@@ -6,6 +6,9 @@ import io.rqueue.converter.GenericMessageConverter;
 import io.rqueue.core.RqueueMessageTemplate;
 import org.springframework.messaging.converter.MessageConverter;
 
+/**
+ *
+ */
 public class RqueueMessageSender {
   private MessageWriter messageWriter;
 
