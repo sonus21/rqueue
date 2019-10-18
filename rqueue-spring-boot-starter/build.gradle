@@ -1,0 +1,7 @@
+plugins {
+    id 'java'
+}
+dependencies {
+    compile project(":rqueue")
+    compile 'org.springframework.boot:spring-boot-starter-data-redis:2.2.0.RELEASE'
+}

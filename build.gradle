@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'idea'
+}
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+subprojects {
+    group='io.rqueue'
+    version ='1.0-SNAPSHOT'
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+}
+
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.springframework/spring-messaging
+    compile group: 'org.springframework', name: 'spring-messaging', version: '5.2.0.RELEASE'
+    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
+    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.2.0.RELEASE'
+}

@@ -1,0 +1,8 @@
+rootProject.name = 'redis-queue'
+include 'rqueue'
+include 'rqueue-spring'
+include 'rqueue-spring-boot-starter'
+include 'rqueue-spring-example'
+include 'rqueue-spring-boot-example'
+
+
