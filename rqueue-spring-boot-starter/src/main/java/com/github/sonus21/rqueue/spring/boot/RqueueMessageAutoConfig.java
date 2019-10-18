@@ -66,6 +66,11 @@ public class RqueueMessageAutoConfig {
   @Bean
   @ConditionalOnMissingBean
   public RqueueMessageSender rqueueMessageSender() {
+    if (simpleRqueueListenerContainerFactory.getMessageConverters() != null) {
+      return new RqueueMessageSender(
+          getMessageTemplate(getRedisConnectionFactory()),
+          simpleRqueueListenerContainerFactory.getMessageConverters());
+    }
     return new RqueueMessageSender(getMessageTemplate(getRedisConnectionFactory()));
   }
 }

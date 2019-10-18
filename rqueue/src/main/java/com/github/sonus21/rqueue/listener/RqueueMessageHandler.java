@@ -2,9 +2,9 @@ package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.constants.Constants.QUEUE_NAME;
 
-import com.github.sonus21.rqueue.utils.ValueResolver;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,8 +69,10 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       MappingInformation mappingInformation =
           new MappingInformation(
               resolveQueueNames(rqueueListener.value()),
-              ValueResolver.resolveToBoolean(getApplicationContext(), rqueueListener.delayedQueue()),
-              ValueResolver.resolveValueToInteger(getApplicationContext(), rqueueListener.numRetries()),
+              ValueResolver.resolveToBoolean(
+                  getApplicationContext(), rqueueListener.delayedQueue()),
+              ValueResolver.resolveValueToInteger(
+                  getApplicationContext(), rqueueListener.numRetries()),
               resolveDelayedQueue(rqueueListener.deadLaterQueue()));
       if (mappingInformation.isValid()) {
         return mappingInformation;
@@ -81,8 +83,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   private String resolveDelayedQueue(String dlqName) {
-    String[] resolvedValues = ValueResolver
-        .resolveValueToArrayOfStrings(getApplicationContext(), dlqName);
+    String[] resolvedValues =
+        ValueResolver.resolveValueToArrayOfStrings(getApplicationContext(), dlqName);
     if (resolvedValues.length == 1) {
       return resolvedValues[0];
     }

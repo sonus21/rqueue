@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class MessageListener {
   @RqueueListener(value = "${rqueue.test.queue}")
-  public void consumeMessage(Object message) {
-    log.info("test: {}", message);
+  public void consumeMessage(String message) {
+    log.info("test: {}", message.getClass());
     // throw new NullPointerException("Failing");
   }
 
@@ -17,7 +17,7 @@ public class MessageListener {
       value = {"${rqueue.dtest.queue}", "${rqueue.dtest2.queue}"},
       delayedQueue = "${rqueue.dtest.queue.delayed-queue}",
       numRetries = "${rqueue.dtest.queue.retries}")
-  public void onMessage(Object message) {
+  public void onMessage(String message) {
     log.info("dtest: {}", message);
     throw new NullPointerException(message.toString());
   }

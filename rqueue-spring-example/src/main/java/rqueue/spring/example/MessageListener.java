@@ -13,7 +13,7 @@ public class MessageListener {
   }
 
   @RqueueListener(value = "dtest", delayedQueue = "true")
-  public void onMessage(Object message) {
+  public void delayedMessage(String message) {
     log.info("dtest: {}", message);
   }
 

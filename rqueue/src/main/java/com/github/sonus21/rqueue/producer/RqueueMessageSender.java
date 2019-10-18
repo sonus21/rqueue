@@ -1,23 +1,38 @@
 package com.github.sonus21.rqueue.producer;
 
-import com.github.sonus21.rqueue.utils.Validator;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.utils.Validator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.util.CollectionUtils;
 
-/**
- *
- */
+/** */
 public class RqueueMessageSender {
   private MessageWriter messageWriter;
 
-  public RqueueMessageSender(
-      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
-    this.messageWriter = new MessageWriter(messageTemplate, messageConverter);
+  private RqueueMessageSender(
+      RqueueMessageTemplate messageTemplate,
+      List<MessageConverter> messageConverters,
+      boolean addDefault) {
+    if (CollectionUtils.isEmpty(messageConverters)) {
+      throw new IllegalArgumentException("messageConverters can  not be empty");
+    }
+    if (addDefault) {
+      messageConverters.add(new GenericMessageConverter());
+    }
+    this.messageWriter = new MessageWriter(messageTemplate, new ArrayList<>(messageConverters));
   }
 
   public RqueueMessageSender(RqueueMessageTemplate messageTemplate) {
-    this(messageTemplate, new GenericMessageConverter());
+    this(messageTemplate, Collections.singletonList(new GenericMessageConverter()), false);
+  }
+
+  public RqueueMessageSender(
+      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
+    this(messageTemplate, messageConverters, true);
   }
 
   public boolean put(String queueName, Object message) {
@@ -42,16 +57,5 @@ public class RqueueMessageSender {
       throw new IllegalArgumentException("delayInMilliSecs can not be null");
     }
     return messageWriter.pushMessage(queueName, message, retryCount, delayInMilliSecs);
-  }
-
-  public MessageConverter getMessageConverter() {
-    return messageWriter.getMessageConverter();
-  }
-
-  public void setMessageConverter(MessageConverter messageConverter) {
-    if (messageConverter == null) {
-      throw new IllegalArgumentException("messageConverter can not be null");
-    }
-    this.messageWriter.setMessageConverter(messageConverter);
   }
 }

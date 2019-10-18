@@ -23,7 +23,7 @@ class MessageExecutor implements Runnable {
     message.updateAccessTime();
     this.rqueueMessage = message;
     this.queueDetail = queueDetail;
-    this.message = new GenericMessage<String>(message.getMessage(), queueDetail.getHeaders());
+    this.message = new GenericMessage<>(message.getMessage(), queueDetail.getHeaders());
     this.messageHandler = messageHandler;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.logger = logger;

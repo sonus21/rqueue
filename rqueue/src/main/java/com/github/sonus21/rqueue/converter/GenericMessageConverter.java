@@ -1,10 +1,7 @@
 package com.github.sonus21.rqueue.converter;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.sonus21.rqueue.exception.MessageDeserializationError;
-import com.github.sonus21.rqueue.exception.MessageSerializationError;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +21,10 @@ public class GenericMessageConverter implements MessageConverter {
       Class<?> c = Class.forName(msg.getName());
       return objectMapper.readValue(msg.msg, c);
     } catch (ClassNotFoundException e) {
-      logger.error("Class not found exception", e);
-      throw new MessageDeserializationError(e.getMessage(), e);
-    } catch (JsonParseException e) {
-      throw new MessageDeserializationError(e.getMessage(), e);
+      logger.warn("Class not found exception", e);
+      return null;
     } catch (IOException e) {
-      throw new MessageDeserializationError(e.getMessage(), e);
+      return null;
     }
   }
 
@@ -42,7 +37,7 @@ public class GenericMessageConverter implements MessageConverter {
       return new GenericMessage<>(objectMapper.writeValueAsString(message));
     } catch (JsonProcessingException e) {
       logger.error("Serialisation failed", e);
-      throw new MessageSerializationError(e.getMessage(), e);
+      return null;
     }
   }
 
