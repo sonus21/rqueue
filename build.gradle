@@ -8,8 +8,8 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 subprojects {
-    group='io.rqueue'
-    version ='1.0-SNAPSHOT'
+    group = 'com.github.sonus21'
+    version = '1.0-SNAPSHOT'
 }
 
 allprojects {
@@ -18,7 +18,6 @@ allprojects {
         jcenter()
     }
 }
-
 
 dependencies {
     // https://mvnrepository.com/artifact/org.springframework/spring-messaging
