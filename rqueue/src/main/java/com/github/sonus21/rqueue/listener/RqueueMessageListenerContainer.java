@@ -1,9 +1,25 @@
+/*
+ * Copyright (c)  2019-2019, Sonu Kumar
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.core.LockManager;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.StringMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.StringMessageTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,6 +50,7 @@ public class RqueueMessageListenerContainer
   private RqueueMessageTemplate rqueueMessageTemplate;
   private RqueueMessageHandler rqueueMessageHandler;
   private AsyncTaskExecutor taskExecutor;
+  private AsyncTaskExecutor spinningTaskExecutor;
   private boolean active = false;
   private boolean autoStartup = true;
   private Map<String, ConsumerQueueDetail> registeredQueues = new ConcurrentHashMap<>();
@@ -41,8 +58,8 @@ public class RqueueMessageListenerContainer
   private ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue = new ConcurrentHashMap<>();
   private LockManager lockManager;
   private boolean running = false;
-  // 5 seconds
-  private long backOffTime = 5000;
+  // 1 second
+  private long backOffTime = 1000;
   // 20 seconds
   private long maxWorkerWaitTime = 200000;
   // 100 ms
@@ -83,9 +100,7 @@ public class RqueueMessageListenerContainer
   }
 
   public void setRqueueMessageHandler(RqueueMessageHandler rqueueMessageHandler) {
-    if (rqueueMessageHandler == null) {
-      throw new IllegalArgumentException("rqueueMessageHandler can not be null");
-    }
+    Assert.notNull(rqueueMessageHandler, "rqueueMessageHandler can not be null");
     this.rqueueMessageHandler = rqueueMessageHandler;
   }
 
@@ -117,6 +132,9 @@ public class RqueueMessageListenerContainer
       if (taskExecutor != null) {
         ((ThreadPoolTaskExecutor) this.taskExecutor).destroy();
       }
+      if (spinningTaskExecutor != null) {
+        ((ThreadPoolTaskExecutor) this.spinningTaskExecutor).destroy();
+      }
     }
   }
 
@@ -145,8 +163,28 @@ public class RqueueMessageListenerContainer
     }
     if (this.taskExecutor == null) {
       this.taskExecutor = createDefaultTaskExecutor();
+    } else {
+      this.spinningTaskExecutor = createSpinningTaskExecutor();
     }
     initializeRunningQueueState();
+  }
+
+  private AsyncTaskExecutor createSpinningTaskExecutor() {
+    String beanName = getBeanName();
+    ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+    threadPoolTaskExecutor.setThreadNamePrefix(
+        beanName != null ? beanName + "-" : DEFAULT_THREAD_NAME_PREFIX);
+    int messageMoverThreadsCount = getDelayedQueueCounts();
+    int messagePullerThreadsCount = getRegisteredQueues().size();
+    int spinningThreads = messageMoverThreadsCount + messagePullerThreadsCount;
+
+    if (spinningThreads > 0) {
+      threadPoolTaskExecutor.setCorePoolSize(spinningThreads);
+      threadPoolTaskExecutor.setMaxPoolSize(2 * spinningThreads);
+    }
+    threadPoolTaskExecutor.setQueueCapacity(0);
+    threadPoolTaskExecutor.afterPropertiesSet();
+    return threadPoolTaskExecutor;
   }
 
   private Map<String, ConsumerQueueDetail> getRegisteredQueues() {
@@ -167,7 +205,7 @@ public class RqueueMessageListenerContainer
             .count();
   }
 
-  private AsyncTaskExecutor createDefaultTaskExecutor() {
+  public AsyncTaskExecutor createDefaultTaskExecutor() {
     String beanName = getBeanName();
     ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
     threadPoolTaskExecutor.setThreadNamePrefix(
@@ -217,13 +255,24 @@ public class RqueueMessageListenerContainer
       return;
     }
     this.queueRunningState.put(queueName, true);
-    Future<?> future =
-        getTaskExecutor().submit(new AsynchronousMessageListener(queueName, queueDetail));
+    Future<?> future;
+    AsynchronousMessageListener messageListener =
+        new AsynchronousMessageListener(queueName, queueDetail);
+    if (spinningTaskExecutor == null) {
+      future = getTaskExecutor().submit(messageListener);
+    } else {
+      future = spinningTaskExecutor.submit(messageListener);
+    }
     this.scheduledFutureByQueue.put(queueName, future);
 
     if (queueDetail.isDelayedQueue()) {
-      Future<?> future2 = getTaskExecutor().submit(new AsynchronousMessageMover(queueDetail));
-      this.scheduledFutureByQueue.put(queueDetail.getZsetName(), future2);
+      AsynchronousMessageMover messageMover = new AsynchronousMessageMover(queueDetail);
+      if (spinningTaskExecutor == null) {
+        future = getTaskExecutor().submit(messageMover);
+      } else {
+        future = spinningTaskExecutor.submit(messageMover);
+      }
+      this.scheduledFutureByQueue.put(queueDetail.getZsetName(), future);
     }
   }
 
@@ -302,7 +351,7 @@ public class RqueueMessageListenerContainer
   private class AsynchronousMessageMover implements Runnable {
     private final ConsumerQueueDetail queueDetail;
 
-    public AsynchronousMessageMover(ConsumerQueueDetail consumerQueueDetail) {
+    AsynchronousMessageMover(ConsumerQueueDetail consumerQueueDetail) {
       this.queueDetail = consumerQueueDetail;
     }
 
@@ -311,7 +360,7 @@ public class RqueueMessageListenerContainer
       while (isQueueActive(queueDetail.getQueueName())) {
         try {
           RqueueMessage rqueueMessage =
-              rqueueMessageTemplate.getFromZset(queueDetail.getZsetName());
+              rqueueMessageTemplate.getFirstFromZset(queueDetail.getZsetName());
           if (rqueueMessage != null && rqueueMessage.getProcessAt() < System.currentTimeMillis()) {
             if (lockManager.acquireLock(rqueueMessage.getId())) {
               // TODO use pipleline here

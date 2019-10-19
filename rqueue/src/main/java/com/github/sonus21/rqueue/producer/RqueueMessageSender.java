@@ -1,5 +1,22 @@
+/*
+ * Copyright (c)  2019-2019, Sonu Kumar
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package com.github.sonus21.rqueue.producer;
 
+import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.utils.Validator;
@@ -7,9 +24,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.Assert;
 
-/** */
+/**
+ * RqueueMessageSender creates message writer that writes message to Redis and have different
+ * methods to push message to redis based on the use case. It can submit delayed message along with
+ * number of retries.
+ *
+ * @author Sonu Kumar
+ */
 public class RqueueMessageSender {
   private MessageWriter messageWriter;
 
@@ -17,9 +40,7 @@ public class RqueueMessageSender {
       RqueueMessageTemplate messageTemplate,
       List<MessageConverter> messageConverters,
       boolean addDefault) {
-    if (CollectionUtils.isEmpty(messageConverters)) {
-      throw new IllegalArgumentException("messageConverters can  not be empty");
-    }
+    Assert.notEmpty(messageConverters, "messageConverters can  not be empty");
     if (addDefault) {
       messageConverters.add(new GenericMessageConverter());
     }
@@ -35,27 +56,66 @@ public class RqueueMessageSender {
     this(messageTemplate, messageConverters, true);
   }
 
+  /**
+   * Submit a message on given queue without any delay, listener would try to consume this message
+   * immediately but due to heavy load message consumption can be delayed if message producer rate
+   * is higher than the rate at consumer consume the messages.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @return message was submitted successfully or failed.
+   */
   public boolean put(String queueName, Object message) {
     Validator.validateQueueNameAndMessage(queueName, message);
     return messageWriter.pushMessage(queueName, message, null, null);
   }
 
-  public boolean put(String queueName, Object message, Long delayInMilliSecs) {
-    if (delayInMilliSecs == null) {
-      throw new IllegalArgumentException("delayInMilliSecs can not be null");
-    }
+  /**
+   * This is an extension to the method {@link #put(String, Object)}. By default container would try
+   * to deliver the same message for {@link Integer#MAX_VALUE} times, but that can be either
+   * overridden using {@link RqueueListener#numRetries()}, even that value can be overridden using
+   * this method.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param retryCount how many times a message would be retried, before it can be discarded or sent
+   *     to dead later queue configured using {@link RqueueListener#delayedQueue()}
+   * @return message was submitted successfully or failed.
+   */
+  public boolean put(String queueName, Object message, int retryCount) {
+    Validator.validateQueueNameAndMessage(queueName, message);
+    return messageWriter.pushMessage(queueName, message, null, null);
+  }
+
+  /**
+   * This is the extension to the method {@link #put(String, Object)}, in this we can specify when
+   * this message would be visible to the consumer.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
+   *     listener when number of millisecond has elapsed.
+   * @return message was submitted successfully or failed.
+   */
+  public boolean put(String queueName, Object message, long delayInMilliSecs) {
     Validator.validateQueueNameAndMessage(queueName, message);
     return messageWriter.pushMessage(queueName, message, null, delayInMilliSecs);
   }
 
-  public boolean put(String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
+  /**
+   * Extension to the {@link #put(String, Object, long)}, as like other retry method we can override
+   * number of times a listener would be retrying
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param retryCount how many times a message would be retried, before it can be discarded or sent
+   *     to dead later queue configured using {@link RqueueListener#delayedQueue()}
+   * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
+   *     listener when number of millisecond has elapsed.
+   * @return message was submitted successfully or failed.
+   */
+  public boolean put(String queueName, Object message, int retryCount, long delayInMilliSecs) {
     Validator.validateQueueNameAndMessage(queueName, message);
-    if (retryCount == null) {
-      throw new IllegalArgumentException("retryCount can not be null");
-    }
-    if (delayInMilliSecs == null) {
-      throw new IllegalArgumentException("delayInMilliSecs can not be null");
-    }
     return messageWriter.pushMessage(queueName, message, retryCount, delayInMilliSecs);
   }
 }

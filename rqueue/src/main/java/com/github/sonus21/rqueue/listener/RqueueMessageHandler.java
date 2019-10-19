@@ -1,3 +1,19 @@
+/*
+ * Copyright (c)  2019-2019, Sonu Kumar
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.constants.Constants.QUEUE_NAME;
@@ -24,7 +40,7 @@ import org.springframework.messaging.handler.invocation.AbstractExceptionHandler
 import org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.HandlerMethodReturnValueHandler;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.comparator.ComparableComparator;
 
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
@@ -143,9 +159,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   public void setMessageConverters(List<MessageConverter> messageConverters) {
-    if (CollectionUtils.isEmpty(messageConverters)) {
-      throw new IllegalArgumentException("messageConverters list can not be empty or null");
-    }
+    Assert.notEmpty(messageConverters, "messageConverters list can not be empty or null");
     this.messageConverters = messageConverters;
     addDefaultMessageConverter();
   }

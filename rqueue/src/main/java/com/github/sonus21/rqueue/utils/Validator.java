@@ -1,26 +1,26 @@
+/*
+ * Copyright (c)  2019-2019, Sonu Kumar
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package com.github.sonus21.rqueue.utils;
 
-import java.util.List;
+import org.springframework.util.Assert;
 
 public abstract class Validator {
   public static void validateQueueNameAndMessage(String queueName, Object message) {
-    if (queueName == null) {
-      throw new IllegalArgumentException("queueName can not be null");
-    }
-    if (message == null) {
-      throw new IllegalArgumentException("message can  not be null");
-    }
-  }
-
-  public static void validateQueueNameAndMessages(String queueName, List<Object> messages) {
-    if (queueName == null) {
-      throw new IllegalArgumentException("queueName can not be null");
-    }
-    if (messages == null) {
-      throw new IllegalArgumentException("messages can  not be null");
-    }
-    if (messages.isEmpty()) {
-      throw new IllegalArgumentException("messages list is empty");
-    }
+    Assert.notNull(queueName, "queueName can not be null");
+    Assert.notNull(message, "message can not be null");
   }
 }
