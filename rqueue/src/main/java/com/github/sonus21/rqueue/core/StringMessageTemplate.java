@@ -25,7 +25,7 @@ public class StringMessageTemplate extends RqueueRedisTemplate<String, String> {
     super(redisConnectionFactory);
   }
 
-  public boolean putIfAbsent(String key, Long time, TimeUnit timeUnit) {
+  public boolean putIfAbsent(String key, long time, TimeUnit timeUnit) {
     Boolean result = redisTemplate.opsForValue().setIfAbsent(key, key, time, timeUnit);
     if (result == null) {
       return false;
@@ -33,7 +33,11 @@ public class StringMessageTemplate extends RqueueRedisTemplate<String, String> {
     return result;
   }
 
-  public void delete(String key) {
-    redisTemplate.delete(key);
+  public boolean delete(String key) {
+    Boolean result = redisTemplate.delete(key);
+    if (result == null) {
+      return false;
+    }
+    return result;
   }
 }

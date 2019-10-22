@@ -51,7 +51,17 @@ public class SimpleRqueueListenerContainerFactory {
    * @see RqueueMessageListenerContainer#createDefaultTaskExecutor()
    */
   public void setTaskExecutor(AsyncTaskExecutor taskExecutor) {
+    Assert.notNull(taskExecutor, "taskExecutor can not be null");
     this.taskExecutor = taskExecutor;
+  }
+
+  /**
+   * Get configured task executor
+   *
+   * @return async task executor
+   */
+  public AsyncTaskExecutor getTaskExecutor() {
+    return taskExecutor;
   }
 
   /**
@@ -61,6 +71,10 @@ public class SimpleRqueueListenerContainerFactory {
    */
   public void setAutoStartup(boolean autoStartup) {
     this.autoStartup = autoStartup;
+  }
+
+  public Boolean getAutoStartup() {
+    return autoStartup;
   }
 
   /**
@@ -108,6 +122,10 @@ public class SimpleRqueueListenerContainerFactory {
    */
   public void setMaxNumWorkers(int maxNumWorkers) {
     this.maxNumWorkers = maxNumWorkers;
+  }
+
+  public Integer getMaxNumWorkers() {
+    return maxNumWorkers;
   }
 
   /**
@@ -175,7 +193,7 @@ public class SimpleRqueueListenerContainerFactory {
     }
     RqueueMessageListenerContainer messageListenerContainer =
         new RqueueMessageListenerContainer(
-            this.rqueueMessageTemplate, this.rqueueMessageHandler, this.stringMessageTemplate);
+            this.rqueueMessageHandler, this.rqueueMessageTemplate, this.stringMessageTemplate);
     messageListenerContainer.setAutoStartup(this.autoStartup);
     if (this.taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(this.taskExecutor);

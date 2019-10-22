@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.constants;
+package com.github.sonus21.rqueue.utils;
 
 public abstract class Constants {
   private static final String DELAYED_QUEUE_PREFIX = "rqueue-delay";

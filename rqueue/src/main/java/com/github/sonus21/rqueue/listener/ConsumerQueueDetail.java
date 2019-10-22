@@ -16,9 +16,9 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.constants.Constants.QUEUE_NAME;
+import static com.github.sonus21.rqueue.utils.Constants.QUEUE_NAME;
 
-import com.github.sonus21.rqueue.constants.Constants;
+import com.github.sonus21.rqueue.utils.Constants;
 import java.util.Collections;
 import java.util.Map;
 
@@ -50,7 +50,7 @@ class ConsumerQueueDetail {
     return queueName;
   }
 
-  public boolean isDelayedQueue() {
+  boolean isDelayedQueue() {
     return delayedQueue;
   }
 

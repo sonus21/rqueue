@@ -16,9 +16,9 @@
 
 package com.github.sonus21.rqueue.producer;
 
-import com.github.sonus21.rqueue.constants.Constants;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.utils.Constants;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,18 +30,25 @@ import org.springframework.messaging.converter.MessageConverter;
 class MessageWriter {
   private RqueueMessageTemplate rqueueMessageTemplate;
   private CompositeMessageConverter messageConverter;
+  private static final long MIN_DELAY_TIME = 1000;
   private static Logger logger = LoggerFactory.getLogger(RqueueMessageSender.class);
 
   MessageWriter(
       RqueueMessageTemplate rqueueMessageTemplate, List<MessageConverter> messageConverters) {
+    this(rqueueMessageTemplate, new CompositeMessageConverter(messageConverters));
+  }
+
+  MessageWriter(
+      RqueueMessageTemplate rqueueMessageTemplate,
+      CompositeMessageConverter compositeMessageConverter) {
     this.rqueueMessageTemplate = rqueueMessageTemplate;
-    this.messageConverter = new CompositeMessageConverter(messageConverters);
+    this.messageConverter = compositeMessageConverter;
   }
 
   boolean pushMessage(String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
     RqueueMessage rqueueMessage = buildMessage(queueName, message, retryCount, delayInMilliSecs);
     try {
-      if (delayInMilliSecs == null) {
+      if (delayInMilliSecs == null || delayInMilliSecs < MIN_DELAY_TIME) {
         rqueueMessageTemplate.add(queueName, rqueueMessage);
       } else {
         rqueueMessageTemplate.addToZset(Constants.getZsetName(queueName), rqueueMessage);
@@ -56,6 +63,7 @@ class MessageWriter {
   private RqueueMessage buildMessage(
       String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
     Message<?> msg = messageConverter.toMessage(message, null);
+    logger.info("{}", msg.getPayload());
     if (msg == null) {
       throw new MessageConversionException("Message could not be build (null)");
     }

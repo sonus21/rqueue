@@ -53,10 +53,8 @@ public class GenericMessageConverter implements MessageConverter {
       Msg msg = objectMapper.readValue((String) message.getPayload(), Msg.class);
       Class<?> c = Class.forName(msg.getName());
       return objectMapper.readValue(msg.msg, c);
-    } catch (ClassNotFoundException e) {
-      logger.warn("Class not found exception", e);
-      return null;
-    } catch (IOException e) {
+    } catch (IOException | ClassCastException | ClassNotFoundException e) {
+      logger.warn("Exception", e);
       return null;
     }
   }

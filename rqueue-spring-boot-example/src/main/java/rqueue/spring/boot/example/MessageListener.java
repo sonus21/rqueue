@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 public class MessageListener {
   @RqueueListener(value = "${rqueue.test.queue}")
   public void consumeMessage(String message) {
-    log.info("test: {}", message.getClass());
+    log.info("test: {}, {}", message, message.getClass());
     // throw new NullPointerException("Failing");
   }
 

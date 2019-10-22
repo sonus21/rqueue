@@ -49,15 +49,15 @@ class MappingInformation implements Comparable<MappingInformation> {
     return String.join(", ", queueNames);
   }
 
-  public int getNumRetries() {
+  int getNumRetries() {
     return numRetries;
   }
 
-  public boolean isDelayedQueue() {
+  boolean isDelayedQueue() {
     return delayedQueue;
   }
 
-  public String getDeadLaterQueueName() {
+  String getDeadLaterQueueName() {
     return deadLaterQueueName;
   }
 

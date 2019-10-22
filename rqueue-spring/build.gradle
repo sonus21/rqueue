@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
     compile project(":rqueue")
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 task sourceJar(type: Jar) {

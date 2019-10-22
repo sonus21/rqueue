@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.core;
 
 import java.util.concurrent.TimeUnit;
+import org.springframework.util.Assert;
 
 /**
  * A global lock manager, it relies on Redis for lock guarantee, even in the case of master slave
@@ -28,6 +29,7 @@ public class LockManager {
   private static final long LOCK_EXPIRY_TIME = 10;
 
   public LockManager(StringMessageTemplate stringMessageTemplate) {
+    Assert.notNull(stringMessageTemplate, "stringMessageTemplate can not be null");
     this.stringMessageTemplate = stringMessageTemplate;
   }
 

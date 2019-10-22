@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.util.Assert;
 
 /**
@@ -36,15 +37,27 @@ import org.springframework.util.Assert;
 public class RqueueMessageSender {
   private MessageWriter messageWriter;
 
+  private List<MessageConverter> getMessageConverters(
+      boolean addDefault, List<MessageConverter> messageConverters) {
+    List<MessageConverter> messageConverterList = new ArrayList<>();
+    StringMessageConverter stringMessageConverter = new StringMessageConverter();
+    stringMessageConverter.setSerializedPayloadClass(String.class);
+    messageConverterList.add(stringMessageConverter);
+    if (addDefault) {
+      messageConverterList.add(new GenericMessageConverter());
+    }
+    messageConverterList.addAll(messageConverters);
+    return messageConverterList;
+  }
+
   private RqueueMessageSender(
       RqueueMessageTemplate messageTemplate,
       List<MessageConverter> messageConverters,
       boolean addDefault) {
+    Assert.notNull(messageTemplate, "messageTemplate can not be null");
     Assert.notEmpty(messageConverters, "messageConverters can  not be empty");
-    if (addDefault) {
-      messageConverters.add(new GenericMessageConverter());
-    }
-    this.messageWriter = new MessageWriter(messageTemplate, new ArrayList<>(messageConverters));
+    this.messageWriter =
+        new MessageWriter(messageTemplate, getMessageConverters(addDefault, messageConverters));
   }
 
   public RqueueMessageSender(RqueueMessageTemplate messageTemplate) {
@@ -84,7 +97,8 @@ public class RqueueMessageSender {
    */
   public boolean put(String queueName, Object message, int retryCount) {
     Validator.validateQueueNameAndMessage(queueName, message);
-    return messageWriter.pushMessage(queueName, message, null, null);
+    Validator.validateRetryCount(retryCount);
+    return messageWriter.pushMessage(queueName, message, retryCount, null);
   }
 
   /**
@@ -99,6 +113,7 @@ public class RqueueMessageSender {
    */
   public boolean put(String queueName, Object message, long delayInMilliSecs) {
     Validator.validateQueueNameAndMessage(queueName, message);
+    Validator.validateDelay(delayInMilliSecs);
     return messageWriter.pushMessage(queueName, message, null, delayInMilliSecs);
   }
 
@@ -116,6 +131,8 @@ public class RqueueMessageSender {
    */
   public boolean put(String queueName, Object message, int retryCount, long delayInMilliSecs) {
     Validator.validateQueueNameAndMessage(queueName, message);
+    Validator.validateRetryCount(retryCount);
+    Validator.validateDelay(delayInMilliSecs);
     return messageWriter.pushMessage(queueName, message, retryCount, delayInMilliSecs);
   }
 }

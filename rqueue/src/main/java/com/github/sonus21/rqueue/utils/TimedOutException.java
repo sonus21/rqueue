@@ -14,17 +14,10 @@
  *   limitations under the License.
  */
 
-package rqueue.spring.boot.example;
+package com.github.sonus21.rqueue.utils;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class RQueueApplicationTest {
-
-  @Test
-  public void contextLoads() {}
+public class TimedOutException extends Exception {
+  public TimedOutException(String message) {
+    super(message);
+  }
 }

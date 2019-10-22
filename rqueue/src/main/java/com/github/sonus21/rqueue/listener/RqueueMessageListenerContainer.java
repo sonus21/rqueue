@@ -49,6 +49,7 @@ public class RqueueMessageListenerContainer
   private String beanName;
   private RqueueMessageTemplate rqueueMessageTemplate;
   private RqueueMessageHandler rqueueMessageHandler;
+  private boolean defaultTaskExecutor = false;
   private AsyncTaskExecutor taskExecutor;
   private AsyncTaskExecutor spinningTaskExecutor;
   private boolean active = false;
@@ -64,6 +65,7 @@ public class RqueueMessageListenerContainer
   private long maxWorkerWaitTime = 200000;
   // 100 ms
   private long delayedQueueSleepTime = 100;
+  private int phase = Integer.MAX_VALUE;
 
   public long getDelayedQueueSleepTime() {
     return this.delayedQueueSleepTime;
@@ -74,9 +76,12 @@ public class RqueueMessageListenerContainer
   }
 
   public RqueueMessageListenerContainer(
-      RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMessageHandler rqueueMessageHandler,
+      RqueueMessageTemplate rqueueMessageTemplate,
       StringMessageTemplate stringMessageTemplate) {
+    Assert.notNull(rqueueMessageHandler, "rqueueMessageHandler can not be null");
+    Assert.notNull(rqueueMessageTemplate, "rqueueMessageTemplate can not be null");
+    Assert.notNull(stringMessageTemplate, "stringMessageTemplate can not be null");
     this.rqueueMessageHandler = rqueueMessageHandler;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.lockManager = new LockManager(stringMessageTemplate);
@@ -84,6 +89,10 @@ public class RqueueMessageListenerContainer
 
   public void setMaxWorkerWaitTime(long stopTime) {
     this.maxWorkerWaitTime = stopTime;
+  }
+
+  public long getMaxWorkerWaitTime() {
+    return this.maxWorkerWaitTime;
   }
 
   public String getBeanName() {
@@ -97,11 +106,6 @@ public class RqueueMessageListenerContainer
 
   public RqueueMessageHandler getRqueueMessageHandler() {
     return this.rqueueMessageHandler;
-  }
-
-  public void setRqueueMessageHandler(RqueueMessageHandler rqueueMessageHandler) {
-    Assert.notNull(rqueueMessageHandler, "rqueueMessageHandler can not be null");
-    this.rqueueMessageHandler = rqueueMessageHandler;
   }
 
   public Integer getMaxNumWorkers() {
@@ -120,22 +124,38 @@ public class RqueueMessageListenerContainer
     return backOffTime;
   }
 
-  public long getQueueStopTimeout() {
-    return this.maxWorkerWaitTime;
-  }
-
   @Override
   public void destroy() throws Exception {
     synchronized (this.lifecycleMgr) {
       this.stop();
       this.active = false;
-      if (taskExecutor != null) {
-        ((ThreadPoolTaskExecutor) this.taskExecutor).destroy();
-      }
-      if (spinningTaskExecutor != null) {
-        ((ThreadPoolTaskExecutor) this.spinningTaskExecutor).destroy();
-      }
+      doDestroy();
     }
+  }
+
+  protected void doDestroy() {
+    if (defaultTaskExecutor && taskExecutor != null) {
+      ((ThreadPoolTaskExecutor) this.taskExecutor).destroy();
+    }
+    if (spinningTaskExecutor != null) {
+      ((ThreadPoolTaskExecutor) this.spinningTaskExecutor).destroy();
+    }
+  }
+
+  @Override
+  public int getPhase() {
+    return this.phase;
+  }
+
+  /**
+   * Configure a custom phase for the container to start. This allows to start other beans that also
+   * implements the {@link SmartLifecycle} interface.
+   *
+   * @param phase - the phase that defines the phase respecting the {@link
+   *     org.springframework.core.Ordered} semantics
+   */
+  public void setPhase(int phase) {
+    this.phase = phase;
   }
 
   @Override
@@ -162,6 +182,7 @@ public class RqueueMessageListenerContainer
       this.lifecycleMgr.notifyAll();
     }
     if (this.taskExecutor == null) {
+      defaultTaskExecutor = true;
       this.taskExecutor = createDefaultTaskExecutor();
     } else {
       this.spinningTaskExecutor = createSpinningTaskExecutor();
@@ -244,6 +265,10 @@ public class RqueueMessageListenerContainer
       running = true;
       lifecycleMgr.notifyAll();
     }
+    doStart();
+  }
+
+  protected void doStart() {
     for (Map.Entry<String, ConsumerQueueDetail> registeredQueue :
         getRegisteredQueues().entrySet()) {
       startQueue(registeredQueue.getKey(), registeredQueue.getValue());
@@ -280,7 +305,7 @@ public class RqueueMessageListenerContainer
     return queueRunningState.getOrDefault(queueName, false);
   }
 
-  private AsyncTaskExecutor getTaskExecutor() {
+  public AsyncTaskExecutor getTaskExecutor() {
     return taskExecutor;
   }
 
@@ -292,6 +317,10 @@ public class RqueueMessageListenerContainer
       this.running = false;
       lifecycleMgr.notifyAll();
     }
+    doStop();
+  }
+
+  protected void doStop() {
     for (Map.Entry<String, Boolean> runningStateByQueue : this.queueRunningState.entrySet()) {
       if (runningStateByQueue.getValue()) {
         stopQueue(runningStateByQueue.getKey());
@@ -307,7 +336,7 @@ public class RqueueMessageListenerContainer
       Future<?> queueSpinningThread = this.scheduledFutureByQueue.get(queueName);
       if (queueSpinningThread != null) {
         try {
-          queueSpinningThread.get(getQueueStopTimeout(), TimeUnit.MILLISECONDS);
+          queueSpinningThread.get(getMaxWorkerWaitTime(), TimeUnit.MILLISECONDS);
         } catch (ExecutionException | TimeoutException e) {
           logger.warn("An exception occurred while stopping queue '{}'", queueName, e);
         } catch (InterruptedException e) {
@@ -319,7 +348,7 @@ public class RqueueMessageListenerContainer
         Future<?> messageMoverThread = this.scheduledFutureByQueue.get(queueDetail.getZsetName());
         if (messageMoverThread != null) {
           try {
-            messageMoverThread.get(getQueueStopTimeout(), TimeUnit.MILLISECONDS);
+            messageMoverThread.get(getMaxWorkerWaitTime(), TimeUnit.MILLISECONDS);
           } catch (ExecutionException | TimeoutException e) {
             logger.warn("An exception occurred while stopping queue '{}'", queueName, e);
           } catch (InterruptedException e) {

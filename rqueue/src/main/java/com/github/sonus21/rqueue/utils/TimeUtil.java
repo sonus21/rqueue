@@ -16,23 +16,23 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import org.springframework.util.Assert;
+import java.util.function.Supplier;
 
-public abstract class Validator {
-  public static void validateQueueNameAndMessage(String queueName, Object message) {
-    Assert.notNull(queueName, "queueName can not be null");
-    Assert.notNull(message, "message can not be null");
+public abstract class TimeUtil {
+  public static void waitFor(
+      Supplier<Boolean> supplier, long waitTimeInMilliSeconds, String description)
+      throws TimedOutException {
+    long startTime = System.currentTimeMillis();
+    do {
+      if (supplier.get()) {
+        return;
+      }
+    } while (System.currentTimeMillis() < startTime + waitTimeInMilliSeconds);
+    throw new TimedOutException("Timed out waiting for " + description);
   }
 
-  public static void validateRetryCount(int retryCount) {
-    if (retryCount < 0) {
-      throw new IllegalArgumentException("retryCount must be positive");
-    }
-  }
-
-  public static void validateDelay(long delayInMilliSecs) {
-    if (delayInMilliSecs < 0) {
-      throw new IllegalArgumentException("delayInMilliSecs must be positive");
-    }
+  public static void waitFor(Supplier<Boolean> supplier, String description)
+      throws TimedOutException {
+    waitFor(supplier, 10000L, description);
   }
 }
