@@ -48,10 +48,25 @@ subprojects {
     }
 }
 
+def publishedProjects = subprojects.findAll({ subproject ->
+    subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example")
+})
+
+task jacocoMerge(type: JacocoMerge) {
+    publishedProjects.each { subproject ->
+        executionData subproject.tasks.withType(Test)
+    }
+    doFirst {
+        executionData = files(executionData.findAll { it.exists() })
+        print(executionData);
+    }
+}
+
+
 task codeCoverageReport(type: JacocoReport) {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
-    subprojects.each {
+    publishedProjects.each {
         sourceSets it.sourceSets.main
     }
 
@@ -59,7 +74,7 @@ task codeCoverageReport(type: JacocoReport) {
         xml.enabled true
         xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
         csv.enabled false
-        html.enabled false
+        html.enabled true
     }
     test.useTestNG()
 }
@@ -72,5 +87,12 @@ jacoco {
     toolVersion = "0.8.4"
 }
 
-check.dependsOn codeCoverageReport
+codeCoverageReport.dependsOn {
+    subprojects*.test
+}
 
+coveralls {
+    description = 'Uploads the aggregated coverage report to Coveralls'
+    sourceDirs = publishedProjects.sourceSets.main.allSource.srcDirs.flatten()
+    jacocoReportPath "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+}
