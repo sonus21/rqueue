@@ -40,9 +40,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueMessageListenerContainerTest {
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
@@ -335,6 +338,7 @@ public class RqueueMessageListenerContainerTest {
                 if (slowQueueCounter.incrementAndGet() == 1) {
                   throw new RedisCommandExecutionException("Test error occurred");
                 }
+                return message;
               }
               return null;
             })
