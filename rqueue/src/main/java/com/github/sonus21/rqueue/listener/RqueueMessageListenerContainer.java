@@ -190,6 +190,10 @@ public class RqueueMessageListenerContainer
     initializeRunningQueueState();
   }
 
+  protected AsyncTaskExecutor getSpinningTaskExecutor() {
+    return this.spinningTaskExecutor;
+  }
+
   private AsyncTaskExecutor createSpinningTaskExecutor() {
     String beanName = getBeanName();
     ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
@@ -405,7 +409,7 @@ public class RqueueMessageListenerContainer
             }
           }
         } catch (Exception e) {
-          logger.error(
+          logger.warn(
               "Message mover failed for queue {}, it will be retried in {} Ms",
               queueDetail.getQueueName(),
               getBackoffTime(),
@@ -435,8 +439,8 @@ public class RqueueMessageListenerContainer
 
     @Override
     public void run() {
-      try {
-        while (isQueueActive(queueName)) {
+      while (isQueueActive(queueName)) {
+        try {
           RqueueMessage message = getMessage();
           if (message != null) {
             if (isQueueActive(queueName)) {
@@ -452,17 +456,17 @@ public class RqueueMessageListenerContainer
               rqueueMessageTemplate.add(queueName, message);
             }
           }
-        }
-      } catch (Exception e) {
-        logger.error(
-            "Message listener failed for queue {}, it will be retried in {} Ms",
-            queueName,
-            getBackoffTime(),
-            e);
-        try {
-          Thread.sleep(getBackoffTime());
-        } catch (InterruptedException ex) {
-          ex.printStackTrace();
+        } catch (Exception e) {
+          logger.warn(
+              "Message listener failed for queue {}, it will be retried in {} Ms",
+              queueName,
+              getBackoffTime(),
+              e);
+          try {
+            Thread.sleep(getBackoffTime());
+          } catch (InterruptedException ex) {
+            ex.printStackTrace();
+          }
         }
       }
     }

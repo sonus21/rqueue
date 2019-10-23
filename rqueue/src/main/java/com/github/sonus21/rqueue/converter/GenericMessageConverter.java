@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
@@ -46,7 +45,6 @@ public class GenericMessageConverter implements MessageConverter {
    * @return the result of the conversion, or {@code null} if the converter cannot perform the
    *     conversion
    */
-  @Nullable
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass) {
     try {

@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +35,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.StringMessageTemplate;
 import com.github.sonus21.rqueue.utils.Constants;
+import io.lettuce.core.RedisCommandExecutionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
@@ -100,6 +102,16 @@ public class RqueueMessageListenerContainerTest {
   }
 
   @Test
+  public void setTaskExecutorCreatesSpinningThread() throws Exception {
+    assertNull(container.getTaskExecutor());
+    ThreadPoolTaskExecutor asyncTaskExecutor = new ThreadPoolTaskExecutor();
+    asyncTaskExecutor.setThreadNamePrefix("testExecutor");
+    container.setTaskExecutor(asyncTaskExecutor);
+    container.afterPropertiesSet();
+    assertNotNull(container.getSpinningTaskExecutor());
+  }
+
+  @Test
   public void testPhaseSetting() {
     assertEquals(Integer.MAX_VALUE, container.getPhase());
     container.setPhase(100);
@@ -107,10 +119,11 @@ public class RqueueMessageListenerContainerTest {
   }
 
   @Test
-  public void checkDoStartMethodIsCalled() throws Exception {
+  public void checkDoStartMethodIsCalledAndIsRunningSet() throws Exception {
     StubMessageListenerContainer container = new StubMessageListenerContainer();
     container.afterPropertiesSet();
     container.start();
+    assertTrue(container.isRunning());
     assertTrue(container.isDoStartMethodIsCalled());
     assertFalse(container.isDestroyMethodIsCalled());
     assertFalse(container.isDoStopMethodIsCalled());
@@ -237,6 +250,99 @@ public class RqueueMessageListenerContainerTest {
     container.start();
     waitFor(() -> zsetCounter.get() == 20, "Generate all slowQueue messages");
     waitFor(() -> messageCounter.get() == 10, "10 messages should be moved to slowQueue");
+    container.stop();
+    container.doDestroy();
+  }
+
+  @Test
+  public void testMessageFetcherRetryWorking() throws Exception {
+    AtomicInteger fastQueueCounter = new AtomicInteger(0);
+    String fastQueueMessage = "This is fast queue";
+    RqueueMessage message = new RqueueMessage(fastQueue, fastQueueMessage, null, null);
+
+    RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
+    StringMessageTemplate stringMessageTemplate = mock(StringMessageTemplate.class);
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
+    applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
+    RqueueMessageHandler messageHandler =
+        applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
+    messageHandler.setApplicationContext(applicationContext);
+    messageHandler.afterPropertiesSet();
+    // sleep for 10Ms
+    container.setBackOffTime(10L);
+
+    RqueueMessageListenerContainer container =
+        new RqueueMessageListenerContainer(
+            messageHandler, rqueueMessageTemplate, stringMessageTemplate);
+    doAnswer(
+            invocation -> {
+              if (fastQueueCounter.get() < 2) {
+                if (fastQueueCounter.incrementAndGet() == 1) {
+                  throw new RedisCommandExecutionException("Some error occurred");
+                }
+                return message;
+              }
+              return null;
+            })
+        .when(rqueueMessageTemplate)
+        .lpop(fastQueue);
+    FastMessageListener fastMessageListener =
+        applicationContext.getBean("fastMessageListener", FastMessageListener.class);
+    container.afterPropertiesSet();
+    container.start();
+    waitFor(() -> fastQueueCounter.get() == 2, "fastQueue message fetch");
+    waitFor(
+        () -> fastQueueMessage.equals(fastMessageListener.getLastMessage()),
+        "message to be consumed");
+    container.stop();
+    container.doDestroy();
+  }
+
+  @Test
+  public void testMessageMoverRetryWorking() throws Exception {
+    RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
+    StringMessageTemplate stringMessageTemplate = mock(StringMessageTemplate.class);
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
+    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
+    RqueueMessageHandler messageHandler =
+        applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
+    messageHandler.setApplicationContext(applicationContext);
+    messageHandler.afterPropertiesSet();
+    RqueueMessageListenerContainer container =
+        new RqueueMessageListenerContainer(
+            messageHandler, rqueueMessageTemplate, stringMessageTemplate);
+    applicationContext.getBean("slowMessageListener", SlowMessageListener.class);
+    AtomicInteger slowQueueCounter = new AtomicInteger(0);
+    AtomicInteger addMessageCounter = new AtomicInteger(0);
+    // retry in 10Ms
+    container.setBackOffTime(10L);
+    String slowQueueMessage = "This is slow queue";
+    RqueueMessage message = new RqueueMessage(slowQueue, slowQueueMessage, null, -1000L);
+    doReturn(true).when(stringMessageTemplate).putIfAbsent(anyString(), anyLong(), any());
+    doAnswer(
+            invocation -> {
+              addMessageCounter.incrementAndGet();
+              return null;
+            })
+        .when(rqueueMessageTemplate)
+        .add(slowQueue, message);
+
+    doAnswer(
+            invocation -> {
+              if (slowQueueCounter.get() < 2) {
+                if (slowQueueCounter.incrementAndGet() == 1) {
+                  throw new RedisCommandExecutionException("Test error occurred");
+                }
+              }
+              return null;
+            })
+        .when(rqueueMessageTemplate)
+        .getFirstFromZset(Constants.getZsetName(slowQueue));
+    container.afterPropertiesSet();
+    container.start();
+    waitFor(() -> slowQueueCounter.get() == 2, "slowQueue message mover retry");
     container.stop();
     container.doDestroy();
   }

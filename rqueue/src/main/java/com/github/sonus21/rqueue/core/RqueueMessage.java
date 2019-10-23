@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@SuppressWarnings({"UnusedDeclaration"})
 public class RqueueMessage implements Serializable {
 
   private static final long serialVersionUID = -3488860960637488519L;
@@ -28,7 +29,7 @@ public class RqueueMessage implements Serializable {
   private String queueName;
   private String message;
   private Integer retryCount;
-  private Long queuedTime;
+  private long queuedTime;
   private long processAt;
   private Long accessTime;
   private Long reEnqueuedAt;
@@ -78,11 +79,11 @@ public class RqueueMessage implements Serializable {
     this.retryCount = retryCount;
   }
 
-  public Long getQueuedTime() {
+  public long getQueuedTime() {
     return this.queuedTime;
   }
 
-  public void setQueuedTime(Long queuedTime) {
+  public void setQueuedTime(long queuedTime) {
     this.queuedTime = queuedTime;
   }
 
@@ -110,6 +111,7 @@ public class RqueueMessage implements Serializable {
     this.reEnqueuedAt = reEnqueuedAt;
   }
 
+  @Override
   public String toString() {
     return "RqMessage(id="
         + this.getId()
@@ -128,6 +130,28 @@ public class RqueueMessage implements Serializable {
         + ", reEnqueuedAt="
         + this.getReEnqueuedAt()
         + ")";
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof RqueueMessage) {
+      RqueueMessage otherMessage = (RqueueMessage) other;
+      if (this.getId() == null && otherMessage.getId() == null) {
+        boolean equal =
+            otherMessage.getQueueName().equals(this.getQueueName())
+                && otherMessage.getMessage().equals(this.getMessage())
+                && otherMessage.getQueuedTime() == this.getQueuedTime()
+                && otherMessage.getProcessAt() == this.getProcessAt();
+        if (equal) {
+          return otherMessage.getRetryCount() == null && this.getRetryCount() == null;
+        }
+        return false;
+      }
+      if (otherMessage.getId() != null && this.getId() != null) {
+        return this.getId().equals(otherMessage.getId());
+      }
+    }
+    return false;
   }
 
   public String getId() {

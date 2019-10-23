@@ -1,46 +1,66 @@
 plugins {
-    id 'java'
-    id 'idea'
+    id 'jacoco'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
 }
-
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-subprojects {
-    group = 'com.github.sonus21'
-    version = '1.0-SNAPSHOT'
-}
-
 allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
     repositories {
         mavenCentral()
         jcenter()
     }
-    plugins.withType(JavaPlugin) {
-        dependencies {
-            // https://mvnrepository.com/artifact/org.springframework/spring-messaging
-            compile group: 'org.springframework', name: 'spring-messaging', version: '5.2.0.RELEASE'
-            // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
-            compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.2.0.RELEASE'
+}
 
-            testCompile group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
-            testAnnotationProcessor 'org.projectlombok:lombok:1.18.10'
-            testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.28'
+subprojects {
+    group = 'com.github.sonus21'
+    version = '1.0-SNAPSHOT'
 
-            testCompile group: 'junit', name: 'junit', version: '4.12'
-            // https://mvnrepository.com/artifact/org.mockito/mockito-core
-            testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
-            // https://mvnrepository.com/artifact/org.hamcrest/hamcrest-library
-            testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '2.2'
-            // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-            testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
-            // https://mvnrepository.com/artifact/org.springframework/spring-test
-            testCompile group: 'org.springframework', name: 'spring-test', version: '5.2.0.RELEASE'
-            testCompile('org.springframework.boot:spring-boot-test:2.2.0.RELEASE')
-            configurations {
-                all*.exclude module: 'spring-boot-starter-logging'
-            }
+    dependencies {
+        // https://mvnrepository.com/artifact/org.springframework/spring-messaging
+        compile group: 'org.springframework', name: 'spring-messaging', version: '5.2.0.RELEASE'
+        // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
+        compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.2.0.RELEASE'
+
+        testCompile group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.10'
+        testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.28'
+
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+        // https://mvnrepository.com/artifact/org.mockito/mockito-core
+        testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
+        // https://mvnrepository.com/artifact/org.hamcrest/hamcrest-library
+        testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '2.2'
+        // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+        testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+        // https://mvnrepository.com/artifact/org.springframework/spring-test
+        testCompile group: 'org.springframework', name: 'spring-test', version: '5.2.0.RELEASE'
+        testCompile('org.springframework.boot:spring-boot-test:2.2.0.RELEASE')
+        configurations {
+            all*.exclude module: 'spring-boot-starter-logging'
         }
     }
 }
+
+task codeCoverageReport(type: JacocoReport) {
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+
+    subprojects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+    test.useTestNG()
+}
+
+codeCoverageReport.dependsOn {
+    subprojects*.test
+}
+

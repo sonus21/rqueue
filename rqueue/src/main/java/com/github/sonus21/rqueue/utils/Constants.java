@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.utils;
 
 public abstract class Constants {
-  private static final String DELAYED_QUEUE_PREFIX = "rqueue-delay";
+  private static final String DELAYED_QUEUE_PREFIX = "rqueue-delay::";
   public static final String QUEUE_NAME = "QUEUE_NAME";
 
   public static String getZsetName(String queueName) {
