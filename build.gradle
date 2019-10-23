@@ -8,6 +8,7 @@ allprojects {
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
+    apply plugin: 'jacoco'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -56,8 +57,9 @@ task codeCoverageReport(type: JacocoReport) {
 
     reports {
         xml.enabled true
+        xml.destination file("${buildDir}/reports/jacoco/report.xml")
         csv.enabled false
-        html.destination file("${buildDir}/jacocoHtml")
+        html.enabled false
     }
     test.useTestNG()
 }
@@ -66,7 +68,9 @@ codeCoverageReport.dependsOn {
     subprojects*.test
 }
 
-tasks.withType(Sign) {
-    onlyIf { isReleaseVersion }
+jacoco {
+    toolVersion = "0.8.4"
 }
+
+check.dependsOn codeCoverageReport
 

@@ -100,7 +100,7 @@ def customizePom(pom) {
         root.children().last() + {
             resolveStrategy = Closure.DELEGATE_FIRST
 
-            description 'Asynchrnous and delayed task executor for spring framework'
+            description 'Asynchornous and delayed task executor'
             name 'Rqueue Core Java'
             url 'https://github.com/sonus21/rqueue'
             organization {

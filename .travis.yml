@@ -11,11 +11,12 @@ cache:
     - $HOME/.gradle
 
 script:
-  - ./gradlew build jacocoTestReport
+  - ./gradlew check
+  - ./gradlew codeCoverageReport
 
 notifications:
   email:
     - sonunitw12@gmail.com
 
 after_success:
-  - ./gradlew test jacocoTestReport coveralls
+  - ./gradlew coveralls
