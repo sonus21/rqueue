@@ -1,8 +1,3 @@
-plugins {
-    id 'maven-publish'
-    id 'signing'
-}
-
 task sourceJar(type: Jar) {
     classifier "sources"
     from sourceSets.main.allJava
@@ -19,7 +14,9 @@ artifacts {
     archives javadocJar
 }
 
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
 }
 
@@ -117,6 +114,7 @@ def customizePom(pom) {
             developers {
                 developer {
                     name "Sonu Kumar"
+                    email "sonunitw12@gmail.com"
                 }
             }
         }
@@ -139,4 +137,9 @@ dependencies {
     compile project(":rqueue")
     compile 'org.springframework.boot:spring-boot-starter-data-redis:2.2.0.RELEASE'
 }
+
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
+}
+
 

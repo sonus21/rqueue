@@ -1,8 +1,3 @@
-plugins {
-    id 'maven-publish'
-    id 'signing'
-}
-
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.0'
@@ -29,7 +24,9 @@ artifacts {
     archives javadocJar
 }
 
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
 }
 
@@ -129,6 +126,7 @@ def customizePom(pom) {
             developers {
                 developer {
                     name "Sonu Kumar"
+                    email "sonunitw12@gmail.com"
                 }
             }
         }
@@ -145,4 +143,8 @@ model {
     tasks.publishMavenJavaPublicationToMavenRepository {
         dependsOn project.tasks.signArchives
     }
+}
+
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
 }

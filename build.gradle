@@ -6,6 +6,8 @@ allprojects {
     apply plugin: 'idea'
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -62,5 +64,9 @@ task codeCoverageReport(type: JacocoReport) {
 
 codeCoverageReport.dependsOn {
     subprojects*.test
+}
+
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
 }
 

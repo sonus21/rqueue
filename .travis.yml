@@ -2,6 +2,11 @@ language: java
 jdk:
   - oraclejdk8
   - openjdk8
+
+env:
+  ORG_GRADLE_PROJECT_sonatypeUsername=xxx
+  ORG_GRADLE_PROJECT_sonatypePassword=xxx
+
 cache:
   directories:
     - $HOME/.gradle
