@@ -1,4 +1,4 @@
-Rqueue aka RedisQueue
+# Rqueue aka RedisQueue
 ----------------------
 [![Build Status](https://travis-ci.org/sonus21/rqueue.svg?branch=master)](https://travis-ci.org/sonus21/rqueue)
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
@@ -25,7 +25,7 @@ Task execution can be configured in different ways
 
 ## Usage
 
-## Application configuration
+### Application configuration
 
 #### Spring-boot
 
@@ -80,7 +80,7 @@ public class Application{
 ```
 
 
-## Worker/Task executor
+### Worker/Task executor
 A  method can be marked as worker/message listener using `RqueueListener` annotation
 
 
@@ -156,7 +156,7 @@ public class MessageService {
 
 --------------
 
-### Advance Configuration
+## Advance Configuration
 Apart from basic configuration, it can be customized heavily, like number of tasks it would be executing concurrently.
 More and more configurations can be provided using `SimpleRqueueListenerContainerFactory` class.
 
