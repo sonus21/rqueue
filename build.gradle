@@ -58,12 +58,11 @@ task jacocoMerge(type: JacocoMerge) {
     }
     doFirst {
         executionData = files(executionData.findAll { it.exists() })
-        print(executionData);
     }
 }
 
 
-task codeCoverageReport(type: JacocoReport) {
+task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
     publishedProjects.each {
@@ -79,9 +78,6 @@ task codeCoverageReport(type: JacocoReport) {
     test.useTestNG()
 }
 
-codeCoverageReport.dependsOn {
-    subprojects*.test
-}
 
 jacoco {
     toolVersion = "0.8.4"
