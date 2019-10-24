@@ -1,5 +1,4 @@
-# Rqueue aka RedisQueue
-----------------------
+Rqueue aka RedisQueue
 [![Build Status](https://travis-ci.org/sonus21/rqueue.svg?branch=master)](https://travis-ci.org/sonus21/rqueue)
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
 
@@ -154,9 +153,8 @@ public class MessageService {
 2. [Rqueue Spring Boot-2](https://github.com/sonus21/rqueue-task-exector) 
 2. [Rqueue Spring ](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example) 
 
---------------
-
 ## Advance Configuration
+
 Apart from basic configuration, it can be customized heavily, like number of tasks it would be executing concurrently.
 More and more configurations can be provided using `SimpleRqueueListenerContainerFactory` class.
 
