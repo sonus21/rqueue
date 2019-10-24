@@ -46,9 +46,9 @@ Add Dependency
     </dependency>
     ```
     
-#### spring-framework
+#### Spring framework
 
-1. Dependency
+1. Add Dependency
     Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
     * Gradle
     ```groovy
@@ -64,7 +64,7 @@ Add Dependency
      </dependency>
     ```
     
-2. Add annotation `EnableRqueue` on application config
+2. Add annotation `EnableRqueue` on application config class
 3. Provide a RedisConnectionFactory bean
 
 
@@ -98,17 +98,20 @@ public class MessageListener {
     log.info("delayedMessage: {}", message);
   }
   
-  @RqueueListener(value = "delayed-queue-2", delayedQueue = "true", numRetries="3", deadLaterQueue="failed-delayed-queue")
+  @RqueueListener(value = "delayed-queue-2", delayedQueue = "true",
+   numRetries="3", deadLaterQueue="failed-delayed-queue")
   public void delayedMessageWithDlq(String message) {
     log.info("delayedMessageWithDlq: {}", message);
   }
   
-  @RqueueListener(value = "job-queue", delayedQueue = "true", numRetries="3", deadLaterQueue="failed-job-queue")
+  @RqueueListener(value = "job-queue", delayedQueue = "true",
+   numRetries="3", deadLaterQueue="failed-job-queue")
   public void onMessage(Job job) {
     log.info("Job created: {}", job);
   }
   
-  @RqueueListener(value = "notification-queue", delayedQueue = "true", numRetries="3", deadLaterQueue="failed-notification-queue")
+  @RqueueListener(value = "notification-queue", delayedQueue = "true", 
+  numRetries="3", deadLaterQueue="failed-notification-queue")
   public void onMessage(Notification notification) {
     log.info("Notification message: {}", notification);
   }
@@ -150,6 +153,8 @@ public class MessageService {
 1. [Rqueue Spring Boot-1](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example) 
 2. [Rqueue Spring Boot-2](https://github.com/sonus21/rqueue-task-exector) 
 2. [Rqueue Spring ](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example) 
+
+--------------
 
 ### Advance Configuration
 Apart from basic configuration, it can be customized heavily, like number of tasks it would be executing concurrently.
@@ -237,7 +242,7 @@ messageConverters.add(messageConverter);
 factory.setMessageConverters(messageConverters);
 ```
    
-More than one message converter can be specified as well, when more than one message converters are provided then they are used in the order, whichever returns **non null** value is used.
+More than one message converter can be used as well, when more than one message converters are provided then they are used in the order, whichever returns **non null** value is used.
 
 
 
