@@ -135,4 +135,8 @@ public class RqueueMessageSender {
     Validator.validateDelay(delayInMilliSecs);
     return messageWriter.pushMessage(queueName, message, retryCount, delayInMilliSecs);
   }
+
+  public List<MessageConverter> getMessageConverters() {
+    return messageWriter.getMessageConverters();
+  }
 }

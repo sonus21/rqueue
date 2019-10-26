@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.spring.boot;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -25,7 +26,9 @@ import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
+import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -121,5 +124,27 @@ public class RqueueMessageAutoConfigTest {
         .getBean(RedisConnectionFactory.class);
     assertNotNull(messageAutoConfig.rqueueMessageSender());
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
+  }
+
+  @Test
+  public void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    MessageConverter messageConverter = new GenericMessageConverter();
+    RqueueMessageAutoConfig messageAutoConfig = new RqueueMessageAutoConfig();
+    factory.setMessageConverters(Collections.singletonList(messageConverter));
+
+    FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
+    FieldUtils.writeField(messageAutoConfig, "beanFactory", beanFactory, true);
+    doReturn(mock(RedisConnectionFactory.class))
+        .when(beanFactory)
+        .getBean(RedisConnectionFactory.class);
+    assertNotNull(messageAutoConfig.rqueueMessageSender());
+    RqueueMessageSender messageSender = messageAutoConfig.rqueueMessageSender();
+    boolean messageConverterIsConfigured = false;
+    for (MessageConverter converter : messageSender.getMessageConverters()) {
+      messageConverterIsConfigured =
+          messageConverterIsConfigured || converter.hashCode() == messageConverter.hashCode();
+    }
+    assertTrue(messageConverterIsConfigured);
   }
 }

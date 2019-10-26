@@ -38,7 +38,6 @@ public class SimpleRqueueListenerContainerFactory {
   private RqueueMessageTemplate rqueueMessageTemplate;
   private RedisConnectionFactory redisConnectionFactory;
   private RqueueMessageHandler rqueueMessageHandler;
-  private StringMessageTemplate stringMessageTemplate;
   private List<MessageConverter> messageConverters;
   private Long backOffTime;
   private Integer maxNumWorkers;
@@ -188,12 +187,12 @@ public class SimpleRqueueListenerContainerFactory {
     if (this.rqueueMessageTemplate == null) {
       this.rqueueMessageTemplate = new RqueueMessageTemplate(redisConnectionFactory);
     }
-    if (this.stringMessageTemplate == null) {
-      this.stringMessageTemplate = new StringMessageTemplate(this.redisConnectionFactory);
-    }
+    StringMessageTemplate stringMessageTemplate =
+        new StringMessageTemplate(this.redisConnectionFactory);
+
     RqueueMessageListenerContainer messageListenerContainer =
         new RqueueMessageListenerContainer(
-            this.rqueueMessageHandler, this.rqueueMessageTemplate, this.stringMessageTemplate);
+            this.rqueueMessageHandler, this.rqueueMessageTemplate, stringMessageTemplate);
     messageListenerContainer.setAutoStartup(this.autoStartup);
     if (this.taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(this.taskExecutor);

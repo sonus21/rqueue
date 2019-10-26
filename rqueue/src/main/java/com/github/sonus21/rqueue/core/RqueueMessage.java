@@ -113,9 +113,9 @@ public class RqueueMessage implements Serializable {
 
   @Override
   public String toString() {
-    return "RqMessage(id="
+    return "RqueueMessage(id="
         + this.getId()
-        + "queueName="
+        + ", queueName="
         + this.getQueueName()
         + ", message="
         + this.getMessage()
@@ -143,7 +143,11 @@ public class RqueueMessage implements Serializable {
                 && otherMessage.getQueuedTime() == this.getQueuedTime()
                 && otherMessage.getProcessAt() == this.getProcessAt();
         if (equal) {
-          return otherMessage.getRetryCount() == null && this.getRetryCount() == null;
+          if (otherMessage.getRetryCount() == null && this.getRetryCount() == null) {
+            return true;
+          } else if (otherMessage.getRetryCount() != null && this.getRetryCount() != null) {
+            return this.getRetryCount().equals(otherMessage.getRetryCount());
+          }
         }
         return false;
       }

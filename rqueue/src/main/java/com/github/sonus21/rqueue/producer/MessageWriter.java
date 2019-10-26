@@ -63,10 +63,13 @@ class MessageWriter {
   private RqueueMessage buildMessage(
       String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
     Message<?> msg = messageConverter.toMessage(message, null);
-    logger.info("{}", msg.getPayload());
     if (msg == null) {
       throw new MessageConversionException("Message could not be build (null)");
     }
     return new RqueueMessage(queueName, (String) msg.getPayload(), retryCount, delayInMilliSecs);
+  }
+
+  List<MessageConverter> getMessageConverters() {
+    return messageConverter.getConverters();
   }
 }

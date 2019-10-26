@@ -37,6 +37,7 @@ import com.github.sonus21.rqueue.core.StringMessageTemplate;
 import com.github.sonus21.rqueue.utils.Constants;
 import io.lettuce.core.RedisCommandExecutionException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import org.junit.Test;
@@ -410,6 +411,38 @@ public class RqueueMessageListenerContainerTest {
         "SlowQueue message consumer call");
     container.stop();
     container.doDestroy();
+  }
+
+  @Test
+  public void internalTasksAreSharedWithTaskExecutor() throws Exception {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
+    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
+    RqueueMessageHandler messageHandler =
+        applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
+    messageHandler.setApplicationContext(applicationContext);
+    messageHandler.afterPropertiesSet();
+    RqueueMessageListenerContainer container =
+        new RqueueMessageListenerContainer(
+            messageHandler, mock(RqueueMessageTemplate.class), mock(StringMessageTemplate.class));
+    TestTaskExecutor taskExecutor = new TestTaskExecutor();
+    container.setTaskExecutor(taskExecutor);
+    container.afterPropertiesSet();
+    container.start();
+    assertEquals(0, taskExecutor.getSubmittedTaskCount());
+    container.stop();
+    container.doDestroy();
+  }
+
+  @Getter
+  private class TestTaskExecutor extends ThreadPoolTaskExecutor {
+    private int submittedTaskCount = 0;
+
+    @Override
+    public Future<?> submit(Runnable task) {
+      submittedTaskCount += 1;
+      return super.submit(task);
+    }
   }
 
   @SuppressWarnings({"UnusedDeclaration"})
