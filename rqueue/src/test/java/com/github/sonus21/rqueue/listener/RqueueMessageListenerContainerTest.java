@@ -414,7 +414,7 @@ public class RqueueMessageListenerContainerTest {
   }
 
   @Test
-  public void internalTasksAreSharedWithTaskExecutor() throws Exception {
+  public void internalTasksAreNotSharedWithTaskExecutor() throws Exception {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
