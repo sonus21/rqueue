@@ -145,7 +145,8 @@ public class RqueueMessage implements Serializable {
         if (equal) {
           if (otherMessage.getRetryCount() == null && this.getRetryCount() == null) {
             return true;
-          } else if (otherMessage.getRetryCount() != null && this.getRetryCount() != null) {
+          }
+          if (otherMessage.getRetryCount() != null && this.getRetryCount() != null) {
             return this.getRetryCount().equals(otherMessage.getRetryCount());
           }
         }

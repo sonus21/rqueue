@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.utils;
 
+@SuppressWarnings("WeakerAccess")
 public class TimedOutException extends Exception {
   public TimedOutException(String message) {
     super(message);

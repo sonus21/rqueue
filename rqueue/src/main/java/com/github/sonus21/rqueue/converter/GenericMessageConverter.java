@@ -80,6 +80,7 @@ public class GenericMessageConverter implements MessageConverter {
     }
   }
 
+  @SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
   private static class Msg {
     private String msg;
     private String name;

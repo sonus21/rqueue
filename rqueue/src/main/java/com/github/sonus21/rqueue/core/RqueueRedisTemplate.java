@@ -23,7 +23,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 abstract class RqueueRedisTemplate<K, V extends Serializable> {
-  protected RedisTemplate<K, V> redisTemplate;
+  RedisTemplate<K, V> redisTemplate;
 
   RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
     this.redisTemplate = new RedisTemplate<>();

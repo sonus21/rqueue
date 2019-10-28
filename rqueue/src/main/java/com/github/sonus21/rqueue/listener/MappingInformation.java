@@ -38,7 +38,6 @@ class MappingInformation implements Comparable<MappingInformation> {
     return this.queueNames;
   }
 
-  @SuppressWarnings("NullableProblems")
   @Override
   public int compareTo(MappingInformation o) {
     return 0;

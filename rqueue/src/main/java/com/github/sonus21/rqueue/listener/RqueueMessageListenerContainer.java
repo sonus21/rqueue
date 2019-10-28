@@ -52,7 +52,6 @@ public class RqueueMessageListenerContainer
   private boolean defaultTaskExecutor = false;
   private AsyncTaskExecutor taskExecutor;
   private AsyncTaskExecutor spinningTaskExecutor;
-  private boolean active = false;
   private boolean autoStartup = true;
   private Map<String, ConsumerQueueDetail> registeredQueues = new ConcurrentHashMap<>();
   private Map<String, Boolean> queueRunningState;
@@ -124,11 +123,15 @@ public class RqueueMessageListenerContainer
     return backOffTime;
   }
 
+  public void setTaskExecutor(AsyncTaskExecutor taskExecutor) {
+    this.taskExecutor = taskExecutor;
+  }
+
   @Override
+  @SuppressWarnings("RedundantThrows")
   public void destroy() throws Exception {
     synchronized (this.lifecycleMgr) {
       this.stop();
-      this.active = false;
       doDestroy();
     }
   }
@@ -167,6 +170,7 @@ public class RqueueMessageListenerContainer
     this.autoStartup = autoStartup;
   }
 
+  @SuppressWarnings("RedundantThrows")
   @Override
   public void afterPropertiesSet() throws Exception {
     synchronized (this.lifecycleMgr) {
@@ -178,7 +182,6 @@ public class RqueueMessageListenerContainer
           this.registeredQueues.put(queue, consumerQueueDetail);
         }
       }
-      this.active = true;
       this.lifecycleMgr.notifyAll();
     }
     if (this.taskExecutor == null) {
@@ -195,21 +198,7 @@ public class RqueueMessageListenerContainer
   }
 
   private AsyncTaskExecutor createSpinningTaskExecutor() {
-    String beanName = getBeanName();
-    ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-    threadPoolTaskExecutor.setThreadNamePrefix(
-        beanName != null ? beanName + "-" : DEFAULT_THREAD_NAME_PREFIX);
-    int messageMoverThreadsCount = getDelayedQueueCounts();
-    int messagePullerThreadsCount = getRegisteredQueues().size();
-    int spinningThreads = messageMoverThreadsCount + messagePullerThreadsCount;
-
-    if (spinningThreads > 0) {
-      threadPoolTaskExecutor.setCorePoolSize(spinningThreads);
-      threadPoolTaskExecutor.setMaxPoolSize(2 * spinningThreads);
-    }
-    threadPoolTaskExecutor.setQueueCapacity(0);
-    threadPoolTaskExecutor.afterPropertiesSet();
-    return threadPoolTaskExecutor;
+    return createTaskExecutor(true);
   }
 
   private Map<String, ConsumerQueueDetail> getRegisteredQueues() {
@@ -230,27 +219,63 @@ public class RqueueMessageListenerContainer
             .count();
   }
 
-  public AsyncTaskExecutor createDefaultTaskExecutor() {
+  @SuppressWarnings("InnerClassMayBeStatic")
+  private class ThreadCount {
+    private int corePoolSize;
+    private int maxPoolSize;
+
+    ThreadCount(int corePoolSize, int maxPoolSize) {
+      this.corePoolSize = corePoolSize;
+      this.maxPoolSize = maxPoolSize;
+    }
+
+    int getCorePoolSize() {
+      return corePoolSize;
+    }
+
+    int getMaxPoolSize() {
+      return maxPoolSize;
+    }
+
+    @Override
+    public String toString() {
+      return corePoolSize + " " + maxPoolSize;
+    }
+  }
+
+  private ThreadCount getThreadCount(boolean onlySpinning) {
+    int messageMoverThreadsCount = getDelayedQueueCounts();
+    int messagePullerThreadsCount = getRegisteredQueues().size();
+    int spinningThreads = messageMoverThreadsCount + messagePullerThreadsCount;
+    int corePoolSize = onlySpinning ? spinningThreads : spinningThreads + messagePullerThreadsCount;
+    int maxPoolSize =
+        onlySpinning
+            ? spinningThreads
+            : spinningThreads
+                + (getMaxNumWorkers() == null
+                    ? messagePullerThreadsCount * DEFAULT_WORKER_COUNT_PER_QUEUE
+                    : getMaxNumWorkers());
+    return new ThreadCount(corePoolSize, maxPoolSize);
+  }
+
+  private AsyncTaskExecutor createTaskExecutor(boolean onlySpinningThread) {
     String beanName = getBeanName();
     ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
     threadPoolTaskExecutor.setThreadNamePrefix(
         beanName != null ? beanName + "-" : DEFAULT_THREAD_NAME_PREFIX);
-    int messageMoverThreadsCount = getDelayedQueueCounts();
-    int messagePullerThreadsCount = getRegisteredQueues().size();
-    int spinningThreads = messageMoverThreadsCount + messagePullerThreadsCount;
-
-    if (spinningThreads > 0) {
-      // one worker for each queue
-      threadPoolTaskExecutor.setCorePoolSize(spinningThreads + messagePullerThreadsCount);
-      int maxWorkers =
-          getMaxNumWorkers() == null
-              ? messagePullerThreadsCount * DEFAULT_WORKER_COUNT_PER_QUEUE
-              : getMaxNumWorkers();
-      threadPoolTaskExecutor.setMaxPoolSize(spinningThreads + maxWorkers);
+    ThreadCount threadCount = getThreadCount(onlySpinningThread);
+    if (threadCount.getCorePoolSize() > 0) {
+      threadPoolTaskExecutor.setCorePoolSize(threadCount.getCorePoolSize());
+      threadPoolTaskExecutor.setMaxPoolSize(threadCount.getMaxPoolSize());
     }
+    System.out.println(threadCount);
     threadPoolTaskExecutor.setQueueCapacity(0);
     threadPoolTaskExecutor.afterPropertiesSet();
     return threadPoolTaskExecutor;
+  }
+
+  public AsyncTaskExecutor createDefaultTaskExecutor() {
+    return createTaskExecutor(false);
   }
 
   private ConsumerQueueDetail getConsumerQueueDetail(
@@ -377,10 +402,6 @@ public class RqueueMessageListenerContainer
     }
   }
 
-  public void setTaskExecutor(AsyncTaskExecutor taskExecutor) {
-    this.taskExecutor = taskExecutor;
-  }
-
   private class AsynchronousMessageMover implements Runnable {
     private final ConsumerQueueDetail queueDetail;
 
@@ -396,7 +417,7 @@ public class RqueueMessageListenerContainer
               rqueueMessageTemplate.getFirstFromZset(queueDetail.getZsetName());
           if (rqueueMessage != null && rqueueMessage.getProcessAt() < System.currentTimeMillis()) {
             if (lockManager.acquireLock(rqueueMessage.getId())) {
-              // TODO use pipleline here
+              // TODO use pipe-line here
               rqueueMessageTemplate.add(queueDetail.getQueueName(), rqueueMessage);
               rqueueMessageTemplate.removeFromZset(queueDetail.getZsetName(), rqueueMessage);
             }

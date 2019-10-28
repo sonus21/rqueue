@@ -72,6 +72,7 @@ public abstract class ValueResolver {
     return Integer.parseInt(name);
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static boolean convertToBoolean(String s) {
     String tmpString = s.trim();
     if (tmpString.equalsIgnoreCase("true")) {

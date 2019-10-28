@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -50,6 +51,7 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<String, RqueueMes
     if (CollectionUtils.isEmpty(msgs)) {
       return null;
     }
-    return msgs.stream().findFirst().get().getValue();
+    Optional<TypedTuple<RqueueMessage>> element = msgs.stream().findFirst();
+    return element.map(TypedTuple::getValue).orElse(null);
   }
 }

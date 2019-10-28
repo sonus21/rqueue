@@ -158,6 +158,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return messageConverters;
   }
 
+  @SuppressWarnings({"WeakerAccess"})
   public void setMessageConverters(List<MessageConverter> messageConverters) {
     Assert.notEmpty(messageConverters, "messageConverters list can not be empty or null");
     this.messageConverters = messageConverters;
