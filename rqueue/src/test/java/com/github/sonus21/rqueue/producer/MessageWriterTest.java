@@ -63,7 +63,6 @@ public class MessageWriterTest {
     assertNull(rqueueMessage.getRetryCount());
     assertEquals(0, rqueueMessage.getProcessAt());
     assertEquals(queueName, rqueueMessage.getQueueName());
-    assertNull(rqueueMessage.getAccessTime());
     assertTrue(rqueueMessage.getQueuedTime() <= System.currentTimeMillis());
     assertNull(rqueueMessage.getReEnqueuedAt());
   }
@@ -90,7 +89,6 @@ public class MessageWriterTest {
     assertEquals((Integer) 3, rqueueMessage.getRetryCount());
     assertTrue(System.currentTimeMillis() + 100 >= rqueueMessage.getProcessAt());
     assertEquals(queueName, rqueueMessage.getQueueName());
-    assertNull(rqueueMessage.getAccessTime());
     assertTrue(rqueueMessage.getQueuedTime() <= System.currentTimeMillis());
     assertNull(rqueueMessage.getReEnqueuedAt());
   }
@@ -117,7 +115,6 @@ public class MessageWriterTest {
     assertEquals((Integer) 3, rqueueMessage.getRetryCount());
     assertTrue(System.currentTimeMillis() + 1200 >= rqueueMessage.getProcessAt());
     assertEquals(queueName, rqueueMessage.getQueueName());
-    assertNull(rqueueMessage.getAccessTime());
     assertTrue(rqueueMessage.getQueuedTime() <= System.currentTimeMillis());
     assertNull(rqueueMessage.getReEnqueuedAt());
   }

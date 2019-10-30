@@ -31,7 +31,6 @@ public class RqueueMessage implements Serializable, Cloneable {
   private Integer retryCount;
   private long queuedTime;
   private long processAt;
-  private Long accessTime;
   private Long reEnqueuedAt;
   private int failureCount;
 
@@ -50,10 +49,6 @@ public class RqueueMessage implements Serializable, Cloneable {
 
   public void updateReEnqueuedAt() {
     this.reEnqueuedAt = System.currentTimeMillis();
-  }
-
-  public void updateAccessTime() {
-    this.accessTime = System.currentTimeMillis();
   }
 
   public String getQueueName() {
@@ -96,14 +91,6 @@ public class RqueueMessage implements Serializable, Cloneable {
     this.processAt = processAt;
   }
 
-  public Long getAccessTime() {
-    return this.accessTime;
-  }
-
-  public void setAccessTime(Long accessTime) {
-    this.accessTime = accessTime;
-  }
-
   public Long getReEnqueuedAt() {
     return this.reEnqueuedAt;
   }
@@ -126,10 +113,10 @@ public class RqueueMessage implements Serializable, Cloneable {
         + this.getQueuedTime()
         + ", processAt="
         + this.getProcessAt()
-        + ", accessTime="
-        + this.getAccessTime()
         + ", reEnqueuedAt="
         + this.getReEnqueuedAt()
+        + ", failureCount="
+        + this.getFailureCount()
         + ")";
   }
 

@@ -16,9 +16,15 @@
 
 package com.github.sonus21.rqueue.spring.boot.integration;
 
+import static com.github.sonus21.rqueue.utils.QueueInfo.getProcessingQueueChannelName;
+import static com.github.sonus21.rqueue.utils.QueueInfo.getProcessingQueueName;
+
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import java.util.Arrays;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -37,13 +43,35 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class ApplicationWithAutoStartSchedulerDisabled extends BaseApplication {
 
   @Bean
+  public RqueueMessageTemplate rqueueMessageTemplate(
+      RedisConnectionFactory redisConnectionFactory) {
+    // set visibility timeout to 10 seconds
+    return new RqueueMessageTemplate(redisConnectionFactory) {
+      @Override
+      public RqueueMessage pop(String queueName) {
+        long currentTime = System.currentTimeMillis();
+        return scriptExecutor.execute(
+            removeScript,
+            Arrays.asList(
+                queueName,
+                getProcessingQueueName(queueName),
+                getProcessingQueueChannelName(queueName)),
+            currentTime,
+            currentTime + 10000L);
+      }
+    };
+  }
+
+  @Bean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
-      RedisConnectionFactory redisConnectionFactory, RqueueMessageHandler rqueueMessageHandler) {
+      RedisConnectionFactory redisConnectionFactory,
+      RqueueMessageHandler rqueueMessageHandler,
+      RqueueMessageTemplate rqueueMessageTemplate) {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     factory.setRedisConnectionFactory(redisConnectionFactory);
+    factory.setRqueueMessageTemplate(rqueueMessageTemplate);
     RqueueMessageListenerContainer container = factory.createMessageListenerContainer();
-    container.setAutoStartScheduler(false);
     container.setMaxNumWorkers(100);
     return container;
   }

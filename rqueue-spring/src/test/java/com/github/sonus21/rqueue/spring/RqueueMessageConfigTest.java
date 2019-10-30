@@ -84,7 +84,7 @@ public class RqueueMessageConfigTest {
   }
 
   @Test
-  public void simpleMessageListenerContainer() throws IllegalAccessException {
+  public void rqueueMessageListenerContainer() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueMessageConfig messageAutoConfig = new RqueueMessageConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
@@ -93,7 +93,7 @@ public class RqueueMessageConfigTest {
     doReturn(mock(RedisConnectionFactory.class))
         .when(beanFactory)
         .getBean(RedisConnectionFactory.class);
-    messageAutoConfig.simpleMessageListenerContainer(messageHandler);
+    messageAutoConfig.rqueueMessageListenerContainer(messageHandler);
     assertEquals(factory.getRqueueMessageHandler().hashCode(), messageHandler.hashCode());
   }
 

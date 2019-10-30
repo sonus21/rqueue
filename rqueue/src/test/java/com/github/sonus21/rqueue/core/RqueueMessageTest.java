@@ -57,14 +57,6 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testSetAccessTime() throws JsonProcessingException {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
-    Long time = System.currentTimeMillis() - delay;
-    message.setAccessTime(time);
-    assertEquals(message.getAccessTime(), time);
-  }
-
-  @Test
   public void testObjectEquality() throws JsonProcessingException {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
     String stringMessage = objectMapper.writeValueAsString(message);
@@ -110,7 +102,7 @@ public class RqueueMessageTest {
             + message.getQueuedTime()
             + ", processAt="
             + message.getProcessAt()
-            + ", accessTime=null, reEnqueuedAt=null)";
+            + ", reEnqueuedAt=null, failureCount=0)";
     assertEquals(toString, message.toString());
   }
 }

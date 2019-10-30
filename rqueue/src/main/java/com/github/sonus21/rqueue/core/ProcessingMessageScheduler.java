@@ -17,16 +17,23 @@
 package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.utils.QueueInfo;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.core.RedisTemplate;
 
 public class ProcessingMessageScheduler extends MessageScheduler {
 
   public ProcessingMessageScheduler(
-      LongMessageTemplate messageTemplate,
-      RedisMessageListenerContainer redisMessageListenerContainer,
-      int poolSize,
-      boolean scheduleTaskAtStartup) {
-    super(messageTemplate, redisMessageListenerContainer, poolSize, scheduleTaskAtStartup);
+      RedisTemplate<String, Long> redisTemplate, int poolSize, boolean scheduleTaskAtStartup) {
+    super(redisTemplate, poolSize, scheduleTaskAtStartup);
+  }
+
+  @Override
+  protected String getChannelName(String queueName) {
+    return QueueInfo.getProcessingQueueChannelName(queueName);
+  }
+
+  @Override
+  protected String getZsetName(String queueName) {
+    return QueueInfo.getProcessingQueueName(queueName);
   }
 
   @Override

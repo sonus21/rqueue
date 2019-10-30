@@ -14,11 +14,27 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.listener;
 
-@SuppressWarnings("WeakerAccess")
-public class TimedOutException extends Exception {
-  public TimedOutException(String message) {
-    super(message);
+class ThreadCount {
+  private int corePoolSize;
+  private int maxPoolSize;
+
+  ThreadCount(int corePoolSize, int maxPoolSize) {
+    this.corePoolSize = corePoolSize;
+    this.maxPoolSize = maxPoolSize;
+  }
+
+  int getCorePoolSize() {
+    return corePoolSize;
+  }
+
+  int getMaxPoolSize() {
+    return maxPoolSize;
+  }
+
+  @Override
+  public String toString() {
+    return corePoolSize + " " + maxPoolSize;
   }
 }

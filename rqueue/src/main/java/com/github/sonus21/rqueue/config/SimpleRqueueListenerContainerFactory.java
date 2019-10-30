@@ -187,8 +187,7 @@ public class SimpleRqueueListenerContainerFactory {
       this.rqueueMessageTemplate = new RqueueMessageTemplate(redisConnectionFactory);
     }
     RqueueMessageListenerContainer messageListenerContainer =
-        new RqueueMessageListenerContainer(
-            this.rqueueMessageHandler, this.rqueueMessageTemplate, this.redisConnectionFactory);
+        new RqueueMessageListenerContainer(this.rqueueMessageHandler, this.rqueueMessageTemplate);
     messageListenerContainer.setAutoStartup(this.autoStartup);
     if (this.taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(this.taskExecutor);

@@ -14,13 +14,10 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.exception;
 
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-
-public class LongMessageTemplate extends RqueueRedisTemplate<String, RqueueMessage> {
-
-  public LongMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
-    super(redisConnectionFactory);
+public class TimedOutException extends Exception {
+  public TimedOutException(String message) {
+    super(message);
   }
 }

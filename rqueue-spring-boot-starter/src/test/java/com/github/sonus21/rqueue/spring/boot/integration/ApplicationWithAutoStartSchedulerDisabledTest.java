@@ -16,16 +16,29 @@
 
 package com.github.sonus21.rqueue.spring.boot.integration;
 
+import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
+import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
+import static org.junit.Assert.assertTrue;
+
+import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.integration.app.dto.EmailTask;
+import com.github.sonus21.rqueue.spring.boot.integration.app.dto.Job;
 import com.github.sonus21.rqueue.spring.boot.integration.app.service.ConsumedMessageService;
-import com.github.sonus21.rqueue.utils.TimedOutException;
+import com.github.sonus21.rqueue.spring.boot.integration.app.service.FailureManager;
+import com.github.sonus21.rqueue.utils.QueueInfo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -34,14 +47,20 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class ApplicationWithAutoStartSchedulerDisabledTest {
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
+  @Autowired private RedisConnectionFactory redisConnectionFactory;
+  @Autowired private FailureManager failureManager;
 
   @Value("${email.queue.name}")
   private String emailQueue;
 
+  @Value("${job.queue.name}")
+  private String jobQueueName;
+
+  private int messageCount = 10;
+
   @Test
   public void testPublishMessageIsTriggeredOnMessageAddition()
       throws InterruptedException, TimedOutException {
-    int messageCount = 20;
     List<EmailTask> emailTasks = new ArrayList<>();
     List<String> ids = new ArrayList<>();
     for (int i = 0; i < messageCount; i++) {
@@ -52,14 +71,51 @@ public class ApplicationWithAutoStartSchedulerDisabledTest {
     }
     Thread.sleep(5000);
     messageSender.put(emailQueue, EmailTask.newInstance());
-    //    waitFor(
-    //        () -> 1 == messageSender.getAllMessages(emailQueue).size(),
-    //        20000L,
-    //        "messages to be consumed");
-    //    assertEquals(messageCount, consumedMessageService.getMessages(ids,
-    // EmailTask.class).size());
-    //    assertTrue(
-    //        emailTasks.containsAll(consumedMessageService.getMessages(ids,
-    // EmailTask.class).values()));
+    waitFor(
+        () -> 1 == messageSender.getAllMessages(emailQueue).size(),
+        60000L,
+        "messages to be consumed");
+    waitFor(
+        () -> messageCount == consumedMessageService.getMessages(ids, EmailTask.class).size(),
+        "message count to be matched");
+    assertTrue(
+        emailTasks.containsAll(consumedMessageService.getMessages(ids, EmailTask.class).values()));
+  }
+
+  private RqueueMessage buildMessage(Object object) {
+    GenericMessageConverter converter = new GenericMessageConverter();
+    Message<?> msg = converter.toMessage(object, null);
+    return new RqueueMessage(jobQueueName, (String) msg.getPayload(), 1, 100L);
+  }
+
+  @Test
+  public void testPublishMessageIsTriggeredOnMessageRemoval()
+      throws InterruptedException, TimedOutException {
+    RedisTemplate<String, RqueueMessage> redisTemplate = getRedisTemplate(redisConnectionFactory);
+    String processingQueueName = QueueInfo.getProcessingQueueName(jobQueueName);
+    long currentTime = System.currentTimeMillis();
+    List<Job> jobs = new ArrayList<>();
+    List<String> ids = new ArrayList<>();
+    int maxDelay = 2000;
+    Random random = new Random();
+    for (int i = 0; i < messageCount; i++) {
+      Job job = Job.newInstance();
+      jobs.add(job);
+      ids.add(job.getId());
+      int delay = random.nextInt(maxDelay);
+      if (random.nextBoolean()) {
+        delay = delay * -1;
+      }
+      redisTemplate.opsForZSet().add(processingQueueName, buildMessage(job), currentTime + delay);
+    }
+    Thread.sleep(maxDelay);
+    waitFor(
+        () -> 0 == messageSender.getAllMessages(jobQueueName).size(),
+        30000L,
+        "messages to be consumed");
+    waitFor(
+        () -> messageCount == consumedMessageService.getMessages(ids, Job.class).size(),
+        "message count to be matched");
+    assertTrue(jobs.containsAll(consumedMessageService.getMessages(ids, Job.class).values()));
   }
 }

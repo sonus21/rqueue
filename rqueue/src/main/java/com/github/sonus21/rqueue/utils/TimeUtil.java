@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import java.util.function.Supplier;
 
 public abstract class TimeUtil {

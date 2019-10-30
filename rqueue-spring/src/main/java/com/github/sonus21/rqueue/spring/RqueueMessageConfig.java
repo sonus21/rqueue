@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 @Configuration
 public class RqueueMessageConfig extends RqueueConfig {
@@ -38,7 +39,7 @@ public class RqueueMessageConfig extends RqueueConfig {
   }
 
   @Bean
-  public RqueueMessageListenerContainer simpleMessageListenerContainer(
+  public RqueueMessageListenerContainer rqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler) {
     if (simpleRqueueListenerContainerFactory.getRqueueMessageHandler() == null) {
       simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
@@ -57,5 +58,12 @@ public class RqueueMessageConfig extends RqueueConfig {
           simpleRqueueListenerContainerFactory.getMessageConverters());
     }
     return new RqueueMessageSender(getMessageTemplate(getRedisConnectionFactory()));
+  }
+
+  @Bean
+  public RedisMessageListenerContainer redisMessageListenerContainer() {
+    RedisMessageListenerContainer messageListenerContainer = new RedisMessageListenerContainer();
+    messageListenerContainer.setConnectionFactory(getRedisConnectionFactory());
+    return messageListenerContainer;
   }
 }

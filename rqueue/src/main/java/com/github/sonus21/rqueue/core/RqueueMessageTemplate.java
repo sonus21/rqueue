@@ -41,9 +41,9 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<String, RqueueMes
   private RedisScript<Long> addScript = RedisScript.of(addMessage, Long.class);
   private RedisScript<Long> removeAdnMessageScript =
       RedisScript.of(removeAndAddMessage, Long.class);
-  private RedisScript<RqueueMessage> removeScript =
+  protected RedisScript<RqueueMessage> removeScript =
       RedisScript.of(removeMessage, RqueueMessage.class);
-  private DefaultScriptExecutor<String> scriptExecutor;
+  protected DefaultScriptExecutor<String> scriptExecutor;
 
   public RqueueMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
     super(redisConnectionFactory);

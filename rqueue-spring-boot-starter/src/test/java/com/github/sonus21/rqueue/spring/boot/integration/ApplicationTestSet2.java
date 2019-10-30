@@ -32,11 +32,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = Application.class)
-public class ApplicationTest {
+@TestPropertySource(locations = "classpath:application-test2.properties")
+public class ApplicationTestSet2 {
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private FailureManager failureManager;
@@ -46,9 +48,6 @@ public class ApplicationTest {
 
   @Value("${email.queue.name}")
   private String emailQueue;
-
-  @Value("${email.dead.later.queue.name}")
-  private String emailDelayedQueue;
 
   @Value("${email.queue.retry.count}")
   private int emailRetryCount;
@@ -60,55 +59,48 @@ public class ApplicationTest {
   private int notificationRetryCount;
 
   @Test
-  public void testAfterRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
-    Job job = Job.newInstance();
-    failureManager.createFailureDetail(job.getId(), 3, 10);
-    messageSender.put(jobQueueName, job);
+  public void testNotificationIsTriggered() throws TimedOutException {
+    Notification notification = Notification.newInstance();
+    messageSender.put(notificationQueue, notification);
     waitFor(
         () -> {
-          Job jobInDb = consumedMessageService.getMessage(job.getId(), Job.class);
-          return job.equals(jobInDb);
+          Notification notificationInDb =
+              consumedMessageService.getMessage(notification.getId(), Notification.class);
+          return notification.equals(notificationInDb);
+        },
+        "notification to be executed");
+  }
+
+  @Test
+  public void testEmailIsRetried() throws TimedOutException {
+    EmailTask emailTask = EmailTask.newInstance();
+    failureManager.createFailureDetail(emailTask.getId(), emailRetryCount - 1, emailRetryCount - 1);
+    messageSender.put(emailQueue, emailTask);
+    waitFor(
+        () -> failureManager.getFailureCount(emailTask.getId()) == emailRetryCount - 1,
+        "email task needs to be retried");
+    waitFor(
+        () -> {
+          EmailTask emailTaskInDb =
+              consumedMessageService.getMessage(emailTask.getId(), EmailTask.class);
+          return emailTask.equals(emailTaskInDb);
         },
         "job to be executed");
+  }
+
+  @Test
+  public void testJobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
+    Job job = Job.newInstance();
+    failureManager.createFailureDetail(job.getId(), -1, 0);
+    messageSender.put(jobQueueName, job);
+    waitFor(() -> failureManager.getFailureCount(job.getId()) >= 3, "Job to be retried");
     waitFor(
         () -> {
           List<Object> messages = messageSender.getAllMessages(jobQueueName);
-          return !messages.contains(job);
+          return messages.contains(job);
         },
-        "message should be deleted from internal storage");
-  }
-
-  @Test
-  public void testMessageMovedToDelayedQueue() throws TimedOutException {
-    EmailTask emailTask = EmailTask.newInstance();
-    failureManager.createFailureDetail(emailTask.getId(), -1, 0);
-    messageSender.put(emailQueue, emailTask, 1000L);
-    waitFor(
-        () -> emailRetryCount == failureManager.getFailureCount(emailTask.getId()),
-        "all retry to be exhausted");
-    waitFor(
-        () -> {
-          List<Object> messages = messageSender.getAllMessages(emailDelayedQueue);
-          return messages.contains(emailTask);
-        },
-        "message should be moved to delayed queue");
-    assertEquals(emailRetryCount, failureManager.getFailureCount(emailTask.getId()));
-  }
-
-  @Test
-  public void testMessageIsDiscardedAfterRetries() throws TimedOutException {
-    Notification notification = Notification.newInstance();
-    failureManager.createFailureDetail(notification.getId(), -1, 0);
-    messageSender.put(notificationQueue, notification, 1000L);
-    waitFor(
-        () -> emailRetryCount == failureManager.getFailureCount(notification.getId()),
-        "all retry to be exhausted");
-    waitFor(
-        () -> {
-          List<Object> messages = messageSender.getAllMessages(notificationQueue);
-          return !messages.contains(notification);
-        },
-        "message to be discarded");
-    assertEquals(emailRetryCount, failureManager.getFailureCount(notification.getId()));
+        "message should be present in internal storage");
+    // more then one copy should not be present
+    assertEquals(1, messageSender.getAllMessages(jobQueueName).size());
   }
 }

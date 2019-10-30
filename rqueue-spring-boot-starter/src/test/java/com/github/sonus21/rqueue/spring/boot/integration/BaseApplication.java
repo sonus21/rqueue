@@ -32,6 +32,9 @@ import redis.embedded.RedisServer;
 public abstract class BaseApplication {
   private RedisServer redisServer;
 
+  @Value("${mysql.db.name}")
+  private String dbName;
+
   @Value("${spring.redis.port}")
   private int redisPort;
 
@@ -57,7 +60,7 @@ public abstract class BaseApplication {
   @Bean
   public DataSource dataSource() {
     EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.H2).build();
+    return builder.setType(EmbeddedDatabaseType.H2).setName(dbName).build();
   }
 
   @Bean
