@@ -25,7 +25,7 @@ import com.github.sonus21.rqueue.spring.boot.integration.app.dto.Job;
 import com.github.sonus21.rqueue.spring.boot.integration.app.dto.Notification;
 import com.github.sonus21.rqueue.spring.boot.integration.app.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.spring.boot.integration.app.service.FailureManager;
-import com.github.sonus21.rqueue.utils.TimedOutException;
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;

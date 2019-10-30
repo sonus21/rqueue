@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 @Configuration
 public class RqueueMessageAutoConfig extends RqueueConfig {
@@ -61,5 +62,13 @@ public class RqueueMessageAutoConfig extends RqueueConfig {
           simpleRqueueListenerContainerFactory.getMessageConverters());
     }
     return new RqueueMessageSender(getMessageTemplate(getRedisConnectionFactory()));
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public RedisMessageListenerContainer redisMessageListenerContainer() {
+    RedisMessageListenerContainer messageListenerContainer = new RedisMessageListenerContainer();
+    messageListenerContainer.setConnectionFactory(getRedisConnectionFactory());
+    return messageListenerContainer;
   }
 }

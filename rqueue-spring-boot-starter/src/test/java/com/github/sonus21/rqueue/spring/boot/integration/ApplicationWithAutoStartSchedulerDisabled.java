@@ -43,7 +43,6 @@ public class ApplicationWithAutoStartSchedulerDisabled extends BaseApplication {
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueMessageListenerContainer container = factory.createMessageListenerContainer();
-    container.setAutoStartScheduler(false);
     container.setMaxNumWorkers(100);
     return container;
   }

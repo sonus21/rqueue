@@ -16,14 +16,21 @@
 
 package com.github.sonus21.rqueue.config;
 
+import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
+
+import com.github.sonus21.rqueue.core.MessageScheduler;
+import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 public abstract class RqueueConfig {
+  @Value("${auto.start.scheduler:true}")
+  private boolean autoStartScheduler;
+
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
       new SimpleRqueueListenerContainerFactory();
@@ -48,9 +55,14 @@ public abstract class RqueueConfig {
   }
 
   @Bean
-  public RedisMessageListenerContainer rqueueRedisMessageListenerContainer() {
-    RedisMessageListenerContainer messageListenerContainer = new RedisMessageListenerContainer();
-    messageListenerContainer.setConnectionFactory(getRedisConnectionFactory());
-    return messageListenerContainer;
+  public MessageScheduler messageScheduler() {
+    return new MessageScheduler(
+        getRedisTemplate(getRedisConnectionFactory()), 5, autoStartScheduler);
+  }
+
+  @Bean
+  public ProcessingMessageScheduler processingMessageScheduler() {
+    return new ProcessingMessageScheduler(
+        getRedisTemplate(getRedisConnectionFactory()), 1, autoStartScheduler);
   }
 }

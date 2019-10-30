@@ -16,10 +16,14 @@
 
 package com.github.sonus21.rqueue.spring.boot.integration;
 
+import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.integration.app.dto.EmailTask;
 import com.github.sonus21.rqueue.spring.boot.integration.app.service.ConsumedMessageService;
-import com.github.sonus21.rqueue.utils.TimedOutException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -52,14 +56,12 @@ public class ApplicationWithAutoStartSchedulerDisabledTest {
     }
     Thread.sleep(5000);
     messageSender.put(emailQueue, EmailTask.newInstance());
-    //    waitFor(
-    //        () -> 1 == messageSender.getAllMessages(emailQueue).size(),
-    //        20000L,
-    //        "messages to be consumed");
-    //    assertEquals(messageCount, consumedMessageService.getMessages(ids,
-    // EmailTask.class).size());
-    //    assertTrue(
-    //        emailTasks.containsAll(consumedMessageService.getMessages(ids,
-    // EmailTask.class).values()));
+    waitFor(
+        () -> 1 == messageSender.getAllMessages(emailQueue).size(),
+        20000L,
+        "messages to be consumed");
+    assertEquals(messageCount, consumedMessageService.getMessages(ids, EmailTask.class).size());
+    assertTrue(
+        emailTasks.containsAll(consumedMessageService.getMessages(ids, EmailTask.class).values()));
   }
 }

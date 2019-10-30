@@ -38,7 +38,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.support.StaticApplicationContext;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -48,9 +47,7 @@ public class RqueueMessageSchedulerListenerContainerTest {
   private static final String fastQueue = "fast-queue";
   private RqueueMessageListenerContainer container =
       new RqueueMessageListenerContainer(
-          mock(RqueueMessageHandler.class),
-          mock(RqueueMessageTemplate.class),
-          mock(RedisConnectionFactory.class));
+          mock(RqueueMessageHandler.class), mock(RqueueMessageTemplate.class));
 
   @Test
   public void setDelayedQueueSleepTime() {
@@ -174,8 +171,7 @@ public class RqueueMessageSchedulerListenerContainerTest {
     messageHandler.afterPropertiesSet();
 
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, mock(RedisConnectionFactory.class));
+        new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     FieldUtils.writeField(
         container,
         "rqueueRedisMessageListenerContainer",
@@ -225,8 +221,7 @@ public class RqueueMessageSchedulerListenerContainerTest {
     container.setBackOffTime(10L);
 
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, mock(RedisConnectionFactory.class));
+        new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     FieldUtils.writeField(
         container,
         "rqueueRedisMessageListenerContainer",
@@ -270,8 +265,7 @@ public class RqueueMessageSchedulerListenerContainerTest {
     messageHandler.afterPropertiesSet();
 
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, mock(RedisConnectionFactory.class));
+        new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     FieldUtils.writeField(
         container,
         "rqueueRedisMessageListenerContainer",
@@ -343,8 +337,7 @@ public class RqueueMessageSchedulerListenerContainerTest {
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(
-            messageHandler, mock(RqueueMessageTemplate.class), mock(RedisConnectionFactory.class));
+        new RqueueMessageListenerContainer(messageHandler, mock(RqueueMessageTemplate.class));
     FieldUtils.writeField(
         container,
         "rqueueRedisMessageListenerContainer",
@@ -368,10 +361,7 @@ public class RqueueMessageSchedulerListenerContainerTest {
     private boolean doStopMethodIsCalled = false;
 
     StubMessageSchedulerListenerContainer() {
-      super(
-          mock(RqueueMessageHandler.class),
-          mock(RqueueMessageTemplate.class),
-          mock(RedisConnectionFactory.class));
+      super(mock(RqueueMessageHandler.class), mock(RqueueMessageTemplate.class));
     }
 
     @Override

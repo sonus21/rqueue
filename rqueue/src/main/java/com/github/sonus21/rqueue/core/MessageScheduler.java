@@ -19,9 +19,11 @@ package com.github.sonus21.rqueue.core;
 import static java.lang.Long.max;
 import static java.lang.Math.min;
 
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.utils.QueueInfo;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,99 +31,173 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.util.Assert;
 
-public class MessageScheduler {
+public class MessageScheduler implements InitializingBean, DisposableBean, SmartLifecycle {
   private static final Logger logger = LoggerFactory.getLogger(MessageScheduler.class);
-  private static final long defaultDelay = 5000L;
-  private static final long maxMessage = 100;
-  private static final long maxDelay = 10;
-  private static final int maxRecursionDepth = 100;
+  private static final long DEFAULT_DELAY = 5000L;
+  private static final long MAX_MESSAGE = 100;
+  private static final long MAX_DELAY = 10;
+  private static final int MAX_RECURSION_DEPTH = 100;
   private final Object monitor = new Object();
   private final int poolSize;
   private volatile boolean running = false;
   private boolean scheduleTaskAtStartup;
   private Resource resource = new ClassPathResource("scripts/push-message.lua");
-  private RedisScript<Long> redisScript = RedisScript.of(resource, Long.class);
-  private MessageSchedulerListener messageSchedulerListener = new MessageSchedulerListener();
-  private LongMessageTemplate messageTemplate;
+  private RedisScript<Long> redisScript;
+  private MessageSchedulerListener messageSchedulerListener;
+  private RedisTemplate<String, Long> redisTemplate;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
-  private Map<String, ScheduledTaskDetail> queueNameToScheduledTask = new ConcurrentHashMap<>();
-  private Map<String, String> channelNameToQueueName = new ConcurrentHashMap<>();
-  private Map<String, String> queueNameToZsetName = new ConcurrentHashMap<>();
-
+  private Map<String, Boolean> queueRunningState;
+  private Map<String, ScheduledTaskDetail> queueNameToScheduledTask;
+  private Map<String, String> channelNameToQueueName;
+  private Map<String, String> queueNameToZsetName;
   private ScheduledExecutorService scheduledExecutorService;
-  private RedisMessageListenerContainer rqueueRedisListenerContainer;
+
+  @Autowired private RqueueMessageListenerContainer rqueueMessageListenerContainer;
+  @Autowired private RedisMessageListenerContainer redisMessageListenerContainer;
 
   public MessageScheduler(
-      LongMessageTemplate messageTemplate,
-      RedisMessageListenerContainer redisMessageListenerContainer,
-      int poolSize,
-      boolean scheduleTaskAtStartup) {
-    this.messageTemplate = messageTemplate;
-    this.rqueueRedisListenerContainer = redisMessageListenerContainer;
+      RedisTemplate<String, Long> redisTemplate, int poolSize, boolean scheduleTaskAtStartup) {
     this.poolSize = poolSize;
     this.scheduleTaskAtStartup = scheduleTaskAtStartup;
+    this.redisTemplate = redisTemplate;
   }
 
-  public void start(Collection<MessageQueue> messageQueues) {
+  @Override
+  public boolean isRunning() {
     synchronized (monitor) {
-      if (messageQueues.size() > 0 && !this.running) {
-        this.running = true;
-        defaultScriptExecutor = new DefaultScriptExecutor<>(messageTemplate.redisTemplate);
-        scheduledExecutorService =
-            Executors.newScheduledThreadPool(min(poolSize, messageQueues.size()));
-        long scheduleAt = System.currentTimeMillis() + maxDelay;
-        for (MessageQueue messageQueue : messageQueues) {
-          if (isScheduleTaskAtStartup()) {
-            ScheduledTaskDetail taskDetail =
-                schedule(messageQueue.getQueueName(), messageQueue.getZsetName(), scheduleAt, true);
-            queueNameToScheduledTask.put(messageQueue.getQueueName(), taskDetail);
-          }
-          rqueueRedisListenerContainer.addMessageListener(
-              messageSchedulerListener, new ChannelTopic(messageQueue.getChannelName()));
-          channelNameToQueueName.put(messageQueue.getChannelName(), messageQueue.getQueueName());
-          queueNameToZsetName.put(messageQueue.getQueueName(), messageQueue.getZsetName());
-        }
-      }
+      return this.running;
     }
   }
 
-  public boolean isRunning() {
-    return this.running;
+  @Override
+  public void start() {
+    logger.info("Starting message mover scheduler");
+    synchronized (monitor) {
+      running = true;
+      monitor.notifyAll();
+    }
+    doStart();
   }
 
+  protected void doStart() {
+    for (String queueName : queueRunningState.keySet()) {
+      startQueue(queueName);
+    }
+  }
+
+  private void startQueue(String queueName) {
+    if (queueRunningState.containsKey(queueName) && queueRunningState.get(queueName)) {
+      return;
+    }
+    queueRunningState.put(queueName, true);
+    long scheduleAt = System.currentTimeMillis() + MAX_DELAY;
+    if (isScheduleTaskAtStartup()) {
+      ScheduledTaskDetail taskDetail =
+          schedule(queueName, getZsetName(queueName), scheduleAt, true);
+      queueNameToScheduledTask.put(queueName, taskDetail);
+    }
+    redisMessageListenerContainer.addMessageListener(
+        messageSchedulerListener, new ChannelTopic(getChannelName(queueName)));
+    channelNameToQueueName.put(getChannelName(queueName), queueName);
+    queueNameToZsetName.put(queueName, getZsetName(queueName));
+  }
+
+  @Override
   public void stop() {
+    logger.info("Stopping Message mover scheduler");
     synchronized (monitor) {
       this.running = false;
+      monitor.notifyAll();
     }
-    if (scheduledExecutorService != null && !scheduledExecutorService.isShutdown()) {
-      for (ScheduledTaskDetail queueDetail : queueNameToScheduledTask.values()) {
-        queueDetail.getFuture().cancel(true);
+    doStop();
+  }
+
+  private void doStop() {
+    for (Map.Entry<String, Boolean> runningStateByQueue : this.queueRunningState.entrySet()) {
+      if (runningStateByQueue.getValue()) {
+        stopQueue(runningStateByQueue.getKey());
       }
-      scheduledExecutorService.shutdownNow();
-      queueNameToScheduledTask.clear();
     }
+    waitForRunningQueuesToStop();
+  }
+
+  private void waitForRunningQueuesToStop() {
+    for (Map.Entry<String, Boolean> queueRunningState : this.queueRunningState.entrySet()) {
+      String queueName = queueRunningState.getKey();
+      ScheduledTaskDetail scheduledTaskDetail = this.queueNameToScheduledTask.get(queueName);
+      if (scheduledTaskDetail != null) {
+        scheduledTaskDetail.getFuture().cancel(true);
+      }
+    }
+  }
+
+  private void stopQueue(String queueName) {
+    Assert.isTrue(
+        this.queueRunningState.containsKey(queueName),
+        "Queue with name '" + queueName + "' does not exist");
+    this.queueRunningState.put(queueName, false);
   }
 
   protected long getNextScheduleTime(long currentTime, Long value) {
-    return currentTime + defaultDelay;
-  }
-
-  public void setScheduleTaskAtStartup(boolean scheduleTaskAtStartup) {
-    this.scheduleTaskAtStartup = scheduleTaskAtStartup;
+    return currentTime + DEFAULT_DELAY;
   }
 
   private boolean isScheduleTaskAtStartup() {
     return scheduleTaskAtStartup;
+  }
+
+  @Override
+  public void destroy() throws Exception {
+    this.stop();
+    scheduledExecutorService.shutdown();
+  }
+
+  protected String getChannelName(String queueName) {
+    return QueueInfo.getChannelName(queueName);
+  }
+
+  protected String getZsetName(String queueName) {
+    return QueueInfo.getTimeQueueName(queueName);
+  }
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    Set<String> queueNames = rqueueMessageListenerContainer.getRegisteredQueues().keySet();
+    defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
+    messageSchedulerListener = new MessageSchedulerListener();
+    redisScript = RedisScript.of(resource, Long.class);
+    queueRunningState = new ConcurrentHashMap<>(queueNames.size());
+    queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
+    channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
+    queueNameToZsetName = new ConcurrentHashMap<>(queueNames.size());
+    scheduledExecutorService = Executors.newScheduledThreadPool(min(poolSize, queueNames.size()));
+    for (String queueName : queueNames) {
+      queueRunningState.put(queueName, false);
+    }
+  }
+
+  private boolean isQueueActive(String queueName) {
+    Boolean val = queueRunningState.get(queueName);
+    if (val == null) {
+      return false;
+    }
+    return val;
   }
 
   private class MessageMoverTimerTask implements Runnable {
@@ -146,12 +222,12 @@ public class MessageScheduler {
     @Override
     public void run() {
       try {
-        if (isRunning()) {
+        if (isQueueActive(queueName)) {
           recursionDepth += 1;
           long currentTime = System.currentTimeMillis();
           // schedule immediately
-          if (recursionDepth == maxRecursionDepth) {
-            schedule(queueName, zsetName, currentTime + maxDelay, false);
+          if (recursionDepth == MAX_RECURSION_DEPTH) {
+            schedule(queueName, zsetName, currentTime + MAX_DELAY, false);
             return;
           }
           Long value =
@@ -159,9 +235,9 @@ public class MessageScheduler {
                   redisScript,
                   Arrays.asList(queueName, zsetName),
                   System.currentTimeMillis(),
-                  maxMessage);
+                  MAX_MESSAGE);
           if (value != null) {
-            if (value - currentTime < maxDelay) {
+            if (value - currentTime < MAX_DELAY) {
               run();
             } else {
               schedule(queueName, zsetName, getNextScheduleTime(currentTime, value), false);
@@ -194,7 +270,7 @@ public class MessageScheduler {
       long requiredDelay = startTime - currentTime;
       if (cancelExistingOne) {
         long existingDelay = scheduledTaskDetail.getStartTime() - currentTime;
-        if (existingDelay < maxDelay) {
+        if (existingDelay < MAX_DELAY) {
           return scheduledTaskDetail;
         }
         scheduledTaskDetail.getFuture().cancel(true);
@@ -214,7 +290,6 @@ public class MessageScheduler {
       try {
         Long startTime = Long.parseLong(body);
         String queueName = channelNameToQueueName.get(channel);
-
         if (queueName == null) {
           logger.warn("Unknown channel name {}", channel);
           return;
