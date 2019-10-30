@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.producer;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +27,8 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -44,23 +45,23 @@ public class MessageWriterTest {
   public void pushMessageWithNoDelay() {
     String message = "Test Message";
     String queueName = "test-queue";
-    RqueueMessage[] rqueueMessages = new RqueueMessage[1];
+    List<RqueueMessage> rqueueMessages = new ArrayList<>();
     doReturn(MessageBuilder.withPayload(message).build())
         .when(messageConverter)
         .toMessage(message, null);
     doAnswer(
             invocation -> {
-              rqueueMessages[0] = (RqueueMessage) invocation.getArguments()[1];
+              rqueueMessages.add((RqueueMessage) invocation.getArguments()[1]);
               return null;
             })
         .when(rqueueMessageTemplate)
         .add(anyString(), any(RqueueMessage.class));
     assertTrue(messageWriter.pushMessage(queueName, message, null, null));
-    RqueueMessage rqueueMessage = rqueueMessages[0];
+    assertEquals(1, rqueueMessages.size());
+    RqueueMessage rqueueMessage = rqueueMessages.get(0);
     assertEquals(message, rqueueMessage.getMessage());
     assertNull(rqueueMessage.getRetryCount());
     assertEquals(0, rqueueMessage.getProcessAt());
-    assertNull(rqueueMessage.getId());
     assertEquals(queueName, rqueueMessage.getQueueName());
     assertNull(rqueueMessage.getAccessTime());
     assertTrue(rqueueMessage.getQueuedTime() <= System.currentTimeMillis());
@@ -71,23 +72,23 @@ public class MessageWriterTest {
   public void pushMessageWithLessThanOneSecondDelayAndRetryCount() {
     String message = "Test Message";
     String queueName = "test-queue";
-    RqueueMessage[] rqueueMessages = new RqueueMessage[1];
+    List<RqueueMessage> rqueueMessages = new ArrayList<>();
     doReturn(MessageBuilder.withPayload(message).build())
         .when(messageConverter)
         .toMessage(message, null);
     doAnswer(
             invocation -> {
-              rqueueMessages[0] = (RqueueMessage) invocation.getArguments()[1];
+              rqueueMessages.add((RqueueMessage) invocation.getArguments()[1]);
               return null;
             })
         .when(rqueueMessageTemplate)
         .add(anyString(), any(RqueueMessage.class));
     assertTrue(messageWriter.pushMessage(queueName, message, 3, 100L));
-    RqueueMessage rqueueMessage = rqueueMessages[0];
+    assertEquals(1, rqueueMessages.size());
+    RqueueMessage rqueueMessage = rqueueMessages.get(0);
     assertEquals(message, rqueueMessage.getMessage());
     assertEquals((Integer) 3, rqueueMessage.getRetryCount());
     assertTrue(System.currentTimeMillis() + 100 >= rqueueMessage.getProcessAt());
-    assertNotNull(rqueueMessage.getId());
     assertEquals(queueName, rqueueMessage.getQueueName());
     assertNull(rqueueMessage.getAccessTime());
     assertTrue(rqueueMessage.getQueuedTime() <= System.currentTimeMillis());
@@ -98,23 +99,23 @@ public class MessageWriterTest {
   public void pushMessageWithDelayAndRetryCount() {
     String message = "Test Message";
     String queueName = "test-queue";
-    RqueueMessage[] rqueueMessages = new RqueueMessage[1];
+    List<RqueueMessage> rqueueMessages = new ArrayList<>();
     doReturn(MessageBuilder.withPayload(message).build())
         .when(messageConverter)
         .toMessage(message, null);
     doAnswer(
             invocation -> {
-              rqueueMessages[0] = (RqueueMessage) invocation.getArguments()[1];
+              rqueueMessages.add((RqueueMessage) invocation.getArguments()[1]);
               return null;
             })
         .when(rqueueMessageTemplate)
-        .addToZset(anyString(), any(RqueueMessage.class));
+        .addWithDelay(anyString(), any(RqueueMessage.class));
     assertTrue(messageWriter.pushMessage(queueName, message, 3, 1200L));
-    RqueueMessage rqueueMessage = rqueueMessages[0];
+    assertEquals(1, rqueueMessages.size());
+    RqueueMessage rqueueMessage = rqueueMessages.get(0);
     assertEquals(message, rqueueMessage.getMessage());
     assertEquals((Integer) 3, rqueueMessage.getRetryCount());
     assertTrue(System.currentTimeMillis() + 1200 >= rqueueMessage.getProcessAt());
-    assertNotNull(rqueueMessage.getId());
     assertEquals(queueName, rqueueMessage.getQueueName());
     assertNull(rqueueMessage.getAccessTime());
     assertTrue(rqueueMessage.getQueuedTime() <= System.currentTimeMillis());

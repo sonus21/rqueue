@@ -14,24 +14,27 @@
  *   limitations under the License.
  */
 
-package rqueue.spring.example;
+package com.github.sonus21.rqueue.spring.boot.integration.app.entity;
 
-import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
-
-  @Override
-  protected Class<?>[] getRootConfigClasses() {
-    return new Class[] {AppConfig.class};
-  }
-
-  @Override
-  protected Class<?>[] getServletConfigClasses() {
-    return null;
-  }
-
-  @Override
-  protected String[] getServletMappings() {
-    return new String[] {"/"};
-  }
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@Entity
+public class ConsumedMessage {
+  @Id
+  private String id;
+  @Column private String message;
 }

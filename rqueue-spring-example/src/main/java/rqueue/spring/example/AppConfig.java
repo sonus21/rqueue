@@ -14,30 +14,23 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package rqueue.spring.example;
 
-import java.util.concurrent.TimeUnit;
+import com.github.sonus21.rqueue.spring.EnableRqueue;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-public class StringMessageTemplate extends RqueueRedisTemplate<String, String> {
-
-  public StringMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
-    super(redisConnectionFactory);
-  }
-
-  public boolean putIfAbsent(String key, long time, TimeUnit timeUnit) {
-    Boolean result = redisTemplate.opsForValue().setIfAbsent(key, key, time, timeUnit);
-    if (result == null) {
-      return false;
-    }
-    return result;
-  }
-
-  public boolean delete(String key) {
-    Boolean result = redisTemplate.delete(key);
-    if (result == null) {
-      return false;
-    }
-    return result;
+@Configuration
+@ComponentScan(basePackages = {"rqueue.spring.example"})
+@EnableRqueue
+@EnableWebMvc
+public class AppConfig {
+  @Bean
+  public RedisConnectionFactory redisConnectionFactory() {
+    return new LettuceConnectionFactory();
   }
 }

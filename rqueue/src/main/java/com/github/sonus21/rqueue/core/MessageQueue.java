@@ -14,24 +14,28 @@
  *   limitations under the License.
  */
 
-package rqueue.spring.example;
+package com.github.sonus21.rqueue.core;
 
-import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+public class MessageQueue {
+  private String zsetName;
+  private String queueName;
+  private String channelName;
 
-public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
-
-  @Override
-  protected Class<?>[] getRootConfigClasses() {
-    return new Class[] {AppConfig.class};
+  public MessageQueue(String zsetName, String queueName, String channelName) {
+    this.zsetName = zsetName;
+    this.queueName = queueName;
+    this.channelName = channelName;
   }
 
-  @Override
-  protected Class<?>[] getServletConfigClasses() {
-    return null;
+  String getZsetName() {
+    return zsetName;
   }
 
-  @Override
-  protected String[] getServletMappings() {
-    return new String[] {"/"};
+  String getQueueName() {
+    return queueName;
+  }
+
+  String getChannelName() {
+    return channelName;
   }
 }

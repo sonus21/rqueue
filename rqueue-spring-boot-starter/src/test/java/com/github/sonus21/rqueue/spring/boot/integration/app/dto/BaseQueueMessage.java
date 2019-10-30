@@ -14,13 +14,21 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.spring.boot.integration.app.dto;
 
-public abstract class Constants {
-  private static final String DELAYED_QUEUE_PREFIX = "rqueue-delay::";
-  public static final String QUEUE_NAME = "QUEUE_NAME";
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-  public static String getZsetName(String queueName) {
-    return DELAYED_QUEUE_PREFIX + queueName;
-  }
+@Getter
+@Setter
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+public abstract class BaseQueueMessage {
+  private String id;
 }

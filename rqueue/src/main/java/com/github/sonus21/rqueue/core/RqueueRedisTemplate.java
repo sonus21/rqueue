@@ -34,4 +34,8 @@ abstract class RqueueRedisTemplate<K, V extends Serializable> {
     this.redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
     this.redisTemplate.afterPropertiesSet();
   }
+
+  public RedisTemplate<K, V> getRedisTemplate() {
+    return this.redisTemplate;
+  }
 }

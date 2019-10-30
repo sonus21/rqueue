@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,9 +33,9 @@ public class RqueueMessageTest {
   private long delay = 100L;
 
   @Test
-  public void checkIdAndProcessAtAreNotSet() {
+  public void checkIdIsSetAndProcessAtNotSet() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, null);
-    assertNull(message.getId());
+    assertNotNull(message.getId());
     assertEquals(0, message.getProcessAt());
   }
 

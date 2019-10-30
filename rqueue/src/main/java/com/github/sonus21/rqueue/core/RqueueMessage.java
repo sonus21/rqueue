@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @SuppressWarnings({"UnusedDeclaration"})
-public class RqueueMessage implements Serializable {
+public class RqueueMessage implements Serializable, Cloneable {
 
   private static final long serialVersionUID = -3488860960637488519L;
   private String id;
@@ -33,6 +33,7 @@ public class RqueueMessage implements Serializable {
   private long processAt;
   private Long accessTime;
   private Long reEnqueuedAt;
+  private int failureCount;
 
   public RqueueMessage() {}
 
@@ -41,9 +42,9 @@ public class RqueueMessage implements Serializable {
     this.message = message;
     this.retryCount = retryCount;
     this.queuedTime = System.currentTimeMillis();
+    this.id = queueName + UUID.randomUUID().toString();
     if (delay != null) {
       this.processAt = queuedTime + delay;
-      this.id = queueName + UUID.randomUUID().toString();
     }
   }
 
@@ -133,30 +134,27 @@ public class RqueueMessage implements Serializable {
   }
 
   @Override
+  public RqueueMessage clone() throws CloneNotSupportedException {
+    return (RqueueMessage) super.clone();
+  }
+
+  @Override
   public boolean equals(Object other) {
     if (other instanceof RqueueMessage) {
       RqueueMessage otherMessage = (RqueueMessage) other;
-      if (this.getId() == null && otherMessage.getId() == null) {
-        boolean equal =
-            otherMessage.getQueueName().equals(this.getQueueName())
-                && otherMessage.getMessage().equals(this.getMessage())
-                && otherMessage.getQueuedTime() == this.getQueuedTime()
-                && otherMessage.getProcessAt() == this.getProcessAt();
-        if (equal) {
-          if (otherMessage.getRetryCount() == null && this.getRetryCount() == null) {
-            return true;
-          }
-          if (otherMessage.getRetryCount() != null && this.getRetryCount() != null) {
-            return this.getRetryCount().equals(otherMessage.getRetryCount());
-          }
-        }
-        return false;
-      }
       if (otherMessage.getId() != null && this.getId() != null) {
         return this.getId().equals(otherMessage.getId());
       }
     }
     return false;
+  }
+
+  public int getFailureCount() {
+    return failureCount;
+  }
+
+  public void setFailureCount(int failureCount) {
+    this.failureCount = failureCount;
   }
 
   public String getId() {

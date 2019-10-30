@@ -22,12 +22,12 @@ public abstract class TimeUtil {
   public static void waitFor(
       Supplier<Boolean> supplier, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
-    long startTime = System.currentTimeMillis();
+    long endTime = System.currentTimeMillis() + waitTimeInMilliSeconds;
     do {
       if (supplier.get()) {
         return;
       }
-    } while (System.currentTimeMillis() < startTime + waitTimeInMilliSeconds);
+    } while (System.currentTimeMillis() < endTime);
     throw new TimedOutException("Timed out waiting for " + description);
   }
 

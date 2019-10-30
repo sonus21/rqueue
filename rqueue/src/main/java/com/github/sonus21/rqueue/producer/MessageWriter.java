@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.producer;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.utils.Constants;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +25,12 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.support.GenericMessage;
 
 class MessageWriter {
   private RqueueMessageTemplate rqueueMessageTemplate;
   private CompositeMessageConverter messageConverter;
-  private static final long MIN_DELAY_TIME = 1000;
+  private static final long MIN_DELAY_TIME = 100;
   private static Logger logger = LoggerFactory.getLogger(RqueueMessageSender.class);
 
   MessageWriter(
@@ -48,10 +48,10 @@ class MessageWriter {
   boolean pushMessage(String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
     RqueueMessage rqueueMessage = buildMessage(queueName, message, retryCount, delayInMilliSecs);
     try {
-      if (delayInMilliSecs == null || delayInMilliSecs < MIN_DELAY_TIME) {
+      if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY_TIME) {
         rqueueMessageTemplate.add(queueName, rqueueMessage);
       } else {
-        rqueueMessageTemplate.addToZset(Constants.getZsetName(queueName), rqueueMessage);
+        rqueueMessageTemplate.addWithDelay(queueName, rqueueMessage);
       }
     } catch (Exception e) {
       logger.error("Message could not be pushed ", e);
@@ -67,6 +67,10 @@ class MessageWriter {
       throw new MessageConversionException("Message could not be build (null)");
     }
     return new RqueueMessage(queueName, (String) msg.getPayload(), retryCount, delayInMilliSecs);
+  }
+
+  Object convertMessageToObject(RqueueMessage message) {
+    return messageConverter.fromMessage(new GenericMessage<>(message.getMessage()), null);
   }
 
   List<MessageConverter> getMessageConverters() {

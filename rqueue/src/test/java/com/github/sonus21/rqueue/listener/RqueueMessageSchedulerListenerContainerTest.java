@@ -22,39 +22,35 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.StringMessageTemplate;
-import com.github.sonus21.rqueue.utils.Constants;
 import io.lettuce.core.RedisCommandExecutionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
-public class RqueueMessageListenerContainerTest {
+public class RqueueMessageSchedulerListenerContainerTest {
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
   private RqueueMessageListenerContainer container =
       new RqueueMessageListenerContainer(
           mock(RqueueMessageHandler.class),
           mock(RqueueMessageTemplate.class),
-          mock(StringMessageTemplate.class));
+          mock(RedisConnectionFactory.class));
 
   @Test
   public void setDelayedQueueSleepTime() {
@@ -124,7 +120,7 @@ public class RqueueMessageListenerContainerTest {
 
   @Test
   public void checkDoStartMethodIsCalledAndIsRunningSet() throws Exception {
-    StubMessageListenerContainer container = new StubMessageListenerContainer();
+    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     container.afterPropertiesSet();
     container.start();
     assertTrue(container.isRunning());
@@ -135,7 +131,7 @@ public class RqueueMessageListenerContainerTest {
 
   @Test
   public void checkDoStopMethodIsCalled() throws Exception {
-    StubMessageListenerContainer container = new StubMessageListenerContainer();
+    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -144,7 +140,7 @@ public class RqueueMessageListenerContainerTest {
 
   @Test
   public void checkDoDestroyMethodIsCalled() throws Exception {
-    StubMessageListenerContainer container = new StubMessageListenerContainer();
+    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -154,7 +150,7 @@ public class RqueueMessageListenerContainerTest {
 
   @Test
   public void checkDoStopMethodIsCalledWithRunnable() throws Exception {
-    StubMessageListenerContainer container = new StubMessageListenerContainer();
+    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     CountDownLatch count = new CountDownLatch(1);
     container.afterPropertiesSet();
     container.start();
@@ -168,12 +164,10 @@ public class RqueueMessageListenerContainerTest {
   @Test
   public void testMessagesAreGettingFetchedFromRedis() throws Exception {
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-    StringMessageTemplate stringMessageTemplate = mock(StringMessageTemplate.class);
-
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
-    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
-    applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
+    applicationContext.registerSingleton("slowMessageListener", SlowMessageSchedulerListener.class);
+    applicationContext.registerSingleton("fastMessageListener", FastMessageSchedulerListener.class);
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);
@@ -181,79 +175,33 @@ public class RqueueMessageListenerContainerTest {
 
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, stringMessageTemplate);
+            messageHandler, rqueueMessageTemplate, mock(RedisConnectionFactory.class));
+    FieldUtils.writeField(
+        container,
+        "rqueueRedisMessageListenerContainer",
+        mock(RedisMessageListenerContainer.class),
+        true);
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
-    AtomicInteger zsetCounter = new AtomicInteger(0);
+    AtomicInteger slowQueueCounter = new AtomicInteger(0);
     doAnswer(
             invocation -> {
               fastQueueCounter.incrementAndGet();
               return null;
             })
         .when(rqueueMessageTemplate)
-        .lpop(fastQueue);
+        .pop(fastQueue);
 
     doAnswer(
             invocation -> {
-              zsetCounter.incrementAndGet();
+              slowQueueCounter.incrementAndGet();
               return null;
             })
         .when(rqueueMessageTemplate)
-        .getFirstFromZset(Constants.getZsetName(slowQueue));
+        .pop(slowQueue);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> fastQueueCounter.get() > 1, "fastQueue message call");
-    waitFor(() -> zsetCounter.get() > 1, "slowQueue message call");
-    container.stop();
-    container.doDestroy();
-  }
-
-  @Test
-  public void testMessagesAreGettingMovedToQueue() throws Exception {
-    RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-    StringMessageTemplate stringMessageTemplate = mock(StringMessageTemplate.class);
-
-    StaticApplicationContext applicationContext = new StaticApplicationContext();
-    applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
-    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
-    RqueueMessageHandler messageHandler =
-        applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
-    messageHandler.setApplicationContext(applicationContext);
-    messageHandler.afterPropertiesSet();
-
-    RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, stringMessageTemplate);
-
-    AtomicInteger zsetCounter = new AtomicInteger(0);
-    AtomicInteger messageCounter = new AtomicInteger(0);
-
-    doReturn(true).when(stringMessageTemplate).putIfAbsent(anyString(), anyLong(), any());
-    doAnswer(
-            invocation -> {
-              messageCounter.incrementAndGet();
-              return null;
-            })
-        .when(rqueueMessageTemplate)
-        .add(eq(slowQueue), any(RqueueMessage.class));
-
-    doAnswer(
-            invocation -> {
-              if (zsetCounter.get() < 10) {
-                zsetCounter.incrementAndGet();
-                return new RqueueMessage(slowQueue, "This is a test", 3, -100L);
-              } else if (zsetCounter.get() < 20) {
-                zsetCounter.incrementAndGet();
-                return new RqueueMessage(slowQueue, "This is a test", 3, 1000L);
-              }
-              return null;
-            })
-        .when(rqueueMessageTemplate)
-        .getFirstFromZset(Constants.getZsetName(slowQueue));
-
-    container.afterPropertiesSet();
-    container.start();
-    waitFor(() -> zsetCounter.get() == 20, "Generate all slowQueue messages");
-    waitFor(() -> messageCounter.get() == 10, "10 messages should be moved to slowQueue");
+    waitFor(() -> slowQueueCounter.get() > 1, "slowQueue message call");
     container.stop();
     container.doDestroy();
   }
@@ -265,10 +213,10 @@ public class RqueueMessageListenerContainerTest {
     RqueueMessage message = new RqueueMessage(fastQueue, fastQueueMessage, null, null);
 
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-    StringMessageTemplate stringMessageTemplate = mock(StringMessageTemplate.class);
+
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
-    applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
+    applicationContext.registerSingleton("fastMessageListener", FastMessageSchedulerListener.class);
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);
@@ -278,7 +226,12 @@ public class RqueueMessageListenerContainerTest {
 
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, stringMessageTemplate);
+            messageHandler, rqueueMessageTemplate, mock(RedisConnectionFactory.class));
+    FieldUtils.writeField(
+        container,
+        "rqueueRedisMessageListenerContainer",
+        mock(RedisMessageListenerContainer.class),
+        true);
     doAnswer(
             invocation -> {
               if (fastQueueCounter.get() < 2) {
@@ -290,9 +243,9 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .lpop(fastQueue);
-    FastMessageListener fastMessageListener =
-        applicationContext.getBean("fastMessageListener", FastMessageListener.class);
+        .pop(fastQueue);
+    FastMessageSchedulerListener fastMessageListener =
+        applicationContext.getBean("fastMessageListener", FastMessageSchedulerListener.class);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> fastQueueCounter.get() == 2, "fastQueue message fetch");
@@ -304,63 +257,13 @@ public class RqueueMessageListenerContainerTest {
   }
 
   @Test
-  public void testMessageMoverRetryWorking() throws Exception {
-    RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-    StringMessageTemplate stringMessageTemplate = mock(StringMessageTemplate.class);
-    StaticApplicationContext applicationContext = new StaticApplicationContext();
-    applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
-    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
-    RqueueMessageHandler messageHandler =
-        applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
-    messageHandler.setApplicationContext(applicationContext);
-    messageHandler.afterPropertiesSet();
-    RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, stringMessageTemplate);
-    applicationContext.getBean("slowMessageListener", SlowMessageListener.class);
-    AtomicInteger slowQueueCounter = new AtomicInteger(0);
-    AtomicInteger addMessageCounter = new AtomicInteger(0);
-    // retry in 10Ms
-    container.setBackOffTime(10L);
-    String slowQueueMessage = "This is slow queue";
-    RqueueMessage message = new RqueueMessage(slowQueue, slowQueueMessage, null, -1000L);
-    doReturn(true).when(stringMessageTemplate).putIfAbsent(anyString(), anyLong(), any());
-    doAnswer(
-            invocation -> {
-              addMessageCounter.incrementAndGet();
-              return null;
-            })
-        .when(rqueueMessageTemplate)
-        .add(slowQueue, message);
-
-    doAnswer(
-            invocation -> {
-              if (slowQueueCounter.get() < 2) {
-                if (slowQueueCounter.incrementAndGet() == 1) {
-                  throw new RedisCommandExecutionException("Test error occurred");
-                }
-                return message;
-              }
-              return null;
-            })
-        .when(rqueueMessageTemplate)
-        .getFirstFromZset(Constants.getZsetName(slowQueue));
-    container.afterPropertiesSet();
-    container.start();
-    waitFor(() -> slowQueueCounter.get() == 2, "slowQueue message mover retry");
-    container.stop();
-    container.doDestroy();
-  }
-
-  @Test
   public void testMessageHandlersAreInvoked() throws Exception {
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-    StringMessageTemplate stringMessageTemplate = mock(StringMessageTemplate.class);
-
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
-    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
-    applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
+    applicationContext.registerSingleton("slowMessageListener", SlowMessageSchedulerListener.class);
+    applicationContext.registerSingleton("fastMessageListener", FastMessageSchedulerListener.class);
+
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);
@@ -368,11 +271,16 @@ public class RqueueMessageListenerContainerTest {
 
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(
-            messageHandler, rqueueMessageTemplate, stringMessageTemplate);
-    FastMessageListener fastMessageListener =
-        applicationContext.getBean("fastMessageListener", FastMessageListener.class);
-    SlowMessageListener slowMessageListener =
-        applicationContext.getBean("slowMessageListener", SlowMessageListener.class);
+            messageHandler, rqueueMessageTemplate, mock(RedisConnectionFactory.class));
+    FieldUtils.writeField(
+        container,
+        "rqueueRedisMessageListenerContainer",
+        mock(RedisMessageListenerContainer.class),
+        true);
+    FastMessageSchedulerListener fastMessageListener =
+        applicationContext.getBean("fastMessageListener", FastMessageSchedulerListener.class);
+    SlowMessageSchedulerListener slowMessageListener =
+        applicationContext.getBean("slowMessageListener", SlowMessageSchedulerListener.class);
 
     AtomicInteger slowQueueCounter = new AtomicInteger(0);
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
@@ -387,7 +295,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .lpop(slowQueue);
+        .pop(slowQueue);
 
     doAnswer(
             invocation -> {
@@ -398,7 +306,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .lpop(fastQueue);
+        .pop(fastQueue);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> slowQueueCounter.get() == 1, "slowQueue message fetch");
@@ -415,16 +323,33 @@ public class RqueueMessageListenerContainerTest {
 
   @Test
   public void internalTasksAreNotSharedWithTaskExecutor() throws Exception {
+    @Getter
+    class TestTaskExecutor extends ThreadPoolTaskExecutor {
+      private int submittedTaskCount = 0;
+
+      @Override
+      public Future<?> submit(Runnable task) {
+        submittedTaskCount += 1;
+        return super.submit(task);
+      }
+    }
+
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
-    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
+    applicationContext.registerSingleton("slowMessageListener", SlowMessageSchedulerListener.class);
+
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(
-            messageHandler, mock(RqueueMessageTemplate.class), mock(StringMessageTemplate.class));
+            messageHandler, mock(RqueueMessageTemplate.class), mock(RedisConnectionFactory.class));
+    FieldUtils.writeField(
+        container,
+        "rqueueRedisMessageListenerContainer",
+        mock(RedisMessageListenerContainer.class),
+        true);
     TestTaskExecutor taskExecutor = new TestTaskExecutor();
     container.setTaskExecutor(taskExecutor);
     container.afterPropertiesSet();
@@ -434,29 +359,19 @@ public class RqueueMessageListenerContainerTest {
     container.doDestroy();
   }
 
-  @Getter
-  private class TestTaskExecutor extends ThreadPoolTaskExecutor {
-    private int submittedTaskCount = 0;
-
-    @Override
-    public Future<?> submit(Runnable task) {
-      submittedTaskCount += 1;
-      return super.submit(task);
-    }
-  }
-
   @SuppressWarnings({"UnusedDeclaration"})
   @Getter
-  private static class StubMessageListenerContainer extends RqueueMessageListenerContainer {
+  private static class StubMessageSchedulerListenerContainer
+      extends RqueueMessageListenerContainer {
     private boolean destroyMethodIsCalled = false;
     private boolean doStartMethodIsCalled = false;
     private boolean doStopMethodIsCalled = false;
 
-    StubMessageListenerContainer() {
+    StubMessageSchedulerListenerContainer() {
       super(
           mock(RqueueMessageHandler.class),
           mock(RqueueMessageTemplate.class),
-          mock(StringMessageTemplate.class));
+          mock(RedisConnectionFactory.class));
     }
 
     @Override
@@ -477,7 +392,7 @@ public class RqueueMessageListenerContainerTest {
 
   @SuppressWarnings({"UnusedDeclaration"})
   @Getter
-  private static class SlowMessageListener {
+  private static class SlowMessageSchedulerListener {
     private String lastMessage;
 
     @RqueueListener(value = slowQueue, delayedQueue = "true")
@@ -488,7 +403,7 @@ public class RqueueMessageListenerContainerTest {
 
   @SuppressWarnings({"UnusedDeclaration"})
   @Getter
-  private static class FastMessageListener {
+  private static class FastMessageSchedulerListener {
     private String lastMessage;
 
     @RqueueListener(fastQueue)

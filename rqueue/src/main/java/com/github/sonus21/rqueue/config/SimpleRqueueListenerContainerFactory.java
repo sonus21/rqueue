@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.config;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.StringMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import java.util.List;
@@ -35,12 +34,12 @@ import org.springframework.util.Assert;
 public class SimpleRqueueListenerContainerFactory {
   private AsyncTaskExecutor taskExecutor;
   private boolean autoStartup = true;
-  private RqueueMessageTemplate rqueueMessageTemplate;
   private RedisConnectionFactory redisConnectionFactory;
   private RqueueMessageHandler rqueueMessageHandler;
   private List<MessageConverter> messageConverters;
   private Long backOffTime;
   private Integer maxNumWorkers;
+  private RqueueMessageTemplate rqueueMessageTemplate;
 
   /**
    * Configures the {@link TaskExecutor} which is used to poll messages and execute them by calling
@@ -187,12 +186,9 @@ public class SimpleRqueueListenerContainerFactory {
     if (this.rqueueMessageTemplate == null) {
       this.rqueueMessageTemplate = new RqueueMessageTemplate(redisConnectionFactory);
     }
-    StringMessageTemplate stringMessageTemplate =
-        new StringMessageTemplate(this.redisConnectionFactory);
-
     RqueueMessageListenerContainer messageListenerContainer =
         new RqueueMessageListenerContainer(
-            this.rqueueMessageHandler, this.rqueueMessageTemplate, stringMessageTemplate);
+            this.rqueueMessageHandler, this.rqueueMessageTemplate, this.redisConnectionFactory);
     messageListenerContainer.setAutoStartup(this.autoStartup);
     if (this.taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(this.taskExecutor);

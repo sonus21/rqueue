@@ -14,24 +14,28 @@
  *   limitations under the License.
  */
 
-package rqueue.spring.example;
+package com.github.sonus21.rqueue.core;
 
-import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+import java.util.concurrent.ScheduledFuture;
 
-public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+class ScheduledTaskDetail {
+  private ScheduledFuture<?> future;
+  private long startTime;
 
-  @Override
-  protected Class<?>[] getRootConfigClasses() {
-    return new Class[] {AppConfig.class};
+  ScheduledTaskDetail(long startTime, ScheduledFuture scheduledFuture) {
+    this.startTime = startTime;
+    this.future = scheduledFuture;
   }
 
-  @Override
-  protected Class<?>[] getServletConfigClasses() {
-    return null;
+  public ScheduledFuture<?> getFuture() {
+    return future;
   }
 
-  @Override
-  protected String[] getServletMappings() {
-    return new String[] {"/"};
+  public void setFuture(ScheduledFuture future) {
+    this.future = future;
+  }
+
+  public long getStartTime() {
+    return startTime;
   }
 }

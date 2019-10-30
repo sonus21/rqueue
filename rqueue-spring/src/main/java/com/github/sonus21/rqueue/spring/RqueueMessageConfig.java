@@ -16,42 +16,15 @@
 
 package com.github.sonus21.rqueue.spring;
 
-import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @Configuration
-public class RqueueMessageConfig {
-
-  @Autowired(required = false)
-  private final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
-      new SimpleRqueueListenerContainerFactory();
-
-  @Autowired private BeanFactory beanFactory;
-
-  private RqueueMessageTemplate getMessageTemplate(RedisConnectionFactory connectionFactory) {
-    if (simpleRqueueListenerContainerFactory.getRqueueMessageTemplate() != null) {
-      return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
-    }
-    simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(
-        new RqueueMessageTemplate(connectionFactory));
-    return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
-  }
-
-  private RedisConnectionFactory getRedisConnectionFactory() {
-    if (simpleRqueueListenerContainerFactory.getRedisConnectionFactory() == null) {
-      simpleRqueueListenerContainerFactory.setRedisConnectionFactory(
-          beanFactory.getBean(RedisConnectionFactory.class));
-    }
-    return simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
-  }
+public class RqueueMessageConfig extends RqueueConfig {
 
   @Bean
   public RqueueMessageHandler rqueueMessageHandler() {

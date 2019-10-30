@@ -22,19 +22,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.springframework.messaging.Message;
 
 @Slf4j
@@ -52,19 +52,14 @@ public class MessageExecutorTest {
     ConsumerQueueDetail queueDetail = new ConsumerQueueDetail(queueName, -1, "", false);
     MessageExecutor messageExecutor =
         new MessageExecutor(rqueueMessage, queueDetail, messageHandler, rqueueMessageTemplate, log);
-    Integer[] counts = new Integer[1];
-    counts[0] = 0;
+    AtomicInteger counter = new AtomicInteger(0);
     try {
       doAnswer(
-              new Answer() {
-                @Override
-                public Object answer(InvocationOnMock invocation) throws Throwable {
-                  if (counts[0] < 10) {
-                    counts[0]++;
-                    throw new NullPointerException(message);
-                  }
-                  return null;
+              invocation -> {
+                if (counter.incrementAndGet() < 10) {
+                  throw new NullPointerException(message);
                 }
+                return null;
               })
           .when(messageHandler)
           .handleMessage(any(Message.class));
@@ -73,7 +68,7 @@ public class MessageExecutorTest {
     }
 
     messageExecutor.run();
-    assertEquals(10, (int) counts[0]);
+    assertEquals(10, counter.get());
   }
 
   @Test
@@ -82,16 +77,12 @@ public class MessageExecutorTest {
     ConsumerQueueDetail queueDetail = new ConsumerQueueDetail(queueName, 10, "", false);
     MessageExecutor messageExecutor =
         new MessageExecutor(rqueueMessage, queueDetail, messageHandler, rqueueMessageTemplate, log);
-    Integer[] counts = new Integer[1];
-    counts[0] = 0;
+    AtomicInteger counter = new AtomicInteger(0);
     try {
       doAnswer(
-              new Answer() {
-                @Override
-                public Object answer(InvocationOnMock invocation) throws Throwable {
-                  counts[0]++;
-                  throw new NullPointerException(message);
-                }
+              invocation -> {
+                counter.incrementAndGet();
+                throw new NullPointerException(message);
               })
           .when(messageHandler)
           .handleMessage(any(Message.class));
@@ -99,7 +90,7 @@ public class MessageExecutorTest {
       // noop
     }
     messageExecutor.run();
-    assertEquals(3, (int) counts[0]);
+    assertEquals(3, counter.get());
     verify(rqueueMessageTemplate, times(0)).add(anyString(), any(RqueueMessage.class));
   }
 
@@ -109,17 +100,21 @@ public class MessageExecutorTest {
     ConsumerQueueDetail queueDetail = new ConsumerQueueDetail(queueName, 1, dlqName, false);
     MessageExecutor messageExecutor =
         new MessageExecutor(rqueueMessage, queueDetail, messageHandler, rqueueMessageTemplate, log);
-    Integer[] counts = new Integer[1];
-    counts[0] = 0;
-    doNothing().when(rqueueMessageTemplate).add(eq(dlqName), any(RqueueMessage.class));
+    AtomicInteger counter = new AtomicInteger(0);
+    List<RqueueMessage> newMessages = new ArrayList<>();
+
+    doAnswer(
+            invocation -> {
+              newMessages.add((RqueueMessage) invocation.getArguments()[1]);
+              return null;
+            })
+        .when(rqueueMessageTemplate)
+        .add(eq(dlqName), any(RqueueMessage.class));
     try {
       doAnswer(
-              new Answer() {
-                @Override
-                public Object answer(InvocationOnMock invocation) throws Throwable {
-                  counts[0]++;
-                  throw new NullPointerException(message);
-                }
+              invocation -> {
+                counter.incrementAndGet();
+                throw new NullPointerException(message);
               })
           .when(messageHandler)
           .handleMessage(any(Message.class));
@@ -127,8 +122,8 @@ public class MessageExecutorTest {
       // noop
     }
     messageExecutor.run();
-    assertEquals(3, (int) counts[0]);
+    assertEquals(3, counter.get());
     verify(rqueueMessageTemplate, times(1)).add(anyString(), any(RqueueMessage.class));
-    assertNotNull(rqueueMessage.getReEnqueuedAt());
+    assertNotNull(newMessages.get(0).getReEnqueuedAt());
   }
 }

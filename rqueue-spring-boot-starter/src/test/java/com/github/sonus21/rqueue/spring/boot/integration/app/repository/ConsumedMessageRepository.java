@@ -14,24 +14,9 @@
  *   limitations under the License.
  */
 
-package rqueue.spring.example;
+package com.github.sonus21.rqueue.spring.boot.integration.app.repository;
 
-import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+import com.github.sonus21.rqueue.spring.boot.integration.app.entity.ConsumedMessage;
+import org.springframework.data.repository.CrudRepository;
 
-public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
-
-  @Override
-  protected Class<?>[] getRootConfigClasses() {
-    return new Class[] {AppConfig.class};
-  }
-
-  @Override
-  protected Class<?>[] getServletConfigClasses() {
-    return null;
-  }
-
-  @Override
-  protected String[] getServletMappings() {
-    return new String[] {"/"};
-  }
-}
+public interface ConsumedMessageRepository extends CrudRepository<ConsumedMessage, String> {}

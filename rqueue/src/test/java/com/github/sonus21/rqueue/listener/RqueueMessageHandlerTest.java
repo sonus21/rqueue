@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.Constants.QUEUE_NAME;
+import static com.github.sonus21.rqueue.utils.QueueInfo.QUEUE_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

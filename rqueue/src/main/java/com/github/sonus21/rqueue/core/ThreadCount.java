@@ -14,24 +14,27 @@
  *   limitations under the License.
  */
 
-package rqueue.spring.example;
+package com.github.sonus21.rqueue.core;
 
-import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+public class ThreadCount {
+  private int corePoolSize;
+  private int maxPoolSize;
 
-public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+  public ThreadCount(int corePoolSize, int maxPoolSize) {
+    this.corePoolSize = corePoolSize;
+    this.maxPoolSize = maxPoolSize;
+  }
 
-  @Override
-  protected Class<?>[] getRootConfigClasses() {
-    return new Class[] {AppConfig.class};
+  public int getCorePoolSize() {
+    return corePoolSize;
+  }
+
+  public int getMaxPoolSize() {
+    return maxPoolSize;
   }
 
   @Override
-  protected Class<?>[] getServletConfigClasses() {
-    return null;
-  }
-
-  @Override
-  protected String[] getServletMappings() {
-    return new String[] {"/"};
+  public String toString() {
+    return corePoolSize + " " + maxPoolSize;
   }
 }
