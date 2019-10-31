@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.spring.boot.integration;
 
 import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
 import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
-import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -78,8 +77,11 @@ public class ApplicationWithAutoStartSchedulerDisabledTest {
     waitFor(
         () -> messageCount == consumedMessageService.getMessages(ids, EmailTask.class).size(),
         "message count to be matched");
-    assertTrue(
-        emailTasks.containsAll(consumedMessageService.getMessages(ids, EmailTask.class).values()));
+    waitFor(
+        () ->
+            emailTasks.containsAll(
+                consumedMessageService.getMessages(ids, EmailTask.class).values()),
+        "All messages to be consumed");
   }
 
   private RqueueMessage buildMessage(Object object) {
@@ -116,6 +118,8 @@ public class ApplicationWithAutoStartSchedulerDisabledTest {
     waitFor(
         () -> messageCount == consumedMessageService.getMessages(ids, Job.class).size(),
         "message count to be matched");
-    assertTrue(jobs.containsAll(consumedMessageService.getMessages(ids, Job.class).values()));
+    waitFor(
+        () -> jobs.containsAll(consumedMessageService.getMessages(ids, Job.class).values()),
+        "All jobs to be executed");
   }
 }
