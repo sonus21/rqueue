@@ -33,7 +33,7 @@ Add Dependency
 * Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:1.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:1.1-RELEASE'
     ```
     * Maven
     ```xml
@@ -51,7 +51,7 @@ Add Dependency
     Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:1.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:1.1-RELEASE'
     ```
     * Maven
     ```xml
