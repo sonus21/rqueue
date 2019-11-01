@@ -63,25 +63,17 @@ public class RqueueMessageListenerContainer
   private Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue = new ConcurrentHashMap<>();
   private boolean running = false;
-  // 1 second
-  private long backOffTime = 1000;
+  // 5 seconds
+  private long backOffTime = 5000L;
   // 20 seconds
-  private long maxWorkerWaitTime = 200000;
-  // 100 ms
-  private long delayedQueueSleepTime = 100;
+  private long maxWorkerWaitTime = 200000L;
+
+  private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private ApplicationContext applicationContext;
   private RqueueMessageTemplate rqueueMessageTemplate;
 
   @Autowired private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
-
-  public long getDelayedQueueSleepTime() {
-    return this.delayedQueueSleepTime;
-  }
-
-  public void setDelayedQueueSleepTime(long delayedQueueSleepTime) {
-    this.delayedQueueSleepTime = delayedQueueSleepTime;
-  }
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -191,6 +183,7 @@ public class RqueueMessageListenerContainer
           this.registeredQueues.put(queue, consumerQueueDetail);
         }
       }
+      this.registeredQueues = Collections.unmodifiableMap(this.registeredQueues);
       this.lifecycleMgr.notifyAll();
     }
     if (this.taskExecutor == null) {
@@ -211,33 +204,24 @@ public class RqueueMessageListenerContainer
   }
 
   public Map<String, ConsumerQueueDetail> getRegisteredQueues() {
-    return Collections.unmodifiableMap(registeredQueues);
+    return this.registeredQueues;
   }
 
   private void initializeRunningQueueState() {
-    for (String queue : this.registeredQueues.keySet()) {
+    for (String queue : getRegisteredQueues().keySet()) {
       queueRunningState.put(queue, false);
     }
   }
 
-  private int getDelayedQueueCounts() {
-    return (int)
-        this.getRegisteredQueues().values().stream()
-            .filter(ConsumerQueueDetail::isDelayedQueue)
-            .count();
-  }
-
   private ThreadCount getThreadCount(boolean onlySpinning) {
-    int messageMoverThreadsCount = getDelayedQueueCounts();
-    int messagePullerThreadsCount = getRegisteredQueues().size();
-    int spinningThreads = messageMoverThreadsCount + messagePullerThreadsCount;
-    int corePoolSize = onlySpinning ? spinningThreads : spinningThreads + messagePullerThreadsCount;
+    int queueSize = getRegisteredQueues().size();
+    int corePoolSize = onlySpinning ? queueSize : queueSize + queueSize;
     int maxPoolSize =
         onlySpinning
-            ? spinningThreads
-            : spinningThreads
+            ? queueSize
+            : queueSize
                 + (getMaxNumWorkers() == null
-                    ? messagePullerThreadsCount * DEFAULT_WORKER_COUNT_PER_QUEUE
+                    ? queueSize * DEFAULT_WORKER_COUNT_PER_QUEUE
                     : getMaxNumWorkers());
     return new ThreadCount(corePoolSize, maxPoolSize);
   }
@@ -288,7 +272,7 @@ public class RqueueMessageListenerContainer
     }
   }
 
-  private void startQueue(String queueName, ConsumerQueueDetail queueDetail) {
+  protected void startQueue(String queueName, ConsumerQueueDetail queueDetail) {
     if (this.queueRunningState.containsKey(queueName) && this.queueRunningState.get(queueName)) {
       return;
     }
@@ -335,9 +319,11 @@ public class RqueueMessageListenerContainer
   private void waitForRunningQueuesToStop() {
     for (Map.Entry<String, Boolean> queueRunningState : this.queueRunningState.entrySet()) {
       String queueName = queueRunningState.getKey();
-      ConsumerQueueDetail queueDetail = this.registeredQueues.get(queueName);
+      ConsumerQueueDetail queueDetail = getRegisteredQueues().get(queueName);
       Future<?> queueSpinningThread = this.scheduledFutureByQueue.get(queueName);
-      if (queueSpinningThread != null) {
+      if (queueSpinningThread != null
+          && !queueSpinningThread.isDone()
+          && !queueSpinningThread.isCancelled()) {
         try {
           queueSpinningThread.get(getMaxWorkerWaitTime(), TimeUnit.MILLISECONDS);
         } catch (ExecutionException | TimeoutException e) {
@@ -363,6 +349,14 @@ public class RqueueMessageListenerContainer
     }
   }
 
+  public long getPollingInterval() {
+    return pollingInterval;
+  }
+
+  public void setPollingInterval(long pollingInterval) {
+    this.pollingInterval = pollingInterval;
+  }
+
   private class AsynchronousMessageListener implements Runnable {
     private final String queueName;
     private final ConsumerQueueDetail queueDetail;
@@ -382,10 +376,12 @@ public class RqueueMessageListenerContainer
         try {
           RqueueMessage message = getMessage();
           if (message != null) {
-            if (isQueueActive(queueName)) {
-              getTaskExecutor().submit(new MessageExecutor(message, queueDetail));
-            } else {
-              rqueueMessageTemplate.add(queueName, message);
+            getTaskExecutor().execute(new MessageExecutor(message, queueDetail));
+          } else {
+            try {
+              Thread.sleep(getPollingInterval());
+            } catch (InterruptedException ex) {
+              ex.printStackTrace();
             }
           }
         } catch (Exception e) {

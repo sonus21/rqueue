@@ -14,32 +14,21 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.spring.boot.application.app.dto;
 
-import java.util.concurrent.Future;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-class ScheduledTaskDetail {
-  private Future<?> future;
-  private long startTime;
-
-  ScheduledTaskDetail(long startTime, Future<?> future) {
-    this.startTime = startTime;
-    this.future = future;
-  }
-
-  Future<?> getFuture() {
-    return future;
-  }
-
-  void setFuture(Future<?> future) {
-    this.future = future;
-  }
-
-  long getStartTime() {
-    return startTime;
-  }
-
-  void setStartTime(Long startTime) {
-    this.startTime = startTime;
-  }
+@Getter
+@Setter
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+public abstract class BaseQueueMessage {
+  private String id;
 }

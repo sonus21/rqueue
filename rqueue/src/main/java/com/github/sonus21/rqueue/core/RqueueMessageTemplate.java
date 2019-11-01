@@ -22,6 +22,7 @@ import static com.github.sonus21.rqueue.utils.QueueInfo.getProcessingQueueName;
 import static com.github.sonus21.rqueue.utils.QueueInfo.getTimeQueueName;
 
 import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.RqueueRedisTemplate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,16 +35,15 @@ import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.util.CollectionUtils;
 
-public class RqueueMessageTemplate extends RqueueRedisTemplate<String, RqueueMessage> {
+public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
   private Resource addMessage = new ClassPathResource("scripts/add-message.lua");
   private Resource removeMessage = new ClassPathResource("scripts/remove-message.lua");
-  private Resource removeAndAddMessage = new ClassPathResource("scripts/add-remove-message.lua");
+  private Resource replaceMessage = new ClassPathResource("scripts/replace-message.lua");
   private RedisScript<Long> addScript = RedisScript.of(addMessage, Long.class);
-  private RedisScript<Long> removeAdnMessageScript =
-      RedisScript.of(removeAndAddMessage, Long.class);
-  protected RedisScript<RqueueMessage> removeScript =
+  private RedisScript<Long> replaceMessageScript = RedisScript.of(replaceMessage, Long.class);
+  private RedisScript<RqueueMessage> removeScript =
       RedisScript.of(removeMessage, RqueueMessage.class);
-  protected DefaultScriptExecutor<String> scriptExecutor;
+  private DefaultScriptExecutor<String> scriptExecutor;
 
   public RqueueMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
     super(redisConnectionFactory);
@@ -78,7 +78,7 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<String, RqueueMes
   }
 
   public void replaceMessage(String zsetName, RqueueMessage src, RqueueMessage tgt) {
-    scriptExecutor.execute(removeAdnMessageScript, Collections.singletonList(zsetName), src, tgt);
+    scriptExecutor.execute(replaceMessageScript, Collections.singletonList(zsetName), src, tgt);
   }
 
   public List<RqueueMessage> getAllMessages(String queueName) {

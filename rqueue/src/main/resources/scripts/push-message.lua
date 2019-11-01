@@ -8,6 +8,6 @@ end;
 -- check head of the queue
 local v = redis.call('ZRANGE', KEYS[2], 0, 0, 'WITHSCORES');
 if v[1] ~= nil then
-    return v[2];
+    return tonumber(v[2]);
 end
 return nil;

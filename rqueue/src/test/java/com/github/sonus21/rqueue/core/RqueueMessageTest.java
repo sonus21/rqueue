@@ -49,7 +49,7 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testSetReEnqueuedAt() throws JsonProcessingException {
+  public void testSetReEnqueuedAt() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
     Long time = System.currentTimeMillis() - delay;
     message.setReEnqueuedAt(time);
@@ -71,27 +71,27 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testObjectEqualityWithDifferentObject() throws JsonProcessingException {
+  public void testObjectEqualityWithDifferentObject() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
     assertNotEquals(message, new Object());
   }
 
   @Test
-  public void testObjectEqualityWithDifferentId() throws JsonProcessingException {
+  public void testObjectEqualityWithDifferentId() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
     RqueueMessage message2 = new RqueueMessage(queueName + "2", queueMessage, retryCount, delay);
     assertNotEquals(message, message2);
   }
 
   @Test
-  public void testObjectEqualityWithDifferentMessageContent() throws JsonProcessingException {
+  public void testObjectEqualityWithDifferentMessageContent() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage + 1, retryCount, delay);
     RqueueMessage message2 = new RqueueMessage(queueName, queueMessage + 2, retryCount, delay);
     assertNotEquals(message, message2);
   }
 
   @Test
-  public void testToString() throws JsonProcessingException {
+  public void testToString() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
     String toString =
         "RqueueMessage(id="

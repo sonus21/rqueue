@@ -7,7 +7,7 @@ Rqueue is an asynchronous task executor(worker) built for spring framework based
 
 * A message can be delayed for an arbitrary period of time or delivered immediately. 
 * Multiple messages can be consumed in parallel by different workers.
-* Message delivery: It's guaranteed that a message is consumed **at max once**.  (Message would be consumed by a worker at max once due to the failure in the worker and resumes process, otherwise exactly one delivery, there's no ACK mechanism like Redis)
+* Message delivery: It's guaranteed that a message is consumed **at least once**.  (Message would be consumed by a worker more than once due to the failure in the underlying worker/restart-process etc, otherwise exactly one delivery)
 
 
 ### Adding a task
@@ -186,7 +186,7 @@ class Application{
 
 **Redis connection failure and retry**  
 
-Whenever a call to Redis failed then it would be retried in 1 second,  to change that we can set back off to some different value. 
+Whenever a call to Redis failed then it would be retried in 5 seconds,  to change that we can set back off to some different value. 
 
 ```java
 // set backoff time to 100 milli second

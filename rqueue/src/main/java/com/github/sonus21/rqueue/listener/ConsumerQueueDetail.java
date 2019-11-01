@@ -22,7 +22,7 @@ public class ConsumerQueueDetail {
   private final String dlqName;
   private final int numRetries;
 
-  ConsumerQueueDetail(
+  public ConsumerQueueDetail(
       String queueName, int numRetries, String deadLaterQueueName, boolean delayedQueue) {
     this.queueName = queueName;
     this.numRetries = numRetries;

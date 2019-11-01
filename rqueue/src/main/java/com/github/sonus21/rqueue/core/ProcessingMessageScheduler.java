@@ -16,14 +16,25 @@
 
 package com.github.sonus21.rqueue.core;
 
+import static java.lang.Long.max;
+
+import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
 import com.github.sonus21.rqueue.utils.QueueInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
 public class ProcessingMessageScheduler extends MessageScheduler {
+  private final Logger logger = LoggerFactory.getLogger(ProcessingMessageScheduler.class);
 
   public ProcessingMessageScheduler(
       RedisTemplate<String, Long> redisTemplate, int poolSize, boolean scheduleTaskAtStartup) {
     super(redisTemplate, poolSize, scheduleTaskAtStartup);
+  }
+
+  @Override
+  protected Logger getLogger() {
+    return this.logger;
   }
 
   @Override
@@ -37,10 +48,20 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   }
 
   @Override
+  protected boolean isQueueValid(ConsumerQueueDetail queueDetail) {
+    return true;
+  }
+
+  @Override
+  protected String getThreadNamePrefix() {
+    return "RQProcessing-";
+  }
+
+  @Override
   protected long getNextScheduleTime(long currentTime, Long value) {
     if (value == null) {
       return QueueInfo.getMessageReEnqueueTime(currentTime);
     }
-    return value;
+    return max(currentTime, value);
   }
 }

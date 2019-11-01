@@ -14,32 +14,27 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.spring.boot.application.app.entity;
 
-import java.util.concurrent.Future;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-class ScheduledTaskDetail {
-  private Future<?> future;
-  private long startTime;
-
-  ScheduledTaskDetail(long startTime, Future<?> future) {
-    this.startTime = startTime;
-    this.future = future;
-  }
-
-  Future<?> getFuture() {
-    return future;
-  }
-
-  void setFuture(Future<?> future) {
-    this.future = future;
-  }
-
-  long getStartTime() {
-    return startTime;
-  }
-
-  void setStartTime(Long startTime) {
-    this.startTime = startTime;
-  }
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@Entity
+public class ConsumedMessage {
+  @Id
+  private String id;
+  @Column private String message;
 }

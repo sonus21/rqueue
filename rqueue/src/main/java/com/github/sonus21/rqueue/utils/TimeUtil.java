@@ -21,19 +21,24 @@ import java.util.function.Supplier;
 
 public abstract class TimeUtil {
   public static void waitFor(
-      Supplier<Boolean> supplier, long waitTimeInMilliSeconds, String description)
+      Supplier<Boolean> callback, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
     long endTime = System.currentTimeMillis() + waitTimeInMilliSeconds;
     do {
-      if (supplier.get()) {
+      if (Boolean.TRUE.equals(callback.get())) {
         return;
+      }
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
     } while (System.currentTimeMillis() < endTime);
     throw new TimedOutException("Timed out waiting for " + description);
   }
 
-  public static void waitFor(Supplier<Boolean> supplier, String description)
+  public static void waitFor(Supplier<Boolean> callback, String description)
       throws TimedOutException {
-    waitFor(supplier, 10000L, description);
+    waitFor(callback, 10000L, description);
   }
 }

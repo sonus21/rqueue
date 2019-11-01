@@ -14,32 +14,18 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.spring.boot;
 
-import java.util.concurrent.Future;
+import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import org.springframework.messaging.Message;
 
-class ScheduledTaskDetail {
-  private Future<?> future;
-  private long startTime;
+public abstract class Utility {
+  private static final GenericMessageConverter converter = new GenericMessageConverter();
 
-  ScheduledTaskDetail(long startTime, Future<?> future) {
-    this.startTime = startTime;
-    this.future = future;
-  }
-
-  Future<?> getFuture() {
-    return future;
-  }
-
-  void setFuture(Future<?> future) {
-    this.future = future;
-  }
-
-  long getStartTime() {
-    return startTime;
-  }
-
-  void setStartTime(Long startTime) {
-    this.startTime = startTime;
+  public static RqueueMessage buildMessage(
+      Object object, String queueName, Integer retryCount, Long delay) {
+    Message<?> msg = converter.toMessage(object, null);
+    return new RqueueMessage(queueName, (String) msg.getPayload(), retryCount, delay);
   }
 }

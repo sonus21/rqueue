@@ -14,32 +14,18 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.utils;
 
-import java.util.concurrent.Future;
+import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
 
-class ScheduledTaskDetail {
-  private Future<?> future;
-  private long startTime;
+import java.io.Serializable;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 
-  ScheduledTaskDetail(long startTime, Future<?> future) {
-    this.startTime = startTime;
-    this.future = future;
-  }
+public abstract class RqueueRedisTemplate<V extends Serializable> {
+  protected RedisTemplate<String, V> redisTemplate;
 
-  Future<?> getFuture() {
-    return future;
-  }
-
-  void setFuture(Future<?> future) {
-    this.future = future;
-  }
-
-  long getStartTime() {
-    return startTime;
-  }
-
-  void setStartTime(Long startTime) {
-    this.startTime = startTime;
+  public RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    this.redisTemplate = getRedisTemplate(redisConnectionFactory);
   }
 }
