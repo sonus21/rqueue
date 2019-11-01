@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring.boot;
+package com.github.sonus21.rqueue.spring.boot.tests.unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
+import com.github.sonus21.rqueue.spring.boot.RqueueMessageAutoConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -84,7 +85,7 @@ public class RqueueMessageAutoConfigTest {
   }
 
   @Test
-  public void simpleMessageListenerContainer() throws IllegalAccessException {
+  public void rqueueMessageListenerContainer() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueMessageAutoConfig messageAutoConfig = new RqueueMessageAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
@@ -93,7 +94,7 @@ public class RqueueMessageAutoConfigTest {
     doReturn(mock(RedisConnectionFactory.class))
         .when(beanFactory)
         .getBean(RedisConnectionFactory.class);
-    messageAutoConfig.simpleMessageListenerContainer(messageHandler);
+    messageAutoConfig.rqueueMessageListenerContainer(messageHandler);
     assertEquals(factory.getRqueueMessageHandler().hashCode(), messageHandler.hashCode());
   }
 

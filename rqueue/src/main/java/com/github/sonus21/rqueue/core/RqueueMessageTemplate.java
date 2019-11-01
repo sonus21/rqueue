@@ -16,42 +16,86 @@
 
 package com.github.sonus21.rqueue.core;
 
-import java.util.Optional;
+import static com.github.sonus21.rqueue.utils.QueueInfo.getChannelName;
+import static com.github.sonus21.rqueue.utils.QueueInfo.getProcessingQueueChannelName;
+import static com.github.sonus21.rqueue.utils.QueueInfo.getProcessingQueueName;
+import static com.github.sonus21.rqueue.utils.QueueInfo.getTimeQueueName;
+
+import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.RqueueRedisTemplate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
+import org.springframework.data.redis.core.script.DefaultScriptExecutor;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.util.CollectionUtils;
 
-public class RqueueMessageTemplate extends RqueueRedisTemplate<String, RqueueMessage> {
-  private static final long KEY_POP_TIMEOUT = 10;
+public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
+  private Resource addMessage = new ClassPathResource("scripts/add-message.lua");
+  private Resource removeMessage = new ClassPathResource("scripts/remove-message.lua");
+  private Resource replaceMessage = new ClassPathResource("scripts/replace-message.lua");
+  private RedisScript<Long> addScript = RedisScript.of(addMessage, Long.class);
+  private RedisScript<Long> replaceMessageScript = RedisScript.of(replaceMessage, Long.class);
+  private RedisScript<RqueueMessage> removeScript =
+      RedisScript.of(removeMessage, RqueueMessage.class);
+  private DefaultScriptExecutor<String> scriptExecutor;
 
   public RqueueMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
     super(redisConnectionFactory);
+    this.scriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
   }
 
-  public void add(String key, RqueueMessage message) {
-    redisTemplate.opsForList().rightPush(key, message);
+  public void add(String queueName, RqueueMessage message) {
+    redisTemplate.opsForList().rightPush(queueName, message);
   }
 
-  public RqueueMessage lpop(String key) {
-    return redisTemplate.opsForList().leftPop(key, KEY_POP_TIMEOUT, TimeUnit.SECONDS);
+  public RqueueMessage pop(String queueName) {
+    long currentTime = System.currentTimeMillis();
+    return scriptExecutor.execute(
+        removeScript,
+        Arrays.asList(
+            queueName, getProcessingQueueName(queueName), getProcessingQueueChannelName(queueName)),
+        currentTime,
+        QueueInfo.getMessageReEnqueueTime(currentTime));
   }
 
-  public void addToZset(String key, RqueueMessage rqueueMessage) {
-    redisTemplate.opsForZSet().add(key, rqueueMessage, rqueueMessage.getProcessAt());
+  public void addWithDelay(String queueName, RqueueMessage rqueueMessage) {
+    scriptExecutor.execute(
+        addScript,
+        Arrays.asList(getTimeQueueName(queueName), getChannelName(queueName)),
+        rqueueMessage,
+        rqueueMessage.getProcessAt(),
+        rqueueMessage.getQueuedTime());
   }
 
-  public void removeFromZset(String key, RqueueMessage rqueueMessage) {
-    redisTemplate.opsForZSet().remove(key, rqueueMessage);
+  public void removeFromZset(String zsetName, RqueueMessage rqueueMessage) {
+    redisTemplate.opsForZSet().remove(zsetName, rqueueMessage);
   }
 
-  public RqueueMessage getFirstFromZset(String key) {
-    Set<TypedTuple<RqueueMessage>> msgs = redisTemplate.opsForZSet().rangeWithScores(key, 0, 0);
-    if (CollectionUtils.isEmpty(msgs)) {
-      return null;
+  public void replaceMessage(String zsetName, RqueueMessage src, RqueueMessage tgt) {
+    scriptExecutor.execute(replaceMessageScript, Collections.singletonList(zsetName), src, tgt);
+  }
+
+  public List<RqueueMessage> getAllMessages(String queueName) {
+    List<RqueueMessage> messages = redisTemplate.opsForList().range(queueName, 0, -1);
+    if (CollectionUtils.isEmpty(messages)) {
+      messages = new ArrayList<>();
     }
-    Optional<TypedTuple<RqueueMessage>> element = msgs.stream().findFirst();
-    return element.map(TypedTuple::getValue).orElse(null);
+    Set<RqueueMessage> messagesFromZset =
+        redisTemplate.opsForZSet().range(QueueInfo.getTimeQueueName(queueName), 0, -1);
+    if (!CollectionUtils.isEmpty(messagesFromZset)) {
+      messages.addAll(messagesFromZset);
+    }
+    Set<RqueueMessage> messagesInProcessingQueue =
+        redisTemplate.opsForZSet().range(QueueInfo.getProcessingQueueName(queueName), 0, -1);
+    if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
+      messages.addAll(messagesInProcessingQueue);
+    }
+    return messages;
   }
 }

@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.converter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,11 +31,12 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
+@SuppressWarnings("unchecked")
 public class GenericMessageConverterTest {
   @Data
   @AllArgsConstructor
   @NoArgsConstructor
-  static class TestData {
+  private static class TestData {
     private String id;
     private String message;
   }
@@ -57,7 +59,7 @@ public class GenericMessageConverterTest {
   @Test
   public void fromMessageClassNotFoundException() {
     Message<String> message2 = (Message<String>) genericMessageConverter.toMessage(testData, null);
-    String payload = message2.getPayload().replace("TestData", "SomeData");
+    String payload = Objects.requireNonNull(message2).getPayload().replace("TestData", "SomeData");
     Message<String> message3 = new GenericMessage<>(payload);
     assertNull(genericMessageConverter.fromMessage(message3, null));
   }

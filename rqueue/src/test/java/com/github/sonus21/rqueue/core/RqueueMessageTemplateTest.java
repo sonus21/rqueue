@@ -16,40 +16,38 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
+@SuppressWarnings("unchecked")
 public class RqueueMessageTemplateTest {
   private RedisConnectionFactory redisConnectionFactory = mock(RedisConnectionFactory.class);
   private RedisTemplate<String, RqueueMessage> redisTemplate = mock(RedisTemplate.class);
   private RqueueMessageTemplate rqueueMessageTemplate =
       new RqueueMessageTemplate(redisConnectionFactory);
   private ListOperations<String, RqueueMessage> listOperations = mock(ListOperations.class);
-  private ZSetOperations<String, RqueueMessage> zSetOperations = mock(ZSetOperations.class);
+  private DefaultScriptExecutor<String> scriptExecutor = mock(DefaultScriptExecutor.class);
   private String key = "test-queue";
   private RqueueMessage message = new RqueueMessage(key, "This is a message", null, 100L);
-  private DefaultTypedTuple<RqueueMessage> typedTuple =
-      new DefaultTypedTuple(message, (double) message.getProcessAt());
 
   @Before
   public void init() throws Exception {
     FieldUtils.writeField(rqueueMessageTemplate, "redisTemplate", redisTemplate, true);
+    FieldUtils.writeField(rqueueMessageTemplate, "scriptExecutor", scriptExecutor, true);
   }
 
   @Test
@@ -60,40 +58,14 @@ public class RqueueMessageTemplateTest {
   }
 
   @Test
-  public void lpop() {
-    doReturn(listOperations).when(redisTemplate).opsForList();
-    doReturn(message).when(listOperations).leftPop(key, 10, TimeUnit.SECONDS);
-    assertEquals(message, rqueueMessageTemplate.lpop(key));
-    doReturn(null).when(listOperations).leftPop(key, 10, TimeUnit.SECONDS);
-    assertNull(rqueueMessageTemplate.lpop(key));
+  public void pop() {
+    rqueueMessageTemplate.pop(key);
+    verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 
   @Test
-  public void addToZset() {
-    doReturn(zSetOperations).when(redisTemplate).opsForZSet();
-    doReturn(true).when(zSetOperations).add(key, message, message.getProcessAt());
-    rqueueMessageTemplate.addToZset(key, message);
-  }
-
-  @Test
-  public void removeFromZset() {
-    doReturn(zSetOperations).when(redisTemplate).opsForZSet();
-    doReturn(1L).when(zSetOperations).remove(key, message);
-    rqueueMessageTemplate.removeFromZset(key, message);
-  }
-
-  @Test
-  public void getFirstFromZset() {
-    doReturn(zSetOperations).when(redisTemplate).opsForZSet();
-    doReturn(null).when(zSetOperations).rangeWithScores(key, 0, 0);
-    assertNull(rqueueMessageTemplate.getFirstFromZset(key));
-
-    // empty collection
-    doReturn(Collections.emptySet()).when(zSetOperations).rangeWithScores(key, 0, 0);
-    assertNull(rqueueMessageTemplate.getFirstFromZset(key));
-
-    // only one element
-    doReturn(Collections.singleton(typedTuple)).when(zSetOperations).rangeWithScores(key, 0, 0);
-    assertEquals(message, rqueueMessageTemplate.getFirstFromZset(key));
+  public void addWithDelay() {
+    rqueueMessageTemplate.addWithDelay(key, message);
+    verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 }

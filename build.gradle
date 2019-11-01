@@ -30,8 +30,11 @@ subprojects {
 
         testCompile group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
         testAnnotationProcessor 'org.projectlombok:lombok:1.18.10'
-        testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.28'
 
+        // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
+        testCompile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+        // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+        testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
         testCompile group: 'junit', name: 'junit', version: '4.12'
         // https://mvnrepository.com/artifact/org.mockito/mockito-core
         testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'

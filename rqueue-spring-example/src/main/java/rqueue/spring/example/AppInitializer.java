@@ -16,7 +16,6 @@
 
 package rqueue.spring.example;
 
-import rqueue.spring.example.config.AppConfig;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {

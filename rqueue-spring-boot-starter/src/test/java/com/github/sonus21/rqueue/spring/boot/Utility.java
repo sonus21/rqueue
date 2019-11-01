@@ -14,13 +14,18 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.spring.boot;
 
-public abstract class Constants {
-  private static final String DELAYED_QUEUE_PREFIX = "rqueue-delay::";
-  public static final String QUEUE_NAME = "QUEUE_NAME";
+import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import org.springframework.messaging.Message;
 
-  public static String getZsetName(String queueName) {
-    return DELAYED_QUEUE_PREFIX + queueName;
+public abstract class Utility {
+  private static final GenericMessageConverter converter = new GenericMessageConverter();
+
+  public static RqueueMessage buildMessage(
+      Object object, String queueName, Integer retryCount, Long delay) {
+    Message<?> msg = converter.toMessage(object, null);
+    return new RqueueMessage(queueName, (String) msg.getPayload(), retryCount, delay);
   }
 }

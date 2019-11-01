@@ -14,23 +14,18 @@
  *   limitations under the License.
  */
 
-package rqueue.spring.example.config;
+package com.github.sonus21.rqueue.utils;
 
-import com.github.sonus21.rqueue.spring.EnableRqueue;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
+
+import java.io.Serializable;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.data.redis.core.RedisTemplate;
 
-@Configuration
-@ComponentScan(basePackages = {"rqueue.spring.example"})
-@EnableRqueue
-@EnableWebMvc
-public class AppConfig {
-  @Bean
-  public RedisConnectionFactory redisConnectionFactory() {
-    return new LettuceConnectionFactory();
+public abstract class RqueueRedisTemplate<V extends Serializable> {
+  protected RedisTemplate<String, V> redisTemplate;
+
+  public RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    this.redisTemplate = getRedisTemplate(redisConnectionFactory);
   }
 }

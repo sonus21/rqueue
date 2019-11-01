@@ -53,4 +53,13 @@ public class Controller {
     rqueueMessageSender.put("job-queue", job);
     return job.toString();
   }
+
+  @GetMapping("job-delay")
+  public String sendJobNotificationWithDelay() {
+    Job job = new Job();
+    job.setId(UUID.randomUUID().toString());
+    job.setMessage("Hi this is " + job.getId());
+    rqueueMessageSender.put("job-queue", job, 2000L);
+    return job.toString();
+  }
 }

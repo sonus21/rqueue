@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.producer;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.utils.Validator;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import org.springframework.util.Assert;
  */
 public class RqueueMessageSender {
   private MessageWriter messageWriter;
+  private RqueueMessageTemplate messageTemplate;
 
   private List<MessageConverter> getMessageConverters(
       boolean addDefault, List<MessageConverter> messageConverters) {
@@ -56,6 +58,7 @@ public class RqueueMessageSender {
       boolean addDefault) {
     Assert.notNull(messageTemplate, "messageTemplate can not be null");
     Assert.notEmpty(messageConverters, "messageConverters can  not be empty");
+    this.messageTemplate = messageTemplate;
     this.messageWriter =
         new MessageWriter(messageTemplate, getMessageConverters(addDefault, messageConverters));
   }
@@ -115,6 +118,21 @@ public class RqueueMessageSender {
     Validator.validateQueueNameAndMessage(queueName, message);
     Validator.validateDelay(delayInMilliSecs);
     return messageWriter.pushMessage(queueName, message, null, delayInMilliSecs);
+  }
+
+  /**
+   * Find all messages stored on a given queue, it considers all the messages including delayed and
+   * non-delayed.
+   *
+   * @param queueName queue name to be query for
+   * @return list of messages
+   */
+  public List<Object> getAllMessages(String queueName) {
+    List<Object> messages = new ArrayList<>();
+    for (RqueueMessage message : messageTemplate.getAllMessages(queueName)) {
+      messages.add(messageWriter.convertMessageToObject(message));
+    }
+    return messages;
   }
 
   /**

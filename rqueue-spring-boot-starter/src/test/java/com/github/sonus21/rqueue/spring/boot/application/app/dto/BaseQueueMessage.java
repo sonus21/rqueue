@@ -14,11 +14,21 @@
  *   limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.spring.boot.application.app.dto;
 
-@SuppressWarnings("WeakerAccess")
-public class TimedOutException extends Exception {
-  public TimedOutException(String message) {
-    super(message);
-  }
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+public abstract class BaseQueueMessage {
+  private String id;
 }

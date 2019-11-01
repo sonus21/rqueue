@@ -14,19 +14,14 @@ dependencies {
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
     compile group: 'org.springframework', name: 'spring-webmvc', version: '5.2.0.RELEASE'
 
-    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
-    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.2.0.RELEASE'
-
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
     compile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
-
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compile group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.28'
-
 
     annotationProcessor 'org.projectlombok:lombok:1.18.10'
 
