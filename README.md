@@ -40,7 +40,7 @@ Add Dependency
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>1.0-RELEASE</version>
+        <version>1.1-RELEASE</version>
         <type>pom</type>
     </dependency>
     ```
@@ -58,7 +58,7 @@ Add Dependency
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>1.0-RELEASE</version>
+       <version>1.1-RELEASE</version>
        <type>pom</type>
      </dependency>
     ```
@@ -137,7 +137,7 @@ public class MessageService {
   // send notification in 30 seconds
    public void sendNotification(Notification notification){
     //do something
-    rqueueMessageSender.put("notification-queue", notification, 30*1000);
+    rqueueMessageSender.put("notification-queue", notification, 30*1000L);
   }
 }
 ```
