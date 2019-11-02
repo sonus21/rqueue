@@ -89,7 +89,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
                   getApplicationContext(), rqueueListener.delayedQueue()),
               ValueResolver.resolveValueToInteger(
                   getApplicationContext(), rqueueListener.numRetries()),
-              resolveDelayedQueue(rqueueListener.deadLaterQueue()));
+              resolveDelayedQueue(rqueueListener.deadLetterQueue()));
       if (mappingInformation.isValid()) {
         return mappingInformation;
       }
@@ -105,7 +105,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       return resolvedValues[0];
     }
     throw new IllegalStateException(
-        "more than one dead later queue can not be configure '" + dlqName + "'");
+        "more than one dead letter queue can not be configure '" + dlqName + "'");
   }
 
   private Set<String> resolveQueueNames(String[] queueNames) {

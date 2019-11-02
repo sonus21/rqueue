@@ -196,9 +196,9 @@ public class RqueueMessageHandlerTest {
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
     Map<String, Object> map = new HashMap<>();
     map.put("queue.name", slowQueue);
-    map.put("queue.dead.later.queue", true);
+    map.put("queue.dead.letter.queue", true);
     map.put("queue.num.retries", 3);
-    map.put("dead.later.queue.name", slowQueue + "-dlq");
+    map.put("dead.letter.queue.name", slowQueue + "-dlq");
     applicationContext
         .getEnvironment()
         .getPropertySources()
@@ -210,7 +210,7 @@ public class RqueueMessageHandlerTest {
     assertEquals(3, messageHandler.mappingInformation.getNumRetries());
     assertEquals(
         Collections.singleton(slowQueue), messageHandler.mappingInformation.getQueueNames());
-    assertEquals(slowQueue + "-dlq", messageHandler.mappingInformation.getDeadLaterQueueName());
+    assertEquals(slowQueue + "-dlq", messageHandler.mappingInformation.getDeadLetterQueueName());
   }
 
   @AllArgsConstructor
@@ -298,9 +298,9 @@ public class RqueueMessageHandlerTest {
 
     @RqueueListener(
         value = "${queue.name}",
-        delayedQueue = "${queue.dead.later.queue}",
+        delayedQueue = "${queue.dead.letter.queue}",
         numRetries = "${queue.num.retries}",
-        deadLaterQueue = "${dead.later.queue.name}")
+        deadLetterQueue = "${dead.letter.queue.name}")
     @SuppressWarnings({"UnusedDeclaration"})
     public void onMessage(String value) {
       this.lastReceivedMessage = value;

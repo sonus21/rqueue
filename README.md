@@ -20,7 +20,7 @@ Rqueue supports two types of tasks.
 Task execution can be configured in different ways
 1. By default a tasks would be retried for Integer.MAX_VALUE number of times
 2. If we do not need retry then we need to set retry count to zero
-3. After retrying/executing a task N (>=1) times if we can't execute the given task then the task can be discarded or push to dead-later-queue
+3. After retrying/executing a task N (>=1) times if we can't execute the given task then the task can be discarded or push to dead-letter-queue
 
 ## Usage
 
@@ -98,19 +98,19 @@ public class MessageListener {
   }
   
   @RqueueListener(value = "delayed-queue-2", delayedQueue = "true",
-   numRetries="3", deadLaterQueue="failed-delayed-queue")
+   numRetries="3", deadLetterQueue="failed-delayed-queue")
   public void delayedMessageWithDlq(String message) {
     log.info("delayedMessageWithDlq: {}", message);
   }
   
   @RqueueListener(value = "job-queue", delayedQueue = "true",
-   numRetries="3", deadLaterQueue="failed-job-queue")
+   numRetries="3", deadLetterQueue="failed-job-queue")
   public void onMessage(Job job) {
     log.info("Job created: {}", job);
   }
   
   @RqueueListener(value = "notification-queue", delayedQueue = "true", 
-  numRetries="3", deadLaterQueue="failed-notification-queue")
+  numRetries="3", deadLetterQueue="failed-notification-queue")
   public void onMessage(Notification notification) {
     log.info("Notification message: {}", notification);
   }

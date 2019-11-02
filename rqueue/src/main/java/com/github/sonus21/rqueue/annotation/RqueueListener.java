@@ -58,7 +58,7 @@ public @interface RqueueListener {
   /**
    * In case of multiple failures corresponding message would be stored in this queue
    *
-   * @return dead later queue name
+   * @return dead letter queue name
    */
-  String deadLaterQueue() default "";
+  String deadLetterQueue() default "";
 }

@@ -20,7 +20,7 @@ allprojects {
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '1.1-SNAPSHOT'
+    version = '1.2-SNAPSHOT'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging

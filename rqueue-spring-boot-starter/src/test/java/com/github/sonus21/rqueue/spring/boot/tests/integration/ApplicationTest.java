@@ -50,7 +50,7 @@ public class ApplicationTest {
   @Value("${email.queue.name}")
   private String emailQueue;
 
-  @Value("${email.dead.later.queue.name}")
+  @Value("${email.dead.letter.queue.name}")
   private String emailDelayedQueue;
 
   @Value("${email.queue.retry.count}")

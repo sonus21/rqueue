@@ -250,7 +250,7 @@ public class RqueueMessageListenerContainer
     return new ConsumerQueueDetail(
         queue,
         mappingInformation.getNumRetries(),
-        mappingInformation.getDeadLaterQueueName(),
+        mappingInformation.getDeadLetterQueueName(),
         mappingInformation.isDelayedQueue());
   }
 

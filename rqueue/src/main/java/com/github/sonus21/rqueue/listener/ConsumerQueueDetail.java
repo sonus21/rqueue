@@ -23,11 +23,11 @@ public class ConsumerQueueDetail {
   private final int numRetries;
 
   public ConsumerQueueDetail(
-      String queueName, int numRetries, String deadLaterQueueName, boolean delayedQueue) {
+      String queueName, int numRetries, String deadLetterQueueName, boolean delayedQueue) {
     this.queueName = queueName;
     this.numRetries = numRetries;
     this.delayedQueue = delayedQueue;
-    this.dlqName = deadLaterQueueName;
+    this.dlqName = deadLetterQueueName;
   }
 
   public String getQueueName() {

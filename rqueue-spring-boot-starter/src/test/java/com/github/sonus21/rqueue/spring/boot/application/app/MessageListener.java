@@ -56,7 +56,7 @@ public class MessageListener {
 
   @RqueueListener(
       value = "${email.queue.name}",
-      deadLaterQueue = "${email.dead.later.queue.name}",
+      deadLetterQueue = "${email.dead.letter.queue.name}",
       numRetries = "${email.queue.retry.count}",
       delayedQueue = "true")
   public void onMessage(EmailTask emailTask) throws Exception {

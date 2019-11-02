@@ -95,7 +95,7 @@ public class RqueueMessageSender {
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or sent
-   *     to dead later queue configured using {@link RqueueListener#delayedQueue()}
+   *     to dead letter queue configured using {@link RqueueListener#delayedQueue()}
    * @return message was submitted successfully or failed.
    */
   public boolean put(String queueName, Object message, int retryCount) {
@@ -142,7 +142,7 @@ public class RqueueMessageSender {
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or sent
-   *     to dead later queue configured using {@link RqueueListener#delayedQueue()}
+   *     to dead letter queue configured using {@link RqueueListener#delayedQueue()}
    * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
    *     listener when number of millisecond has elapsed.
    * @return message was submitted successfully or failed.

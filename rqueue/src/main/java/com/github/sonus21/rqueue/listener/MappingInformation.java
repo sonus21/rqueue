@@ -24,14 +24,14 @@ class MappingInformation implements Comparable<MappingInformation> {
   private final Set<String> queueNames;
   private int numRetries;
   private boolean delayedQueue;
-  private String deadLaterQueueName;
+  private String deadLetterQueueName;
 
   MappingInformation(
-      Set<String> queueNames, boolean delayedQueue, int numRetries, String deadLaterQueueName) {
+      Set<String> queueNames, boolean delayedQueue, int numRetries, String deadLetterQueueName) {
     this.queueNames = Collections.unmodifiableSet(queueNames);
     this.delayedQueue = delayedQueue;
     this.numRetries = numRetries;
-    this.deadLaterQueueName = deadLaterQueueName;
+    this.deadLetterQueueName = deadLetterQueueName;
   }
 
   Set<String> getQueueNames() {
@@ -56,8 +56,8 @@ class MappingInformation implements Comparable<MappingInformation> {
     return delayedQueue;
   }
 
-  String getDeadLaterQueueName() {
-    return deadLaterQueueName;
+  String getDeadLetterQueueName() {
+    return deadLetterQueueName;
   }
 
   boolean isValid() {
