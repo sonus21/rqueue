@@ -23,15 +23,19 @@ import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
+import com.github.sonus21.rqueue.spring.boot.RunTestUntilFail;
+import com.github.sonus21.rqueue.spring.boot.Utility;
 import com.github.sonus21.rqueue.spring.boot.application.app.dto.Job;
 import com.github.sonus21.rqueue.spring.boot.application.app.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.spring.boot.application.main.ApplicationWithCustomConfiguration;
 import com.github.sonus21.rqueue.utils.QueueInfo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,15 +64,30 @@ public class ApplicationTest4 {
   @Autowired protected RedisConnectionFactory redisConnectionFactory;
   private RedisTemplate<String, RqueueMessage> redisTemplate;
 
-  @PostConstruct
-  public void init() {
-    this.redisTemplate = getRedisTemplate(redisConnectionFactory);
-  }
-
   @Value("${job.queue.name}")
   private String jobQueueName;
 
   private int messageCount = 110;
+
+  @Rule
+  public RunTestUntilFail retry =
+      new RunTestUntilFail(
+          log,
+          1,
+          () -> {
+            for (Entry<String, List<RqueueMessage>> entry :
+                Utility.getMessageMap(jobQueueName, redisTemplate).entrySet()) {
+              log.info("Queue {}", entry.getKey());
+              for (RqueueMessage message : entry.getValue()) {
+                log.info("Queue {} Msg {}", entry.getKey(), message);
+              }
+            }
+          });
+
+  @PostConstruct
+  public void init() {
+    this.redisTemplate = getRedisTemplate(redisConnectionFactory);
+  }
 
   @Test
   public void testPublishMessageIsTriggeredOnMessageRemoval()

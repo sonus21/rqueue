@@ -375,6 +375,7 @@ public class RqueueMessageListenerContainer
       while (isQueueActive(queueName)) {
         try {
           RqueueMessage message = getMessage();
+          logger.debug("Fetched Msg {}", message);
           if (message != null) {
             getTaskExecutor().execute(new MessageExecutor(message, queueDetail));
           } else {
@@ -459,6 +460,7 @@ public class RqueueMessageListenerContainer
             rqueueMessageTemplate.removeFromZset(processingQueueName, rqueueMessage);
           }
         } else {
+          logger.debug("Delete Queue: {} message: {}", processingQueueName, rqueueMessage);
           // delete it from processing queue
           rqueueMessageTemplate.removeFromZset(processingQueueName, rqueueMessage);
         }

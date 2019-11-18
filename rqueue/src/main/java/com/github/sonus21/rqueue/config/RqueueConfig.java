@@ -27,9 +27,29 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
+/**
+ * This is a base configuration class, that is used in Spring and Spring boot Rqueue packages for
+ * configuration. This class creates required beans to work Rqueue library. It internally maintains
+ * two types of scheduled tasks for different functionality, for delayed queue messages have to be
+ * moved from ZSET to LIST, in other case to at least once message delivery guarantee, messages have
+ * to be moved from ZSET to LIST again, we expect very small number of messages in processing queue.
+ * Reason being we delete messages once it's consumed, but due to failure in listeners message might
+ * not be removed, where as message in delayed queue can be very high based on the use case.
+ */
 public abstract class RqueueConfig {
+
+  /**
+   * This is more for testing features where scheduler is not started automatically, based on the
+   * messages from Redis PUB/SUB channel tasks are executed.
+   */
   @Value("${auto.start.scheduler:true}")
   private boolean autoStartScheduler;
+
+  @Value("${delayed.queue.thread.pool.size:5}")
+  private int delayedQueueSchedulerPoolSize;
+
+  @Value("${processing.queue.thread.pool.size:1}")
+  private int processingQueueSchedulerPoolSize;
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
@@ -37,6 +57,13 @@ public abstract class RqueueConfig {
 
   @Autowired protected BeanFactory beanFactory;
 
+  /**
+   * Get redis connection factory either from listener container factory or from bean factory. 1st
+   * priority is given to container factory. This redis connection factory is used to connect to
+   * Database for different ops.
+   *
+   * @return {@link RedisConnectionFactory} object
+   */
   protected RedisConnectionFactory getRedisConnectionFactory() {
     if (simpleRqueueListenerContainerFactory.getRedisConnectionFactory() == null) {
       simpleRqueueListenerContainerFactory.setRedisConnectionFactory(
@@ -45,6 +72,13 @@ public abstract class RqueueConfig {
     return simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
   }
 
+  /**
+   * Get Rqueue message template either from listener container factory or create new one. 1st
+   * priority is given to container factory. Message template is used to serialize message and
+   * sending message to Redis.
+   *
+   * @return {@link RqueueMessageTemplate} object
+   */
   protected RqueueMessageTemplate getMessageTemplate(RedisConnectionFactory connectionFactory) {
     if (simpleRqueueListenerContainerFactory.getRqueueMessageTemplate() != null) {
       return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
@@ -54,15 +88,31 @@ public abstract class RqueueConfig {
     return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
   }
 
+  /**
+   * This scheduler is used to pull messages from delayed queue to their respective queue.
+   * Internally it moves messages from ZSET to LIST based on the priority and current time.
+   *
+   * @return {@link MessageScheduler} object
+   */
   @Bean
   public MessageScheduler messageScheduler() {
     return new MessageScheduler(
-        getRedisTemplate(getRedisConnectionFactory()), 5, autoStartScheduler);
+        getRedisTemplate(getRedisConnectionFactory()),
+        delayedQueueSchedulerPoolSize,
+        autoStartScheduler);
   }
 
+  /**
+   * This scheduler is used to pull messages from processing queue to their respective queue.
+   * Internally it moves messages from ZSET to LIST based on the priority and current time.
+   *
+   * @return {@link MessageScheduler} object
+   */
   @Bean
   public ProcessingMessageScheduler processingMessageScheduler() {
     return new ProcessingMessageScheduler(
-        getRedisTemplate(getRedisConnectionFactory()), 1, autoStartScheduler);
+        getRedisTemplate(getRedisConnectionFactory()),
+        processingQueueSchedulerPoolSize,
+        autoStartScheduler);
   }
 }

@@ -18,7 +18,15 @@ package com.github.sonus21.rqueue.spring.boot;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.utils.QueueInfo;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
+import org.springframework.util.CollectionUtils;
 
 public abstract class Utility {
   private static final GenericMessageConverter converter = new GenericMessageConverter();
@@ -27,5 +35,35 @@ public abstract class Utility {
       Object object, String queueName, Integer retryCount, Long delay) {
     Message<?> msg = converter.toMessage(object, null);
     return new RqueueMessage(queueName, (String) msg.getPayload(), retryCount, delay);
+  }
+
+  public static Map<String, List<RqueueMessage>> getMessageMap(
+      String queueName, RedisTemplate<String, RqueueMessage> redisTemplate) {
+    Map<String, List<RqueueMessage>> queueNameToMessage = new HashMap<>();
+
+    List<RqueueMessage> messages = redisTemplate.opsForList().range(queueName, 0, -1);
+    if (CollectionUtils.isEmpty(messages)) {
+      messages = new ArrayList<>();
+    }
+    queueNameToMessage.put(queueName, messages);
+
+    Set<RqueueMessage> messagesFromZset =
+        redisTemplate.opsForZSet().range(QueueInfo.getTimeQueueName(queueName), 0, -1);
+    if (!CollectionUtils.isEmpty(messagesFromZset)) {
+      messages = new ArrayList<>(messagesFromZset);
+    } else {
+      messages = new ArrayList<>();
+    }
+    queueNameToMessage.put(QueueInfo.getTimeQueueName(queueName), messages);
+
+    Set<RqueueMessage> messagesInProcessingQueue =
+        redisTemplate.opsForZSet().range(QueueInfo.getProcessingQueueName(queueName), 0, -1);
+    if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
+      messages = new ArrayList<>(messagesInProcessingQueue);
+    } else {
+      messages = new ArrayList<>();
+    }
+    queueNameToMessage.put(QueueInfo.getProcessingQueueName(queueName), messages);
+    return queueNameToMessage;
   }
 }

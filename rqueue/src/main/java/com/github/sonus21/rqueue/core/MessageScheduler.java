@@ -277,7 +277,16 @@ public class MessageScheduler implements InitializingBean, DisposableBean, Smart
 
   protected synchronized void schedule(
       String queueName, String zsetName, Long startTime, boolean forceSchedule) {
-    if (!isQueueActive(queueName) || scheduler == null) {
+    boolean isQueueActive = isQueueActive(queueName);
+    getLogger()
+        .debug(
+            "Schedule Task QUEUE: {}, ZSET:{},  StartTime: {} Force: {}, QState: {}",
+            queueName,
+            zsetName,
+            startTime,
+            forceSchedule,
+            isQueueActive);
+    if (!isQueueActive || scheduler == null) {
       return;
     }
     ScheduledTaskDetail scheduledTaskDetail = queueNameToScheduledTask.get(queueName);
@@ -332,6 +341,7 @@ public class MessageScheduler implements InitializingBean, DisposableBean, Smart
       }
       String body = new String(message.getBody());
       String channel = new String(message.getChannel());
+      getLogger().debug("Body: {}  Channel: {}", body, channel);
       try {
         Long startTime = Long.parseLong(body);
         String queueName = channelNameToQueueName.get(channel);
