@@ -40,8 +40,7 @@ public class MessageListener {
   @RqueueListener("${job.queue.name}")
   public void onMessage(Job job) throws Exception {
     if (failureManager.shouldFail(job.getId())) {
-      log.debug("{}", job);
-      throw new Exception("Failing job task to be retried");
+      throw new Exception("Failing job task to be retried" + job);
     }
     consumedMessageService.save(job);
   }
@@ -52,7 +51,7 @@ public class MessageListener {
       delayedQueue = "true")
   public void onMessage(Notification notification) throws Exception {
     if (failureManager.shouldFail(notification.getId())) {
-      throw new Exception("Failing notification task to be retried");
+      throw new Exception("Failing notification task to be retried" + notification);
     }
     consumedMessageService.save(notification);
   }
@@ -64,7 +63,7 @@ public class MessageListener {
       delayedQueue = "true")
   public void onMessage(EmailTask emailTask) throws Exception {
     if (failureManager.shouldFail(emailTask.getId())) {
-      throw new Exception("Failing email task to be retried");
+      throw new Exception("Failing email task to be retried" + emailTask);
     }
     consumedMessageService.save(emailTask);
   }
