@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.spring.boot.application.app.service.ConsumedMes
 import com.github.sonus21.rqueue.spring.boot.application.app.service.FailureManager;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Transactional
+@Slf4j
 public class MessageListener {
   @NonNull private ConsumedMessageService consumedMessageService;
   @NonNull private FailureManager failureManager;
@@ -38,6 +40,7 @@ public class MessageListener {
   @RqueueListener("${job.queue.name}")
   public void onMessage(Job job) throws Exception {
     if (failureManager.shouldFail(job.getId())) {
+      log.debug("{}", job);
       throw new Exception("Failing job task to be retried");
     }
     consumedMessageService.save(job);
