@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
-import com.github.sonus21.rqueue.spring.boot.application.main.Application;
 import com.github.sonus21.rqueue.spring.boot.application.app.dto.EmailTask;
 import com.github.sonus21.rqueue.spring.boot.application.app.dto.Job;
 import com.github.sonus21.rqueue.spring.boot.application.app.dto.Notification;
 import com.github.sonus21.rqueue.spring.boot.application.app.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.spring.boot.application.app.service.FailureManager;
+import com.github.sonus21.rqueue.spring.boot.application.main.Application;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,6 +40,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 public class ApplicationTest {
+  static {
+    System.setProperty("TEST_NAME", "ApplicationTest");
+  }
+
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private FailureManager failureManager;

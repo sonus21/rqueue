@@ -59,6 +59,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
       "max.workers.count=120"
     })
 public class ApplicationTest4 {
+  static {
+    System.setProperty("TEST_NAME", "ApplicationTest4");
+  }
+
   @Autowired protected ConsumedMessageService consumedMessageService;
   @Autowired protected RqueueMessageSender messageSender;
   @Autowired protected RedisConnectionFactory redisConnectionFactory;

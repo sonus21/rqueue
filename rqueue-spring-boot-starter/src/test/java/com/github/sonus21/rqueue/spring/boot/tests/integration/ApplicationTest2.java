@@ -42,6 +42,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @TestPropertySource(properties = {"spring.redis.port=6381", "mysql.db.name=test1"})
 @SpringBootTest
 public class ApplicationTest2 {
+  static {
+    System.setProperty("TEST_NAME", "ApplicationTest2");
+  }
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private FailureManager failureManager;

@@ -50,6 +50,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
     properties = {"auto.start.scheduler=false", "spring.redis.port=6382", "mysql.db.name=test2"})
 @SpringBootTest
 public class ApplicationTest3 {
+  static {
+    System.setProperty("TEST_NAME", "ApplicationTest3");
+  }
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private RedisConnectionFactory redisConnectionFactory;

@@ -372,10 +372,11 @@ public class RqueueMessageListenerContainer
 
     @Override
     public void run() {
+      logger.debug("Running Queue {}", queueName);
       while (isQueueActive(queueName)) {
         try {
           RqueueMessage message = getMessage();
-          logger.debug("Fetched Msg {}", message);
+          logger.debug("Queue: {} Fetched Msg {}", queueName, message);
           if (message != null) {
             getTaskExecutor().execute(new MessageExecutor(message, queueDetail));
           } else {
