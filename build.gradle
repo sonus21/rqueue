@@ -1,6 +1,7 @@
 plugins {
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.6.3'
+    id 'nebula.optional-base' version '5.0.2'
 }
 allprojects {
     apply plugin: 'idea'
@@ -9,6 +10,7 @@ allprojects {
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'jacoco'
+    apply plugin: 'nebula.optional-base'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -52,7 +54,7 @@ subprojects {
 }
 
 def publishedProjects = subprojects.findAll({ subproject ->
-    subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example")
+    subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example") && !subproject.name.contains("test")
 })
 
 task jacocoMerge(type: JacocoMerge) {

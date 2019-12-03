@@ -1,23 +1,24 @@
 /*
- * Copyright (c)  2019-2019, Sonu Kumar
+ * Copyright (c) 2019-2019, Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *       https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.utils.QueueInfo;
 import java.util.Collections;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.Message;
@@ -42,7 +44,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-@SuppressWarnings({"unused"})
 public class RqueueMessageListenerContainer
     implements InitializingBean, DisposableBean, SmartLifecycle, BeanNameAware {
   private static final String DEFAULT_THREAD_NAME_PREFIX =
@@ -73,6 +74,10 @@ public class RqueueMessageListenerContainer
   private ApplicationContext applicationContext;
   private RqueueMessageTemplate rqueueMessageTemplate;
 
+  @Lazy
+  @Autowired(required = false)
+  private RqueueCounter rqueueCounter;
+
   @Autowired private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
 
   public RqueueMessageListenerContainer(
@@ -83,12 +88,16 @@ public class RqueueMessageListenerContainer
     this.rqueueMessageTemplate = rqueueMessageTemplate;
   }
 
-  public void setMaxWorkerWaitTime(long stopTime) {
-    this.maxWorkerWaitTime = stopTime;
+  public RqueueMessageTemplate getRqueueMessageTemplate() {
+    return rqueueMessageTemplate;
   }
 
   public long getMaxWorkerWaitTime() {
-    return this.maxWorkerWaitTime;
+    return maxWorkerWaitTime;
+  }
+
+  public void setMaxWorkerWaitTime(long stopTime) {
+    maxWorkerWaitTime = stopTime;
   }
 
   public String getBeanName() {
@@ -97,11 +106,11 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void setBeanName(String name) {
-    this.beanName = name;
+    beanName = name;
   }
 
   public RqueueMessageHandler getRqueueMessageHandler() {
-    return this.rqueueMessageHandler;
+    return rqueueMessageHandler;
   }
 
   public Integer getMaxNumWorkers() {
@@ -120,31 +129,26 @@ public class RqueueMessageListenerContainer
     return backOffTime;
   }
 
-  public void setTaskExecutor(AsyncTaskExecutor taskExecutor) {
-    this.taskExecutor = taskExecutor;
-  }
-
   @Override
-  @SuppressWarnings("RedundantThrows")
   public void destroy() throws Exception {
-    synchronized (this.lifecycleMgr) {
-      this.stop();
+    synchronized (lifecycleMgr) {
+      stop();
       doDestroy();
     }
   }
 
   protected void doDestroy() {
     if (defaultTaskExecutor && taskExecutor != null) {
-      ((ThreadPoolTaskExecutor) this.taskExecutor).destroy();
+      ((ThreadPoolTaskExecutor) taskExecutor).destroy();
     }
     if (spinningTaskExecutor != null) {
-      ((ThreadPoolTaskExecutor) this.spinningTaskExecutor).destroy();
+      ((ThreadPoolTaskExecutor) spinningTaskExecutor).destroy();
     }
   }
 
   @Override
   public int getPhase() {
-    return this.phase;
+    return phase;
   }
 
   /**
@@ -167,11 +171,10 @@ public class RqueueMessageListenerContainer
     this.autoStartup = autoStartup;
   }
 
-  @SuppressWarnings("RedundantThrows")
   @Override
   public void afterPropertiesSet() throws Exception {
     int delayedQueueCount = 0;
-    synchronized (this.lifecycleMgr) {
+    synchronized (lifecycleMgr) {
       for (MappingInformation mappingInformation :
           rqueueMessageHandler.getHandlerMethods().keySet()) {
         for (String queue : mappingInformation.getQueueNames()) {
@@ -180,23 +183,23 @@ public class RqueueMessageListenerContainer
           if (consumerQueueDetail.isDelayedQueue()) {
             delayedQueueCount += 1;
           }
-          this.registeredQueues.put(queue, consumerQueueDetail);
+          registeredQueues.put(queue, consumerQueueDetail);
         }
       }
-      this.registeredQueues = Collections.unmodifiableMap(this.registeredQueues);
-      this.lifecycleMgr.notifyAll();
+      registeredQueues = Collections.unmodifiableMap(registeredQueues);
+      lifecycleMgr.notifyAll();
     }
-    if (this.taskExecutor == null) {
+    if (taskExecutor == null) {
       defaultTaskExecutor = true;
-      this.taskExecutor = createDefaultTaskExecutor();
+      taskExecutor = createDefaultTaskExecutor();
     } else {
-      this.spinningTaskExecutor = createSpinningTaskExecutor();
+      spinningTaskExecutor = createSpinningTaskExecutor();
     }
     initializeRunningQueueState();
   }
 
   protected AsyncTaskExecutor getSpinningTaskExecutor() {
-    return this.spinningTaskExecutor;
+    return spinningTaskExecutor;
   }
 
   private AsyncTaskExecutor createSpinningTaskExecutor() {
@@ -204,7 +207,7 @@ public class RqueueMessageListenerContainer
   }
 
   public Map<String, ConsumerQueueDetail> getRegisteredQueues() {
-    return this.registeredQueues;
+    return registeredQueues;
   }
 
   private void initializeRunningQueueState() {
@@ -273,10 +276,10 @@ public class RqueueMessageListenerContainer
   }
 
   protected void startQueue(String queueName, ConsumerQueueDetail queueDetail) {
-    if (this.queueRunningState.containsKey(queueName) && this.queueRunningState.get(queueName)) {
+    if (queueRunningState.containsKey(queueName) && queueRunningState.get(queueName)) {
       return;
     }
-    this.queueRunningState.put(queueName, true);
+    queueRunningState.put(queueName, true);
     Future<?> future;
     AsynchronousMessageListener messageListener =
         new AsynchronousMessageListener(queueName, queueDetail);
@@ -285,7 +288,7 @@ public class RqueueMessageListenerContainer
     } else {
       future = spinningTaskExecutor.submit(messageListener);
     }
-    this.scheduledFutureByQueue.put(queueName, future);
+    scheduledFutureByQueue.put(queueName, future);
   }
 
   private boolean isQueueActive(String queueName) {
@@ -296,19 +299,23 @@ public class RqueueMessageListenerContainer
     return taskExecutor;
   }
 
+  public void setTaskExecutor(AsyncTaskExecutor taskExecutor) {
+    this.taskExecutor = taskExecutor;
+  }
+
   @Override
   public void stop() {
     logger.info("Stopping Rqueue Message container");
 
     synchronized (lifecycleMgr) {
-      this.running = false;
+      running = false;
       lifecycleMgr.notifyAll();
     }
     doStop();
   }
 
   protected void doStop() {
-    for (Map.Entry<String, Boolean> runningStateByQueue : this.queueRunningState.entrySet()) {
+    for (Map.Entry<String, Boolean> runningStateByQueue : queueRunningState.entrySet()) {
       if (runningStateByQueue.getValue()) {
         stopQueue(runningStateByQueue.getKey());
       }
@@ -317,10 +324,10 @@ public class RqueueMessageListenerContainer
   }
 
   private void waitForRunningQueuesToStop() {
-    for (Map.Entry<String, Boolean> queueRunningState : this.queueRunningState.entrySet()) {
+    for (Map.Entry<String, Boolean> queueRunningState : queueRunningState.entrySet()) {
       String queueName = queueRunningState.getKey();
       ConsumerQueueDetail queueDetail = getRegisteredQueues().get(queueName);
-      Future<?> queueSpinningThread = this.scheduledFutureByQueue.get(queueName);
+      Future<?> queueSpinningThread = scheduledFutureByQueue.get(queueName);
       if (queueSpinningThread != null
           && !queueSpinningThread.isDone()
           && !queueSpinningThread.isCancelled()) {
@@ -337,15 +344,15 @@ public class RqueueMessageListenerContainer
 
   private void stopQueue(String queueName) {
     Assert.isTrue(
-        this.queueRunningState.containsKey(queueName),
+        queueRunningState.containsKey(queueName),
         "Queue with name '" + queueName + "' does not exist");
-    this.queueRunningState.put(queueName, false);
+    queueRunningState.put(queueName, false);
   }
 
   @Override
   public boolean isRunning() {
     synchronized (lifecycleMgr) {
-      return this.running;
+      return running;
     }
   }
 
@@ -361,13 +368,13 @@ public class RqueueMessageListenerContainer
     private final String queueName;
     private final ConsumerQueueDetail queueDetail;
 
-    private RqueueMessage getMessage() {
-      return rqueueMessageTemplate.pop(queueName);
-    }
-
     AsynchronousMessageListener(String queueName, ConsumerQueueDetail value) {
       this.queueName = queueName;
-      this.queueDetail = value;
+      queueDetail = value;
+    }
+
+    private RqueueMessage getMessage() {
+      return rqueueMessageTemplate.pop(queueName);
     }
 
     @Override
@@ -403,14 +410,14 @@ public class RqueueMessageListenerContainer
   }
 
   class MessageExecutor implements Runnable {
+    private static final int MAX_RETRY_COUNT = Integer.MAX_VALUE;
+    private static final long DELTA_BETWEEN_RE_ENQUEUE_TIME = 5000L;
     private final ConsumerQueueDetail queueDetail;
     private final Message<String> message;
     private final RqueueMessage rqueueMessage;
-    private static final int MAX_RETRY_COUNT = Integer.MAX_VALUE;
-    private static final long DELTA_BETWEEN_RE_ENQUEUE_TIME = 5000L;
 
     MessageExecutor(RqueueMessage message, ConsumerQueueDetail queueDetail) {
-      this.rqueueMessage = message;
+      rqueueMessage = message;
       this.queueDetail = queueDetail;
       this.message =
           new GenericMessage<>(
@@ -422,8 +429,8 @@ public class RqueueMessageListenerContainer
           rqueueMessage.getRetryCount() == null
               ? queueDetail.getNumRetries()
               : rqueueMessage.getRetryCount();
-      // DLQ is  not specified so retry it for max number of counts
-      if (maxRetryCount == -1 && queueDetail.getDlqName().isEmpty()) {
+      // DLQ is not specified so retry it for max number of counts
+      if (maxRetryCount == -1 && !queueDetail.isDlqSet()) {
         maxRetryCount = MAX_RETRY_COUNT;
       }
       return maxRetryCount;
@@ -442,7 +449,7 @@ public class RqueueMessageListenerContainer
         String processingQueueName = QueueInfo.getProcessingQueueName(queueDetail.getQueueName());
         if (!executed) {
           // move to DLQ
-          if (!queueDetail.getDlqName().isEmpty()) {
+          if (queueDetail.isDlqSet()) {
             RqueueMessage newMessage = rqueueMessage.clone();
             newMessage.setFailureCount(currentFailureCount);
             newMessage.updateReEnqueuedAt();
@@ -470,6 +477,20 @@ public class RqueueMessageListenerContainer
       }
     }
 
+    private void updateExecutionCount() {
+      if (rqueueCounter == null) {
+        return;
+      }
+      rqueueCounter.updateExecutionCount(queueDetail.getQueueName());
+    }
+
+    private void updateFailureCount() {
+      if (rqueueCounter == null) {
+        return;
+      }
+      rqueueCounter.updateFailureCount(queueDetail.getQueueName());
+    }
+
     @Override
     public void run() {
       boolean executed = false;
@@ -481,9 +502,11 @@ public class RqueueMessageListenerContainer
           return;
         }
         try {
+          updateExecutionCount();
           getRqueueMessageHandler().handleMessage(message);
           executed = true;
         } catch (Exception e) {
+          updateFailureCount();
           currentFailureCount += 1;
         }
       } while (currentFailureCount < maxRetryCount

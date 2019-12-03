@@ -1,0 +1,33 @@
+version: '3'
+services:
+  prometheus:
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    image: prom/prometheus
+
+  grafana:
+    ports:
+      - "3000:3000"
+    image:  grafana/grafana
+
+  redis:
+    ports:
+      - "6379:6379"
+    image: redis
+  rqueue:
+    container_name: rqueue
+    build:
+      dockerfile: Dockerfile
+      context: .
+    environment:
+      - spring.redis.host=redis
+    ports:
+      - "8080:8080"
+    image: rqueue
+    depends_on:
+      - redis
+      - prometheus
+      - grafana
+

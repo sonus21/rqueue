@@ -7,13 +7,12 @@ buildscript {
 dependencies {
     compile project(":rqueue")
     compile 'org.springframework.boot:spring-boot-starter-data-redis:2.2.0.RELEASE'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.2.1.RELEASE', optional
+    testCompile project(":rqueue-test-common")
     testCompile 'org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE'
-    testCompile 'com.h2database:h2:1.4.194'
-    testCompile 'it.ozimov:embedded-redis:0.7.2'
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa
     testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.2.0.RELEASE'
-    // https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api
-    testCompile group: 'javax.persistence', name: 'javax.persistence-api', version: '2.2'
 }
 
 
