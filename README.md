@@ -1,4 +1,6 @@
+[![Rqueue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/RQueue-icon.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/RQueue-icon.png)
 # Rqueue aka RedisQueue  
+ 
 [![Build Status](https://travis-ci.org/sonus21/rqueue.svg?branch=master)](https://travis-ci.org/sonus21/rqueue)
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
 
