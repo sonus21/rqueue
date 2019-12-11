@@ -14,8 +14,7 @@ artifacts {
     archives javadocJar
 }
 
-
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT") && !"rqueue".equals(System.getenv("USER_NAME"))
 signing {
     required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives

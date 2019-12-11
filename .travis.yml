@@ -8,6 +8,7 @@ services:
 env:
   ORG_GRADLE_PROJECT_sonatypeUsername=xxx
   ORG_GRADLE_PROJECT_sonatypePassword=xxx
+  USER_NAME=rqueue
 
 cache:
   directories:
