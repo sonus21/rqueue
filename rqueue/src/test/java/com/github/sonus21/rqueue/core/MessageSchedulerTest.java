@@ -1,17 +1,17 @@
 /*
- * Copyright (c)  2019-2019, Sonu Kumar
+ * Copyright (c) 2019-2019, Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *       https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.github.sonus21.rqueue.core;
@@ -57,7 +57,6 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
-@SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
 public class MessageSchedulerTest {
   private int poolSize = 1;
   @Mock private RqueueMessageListenerContainer rqueueMessageListenerContainer;
@@ -118,6 +117,9 @@ public class MessageSchedulerTest {
         ((Map) FieldUtils.readField(messageScheduler, "channelNameToQueueName", true)).isEmpty());
     assertTrue(
         ((Map) FieldUtils.readField(messageScheduler, "queueNameToZsetName", true)).isEmpty());
+    assertTrue(
+        ((Map) FieldUtils.readField(messageScheduler, "queueNameToLastMessageSeenTime", true))
+            .isEmpty());
   }
 
   @Test
@@ -242,7 +244,7 @@ public class MessageSchedulerTest {
   }
 
   @Test
-  public void onCompletionOfExistingTaskANewTaskIsSubmitted() throws Exception {
+  public void onCompletionOfExistingTaskNewTaskIsSubmitted() throws Exception {
     AtomicInteger counter = new AtomicInteger(0);
     doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
     doAnswer(
@@ -290,6 +292,8 @@ public class MessageSchedulerTest {
   }
 
   static class TestTaskScheduler extends ThreadPoolTaskScheduler {
+
+    private static final long serialVersionUID = 3617860362304703358L;
     boolean shutdown = false;
     List<Future<?>> tasks = new Vector<>();
 
@@ -314,7 +318,7 @@ public class MessageSchedulerTest {
     }
   }
 
-  static class TestMessageScheduler extends MessageScheduler {
+  static class TestMessageScheduler extends DelayedMessageScheduler {
     List<Boolean> scheduleList = new Vector<>();
 
     TestMessageScheduler(

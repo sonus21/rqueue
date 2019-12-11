@@ -1,17 +1,17 @@
 /*
- * Copyright (c)  2019-2019, Sonu Kumar
+ * Copyright (c) 2019-2019, Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *       https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.github.sonus21.rqueue.producer;
@@ -30,14 +30,35 @@ import org.springframework.util.Assert;
 
 /**
  * RqueueMessageSender creates message writer that writes message to Redis and have different
- * methods to push message to redis based on the use case. It can submit delayed message along with
- * number of retries.
+ * methods to push message to redis based on the use case. It can submit a delayed message along
+ * with number of retries.
  *
  * @author Sonu Kumar
  */
 public class RqueueMessageSender {
+  private static final int DEFAULT_MAX_MESSAGE = 1000;
   private MessageWriter messageWriter;
   private RqueueMessageTemplate messageTemplate;
+
+  private RqueueMessageSender(
+      RqueueMessageTemplate messageTemplate,
+      List<MessageConverter> messageConverters,
+      boolean addDefault) {
+    Assert.notNull(messageTemplate, "messageTemplate can not be null");
+    Assert.notEmpty(messageConverters, "messageConverters can  not be empty");
+    this.messageTemplate = messageTemplate;
+    messageWriter =
+        new MessageWriter(messageTemplate, getMessageConverters(addDefault, messageConverters));
+  }
+
+  public RqueueMessageSender(RqueueMessageTemplate messageTemplate) {
+    this(messageTemplate, Collections.singletonList(new GenericMessageConverter()), false);
+  }
+
+  public RqueueMessageSender(
+      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
+    this(messageTemplate, messageConverters, true);
+  }
 
   private List<MessageConverter> getMessageConverters(
       boolean addDefault, List<MessageConverter> messageConverters) {
@@ -50,26 +71,6 @@ public class RqueueMessageSender {
     }
     messageConverterList.addAll(messageConverters);
     return messageConverterList;
-  }
-
-  private RqueueMessageSender(
-      RqueueMessageTemplate messageTemplate,
-      List<MessageConverter> messageConverters,
-      boolean addDefault) {
-    Assert.notNull(messageTemplate, "messageTemplate can not be null");
-    Assert.notEmpty(messageConverters, "messageConverters can  not be empty");
-    this.messageTemplate = messageTemplate;
-    this.messageWriter =
-        new MessageWriter(messageTemplate, getMessageConverters(addDefault, messageConverters));
-  }
-
-  public RqueueMessageSender(RqueueMessageTemplate messageTemplate) {
-    this(messageTemplate, Collections.singletonList(new GenericMessageConverter()), false);
-  }
-
-  public RqueueMessageSender(
-      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    this(messageTemplate, messageConverters, true);
   }
 
   /**
@@ -156,5 +157,40 @@ public class RqueueMessageSender {
 
   public List<MessageConverter> getMessageConverters() {
     return messageWriter.getMessageConverters();
+  }
+
+  /**
+   * Move messages from Dead Letter queue to the destination queue. This push the messages at the
+   * FRONT of destination queue, so that it can be reprocessed as soon as possible.
+   *
+   * @param deadLetterQueueName dead letter queue name
+   * @param queueName queue name
+   * @param maxMessages number of messages to be moved by default move {@link #DEFAULT_MAX_MESSAGE}
+   *     messages
+   * @return success or failure
+   */
+  public boolean moveMessageFromDeadLetterToQueue(
+      String deadLetterQueueName, String queueName, Integer maxMessages) {
+    Assert.notNull(deadLetterQueueName, "deadLetterQueueName must not be null");
+    Assert.notNull(queueName, "queueName must not be null");
+    Assert.isTrue(
+        !deadLetterQueueName.equals(queueName),
+        "deadLetterQueueName and queueName must be different");
+    if (maxMessages == null) {
+      maxMessages = DEFAULT_MAX_MESSAGE;
+    }
+    Assert.isTrue(maxMessages > 0, "maxMessage must be greater than zero");
+    return messageTemplate.moveMessage(deadLetterQueueName, queueName, maxMessages);
+  }
+
+  /**
+   * A shortcut to the method {@link #moveMessageFromDeadLetterToQueue(String, String, Integer)}
+   *
+   * @param deadLetterQueueName dead letter queue name
+   * @param queueName queue name
+   * @return success or failure
+   */
+  public boolean moveMessageFromDeadLetterToQueue(String deadLetterQueueName, String queueName) {
+    return moveMessageFromDeadLetterToQueue(deadLetterQueueName, queueName, null);
   }
 }

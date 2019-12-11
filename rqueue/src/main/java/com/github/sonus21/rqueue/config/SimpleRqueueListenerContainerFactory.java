@@ -1,17 +1,17 @@
 /*
- * Copyright (c)  2019-2019, Sonu Kumar
+ * Copyright (c) 2019-2019, Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *       https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.github.sonus21.rqueue.config;
@@ -27,9 +27,9 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.util.Assert;
 
 /**
- * This is a bare minimal factory class that can be used to configure the entire Rqueue library. By
- * default it can create all different components, though some of the component can be overridden
- * using it's methods.
+ * This is a bare minimal factory class, that can be used to create {@link
+ * RqueueMessageListenerContainer} object. Factory has multiple methods to support different types
+ * of requirements.
  */
 public class SimpleRqueueListenerContainerFactory {
   private AsyncTaskExecutor taskExecutor;
@@ -40,6 +40,15 @@ public class SimpleRqueueListenerContainerFactory {
   private Long backOffTime;
   private Integer maxNumWorkers;
   private RqueueMessageTemplate rqueueMessageTemplate;
+
+  /**
+   * Get configured task executor
+   *
+   * @return async task executor
+   */
+  public AsyncTaskExecutor getTaskExecutor() {
+    return taskExecutor;
+  }
 
   /**
    * Configures the {@link TaskExecutor} which is used to poll messages and execute them by calling
@@ -53,13 +62,8 @@ public class SimpleRqueueListenerContainerFactory {
     this.taskExecutor = taskExecutor;
   }
 
-  /**
-   * Get configured task executor
-   *
-   * @return async task executor
-   */
-  public AsyncTaskExecutor getTaskExecutor() {
-    return taskExecutor;
+  public Boolean getAutoStartup() {
+    return autoStartup;
   }
 
   /**
@@ -71,8 +75,13 @@ public class SimpleRqueueListenerContainerFactory {
     this.autoStartup = autoStartup;
   }
 
-  public Boolean getAutoStartup() {
-    return autoStartup;
+  /**
+   * Return configured message handler
+   *
+   * @return RqueueMessageHandler object
+   */
+  public RqueueMessageHandler getRqueueMessageHandler() {
+    return rqueueMessageHandler;
   }
 
   /**
@@ -87,20 +96,11 @@ public class SimpleRqueueListenerContainerFactory {
   }
 
   /**
-   * Return configured message handler
-   *
-   * @return RqueueMessageHandler object
-   */
-  public RqueueMessageHandler getRqueueMessageHandler() {
-    return this.rqueueMessageHandler;
-  }
-
-  /**
    * @return The number of milliseconds the polling thread must wait before trying to recover when
    *     an error occurs (e.g. connection timeout)
    */
   public Long getBackOffTime() {
-    return this.backOffTime;
+    return backOffTime;
   }
 
   /**
@@ -113,6 +113,10 @@ public class SimpleRqueueListenerContainerFactory {
     this.backOffTime = backOffTime;
   }
 
+  public Integer getMaxNumWorkers() {
+    return maxNumWorkers;
+  }
+
   /**
    * Maximum number of workers, that would be used to run tasks.
    *
@@ -122,8 +126,9 @@ public class SimpleRqueueListenerContainerFactory {
     this.maxNumWorkers = maxNumWorkers;
   }
 
-  public Integer getMaxNumWorkers() {
-    return maxNumWorkers;
+  /** @return list of configured message converters */
+  public List<MessageConverter> getMessageConverters() {
+    return messageConverters;
   }
 
   /**
@@ -137,9 +142,9 @@ public class SimpleRqueueListenerContainerFactory {
     this.messageConverters = messageConverters;
   }
 
-  /** @return list of configured message converters */
-  public List<MessageConverter> getMessageConverters() {
-    return messageConverters;
+  /** @return get Redis connection factor */
+  public RedisConnectionFactory getRedisConnectionFactory() {
+    return redisConnectionFactory;
   }
 
   /**
@@ -153,9 +158,9 @@ public class SimpleRqueueListenerContainerFactory {
     this.redisConnectionFactory = redisConnectionFactory;
   }
 
-  /** @return get Redis connection factor */
-  public RedisConnectionFactory getRedisConnectionFactory() {
-    return this.redisConnectionFactory;
+  /** @return message template */
+  public RqueueMessageTemplate getRqueueMessageTemplate() {
+    return rqueueMessageTemplate;
   }
 
   /**
@@ -165,12 +170,7 @@ public class SimpleRqueueListenerContainerFactory {
    */
   public void setRqueueMessageTemplate(RqueueMessageTemplate messageTemplate) {
     Assert.notNull(messageTemplate, "messageTemplate must not be null");
-    this.rqueueMessageTemplate = messageTemplate;
-  }
-
-  /** @return message template */
-  public RqueueMessageTemplate getRqueueMessageTemplate() {
-    return this.rqueueMessageTemplate;
+    rqueueMessageTemplate = messageTemplate;
   }
 
   /**
@@ -181,22 +181,22 @@ public class SimpleRqueueListenerContainerFactory {
    * @return an object of {@link RqueueMessageListenerContainer} object
    */
   public RqueueMessageListenerContainer createMessageListenerContainer() {
-    Assert.notNull(this.rqueueMessageHandler, "rqueueMessageHandler must not be null");
-    Assert.notNull(this.redisConnectionFactory, "redisConnectionFactory must not be null");
-    if (this.rqueueMessageTemplate == null) {
-      this.rqueueMessageTemplate = new RqueueMessageTemplate(redisConnectionFactory);
+    Assert.notNull(rqueueMessageHandler, "rqueueMessageHandler must not be null");
+    Assert.notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
+    if (rqueueMessageTemplate == null) {
+      rqueueMessageTemplate = new RqueueMessageTemplate(redisConnectionFactory);
     }
     RqueueMessageListenerContainer messageListenerContainer =
-        new RqueueMessageListenerContainer(this.rqueueMessageHandler, this.rqueueMessageTemplate);
-    messageListenerContainer.setAutoStartup(this.autoStartup);
-    if (this.taskExecutor != null) {
-      messageListenerContainer.setTaskExecutor(this.taskExecutor);
+        new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate);
+    messageListenerContainer.setAutoStartup(autoStartup);
+    if (taskExecutor != null) {
+      messageListenerContainer.setTaskExecutor(taskExecutor);
     }
-    if (this.maxNumWorkers != null) {
-      messageListenerContainer.setMaxNumWorkers(this.maxNumWorkers);
+    if (maxNumWorkers != null) {
+      messageListenerContainer.setMaxNumWorkers(maxNumWorkers);
     }
-    if (this.backOffTime != null) {
-      messageListenerContainer.setBackOffTime(this.backOffTime);
+    if (backOffTime != null) {
+      messageListenerContainer.setBackOffTime(backOffTime);
     }
     return messageListenerContainer;
   }

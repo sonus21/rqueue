@@ -1,0 +1,11 @@
+<configuration>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
+    <encoder>
+      <pattern>[%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger level="DEBUG" name="com.github.sonus21.rqueue.core">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+</configuration>

@@ -1,1 +1,3 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.github.sonus21.rqueue.spring.boot.RqueueMessageAutoConfig
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.github.sonus21.rqueue.spring.boot.RqueueMessageAutoConfig, \
+  com.github.sonus21.rqueue.spring.boot.RqueueMetricsAutoConfig

@@ -1,17 +1,17 @@
 /*
- * Copyright (c)  2019-2019, Sonu Kumar
+ * Copyright (c) 2019-2019, Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *       https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
@@ -21,13 +21,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
-import com.github.sonus21.rqueue.spring.boot.application.main.Application;
-import com.github.sonus21.rqueue.spring.boot.application.app.dto.EmailTask;
-import com.github.sonus21.rqueue.spring.boot.application.app.dto.Job;
-import com.github.sonus21.rqueue.spring.boot.application.app.dto.Notification;
-import com.github.sonus21.rqueue.spring.boot.application.app.service.ConsumedMessageService;
-import com.github.sonus21.rqueue.spring.boot.application.app.service.FailureManager;
+import com.github.sonus21.rqueue.spring.boot.application.Application;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +31,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import rqueue.test.dto.Email;
+import rqueue.test.dto.Job;
+import rqueue.test.dto.Notification;
+import rqueue.test.service.ConsumedMessageService;
+import rqueue.test.service.FailureManager;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
+@Slf4j
 public class ApplicationTest {
+  static {
+    System.setProperty("TEST_NAME", ApplicationTest.class.getSimpleName());
+  }
+
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private FailureManager failureManager;
@@ -51,7 +57,7 @@ public class ApplicationTest {
   private String emailQueue;
 
   @Value("${email.dead.letter.queue.name}")
-  private String emailDelayedQueue;
+  private String emailDeadLetterQueue;
 
   @Value("${email.queue.retry.count}")
   private int emailRetryCount;
@@ -63,7 +69,7 @@ public class ApplicationTest {
   private int notificationRetryCount;
 
   @Test
-  public void testAfterRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
+  public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), 3, 10);
     messageSender.put(jobQueueName, job);
@@ -82,24 +88,29 @@ public class ApplicationTest {
   }
 
   @Test
-  public void testMessageMovedToDelayedQueue() throws TimedOutException {
-    EmailTask emailTask = EmailTask.newInstance();
-    failureManager.createFailureDetail(emailTask.getId(), -1, 0);
-    messageSender.put(emailQueue, emailTask, 1000L);
+  public void messageMovedToDelayedQueue() throws TimedOutException {
+    Email email = Email.newInstance();
+    failureManager.createFailureDetail(email.getId(), -1, 0);
+    messageSender.put(emailQueue, email, 1000L);
     waitFor(
-        () -> emailRetryCount == failureManager.getFailureCount(emailTask.getId()),
+        () -> emailRetryCount == failureManager.getFailureCount(email.getId()),
         "all retry to be exhausted");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(emailDelayedQueue);
-          return messages.contains(emailTask);
+          List<Object> messages = messageSender.getAllMessages(emailDeadLetterQueue);
+          return messages.contains(email);
         },
         "message should be moved to delayed queue");
-    assertEquals(emailRetryCount, failureManager.getFailureCount(emailTask.getId()));
+    assertEquals(emailRetryCount, failureManager.getFailureCount(email.getId()));
+    failureManager.delete(email.getId());
+
+    log.info("Move message from DLQ to original queue");
+    messageSender.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
+    assertEquals(0, messageSender.getAllMessages(emailDeadLetterQueue).size());
   }
 
   @Test
-  public void testMessageIsDiscardedAfterRetries() throws TimedOutException {
+  public void messageIsDiscardedAfterRetries() throws TimedOutException {
     Notification notification = Notification.newInstance();
     failureManager.createFailureDetail(notification.getId(), -1, 0);
     messageSender.put(notificationQueue, notification, 1000L);

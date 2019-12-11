@@ -12,8 +12,8 @@ Rqueue is an asynchronous task executor(worker) built for spring framework based
 
 ### Adding a task
 Rqueue supports two types of tasks.
-1. Execute method as soon as possible
-2. Delayed tasks (task that would be scheduled at given delay)
+1. Execute tasks as soon as possible
+2. Delayed tasks (task that would be scheduled at given delay, run task at 2:30PM)
 
 
 ### Task execution  configuration
@@ -33,14 +33,14 @@ Add Dependency
 * Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:1.2-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:1.3-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>1.2-RELEASE</version>
+        <version>1.3-RELEASE</version>
         <type>pom</type>
     </dependency>
     ```
@@ -51,14 +51,14 @@ Add Dependency
     Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:1.2-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:1.3-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>1.2-RELEASE</version>
+       <version>1.3-RELEASE</version>
        <type>pom</type>
      </dependency>
     ```
@@ -241,6 +241,40 @@ factory.setMessageConverters(messageConverters);
 ```
    
 More than one message converter can be used as well, when more than one message converters are provided then they are used in the order, whichever returns **non null** value is used.
+
+## Monitoring Queue Statistics
+NOTE: Rqueue support micrometer library for monitoring. 
+
+**It provides 4 types gauge of metrics.**
+```
+1. queue.size : number of tasks to be run
+2. dead.letter.queue.size : number of tasks in the dead letter queue
+3. delayed.queue.size : number of tasks scheduled for later time, it's an approximate number, since some tasks might not have moved to be processed despite best efforts
+4. processing.queue.size : number of tasks are being processed. It's also an approximate number due to retry and tasks acknowledgements.
+```
+
+**Execution and failure counters can be enabled (by default this is disabled).**
+
+We need to set count.execution and count.failure fields of RqueueMetricsProperties
+```
+1. execution.count
+2. failure.count 
+```
+
+All these metrics are tagged 
+
+**Spring Boot Application**
+1.  Add micrometer and the exporter dependencies
+2.  Set tags if any using `rqueue.metrics.tags.<name> = <value>`
+3.  Enable counting features using `rqueue.metrics.count.execution=true`, `rqueue.metrics.count.failure=true` 
+
+**Spring Application**
+
+1. Add micrometer and the exporter dependencies provide MeterRegistry as bean
+2. Provide bean of RqueueMetricsProperties, in this bean set all the required fields.
+
+
+[![Grafana Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)
 
 
 
