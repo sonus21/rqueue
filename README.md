@@ -1,4 +1,4 @@
-<img align="right" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/RQueue-icon.png" alt="Rqueue Logo" width="300">
+<img align="right" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/RQueue-icon.png" alt="Rqueue Logo" width="350">
 
 # Rqueue: RedisQueue, Redis Task Queue for Spring and Spring Boot   
  
