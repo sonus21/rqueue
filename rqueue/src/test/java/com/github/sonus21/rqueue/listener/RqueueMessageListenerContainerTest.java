@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,8 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.support.StaticApplicationContext;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
@@ -76,7 +76,7 @@ public class RqueueMessageListenerContainerTest {
   @Test
   public void setBackOffTime() {
     container.setBackOffTime(1000L);
-    assertEquals(1000L, container.getBackoffTime());
+    assertEquals(1000L, container.getBackOffTime());
   }
 
   @Test
@@ -118,6 +118,8 @@ public class RqueueMessageListenerContainerTest {
   @Test
   public void checkDoStartMethodIsCalledAndIsRunningSet() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    FieldUtils.writeField(
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     container.afterPropertiesSet();
     container.start();
     assertTrue(container.isRunning());
@@ -129,6 +131,8 @@ public class RqueueMessageListenerContainerTest {
   @Test
   public void checkDoStopMethodIsCalled() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    FieldUtils.writeField(
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -138,6 +142,8 @@ public class RqueueMessageListenerContainerTest {
   @Test
   public void checkDoDestroyMethodIsCalled() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    FieldUtils.writeField(
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -148,6 +154,8 @@ public class RqueueMessageListenerContainerTest {
   @Test
   public void checkDoStopMethodIsCalledWithRunnable() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    FieldUtils.writeField(
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     CountDownLatch count = new CountDownLatch(1);
     container.afterPropertiesSet();
     container.start();
@@ -173,10 +181,7 @@ public class RqueueMessageListenerContainerTest {
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     FieldUtils.writeField(
-        container,
-        "rqueueRedisMessageListenerContainer",
-        mock(RedisMessageListenerContainer.class),
-        true);
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     AtomicInteger slowQueueCounter = new AtomicInteger(0);
     doAnswer(
@@ -223,10 +228,7 @@ public class RqueueMessageListenerContainerTest {
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     FieldUtils.writeField(
-        container,
-        "rqueueRedisMessageListenerContainer",
-        mock(RedisMessageListenerContainer.class),
-        true);
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     doAnswer(
             invocation -> {
               if (fastQueueCounter.get() < 2) {
@@ -258,7 +260,6 @@ public class RqueueMessageListenerContainerTest {
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton("slowMessageListener", SlowMessageSchedulerListener.class);
     applicationContext.registerSingleton("fastMessageListener", FastMessageSchedulerListener.class);
-
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);
@@ -267,10 +268,7 @@ public class RqueueMessageListenerContainerTest {
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     FieldUtils.writeField(
-        container,
-        "rqueueRedisMessageListenerContainer",
-        mock(RedisMessageListenerContainer.class),
-        true);
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     FastMessageSchedulerListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageSchedulerListener.class);
     SlowMessageSchedulerListener slowMessageListener =
@@ -341,10 +339,7 @@ public class RqueueMessageListenerContainerTest {
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(messageHandler, mock(RqueueMessageTemplate.class));
     FieldUtils.writeField(
-        container,
-        "rqueueRedisMessageListenerContainer",
-        mock(RedisMessageListenerContainer.class),
-        true);
+        container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     TestTaskExecutor taskExecutor = new TestTaskExecutor();
     container.setTaskExecutor(taskExecutor);
     container.afterPropertiesSet();

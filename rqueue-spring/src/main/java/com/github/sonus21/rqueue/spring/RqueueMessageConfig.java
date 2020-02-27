@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.spring;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.metrics.QueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
@@ -27,7 +28,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.data.util.Pair;
 
 @Configuration
 public class RqueueMessageConfig extends RqueueConfig {
@@ -75,12 +75,21 @@ public class RqueueMessageConfig extends RqueueConfig {
 
   @Bean
   @Conditional(MetricsEnabled.class)
-  public RqueueCounter rqueueCounter(
+  public RqueueMetrics rqueueMetrics(
       RqueueMessageListenerContainer rqueueMessageListenerContainer,
       MeterRegistry meterRegistry,
-      RqueueMetricsProperties metricsProperties) {
-    Pair<RqueueMetrics, RqueueCounter> p =
-        RqueueMetrics.monitor(rqueueMessageListenerContainer, meterRegistry, metricsProperties);
-    return p.getSecond();
+      RqueueMetricsProperties rqueueMetricsProperties) {
+    QueueCounter queueCounter = new QueueCounter();
+    return new RqueueMetrics(
+        rqueueMessageListenerContainer.getRqueueMessageTemplate(),
+        rqueueMetricsProperties,
+        meterRegistry,
+        queueCounter);
+  }
+
+  @Bean
+  @Conditional(MetricsEnabled.class)
+  public RqueueCounter rqueueCounter(RqueueMetrics rqueueMetrics) {
+    return new RqueueCounter(rqueueMetrics.getQueueCounter());
   }
 }

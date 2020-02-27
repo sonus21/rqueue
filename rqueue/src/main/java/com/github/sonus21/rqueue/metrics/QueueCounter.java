@@ -25,7 +25,7 @@ import java.util.Map;
  * Queue counter counts the different types of events related to a queue. Failure and execution
  * count, it supports queue registrations.
  */
-class QueueCounter {
+public class QueueCounter {
   private static final String FAILURE_COUNT = "failure.count";
   private static final String EXECUTION_COUNT = "execution.count";
   private Map<String, Counter> queueNameToFailureCounter = new HashMap<>();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,17 @@ package com.github.sonus21.rqueue.core;
 import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
+import com.github.sonus21.rqueue.utils.SchedulerFactory;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,12 +41,18 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.data.redis.connection.DefaultMessage;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisCallback;
@@ -56,10 +61,10 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(fullyQualifiedNames = {"com.github.sonus21.rqueue.utils.SchedulerFactory"})
 public class MessageSchedulerTest {
   private int poolSize = 1;
-  @Mock private RqueueMessageListenerContainer rqueueMessageListenerContainer;
   @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
   @Mock private RedisTemplate<String, Long> redisTemplate;
 
@@ -72,6 +77,8 @@ public class MessageSchedulerTest {
   private ConsumerQueueDetail slowQueueDetail = new ConsumerQueueDetail(slowQueue, -1, "", true);
   private ConsumerQueueDetail fastQueueDetail = new ConsumerQueueDetail(fastQueue, -1, "", false);
   private Map<String, ConsumerQueueDetail> queueNameToQueueDetail = new HashMap<>();
+
+  @Rule public MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
   @Before
   public void init() {
@@ -107,44 +114,20 @@ public class MessageSchedulerTest {
 
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
-    doReturn(Collections.emptyMap()).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", Collections.emptyMap(), true));
     assertNull(FieldUtils.readField(messageScheduler, "scheduler", true));
-    assertTrue(((Map) FieldUtils.readField(messageScheduler, "queueRunningState", true)).isEmpty());
-    assertTrue(
-        ((Map) FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true)).isEmpty());
-    assertTrue(
-        ((Map) FieldUtils.readField(messageScheduler, "channelNameToQueueName", true)).isEmpty());
-    assertTrue(
-        ((Map) FieldUtils.readField(messageScheduler, "queueNameToZsetName", true)).isEmpty());
-    assertTrue(
-        ((Map) FieldUtils.readField(messageScheduler, "queueNameToLastMessageSeenTime", true))
-            .isEmpty());
-  }
-
-  @Test
-  public void afterPropertiesSet() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
-    assertNotNull(FieldUtils.readField(messageScheduler, "scheduler", true));
-    Map<String, Boolean> queueRunningState =
-        (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
-    assertEquals(1, queueRunningState.size());
-    assertFalse(queueRunningState.get(slowQueue));
-    assertEquals(
-        0, ((Map) FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true)).size());
-    assertEquals(
-        0, ((Map) FieldUtils.readField(messageScheduler, "channelNameToQueueName", true)).size());
-    assertEquals(
-        0, ((Map) FieldUtils.readField(messageScheduler, "queueNameToZsetName", true)).size());
-    messageScheduler.destroy();
+    assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));
+    assertNull(FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true));
+    assertNull(FieldUtils.readField(messageScheduler, "channelNameToQueueName", true));
+    assertNull(FieldUtils.readField(messageScheduler, "queueNameToZsetName", true));
+    assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageSeenTime", true));
   }
 
   @Test
   public void start() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
-    messageScheduler.start();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
     assertEquals(1, queueRunningState.size());
@@ -155,30 +138,28 @@ public class MessageSchedulerTest {
         1, ((Map) FieldUtils.readField(messageScheduler, "channelNameToQueueName", true)).size());
     assertEquals(
         1, ((Map) FieldUtils.readField(messageScheduler, "queueNameToZsetName", true)).size());
-    assertTrue(messageScheduler.isRunning());
     Thread.sleep(500L);
     messageScheduler.destroy();
   }
 
   @Test
   public void startAddsChannelToMessageListener() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
     doNothing()
         .when(redisMessageListenerContainer)
         .addMessageListener(any(), eq(new ChannelTopic(QueueInfo.getChannelName(slowQueue))));
-    messageScheduler.afterPropertiesSet();
-    messageScheduler.start();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     Thread.sleep(500L);
     messageScheduler.destroy();
   }
 
   @Test
   public void stop() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
-    messageScheduler.start();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     Thread.sleep(500L);
-    messageScheduler.stop();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, false));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
     assertEquals(1, queueRunningState.size());
@@ -194,14 +175,19 @@ public class MessageSchedulerTest {
 
   @Test
   public void destroy() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     scheduler.setPoolSize(1);
     scheduler.afterPropertiesSet();
-
-    FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
-    messageScheduler.start();
+    PowerMockito.stub(
+            PowerMockito.method(
+                SchedulerFactory.class,
+                "createThreadPoolTaskScheduler",
+                Integer.TYPE,
+                String.class,
+                Integer.TYPE))
+        .toReturn(scheduler);
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     Thread.sleep(500L);
     messageScheduler.destroy();
     Map<String, Boolean> queueRunningState =
@@ -215,13 +201,19 @@ public class MessageSchedulerTest {
 
   @Test
   public void startSubmitsTask() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     scheduler.setPoolSize(1);
     scheduler.afterPropertiesSet();
-    FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
-    messageScheduler.start();
+    PowerMockito.stub(
+            PowerMockito.method(
+                SchedulerFactory.class,
+                "createThreadPoolTaskScheduler",
+                Integer.TYPE,
+                String.class,
+                Integer.TYPE))
+        .toReturn(scheduler);
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     assertTrue(scheduler.tasks.size() >= 1);
     messageScheduler.destroy();
   }
@@ -229,7 +221,6 @@ public class MessageSchedulerTest {
   @Test
   public void startSubmitsTaskAndThatGetsExecuted() throws Exception {
     AtomicInteger counter = new AtomicInteger(0);
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
     doAnswer(
             invocation -> {
               counter.incrementAndGet();
@@ -237,8 +228,8 @@ public class MessageSchedulerTest {
             })
         .when(redisTemplate)
         .execute(any(RedisCallback.class));
-    messageScheduler.afterPropertiesSet();
-    messageScheduler.start();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     waitFor(() -> counter.get() >= 1, "scripts are getting executed");
     messageScheduler.destroy();
   }
@@ -246,7 +237,6 @@ public class MessageSchedulerTest {
   @Test
   public void onCompletionOfExistingTaskNewTaskIsSubmitted() throws Exception {
     AtomicInteger counter = new AtomicInteger(0);
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
     doAnswer(
             invocation -> {
               counter.incrementAndGet();
@@ -254,12 +244,19 @@ public class MessageSchedulerTest {
             })
         .when(redisTemplate)
         .execute(any(RedisCallback.class));
-    messageScheduler.afterPropertiesSet();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     scheduler.setPoolSize(1);
     scheduler.afterPropertiesSet();
-    FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
-    messageScheduler.start();
+    PowerMockito.stub(
+            PowerMockito.method(
+                SchedulerFactory.class,
+                "createThreadPoolTaskScheduler",
+                Integer.TYPE,
+                String.class,
+                Integer.TYPE))
+        .toReturn(scheduler);
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     waitFor(() -> counter.get() >= 1, "scripts are getting executed");
     messageScheduler.destroy();
     assertTrue(scheduler.tasks.size() >= 2);
@@ -267,9 +264,9 @@ public class MessageSchedulerTest {
 
   @Test
   public void onMessageListenerTest() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
-    messageScheduler.start();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+
     MessageListener messageListener =
         (MessageListener) FieldUtils.readField(messageScheduler, "messageSchedulerListener", true);
     // invalid channel

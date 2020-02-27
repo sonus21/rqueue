@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,11 @@
 package com.github.sonus21.rqueue.core;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.core.MessageSchedulerTest.TestMessageScheduler;
 import com.github.sonus21.rqueue.core.MessageSchedulerTest.TestTaskScheduler;
 import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -38,7 +37,6 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class MessageSchedulerWithSchedulerDisabledAtStartup {
-  @Mock private RqueueMessageListenerContainer rqueueMessageListenerContainer;
   @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
   @Mock private RedisTemplate<String, Long> redisTemplate;
 
@@ -60,20 +58,17 @@ public class MessageSchedulerWithSchedulerDisabledAtStartup {
 
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
-    messageScheduler.start();
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", null, true));
     assertEquals(0, messageScheduler.scheduleList.size());
     messageScheduler.destroy();
   }
 
   @Test
   public void startShouldNotSubmitsTask() throws Exception {
-    doReturn(queueNameToQueueDetail).when(rqueueMessageListenerContainer).getRegisteredQueues();
-    messageScheduler.afterPropertiesSet();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
-    messageScheduler.start();
+    messageScheduler.onApplicationEvent(
+        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     assertEquals(0, scheduler.tasks.size());
     messageScheduler.destroy();
   }

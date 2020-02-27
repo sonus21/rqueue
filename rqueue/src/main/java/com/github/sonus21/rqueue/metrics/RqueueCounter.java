@@ -24,7 +24,7 @@ package com.github.sonus21.rqueue.metrics;
 public class RqueueCounter {
   private final QueueCounter queueCounter;
 
-  RqueueCounter(QueueCounter queueCounter) {
+  public RqueueCounter(QueueCounter queueCounter) {
     this.queueCounter = queueCounter;
   }
 
