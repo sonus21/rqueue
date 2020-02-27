@@ -1,7 +1,7 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
+name: Issue
+about: Please provide details
+title: 'Anything ...'
 labels: ''
 assignees: sonus21
 
