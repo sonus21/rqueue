@@ -15,14 +15,17 @@ A clear and concise description of what the bug is.
 
 Steps to reproduce the behavior:
 
+A sample reproducable code if possible.
+
 **Screenshots**
 
 If applicable, add screenshots to help explain your problem.
 
-**Library Versions**
+**Library Dependencies**
  - Spring Boot: 
  - Spring Messaging:
  - Spring Data Redis: 
+
 
 
 
