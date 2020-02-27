@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.spring;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.metrics.QueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
@@ -74,13 +75,21 @@ public class RqueueMessageConfig extends RqueueConfig {
 
   @Bean
   @Conditional(MetricsEnabled.class)
-  public RqueueCounter rqueueCounter(
+  public RqueueMetrics rqueueMetrics(
       RqueueMessageListenerContainer rqueueMessageListenerContainer,
       MeterRegistry meterRegistry,
-      RqueueMetricsProperties metricsProperties) {
-    RqueueCounter rqueueCounter = new RqueueCounter();
-    RqueueMetrics.monitor(
-        rqueueMessageListenerContainer, meterRegistry, metricsProperties, rqueueCounter);
-    return rqueueCounter;
+      RqueueMetricsProperties rqueueMetricsProperties) {
+    QueueCounter queueCounter = new QueueCounter();
+    return new RqueueMetrics(
+        rqueueMessageListenerContainer.getRqueueMessageTemplate(),
+        rqueueMetricsProperties,
+        meterRegistry,
+        queueCounter);
+  }
+
+  @Bean
+  @Conditional(MetricsEnabled.class)
+  public RqueueCounter rqueueCounter(RqueueMetrics rqueueMetrics) {
+    return new RqueueCounter(rqueueMetrics.getQueueCounter());
   }
 }

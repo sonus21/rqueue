@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@ import static java.lang.Math.min;
 
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
+import com.github.sonus21.rqueue.utils.SchedulerFactory;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -36,9 +37,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.SmartLifecycle;
+import org.springframework.context.ApplicationListener;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -49,16 +49,16 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
-public abstract class MessageScheduler implements InitializingBean, DisposableBean, SmartLifecycle {
+public abstract class MessageScheduler
+    implements DisposableBean, ApplicationListener<QueueInitializationEvent> {
   private static final long DEFAULT_SCRIPT_EXECUTION_TIME = 5000L;
   private static final long MIN_DELAY = 10L;
   private static final int MAX_MESSAGE = 100;
   private static final long TASK_ALIVE_TIME = -30 * 1000L;
 
-  private final Object monitor = new Object();
   private final int poolSize;
-  private volatile boolean running = false;
   private boolean scheduleTaskAtStartup;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
@@ -70,8 +70,6 @@ public abstract class MessageScheduler implements InitializingBean, DisposableBe
   private Map<String, String> queueNameToZsetName;
   private Map<String, Long> queueNameToLastMessageSeenTime;
   private ThreadPoolTaskScheduler scheduler;
-
-  @Autowired private RqueueMessageListenerContainer rqueueMessageListenerContainer;
   @Autowired private RedisMessageListenerContainer redisMessageListenerContainer;
 
   public MessageScheduler(
@@ -93,30 +91,14 @@ public abstract class MessageScheduler implements InitializingBean, DisposableBe
 
   protected abstract boolean isQueueValid(ConsumerQueueDetail queueDetail);
 
-  @Override
-  public boolean isRunning() {
-    synchronized (monitor) {
-      return running;
-    }
-  }
-
-  @Override
-  public void start() {
-    synchronized (monitor) {
-      running = true;
-      monitor.notifyAll();
-    }
-    doStart();
-  }
-
-  protected void doStart() {
+  private void doStart() {
     for (String queueName : queueRunningState.keySet()) {
       startQueue(queueName);
     }
   }
 
   private void startQueue(String queueName) {
-    if (queueRunningState.containsKey(queueName) && queueRunningState.get(queueName)) {
+    if (Boolean.TRUE.equals(queueRunningState.get(queueName))) {
       return;
     }
     queueRunningState.put(queueName, true);
@@ -130,18 +112,12 @@ public abstract class MessageScheduler implements InitializingBean, DisposableBe
     queueNameToZsetName.put(queueName, getZsetName(queueName));
   }
 
-  @Override
-  public void stop() {
-    synchronized (monitor) {
-      running = false;
-      monitor.notifyAll();
-    }
-    doStop();
-  }
-
   private void doStop() {
+    if (CollectionUtils.isEmpty(queueRunningState)) {
+      return;
+    }
     for (Map.Entry<String, Boolean> runningStateByQueue : queueRunningState.entrySet()) {
-      if (runningStateByQueue.getValue()) {
+      if (Boolean.TRUE.equals(runningStateByQueue.getValue())) {
         stopQueue(runningStateByQueue.getKey());
       }
     }
@@ -150,8 +126,8 @@ public abstract class MessageScheduler implements InitializingBean, DisposableBe
   }
 
   private void waitForRunningQueuesToStop() {
-    for (Map.Entry<String, Boolean> queueRunningState : queueRunningState.entrySet()) {
-      String queueName = queueRunningState.getKey();
+    for (Map.Entry<String, Boolean> runningState : queueRunningState.entrySet()) {
+      String queueName = runningState.getKey();
       ScheduledTaskDetail scheduledTaskDetail = queueNameToScheduledTask.get(queueName);
       if (scheduledTaskDetail != null) {
         Future<?> future = scheduledTaskDetail.getFuture();
@@ -176,7 +152,7 @@ public abstract class MessageScheduler implements InitializingBean, DisposableBe
 
   @Override
   public void destroy() throws Exception {
-    stop();
+    doStop();
     if (scheduler != null) {
       scheduler.destroy();
     }
@@ -186,37 +162,9 @@ public abstract class MessageScheduler implements InitializingBean, DisposableBe
     if (queueCount == 0) {
       return;
     }
-    scheduler = new ThreadPoolTaskScheduler();
-    scheduler.setPoolSize(min(poolSize, queueCount));
-    scheduler.setThreadNamePrefix(getThreadNamePrefix());
-    scheduler.setAwaitTerminationSeconds(60);
-    scheduler.setRemoveOnCancelPolicy(true);
-    scheduler.afterPropertiesSet();
-  }
-
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    Set<String> queueNames = new HashSet<>();
-    for (Entry<String, ConsumerQueueDetail> entry :
-        rqueueMessageListenerContainer.getRegisteredQueues().entrySet()) {
-      String queueName = entry.getKey();
-      ConsumerQueueDetail queueDetail = entry.getValue();
-      if (isQueueValid(queueDetail)) {
-        queueNames.add(queueName);
-      }
-    }
-    defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
-    messageSchedulerListener = new MessageSchedulerListener();
-    redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.PUSH_MESSAGE);
-    queueRunningState = new ConcurrentHashMap<>(queueNames.size());
-    queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
-    channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
-    queueNameToZsetName = new ConcurrentHashMap<>(queueNames.size());
-    queueNameToLastMessageSeenTime = new ConcurrentHashMap<>(queueNames.size());
-    createScheduler(queueNames.size());
-    for (String queueName : queueNames) {
-      queueRunningState.put(queueName, false);
-    }
+    scheduler =
+        SchedulerFactory.createThreadPoolTaskScheduler(
+            min(poolSize, queueCount), getThreadNamePrefix(), 60);
   }
 
   private boolean isQueueActive(String queueName) {
@@ -338,6 +286,42 @@ public abstract class MessageScheduler implements InitializingBean, DisposableBe
       } catch (NumberFormatException e) {
         getLogger().error("Invalid data {} on a channel {}", body, channel);
       }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void initialize(Map<String, ConsumerQueueDetail> queueDetailMap) {
+    Set<String> queueNames = new HashSet<>();
+    for (Entry<String, ConsumerQueueDetail> entry : queueDetailMap.entrySet()) {
+      String queueName = entry.getKey();
+      ConsumerQueueDetail queueDetail = entry.getValue();
+      if (isQueueValid(queueDetail)) {
+        queueNames.add(queueName);
+      }
+    }
+    defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
+    messageSchedulerListener = new MessageSchedulerListener();
+    redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.PUSH_MESSAGE);
+    queueRunningState = new ConcurrentHashMap<>(queueNames.size());
+    queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
+    channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
+    queueNameToZsetName = new ConcurrentHashMap<>(queueNames.size());
+    queueNameToLastMessageSeenTime = new ConcurrentHashMap<>(queueNames.size());
+    createScheduler(queueNames.size());
+    for (String queueName : queueNames) {
+      queueRunningState.put(queueName, false);
+    }
+  }
+
+  @Override
+  public void onApplicationEvent(QueueInitializationEvent event) {
+    doStop();
+    if (event.isStart()) {
+      if (CollectionUtils.isEmpty(event.getQueueDetailMap())) {
+        return;
+      }
+      initialize(event.getQueueDetailMap());
+      doStart();
     }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,73 +16,29 @@
 
 package com.github.sonus21.rqueue.metrics;
 
-import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import com.github.sonus21.rqueue.metrics.RqueueMetricsPropertiesTest.MetricProperties;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.search.MeterNotFoundException;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueCounterTest {
-  private String simpleQueue = "simple-queue";
-  private String delayedQueue = "delayed-queue";
-  private MetricProperties metricsProperties = new MetricProperties();
-
-  private void updateCount(String type, RqueueCounter rq, String queueName) {
-    if (type.equals("failure")) {
-      rq.updateFailureCount(queueName);
-    } else {
-      rq.updateExecutionCount(queueName);
-    }
-  }
-
-  private void registerQueue(
-      MetricProperties metricsProperties,
-      MeterRegistry meterRegistry,
-      String queueName,
-      String type) {
-    RqueueCounter rq = new RqueueCounter();
-    rq.registerQueue(metricsProperties, Tags.of("queue", queueName), meterRegistry, queueName);
-    updateCount(type, rq, queueName);
-    updateCount(type, rq, queueName + queueName);
-  }
-
-  private void validateCountStatistics(String queueName, String type) {
-    String dataName = "execution.count";
-    if (type.equals("failure")) {
-      dataName = "failure.count";
-    }
-    MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    registerQueue(metricsProperties, meterRegistry, queueName, type);
-    try {
-      meterRegistry.get(dataName).tags(Tags.of("queue", queueName)).counter().count();
-      Assert.fail();
-    } catch (MeterNotFoundException e) {
-    }
-    meterRegistry = new SimpleMeterRegistry();
-    if (type.equals("failure")) {
-      metricsProperties.getCount().setFailure(true);
-    } else {
-      metricsProperties.getCount().setExecution(true);
-    }
-    registerQueue(metricsProperties, meterRegistry, queueName, type);
-    assertEquals(
-        1, meterRegistry.get(dataName).tags(Tags.of("queue", queueName)).counter().count(), 0);
-  }
+  private QueueCounter queueCounter = mock(QueueCounter.class);
+  private RqueueCounter rqueueCounter = new RqueueCounter(queueCounter);
+  private String queueName = "test";
 
   @Test
   public void updateFailureCount() {
-    validateCountStatistics(simpleQueue, "failure");
+    rqueueCounter.updateFailureCount(queueName);
+    verify(queueCounter, times(1)).updateFailureCount(queueName);
   }
 
   @Test
   public void updateExecutionCount() {
-    validateCountStatistics(delayedQueue, "success");
+    rqueueCounter.updateExecutionCount(queueName);
+    verify(queueCounter, times(1)).updateExecutionCount(queueName);
   }
 }

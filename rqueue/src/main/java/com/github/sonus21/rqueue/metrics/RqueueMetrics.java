@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package com.github.sonus21.rqueue.metrics;
 
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.binder.MeterBinder;
-import java.lang.ref.WeakReference;
+import java.util.Map;
+import org.springframework.context.ApplicationListener;
 
 /**
  * RqueueMetrics register metrics related to queue. A queue can have 4 types of metrics like
@@ -32,51 +33,33 @@ import java.lang.ref.WeakReference;
  * queue messages can be in delayed queue because time has not reached. Some messages can be in dead
  * letter queue if dead letter queue is configured.
  */
-public class RqueueMetrics implements MeterBinder {
+public class RqueueMetrics implements ApplicationListener<QueueInitializationEvent> {
   private static final String QUEUE_SIZE = "queue.size";
   private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
-  private RqueueCounter rqueueCounter;
-  private WeakReference<RqueueMessageListenerContainer> container;
+  private RqueueMessageTemplate rqueueMessageTemplate;
   private RqueueMetricsProperties metricsProperties;
+  private MeterRegistry meterRegistry;
+  private QueueCounter queueCounter;
 
   public RqueueMetrics(
-      RqueueMessageListenerContainer container,
+      RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMetricsProperties metricsProperties,
-      RqueueCounter counter) {
+      MeterRegistry meterRegistry,
+      QueueCounter queueCounter) {
     this.metricsProperties = metricsProperties;
-    rqueueCounter = counter;
-    this.container = new WeakReference<>(container);
-  }
-
-  public static RqueueMetrics monitor(
-      RqueueMessageListenerContainer container,
-      MeterRegistry registry,
-      RqueueMetricsProperties metricsProperties,
-      RqueueCounter counter) {
-    if (container == null) {
-      return null;
-    }
-    RqueueMetrics rqueueMetrics = new RqueueMetrics(container, metricsProperties, counter);
-    rqueueMetrics.bindTo(registry);
-    return rqueueMetrics;
-  }
-
-  private int numQueues() {
-    RqueueMessageListenerContainer listenerContainer = container.get();
-    if (listenerContainer == null) {
-      return 0;
-    }
-    return listenerContainer.getRegisteredQueues().size();
+    this.rqueueMessageTemplate = rqueueMessageTemplate;
+    this.meterRegistry = meterRegistry;
+    this.queueCounter = queueCounter;
   }
 
   private long size(String name, boolean isZset) {
     Long val;
     if (!isZset) {
-      val = container.get().getRqueueMessageTemplate().getListLength(name);
+      val = rqueueMessageTemplate.getListLength(name);
     } else {
-      val = container.get().getRqueueMessageTemplate().getZsetSize(name);
+      val = rqueueMessageTemplate.getZsetSize(name);
     }
     if (val == null || val < 0) {
       return 0;
@@ -84,25 +67,21 @@ public class RqueueMetrics implements MeterBinder {
     return val;
   }
 
-  @Override
-  public void bindTo(MeterRegistry registry) {
-    if (numQueues() == 0) {
-      return;
-    }
-    for (ConsumerQueueDetail queueDetail : container.get().getRegisteredQueues().values()) {
+  private void monitor(Map<String, ConsumerQueueDetail> queueDetailMap) {
+    for (ConsumerQueueDetail queueDetail : queueDetailMap.values()) {
       Tags queueTags =
           Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getQueueName());
       Gauge.builder(QUEUE_SIZE, queueDetail, c -> size(queueDetail.getQueueName(), false))
           .tags(queueTags)
           .description("The number of entries in this queue")
-          .register(registry);
+          .register(meterRegistry);
       Gauge.builder(
               PROCESSING_QUEUE_SIZE,
               queueDetail,
               c -> size(QueueInfo.getProcessingQueueName(queueDetail.getQueueName()), true))
           .tags(queueTags)
           .description("The number of entries in the processing queue")
-          .register(registry);
+          .register(meterRegistry);
 
       if (queueDetail.isDelayedQueue()) {
         Gauge.builder(
@@ -111,7 +90,7 @@ public class RqueueMetrics implements MeterBinder {
                 c -> size(QueueInfo.getTimeQueueName(queueDetail.getQueueName()), true))
             .tags(queueTags)
             .description("The number of entries waiting in the delayed queue")
-            .register(registry);
+            .register(meterRegistry);
       }
       if (queueDetail.isDlqSet()) {
         Builder<ConsumerQueueDetail> builder =
@@ -119,12 +98,19 @@ public class RqueueMetrics implements MeterBinder {
                 DEAD_LETTER_QUEUE_SIZE, queueDetail, c -> size(queueDetail.getDlqName(), false));
         builder.tags(queueTags);
         builder.description("The number of entries in the dead letter queue");
-        builder.register(registry);
+        builder.register(meterRegistry);
       }
-      if (rqueueCounter != null) {
-        rqueueCounter.registerQueue(
-            metricsProperties, queueTags, registry, queueDetail.getQueueName());
-      }
+      queueCounter.registerQueue(
+          metricsProperties, queueTags, meterRegistry, queueDetail.getQueueName());
     }
+  }
+
+  @Override
+  public void onApplicationEvent(QueueInitializationEvent event) {
+    monitor(event.getQueueDetailMap());
+  }
+
+  public QueueCounter getQueueCounter() {
+    return this.queueCounter;
   }
 }

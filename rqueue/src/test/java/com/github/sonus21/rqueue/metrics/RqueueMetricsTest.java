@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,14 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
@@ -44,10 +43,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueMetricsTest {
-  private RqueueMessageListenerContainer container = mock(RqueueMessageListenerContainer.class);
   private RqueueMessageTemplate template = mock(RqueueMessageTemplate.class);
   private RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
-  private RqueueCounter rqueueCounter = mock(RqueueCounter.class);
+  private QueueCounter queueCounter = mock(QueueCounter.class);
   private Map<String, ConsumerQueueDetail> queueDetails = new HashMap<>();
   private String simpleQueue = "simple-queue";
   private String delayedQueue = "delayed-queue";
@@ -58,8 +56,6 @@ public class RqueueMetricsTest {
   public void init() {
     queueDetails.put(simpleQueue, new ConsumerQueueDetail(simpleQueue, -1, deadLetterQueue, false));
     queueDetails.put(delayedQueue, new ConsumerQueueDetail(delayedQueue, -1, "", true));
-    doReturn(queueDetails).when(container).getRegisteredQueues();
-    doReturn(template).when(container).getRqueueMessageTemplate();
     doAnswer(
             invocation -> {
               String zsetName = (String) invocation.getArguments()[0];
@@ -114,43 +110,6 @@ public class RqueueMetricsTest {
     }
   }
 
-  private void verifyWithConstructor(Tags tags) {
-    MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
-    metricsProperties.setMetricTags(tags);
-    new RqueueMetrics(container, metricsProperties, rqueueCounter).bindTo(meterRegistry);
-    verifyQueueDetail(meterRegistry, simpleQueue, true, false, Tags.empty());
-    verifyQueueDetail(meterRegistry, delayedQueue, false, true, Tags.empty());
-  }
-
-  @Test
-  public void constructInstanceViaConstructorWithTags() {
-    verifyWithConstructor(Tags.of("rQueue", "dc1"));
-  }
-
-  @Test
-  public void constructInstanceViaConstructor() {
-    verifyWithConstructor(Tags.empty());
-  }
-
-  @Test
-  public void constructInstanceViaStaticMethodMonitor() {
-    MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
-    verifyQueueDetail(meterRegistry, simpleQueue, true, false, Tags.empty());
-    verifyQueueDetail(meterRegistry, delayedQueue, false, true, Tags.empty());
-  }
-
-  @Test
-  public void constructInstanceViaStaticMethodMonitorWithTags() {
-    MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
-    metricsProperties.setMetricTags(tags);
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
-    verifyQueueDetail(meterRegistry, simpleQueue, true, false, tags);
-    verifyQueueDetail(meterRegistry, delayedQueue, false, true, tags);
-  }
-
   private void verifyQueueStatistics(
       MeterRegistry registry,
       String name,
@@ -179,7 +138,9 @@ public class RqueueMetricsTest {
   @Test
   public void queueStatistics() {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
+    RqueueMetrics metrics =
+        new RqueueMetrics(template, metricsProperties, meterRegistry, queueCounter);
+    metrics.onApplicationEvent(new QueueInitializationEvent("Test", queueDetails, true));
     verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
     verifyQueueStatistics(meterRegistry, delayedQueue, 200, 15, 0, 5);
   }
@@ -187,17 +148,19 @@ public class RqueueMetricsTest {
   private void verifyCounterRegisterMethodIsCalled(Tags tags) {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     metricsProperties.setMetricTags(tags);
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
-    verify(rqueueCounter, times(1))
+    RqueueMetrics metrics =
+        new RqueueMetrics(template, metricsProperties, meterRegistry, queueCounter);
+    metrics.onApplicationEvent(new QueueInitializationEvent("Test", queueDetails, true));
+    verify(queueCounter, times(1))
         .registerQueue(
             metricsProperties, Tags.concat(tags, "queue", simpleQueue), meterRegistry, simpleQueue);
-    verify(rqueueCounter, times(1))
+    verify(queueCounter, times(1))
         .registerQueue(
             metricsProperties,
             Tags.concat(tags, "queue", delayedQueue),
             meterRegistry,
             delayedQueue);
-    verify(rqueueCounter, times(2)).registerQueue(any(), any(), any(), anyString());
+    verify(queueCounter, times(2)).registerQueue(any(), any(), any(), anyString());
   }
 
   @Test

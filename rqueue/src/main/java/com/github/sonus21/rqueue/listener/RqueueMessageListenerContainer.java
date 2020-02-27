@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,11 +34,9 @@ import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -49,8 +48,6 @@ public class RqueueMessageListenerContainer
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
   private static final int DEFAULT_WORKER_COUNT_PER_QUEUE = 2;
-  private static final int POOL_SIZE_FOR_MESSAGE_MOVER = 5;
-  private static final int POOL_SIZE_FOR_MESSAGE_PROCESSING_MOVER = 2;
   private static Logger logger = LoggerFactory.getLogger(RqueueMessageListenerContainer.class);
   private final Object lifecycleMgr = new Object();
   private Integer maxNumWorkers;
@@ -71,14 +68,12 @@ public class RqueueMessageListenerContainer
 
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
-  private ApplicationContext applicationContext;
   private RqueueMessageTemplate rqueueMessageTemplate;
 
-  @Lazy
+  @Autowired private ApplicationEventPublisher applicationEventPublisher;
+
   @Autowired(required = false)
   private RqueueCounter rqueueCounter;
-
-  @Autowired private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -101,12 +96,12 @@ public class RqueueMessageListenerContainer
   }
 
   public String getBeanName() {
-    return beanName;
+    return this.beanName;
   }
 
   @Override
   public void setBeanName(String name) {
-    beanName = name;
+    this.beanName = name;
   }
 
   public RqueueMessageHandler getRqueueMessageHandler() {
@@ -125,7 +120,7 @@ public class RqueueMessageListenerContainer
     this.backOffTime = backOffTime;
   }
 
-  public long getBackoffTime() {
+  public long getBackOffTime() {
     return backOffTime;
   }
 
@@ -173,16 +168,12 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    int delayedQueueCount = 0;
     synchronized (lifecycleMgr) {
       for (MappingInformation mappingInformation :
           rqueueMessageHandler.getHandlerMethods().keySet()) {
         for (String queue : mappingInformation.getQueueNames()) {
           ConsumerQueueDetail consumerQueueDetail =
               getConsumerQueueDetail(queue, mappingInformation);
-          if (consumerQueueDetail.isDelayedQueue()) {
-            delayedQueueCount += 1;
-          }
           registeredQueues.put(queue, consumerQueueDetail);
         }
       }
@@ -230,10 +221,10 @@ public class RqueueMessageListenerContainer
   }
 
   private AsyncTaskExecutor createTaskExecutor(boolean onlySpinningThread) {
-    String beanName = getBeanName();
+    String name = getBeanName();
     ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
     threadPoolTaskExecutor.setThreadNamePrefix(
-        beanName != null ? beanName + "-" : DEFAULT_THREAD_NAME_PREFIX);
+        name != null ? name + "-" : DEFAULT_THREAD_NAME_PREFIX);
     ThreadCount threadCount = getThreadCount(onlySpinningThread);
     if (threadCount.getCorePoolSize() > 0) {
       threadPoolTaskExecutor.setCorePoolSize(threadCount.getCorePoolSize());
@@ -262,9 +253,11 @@ public class RqueueMessageListenerContainer
     logger.info("Starting Rqueue Message container");
     synchronized (lifecycleMgr) {
       running = true;
+      doStart();
+      applicationEventPublisher.publishEvent(
+          new QueueInitializationEvent("Container", registeredQueues, true));
       lifecycleMgr.notifyAll();
     }
-    doStart();
   }
 
   protected void doStart() {
@@ -306,12 +299,13 @@ public class RqueueMessageListenerContainer
   @Override
   public void stop() {
     logger.info("Stopping Rqueue Message container");
-
     synchronized (lifecycleMgr) {
       running = false;
+      doStop();
+      applicationEventPublisher.publishEvent(
+          new QueueInitializationEvent("Container", registeredQueues, false));
       lifecycleMgr.notifyAll();
     }
-    doStop();
   }
 
   protected void doStop() {
@@ -397,10 +391,10 @@ public class RqueueMessageListenerContainer
           logger.warn(
               "Message listener failed for queue {}, it will be retried in {} Ms",
               queueName,
-              getBackoffTime(),
+              getBackOffTime(),
               e);
           try {
-            Thread.sleep(getBackoffTime());
+            Thread.sleep(getBackOffTime());
           } catch (InterruptedException ex) {
             ex.printStackTrace();
           }
