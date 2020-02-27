@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.util.Pair;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({MeterRegistry.class})
@@ -49,9 +50,9 @@ public class RqueueMetricsAutoConfig {
       actualTags = Tags.concat(actualTags, e.getKey(), e.getValue());
     }
     rqueueMetricsProperties.setMetricTags(actualTags);
-    RqueueCounter counter = new RqueueCounter();
-    RqueueMetrics.monitor(
-        rqueueMessageListenerContainer, meterRegistry, rqueueMetricsProperties, counter);
-    return counter;
+    Pair<RqueueMetrics, RqueueCounter> p =
+        RqueueMetrics.monitor(
+            rqueueMessageListenerContainer, meterRegistry, rqueueMetricsProperties);
+    return p.getSecond();
   }
 }

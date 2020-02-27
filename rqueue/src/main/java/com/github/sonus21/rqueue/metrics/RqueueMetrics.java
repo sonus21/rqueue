@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.metrics;
 
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.QueueInfo;
@@ -24,7 +25,8 @@ import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import java.lang.ref.WeakReference;
+import java.util.Map;
+import org.springframework.data.util.Pair;
 
 /**
  * RqueueMetrics register metrics related to queue. A queue can have 4 types of metrics like
@@ -37,46 +39,50 @@ public class RqueueMetrics implements MeterBinder {
   private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
-  private RqueueCounter rqueueCounter;
-  private WeakReference<RqueueMessageListenerContainer> container;
+  private QueueCounter queueCounter;
+  private RqueueMessageTemplate rqueueMessageTemplate;
   private RqueueMetricsProperties metricsProperties;
+  private Map<String, ConsumerQueueDetail> queueDetailMap;
 
-  public RqueueMetrics(
-      RqueueMessageListenerContainer container,
+  private RqueueMetrics(
+      RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMetricsProperties metricsProperties,
-      RqueueCounter counter) {
+      QueueCounter counter,
+      Map<String, ConsumerQueueDetail> queueDetailMap) {
     this.metricsProperties = metricsProperties;
-    rqueueCounter = counter;
-    this.container = new WeakReference<>(container);
+    this.queueCounter = counter;
+    this.rqueueMessageTemplate = rqueueMessageTemplate;
+    this.queueDetailMap = queueDetailMap;
   }
 
-  public static RqueueMetrics monitor(
+  static Pair<RqueueMetrics, RqueueCounter> monitor(
       RqueueMessageListenerContainer container,
       MeterRegistry registry,
       RqueueMetricsProperties metricsProperties,
-      RqueueCounter counter) {
-    if (container == null) {
-      return null;
-    }
-    RqueueMetrics rqueueMetrics = new RqueueMetrics(container, metricsProperties, counter);
+      QueueCounter queueCounter) {
+    RqueueMetrics rqueueMetrics =
+        new RqueueMetrics(
+            container.getRqueueMessageTemplate(),
+            metricsProperties,
+            queueCounter,
+            container.getRegisteredQueues());
     rqueueMetrics.bindTo(registry);
-    return rqueueMetrics;
+    return Pair.of(rqueueMetrics, new RqueueCounter(queueCounter));
   }
 
-  private int numQueues() {
-    RqueueMessageListenerContainer listenerContainer = container.get();
-    if (listenerContainer == null) {
-      return 0;
-    }
-    return listenerContainer.getRegisteredQueues().size();
+  public static Pair<RqueueMetrics, RqueueCounter> monitor(
+      RqueueMessageListenerContainer container,
+      MeterRegistry registry,
+      RqueueMetricsProperties metricsProperties) {
+    return monitor(container, registry, metricsProperties, new QueueCounter());
   }
 
   private long size(String name, boolean isZset) {
     Long val;
     if (!isZset) {
-      val = container.get().getRqueueMessageTemplate().getListLength(name);
+      val = rqueueMessageTemplate.getListLength(name);
     } else {
-      val = container.get().getRqueueMessageTemplate().getZsetSize(name);
+      val = rqueueMessageTemplate.getZsetSize(name);
     }
     if (val == null || val < 0) {
       return 0;
@@ -86,10 +92,7 @@ public class RqueueMetrics implements MeterBinder {
 
   @Override
   public void bindTo(MeterRegistry registry) {
-    if (numQueues() == 0) {
-      return;
-    }
-    for (ConsumerQueueDetail queueDetail : container.get().getRegisteredQueues().values()) {
+    for (ConsumerQueueDetail queueDetail : queueDetailMap.values()) {
       Tags queueTags =
           Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getQueueName());
       Gauge.builder(QUEUE_SIZE, queueDetail, c -> size(queueDetail.getQueueName(), false))
@@ -121,10 +124,8 @@ public class RqueueMetrics implements MeterBinder {
         builder.description("The number of entries in the dead letter queue");
         builder.register(registry);
       }
-      if (rqueueCounter != null) {
-        rqueueCounter.registerQueue(
-            metricsProperties, queueTags, registry, queueDetail.getQueueName());
-      }
+      queueCounter.registerQueue(
+          metricsProperties, queueTags, registry, queueDetail.getQueueName());
     }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,16 @@
 
 package com.github.sonus21.rqueue.spring;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
- * Checks whether MeterRegistry class is present it or not. if MeterRegistry class is founds then
- * it's assumed that Metric feature is enables. It's essential to restrict the bean creation
- * otherwise can lead to error in bootstrap process.
+ * Checks whether MeterRegistry bean is present it or not. if MeterRegistry bean is founds then it's
+ * assumed that Metric feature is enables. It's essential to restrict the bean creation otherwise
+ * can lead to error in bootstrap process.
  */
 public class MetricsEnabled implements Condition {
 
@@ -31,9 +33,14 @@ public class MetricsEnabled implements Condition {
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
     try {
       Class.forName("io.micrometer.core.instrument.MeterRegistry");
-    } catch (ClassNotFoundException e) {
+      ConfigurableListableBeanFactory factory = context.getBeanFactory();
+      if (factory != null) {
+        factory.getBean(io.micrometer.core.instrument.MeterRegistry.class);
+        return true;
+      }
+    } catch (ClassNotFoundException | BeansException e) {
       return false;
     }
-    return true;
+    return false;
   }
 }

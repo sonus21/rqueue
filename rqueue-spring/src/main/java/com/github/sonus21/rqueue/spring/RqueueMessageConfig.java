@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.util.Pair;
 
 @Configuration
 public class RqueueMessageConfig extends RqueueConfig {
@@ -78,9 +79,8 @@ public class RqueueMessageConfig extends RqueueConfig {
       RqueueMessageListenerContainer rqueueMessageListenerContainer,
       MeterRegistry meterRegistry,
       RqueueMetricsProperties metricsProperties) {
-    RqueueCounter rqueueCounter = new RqueueCounter();
-    RqueueMetrics.monitor(
-        rqueueMessageListenerContainer, meterRegistry, metricsProperties, rqueueCounter);
-    return rqueueCounter;
+    Pair<RqueueMetrics, RqueueCounter> p =
+        RqueueMetrics.monitor(rqueueMessageListenerContainer, meterRegistry, metricsProperties);
+    return p.getSecond();
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class RqueueMetricsTest {
   private RqueueMessageListenerContainer container = mock(RqueueMessageListenerContainer.class);
   private RqueueMessageTemplate template = mock(RqueueMessageTemplate.class);
   private RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
-  private RqueueCounter rqueueCounter = mock(RqueueCounter.class);
+  private QueueCounter queueCounter = mock(QueueCounter.class);
   private Map<String, ConsumerQueueDetail> queueDetails = new HashMap<>();
   private String simpleQueue = "simple-queue";
   private String delayedQueue = "delayed-queue";
@@ -114,29 +114,10 @@ public class RqueueMetricsTest {
     }
   }
 
-  private void verifyWithConstructor(Tags tags) {
-    MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
-    metricsProperties.setMetricTags(tags);
-    new RqueueMetrics(container, metricsProperties, rqueueCounter).bindTo(meterRegistry);
-    verifyQueueDetail(meterRegistry, simpleQueue, true, false, Tags.empty());
-    verifyQueueDetail(meterRegistry, delayedQueue, false, true, Tags.empty());
-  }
-
-  @Test
-  public void constructInstanceViaConstructorWithTags() {
-    verifyWithConstructor(Tags.of("rQueue", "dc1"));
-  }
-
-  @Test
-  public void constructInstanceViaConstructor() {
-    verifyWithConstructor(Tags.empty());
-  }
-
   @Test
   public void constructInstanceViaStaticMethodMonitor() {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
+    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, queueCounter);
     verifyQueueDetail(meterRegistry, simpleQueue, true, false, Tags.empty());
     verifyQueueDetail(meterRegistry, delayedQueue, false, true, Tags.empty());
   }
@@ -146,7 +127,7 @@ public class RqueueMetricsTest {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
     metricsProperties.setMetricTags(tags);
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
+    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, queueCounter);
     verifyQueueDetail(meterRegistry, simpleQueue, true, false, tags);
     verifyQueueDetail(meterRegistry, delayedQueue, false, true, tags);
   }
@@ -179,7 +160,7 @@ public class RqueueMetricsTest {
   @Test
   public void queueStatistics() {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
+    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, queueCounter);
     verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
     verifyQueueStatistics(meterRegistry, delayedQueue, 200, 15, 0, 5);
   }
@@ -187,17 +168,17 @@ public class RqueueMetricsTest {
   private void verifyCounterRegisterMethodIsCalled(Tags tags) {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     metricsProperties.setMetricTags(tags);
-    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, rqueueCounter);
-    verify(rqueueCounter, times(1))
+    RqueueMetrics.monitor(container, meterRegistry, metricsProperties, queueCounter);
+    verify(queueCounter, times(1))
         .registerQueue(
             metricsProperties, Tags.concat(tags, "queue", simpleQueue), meterRegistry, simpleQueue);
-    verify(rqueueCounter, times(1))
+    verify(queueCounter, times(1))
         .registerQueue(
             metricsProperties,
             Tags.concat(tags, "queue", delayedQueue),
             meterRegistry,
             delayedQueue);
-    verify(rqueueCounter, times(2)).registerQueue(any(), any(), any(), anyString());
+    verify(queueCounter, times(2)).registerQueue(any(), any(), any(), anyString());
   }
 
   @Test

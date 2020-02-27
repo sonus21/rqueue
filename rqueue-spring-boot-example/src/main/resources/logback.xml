@@ -5,7 +5,7 @@
     </encoder>
   </appender>
 
-  <logger level="DEBUG" name="com.github.sonus21.rqueue.core">
+  <logger level="INFO" name="root">
     <appender-ref ref="STDOUT"/>
   </logger>
 </configuration>

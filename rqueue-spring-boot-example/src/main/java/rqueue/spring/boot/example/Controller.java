@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package rqueue.spring.boot.example;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor(onConstructor = @__(@Autowired))
+@Slf4j
 public class Controller {
   private RqueueMessageSender rqueueMessageSender;
 
@@ -51,6 +53,7 @@ public class Controller {
     job.setId(UUID.randomUUID().toString());
     job.setMessage("Hi this is " + job.getId());
     rqueueMessageSender.put("job-queue", job);
+    log.info("{}", job);
     return job.toString();
   }
 
