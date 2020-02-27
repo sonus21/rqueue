@@ -271,11 +271,13 @@ public class MessageSchedulerTest {
         (MessageListener) FieldUtils.readField(messageScheduler, "messageSchedulerListener", true);
     // invalid channel
     messageListener.onMessage(new DefaultMessage(slowQueue.getBytes(), "312".getBytes()), null);
+    Thread.sleep(50);
     assertEquals(1, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
     // invalid body
     messageListener.onMessage(
         new DefaultMessage(QueueInfo.getChannelName(slowQueue).getBytes(), "sss".getBytes()), null);
+    Thread.sleep(50);
     assertEquals(1, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
     // both are correct
@@ -284,6 +286,7 @@ public class MessageSchedulerTest {
             QueueInfo.getChannelName(slowQueue).getBytes(),
             String.valueOf(System.currentTimeMillis()).getBytes()),
         null);
+    Thread.sleep(50);
     assertEquals(2, messageScheduler.scheduleList.stream().filter(e -> !e).count());
     messageScheduler.destroy();
   }
