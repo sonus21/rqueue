@@ -45,13 +45,17 @@ public abstract class BaseApplication {
 
   @PostConstruct
   public void postConstruct() {
-    redisServer = new RedisServer(redisPort);
-    redisServer.start();
+    if (redisServer == null) {
+      redisServer = new RedisServer(redisPort);
+      redisServer.start();
+    }
   }
 
   @PreDestroy
   public void preDestroy() {
-    redisServer.stop();
+    if (redisServer != null) {
+      redisServer.stop();
+    }
   }
 
   @Bean

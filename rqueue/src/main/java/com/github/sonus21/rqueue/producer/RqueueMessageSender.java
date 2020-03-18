@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.utils.QueueInfo;
 import com.github.sonus21.rqueue.utils.Validator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -192,5 +193,16 @@ public class RqueueMessageSender {
    */
   public boolean moveMessageFromDeadLetterToQueue(String deadLetterQueueName, String queueName) {
     return moveMessageFromDeadLetterToQueue(deadLetterQueueName, queueName, null);
+  }
+
+  /**
+   * Very dangerous method it will delete all messages in a queue
+   *
+   * @param queueName queue name
+   */
+  public void deleteAllMessages(String queueName) {
+    messageTemplate.deleteKey(queueName);
+    messageTemplate.deleteKey(QueueInfo.getProcessingQueueName(queueName));
+    messageTemplate.deleteKey(QueueInfo.getTimeQueueName(queueName));
   }
 }

@@ -23,11 +23,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.util.CollectionUtils;
 
+@Slf4j
 public abstract class Utility {
   private static final GenericMessageConverter converter = new GenericMessageConverter();
 
@@ -65,5 +68,17 @@ public abstract class Utility {
     }
     queueNameToMessage.put(QueueInfo.getProcessingQueueName(queueName), messages);
     return queueNameToMessage;
+  }
+
+  public static void printQueueStats(
+      List<String> queueNames, RedisTemplate<String, RqueueMessage> redisTemplate) {
+    for (String queueName : queueNames) {
+      for (Entry<String, List<RqueueMessage>> entry :
+          Utility.getMessageMap(queueName, redisTemplate).entrySet()) {
+        for (RqueueMessage message : entry.getValue()) {
+          log.info("Queue: {} Msg: {}", entry.getKey(), message);
+        }
+      }
+    }
   }
 }

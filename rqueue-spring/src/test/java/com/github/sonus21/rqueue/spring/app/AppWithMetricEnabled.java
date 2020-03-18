@@ -18,6 +18,8 @@ package com.github.sonus21.rqueue.spring.app;
 
 import com.github.sonus21.rqueue.spring.EnableRqueue;
 import com.github.sonus21.rqueue.spring.RqueueMetricsProperties;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -27,18 +29,22 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import rqueue.test.BaseApplication;
 
 @Configuration
-@ComponentScan(basePackages = {"rqueue.test", "com.github.sonus21.rqueue.spring.app"})
+@ComponentScan(basePackages = {"rqueue.test", "com.github.sonus21.rqueue.spring.services"})
 @EnableRqueue
 @EnableWebMvc
 @PropertySource("classpath:application.properties")
-public class AppConfig extends BaseApplication {
+public class AppWithMetricEnabled extends BaseApplication {
   @Bean
   public PrometheusMeterRegistry meterRegistry() {
-    return new PrometheusMeterRegistry(key -> null);
+    return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
   }
 
   @Bean
   public RqueueMetricsProperties rqueueMetricsProperties() {
-    return new RqueueMetricsProperties();
+    RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties();
+    metricsProperties.setMetricTags(Tags.of("rqueue", "test"));
+    metricsProperties.getCount().setExecution(true);
+    metricsProperties.getCount().setFailure(true);
+    return metricsProperties;
   }
 }

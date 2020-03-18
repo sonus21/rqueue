@@ -42,6 +42,7 @@ public class MessageListener {
     if (failureManager.shouldFail(job.getId())) {
       throw new Exception("Failing job task to be retried" + job);
     }
+    log.info("Job: {}", job);
     consumedMessageService.save(job);
   }
 
@@ -53,6 +54,7 @@ public class MessageListener {
     if (failureManager.shouldFail(notification.getId())) {
       throw new Exception("Failing notification task to be retried" + notification);
     }
+    log.info("Notification: {}", notification);
     consumedMessageService.save(notification);
   }
 
@@ -65,6 +67,7 @@ public class MessageListener {
     if (failureManager.shouldFail(email.getId())) {
       throw new Exception("Failing email task to be retried" + email);
     }
+    log.info("Email: {}", email);
     consumedMessageService.save(email);
   }
 }

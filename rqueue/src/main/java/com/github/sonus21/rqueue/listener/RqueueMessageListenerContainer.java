@@ -389,7 +389,7 @@ public class RqueueMessageListenerContainer
           }
         } catch (Exception e) {
           logger.warn(
-              "Message listener failed for queue {}, it will be retried in {} Ms",
+              "Message listener failed for the queue {}, it will be retried in {} Ms",
               queueName,
               getBackOffTime(),
               e);
