@@ -4,6 +4,7 @@
  
 [![Build Status](https://travis-ci.org/sonus21/rqueue.svg?branch=master)](https://travis-ci.org/sonus21/rqueue)
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
+![Maven Central](https://img.shields.io/maven-central/v/com.github.sonus21/rqueue)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 Rqueue is an asynchronous task executor(worker) built for spring framework based on the spring framework's messaging library backed by Redis.
