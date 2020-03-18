@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.spring;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
@@ -33,14 +31,9 @@ public class MetricsEnabled implements Condition {
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
     try {
       Class.forName("io.micrometer.core.instrument.MeterRegistry");
-      ConfigurableListableBeanFactory factory = context.getBeanFactory();
-      if (factory != null) {
-        factory.getBean(io.micrometer.core.instrument.MeterRegistry.class);
-        return true;
-      }
-    } catch (ClassNotFoundException | BeansException e) {
+      return true;
+    } catch (ClassNotFoundException e) {
       return false;
     }
-    return false;
   }
 }

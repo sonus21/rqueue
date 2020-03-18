@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring.app;
+package com.github.sonus21.rqueue.spring.services;
 
 import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import lombok.AllArgsConstructor;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
 import rqueue.test.entity.ConsumedMessage;
 import rqueue.test.repository.ConsumedMessageRepository;
@@ -34,7 +35,9 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
   public <S extends ConsumedMessage> S save(S entity) {
     EntityManager entityManager = entityManagerFactory.createEntityManager();
     Session session = entityManager.unwrap(Session.class);
+    Transaction tx = session.beginTransaction();
     session.save(entity);
+    tx.commit();
     return entity;
   }
 

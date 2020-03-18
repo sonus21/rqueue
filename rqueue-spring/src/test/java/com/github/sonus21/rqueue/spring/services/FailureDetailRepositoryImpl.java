@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring.app;
+package com.github.sonus21.rqueue.spring.services;
 
+import java.util.List;
 import java.util.Optional;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import lombok.AllArgsConstructor;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 import rqueue.test.entity.FailureDetail;
 import rqueue.test.repository.FailureDetailRepository;
 
@@ -30,7 +38,16 @@ public class FailureDetailRepositoryImpl implements FailureDetailRepository {
 
   @Override
   public <S extends FailureDetail> S save(S entity) {
-    return null;
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Session session = entityManager.unwrap(Session.class);
+    Transaction tx = session.beginTransaction();
+    if (entity.getFailureCount() == 0) {
+      session.save(entity);
+    } else {
+      session.update(entity);
+    }
+    tx.commit();
+    return entity;
   }
 
   @Override
@@ -40,7 +57,17 @@ public class FailureDetailRepositoryImpl implements FailureDetailRepository {
 
   @Override
   public Optional<FailureDetail> findById(String s) {
-    return Optional.empty();
+    EntityManager em = entityManagerFactory.createEntityManager();
+    CriteriaBuilder cb = em.getCriteriaBuilder();
+    CriteriaQuery<FailureDetail> q = cb.createQuery(FailureDetail.class);
+    Root<FailureDetail> c = q.from(FailureDetail.class);
+    q.select(c).where(cb.equal(c.get("id"), s));
+    List<FailureDetail> failureDetails = em.createQuery(q).getResultList();
+    em.close();
+    if (CollectionUtils.isEmpty(failureDetails)) {
+      return Optional.empty();
+    }
+    return Optional.of(failureDetails.get(0));
   }
 
   @Override

@@ -121,4 +121,8 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
     }
     return true;
   }
+
+  public void deleteKey(String key) {
+    redisTemplate.delete(key);
+  }
 }

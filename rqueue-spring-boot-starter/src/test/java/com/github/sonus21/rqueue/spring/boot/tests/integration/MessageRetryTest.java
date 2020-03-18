@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
 import static org.junit.Assert.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;

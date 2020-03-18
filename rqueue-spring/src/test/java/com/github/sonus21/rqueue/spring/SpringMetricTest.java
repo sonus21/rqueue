@@ -16,48 +16,43 @@
 
 package com.github.sonus21.rqueue.spring;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
 
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
-import java.util.Map;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import rqueue.test.tests.MetricTestBase;
 
 @ContextConfiguration(classes = AppWithMetricEnabled.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 @Slf4j
 @WebAppConfiguration
-public class SpringAppTest {
+public class SpringMetricTest extends MetricTestBase {
   static {
-    System.setProperty("TEST_NAME", SpringAppTest.class.getSimpleName());
+    System.setProperty("TEST_NAME", SpringMetricTest.class.getSimpleName());
   }
 
-  @Autowired private RqueueMessageListenerContainer container;
-
-  @Value("${email.queue.name}")
-  private String emailQueue;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
-  @Value("${notification.queue.name}")
-  private String notificationQueueName;
 
   @Test
-  public void numListeners() {
-    Map<String, ConsumerQueueDetail> registeredQueue = container.getRegisteredQueues();
-    assertEquals(3, registeredQueue.size());
-    assertTrue(registeredQueue.containsKey(notificationQueueName));
-    assertTrue(registeredQueue.containsKey(emailQueue));
-    assertTrue(registeredQueue.containsKey(jobQueueName));
+  public void delayedQueueStatus() throws TimedOutException {
+    this.delayedQueueStatus(redisTemplate);
+  }
+
+  @Test
+  public void metricStatus() throws TimedOutException {
+    this.metricStatus(redisTemplate);
+  }
+
+  @Test
+  public void countStatusTest() throws TimedOutException {
+    this.countStatus();
   }
 }

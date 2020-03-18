@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
-import static com.github.sonus21.rqueue.utils.TimeUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static rqueue.test.Utility.buildMessage;
