@@ -35,7 +35,8 @@ import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.annotation.support.AnnotationExceptionHandlerMethodResolver;
-import org.springframework.messaging.handler.annotation.support.PayloadMethodArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.MessageMethodArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.PayloadArgumentResolver;
 import org.springframework.messaging.handler.invocation.AbstractExceptionHandlerMethodResolver;
 import org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -64,7 +65,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>(getCustomArgumentResolvers());
     CompositeMessageConverter compositeMessageConverter =
         new CompositeMessageConverter(getMessageConverters());
-    resolvers.add(new PayloadMethodArgumentResolver(compositeMessageConverter));
+    resolvers.add(new PayloadArgumentResolver(compositeMessageConverter));
     return resolvers;
   }
 

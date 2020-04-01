@@ -18,19 +18,25 @@ package com.github.sonus21.rqueue.core;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
+@SuppressWarnings("unchecked")
 class RedisScriptFactory {
-  static RedisScript<?> getScript(ScriptType type) {
+  static RedisScript getScript(ScriptType type) {
     Resource resource = new ClassPathResource(type.getPath());
+    DefaultRedisScript script = new DefaultRedisScript();
+    script.setLocation(resource);
     switch (type) {
       case ADD_MESSAGE:
       case MOVE_MESSAGE:
       case REPLACE_MESSAGE:
       case PUSH_MESSAGE:
-        return RedisScript.of(resource, Long.class);
+        script.setResultType(Long.class);
+        return script;
       case REMOVE_MESSAGE:
-        return RedisScript.of(resource, RqueueMessage.class);
+        script.setResultType(RqueueMessage.class);
+        return script;
     }
     return null;
   }

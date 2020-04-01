@@ -2,39 +2,39 @@ dependencies {
     compile project(":rqueue")
 
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    compile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+    compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
-    compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.3.2'
+    compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
 
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    compile group: 'org.springframework', name: 'spring-webmvc', version: '5.2.0.RELEASE'
+    compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
 
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
+    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
-    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
+    compile group: 'org.projectlombok', name: 'lombok', version: "${lombokVersion}"
 
-    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api
-    compile group: 'javax.persistence', name: 'javax.persistence-api', version: '2.2'
+    compile group: 'javax.persistence', name: 'javax.persistence-api', version: "${jpaVersion}"
 
-    compile 'com.h2database:h2:1.4.194'
-    compile 'it.ozimov:embedded-redis:0.7.2'
+    compile "com.h2database:h2:${h2Version}"
+    compile "it.ozimov:embedded-redis:${embeddedRedisVersion}"
 
     // https://mvnrepository.com/artifact/org.springframework.data/spring-data-jpa
-    compile group: 'org.springframework.data', name: 'spring-data-jpa', version: '2.2.2.RELEASE'
+    compile group: 'org.springframework.data', name: 'spring-data-jpa', version: "${springBootVersion}"
 
     // https://mvnrepository.com/artifact/org.hibernate/hibernate-core
-    compile group: 'org.hibernate', name: 'hibernate-core', version: '5.4.9.Final'
+    compile group: 'org.hibernate', name: 'hibernate-core', version: "${hibernateVersion}"
 
     // https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
-    compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+    compile group: 'javax.annotation', name: 'javax.annotation-api', version: "${javaxAnnotationVersion}"
 
-    compile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'junit', name: 'junit', version: "${junitVersion}"
 
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
 
 }
