@@ -16,16 +16,12 @@
 
 package com.github.sonus21.rqueue.spring;
 
-import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
-
-import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -40,7 +36,6 @@ public class SpringMetricTest extends MetricTestBase {
     System.setProperty("TEST_NAME", SpringMetricTest.class.getSimpleName());
   }
 
-
   @Test
   public void delayedQueueStatus() throws TimedOutException {
     this.delayedQueueStatus(redisTemplate);
@@ -52,6 +47,7 @@ public class SpringMetricTest extends MetricTestBase {
   }
 
   @Test
+  @Ignore
   public void countStatusTest() throws TimedOutException {
     this.countStatus();
   }

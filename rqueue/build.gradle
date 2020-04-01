@@ -1,14 +1,14 @@
-ext.projectDescription = 'Asynchornous and delayed task executor'
+ext.projectDescription = 'Asynchronous and delayed task executor'
 ext.name = 'Rqueue Core Java'
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"
 }
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.0'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.10.0'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.0'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: "${jacksonVersion}"
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${jacksonVersion}"
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${jacksonVersion}"
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    compile 'io.micrometer:micrometer-core:1.3.2', optional
-    testCompile 'io.lettuce:lettuce-core:5.2.0.RELEASE'
+    compile "io.micrometer:micrometer-core:${microMeterVersion}", optional
+    testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
 }

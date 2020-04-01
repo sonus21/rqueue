@@ -22,6 +22,9 @@ import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Map.Entry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
@@ -31,7 +34,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration(proxyBeanMethods = false)
+@Configuration
 @ConditionalOnClass({MeterRegistry.class})
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @EnableConfigurationProperties(RqueueMetricsProperties.class)
@@ -43,7 +46,7 @@ public class RqueueMetricsAutoConfig {
       RqueueMessageListenerContainer rqueueMessageListenerContainer,
       RqueueMetricsProperties rqueueMetricsProperties) {
     Tags actualTags = Tags.empty();
-    for (Entry<String, String> e : metricsProperties.getTags().entrySet()) {
+    for (Entry<String, String> e : getTags(metricsProperties).entrySet()) {
       actualTags = Tags.concat(actualTags, e.getKey(), e.getValue());
     }
     for (Entry<String, String> e : rqueueMetricsProperties.getTags().entrySet()) {
@@ -56,6 +59,16 @@ public class RqueueMetricsAutoConfig {
         rqueueMetricsProperties,
         meterRegistry,
         queueCounter);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Map<String, String> getTags(MetricsProperties metricsProperties) {
+    try {
+      Method method = MetricsProperties.class.getMethod("getTags");
+      return (Map<String, String>) method.invoke(metricsProperties);
+    } catch (Exception e) {
+      return Collections.emptyMap();
+    }
   }
 
   @Bean

@@ -1,22 +1,18 @@
 <configuration>
   <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
     <encoder>
-      <pattern>${TEST_NAME} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} -
-        %msg%n
-      </pattern>
+      <pattern>${TEST_NAME} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
     <encoder>
-      <pattern>${TEST_NAME} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} -
-        %msg%n
-      </pattern>
+      <pattern>${TEST_NAME} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
-    <file>test.log</file>
+    <file>log/test.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>test.%d{yyyy-MM-dd-HH-mm}.log</fileNamePattern>
+      <fileNamePattern>log/test.%d{yyyy-MM-dd-HH-mm}.log</fileNamePattern>
       <maxHistory>30</maxHistory>
-      <totalSizeCap>500MB</totalSizeCap>
+      <totalSizeCap>100MB</totalSizeCap>
     </rollingPolicy>
   </appender>
 

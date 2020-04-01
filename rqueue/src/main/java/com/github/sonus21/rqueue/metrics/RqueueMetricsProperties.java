@@ -31,9 +31,10 @@ import java.util.Map.Entry;
 public abstract class RqueueMetricsProperties {
 
   /** List of tags to be used while publishing metrics. */
-  private final Map<String, String> tags = new LinkedHashMap<>();
+  private Map<String, String> tags = new LinkedHashMap<>();
+
   /** what type of counting feature is enabled, by default counting feature is disabled. */
-  private final Count count = new Count();
+  private Count count = new Count();
 
   private Tags metricTags = Tags.empty();
 
@@ -43,6 +44,14 @@ public abstract class RqueueMetricsProperties {
 
   public Map<String, String> getTags() {
     return tags;
+  }
+
+  public void setTags(Map<String, String> tags) {
+    this.tags = tags;
+  }
+
+  public void setCount(Count count) {
+    this.count = count;
   }
 
   /**

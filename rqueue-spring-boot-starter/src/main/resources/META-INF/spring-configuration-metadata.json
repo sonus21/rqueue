@@ -1,0 +1,27 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics",
+      "type": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics.count",
+      "type": "com.github.sonus21.rqueue.metrics.RqueueMetricsProperties$Count"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics.metric-tags",
+      "type": "io.micrometer.core.instrument.Tags"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics.tags",
+      "type": "java.util.Map<java.lang.String,java.lang.String>"
+    }
+  ]
+}

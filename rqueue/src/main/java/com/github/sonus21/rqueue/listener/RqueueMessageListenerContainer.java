@@ -162,6 +162,14 @@ public class RqueueMessageListenerContainer
     return autoStartup;
   }
 
+  @Override
+  public void stop(Runnable callback) {
+    synchronized (this.lifecycleMgr) {
+      stop();
+      callback.run();
+    }
+  }
+
   public void setAutoStartup(boolean autoStartup) {
     this.autoStartup = autoStartup;
   }

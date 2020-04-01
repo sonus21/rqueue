@@ -9,25 +9,25 @@ dependencies {
     compile project(":rqueue-spring")
 
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    compile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+    compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
 
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    compile group: 'org.springframework', name: 'spring-webmvc', version: '5.2.0.RELEASE'
+    compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
 
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
+    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
-    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
+    compile group: 'org.projectlombok', name: 'lombok', version: "${lombokVersion}"
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.28'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: "${sl4jVersion}"
 
-    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
-    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.47'
+    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: "${tomcatVersion}"
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
-    compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.3.2'
+    compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
 
 }
