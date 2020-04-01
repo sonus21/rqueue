@@ -31,9 +31,9 @@ jobs:
         - SPRING_VERSION=5.2.0.RELEASE
         - SPRING_DATA_VERSION=2.2.0.RELEASE
         - MICROMETER_VERSION=1.3.2
-        script:
-          - ./gradlew check
-          - ./gradlew codeCoverageReport
+      script:
+        - ./gradlew check
+        - ./gradlew codeCoverageReport
 
 stages:
   - spring-boot-2.1
