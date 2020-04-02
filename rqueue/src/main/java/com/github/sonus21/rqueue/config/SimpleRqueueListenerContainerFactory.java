@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ package com.github.sonus21.rqueue.config;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.processor.MessageProcessor;
+import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
+import com.github.sonus21.rqueue.utils.Constants;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -32,13 +35,36 @@ import org.springframework.util.Assert;
  * of requirements.
  */
 public class SimpleRqueueListenerContainerFactory {
+  // Provide task executor, this can be used to provide some additional details like some threads
+  // name, etc otherwise a default task executor would be created
   private AsyncTaskExecutor taskExecutor;
+  // whether container should auto start or not
   private boolean autoStartup = true;
+  // Redis connection factory for the listener container
   private RedisConnectionFactory redisConnectionFactory;
+  // Custom requeue message handler
   private RqueueMessageHandler rqueueMessageHandler;
+  // List of message converters to convert messages to/from
   private List<MessageConverter> messageConverters;
+  // In case of failure how much time, we should wait for next job
   private Long backOffTime;
+  // Number of workers requires for execution
   private Integer maxNumWorkers;
+  // Control how much time a job takes in execution, this can be used to fast-recovery
+  // when a job goes to running state then if it's not deleted within N secs then
+  // it has to be re-processed, that re-process time can be controller using this field.
+  // For example a job started execution at 10:30AM and executor was shutdown so this task requires
+  // retry By default it will be retried in 15 minutes, but if you want to reprocess quickly/defer
+  // further than this can be used to reprocess
+  private long maxJobExecutionTime = Constants.MAX_JOB_EXECUTION_TIME;
+
+  // This message processor would be called whenever a message is discarded due to retry limit
+  // exhaustion
+  private MessageProcessor discardMessageProcessor = new NoOpMessageProcessor();
+  // This message processor would be called whenever a message is moved to dead letter queue
+  private MessageProcessor deadLetterQueueMessageProcessor = new NoOpMessageProcessor();
+
+  // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
 
   /**
@@ -181,13 +207,19 @@ public class SimpleRqueueListenerContainerFactory {
    * @return an object of {@link RqueueMessageListenerContainer} object
    */
   public RqueueMessageListenerContainer createMessageListenerContainer() {
-    Assert.notNull(rqueueMessageHandler, "rqueueMessageHandler must not be null");
+    Assert.notNull(getRqueueMessageHandler(), "rqueueMessageHandler must not be null");
     Assert.notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
     if (rqueueMessageTemplate == null) {
-      rqueueMessageTemplate = new RqueueMessageTemplate(redisConnectionFactory);
+      rqueueMessageTemplate =
+          new RqueueMessageTemplate(redisConnectionFactory, maxJobExecutionTime);
     }
     RqueueMessageListenerContainer messageListenerContainer =
-        new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate);
+        new RqueueMessageListenerContainer(
+            getRqueueMessageHandler(),
+            rqueueMessageTemplate,
+            getDiscardMessageProcessor(),
+            getDeadLetterQueueMessageProcessor(),
+            getMaxJobExecutionTime());
     messageListenerContainer.setAutoStartup(autoStartup);
     if (taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(taskExecutor);
@@ -199,5 +231,52 @@ public class SimpleRqueueListenerContainerFactory {
       messageListenerContainer.setBackOffTime(backOffTime);
     }
     return messageListenerContainer;
+  }
+
+  public long getMaxJobExecutionTime() {
+    return maxJobExecutionTime;
+  }
+
+  /* Control how much time a job takes in execution, this can be used to fast-recovery
+   *when a job goes to running state then if it's not deleted within N secs then
+   *it has to be re-processed, that re-process time can be controller using this field.
+   *For example a job started execution at 10:30AM and executor was shutdown so this task requires
+   *retry By default it will be retried in 15 minutes, but if you want to reprocess quickly/defer
+   *further than this can be used to reprocess.
+   *
+   * @param maxJobExecutionTime
+   */
+  public void setMaxJobProcessTime(long maxJobExecutionTime) {
+    this.maxJobExecutionTime = maxJobExecutionTime;
+  }
+
+  public MessageProcessor getDiscardMessageProcessor() {
+    return discardMessageProcessor;
+  }
+
+  /**
+   * This message processor would be called whenever a message is discarded due to retry limit
+   * exhaust.
+   *
+   * @param discardMessageProcessor object of the discard message processor.
+   */
+  public void setDiscardMessageProcessor(MessageProcessor discardMessageProcessor) {
+    Assert.notNull(discardMessageProcessor, "discardMessageProcessor cannot be null");
+    this.discardMessageProcessor = discardMessageProcessor;
+  }
+
+  public MessageProcessor getDeadLetterQueueMessageProcessor() {
+    return deadLetterQueueMessageProcessor;
+  }
+
+  /**
+   * This message processor would be called whenever a message is moved to dead letter queue
+   *
+   * @param deadLetterQueueMessageProcessor object of message processor.
+   */
+  public void setDeadLetterQueueMessageProcessor(MessageProcessor deadLetterQueueMessageProcessor) {
+    Assert.notNull(
+        deadLetterQueueMessageProcessor, "deadLetterQueueMessageProcessor cannot be null");
+    this.deadLetterQueueMessageProcessor = deadLetterQueueMessageProcessor;
   }
 }

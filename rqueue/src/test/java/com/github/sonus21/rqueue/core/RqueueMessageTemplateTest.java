@@ -45,7 +45,7 @@ public class RqueueMessageTemplateTest {
   private DefaultScriptExecutor<String> scriptExecutor = mock(DefaultScriptExecutor.class);
 
   private RqueueMessageTemplate rqueueMessageTemplate =
-      new RqueueMessageTemplate(redisConnectionFactory);
+      new RqueueMessageTemplate(redisConnectionFactory, 900000);
 
   private String key = "test-queue";
   private RqueueMessage message = new RqueueMessage(key, "This is a message", null, 100L);

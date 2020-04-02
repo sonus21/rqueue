@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package com.github.sonus21.rqueue.listener;
 
-public class ConsumerQueueDetail {
+public class QueueDetail {
   private final String queueName;
   private final boolean delayedQueue;
   private final String dlqName;
   private final int numRetries;
 
-  public ConsumerQueueDetail(
+  public QueueDetail(
       String queueName, int numRetries, String deadLetterQueueName, boolean delayedQueue) {
     this.queueName = queueName;
     this.numRetries = numRetries;

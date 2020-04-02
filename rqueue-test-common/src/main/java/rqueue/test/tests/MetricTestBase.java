@@ -26,7 +26,7 @@ import static rqueue.test.Utility.buildMessage;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueUtility;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Random;
 import javax.annotation.PostConstruct;
@@ -48,23 +48,19 @@ public class MetricTestBase {
   @Autowired protected RedisConnectionFactory redisConnectionFactory;
   @Autowired protected MeterRegistry meterRegistry;
   protected RedisTemplate<String, RqueueMessage> redisTemplate;
+  @Value("${email.dead.letter.queue.name}")
+  private String emailDlq;
+  @Value("${email.queue.name}")
+  private String emailQueueName;
+  @Value("${job.queue.name}")
+  private String jobQueue;
+  @Value("${notification.queue.name}")
+  private String notificationQueue;
 
   @PostConstruct
   public void init() {
     redisTemplate = getRedisTemplate(redisConnectionFactory);
   }
-
-  @Value("${email.dead.letter.queue.name}")
-  private String emailDlq;
-
-  @Value("${email.queue.name}")
-  private String emailQueueName;
-
-  @Value("${job.queue.name}")
-  private String jobQueue;
-
-  @Value("${notification.queue.name}")
-  private String notificationQueue;
 
   public void delayedQueueStatus(RedisTemplate<String, RqueueMessage> redisTemplate)
       throws TimedOutException {
@@ -81,7 +77,7 @@ public class MetricTestBase {
         redisTemplate
             .opsForZSet()
             .add(
-                QueueInfo.getTimeQueueName(notificationQueue),
+                QueueUtility.getTimeQueueName(notificationQueue),
                 buildMessage(notification, notificationQueue, null, null),
                 System.currentTimeMillis() - delay);
       } else {

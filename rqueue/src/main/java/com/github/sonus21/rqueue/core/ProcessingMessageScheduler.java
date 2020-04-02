@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package com.github.sonus21.rqueue.core;
 
 import static java.lang.Long.max;
 
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.QueueUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,8 +28,12 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   private final Logger logger = LoggerFactory.getLogger(ProcessingMessageScheduler.class);
 
   public ProcessingMessageScheduler(
-      RedisTemplate<String, Long> redisTemplate, int poolSize, boolean scheduleTaskAtStartup) {
-    super(redisTemplate, poolSize, scheduleTaskAtStartup);
+      RedisTemplate<String, Long> redisTemplate,
+      int poolSize,
+      boolean scheduleTaskAtStartup,
+      boolean redisEnabled,
+      long maxJobExecutionTime) {
+    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled, maxJobExecutionTime);
   }
 
   @Override
@@ -39,16 +43,16 @@ public class ProcessingMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueInfo.getProcessingQueueChannelName(queueName);
+    return QueueUtility.getProcessingQueueChannelName(queueName);
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueInfo.getProcessingQueueName(queueName);
+    return QueueUtility.getProcessingQueueName(queueName);
   }
 
   @Override
-  protected boolean isQueueValid(ConsumerQueueDetail queueDetail) {
+  protected boolean isQueueValid(QueueDetail queueDetail) {
     return true;
   }
 
@@ -60,7 +64,7 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   @Override
   protected long getNextScheduleTime(long currentTime, Long value) {
     if (value == null) {
-      return QueueInfo.getMessageReEnqueueTime(currentTime);
+      return QueueUtility.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime);
     }
     return max(currentTime, value);
   }

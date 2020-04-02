@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package rqueue.test;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueUtility;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,22 +51,22 @@ public abstract class Utility {
     queueNameToMessage.put(queueName, messages);
 
     Set<RqueueMessage> messagesFromZset =
-        redisTemplate.opsForZSet().range(QueueInfo.getTimeQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtility.getTimeQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesFromZset)) {
       messages = new ArrayList<>(messagesFromZset);
     } else {
       messages = new ArrayList<>();
     }
-    queueNameToMessage.put(QueueInfo.getTimeQueueName(queueName), messages);
+    queueNameToMessage.put(QueueUtility.getTimeQueueName(queueName), messages);
 
     Set<RqueueMessage> messagesInProcessingQueue =
-        redisTemplate.opsForZSet().range(QueueInfo.getProcessingQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtility.getProcessingQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
       messages = new ArrayList<>(messagesInProcessingQueue);
     } else {
       messages = new ArrayList<>();
     }
-    queueNameToMessage.put(QueueInfo.getProcessingQueueName(queueName), messages);
+    queueNameToMessage.put(QueueUtility.getProcessingQueueName(queueName), messages);
     return queueNameToMessage;
   }
 

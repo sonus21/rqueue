@@ -20,7 +20,8 @@ import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.QueueUtility;
 import com.github.sonus21.rqueue.utils.Validator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +38,6 @@ import org.springframework.util.Assert;
  * @author Sonu Kumar
  */
 public class RqueueMessageSender {
-  private static final int DEFAULT_MAX_MESSAGE = 1000;
   private MessageWriter messageWriter;
   private RqueueMessageTemplate messageTemplate;
 
@@ -166,7 +166,7 @@ public class RqueueMessageSender {
    *
    * @param deadLetterQueueName dead letter queue name
    * @param queueName queue name
-   * @param maxMessages number of messages to be moved by default move {@link #DEFAULT_MAX_MESSAGE}
+   * @param maxMessages number of messages to be moved by default move {@link Constants#ONE_MILLI}
    *     messages
    * @return success or failure
    */
@@ -178,7 +178,7 @@ public class RqueueMessageSender {
         !deadLetterQueueName.equals(queueName),
         "deadLetterQueueName and queueName must be different");
     if (maxMessages == null) {
-      maxMessages = DEFAULT_MAX_MESSAGE;
+      maxMessages = Constants.MAX_MESSAGES;
     }
     Assert.isTrue(maxMessages > 0, "maxMessage must be greater than zero");
     return messageTemplate.moveMessage(deadLetterQueueName, queueName, maxMessages);
@@ -202,7 +202,7 @@ public class RqueueMessageSender {
    */
   public void deleteAllMessages(String queueName) {
     messageTemplate.deleteKey(queueName);
-    messageTemplate.deleteKey(QueueInfo.getProcessingQueueName(queueName));
-    messageTemplate.deleteKey(QueueInfo.getTimeQueueName(queueName));
+    messageTemplate.deleteKey(QueueUtility.getProcessingQueueName(queueName));
+    messageTemplate.deleteKey(QueueUtility.getTimeQueueName(queueName));
   }
 }

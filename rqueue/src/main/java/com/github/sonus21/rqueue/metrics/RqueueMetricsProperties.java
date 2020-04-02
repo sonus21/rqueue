@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,16 +42,16 @@ public abstract class RqueueMetricsProperties {
     return count;
   }
 
+  public void setCount(Count count) {
+    this.count = count;
+  }
+
   public Map<String, String> getTags() {
     return tags;
   }
 
   public void setTags(Map<String, String> tags) {
     this.tags = tags;
-  }
-
-  public void setCount(Count count) {
-    this.count = count;
   }
 
   /**

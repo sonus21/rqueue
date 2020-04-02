@@ -19,14 +19,14 @@ package com.github.sonus21.rqueue.utils;
 import java.util.Collections;
 import java.util.Map;
 
-public abstract class QueueInfo {
+public class QueueUtility {
   public static final String QUEUE_NAME = "QUEUE_NAME";
   private static final String DELAYED_QUEUE_PREFIX = "rqueue-delay::";
   private static final String CHANNEL_PREFIX = "rqueue-channel::";
   private static final String PROCESSING_PREFIX = "rqueue-processing::";
   private static final String PROCESSING_CHANNEL_PREFIX = "rqueue-processing-channel::";
-  // 15 minutes in millis
-  private static final long MAX_MESSAGE_PROCESSING_TIME = 15 * 60 * 1000L;
+
+  private QueueUtility() {}
 
   public static Map<String, Object> getQueueHeaders(String queueName) {
     return Collections.singletonMap(QUEUE_NAME, queueName);
@@ -48,11 +48,11 @@ public abstract class QueueInfo {
     return PROCESSING_CHANNEL_PREFIX + queueName;
   }
 
-  public static long getMessageReEnqueueTime() {
-    return getMessageReEnqueueTime(System.currentTimeMillis());
+  public static long getMessageReEnqueueTimeWithDelay(long maxDelay) {
+    return getMessageReEnqueueTimeWithDelay(System.currentTimeMillis(), maxDelay);
   }
 
-  public static long getMessageReEnqueueTime(long currentTime) {
-    return currentTime + MAX_MESSAGE_PROCESSING_TIME;
+  public static long getMessageReEnqueueTimeWithDelay(long currentTime, long maxDelay) {
+    return currentTime + maxDelay;
   }
 }

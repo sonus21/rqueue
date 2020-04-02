@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package com.github.sonus21.rqueue.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.QueueUtility;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -29,23 +29,23 @@ public class ProcessingMessageSchedulerTest {
   private int poolSize = 1;
   @Mock private RedisTemplate<String, Long> redisTemplate;
   private ProcessingMessageScheduler messageScheduler =
-      new ProcessingMessageScheduler(redisTemplate, poolSize, true);
+      new ProcessingMessageScheduler(redisTemplate, poolSize, true, true, 900000);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private ConsumerQueueDetail slowQueueDetail = new ConsumerQueueDetail(slowQueue, -1, "", true);
-  private ConsumerQueueDetail fastQueueDetail = new ConsumerQueueDetail(fastQueue, -1, "", false);
+  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true);
+  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false);
 
   @Test
   public void getChannelName() {
     assertEquals(
-        QueueInfo.getProcessingQueueChannelName(slowQueue),
+        QueueUtility.getProcessingQueueChannelName(slowQueue),
         messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
   public void getZsetName() {
     assertEquals(
-        QueueInfo.getProcessingQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
+        QueueUtility.getProcessingQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
@@ -58,7 +58,7 @@ public class ProcessingMessageSchedulerTest {
   public void getNextScheduleTime() {
     long currentTime = System.currentTimeMillis();
     assertEquals(
-        QueueInfo.getMessageReEnqueueTime(currentTime),
+        QueueUtility.getMessageReEnqueueTimeWithDelay(currentTime, 900000),
         messageScheduler.getNextScheduleTime(currentTime, null));
     assertEquals(
         currentTime + 1000L,

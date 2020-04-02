@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -70,6 +70,7 @@ public class ProcessingMessageSchedulerTest {
 
   @Value("${job.queue.name}")
   private String jobQueueName;
+
   @Rule
   public RunTestUntilFail retry =
       new RunTestUntilFail(
@@ -84,6 +85,7 @@ public class ProcessingMessageSchedulerTest {
               }
             }
           });
+
   private int messageCount = 110;
 
   @PostConstruct
@@ -94,7 +96,7 @@ public class ProcessingMessageSchedulerTest {
   @Test
   public void publishMessageIsTriggeredOnMessageRemoval()
       throws InterruptedException, TimedOutException {
-    String processingQueueName = QueueInfo.getProcessingQueueName(jobQueueName);
+    String processingQueueName = QueueUtility.getProcessingQueueName(jobQueueName);
     long currentTime = System.currentTimeMillis();
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.producer;
 
+import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
+
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import java.util.List;
@@ -28,7 +30,6 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
 class MessageWriter {
-  private static final long MIN_DELAY_TIME = 100;
   private static Logger logger = LoggerFactory.getLogger(RqueueMessageSender.class);
   private RqueueMessageTemplate rqueueMessageTemplate;
   private CompositeMessageConverter messageConverter;
@@ -48,7 +49,7 @@ class MessageWriter {
   boolean pushMessage(String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
     RqueueMessage rqueueMessage = buildMessage(queueName, message, retryCount, delayInMilliSecs);
     try {
-      if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY_TIME) {
+      if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
         rqueueMessageTemplate.add(queueName, rqueueMessage);
       } else {
         rqueueMessageTemplate.addWithDelay(queueName, rqueueMessage);

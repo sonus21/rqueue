@@ -17,8 +17,8 @@
 package com.github.sonus21.rqueue.metrics;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.QueueUtility;
 import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Gauge.Builder;
@@ -67,8 +67,8 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
     return val;
   }
 
-  private void monitor(Map<String, ConsumerQueueDetail> queueDetailMap) {
-    for (ConsumerQueueDetail queueDetail : queueDetailMap.values()) {
+  private void monitor(Map<String, QueueDetail> queueDetailMap) {
+    for (QueueDetail queueDetail : queueDetailMap.values()) {
       Tags queueTags =
           Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getQueueName());
       Gauge.builder(QUEUE_SIZE, queueDetail, c -> size(queueDetail.getQueueName(), false))
@@ -78,7 +78,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
       Gauge.builder(
               PROCESSING_QUEUE_SIZE,
               queueDetail,
-              c -> size(QueueInfo.getProcessingQueueName(queueDetail.getQueueName()), true))
+              c -> size(QueueUtility.getProcessingQueueName(queueDetail.getQueueName()), true))
           .tags(queueTags)
           .description("The number of entries in the processing queue")
           .register(meterRegistry);
@@ -87,13 +87,13 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
         Gauge.builder(
                 DELAYED_QUEUE_SIZE,
                 queueDetail,
-                c -> size(QueueInfo.getTimeQueueName(queueDetail.getQueueName()), true))
+                c -> size(QueueUtility.getTimeQueueName(queueDetail.getQueueName()), true))
             .tags(queueTags)
             .description("The number of entries waiting in the delayed queue")
             .register(meterRegistry);
       }
       if (queueDetail.isDlqSet()) {
-        Builder<ConsumerQueueDetail> builder =
+        Builder<QueueDetail> builder =
             Gauge.builder(
                 DEAD_LETTER_QUEUE_SIZE, queueDetail, c -> size(queueDetail.getDlqName(), false));
         builder.tags(queueTags);
