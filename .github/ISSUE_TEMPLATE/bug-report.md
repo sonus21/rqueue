@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Please provide details
+about: What's not working?
 title: Anything ...
 labels: ''
 assignees: sonus21
