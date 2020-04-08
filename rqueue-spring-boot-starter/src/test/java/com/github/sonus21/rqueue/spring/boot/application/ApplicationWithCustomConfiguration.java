@@ -50,10 +50,9 @@ public class ApplicationWithCustomConfiguration extends BaseApplication {
     RqueueMessageListenerContainer rqueueMessageListenerContainer =
         new RqueueMessageListenerContainer(
             rqueueMessageHandler,
-            new RqueueMessageTemplate(redisConnectionFactory, 900000),
+            new RqueueMessageTemplate(redisConnectionFactory),
             new NoOpMessageProcessor(),
-            new NoOpMessageProcessor(),
-            900000);
+            new NoOpMessageProcessor());
     rqueueMessageListenerContainer.setMaxNumWorkers(maxWorkers);
     return rqueueMessageListenerContainer;
   }

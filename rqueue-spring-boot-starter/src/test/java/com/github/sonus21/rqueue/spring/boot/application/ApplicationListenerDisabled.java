@@ -46,10 +46,9 @@ public class ApplicationListenerDisabled extends BaseApplication {
       RqueueMessageHandler rqueueMessageHandler, RedisConnectionFactory redisConnectionFactory) {
     return new RqueueMessageListenerContainer(
         rqueueMessageHandler,
-        new RqueueMessageTemplate(redisConnectionFactory, 900000),
+        new RqueueMessageTemplate(redisConnectionFactory),
         new NoOpMessageProcessor(),
-        new NoOpMessageProcessor(),
-        900000) {
+        new NoOpMessageProcessor()) {
       @Override
       protected void startQueue(String queueName, QueueDetail queueDetail) {}
     };

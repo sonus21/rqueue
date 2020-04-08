@@ -38,13 +38,10 @@ import org.springframework.util.CollectionUtils;
 
 @SuppressWarnings("unchecked")
 public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
-  private final long maxJobExecutionTime;
   private DefaultScriptExecutor<String> scriptExecutor;
 
-  public RqueueMessageTemplate(
-      RedisConnectionFactory redisConnectionFactory, long maxJobExecutionTime) {
+  public RqueueMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
     super(redisConnectionFactory);
-    this.maxJobExecutionTime = maxJobExecutionTime;
     scriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
   }
 
@@ -52,7 +49,7 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
     redisTemplate.opsForList().rightPush(queueName, message);
   }
 
-  public RqueueMessage pop(String queueName) {
+  public RqueueMessage pop(String queueName, long maxJobExecutionTime) {
     long currentTime = System.currentTimeMillis();
     RedisScript<RqueueMessage> script =
         (RedisScript<RqueueMessage>) getScript(ScriptType.REMOVE_MESSAGE);

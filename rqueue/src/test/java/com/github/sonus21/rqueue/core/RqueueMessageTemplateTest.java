@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -45,7 +46,7 @@ public class RqueueMessageTemplateTest {
   private DefaultScriptExecutor<String> scriptExecutor = mock(DefaultScriptExecutor.class);
 
   private RqueueMessageTemplate rqueueMessageTemplate =
-      new RqueueMessageTemplate(redisConnectionFactory, 900000);
+      new RqueueMessageTemplate(redisConnectionFactory);
 
   private String key = "test-queue";
   private RqueueMessage message = new RqueueMessage(key, "This is a message", null, 100L);
@@ -65,7 +66,7 @@ public class RqueueMessageTemplateTest {
 
   @Test
   public void pop() {
-    rqueueMessageTemplate.pop(key);
+    rqueueMessageTemplate.pop(key, Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 

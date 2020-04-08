@@ -89,7 +89,9 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
                   getApplicationContext(), rqueueListener.delayedQueue()),
               ValueResolver.resolveValueToInteger(
                   getApplicationContext(), rqueueListener.numRetries()),
-              resolveDelayedQueue(rqueueListener.deadLetterQueue()));
+              resolveDelayedQueue(rqueueListener.deadLetterQueue()),
+              ValueResolver.resolveValueToLong(
+                  getApplicationContext(), rqueueListener.maxJobExecutionTime()));
       if (mappingInformation.isValid()) {
         return mappingInformation;
       }

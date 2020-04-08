@@ -22,9 +22,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
+import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import com.github.sonus21.rqueue.utils.SchedulerFactory;
 import java.time.Instant;
 import java.util.Arrays;
@@ -56,7 +56,6 @@ import org.springframework.util.CollectionUtils;
 
 public abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<QueueInitializationEvent> {
-  protected final long maxJobExecutionTime;
   private final int poolSize;
   private final boolean scheduleTaskAtStartup;
   private final boolean redisEnabled;
@@ -65,6 +64,7 @@ public abstract class MessageScheduler
   private RedisTemplate<String, Long> redisTemplate;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
   private Map<String, Boolean> queueRunningState;
+  protected Map<String, Long> queueNameToDelay;
   private Map<String, ScheduledTaskDetail> queueNameToScheduledTask;
   private Map<String, String> channelNameToQueueName;
   private Map<String, String> queueNameToZsetName;
@@ -76,18 +76,18 @@ public abstract class MessageScheduler
       RedisTemplate<String, Long> redisTemplate,
       int poolSize,
       boolean scheduleTaskAtStartup,
-      boolean redisEnabled,
-      long maxJobExecutionTime) {
+      boolean redisEnabled) {
     this.poolSize = poolSize;
     this.scheduleTaskAtStartup = scheduleTaskAtStartup;
     this.redisEnabled = redisEnabled;
     this.redisTemplate = redisTemplate;
-    this.maxJobExecutionTime = maxJobExecutionTime;
   }
+
+  protected abstract void initializeState(Map<String, QueueDetail> queueDetailMap);
 
   protected abstract Logger getLogger();
 
-  protected abstract long getNextScheduleTime(long currentTime, Long value);
+  protected abstract long getNextScheduleTime(String queueName, Long value);
 
   protected abstract String getChannelName(String queueName);
 
@@ -237,8 +237,7 @@ public abstract class MessageScheduler
     MessageMoverTask timerTask = new MessageMoverTask(queueName, zsetName);
     Future<?> future =
         scheduler.schedule(
-            timerTask,
-            Instant.ofEpochMilli(getNextScheduleTime(System.currentTimeMillis(), startTime)));
+            timerTask, Instant.ofEpochMilli(getNextScheduleTime(queueName, startTime)));
     queueNameToScheduledTask.put(
         timerTask.getQueueName(), new ScheduledTaskDetail(startTime, future));
   }
@@ -267,6 +266,7 @@ public abstract class MessageScheduler
     for (String queueName : queueNames) {
       queueRunningState.put(queueName, false);
     }
+    initializeState(queueDetailMap);
   }
 
   @Override
@@ -301,10 +301,9 @@ public abstract class MessageScheduler
           long currentTime = System.currentTimeMillis();
           Long value =
               defaultScriptExecutor.execute(
-                  redisScript, Arrays.asList(queueName, zsetName), currentTime,
-                  MAX_MESSAGES);
-          schedule(
-              queueName, zsetName, getNextScheduleTime(System.currentTimeMillis(), value), true);
+                  redisScript, Arrays.asList(queueName, zsetName), currentTime, MAX_MESSAGES);
+          long nextExecutionTime = getNextScheduleTime(queueName, value);
+          schedule(queueName, zsetName, nextExecutionTime, true);
         }
       } catch (RedisSystemException e) {
         // no op

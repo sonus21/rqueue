@@ -53,7 +53,6 @@ public class RqueueMessageListenerContainer
   private final MessageProcessor discardMessageProcessor;
   private final MessageProcessor dlqMessageProcessor;
   private final RqueueMessageTemplate rqueueMessageTemplate;
-  private final long maxJobExecutionTime;
 
   @Autowired(required = false)
   RqueueCounter rqueueCounter;
@@ -78,8 +77,7 @@ public class RqueueMessageListenerContainer
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
       MessageProcessor discardMessageProcessor,
-      MessageProcessor dlqMessageProcessor,
-      long maxJobExecutionTime) {
+      MessageProcessor dlqMessageProcessor) {
     Assert.notNull(rqueueMessageHandler, "rqueueMessageHandler cannot be null");
     Assert.notNull(rqueueMessageTemplate, "rqueueMessageTemplate cannot be null");
     Assert.notNull(discardMessageProcessor, "discardMessageProcessor cannot be null");
@@ -88,7 +86,6 @@ public class RqueueMessageListenerContainer
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.discardMessageProcessor = discardMessageProcessor;
     this.dlqMessageProcessor = dlqMessageProcessor;
-    this.maxJobExecutionTime = maxJobExecutionTime;
   }
 
   public RqueueMessageTemplate getRqueueMessageTemplate() {
@@ -259,7 +256,8 @@ public class RqueueMessageListenerContainer
         queue,
         mappingInformation.getNumRetries(),
         mappingInformation.getDeadLetterQueueName(),
-        mappingInformation.isDelayedQueue());
+        mappingInformation.isDelayedQueue(),
+        mappingInformation.getMaxJobExecutionTime());
   }
 
   @Override
@@ -369,10 +367,6 @@ public class RqueueMessageListenerContainer
 
   public void setPollingInterval(long pollingInterval) {
     this.pollingInterval = pollingInterval;
-  }
-
-  public long getMaxJobExecutionTime() {
-    return maxJobExecutionTime;
   }
 
   public MessageProcessor getDiscardMessageProcessor() {

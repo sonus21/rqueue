@@ -94,8 +94,7 @@ public abstract class RqueueConfig {
       return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
     }
     simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(
-        new RqueueMessageTemplate(
-            connectionFactory, simpleRqueueListenerContainerFactory.getMaxJobExecutionTime()));
+        new RqueueMessageTemplate(connectionFactory));
     return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
   }
 
@@ -111,8 +110,7 @@ public abstract class RqueueConfig {
         getRedisTemplate(getRedisConnectionFactory()),
         delayedQueueSchedulerPoolSize,
         schedulerAutoStart,
-        schedulerRedisEnabled,
-        simpleRqueueListenerContainerFactory.getMaxJobExecutionTime());
+        schedulerRedisEnabled);
   }
 
   /**
@@ -127,7 +125,6 @@ public abstract class RqueueConfig {
         getRedisTemplate(getRedisConnectionFactory()),
         processingQueueSchedulerPoolSize,
         schedulerAutoStart,
-        schedulerRedisEnabled,
-        simpleRqueueListenerContainerFactory.getMaxJobExecutionTime());
+        schedulerRedisEnabled);
   }
 }

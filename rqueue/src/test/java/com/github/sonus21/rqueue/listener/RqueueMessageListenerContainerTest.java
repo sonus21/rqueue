@@ -54,8 +54,7 @@ public class RqueueMessageListenerContainerTest {
           mock(RqueueMessageHandler.class),
           mock(RqueueMessageTemplate.class),
           discardMessageProcessor,
-          deadLetterMessageProcessor,
-          900000);
+          deadLetterMessageProcessor);
 
   @Test
   public void testPollingInterval() {
@@ -191,8 +190,7 @@ public class RqueueMessageListenerContainerTest {
             messageHandler,
             rqueueMessageTemplate,
             new NoOpMessageProcessor(),
-            new NoOpMessageProcessor(),
-            900000);
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
@@ -203,7 +201,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(fastQueue);
+        .pop(fastQueue, 900000L);
 
     doAnswer(
             invocation -> {
@@ -211,7 +209,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(slowQueue);
+        .pop(slowQueue, 900000L);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> fastQueueCounter.get() > 1, "fastQueue message call");
@@ -243,8 +241,7 @@ public class RqueueMessageListenerContainerTest {
             messageHandler,
             rqueueMessageTemplate,
             new NoOpMessageProcessor(),
-            new NoOpMessageProcessor(),
-            900000);
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     doAnswer(
@@ -258,7 +255,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(fastQueue);
+        .pop(fastQueue, 900000L);
     FastMessageSchedulerListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageSchedulerListener.class);
     container.afterPropertiesSet();
@@ -288,8 +285,7 @@ public class RqueueMessageListenerContainerTest {
             messageHandler,
             rqueueMessageTemplate,
             new NoOpMessageProcessor(),
-            new NoOpMessageProcessor(),
-            900000);
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     FastMessageSchedulerListener fastMessageListener =
@@ -310,7 +306,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(slowQueue);
+        .pop(slowQueue, 900000L);
 
     doAnswer(
             invocation -> {
@@ -321,7 +317,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(fastQueue);
+        .pop(fastQueue, 900000L);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> slowQueueCounter.get() == 1, "slowQueue message fetch");
@@ -364,8 +360,7 @@ public class RqueueMessageListenerContainerTest {
             messageHandler,
             mock(RqueueMessageTemplate.class),
             new NoOpMessageProcessor(),
-            new NoOpMessageProcessor(),
-            900000);
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     TestTaskExecutor taskExecutor = new TestTaskExecutor();
@@ -389,8 +384,7 @@ public class RqueueMessageListenerContainerTest {
           mock(RqueueMessageHandler.class),
           mock(RqueueMessageTemplate.class),
           new NoOpMessageProcessor(),
-          new NoOpMessageProcessor(),
-          900000);
+          new NoOpMessageProcessor());
     }
 
     @Override

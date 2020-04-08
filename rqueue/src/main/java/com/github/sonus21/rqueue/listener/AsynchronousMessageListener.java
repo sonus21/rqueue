@@ -31,7 +31,7 @@ class AsynchronousMessageListener extends MessageContainerBase implements Runnab
   }
 
   private RqueueMessage getMessage() {
-    return getRqueueMessageTemplate().pop(queueName);
+    return getRqueueMessageTemplate().pop(queueName, queueDetail.getMaxJobExecutionTime());
   }
 
   @Override

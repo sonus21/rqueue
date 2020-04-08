@@ -25,6 +25,39 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class ValueResolver {
   private ValueResolver() {}
 
+  public static Long parseStringToLong(String val) {
+    if (val == null) {
+      return null;
+    }
+    String tmpVal = val.trim();
+    if (tmpVal.equals("null")) {
+      return null;
+    }
+    return Long.parseLong(tmpVal);
+  }
+
+  public static Integer parseStringToInt(String val) {
+    if (val == null) {
+      return null;
+    }
+    String tmpVal = val.trim();
+    if (tmpVal.equals("null")) {
+      return null;
+    }
+    return Integer.parseInt(tmpVal);
+  }
+
+  public static boolean convertToBoolean(String s) {
+    String tmpString = s.trim();
+    if (tmpString.equalsIgnoreCase("true")) {
+      return true;
+    }
+    if (tmpString.equalsIgnoreCase("false")) {
+      return false;
+    }
+    throw new IllegalArgumentException(s + " cannot be converted to boolean");
+  }
+
   private static String[] wrapInStringArray(Object valueToWrap) {
     return new String[] {valueToWrap.toString()};
   }
@@ -60,7 +93,7 @@ public class ValueResolver {
       String placeholdersResolved = configurableBeanFactory.resolveEmbeddedValue(name);
       BeanExpressionResolver exprResolver = configurableBeanFactory.getBeanExpressionResolver();
       if (exprResolver == null) {
-        return Integer.parseInt(name);
+        return parseStringToInt(name);
       }
       Object result =
           exprResolver.evaluate(
@@ -68,21 +101,34 @@ public class ValueResolver {
       if (result instanceof Integer) {
         return (Integer) result;
       } else if (result instanceof String) {
-        return Integer.parseInt((String) result);
+        return parseStringToInt((String) result);
       }
     }
-    return Integer.parseInt(name);
+    return parseStringToInt(name);
   }
 
-  public static boolean convertToBoolean(String s) {
-    String tmpString = s.trim();
-    if (tmpString.equalsIgnoreCase("true")) {
-      return true;
+  public static Long resolveValueToLong(ApplicationContext applicationContext, String name) {
+    if (applicationContext instanceof ConfigurableApplicationContext) {
+      ConfigurableBeanFactory configurableBeanFactory =
+          ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
+      String placeholdersResolved = configurableBeanFactory.resolveEmbeddedValue(name);
+      BeanExpressionResolver exprResolver = configurableBeanFactory.getBeanExpressionResolver();
+      if (exprResolver == null) {
+        return parseStringToLong(name);
+      }
+      Object result =
+          exprResolver.evaluate(
+              placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
+      if (result instanceof Long) {
+        return (Long) result;
+      } else if (result instanceof Integer) {
+        return ((Integer) result).longValue();
+      } else if (result instanceof String) {
+        return parseStringToLong((String) result);
+      }
+      throw new IllegalArgumentException(result + " can not be converted to long");
     }
-    if (tmpString.equalsIgnoreCase("false")) {
-      return false;
-    }
-    throw new IllegalArgumentException(s + " can not be converted to boolean");
+    return parseStringToLong(name);
   }
 
   public static boolean resolveToBoolean(ApplicationContext applicationContext, String name) {

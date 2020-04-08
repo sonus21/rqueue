@@ -21,13 +21,19 @@ public class QueueDetail {
   private final boolean delayedQueue;
   private final String dlqName;
   private final int numRetries;
+  private final long maxJobExecutionTime;
 
   public QueueDetail(
-      String queueName, int numRetries, String deadLetterQueueName, boolean delayedQueue) {
+      String queueName,
+      int numRetries,
+      String deadLetterQueueName,
+      boolean delayedQueue,
+      long maxJobExecutionTime) {
     this.queueName = queueName;
     this.numRetries = numRetries;
     this.delayedQueue = delayedQueue;
-    dlqName = deadLetterQueueName;
+    this.dlqName = deadLetterQueueName;
+    this.maxJobExecutionTime = maxJobExecutionTime;
   }
 
   public String getQueueName() {
@@ -48,5 +54,9 @@ public class QueueDetail {
 
   public boolean isDlqSet() {
     return dlqName != null && !dlqName.isEmpty();
+  }
+
+  public long getMaxJobExecutionTime() {
+    return maxJobExecutionTime;
   }
 }

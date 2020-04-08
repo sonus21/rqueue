@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.processor.MessageProcessor;
@@ -155,5 +157,9 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
         && !executed
         && System.currentTimeMillis() < maxRetryTime);
     handlePostProcessing(executed, currentFailureCount, maxRetryCount);
+  }
+
+  private long getMaxProcessingTime() {
+    return System.currentTimeMillis() + queueDetail.getMaxJobExecutionTime() - DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 }

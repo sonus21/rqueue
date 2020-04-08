@@ -21,6 +21,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.QueueUtils;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -29,11 +32,19 @@ public class ProcessingMessageSchedulerTest {
   private int poolSize = 1;
   @Mock private RedisTemplate<String, Long> redisTemplate;
   private ProcessingMessageScheduler messageScheduler =
-      new ProcessingMessageScheduler(redisTemplate, poolSize, true, true, 900000);
+      new ProcessingMessageScheduler(redisTemplate, poolSize, true, true);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false);
+  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true, 100000L);
+  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false, 200000L);
+
+  @Before
+  public void init() {
+    Map<String, QueueDetail> queueDetailMap = new HashMap<>();
+    queueDetailMap.put(slowQueue, slowQueueDetail);
+    queueDetailMap.put(fastQueue, fastQueueDetail);
+    messageScheduler.initializeState(queueDetailMap);
+  }
 
   @Test
   public void getChannelName() {
@@ -55,13 +66,22 @@ public class ProcessingMessageSchedulerTest {
   }
 
   @Test
-  public void getNextScheduleTime() {
+  public void getNextScheduleTimeSlowQueue() {
     long currentTime = System.currentTimeMillis();
     assertEquals(
-        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, 900000),
-        messageScheduler.getNextScheduleTime(currentTime, null));
+        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, 100000),
+        messageScheduler.getNextScheduleTime(slowQueue, null));
     assertEquals(
-        currentTime + 1000L,
-        messageScheduler.getNextScheduleTime(currentTime, currentTime + 1000L));
+        currentTime + 1000L, messageScheduler.getNextScheduleTime(slowQueue, currentTime + 1000L));
+  }
+
+  @Test
+  public void getNextScheduleTimeFastQueue() {
+    long currentTime = System.currentTimeMillis();
+    assertEquals(
+        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, 200000),
+        messageScheduler.getNextScheduleTime(fastQueue, null));
+    assertEquals(
+        currentTime + 1000L, messageScheduler.getNextScheduleTime(fastQueue, currentTime + 1000L));
   }
 }

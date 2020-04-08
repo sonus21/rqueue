@@ -27,9 +27,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.QueueUtils;
-import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
@@ -54,8 +54,8 @@ public class RqueueMetricsTest {
 
   @Before
   public void init() {
-    queueDetails.put(simpleQueue, new QueueDetail(simpleQueue, -1, deadLetterQueue, false));
-    queueDetails.put(delayedQueue, new QueueDetail(delayedQueue, -1, "", true));
+    queueDetails.put(simpleQueue, new QueueDetail(simpleQueue, -1, deadLetterQueue, false, 900000));
+    queueDetails.put(delayedQueue, new QueueDetail(delayedQueue, -1, "", true, 900000));
     doAnswer(
             invocation -> {
               String zsetName = (String) invocation.getArguments()[0];

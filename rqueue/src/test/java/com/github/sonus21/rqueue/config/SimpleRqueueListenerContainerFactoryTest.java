@@ -27,7 +27,6 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.processor.MessageProcessor;
 import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import org.junit.Before;
@@ -168,34 +167,6 @@ public class SimpleRqueueListenerContainerFactoryTest {
     assertNotNull(container.getRqueueMessageHandler());
     assertTrue(container.isAutoStartup());
     assertNotNull(simpleRqueueListenerContainerFactory.getRqueueMessageTemplate());
-    assertEquals(900000L, container.getMaxJobExecutionTime());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testJobExecutionTimeTooLess() {
-    simpleRqueueListenerContainerFactory.setMaxJobProcessTime(Duration.ZERO);
-  }
-
-  @Test
-  public void testFixedJobExecutionTime() {
-    assertEquals(900000L, simpleRqueueListenerContainerFactory.getMaxJobExecutionTime());
-  }
-
-  @Test
-  public void testUpdatedJobExecutionTime() {
-    simpleRqueueListenerContainerFactory.setMaxJobProcessTime(Duration.ofMillis(600));
-    assertEquals(600L, simpleRqueueListenerContainerFactory.getMaxJobExecutionTime());
-    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
-    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
-    RqueueMessageListenerContainer container =
-        simpleRqueueListenerContainerFactory.createMessageListenerContainer();
-    assertNotNull(container);
-    assertEquals(600L, container.getMaxJobExecutionTime());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void deadLetterMessageProcessorNull() {
-    simpleRqueueListenerContainerFactory.setDeadLetterQueueMessageProcessor(null);
   }
 
   @Test

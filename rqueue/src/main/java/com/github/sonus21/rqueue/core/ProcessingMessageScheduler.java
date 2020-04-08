@@ -20,6 +20,8 @@ import static java.lang.Long.max;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.QueueUtils;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,9 +33,16 @@ public class ProcessingMessageScheduler extends MessageScheduler {
       RedisTemplate<String, Long> redisTemplate,
       int poolSize,
       boolean scheduleTaskAtStartup,
-      boolean redisEnabled,
-      long maxJobExecutionTime) {
-    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled, maxJobExecutionTime);
+      boolean redisEnabled) {
+    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled);
+  }
+
+  @Override
+  protected void initializeState(Map<String, QueueDetail> queueDetailMap) {
+    this.queueNameToDelay = new ConcurrentHashMap<>(queueDetailMap.size());
+    for (QueueDetail queueDetail : queueDetailMap.values()) {
+      this.queueNameToDelay.put(queueDetail.getQueueName(), queueDetail.getMaxJobExecutionTime());
+    }
   }
 
   @Override
@@ -62,9 +71,11 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected long getNextScheduleTime(long currentTime, Long value) {
+  protected long getNextScheduleTime(String queueName, Long value) {
+    long currentTime = System.currentTimeMillis();
     if (value == null) {
-      return QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime);
+      long delay = queueNameToDelay.get(queueName);
+      return QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, delay);
     }
     return max(currentTime, value);
   }

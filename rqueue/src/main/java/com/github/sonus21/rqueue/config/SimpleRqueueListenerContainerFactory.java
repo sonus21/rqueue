@@ -16,16 +16,11 @@
 
 package com.github.sonus21.rqueue.config;
 
-import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
-import static com.github.sonus21.rqueue.utils.Constants.MIN_EXECUTION_TIME;
-
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.processor.MessageProcessor;
 import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
-import com.github.sonus21.rqueue.utils.Constants;
-import java.time.Duration;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -54,14 +49,6 @@ public class SimpleRqueueListenerContainerFactory {
   private Long backOffTime;
   // Number of workers requires for execution
   private Integer maxNumWorkers;
-  // Control how much time a job takes in execution, this can be used to fast-recovery
-  // when a job goes to running state then if it's not deleted within N secs then
-  // it has to be re-processed, that re-process time can be controller using this field.
-  // For example a job started execution at 10:30AM and executor was shutdown so this task requires
-  // retry By default it will be retried in 15 minutes, but if you want to reprocess quickly/defer
-  // further than this can be used to reprocess
-  private long maxJobExecutionTime = Constants.MAX_JOB_EXECUTION_TIME;
-
   // This message processor would be called whenever a message is discarded due to retry limit
   // exhaustion
   private MessageProcessor discardMessageProcessor = new NoOpMessageProcessor();
@@ -214,16 +201,14 @@ public class SimpleRqueueListenerContainerFactory {
     Assert.notNull(getRqueueMessageHandler(), "rqueueMessageHandler must not be null");
     Assert.notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
     if (rqueueMessageTemplate == null) {
-      rqueueMessageTemplate =
-          new RqueueMessageTemplate(redisConnectionFactory, maxJobExecutionTime);
+      rqueueMessageTemplate = new RqueueMessageTemplate(redisConnectionFactory);
     }
     RqueueMessageListenerContainer messageListenerContainer =
         new RqueueMessageListenerContainer(
             getRqueueMessageHandler(),
             rqueueMessageTemplate,
             getDiscardMessageProcessor(),
-            getDeadLetterQueueMessageProcessor(),
-            getMaxJobExecutionTime());
+            getDeadLetterQueueMessageProcessor());
     messageListenerContainer.setAutoStartup(autoStartup);
     if (taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(taskExecutor);
@@ -235,37 +220,6 @@ public class SimpleRqueueListenerContainerFactory {
       messageListenerContainer.setBackOffTime(backOffTime);
     }
     return messageListenerContainer;
-  }
-
-  public long getMaxJobExecutionTime() {
-    return maxJobExecutionTime;
-  }
-
-  /**
-   * Control how much time a job takes in execution, this can be used to fast-recovery when a job
-   * goes to running state then if it's not deleted within N secs then it has to be re-processed,
-   * that re-process time can be controller using this.
-   *
-   * <p>For example a job started execution at 10:30AM and executor was shutdown so this task
-   * requires retry By default it will be retried in 15 minutes, but if you want to reprocess
-   * quickly/defer further than this can be used to reprocess.
-   *
-   * <p>Minimum time is based on the two factors <br>
-   * 1. Actual Task execution time <br>
-   * 2. Redis execution time and thread busyness.
-   *
-   * <p>NOTE: * If provided time is too small then same tasks would be running multiple times, that
-   * can cause problem in the application. On the other-side if provided time is too large than the
-   * task retry would be delayed.
-   *
-   * @param maxJobExecutionTime total job execution time
-   */
-  public void setMaxJobProcessTime(Duration maxJobExecutionTime) {
-    long mili = maxJobExecutionTime.toMillis();
-    if (mili < MIN_EXECUTION_TIME + DELTA_BETWEEN_RE_ENQUEUE_TIME) {
-      throw new IllegalArgumentException("job execution time is too less");
-    }
-    this.maxJobExecutionTime = mili;
   }
 
   public MessageProcessor getDiscardMessageProcessor() {

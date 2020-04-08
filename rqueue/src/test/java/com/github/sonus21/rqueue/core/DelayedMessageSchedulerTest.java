@@ -18,6 +18,8 @@ package com.github.sonus21.rqueue.core;
 
 import static com.github.sonus21.rqueue.utils.TimeUtils.sleep;
 import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -64,7 +66,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(fullyQualifiedNames = {"com.github.sonus21.rqueue.utils.SchedulerFactory"})
-public class MessageSchedulerTest {
+public class DelayedMessageSchedulerTest {
   @Rule public MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
   private int poolSize = 1;
   @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
@@ -72,12 +74,12 @@ public class MessageSchedulerTest {
 
   @InjectMocks
   private TestMessageScheduler messageScheduler =
-      new TestMessageScheduler(redisTemplate, poolSize, true, true, 900000);
+      new TestMessageScheduler(redisTemplate, poolSize, true, true);
 
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false);
+  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true, 900000L);
+  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false, 900000L);
   private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
 
   @Before
@@ -89,8 +91,7 @@ public class MessageSchedulerTest {
 
   @Test
   public void getChannelName() {
-    assertEquals(
-        QueueUtils.getChannelName(slowQueue), messageScheduler.getChannelName(slowQueue));
+    assertEquals(QueueUtils.getChannelName(slowQueue), messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
@@ -107,10 +108,12 @@ public class MessageSchedulerTest {
   @Test
   public void getNextScheduleTime() {
     long currentTime = System.currentTimeMillis();
-    assertEquals(currentTime + 5000L, messageScheduler.getNextScheduleTime(currentTime, null));
-    assertEquals(
-        currentTime + 5000L,
-        messageScheduler.getNextScheduleTime(currentTime, currentTime + 1000L));
+    assertThat(
+        messageScheduler.getNextScheduleTime(slowQueue, null),
+        greaterThanOrEqualTo(currentTime + 5000L));
+    assertThat(
+        messageScheduler.getNextScheduleTime(fastQueue, currentTime + 1000L),
+        greaterThanOrEqualTo(currentTime + 5000L));
   }
 
   @Test
@@ -328,9 +331,8 @@ public class MessageSchedulerTest {
         RedisTemplate<String, Long> redisTemplate,
         int poolSize,
         boolean scheduleTaskAtStartup,
-        boolean redisEnabled,
-        long maxJobExecutionTime) {
-      super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled, maxJobExecutionTime);
+        boolean redisEnabled) {
+      super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled);
     }
 
     @Override

@@ -16,10 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
-
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import org.slf4j.Logger;
@@ -53,12 +50,6 @@ public class MessageContainerBase {
   @SuppressWarnings("ConstantConditions")
   protected RqueueMessageTemplate getRqueueMessageTemplate() {
     return container.get().getRqueueMessageTemplate();
-  }
-
-  @SuppressWarnings("ConstantConditions")
-  long getMaxProcessingTime() {
-    return QueueUtils.getMessageReEnqueueTimeWithDelay(container.get().getMaxJobExecutionTime())
-        - DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 
   @SuppressWarnings("ConstantConditions")

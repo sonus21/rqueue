@@ -76,7 +76,6 @@ public class MessageExecutorTest {
     doReturn(messageTemplate).when(container).getRqueueMessageTemplate();
     doReturn(messageHandler).when(container).getRqueueMessageHandler();
     doReturn(messageConverterList).when(messageHandler).getMessageConverters();
-    doReturn(10000l).when(container).getMaxJobExecutionTime();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
         .handleMessage(any());
@@ -84,7 +83,7 @@ public class MessageExecutorTest {
 
   @Test
   public void callDiscardProcessor() {
-    QueueDetail queueDetail = new QueueDetail("test", 3, "", false);
+    QueueDetail queueDetail = new QueueDetail("test", 3, "", false, 900000);
     MessageExecutor messageExecutor =
         new MessageExecutor(rqueueMessage, queueDetail, containerWeakReference);
     messageExecutor.run();
@@ -93,7 +92,7 @@ public class MessageExecutorTest {
 
   @Test
   public void callDeadLetterProcessor() {
-    QueueDetail queueDetail = new QueueDetail("test", 3, "dead-test", false);
+    QueueDetail queueDetail = new QueueDetail("test", 3, "dead-test", false, 900000);
 
     MessageExecutor messageExecutor =
         new MessageExecutor(rqueueMessage, queueDetail, containerWeakReference);

@@ -18,10 +18,10 @@ package com.github.sonus21.rqueue.core;
 
 import static org.junit.Assert.assertEquals;
 
-import com.github.sonus21.rqueue.core.MessageSchedulerTest.TestMessageScheduler;
-import com.github.sonus21.rqueue.core.MessageSchedulerTest.TestTaskScheduler;
-import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestMessageScheduler;
+import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestTaskScheduler;
 import com.github.sonus21.rqueue.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -42,12 +42,12 @@ public class MessageSchedulerWithSchedulerDisabledAtStartup {
 
   @InjectMocks
   private TestMessageScheduler messageScheduler =
-      new TestMessageScheduler(redisTemplate, 1, false, true, 900000);
+      new TestMessageScheduler(redisTemplate, 1, false, true);
 
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false);
+  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true, 900000L);
+  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false, 900000L);
   private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
 
   @Before

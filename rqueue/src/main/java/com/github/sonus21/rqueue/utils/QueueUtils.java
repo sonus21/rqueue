@@ -48,10 +48,6 @@ public class QueueUtils {
     return PROCESSING_CHANNEL_PREFIX + queueName;
   }
 
-  public static long getMessageReEnqueueTimeWithDelay(long maxDelay) {
-    return getMessageReEnqueueTimeWithDelay(System.currentTimeMillis(), maxDelay);
-  }
-
   public static long getMessageReEnqueueTimeWithDelay(long currentTime, long maxDelay) {
     return currentTime + maxDelay;
   }

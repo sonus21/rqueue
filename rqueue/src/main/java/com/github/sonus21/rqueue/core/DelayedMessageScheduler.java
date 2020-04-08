@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.core;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueUtils;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,10 +31,12 @@ public class DelayedMessageScheduler extends MessageScheduler {
       RedisTemplate<String, Long> redisTemplate,
       int poolSize,
       boolean scheduleTaskAtStartup,
-      boolean redisEnabled,
-      long maxJobExecutionTime) {
-    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled, maxJobExecutionTime);
+      boolean redisEnabled) {
+    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled);
   }
+
+  @Override
+  protected void initializeState(Map<String, QueueDetail> queueDetailMap) {}
 
   @Override
   public Logger getLogger() {
@@ -41,7 +44,8 @@ public class DelayedMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected long getNextScheduleTime(long currentTime, Long value) {
+  protected long getNextScheduleTime(String queueName, Long value) {
+    long currentTime = System.currentTimeMillis();
     if (value == null) {
       return currentTime + Constants.DEFAULT_DELAY;
     }
