@@ -28,8 +28,8 @@ import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtility;
-import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
+import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
@@ -59,13 +59,13 @@ public class RqueueMetricsTest {
     doAnswer(
             invocation -> {
               String zsetName = (String) invocation.getArguments()[0];
-              if (zsetName.equals(QueueUtility.getTimeQueueName(delayedQueue))) {
+              if (zsetName.equals(QueueUtils.getTimeQueueName(delayedQueue))) {
                 return 5L;
               }
-              if (zsetName.equals(QueueUtility.getProcessingQueueName(simpleQueue))) {
+              if (zsetName.equals(QueueUtils.getProcessingQueueName(simpleQueue))) {
                 return 10L;
               }
-              if (zsetName.equals(QueueUtility.getProcessingQueueName(delayedQueue))) {
+              if (zsetName.equals(QueueUtils.getProcessingQueueName(delayedQueue))) {
                 return 15L;
               }
               return null;

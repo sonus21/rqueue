@@ -49,14 +49,14 @@ public class RqueueMessageSenderTest {
   @Test
   public void putWithNullQueueName() {
     expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("queueName can not be null");
+    expectedException.expectMessage("queueName cannot be null");
     rqueueMessageSender.put(null, null);
   }
 
   @Test
   public void putWithNullMessage() {
     expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("message can not be null");
+    expectedException.expectMessage("message cannot be null");
     rqueueMessageSender.put(queueName, null);
   }
 

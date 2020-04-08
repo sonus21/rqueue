@@ -17,14 +17,14 @@
 package com.github.sonus21.rqueue.core;
 
 import static com.github.sonus21.rqueue.core.RedisScriptFactory.getScript;
-import static com.github.sonus21.rqueue.utils.QueueUtility.getChannelName;
-import static com.github.sonus21.rqueue.utils.QueueUtility.getProcessingQueueChannelName;
-import static com.github.sonus21.rqueue.utils.QueueUtility.getProcessingQueueName;
-import static com.github.sonus21.rqueue.utils.QueueUtility.getTimeQueueName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getChannelName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueChannelName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getTimeQueueName;
 
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.RqueueRedisTemplate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +61,7 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
         Arrays.asList(
             queueName, getProcessingQueueName(queueName), getProcessingQueueChannelName(queueName)),
         currentTime,
-        QueueUtility.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime));
+        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime));
   }
 
   public void addWithDelay(String queueName, RqueueMessage rqueueMessage) {
@@ -90,12 +90,12 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
       messages = new ArrayList<>();
     }
     Set<RqueueMessage> messagesFromZset =
-        redisTemplate.opsForZSet().range(QueueUtility.getTimeQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtils.getTimeQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesFromZset)) {
       messages.addAll(messagesFromZset);
     }
     Set<RqueueMessage> messagesInProcessingQueue =
-        redisTemplate.opsForZSet().range(QueueUtility.getProcessingQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtils.getProcessingQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
       messages.addAll(messagesInProcessingQueue);
     }

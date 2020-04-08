@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,9 @@ import static org.junit.Assert.assertTrue;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.processor.MessageProcessor;
+import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import org.junit.Before;
@@ -165,5 +168,67 @@ public class SimpleRqueueListenerContainerFactoryTest {
     assertNotNull(container.getRqueueMessageHandler());
     assertTrue(container.isAutoStartup());
     assertNotNull(simpleRqueueListenerContainerFactory.getRqueueMessageTemplate());
+    assertEquals(900000L, container.getMaxJobExecutionTime());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testJobExecutionTimeTooLess() {
+    simpleRqueueListenerContainerFactory.setMaxJobProcessTime(Duration.ZERO);
+  }
+
+  @Test
+  public void testFixedJobExecutionTime() {
+    assertEquals(900000L, simpleRqueueListenerContainerFactory.getMaxJobExecutionTime());
+  }
+
+  @Test
+  public void testUpdatedJobExecutionTime() {
+    simpleRqueueListenerContainerFactory.setMaxJobProcessTime(Duration.ofMillis(600));
+    assertEquals(600L, simpleRqueueListenerContainerFactory.getMaxJobExecutionTime());
+    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    RqueueMessageListenerContainer container =
+        simpleRqueueListenerContainerFactory.createMessageListenerContainer();
+    assertNotNull(container);
+    assertEquals(600L, container.getMaxJobExecutionTime());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void deadLetterMessageProcessorNull() {
+    simpleRqueueListenerContainerFactory.setDeadLetterQueueMessageProcessor(null);
+  }
+
+  @Test
+  public void deadLetterMessageProcessor() {
+    MessageProcessor messageProcessor = new NoOpMessageProcessor();
+    simpleRqueueListenerContainerFactory.setDeadLetterQueueMessageProcessor(messageProcessor);
+    assertEquals(
+        messageProcessor,
+        simpleRqueueListenerContainerFactory.getDeadLetterQueueMessageProcessor());
+    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    RqueueMessageListenerContainer container =
+        simpleRqueueListenerContainerFactory.createMessageListenerContainer();
+    assertNotNull(container);
+    assertEquals(messageProcessor, container.getDlqMessageProcessor());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void discardMessageProcessorNull() {
+    simpleRqueueListenerContainerFactory.setDiscardMessageProcessor(null);
+  }
+
+  @Test
+  public void discardMessageProcessor() {
+    MessageProcessor messageProcessor = new NoOpMessageProcessor();
+    simpleRqueueListenerContainerFactory.setDiscardMessageProcessor(messageProcessor);
+    assertEquals(
+        messageProcessor, simpleRqueueListenerContainerFactory.getDiscardMessageProcessor());
+    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    RqueueMessageListenerContainer container =
+        simpleRqueueListenerContainerFactory.createMessageListenerContainer();
+    assertNotNull(container);
+    assertEquals(messageProcessor, container.getDiscardMessageProcessor());
   }
 }

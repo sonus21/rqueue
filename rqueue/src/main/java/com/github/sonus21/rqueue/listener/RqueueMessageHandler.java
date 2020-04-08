@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.QueueUtility.QUEUE_NAME;
+import static com.github.sonus21.rqueue.utils.QueueUtils.QUEUE_NAME;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;

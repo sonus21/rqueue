@@ -18,7 +18,7 @@ package rqueue.test;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +31,9 @@ import org.springframework.messaging.Message;
 import org.springframework.util.CollectionUtils;
 
 @Slf4j
-public abstract class Utility {
+public class TestUtils {
+  private TestUtils() {}
+
   private static final GenericMessageConverter converter = new GenericMessageConverter();
 
   public static RqueueMessage buildMessage(
@@ -51,22 +53,22 @@ public abstract class Utility {
     queueNameToMessage.put(queueName, messages);
 
     Set<RqueueMessage> messagesFromZset =
-        redisTemplate.opsForZSet().range(QueueUtility.getTimeQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtils.getTimeQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesFromZset)) {
       messages = new ArrayList<>(messagesFromZset);
     } else {
       messages = new ArrayList<>();
     }
-    queueNameToMessage.put(QueueUtility.getTimeQueueName(queueName), messages);
+    queueNameToMessage.put(QueueUtils.getTimeQueueName(queueName), messages);
 
     Set<RqueueMessage> messagesInProcessingQueue =
-        redisTemplate.opsForZSet().range(QueueUtility.getProcessingQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtils.getProcessingQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
       messages = new ArrayList<>(messagesInProcessingQueue);
     } else {
       messages = new ArrayList<>();
     }
-    queueNameToMessage.put(QueueUtility.getProcessingQueueName(queueName), messages);
+    queueNameToMessage.put(QueueUtils.getProcessingQueueName(queueName), messages);
     return queueNameToMessage;
   }
 
@@ -74,7 +76,7 @@ public abstract class Utility {
       List<String> queueNames, RedisTemplate<String, RqueueMessage> redisTemplate) {
     for (String queueName : queueNames) {
       for (Entry<String, List<RqueueMessage>> entry :
-          Utility.getMessageMap(queueName, redisTemplate).entrySet()) {
+          TestUtils.getMessageMap(queueName, redisTemplate).entrySet()) {
         for (RqueueMessage message : entry.getValue()) {
           log.info("Queue: {} Msg: {}", entry.getKey(), message);
         }

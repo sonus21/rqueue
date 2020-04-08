@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.github.sonus21.rqueue.core.MessageSchedulerTest.TestMessageScheduler;
 import com.github.sonus21.rqueue.core.MessageSchedulerTest.TestTaskScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
+import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;

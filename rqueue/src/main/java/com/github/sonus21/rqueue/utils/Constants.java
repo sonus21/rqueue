@@ -24,8 +24,9 @@ public class Constants {
   public static final long MAX_JOB_EXECUTION_TIME = 15 * SECONDS_IN_A_MINUTE * ONE_MILLI;
   public static final long DEFAULT_DELAY = 5 * ONE_MILLI;
   public static final long DEFAULT_SCRIPT_EXECUTION_TIME = DEFAULT_DELAY;
-  public static final long DELTA_BETWEEN_RE_ENQUEUE_TIME = DEFAULT_DELAY;
   public static final long MIN_DELAY = 100L;
+  public static final long MIN_EXECUTION_TIME = MIN_DELAY;
+  public static final long DELTA_BETWEEN_RE_ENQUEUE_TIME = 5 * MIN_DELAY;
   public static final long TASK_ALIVE_TIME = -30 * Constants.ONE_MILLI;
   public static final int MAX_MESSAGES = 100;
   public static final int DEFAULT_WORKER_COUNT_PER_QUEUE = 2;

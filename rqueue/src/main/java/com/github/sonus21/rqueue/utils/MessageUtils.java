@@ -16,26 +16,23 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import com.github.sonus21.rqueue.listener.QueueDetail;
-import java.util.Map;
-import org.springframework.context.ApplicationEvent;
+import java.util.List;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.util.Assert;
 
-public class QueueInitializationEvent extends ApplicationEvent {
-  private final Map<String, QueueDetail> queueDetailMap;
-  private final boolean start;
+public class MessageUtils {
+  public MessageUtils() {}
 
-  public QueueInitializationEvent(
-      Object source, Map<String, QueueDetail> queueDetailMap, boolean start) {
-    super(source);
-    this.queueDetailMap = queueDetailMap;
-    this.start = start;
-  }
-
-  public Map<String, QueueDetail> getQueueDetailMap() {
-    return queueDetailMap;
-  }
-
-  public boolean isStart() {
-    return start;
+  public static Object convertMessageToObject(
+      Message<?> message, List<MessageConverter> messageConverters) {
+    Assert.notEmpty(messageConverters, "messageConverters cannot be empty");
+    for (MessageConverter messageConverter : messageConverters) {
+      try {
+        return messageConverter.fromMessage(message, null);
+      } catch (Exception e) {
+      }
+    }
+    return null;
   }
 }

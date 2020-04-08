@@ -16,17 +16,17 @@
 
 package rqueue.test.tests;
 
-import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
-import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
+import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static rqueue.test.Utility.buildMessage;
+import static rqueue.test.TestUtils.buildMessage;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Random;
 import javax.annotation.PostConstruct;
@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import rqueue.test.Utility;
+import rqueue.test.TestUtils;
 import rqueue.test.dto.Email;
 import rqueue.test.dto.Job;
 import rqueue.test.dto.Notification;
@@ -48,12 +48,16 @@ public class MetricTestBase {
   @Autowired protected RedisConnectionFactory redisConnectionFactory;
   @Autowired protected MeterRegistry meterRegistry;
   protected RedisTemplate<String, RqueueMessage> redisTemplate;
+
   @Value("${email.dead.letter.queue.name}")
   private String emailDlq;
+
   @Value("${email.queue.name}")
   private String emailQueueName;
+
   @Value("${job.queue.name}")
   private String jobQueue;
+
   @Value("${notification.queue.name}")
   private String notificationQueue;
 
@@ -77,7 +81,7 @@ public class MetricTestBase {
         redisTemplate
             .opsForZSet()
             .add(
-                QueueUtility.getTimeQueueName(notificationQueue),
+                QueueUtils.getTimeQueueName(notificationQueue),
                 buildMessage(notification, notificationQueue, null, null),
                 System.currentTimeMillis() - delay);
       } else {
@@ -165,7 +169,7 @@ public class MetricTestBase {
         30000,
         "job process",
         () ->
-            Utility.printQueueStats(
+            TestUtils.printQueueStats(
                 newArrayList(jobQueue, emailQueueName, notificationQueue), redisTemplate));
     waitFor(
         () ->
@@ -178,7 +182,7 @@ public class MetricTestBase {
                 == 1,
         "message process",
         () ->
-            Utility.printQueueStats(
+            TestUtils.printQueueStats(
                 newArrayList(jobQueue, emailQueueName, notificationQueue), redisTemplate));
 
     assertEquals(

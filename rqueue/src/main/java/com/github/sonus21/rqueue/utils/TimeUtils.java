@@ -28,8 +28,8 @@ import java.util.function.BooleanSupplier;
  * throw TimeOutException. If postmortem method is provided then it will call that method before
  * throwing exception.
  */
-public class WaitForUtil {
-  private WaitForUtil() {}
+public class TimeUtils {
+  private TimeUtils() {}
 
   public static void waitFor(
       BooleanSupplier callback, long waitTimeInMilliSeconds, String description)
@@ -58,11 +58,7 @@ public class WaitForUtil {
       if (Boolean.TRUE.equals(callback.getAsBoolean())) {
         return;
       }
-      try {
-        Thread.sleep(100L);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+      sleep(100L);
     } while (System.currentTimeMillis() < endTime);
     try {
       postmortem.run();
@@ -70,5 +66,13 @@ public class WaitForUtil {
       e.printStackTrace();
     }
     throw new TimedOutException("Timed out waiting for " + description);
+  }
+
+  public static void sleep(long time) {
+    try {
+      Thread.sleep(time);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 }

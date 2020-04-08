@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.config;
 
-import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
+import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
 
 import com.github.sonus21.rqueue.core.DelayedMessageScheduler;
 import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;

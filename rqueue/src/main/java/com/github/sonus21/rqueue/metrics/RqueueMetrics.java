@@ -18,8 +18,8 @@ package com.github.sonus21.rqueue.metrics;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtility;
-import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
+import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -78,7 +78,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
       Gauge.builder(
               PROCESSING_QUEUE_SIZE,
               queueDetail,
-              c -> size(QueueUtility.getProcessingQueueName(queueDetail.getQueueName()), true))
+              c -> size(QueueUtils.getProcessingQueueName(queueDetail.getQueueName()), true))
           .tags(queueTags)
           .description("The number of entries in the processing queue")
           .register(meterRegistry);
@@ -87,7 +87,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
         Gauge.builder(
                 DELAYED_QUEUE_SIZE,
                 queueDetail,
-                c -> size(QueueUtility.getTimeQueueName(queueDetail.getQueueName()), true))
+                c -> size(QueueUtils.getTimeQueueName(queueDetail.getQueueName()), true))
             .tags(queueTags)
             .description("The number of entries waiting in the delayed queue")
             .register(meterRegistry);

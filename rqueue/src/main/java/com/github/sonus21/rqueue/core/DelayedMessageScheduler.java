@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -53,12 +53,12 @@ public class DelayedMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueUtility.getChannelName(queueName);
+    return QueueUtils.getChannelName(queueName);
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueUtility.getTimeQueueName(queueName);
+    return QueueUtils.getTimeQueueName(queueName);
   }
 
   @Override

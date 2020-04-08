@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,8 +47,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class RqueueMessageListenerContainerTest {
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
-  private MockedMessageProcessor deadLetterMessageProcessor = new MockedMessageProcessor();
-  private MockedMessageProcessor discardMessageProcessor = new MockedMessageProcessor();
+  private MessageProcessor deadLetterMessageProcessor = new NoOpMessageProcessor();
+  private MessageProcessor discardMessageProcessor = deadLetterMessageProcessor;
   private RqueueMessageListenerContainer container =
       new RqueueMessageListenerContainer(
           mock(RqueueMessageHandler.class),
@@ -426,20 +426,6 @@ public class RqueueMessageListenerContainerTest {
     @RqueueListener(fastQueue)
     public void onMessage(String message) {
       lastMessage = message;
-    }
-  }
-
-  @Getter
-  private static class MockedMessageProcessor implements MessageProcessor {
-    private int count;
-
-    @Override
-    public void process(Object message) {
-      count += 1;
-    }
-
-    public void resetCount() {
-      count = 0;
     }
   }
 }

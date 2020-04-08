@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,9 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public abstract class ValueResolver {
+public class ValueResolver {
+  private ValueResolver() {}
+
   private static String[] wrapInStringArray(Object valueToWrap) {
     return new String[] {valueToWrap.toString()};
   }

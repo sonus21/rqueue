@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
+import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
 
 import java.io.Serializable;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

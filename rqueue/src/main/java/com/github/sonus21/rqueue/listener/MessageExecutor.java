@@ -19,8 +19,8 @@ package com.github.sonus21.rqueue.listener;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.processor.MessageProcessor;
-import com.github.sonus21.rqueue.utils.MessageUtility;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.MessageUtils;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.lang.ref.WeakReference;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
@@ -40,7 +40,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     this.queueDetail = queueDetail;
     this.message =
         new GenericMessage<>(
-            message.getMessage(), QueueUtility.getQueueHeaders(queueDetail.getQueueName()));
+            message.getMessage(), QueueUtils.getQueueHeaders(queueDetail.getQueueName()));
   }
 
   private int getMaxRetryCount() {
@@ -56,7 +56,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
   }
 
   private Object getPayload() {
-    return MessageUtility.convertMessageToObject(message, getMessageConverters());
+    return MessageUtils.convertMessageToObject(message, getMessageConverters());
   }
 
   @SuppressWarnings("ConstantConditions")
@@ -95,7 +95,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
       return;
     }
     try {
-      String processingQueueName = QueueUtility.getProcessingQueueName(queueDetail.getQueueName());
+      String processingQueueName = QueueUtils.getProcessingQueueName(queueDetail.getQueueName());
       if (!executed) {
         // move to DLQ
         if (queueDetail.isDlqSet()) {

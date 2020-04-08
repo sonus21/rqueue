@@ -21,7 +21,7 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.Validator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -202,7 +202,7 @@ public class RqueueMessageSender {
    */
   public void deleteAllMessages(String queueName) {
     messageTemplate.deleteKey(queueName);
-    messageTemplate.deleteKey(QueueUtility.getProcessingQueueName(queueName));
-    messageTemplate.deleteKey(QueueUtility.getTimeQueueName(queueName));
+    messageTemplate.deleteKey(QueueUtils.getProcessingQueueName(queueName));
+    messageTemplate.deleteKey(QueueUtils.getTimeQueueName(queueName));
   }
 }

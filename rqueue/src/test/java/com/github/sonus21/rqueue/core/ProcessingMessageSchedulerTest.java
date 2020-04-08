@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -38,14 +38,14 @@ public class ProcessingMessageSchedulerTest {
   @Test
   public void getChannelName() {
     assertEquals(
-        QueueUtility.getProcessingQueueChannelName(slowQueue),
+        QueueUtils.getProcessingQueueChannelName(slowQueue),
         messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
   public void getZsetName() {
     assertEquals(
-        QueueUtility.getProcessingQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
+        QueueUtils.getProcessingQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
@@ -58,7 +58,7 @@ public class ProcessingMessageSchedulerTest {
   public void getNextScheduleTime() {
     long currentTime = System.currentTimeMillis();
     assertEquals(
-        QueueUtility.getMessageReEnqueueTimeWithDelay(currentTime, 900000),
+        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, 900000),
         messageScheduler.getNextScheduleTime(currentTime, null));
     assertEquals(
         currentTime + 1000L,

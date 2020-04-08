@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.core;
 import static java.lang.Long.max;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtility;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -43,12 +43,12 @@ public class ProcessingMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueUtility.getProcessingQueueChannelName(queueName);
+    return QueueUtils.getProcessingQueueChannelName(queueName);
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueUtility.getProcessingQueueName(queueName);
+    return QueueUtils.getProcessingQueueName(queueName);
   }
 
   @Override
@@ -64,7 +64,7 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   @Override
   protected long getNextScheduleTime(long currentTime, Long value) {
     if (value == null) {
-      return QueueUtility.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime);
+      return QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime);
     }
     return max(currentTime, value);
   }

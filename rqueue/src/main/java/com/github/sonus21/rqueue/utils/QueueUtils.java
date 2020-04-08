@@ -19,14 +19,14 @@ package com.github.sonus21.rqueue.utils;
 import java.util.Collections;
 import java.util.Map;
 
-public class QueueUtility {
+public class QueueUtils {
   public static final String QUEUE_NAME = "QUEUE_NAME";
   private static final String DELAYED_QUEUE_PREFIX = "rqueue-delay::";
   private static final String CHANNEL_PREFIX = "rqueue-channel::";
   private static final String PROCESSING_PREFIX = "rqueue-processing::";
   private static final String PROCESSING_CHANNEL_PREFIX = "rqueue-processing-channel::";
 
-  private QueueUtility() {}
+  private QueueUtils() {}
 
   public static Map<String, Object> getQueueHeaders(String queueName) {
     return Collections.singletonMap(QUEUE_NAME, queueName);

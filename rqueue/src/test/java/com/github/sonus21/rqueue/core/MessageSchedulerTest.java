@@ -16,7 +16,8 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.TimeUtils.sleep;
+import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -26,9 +27,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 
+import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtility;
-import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.SchedulerFactory;
 import java.time.Instant;
 import java.util.Collections;
@@ -68,9 +69,11 @@ public class MessageSchedulerTest {
   private int poolSize = 1;
   @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
   @Mock private RedisTemplate<String, Long> redisTemplate;
+
   @InjectMocks
   private TestMessageScheduler messageScheduler =
       new TestMessageScheduler(redisTemplate, poolSize, true, true, 900000);
+
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
   private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true);
@@ -86,12 +89,13 @@ public class MessageSchedulerTest {
 
   @Test
   public void getChannelName() {
-    assertEquals(QueueUtility.getChannelName(slowQueue), messageScheduler.getChannelName(slowQueue));
+    assertEquals(
+        QueueUtils.getChannelName(slowQueue), messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
   public void getZsetName() {
-    assertEquals(QueueUtility.getTimeQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
+    assertEquals(QueueUtils.getTimeQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
@@ -143,7 +147,7 @@ public class MessageSchedulerTest {
   public void startAddsChannelToMessageListener() throws Exception {
     doNothing()
         .when(redisMessageListenerContainer)
-        .addMessageListener(any(), eq(new ChannelTopic(QueueUtility.getChannelName(slowQueue))));
+        .addMessageListener(any(), eq(new ChannelTopic(QueueUtils.getChannelName(slowQueue))));
     messageScheduler.onApplicationEvent(
         new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     Thread.sleep(500L);
@@ -255,6 +259,7 @@ public class MessageSchedulerTest {
     messageScheduler.onApplicationEvent(
         new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
     waitFor(() -> counter.get() >= 1, "scripts are getting executed");
+    sleep(10);
     messageScheduler.destroy();
     assertTrue(scheduler.tasks.size() >= 2);
   }
@@ -273,14 +278,15 @@ public class MessageSchedulerTest {
 
     // invalid body
     messageListener.onMessage(
-        new DefaultMessage(QueueUtility.getChannelName(slowQueue).getBytes(), "sss".getBytes()), null);
+        new DefaultMessage(QueueUtils.getChannelName(slowQueue).getBytes(), "sss".getBytes()),
+        null);
     Thread.sleep(50);
     assertEquals(1, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
     // both are correct
     messageListener.onMessage(
         new DefaultMessage(
-            QueueUtility.getChannelName(slowQueue).getBytes(),
+            QueueUtils.getChannelName(slowQueue).getBytes(),
             String.valueOf(System.currentTimeMillis()).getBytes()),
         null);
     Thread.sleep(50);
