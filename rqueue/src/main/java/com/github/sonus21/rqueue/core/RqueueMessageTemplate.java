@@ -17,13 +17,14 @@
 package com.github.sonus21.rqueue.core;
 
 import static com.github.sonus21.rqueue.core.RedisScriptFactory.getScript;
-import static com.github.sonus21.rqueue.utils.QueueInfo.getChannelName;
-import static com.github.sonus21.rqueue.utils.QueueInfo.getProcessingQueueChannelName;
-import static com.github.sonus21.rqueue.utils.QueueInfo.getProcessingQueueName;
-import static com.github.sonus21.rqueue.utils.QueueInfo.getTimeQueueName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getChannelName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueChannelName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueName;
+import static com.github.sonus21.rqueue.utils.QueueUtils.getTimeQueueName;
 
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.RqueueRedisTemplate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +38,6 @@ import org.springframework.util.CollectionUtils;
 
 @SuppressWarnings("unchecked")
 public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
-  private static final int MESSAGE_BATCH_SIZE = 100;
   private DefaultScriptExecutor<String> scriptExecutor;
 
   public RqueueMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
@@ -49,7 +49,7 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
     redisTemplate.opsForList().rightPush(queueName, message);
   }
 
-  public RqueueMessage pop(String queueName) {
+  public RqueueMessage pop(String queueName, long maxJobExecutionTime) {
     long currentTime = System.currentTimeMillis();
     RedisScript<RqueueMessage> script =
         (RedisScript<RqueueMessage>) getScript(ScriptType.REMOVE_MESSAGE);
@@ -58,7 +58,7 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
         Arrays.asList(
             queueName, getProcessingQueueName(queueName), getProcessingQueueChannelName(queueName)),
         currentTime,
-        QueueInfo.getMessageReEnqueueTime(currentTime));
+        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime));
   }
 
   public void addWithDelay(String queueName, RqueueMessage rqueueMessage) {
@@ -87,12 +87,12 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
       messages = new ArrayList<>();
     }
     Set<RqueueMessage> messagesFromZset =
-        redisTemplate.opsForZSet().range(QueueInfo.getTimeQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtils.getTimeQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesFromZset)) {
       messages.addAll(messagesFromZset);
     }
     Set<RqueueMessage> messagesInProcessingQueue =
-        redisTemplate.opsForZSet().range(QueueInfo.getProcessingQueueName(queueName), 0, -1);
+        redisTemplate.opsForZSet().range(QueueUtils.getProcessingQueueName(queueName), 0, -1);
     if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
       messages.addAll(messagesInProcessingQueue);
     }
@@ -109,15 +109,15 @@ public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
 
   public boolean moveMessage(String srcQueueName, String dstQueueName, int maxMessage) {
     RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.MOVE_MESSAGE);
-    int offset = MESSAGE_BATCH_SIZE;
+    int offset = Constants.MAX_MESSAGES;
     while (true) {
       long remainingMessages =
           scriptExecutor.execute(
-              script, Arrays.asList(srcQueueName, dstQueueName), MESSAGE_BATCH_SIZE);
+              script, Arrays.asList(srcQueueName, dstQueueName), Constants.MAX_MESSAGES);
       if (remainingMessages <= 0 || offset >= maxMessage) {
         break;
       }
-      offset += MESSAGE_BATCH_SIZE;
+      offset += Constants.MAX_MESSAGES;
     }
     return true;
   }

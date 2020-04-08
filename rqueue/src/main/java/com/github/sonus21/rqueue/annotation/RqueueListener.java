@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,4 +61,25 @@ public @interface RqueueListener {
    * @return dead letter queue name
    */
   String deadLetterQueue() default "";
+
+  /**
+   * Control maximum job execution time for this queue(s). This can be used to fast-recovery when a
+   * job goes to running state then if it's not deleted within N secs then it has to be
+   * re-processed, that re-process time can be controller using this.
+   *
+   * <p>For example a job started execution at 10:30AM and executor was shutdown so this task
+   * requires retry By default it will be retried in 15 minutes, but if you want to reprocess
+   * quickly/defer further than this can be used to reprocess.
+   *
+   * <p>Minimum time is based on the two factors <br>
+   * 1. Actual Task execution time <br>
+   * 2. Redis execution time and thread busyness.
+   *
+   * <p>NOTE: * If provided time is too small then same tasks would be running multiple times, that
+   * can cause problem in the application. On the other-side if provided time is too large than the
+   * task retry would be delayed.
+   *
+   * @return maxJobExecutionTime total job execution time.
+   */
+  String maxJobExecutionTime() default "900000";
 }

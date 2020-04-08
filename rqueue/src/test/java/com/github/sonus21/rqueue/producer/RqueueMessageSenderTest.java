@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,14 +49,14 @@ public class RqueueMessageSenderTest {
   @Test
   public void putWithNullQueueName() {
     expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("queueName can not be null");
+    expectedException.expectMessage("queueName cannot be null");
     rqueueMessageSender.put(null, null);
   }
 
   @Test
   public void putWithNullMessage() {
     expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("message can not be null");
+    expectedException.expectMessage("message cannot be null");
     rqueueMessageSender.put(queueName, null);
   }
 
@@ -116,7 +116,7 @@ public class RqueueMessageSenderTest {
 
   @Test
   public void moveMessageFromDeadLetterToQueue() {
-    doReturn(true).when(rqueueMessageTemplate).moveMessage("dlq" + queueName, queueName, 1000);
+    doReturn(true).when(rqueueMessageTemplate).moveMessage("dlq" + queueName, queueName, 100);
     rqueueMessageSender.moveMessageFromDeadLetterToQueue("dlq" + queueName, queueName, null);
   }
 

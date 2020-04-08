@@ -16,22 +16,31 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+import static com.github.sonus21.rqueue.utils.Constants.MIN_EXECUTION_TIME;
+
 import java.util.Collections;
 import java.util.Set;
 
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
 class MappingInformation implements Comparable<MappingInformation> {
   private final Set<String> queueNames;
-  private int numRetries;
-  private boolean delayedQueue;
-  private String deadLetterQueueName;
+  private final int numRetries;
+  private final boolean delayedQueue;
+  private final String deadLetterQueueName;
+  private final long maxJobExecutionTime;
 
   MappingInformation(
-      Set<String> queueNames, boolean delayedQueue, int numRetries, String deadLetterQueueName) {
+      Set<String> queueNames,
+      boolean delayedQueue,
+      int numRetries,
+      String deadLetterQueueName,
+      long maxJobExecutionTime) {
     this.queueNames = Collections.unmodifiableSet(queueNames);
     this.delayedQueue = delayedQueue;
     this.numRetries = numRetries;
     this.deadLetterQueueName = deadLetterQueueName;
+    this.maxJobExecutionTime = maxJobExecutionTime;
   }
 
   Set<String> getQueueNames() {
@@ -61,6 +70,11 @@ class MappingInformation implements Comparable<MappingInformation> {
   }
 
   boolean isValid() {
-    return getQueueNames().size() > 0;
+    return getQueueNames().size() > 0
+        && maxJobExecutionTime > MIN_EXECUTION_TIME + DELTA_BETWEEN_RE_ENQUEUE_TIME;
+  }
+
+  public long getMaxJobExecutionTime() {
+    return maxJobExecutionTime;
   }
 }

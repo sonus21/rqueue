@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.event;
 
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import java.util.Map;
 import org.springframework.context.ApplicationEvent;
 
 public class QueueInitializationEvent extends ApplicationEvent {
-  private final Map<String, ConsumerQueueDetail> queueDetailMap;
+  private final Map<String, QueueDetail> queueDetailMap;
   private final boolean start;
+
   public QueueInitializationEvent(
-      Object source, Map<String, ConsumerQueueDetail> queueDetailMap, boolean start) {
+      Object source, Map<String, QueueDetail> queueDetailMap, boolean start) {
     super(source);
     this.queueDetailMap = queueDetailMap;
     this.start = start;
   }
 
-  public Map<String, ConsumerQueueDetail> getQueueDetailMap() {
+  public Map<String, QueueDetail> getQueueDetailMap() {
     return queueDetailMap;
   }
 

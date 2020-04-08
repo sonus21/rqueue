@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.processor;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
-
-import java.io.Serializable;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-
-public abstract class RqueueRedisTemplate<V extends Serializable> {
-  protected RedisTemplate<String, V> redisTemplate;
-
-  public RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
-    redisTemplate = getRedisTemplate(redisConnectionFactory);
-  }
+public class NoOpMessageProcessor implements MessageProcessor {
+  @Override
+  public void process(Object o) {}
 }

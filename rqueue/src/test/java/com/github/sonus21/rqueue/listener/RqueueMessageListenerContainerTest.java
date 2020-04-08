@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -28,6 +28,8 @@ import static org.mockito.Mockito.mock;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.processor.MessageProcessor;
+import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
 import io.lettuce.core.RedisCommandExecutionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -45,9 +47,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class RqueueMessageListenerContainerTest {
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
+  private MessageProcessor deadLetterMessageProcessor = new NoOpMessageProcessor();
+  private MessageProcessor discardMessageProcessor = deadLetterMessageProcessor;
   private RqueueMessageListenerContainer container =
       new RqueueMessageListenerContainer(
-          mock(RqueueMessageHandler.class), mock(RqueueMessageTemplate.class));
+          mock(RqueueMessageHandler.class),
+          mock(RqueueMessageTemplate.class),
+          discardMessageProcessor,
+          deadLetterMessageProcessor);
 
   @Test
   public void testPollingInterval() {
@@ -179,7 +186,11 @@ public class RqueueMessageListenerContainerTest {
     messageHandler.afterPropertiesSet();
 
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
+        new RqueueMessageListenerContainer(
+            messageHandler,
+            rqueueMessageTemplate,
+            new NoOpMessageProcessor(),
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
@@ -190,7 +201,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(fastQueue);
+        .pop(fastQueue, 900000L);
 
     doAnswer(
             invocation -> {
@@ -198,7 +209,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(slowQueue);
+        .pop(slowQueue, 900000L);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> fastQueueCounter.get() > 1, "fastQueue message call");
@@ -226,7 +237,11 @@ public class RqueueMessageListenerContainerTest {
     container.setBackOffTime(10L);
 
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
+        new RqueueMessageListenerContainer(
+            messageHandler,
+            rqueueMessageTemplate,
+            new NoOpMessageProcessor(),
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     doAnswer(
@@ -240,7 +255,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(fastQueue);
+        .pop(fastQueue, 900000L);
     FastMessageSchedulerListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageSchedulerListener.class);
     container.afterPropertiesSet();
@@ -266,7 +281,11 @@ public class RqueueMessageListenerContainerTest {
     messageHandler.afterPropertiesSet();
 
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
+        new RqueueMessageListenerContainer(
+            messageHandler,
+            rqueueMessageTemplate,
+            new NoOpMessageProcessor(),
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     FastMessageSchedulerListener fastMessageListener =
@@ -287,7 +306,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(slowQueue);
+        .pop(slowQueue, 900000L);
 
     doAnswer(
             invocation -> {
@@ -298,7 +317,7 @@ public class RqueueMessageListenerContainerTest {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .pop(fastQueue);
+        .pop(fastQueue, 900000L);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> slowQueueCounter.get() == 1, "slowQueue message fetch");
@@ -337,7 +356,11 @@ public class RqueueMessageListenerContainerTest {
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
     RqueueMessageListenerContainer container =
-        new RqueueMessageListenerContainer(messageHandler, mock(RqueueMessageTemplate.class));
+        new RqueueMessageListenerContainer(
+            messageHandler,
+            mock(RqueueMessageTemplate.class),
+            new NoOpMessageProcessor(),
+            new NoOpMessageProcessor());
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     TestTaskExecutor taskExecutor = new TestTaskExecutor();
@@ -357,7 +380,11 @@ public class RqueueMessageListenerContainerTest {
     private boolean doStopMethodIsCalled = false;
 
     StubMessageSchedulerListenerContainer() {
-      super(mock(RqueueMessageHandler.class), mock(RqueueMessageTemplate.class));
+      super(
+          mock(RqueueMessageHandler.class),
+          mock(RqueueMessageTemplate.class),
+          new NoOpMessageProcessor(),
+          new NoOpMessageProcessor());
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@ package com.github.sonus21.rqueue.utils;
 
 import org.springframework.util.Assert;
 
-public abstract class Validator {
+public class Validator {
+  private Validator() {}
+
   public static void validateQueueNameAndMessage(String queueName, Object message) {
-    Assert.notNull(queueName, "queueName can not be null");
-    Assert.notNull(message, "message can not be null");
+    Assert.notNull(queueName, "queueName cannot be null");
+    Assert.notNull(message, "message cannot be null");
   }
 
   public static void validateRetryCount(int retryCount) {

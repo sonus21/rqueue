@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.processor;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
+/** This interface can be used to take some action when ever a message is processed */
+public interface MessageProcessor {
 
-import java.io.Serializable;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-
-public abstract class RqueueRedisTemplate<V extends Serializable> {
-  protected RedisTemplate<String, V> redisTemplate;
-
-  public RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
-    redisTemplate = getRedisTemplate(redisConnectionFactory);
-  }
+  /**
+   * This method would be called with the specified object, this will happen only when message is
+   * deserialize successfully.
+   *
+   * @param message message
+   */
+  void process(Object message);
 }

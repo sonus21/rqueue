@@ -27,9 +27,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.utils.QueueInfo;
-import com.github.sonus21.rqueue.utils.QueueInitializationEvent;
+import com.github.sonus21.rqueue.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
@@ -46,7 +46,7 @@ public class RqueueMetricsTest {
   private RqueueMessageTemplate template = mock(RqueueMessageTemplate.class);
   private RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
   private QueueCounter queueCounter = mock(QueueCounter.class);
-  private Map<String, ConsumerQueueDetail> queueDetails = new HashMap<>();
+  private Map<String, QueueDetail> queueDetails = new HashMap<>();
   private String simpleQueue = "simple-queue";
   private String delayedQueue = "delayed-queue";
   private String deadLetterQueue = "dlq";
@@ -54,18 +54,18 @@ public class RqueueMetricsTest {
 
   @Before
   public void init() {
-    queueDetails.put(simpleQueue, new ConsumerQueueDetail(simpleQueue, -1, deadLetterQueue, false));
-    queueDetails.put(delayedQueue, new ConsumerQueueDetail(delayedQueue, -1, "", true));
+    queueDetails.put(simpleQueue, new QueueDetail(simpleQueue, -1, deadLetterQueue, false, 900000));
+    queueDetails.put(delayedQueue, new QueueDetail(delayedQueue, -1, "", true, 900000));
     doAnswer(
             invocation -> {
               String zsetName = (String) invocation.getArguments()[0];
-              if (zsetName.equals(QueueInfo.getTimeQueueName(delayedQueue))) {
+              if (zsetName.equals(QueueUtils.getTimeQueueName(delayedQueue))) {
                 return 5L;
               }
-              if (zsetName.equals(QueueInfo.getProcessingQueueName(simpleQueue))) {
+              if (zsetName.equals(QueueUtils.getProcessingQueueName(simpleQueue))) {
                 return 10L;
               }
-              if (zsetName.equals(QueueInfo.getProcessingQueueName(delayedQueue))) {
+              if (zsetName.equals(QueueUtils.getProcessingQueueName(delayedQueue))) {
                 return 15L;
               }
               return null;

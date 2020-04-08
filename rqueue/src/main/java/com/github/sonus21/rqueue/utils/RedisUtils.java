@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-public abstract class RedisUtil {
+public class RedisUtils {
+  private RedisUtils() {}
+
   public static <T> RedisTemplate<String, T> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
     RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();

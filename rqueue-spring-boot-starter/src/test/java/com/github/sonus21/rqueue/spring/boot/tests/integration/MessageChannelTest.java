@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
-import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
+import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static rqueue.test.Utility.buildMessage;
+import static rqueue.test.TestUtils.buildMessage;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -57,6 +57,7 @@ public class MessageChannelTest {
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private RedisConnectionFactory redisConnectionFactory;
   private RedisTemplate<String, RqueueMessage> redisTemplate;
+
   @Value("${email.queue.name}")
   private String emailQueue;
 
@@ -75,7 +76,7 @@ public class MessageChannelTest {
       redisTemplate
           .opsForZSet()
           .add(
-              QueueInfo.getTimeQueueName(emailQueue),
+              QueueUtils.getTimeQueueName(emailQueue),
               buildMessage(email, emailQueue, null, null),
               currentTime - 1000L);
     }
@@ -83,7 +84,7 @@ public class MessageChannelTest {
     log.info("adding new message {}", email);
     messageSender.put(emailQueue, email, 1000L);
     waitFor(
-        () -> redisTemplate.opsForZSet().size(QueueInfo.getTimeQueueName(emailQueue)) <= 1,
+        () -> redisTemplate.opsForZSet().size(QueueUtils.getTimeQueueName(emailQueue)) <= 1,
         "one or less messages in zset");
     assertTrue(
         "Messages are correctly moved",

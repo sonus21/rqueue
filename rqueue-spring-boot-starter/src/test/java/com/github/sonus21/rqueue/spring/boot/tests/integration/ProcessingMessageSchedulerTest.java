@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
-import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
-import static rqueue.test.Utility.buildMessage;
+import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
+import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
+import static rqueue.test.TestUtils.buildMessage;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -43,7 +43,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import rqueue.test.RunTestUntilFail;
-import rqueue.test.Utility;
+import rqueue.test.TestUtils;
 import rqueue.test.dto.Job;
 import rqueue.test.service.ConsumedMessageService;
 
@@ -70,6 +70,7 @@ public class ProcessingMessageSchedulerTest {
 
   @Value("${job.queue.name}")
   private String jobQueueName;
+
   @Rule
   public RunTestUntilFail retry =
       new RunTestUntilFail(
@@ -77,13 +78,14 @@ public class ProcessingMessageSchedulerTest {
           1,
           () -> {
             for (Entry<String, List<RqueueMessage>> entry :
-                Utility.getMessageMap(jobQueueName, redisTemplate).entrySet()) {
+                TestUtils.getMessageMap(jobQueueName, redisTemplate).entrySet()) {
               log.error("FAILING Queue {}", entry.getKey());
               for (RqueueMessage message : entry.getValue()) {
                 log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
               }
             }
           });
+
   private int messageCount = 110;
 
   @PostConstruct
@@ -94,7 +96,7 @@ public class ProcessingMessageSchedulerTest {
   @Test
   public void publishMessageIsTriggeredOnMessageRemoval()
       throws InterruptedException, TimedOutException {
-    String processingQueueName = QueueInfo.getProcessingQueueName(jobQueueName);
+    String processingQueueName = QueueUtils.getProcessingQueueName(jobQueueName);
     long currentTime = System.currentTimeMillis();
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();

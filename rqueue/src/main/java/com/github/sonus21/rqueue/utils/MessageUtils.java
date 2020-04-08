@@ -16,16 +16,23 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
+import java.util.List;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.util.Assert;
 
-import java.io.Serializable;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
+public class MessageUtils {
+  public MessageUtils() {}
 
-public abstract class RqueueRedisTemplate<V extends Serializable> {
-  protected RedisTemplate<String, V> redisTemplate;
-
-  public RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
-    redisTemplate = getRedisTemplate(redisConnectionFactory);
+  public static Object convertMessageToObject(
+      Message<?> message, List<MessageConverter> messageConverters) {
+    Assert.notEmpty(messageConverters, "messageConverters cannot be empty");
+    for (MessageConverter messageConverter : messageConverters) {
+      try {
+        return messageConverter.fromMessage(message, null);
+      } catch (Exception e) {
+      }
+    }
+    return null;
   }
 }

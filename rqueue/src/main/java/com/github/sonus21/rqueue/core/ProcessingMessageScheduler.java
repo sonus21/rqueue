@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@ package com.github.sonus21.rqueue.core;
 
 import static java.lang.Long.max;
 
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
-import com.github.sonus21.rqueue.utils.QueueInfo;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.QueueUtils;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,8 +30,19 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   private final Logger logger = LoggerFactory.getLogger(ProcessingMessageScheduler.class);
 
   public ProcessingMessageScheduler(
-      RedisTemplate<String, Long> redisTemplate, int poolSize, boolean scheduleTaskAtStartup) {
-    super(redisTemplate, poolSize, scheduleTaskAtStartup);
+      RedisTemplate<String, Long> redisTemplate,
+      int poolSize,
+      boolean scheduleTaskAtStartup,
+      boolean redisEnabled) {
+    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled);
+  }
+
+  @Override
+  protected void initializeState(Map<String, QueueDetail> queueDetailMap) {
+    this.queueNameToDelay = new ConcurrentHashMap<>(queueDetailMap.size());
+    for (QueueDetail queueDetail : queueDetailMap.values()) {
+      this.queueNameToDelay.put(queueDetail.getQueueName(), queueDetail.getMaxJobExecutionTime());
+    }
   }
 
   @Override
@@ -39,16 +52,16 @@ public class ProcessingMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueInfo.getProcessingQueueChannelName(queueName);
+    return QueueUtils.getProcessingQueueChannelName(queueName);
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueInfo.getProcessingQueueName(queueName);
+    return QueueUtils.getProcessingQueueName(queueName);
   }
 
   @Override
-  protected boolean isQueueValid(ConsumerQueueDetail queueDetail) {
+  protected boolean isQueueValid(QueueDetail queueDetail) {
     return true;
   }
 
@@ -58,9 +71,11 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected long getNextScheduleTime(long currentTime, Long value) {
+  protected long getNextScheduleTime(String queueName, Long value) {
+    long currentTime = System.currentTimeMillis();
     if (value == null) {
-      return QueueInfo.getMessageReEnqueueTime(currentTime);
+      long delay = queueNameToDelay.get(queueName);
+      return QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, delay);
     }
     return max(currentTime, value);
   }

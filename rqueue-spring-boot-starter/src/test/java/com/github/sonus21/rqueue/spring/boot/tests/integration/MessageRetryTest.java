@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.WaitForUtil.waitFor;
+import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;

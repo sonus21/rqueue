@@ -19,6 +19,8 @@ package com.github.sonus21.rqueue.utils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public class SchedulerFactory {
+  private SchedulerFactory() {}
+
   public static ThreadPoolTaskScheduler createThreadPoolTaskScheduler(
       int poolSize, String threadPrefix, int terminationTime) {
     ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();

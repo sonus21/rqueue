@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.config;
 
-import static com.github.sonus21.rqueue.utils.RedisUtil.getRedisTemplate;
+import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
 
 import com.github.sonus21.rqueue.core.DelayedMessageScheduler;
 import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
@@ -43,17 +43,27 @@ public abstract class RqueueConfig {
       new SimpleRqueueListenerContainerFactory();
 
   @Autowired protected BeanFactory beanFactory;
-  /**
-   * This is more for testing features where scheduler is not started automatically, based on the
-   * messages from Redis PUB/SUB channel tasks are executed.
-   */
-  @Value("${auto.start.scheduler:true}")
-  private boolean autoStartScheduler;
 
-  @Value("${delayed.queue.thread.pool.size:5}")
+  /**
+   * This is used to control message scheduler auto start feature, if it's disabled then messages
+   * are moved only when a message is received from Redis PUB/SUB channel.
+   */
+  @Value("${rqueue.scheduler.auto.start:true}")
+  private boolean schedulerAutoStart;
+
+  /**
+   * This is used to control message scheduler redis pub/sub interaction, this can be used to
+   * completely disable the redis PUB/SUB interaction
+   */
+  @Value("${rqueue.scheduler.redis.enabled:true}")
+  private boolean schedulerRedisEnabled;
+
+  // Number of threads used to process delayed queue messages by scheduler
+  @Value("${rqueue.scheduler.delayed.queue.thread.pool.size:5}")
   private int delayedQueueSchedulerPoolSize;
 
-  @Value("${processing.queue.thread.pool.size:1}")
+  //  Number of threads used to process processing queue messages by scheduler
+  @Value("${rqueue.processing.delayed.queue.thread.pool.size:1}")
   private int processingQueueSchedulerPoolSize;
 
   /**
@@ -99,7 +109,8 @@ public abstract class RqueueConfig {
     return new DelayedMessageScheduler(
         getRedisTemplate(getRedisConnectionFactory()),
         delayedQueueSchedulerPoolSize,
-        autoStartScheduler);
+        schedulerAutoStart,
+        schedulerRedisEnabled);
   }
 
   /**
@@ -113,6 +124,7 @@ public abstract class RqueueConfig {
     return new ProcessingMessageScheduler(
         getRedisTemplate(getRedisConnectionFactory()),
         processingQueueSchedulerPoolSize,
-        autoStartScheduler);
+        schedulerAutoStart,
+        schedulerRedisEnabled);
   }
 }

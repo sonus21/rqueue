@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,24 @@
 
 package com.github.sonus21.rqueue.listener;
 
-public class ConsumerQueueDetail {
+public class QueueDetail {
   private final String queueName;
   private final boolean delayedQueue;
   private final String dlqName;
   private final int numRetries;
+  private final long maxJobExecutionTime;
 
-  public ConsumerQueueDetail(
-      String queueName, int numRetries, String deadLetterQueueName, boolean delayedQueue) {
+  public QueueDetail(
+      String queueName,
+      int numRetries,
+      String deadLetterQueueName,
+      boolean delayedQueue,
+      long maxJobExecutionTime) {
     this.queueName = queueName;
     this.numRetries = numRetries;
     this.delayedQueue = delayedQueue;
-    dlqName = deadLetterQueueName;
+    this.dlqName = deadLetterQueueName;
+    this.maxJobExecutionTime = maxJobExecutionTime;
   }
 
   public String getQueueName() {
@@ -48,5 +54,9 @@ public class ConsumerQueueDetail {
 
   public boolean isDlqSet() {
     return dlqName != null && !dlqName.isEmpty();
+  }
+
+  public long getMaxJobExecutionTime() {
+    return maxJobExecutionTime;
   }
 }

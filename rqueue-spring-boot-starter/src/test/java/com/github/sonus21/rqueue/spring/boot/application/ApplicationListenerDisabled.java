@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 package com.github.sonus21.rqueue.spring.boot.application;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.listener.ConsumerQueueDetail;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -44,9 +45,12 @@ public class ApplicationListenerDisabled extends BaseApplication {
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RedisConnectionFactory redisConnectionFactory) {
     return new RqueueMessageListenerContainer(
-        rqueueMessageHandler, new RqueueMessageTemplate(redisConnectionFactory)) {
+        rqueueMessageHandler,
+        new RqueueMessageTemplate(redisConnectionFactory),
+        new NoOpMessageProcessor(),
+        new NoOpMessageProcessor()) {
       @Override
-      protected void startQueue(String queueName, ConsumerQueueDetail queueDetail) {}
+      protected void startQueue(String queueName, QueueDetail queueDetail) {}
     };
   }
 }
