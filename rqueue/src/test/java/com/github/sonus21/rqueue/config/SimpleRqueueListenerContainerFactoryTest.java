@@ -23,10 +23,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.processor.MessageProcessor;
-import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import org.junit.Before;
@@ -171,7 +170,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void deadLetterMessageProcessor() {
-    MessageProcessor messageProcessor = new NoOpMessageProcessor();
+    MessageProcessor messageProcessor = new MessageProcessor() {};
     simpleRqueueListenerContainerFactory.setDeadLetterQueueMessageProcessor(messageProcessor);
     assertEquals(
         messageProcessor,
@@ -181,7 +180,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
-    assertEquals(messageProcessor, container.getDlqMessageProcessor());
+    assertEquals(messageProcessor, container.getDeadLetterQueueMessageProcessor());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -191,7 +190,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void discardMessageProcessor() {
-    MessageProcessor messageProcessor = new NoOpMessageProcessor();
+    MessageProcessor messageProcessor = new MessageProcessor() {};
     simpleRqueueListenerContainerFactory.setDiscardMessageProcessor(messageProcessor);
     assertEquals(
         messageProcessor, simpleRqueueListenerContainerFactory.getDiscardMessageProcessor());

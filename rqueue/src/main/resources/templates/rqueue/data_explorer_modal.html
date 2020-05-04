@@ -1,0 +1,57 @@
+<div class="modal fade" id="explore-queue">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title" id="explorer-title">Queue: <b>{{queueName}}</b></h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <!-- Modal body -->
+      <div class="modal-body">
+        <div class="queue-nav container">
+          <label for="page-size">Number of items</label>
+          <select id="page-size">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <button type="button" class="btn btn-danger btn-delete-all btn-sm display-none" id="clear-queue"
+                  onclick="deleteAll()">Delete All
+          </button>
+          <button class="btn btn-info btn-sm btn-poll float-right" onclick="pollQueue()">Poll
+          </button>
+        </div>
+        <hr/>
+        <div class="container">
+          <div class="row  table-responsive" id="explore-data-table">
+            <table class="table table-bordered">
+              <thead>
+              <tr id="table-header">
+                <th></th>
+              </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Modal footer -->
+      <div class="modal-footer data-explorer-footer">
+        <div>
+          <button type="button" class="btn btn-info display-none"
+                  id="previous-page-button" onclick="prevPage()">Previous
+          </button>
+        </div>
+        <div class="text-center">
+          <span id="display-page-number"></span>
+        </div>
+        <div>
+          <button type="button" class="btn btn-info display-none" id="next-page-button"
+                  onclick="nextPage()">Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
+import lombok.ToString;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
 @SuppressWarnings("unchecked")
+@ToString
 class RedisScriptFactory {
   static RedisScript getScript(ScriptType type) {
     Resource resource = new ClassPathResource(type.getPath());
@@ -29,25 +32,31 @@ class RedisScriptFactory {
     script.setLocation(resource);
     switch (type) {
       case ADD_MESSAGE:
-      case MOVE_MESSAGE:
       case REPLACE_MESSAGE:
       case PUSH_MESSAGE:
+      case MOVE_MESSAGE_LIST_TO_LIST:
+      case MOVE_MESSAGE_LIST_TO_ZSET:
+      case MOVE_MESSAGE_ZSET_TO_ZSET:
+      case MOVE_MESSAGE_ZSET_TO_LIST:
         script.setResultType(Long.class);
         return script;
-      case REMOVE_MESSAGE:
+      case POP_MESSAGE:
         script.setResultType(RqueueMessage.class);
         return script;
+      default:
+        throw new UnknownSwitchCase(type.toString());
     }
-    return null;
   }
 
   enum ScriptType {
-    ADD_MESSAGE("scripts/add-message.lua"),
-    REMOVE_MESSAGE("scripts/remove-message.lua"),
-    REPLACE_MESSAGE("scripts/replace-message.lua"),
-    MOVE_MESSAGE("scripts/move-message.lua"),
-    PUSH_MESSAGE("scripts/push-message.lua");
-
+    ADD_MESSAGE("scripts/add_message.lua"),
+    POP_MESSAGE("scripts/pop_message.lua"),
+    REPLACE_MESSAGE("scripts/replace_message.lua"),
+    PUSH_MESSAGE("scripts/push_message.lua"),
+    MOVE_MESSAGE_LIST_TO_LIST("scripts/move_message_list_to_list.lua"),
+    MOVE_MESSAGE_LIST_TO_ZSET("scripts/move_message_list_to_zset.lua"),
+    MOVE_MESSAGE_ZSET_TO_ZSET("scripts/move_message_zset_to_zset.lua"),
+    MOVE_MESSAGE_ZSET_TO_LIST("scripts/move_message_zset_to_list.lua");
     private String path;
 
     ScriptType(String path) {

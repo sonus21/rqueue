@@ -16,16 +16,18 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.QueueUtils.QUEUE_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -56,7 +58,8 @@ public class RqueueMessageHandlerTest {
       ((Message<String>) messageConverter.toMessage(messagePayload, null)).getPayload();
 
   private Message<String> buildMessage(String queueName, String message) {
-    return new GenericMessage<>(message, Collections.singletonMap(QUEUE_NAME, queueName));
+    return new GenericMessage<>(
+        message, Collections.singletonMap(QueueUtils.getMessageHeaderKey(), queueName));
   }
 
   @Test
@@ -192,9 +195,10 @@ public class RqueueMessageHandlerTest {
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPlaceHolders.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
     Map<String, Object> map = new HashMap<>();
-    map.put("queue.name", slowQueue);
+    map.put("queue.name", slowQueue + "," + smartQueue);
     map.put("queue.dead.letter.queue", true);
     map.put("queue.num.retries", 3);
+    map.put("queue.visibility.timeout", "30*30*60");
     map.put("dead.letter.queue.name", slowQueue + "-dlq");
     applicationContext
         .getEnvironment()
@@ -205,8 +209,11 @@ public class RqueueMessageHandlerTest {
     DummyMessageHandler messageHandler = applicationContext.getBean(DummyMessageHandler.class);
     assertTrue(messageHandler.mappingInformation.isDelayedQueue());
     assertEquals(3, messageHandler.mappingInformation.getNumRetries());
-    assertEquals(
-        Collections.singleton(slowQueue), messageHandler.mappingInformation.getQueueNames());
+    Set<String> queueNames = new HashSet<>();
+    queueNames.add(slowQueue);
+    queueNames.add(smartQueue);
+    assertEquals(queueNames, messageHandler.mappingInformation.getQueueNames());
+    assertEquals(30 * 30 * 60L, messageHandler.mappingInformation.getVisibilityTimeout());
     assertEquals(slowQueue + "-dlq", messageHandler.mappingInformation.getDeadLetterQueueName());
   }
 
@@ -293,7 +300,8 @@ public class RqueueMessageHandlerTest {
         value = "${queue.name}",
         delayedQueue = "${queue.dead.letter.queue}",
         numRetries = "${queue.num.retries}",
-        deadLetterQueue = "${dead.letter.queue.name}")
+        deadLetterQueue = "${dead.letter.queue.name}",
+        visibilityTimeout = "${queue.visibility.timeout}")
     public void onMessage(String value) {
       lastReceivedMessage = value;
     }

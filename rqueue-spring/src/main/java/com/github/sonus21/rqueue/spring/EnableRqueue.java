@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ import org.springframework.context.annotation.Import;
  * <p>All other beans would be created automatically. Though other components of library can be
  * configured as well using {@link
  * com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory}. Even it can be configured
- * at very fine grained level by creating all individual beans created in {@link
- * RqueueMessageConfig}
+ * at very fine-grained level by creating all individual beans created in {@link
+ * RqueueListenerConfig}
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({RqueueMessageConfig.class})
+@Import({RqueueListenerConfig.class})
 public @interface EnableRqueue {}

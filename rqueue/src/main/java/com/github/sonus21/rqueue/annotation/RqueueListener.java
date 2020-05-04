@@ -24,62 +24,110 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation for mapping a method onto message-handling methods by matching to the message queue.
- * Any method can be marked with with this annotation, different field can be configured in any
- * order.
+ *
+ * <p>Any method can be marked as listener with this annotation, different field can be configured
+ * in any order as per need.
+ *
+ * <p>All fields support SpEL(Spring Expression Language) as well property placeholder.
+ *
+ * <pre>
+ * &amp;Component
+ * public class MessageListener {
+ * &amp;RqueueListener(
+ *       value="${job.queue}",
+ *      delayedQueue="true",
+ *      numRetries="3",
+ *      deadLetterQueue="#{job.dead.letter.queue}",
+ *      visibilityTimeout="30*60*1000")
+ *   public void job(Job job)}{
+ *      // do something
+ *   }
+ * }
+ * </pre>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RqueueListener {
   /**
-   * List of queues. Queues can be defined by their name or placeholder that would be resolved to
-   * properties file.
+   * List of unique queues. Queues can be defined by their name, placeholder that would be resolved
+   * to properties file or could be list of comma separated queue names.
    *
-   * @return list of queues
+   * @return list of queues.
    */
   String[] value() default {};
 
   /**
-   * Whether this is delayed queue or not
+   * Whether this is a delayed queue or not. Delay queue are those queues where message(s) will be
+   * held in the queue till the time has elapsed. For example delay the message delivery by 30
+   * minutes from the time of enqueue. Delayed queues are handled slightly different from the
+   * classical FIFO.
+   *
+   * <p>Read more at: https://medium.com/@sonus21/introducing-rqueue-redis-queue-d344f5c36e1b
    *
    * @return true/false
    */
   String delayedQueue() default "false";
 
   /**
-   * how many times a message should be retried before it can be discarded or send it to DLQ in case
-   * of consecutive failures. Whenever message handler fails, container keeps retrying to deliver
-   * the same message but in some cases we can ignore the failure or discard this message.
+   * Number of times a message should be retried before it can be discarded or send it to dead
+   * letter queue in case of consecutive failures. This is a global value for a consumer, each
+   * message can have their own retries as well.
+   *
+   * <p>Whenever message handler fails, container keeps retrying to deliver the same message until
+   * it's delivered but in some cases we can ignore or discard this message.
+   *
+   * <p>Default behaviour is to try to deliver the same message until it's delivered, upper limit of
+   * the delivery retry is {@link Integer#MAX_VALUE} when dead letter queue is not provided. If dead
+   * letter queue is provided then it will retry {@link
+   * com.github.sonus21.rqueue.utils.Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE} of times.
    *
    * @return integer value
    */
   String numRetries() default "-1";
 
   /**
-   * In case of multiple failures corresponding message would be stored in this queue
+   * Name of the queue, where message has to be sent in case of consecutive failures configured as
+   * per {@link #numRetries()}
    *
    * @return dead letter queue name
    */
   String deadLetterQueue() default "";
 
   /**
-   * Control maximum job execution time for this queue(s). This can be used to fast-recovery when a
-   * job goes to running state then if it's not deleted within N secs then it has to be
+   * Control visibility timeout for this/these queue(s). When a message is consumed from a queue
+   * then it's hidden for other consumers for this period. This can be used to fast-recovery when a
+   * job goes to running state then if it's not executed within N secs then it has to be
    * re-processed, that re-process time can be controller using this.
    *
-   * <p>For example a job started execution at 10:30AM and executor was shutdown so this task
-   * requires retry By default it will be retried in 15 minutes, but if you want to reprocess
-   * quickly/defer further than this can be used to reprocess.
+   * <p>For example a message was consumer at 10:30AM and message was not consumed for any reason
+   * like executor was shutdown, task took longer time to execute. In such cases consumed message
+   * would become visible to other consumers as soon as this time elapse. By default, message would
+   * become visible to other consumers after 15 minutes. In some cases 15 minutes could be too large
+   * or small, in such cases We can control the visibility timeout using this field.
    *
    * <p>Minimum time is based on the two factors <br>
    * 1. Actual Task execution time <br>
-   * 2. Redis execution time and thread busyness.
+   * 2. Redis call time and thread busyness.
    *
-   * <p>NOTE: * If provided time is too small then same tasks would be running multiple times, that
-   * can cause problem in the application. On the other-side if provided time is too large than the
-   * task retry would be delayed.
+   * <p><b>NOTE:</b>If provided time is too small then same messages would be consumed by multiple
+   * listeners, that can cause problem in the application. On the other-side if provided time is too
+   * high then the message would be hidden from other consumers for a long time.
    *
-   * @return maxJobExecutionTime total job execution time.
+   * <p><b>NOTE:</b> This time is in milli seconds
+   *
+   * @return visibilityTimeout visibility timeout
    */
-  String maxJobExecutionTime() default "900000";
+  String visibilityTimeout() default "900000";
+
+  /**
+   * Control whether this listener is active or not. If this is set to false then message would not
+   * be consumed by the method marked using {@link RqueueListener}.
+   *
+   * <p>Use case could be of like, disable this listener in a given availability zone or in a given
+   * environment.
+   *
+   * @return whether listener is active or not.
+   */
+  String active() default "true";
 }

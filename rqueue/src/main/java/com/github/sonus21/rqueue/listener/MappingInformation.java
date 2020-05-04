@@ -19,33 +19,23 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_EXECUTION_TIME;
 
-import java.util.Collections;
 import java.util.Set;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
+@Getter(AccessLevel.PACKAGE)
+@AllArgsConstructor
+@EqualsAndHashCode
 class MappingInformation implements Comparable<MappingInformation> {
   private final Set<String> queueNames;
-  private final int numRetries;
   private final boolean delayedQueue;
+  private final int numRetries;
   private final String deadLetterQueueName;
-  private final long maxJobExecutionTime;
-
-  MappingInformation(
-      Set<String> queueNames,
-      boolean delayedQueue,
-      int numRetries,
-      String deadLetterQueueName,
-      long maxJobExecutionTime) {
-    this.queueNames = Collections.unmodifiableSet(queueNames);
-    this.delayedQueue = delayedQueue;
-    this.numRetries = numRetries;
-    this.deadLetterQueueName = deadLetterQueueName;
-    this.maxJobExecutionTime = maxJobExecutionTime;
-  }
-
-  Set<String> getQueueNames() {
-    return queueNames;
-  }
+  private final long visibilityTimeout;
+  private final boolean active;
 
   @Override
   public int compareTo(MappingInformation o) {
@@ -57,24 +47,9 @@ class MappingInformation implements Comparable<MappingInformation> {
     return String.join(", ", queueNames);
   }
 
-  int getNumRetries() {
-    return numRetries;
-  }
-
-  boolean isDelayedQueue() {
-    return delayedQueue;
-  }
-
-  String getDeadLetterQueueName() {
-    return deadLetterQueueName;
-  }
-
   boolean isValid() {
-    return getQueueNames().size() > 0
-        && maxJobExecutionTime > MIN_EXECUTION_TIME + DELTA_BETWEEN_RE_ENQUEUE_TIME;
-  }
-
-  public long getMaxJobExecutionTime() {
-    return maxJobExecutionTime;
+    return active
+        && getQueueNames().size() > 0
+        && visibilityTimeout > MIN_EXECUTION_TIME + DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 }

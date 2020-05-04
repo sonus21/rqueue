@@ -19,16 +19,26 @@ package com.github.sonus21.rqueue.listener;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.processor.MessageProcessor;
+import com.github.sonus21.rqueue.core.support.MessageProcessor;
+import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,40 +52,29 @@ public class MessageExecutorTest {
   private RqueueMessageListenerContainer container = mock(RqueueMessageListenerContainer.class);
   private WeakReference<RqueueMessageListenerContainer> containerWeakReference =
       new WeakReference<>(container);
+  private RqueueMessageMetadataService rqueueMessageMetadataService =
+      mock(RqueueMessageMetadataService.class);
   private TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
   private TestMessageProcessor discardProcessor = new TestMessageProcessor();
+  private TestMessageProcessor preProcessMessageProcessor = new TestMessageProcessor();
   private RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageHandler messageHandler = mock(RqueueMessageHandler.class);
   private RqueueMessage rqueueMessage = new RqueueMessage();
-
-  private class TestMessageProcessor implements MessageProcessor {
-    private int count;
-
-    @Override
-    public void process(Object message) {
-      count += 1;
-    }
-
-    public void clear() {
-      this.count = 0;
-    }
-
-    public int getCount() {
-      return count;
-    }
-  }
+  private Semaphore semaphore = new Semaphore(100);
 
   @Before
-  public void init() {
+  public void init() throws IllegalAccessException {
     List<MessageConverter> messageConverterList =
         Collections.singletonList(new GenericMessageConverter());
     rqueueMessage.setMessage("test message");
-    doReturn(deadLetterProcessor).when(container).getDlqMessageProcessor();
+    rqueueMessage.setId(UUID.randomUUID().toString());
+    doReturn(rqueueMessageMetadataService).when(container).getRqueueMessageMetadataService();
+    doReturn(deadLetterProcessor).when(container).getDeadLetterQueueMessageProcessor();
     doReturn(discardProcessor).when(container).getDiscardMessageProcessor();
     doReturn(true).when(container).isQueueActive(anyString());
     doReturn(messageTemplate).when(container).getRqueueMessageTemplate();
-    doReturn(messageHandler).when(container).getRqueueMessageHandler();
     doReturn(messageConverterList).when(messageHandler).getMessageConverters();
+    doReturn(preProcessMessageProcessor).when(container).getPreExecutionMessageProcessor();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
         .handleMessage(any());
@@ -85,7 +84,8 @@ public class MessageExecutorTest {
   public void callDiscardProcessor() {
     QueueDetail queueDetail = new QueueDetail("test", 3, "", false, 900000);
     MessageExecutor messageExecutor =
-        new MessageExecutor(rqueueMessage, queueDetail, containerWeakReference);
+        new MessageExecutor(
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
     messageExecutor.run();
     assertEquals(1, discardProcessor.getCount());
   }
@@ -95,8 +95,81 @@ public class MessageExecutorTest {
     QueueDetail queueDetail = new QueueDetail("test", 3, "dead-test", false, 900000);
 
     MessageExecutor messageExecutor =
-        new MessageExecutor(rqueueMessage, queueDetail, containerWeakReference);
+        new MessageExecutor(
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
     messageExecutor.run();
     assertEquals(1, deadLetterProcessor.getCount());
+  }
+
+  @Test
+  public void messageIsParkedForRetry() {
+    QueueDetail queueDetail = new QueueDetail("test", 1000, "", false, 0);
+    MessageExecutor messageExecutor =
+        new MessageExecutor(
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+    doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
+    messageExecutor.run();
+    verify(messageTemplate, times(1))
+        .replaceMessage(
+            eq(QueueUtils.getProcessingQueueName(queueDetail.getQueueName())),
+            eq(rqueueMessage),
+            any());
+  }
+
+  @Test
+  public void messageIsNotExecutedWhenDeletedManually() {
+    QueueDetail queueDetail = new QueueDetail("test", 3, "", false, 0);
+    MessageExecutor messageExecutor =
+        new MessageExecutor(
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+    MessageMetadata messageMetadata = new MessageMetadata();
+    messageMetadata.setDeleted(true);
+    doReturn(messageMetadata)
+        .when(rqueueMessageMetadataService)
+        .get("__rq::m-mdata::" + rqueueMessage.getId());
+    messageExecutor.run();
+    verify(messageHandler, times(0)).handleMessage(any());
+  }
+
+  @Test
+  public void messageIsDeletedWhileExecuting() {
+    QueueDetail queueDetail = new QueueDetail("test", 3, "", false, 0);
+    MessageExecutor messageExecutor =
+        new MessageExecutor(
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+    AtomicInteger atomicInteger = new AtomicInteger(0);
+    doAnswer(
+            invocation -> {
+              if (atomicInteger.get() == 0) {
+                atomicInteger.incrementAndGet();
+                return null;
+              }
+              MessageMetadata messageMetadata = new MessageMetadata();
+              messageMetadata.setDeleted(true);
+              return messageMetadata;
+            })
+        .when(rqueueMessageMetadataService)
+        .get("__rq::m-mdata::" + rqueueMessage.getId());
+    doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
+    messageExecutor.run();
+    verify(messageHandler, times(1)).handleMessage(any());
+  }
+
+  private class TestMessageProcessor implements MessageProcessor {
+    private int count;
+
+    @Override
+    public boolean process(Object message) {
+      count += 1;
+      return true;
+    }
+
+    public void clear() {
+      this.count = 0;
+    }
+
+    public int getCount() {
+      return count;
+    }
   }
 }

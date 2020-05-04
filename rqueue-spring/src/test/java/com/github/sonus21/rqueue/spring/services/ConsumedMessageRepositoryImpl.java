@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.spring.services;
 
+import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
+import com.github.sonus21.rqueue.test.repository.ConsumedMessageRepository;
 import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -23,8 +25,6 @@ import lombok.AllArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
-import rqueue.test.entity.ConsumedMessage;
-import rqueue.test.repository.ConsumedMessageRepository;
 
 @Repository
 @AllArgsConstructor

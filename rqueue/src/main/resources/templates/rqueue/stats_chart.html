@@ -1,0 +1,36 @@
+<h2 class="text-center">Message Stats</h2>
+<div id="stats_chart" style="width: 100%; height: 500px;"></div>
+<div class="container">
+  <div class="row ">
+    <div class="col-md-6 offset-md-3">
+      <div class="row dashboard-chart-form">
+        <div class="type_selectors col-md-7">
+          <p>Select Data Type</p>
+          {% for type in typeSelectors %}
+          <div class="form-check">
+            <input class="form-check-input" checked="checked" type="checkbox"
+                   value="{{type.name}}"
+                   id="{{type.name}}" name="data-type">
+            <label class="form-check-label" for="{{type.name}}">
+              {{ type.description }}
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="dashboard-form-action col-md-5">
+          <div class="form-group">
+            <label for="stats-aggregator-type">Select Aggregator Type</label>
+            <select class="form-control" id="stats-aggregator-type" name="aggregator-type">
+              {% for aggregator in aggregatorTypes %}
+              <option {% if (loop.first) %} selected {% endif %}>{{aggregator}}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-success" id="refresh-chart">Display</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

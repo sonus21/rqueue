@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.metrics;
 
+import com.github.sonus21.rqueue.config.MetricsProperties;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
@@ -48,7 +49,7 @@ public class QueueCounter {
   }
 
   void registerQueue(
-      RqueueMetricsProperties metricsProperties,
+      MetricsProperties metricsProperties,
       Tags queueTags,
       MeterRegistry registry,
       String queueName) {

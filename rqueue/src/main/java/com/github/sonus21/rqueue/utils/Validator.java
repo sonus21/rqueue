@@ -16,14 +16,16 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import org.springframework.util.Assert;
+import static org.springframework.util.Assert.notNull;
+
+import org.springframework.data.redis.connection.DataType;
 
 public class Validator {
   private Validator() {}
 
   public static void validateQueueNameAndMessage(String queueName, Object message) {
-    Assert.notNull(queueName, "queueName cannot be null");
-    Assert.notNull(message, "message cannot be null");
+    notNull(queueName, "queueName cannot be null");
+    notNull(message, "message cannot be null");
   }
 
   public static void validateRetryCount(int retryCount) {
@@ -35,6 +37,21 @@ public class Validator {
   public static void validateDelay(long delayInMilliSecs) {
     if (delayInMilliSecs < 0) {
       throw new IllegalArgumentException("delayInMilliSecs must be positive");
+    }
+  }
+
+  public static void validateMessageTransferDataType(
+      DataType source,
+      DataType destination,
+      DataType sourceExpected,
+      DataType destinationExpected) {
+    if (source != sourceExpected) {
+      throw new IllegalArgumentException(
+          "Source is of Type:" + source + " Destination is of Type:" + destination);
+    }
+    if (destination != null && destination != DataType.NONE && destination != destinationExpected) {
+      throw new IllegalArgumentException(
+          "Source is of Type:" + source + " Destination is of Type:" + destination);
     }
   }
 }

@@ -16,17 +16,18 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import static org.springframework.util.Assert.notEmpty;
+
 import java.util.List;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.util.Assert;
 
 public class MessageUtils {
   public MessageUtils() {}
 
   public static Object convertMessageToObject(
-      Message<?> message, List<MessageConverter> messageConverters) {
-    Assert.notEmpty(messageConverters, "messageConverters cannot be empty");
+      Message<String> message, List<MessageConverter> messageConverters) {
+    notEmpty(messageConverters, "messageConverters cannot be empty");
     for (MessageConverter messageConverter : messageConverters) {
       try {
         return messageConverter.fromMessage(message, null);

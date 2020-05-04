@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,17 +51,17 @@ public class MessageWriterTest {
         .toMessage(message, null);
     doAnswer(
             invocation -> {
-              rqueueMessages.add((RqueueMessage) invocation.getArguments()[1]);
+              rqueueMessages.add(invocation.getArgument(1));
               return null;
             })
         .when(rqueueMessageTemplate)
-        .add(anyString(), any(RqueueMessage.class));
+        .addMessage(anyString(), any(RqueueMessage.class));
     assertTrue(messageWriter.pushMessage(queueName, message, null, null));
     assertEquals(1, rqueueMessages.size());
     RqueueMessage rqueueMessage = rqueueMessages.get(0);
     assertEquals(message, rqueueMessage.getMessage());
     assertNull(rqueueMessage.getRetryCount());
-    assertEquals(0, rqueueMessage.getProcessAt());
+    assertEquals(rqueueMessage.getQueuedTime(), rqueueMessage.getProcessAt());
     assertEquals(queueName, rqueueMessage.getQueueName());
     assertTrue(rqueueMessage.getQueuedTime() <= System.currentTimeMillis());
     assertNull(rqueueMessage.getReEnqueuedAt());
@@ -77,11 +77,11 @@ public class MessageWriterTest {
         .toMessage(message, null);
     doAnswer(
             invocation -> {
-              rqueueMessages.add((RqueueMessage) invocation.getArguments()[1]);
+              rqueueMessages.add(invocation.getArgument(1));
               return null;
             })
         .when(rqueueMessageTemplate)
-        .add(anyString(), any(RqueueMessage.class));
+        .addMessage(anyString(), any(RqueueMessage.class));
     assertTrue(messageWriter.pushMessage(queueName, message, 3, 100L));
     assertEquals(1, rqueueMessages.size());
     RqueueMessage rqueueMessage = rqueueMessages.get(0);
@@ -103,11 +103,11 @@ public class MessageWriterTest {
         .toMessage(message, null);
     doAnswer(
             invocation -> {
-              rqueueMessages.add((RqueueMessage) invocation.getArguments()[1]);
+              rqueueMessages.add(invocation.getArgument(1));
               return null;
             })
         .when(rqueueMessageTemplate)
-        .addWithDelay(anyString(), any(RqueueMessage.class));
+        .addMessageWithDelay(anyString(), any(RqueueMessage.class));
     assertTrue(messageWriter.pushMessage(queueName, message, 3, 1200L));
     assertEquals(1, rqueueMessages.size());
     RqueueMessage rqueueMessage = rqueueMessages.get(0);

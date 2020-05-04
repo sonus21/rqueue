@@ -16,47 +16,38 @@
 
 package com.github.sonus21.rqueue.listener;
 
-public class QueueDetail {
+import com.github.sonus21.rqueue.utils.StringUtils;
+import java.io.Serializable;
+import lombok.Getter;
+import lombok.NonNull;
+
+@Getter
+public class QueueDetail implements Serializable {
+
+  private static final long serialVersionUID = -4274795210784695201L;
   private final String queueName;
   private final boolean delayedQueue;
-  private final String dlqName;
+  private final String deadLetterQueueName;
   private final int numRetries;
-  private final long maxJobExecutionTime;
+  private final long visibilityTimeout;
 
   public QueueDetail(
-      String queueName,
+      @NonNull String queueName,
       int numRetries,
       String deadLetterQueueName,
       boolean delayedQueue,
-      long maxJobExecutionTime) {
+      long visibilityTimeout) {
+    if (numRetries == -1) {
+      throw new IllegalArgumentException("numRetries must be greater than one");
+    }
     this.queueName = queueName;
     this.numRetries = numRetries;
     this.delayedQueue = delayedQueue;
-    this.dlqName = deadLetterQueueName;
-    this.maxJobExecutionTime = maxJobExecutionTime;
-  }
-
-  public String getQueueName() {
-    return queueName;
-  }
-
-  public boolean isDelayedQueue() {
-    return delayedQueue;
-  }
-
-  public String getDlqName() {
-    return dlqName;
-  }
-
-  public int getNumRetries() {
-    return numRetries;
+    this.deadLetterQueueName = deadLetterQueueName;
+    this.visibilityTimeout = visibilityTimeout;
   }
 
   public boolean isDlqSet() {
-    return dlqName != null && !dlqName.isEmpty();
-  }
-
-  public long getMaxJobExecutionTime() {
-    return maxJobExecutionTime;
+    return !StringUtils.isEmpty(deadLetterQueueName);
   }
 }

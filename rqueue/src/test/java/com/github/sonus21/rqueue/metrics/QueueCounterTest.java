@@ -17,13 +17,13 @@
 package com.github.sonus21.rqueue.metrics;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import com.github.sonus21.rqueue.metrics.RqueueMetricsPropertiesTest.MetricProperties;
+import com.github.sonus21.rqueue.metrics.MetricsPropertiesTest.MetricProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -62,7 +62,7 @@ public class QueueCounterTest {
     registerQueue(metricsProperties, meterRegistry, queueName, type);
     try {
       meterRegistry.get(dataName).tags(Tags.of("queue", queueName)).counter().count();
-      Assert.fail();
+      fail();
     } catch (MeterNotFoundException e) {
     }
     meterRegistry = new SimpleMeterRegistry();

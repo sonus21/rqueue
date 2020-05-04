@@ -21,16 +21,15 @@ import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
+@Slf4j
 class MessageWriter {
-  private static Logger logger = LoggerFactory.getLogger(RqueueMessageSender.class);
   private RqueueMessageTemplate rqueueMessageTemplate;
   private CompositeMessageConverter messageConverter;
 
@@ -50,12 +49,12 @@ class MessageWriter {
     RqueueMessage rqueueMessage = buildMessage(queueName, message, retryCount, delayInMilliSecs);
     try {
       if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
-        rqueueMessageTemplate.add(queueName, rqueueMessage);
+        rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
       } else {
-        rqueueMessageTemplate.addWithDelay(queueName, rqueueMessage);
+        rqueueMessageTemplate.addMessageWithDelay(queueName, rqueueMessage);
       }
     } catch (Exception e) {
-      logger.error("Message could not be pushed ", e);
+      log.error("Message could not be pushed ", e);
       return false;
     }
     return true;

@@ -16,16 +16,19 @@
 
 package com.github.sonus21.rqueue.metrics;
 
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
 import com.github.sonus21.rqueue.utils.QueueUtils;
-import com.github.sonus21.rqueue.event.QueueInitializationEvent;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
 
 /**
  * RqueueMetrics register metrics related to queue. A queue can have 4 types of metrics like
@@ -38,26 +41,21 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
   private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
-  private RqueueMessageTemplate rqueueMessageTemplate;
-  private RqueueMetricsProperties metricsProperties;
-  private MeterRegistry meterRegistry;
+  private RqueueRedisTemplate<String> rqueueMessageTemplate;
+  @Autowired private MetricsProperties metricsProperties;
+  @Autowired private MeterRegistry meterRegistry;
   private QueueCounter queueCounter;
 
   public RqueueMetrics(
-      RqueueMessageTemplate rqueueMessageTemplate,
-      RqueueMetricsProperties metricsProperties,
-      MeterRegistry meterRegistry,
-      QueueCounter queueCounter) {
-    this.metricsProperties = metricsProperties;
+      RqueueRedisTemplate<String> rqueueMessageTemplate, QueueCounter queueCounter) {
     this.rqueueMessageTemplate = rqueueMessageTemplate;
-    this.meterRegistry = meterRegistry;
     this.queueCounter = queueCounter;
   }
 
   private long size(String name, boolean isZset) {
     Long val;
     if (!isZset) {
-      val = rqueueMessageTemplate.getListLength(name);
+      val = rqueueMessageTemplate.getListSize(name);
     } else {
       val = rqueueMessageTemplate.getZsetSize(name);
     }
@@ -87,7 +85,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
         Gauge.builder(
                 DELAYED_QUEUE_SIZE,
                 queueDetail,
-                c -> size(QueueUtils.getTimeQueueName(queueDetail.getQueueName()), true))
+                c -> size(QueueUtils.getDelayedQueueName(queueDetail.getQueueName()), true))
             .tags(queueTags)
             .description("The number of entries waiting in the delayed queue")
             .register(meterRegistry);
@@ -95,7 +93,9 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
       if (queueDetail.isDlqSet()) {
         Builder<QueueDetail> builder =
             Gauge.builder(
-                DEAD_LETTER_QUEUE_SIZE, queueDetail, c -> size(queueDetail.getDlqName(), false));
+                DEAD_LETTER_QUEUE_SIZE,
+                queueDetail,
+                c -> size(queueDetail.getDeadLetterQueueName(), false));
         builder.tags(queueTags);
         builder.description("The number of entries in the dead letter queue");
         builder.register(meterRegistry);
@@ -106,8 +106,11 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
   }
 
   @Override
+  @Async
   public void onApplicationEvent(QueueInitializationEvent event) {
-    monitor(event.getQueueDetailMap());
+    if (event.isStart()) {
+      monitor(event.getQueueDetailMap());
+    }
   }
 
   public QueueCounter getQueueCounter() {

@@ -1,0 +1,97 @@
+{% extends 'classpath:/templates/rqueue/base.html' %}
+{% block main %}
+<div class="container">
+  <div class="row table-responsive ">
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Queue</th>
+        <th>Delayed</th>
+        <th>Max Number of Retry</th>
+        <th>Visibility Timeout</th>
+        <th>Dead Letter queues</th>
+        <th>Created On</th>
+        <th>Updated On</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        {% if config == null %}
+        {{ queueName }}
+        {% else %}
+        <td>{{config.name}}</td>
+        <td>{% if config.delayed %} Yes {% else %} No {% endif %}</td>
+        <td>{{config.numRetry}}</td>
+        <td>{{config.visibilityTimeout}}</td>
+        <td>
+          {{ join(config.deadLetterQueues, ', ') }}
+        </td>
+        <td>{{ time(config.createdOn) }}</td>
+        <td>{{ time(config.updatedOn) }}</td>
+        {% endif %}
+      </tr>
+      </tbody>
+    </table>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Job Type</th>
+        <th>Data Type</th>
+        <th>Name</th>
+        <th>Size</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for queueData in queueRedisDataDetails %}
+      <tr>
+        <td>
+          <a href="#" data-toggle="modal" data-target="#explore-queue"
+             data-name="{{queueData.value.name}}" data-type="{{queueData.value.type}}"
+             onclick="exploreData(this)">
+            {{queueData.key.name}}
+          </a>
+        </td>
+        <td>{{queueData.value.type}}</td>
+        <td>{{queueData.value.name}}</td>
+        <td>{{queueData.value.size}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<hr/>
+{% include 'classpath:/templates/rqueue/stats_chart.html' %}
+<hr/>
+{% include 'classpath:/templates/rqueue/latency_chart.html' %}
+
+{% include 'classpath:/templates/rqueue/data_explorer_modal.html' %}
+{% endblock %}
+
+{% block additional_script %}
+<script> queueName = "{{queueName}}"</script>
+<script type="application/javascript">
+  dataPageUrl = "/rqueue/api/v1/explore";
+  var chartParams = {"queue": queueName, "type": "STATS", 'aggregationType': 'DAILY'};
+  var latencyChartParams = {"queue": queueName, "type": "LATENCY", 'aggregationType': 'DAILY'};
+  $(document).ready(function () {
+    drawChart(chartParams, "stats_chart");
+    drawChart(latencyChartParams, "latency_chart");
+    $('#refresh-chart').click(function () {
+      refreshStatsChart(chartParams, "stats_chart");
+    });
+
+    $('#refresh-latency-chart').click(function () {
+      refreshLatencyChart(latencyChartParams, "latency_chart");
+    });
+
+    $('#explore-queue').on('shown.bs.modal', function () {
+      $('#explorer-title').empty().append("Queue:").append("<b>&nbsp;" + queueName + "</b>").append(
+          "&nbsp;[" + dataType + "]").append("<b>&nbsp;" + dataName + "</b>");
+      refreshPage();
+    });
+  });
+
+</script>
+{% endblock %}
+

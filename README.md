@@ -1,6 +1,6 @@
-<img align="right" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/RQueue-icon.png" alt="Rqueue Logo" width="350">
+<img align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="110">
 
-# Rqueue: RedisQueue, Redis Task Queue for Spring and Spring Boot   
+# Rqueue: Redis Queue,Task Queue, Delayed Queue for Spring and Spring Boot
  
 [![Build Status](https://travis-ci.org/sonus21/rqueue.svg?branch=master)](https://travis-ci.org/sonus21/rqueue)
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
@@ -9,8 +9,7 @@
 
 Rqueue is an asynchronous task executor(worker) built for spring framework based on the spring framework's messaging library backed by Redis.
 
-
-* A message can be delayed for an arbitrary period of time or delivered immediately. 
+* A message can be delayed for an arbitrary period of time or delivered immediately.
 * Multiple messages can be consumed in parallel by different workers.
 * Message delivery: It's guaranteed that a message is consumed **at least once**.  (Message would be consumed by a worker more than once due to the failure in the underlying worker/restart-process etc, otherwise exactly one delivery)
 
@@ -38,14 +37,14 @@ Add Dependency
 * Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:1.3-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.0.0-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>1.3-RELEASE</version>
+        <version>2.0.0-RELEASE</version>
         <type>pom</type>
     </dependency>
     ```
@@ -56,14 +55,14 @@ Add Dependency
     Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:1.3-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.0.0-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>1.3-RELEASE</version>
+       <version>2.0.0-RELEASE</version>
        <type>pom</type>
      </dependency>
     ```
@@ -123,7 +122,7 @@ public class MessageListener {
 ```
 
 ### Message publishing or task submission
-All messages can be send using `RqueueMessageSender` bean's methods. It has handful number of put methods, we can use one of them based on the use case.
+All messages can be send using `RqueueMessageSender` bean's methods. It has handful number of `enqueue` and `enqueueIn` methods, we can use one of them based on the use case.
 
 
 ```java
@@ -131,18 +130,18 @@ public class MessageService {
   @AutoWired private RqueueMessageSender rqueueMessageSender;
   
   public void doSomething(){
-    rqueueMessageSender.put("simple-queue", "Rqueue is configured");
+    rqueueMessageSender.enqueue("simple-queue", "Rqueue is configured");
   }
   
   public void createJOB(Job job){
     //do something
-    rqueueMessageSender.put("job-queue", job);
+    rqueueMessageSender.enqueue("job-queue", job);
   }
   
   // send notification in 30 seconds
    public void sendNotification(Notification notification){
     //do something
-    rqueueMessageSender.put("notification-queue", notification, 30*1000L);
+    rqueueMessageSender.enqueueIn("notification-queue", notification, 30*1000L);
   }
 }
 ```
@@ -179,13 +178,18 @@ class Application{
     
     
 ```java
- // Create redis connection factory of your choice either Redission or Lettuce or Jedis 
- // Get redis configuration 
- RedisConfiguration redisConfiguration  = new RedisConfiguration();
- // Set fields of redis configuration
- // Create lettuce connection factory
- LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisConfiguration);
- factory.setRedisConnectionFactory(lettuceConnectionFactory);
+  @Bean
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(RqueueMessageHandler rqueueMessageHandler){
+    // Create redis connection factory of your choice either Redission or Lettuce or Jedis 
+     // Get redis configuration 
+     RedisConfiguration redisConfiguration  = new RedisConfiguration();
+     // Set fields of redis configuration
+     // Create lettuce connection factory
+     LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisConfiguration);
+     factory.setRedisConnectionFactory(lettuceConnectionFactory);
+     facory.setRqueueMessageHandler(rqueueMessageHandler);
+     return factory;
+  }
 ``` 
 ---
 
@@ -209,7 +213,7 @@ SimpleRqueueListenerContainerFactory factory =  new SimpleRqueueListenerContaine
 factory.setMaxNumWorkers(10);
 ```
 
-By default number of task executors are same as number of queues. A custom or shared task executor can be configured using factory's `setTaskExecutor` method, we need to provide an implementation of AsyncTaskExecutor
+By default number of task executors are twice of the number of queues. A custom or shared task executor can be configured using factory's `setTaskExecutor` method, we need to provide an implementation of AsyncTaskExecutor
 
 
 ```java
@@ -224,11 +228,33 @@ factory.setTaskExecutor(threadPoolTaskExecutor);
 
 ---
 **Manual/Auto start of the container**
-
-Whenever container is refreshed then it can be started automatically or manfully. Default behaviour is to start automatically, to change this behaviour set auto-start to false.
+Whenever container is refreshed or application is started then it is be started automatically and it  comes with a graceful shutdown.  
+Automatic start of the container can be controlled using `autoStartup` flag, when autoStartup is false then application must call start and stop  
+method of container to start and stop the container, for further graceful shutdown you should call destroy method as well.
 
 ```java
 factory.setAutoStartup(false);
+
+```
+
+```java
+public class BootstrapController {
+  @Autowired private RqueueMessageListenerContainer rqueueMessageListenerContainer;
+  // ...
+  public void start(){
+    // ...
+    rqueueMessageListenerContainer.start();
+  }
+   public void stop(){
+    // ...
+    rqueueMessageListenerContainer.stop();
+  }
+   public void destroy(){
+    // ...
+    rqueueMessageListenerContainer.destroy();
+  }
+  //...
+}
 ```
 
 ---
@@ -282,9 +308,33 @@ All these metrics are tagged
 [![Grafana Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)
 
 
+## Web Interface
+* Queue stats (Scheduled, waiting to run, running, moved to dead letter queue)
+* Latency:  Min/Max and Average task execution time
+* Queue Management: Move tasks from one queue to another
+* Delete enqueued tasks
+
+Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
+
+**Configuration**
+* Add resource handler to handle the static resources.
+```java
+  public class MvcConfig implements WebMvcConfigurer {
+
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    //...
+    if (!registry.hasMappingForPattern("/**")) {
+      registry.addResourceHandler("/**").addResourceLocations("classpath:/public/");
+    }
+  }
+}
+```
+
+All paths are under `/rqueue/**`. for authentication add interceptor(s) that would check for the session etc.
 
 ## Support
-Please report problems/bugs to issue tracker. You are most welcome for any pull requests for feature/issue.
+Please report problem, bug or feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for feature, issue or enhancement.
 
 ## License
 The Rqueue is released under version 2.0 of the Apache License.

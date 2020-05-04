@@ -17,45 +17,62 @@
 package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.Constants.DEFAULT_WORKER_COUNT_PER_QUEUE;
+import static org.springframework.util.Assert.notNull;
 
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
-import com.github.sonus21.rqueue.processor.MessageProcessor;
+import com.github.sonus21.rqueue.models.ThreadCount;
+import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.ThreadUtils;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.Semaphore;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.Lifecycle;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
+/**
+ * Container providing asynchronous behaviour for Rqueue message listeners. Handles the low level
+ * details of listening, converting and message dispatching.
+ *
+ * @see com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory
+ */
+@Slf4j
 public class RqueueMessageListenerContainer
     implements InitializingBean, DisposableBean, SmartLifecycle, BeanNameAware {
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
-  static Logger logger = LoggerFactory.getLogger(RqueueMessageListenerContainer.class);
   private final Object lifecycleMgr = new Object();
-  private final RqueueMessageHandler rqueueMessageHandler;
-  private final MessageProcessor discardMessageProcessor;
-  private final MessageProcessor dlqMessageProcessor;
   private final RqueueMessageTemplate rqueueMessageTemplate;
+  private final RqueueMessageHandler rqueueMessageHandler;
+  private MessageProcessor discardMessageProcessor;
+  private MessageProcessor deadLetterQueueMessageProcessor;
+  private MessageProcessor manualDeletionMessageProcessor;
+  private MessageProcessor postExecutionMessageProcessor;
+  private MessageProcessor preExecutionMessageProcessor;
+
+  @Autowired private ApplicationEventPublisher applicationEventPublisher;
+  @Autowired private RqueueWebConfig rqueueWebConfig;
 
   @Autowired(required = false)
-  RqueueCounter rqueueCounter;
+  private RqueueCounter rqueueCounter;
+
+  @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
 
   private Integer maxNumWorkers;
   private String beanName;
@@ -70,22 +87,20 @@ public class RqueueMessageListenerContainer
   private long backOffTime = 5 * Constants.ONE_MILLI;
   private long maxWorkerWaitTime = 20 * Constants.ONE_MILLI;
   private long pollingInterval = 200L;
+  private Semaphore semaphore;
   private int phase = Integer.MAX_VALUE;
-  @Autowired private ApplicationEventPublisher applicationEventPublisher;
 
   public RqueueMessageListenerContainer(
-      RqueueMessageHandler rqueueMessageHandler,
-      RqueueMessageTemplate rqueueMessageTemplate,
-      MessageProcessor discardMessageProcessor,
-      MessageProcessor dlqMessageProcessor) {
-    Assert.notNull(rqueueMessageHandler, "rqueueMessageHandler cannot be null");
-    Assert.notNull(rqueueMessageTemplate, "rqueueMessageTemplate cannot be null");
-    Assert.notNull(discardMessageProcessor, "discardMessageProcessor cannot be null");
-    Assert.notNull(dlqMessageProcessor, "dlqMessageProcessor cannot be null");
+      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
+    notNull(rqueueMessageHandler, "rqueueMessageHandler cannot be null");
+    notNull(rqueueMessageTemplate, "rqueueMessageTemplate cannot be null");
     this.rqueueMessageHandler = rqueueMessageHandler;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
-    this.discardMessageProcessor = discardMessageProcessor;
-    this.dlqMessageProcessor = dlqMessageProcessor;
+    this.discardMessageProcessor = new MessageProcessor() {};
+    this.deadLetterQueueMessageProcessor = this.discardMessageProcessor;
+    this.manualDeletionMessageProcessor = this.discardMessageProcessor;
+    this.postExecutionMessageProcessor = this.discardMessageProcessor;
+    this.preExecutionMessageProcessor = this.discardMessageProcessor;
   }
 
   public RqueueMessageTemplate getRqueueMessageTemplate() {
@@ -167,6 +182,19 @@ public class RqueueMessageListenerContainer
     return autoStartup;
   }
 
+  /**
+   * Control if this component should get started automatically or manually.
+   *
+   * <p>A value of {@code false} indicates that the container is intended to be started and stopped
+   * through an explicit call to {@link #start()} and {@link #stop()}, and analogous to a plain
+   * {@link Lifecycle} implementation.
+   *
+   * @param autoStartup true/false
+   * @see #start()
+   * @see #stop()
+   * @see Lifecycle#stop()
+   * @see Lifecycle#start() ()
+   */
   public void setAutoStartup(boolean autoStartup) {
     this.autoStartup = autoStartup;
   }
@@ -190,15 +218,16 @@ public class RqueueMessageListenerContainer
         }
       }
       registeredQueues = Collections.unmodifiableMap(registeredQueues);
+      if (taskExecutor == null) {
+        defaultTaskExecutor = true;
+        taskExecutor = createDefaultTaskExecutor();
+      } else {
+        spinningTaskExecutor = createSpinningTaskExecutor();
+      }
+      initializeRunningQueueState();
+      this.semaphore = new Semaphore(getWorkersCount());
       lifecycleMgr.notifyAll();
     }
-    if (taskExecutor == null) {
-      defaultTaskExecutor = true;
-      taskExecutor = createDefaultTaskExecutor();
-    } else {
-      spinningTaskExecutor = createSpinningTaskExecutor();
-    }
-    initializeRunningQueueState();
   }
 
   protected AsyncTaskExecutor getSpinningTaskExecutor() {
@@ -219,17 +248,10 @@ public class RqueueMessageListenerContainer
     }
   }
 
-  private ThreadCount getThreadCount(boolean onlySpinning) {
-    int queueSize = getRegisteredQueues().size();
-    int corePoolSize = onlySpinning ? queueSize : queueSize + queueSize;
-    int maxPoolSize =
-        onlySpinning
-            ? queueSize
-            : queueSize
-                + (getMaxNumWorkers() == null
-                    ? queueSize * DEFAULT_WORKER_COUNT_PER_QUEUE
-                    : getMaxNumWorkers());
-    return new ThreadCount(corePoolSize, maxPoolSize);
+  private int getWorkersCount() {
+    return (maxNumWorkers == null
+        ? getRegisteredQueues().size() * DEFAULT_WORKER_COUNT_PER_QUEUE
+        : maxNumWorkers);
   }
 
   private AsyncTaskExecutor createTaskExecutor(boolean onlySpinningThread) {
@@ -237,7 +259,10 @@ public class RqueueMessageListenerContainer
     ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
     threadPoolTaskExecutor.setThreadNamePrefix(
         name != null ? name + "-" : DEFAULT_THREAD_NAME_PREFIX);
-    ThreadCount threadCount = getThreadCount(onlySpinningThread);
+    threadPoolTaskExecutor.setBeanName(DEFAULT_THREAD_NAME_PREFIX);
+    ThreadCount threadCount =
+        ThreadUtils.getThreadCount(
+            onlySpinningThread, getRegisteredQueues().size(), getWorkersCount());
     if (threadCount.getCorePoolSize() > 0) {
       threadPoolTaskExecutor.setCorePoolSize(threadCount.getCorePoolSize());
       threadPoolTaskExecutor.setMaxPoolSize(threadCount.getMaxPoolSize());
@@ -252,17 +277,23 @@ public class RqueueMessageListenerContainer
   }
 
   private QueueDetail getQueueDetail(String queue, MappingInformation mappingInformation) {
+    int numRetries = mappingInformation.getNumRetries();
+    if (!mappingInformation.getDeadLetterQueueName().isEmpty() && numRetries == -1) {
+      numRetries = Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE;
+    } else if (numRetries == -1) {
+      numRetries = Integer.MAX_VALUE;
+    }
     return new QueueDetail(
         queue,
-        mappingInformation.getNumRetries(),
+        numRetries,
         mappingInformation.getDeadLetterQueueName(),
         mappingInformation.isDelayedQueue(),
-        mappingInformation.getMaxJobExecutionTime());
+        mappingInformation.getVisibilityTimeout());
   }
 
   @Override
   public void start() {
-    logger.info("Starting Rqueue Message container");
+    log.info("Starting Rqueue Message container");
     synchronized (lifecycleMgr) {
       running = true;
       doStart();
@@ -280,17 +311,16 @@ public class RqueueMessageListenerContainer
   }
 
   protected void startQueue(String queueName, QueueDetail queueDetail) {
-    if (queueRunningState.containsKey(queueName) && queueRunningState.get(queueName)) {
+    if (Boolean.TRUE.equals(queueRunningState.get(queueName))) {
       return;
     }
     queueRunningState.put(queueName, true);
     Future<?> future;
-    AsynchronousMessageListener messageListener =
-        new AsynchronousMessageListener(queueName, queueDetail, this);
+    MessagePoller messagePoller = new MessagePoller(queueName, queueDetail, this, semaphore);
     if (spinningTaskExecutor == null) {
-      future = getTaskExecutor().submit(messageListener);
+      future = getTaskExecutor().submit(messagePoller);
     } else {
-      future = spinningTaskExecutor.submit(messageListener);
+      future = spinningTaskExecutor.submit(messagePoller);
     }
     scheduledFutureByQueue.put(queueName, future);
   }
@@ -309,19 +339,19 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void stop() {
-    logger.info("Stopping Rqueue Message container");
+    log.info("Stopping Rqueue Message container");
     synchronized (lifecycleMgr) {
       running = false;
-      doStop();
       applicationEventPublisher.publishEvent(
           new QueueInitializationEvent("Container", registeredQueues, false));
+      doStop();
       lifecycleMgr.notifyAll();
     }
   }
 
   protected void doStop() {
     for (Map.Entry<String, Boolean> runningStateByQueue : queueRunningState.entrySet()) {
-      if (runningStateByQueue.getValue()) {
+      if (Boolean.TRUE.equals(runningStateByQueue.getValue())) {
         stopQueue(runningStateByQueue.getKey());
       }
     }
@@ -329,21 +359,15 @@ public class RqueueMessageListenerContainer
   }
 
   private void waitForRunningQueuesToStop() {
-    for (Map.Entry<String, Boolean> queueRunningState : queueRunningState.entrySet()) {
-      String queueName = queueRunningState.getKey();
-      QueueDetail queueDetail = getRegisteredQueues().get(queueName);
+    for (Map.Entry<String, Boolean> entry : queueRunningState.entrySet()) {
+      String queueName = entry.getKey();
       Future<?> queueSpinningThread = scheduledFutureByQueue.get(queueName);
-      if (queueSpinningThread != null
-          && !queueSpinningThread.isDone()
-          && !queueSpinningThread.isCancelled()) {
-        try {
-          queueSpinningThread.get(getMaxWorkerWaitTime(), TimeUnit.MILLISECONDS);
-        } catch (ExecutionException | TimeoutException e) {
-          logger.warn("An exception occurred while stopping queue '{}'", queueName, e);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-      }
+      ThreadUtils.waitForTermination(
+          log,
+          queueSpinningThread,
+          getMaxWorkerWaitTime(),
+          "An exception occurred while stopping queue '{}'",
+          queueName);
     }
   }
 
@@ -370,10 +394,63 @@ public class RqueueMessageListenerContainer
   }
 
   public MessageProcessor getDiscardMessageProcessor() {
-    return discardMessageProcessor;
+    return this.discardMessageProcessor;
   }
 
-  public MessageProcessor getDlqMessageProcessor() {
-    return dlqMessageProcessor;
+  public void setDiscardMessageProcessor(MessageProcessor discardMessageProcessor) {
+    notNull(discardMessageProcessor, "discardMessageProcessor cannot be null");
+    this.discardMessageProcessor = discardMessageProcessor;
+  }
+
+  public MessageProcessor getDeadLetterQueueMessageProcessor() {
+    return this.deadLetterQueueMessageProcessor;
+  }
+
+  public void setDeadLetterQueueMessageProcessor(MessageProcessor deadLetterQueueMessageProcessor) {
+    notNull(deadLetterQueueMessageProcessor, "deadLetterQueueMessageProcessor cannot be null");
+    this.deadLetterQueueMessageProcessor = deadLetterQueueMessageProcessor;
+  }
+
+  RqueueMessageMetadataService getRqueueMessageMetadataService() {
+    return rqueueMessageMetadataService;
+  }
+
+  public MessageProcessor getManualDeletionMessageProcessor() {
+    return this.manualDeletionMessageProcessor;
+  }
+
+  public void setManualDeletionMessageProcessor(MessageProcessor manualDeletionMessageProcessor) {
+    notNull(manualDeletionMessageProcessor, "manualDeletionMessageProcessor cannot be null");
+    this.manualDeletionMessageProcessor = manualDeletionMessageProcessor;
+  }
+
+  public MessageProcessor getPostExecutionMessageProcessor() {
+    return this.postExecutionMessageProcessor;
+  }
+
+  public void setPostExecutionMessageProcessor(MessageProcessor postExecutionMessageProcessor) {
+    notNull(postExecutionMessageProcessor, "postExecutionMessageProcessor cannot be null");
+    this.postExecutionMessageProcessor = postExecutionMessageProcessor;
+  }
+
+  public MessageProcessor getPreExecutionMessageProcessor() {
+    return preExecutionMessageProcessor;
+  }
+
+  public void setPreExecutionMessageProcessor(MessageProcessor preExecutionMessageProcessor) {
+    notNull(preExecutionMessageProcessor, "preExecutionMessageProcessor cannot be null");
+    this.preExecutionMessageProcessor = preExecutionMessageProcessor;
+  }
+
+  public RqueueCounter getRqueueCounter() {
+    return rqueueCounter;
+  }
+
+  public RqueueWebConfig getRqueueWebConfig() {
+    return rqueueWebConfig;
+  }
+
+  public ApplicationEventPublisher getApplicationEventPublisher() {
+    return applicationEventPublisher;
   }
 }

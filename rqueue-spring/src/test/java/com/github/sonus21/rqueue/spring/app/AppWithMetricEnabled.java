@@ -16,24 +16,33 @@
 
 package com.github.sonus21.rqueue.spring.app;
 
+import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.spring.EnableRqueue;
 import com.github.sonus21.rqueue.spring.RqueueMetricsProperties;
+import com.github.sonus21.rqueue.test.BaseApplication;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import rqueue.test.BaseApplication;
 
 @Configuration
-@ComponentScan(basePackages = {"rqueue.test", "com.github.sonus21.rqueue.spring.services"})
+@ComponentScan(
+    basePackages = {"com.github.sonus21.rqueue.test", "com.github.sonus21.rqueue.spring.services"})
 @EnableRqueue
 @EnableWebMvc
 @PropertySource("classpath:application.properties")
 public class AppWithMetricEnabled extends BaseApplication {
+  @Value("${max.workers.count:6}")
+  private int maxWorkers;
+
   @Bean
   public PrometheusMeterRegistry meterRegistry() {
     return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
@@ -46,5 +55,37 @@ public class AppWithMetricEnabled extends BaseApplication {
     metricsProperties.getCount().setExecution(true);
     metricsProperties.getCount().setFailure(true);
     return metricsProperties;
+  }
+
+  public class DeleteMessageListener implements MessageProcessor {
+    private List<Object> messages = new ArrayList<>();
+
+    @Override
+    public boolean process(Object message) {
+      messages.add(message);
+      return true;
+    }
+
+    public List<Object> getMessages() {
+      return messages;
+    }
+
+    public void clear() {
+      this.messages = new ArrayList<>();
+    }
+  }
+
+  @Bean
+  public DeleteMessageListener deleteMessageListener() {
+    return new DeleteMessageListener();
+  }
+
+  @Bean
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
+      DeleteMessageListener deleteMessageListener) {
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMaxNumWorkers(maxWorkers);
+    factory.setManualDeletionMessageProcessor(deleteMessageListener);
+    return factory;
   }
 }

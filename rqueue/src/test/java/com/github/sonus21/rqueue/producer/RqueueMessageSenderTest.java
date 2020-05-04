@@ -18,12 +18,18 @@ package com.github.sonus21.rqueue.producer;
 
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.models.MessageMoveResult;
 import java.util.Random;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,8 +41,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class RqueueMessageSenderTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  private RqueueMessageSender rqueueMessageSender = new RqueueMessageSender(rqueueMessageTemplate);
+  private RqueueMessageSender rqueueMessageSender =
+      new RqueueMessageSenderImpl(rqueueMessageTemplate);
   private String queueName = "test-queue";
+  private String slowQueue = "slow-queue";
+  private String deadLetterQueueName = "dead-test-queue";
   private String message = "Test Message";
   private MessageWriter messageWriter = mock(MessageWriter.class);
   private Random random = new Random();
@@ -90,39 +99,47 @@ public class RqueueMessageSenderTest {
 
   @Test
   public void moveMessageFromQueueExceptions() {
+    // source is not provided
     try {
       rqueueMessageSender.moveMessageFromDeadLetterToQueue(null, queueName, null);
-      Assert.fail();
+      fail();
     } catch (IllegalArgumentException e) {
     }
 
+    // destination is not provided
     try {
       rqueueMessageSender.moveMessageFromDeadLetterToQueue(queueName, null, null);
-      Assert.fail();
+      fail();
     } catch (IllegalArgumentException e) {
     }
-
-    try {
-      rqueueMessageSender.moveMessageFromDeadLetterToQueue(queueName, queueName, null);
-      Assert.fail();
-    } catch (IllegalArgumentException e) {
-    }
-    try {
-      rqueueMessageSender.moveMessageFromDeadLetterToQueue("dlq" + queueName, queueName, -1);
-      Assert.fail();
-    } catch (IllegalArgumentException e) {
-    }
+    doReturn(new MessageMoveResult(10, true))
+        .when(rqueueMessageTemplate)
+        .moveMessageListToList(anyString(), anyString(), anyInt());
+    rqueueMessageSender.moveMessageFromDeadLetterToQueue(queueName, slowQueue, null);
   }
 
   @Test
-  public void moveMessageFromDeadLetterToQueue() {
-    doReturn(true).when(rqueueMessageTemplate).moveMessage("dlq" + queueName, queueName, 100);
-    rqueueMessageSender.moveMessageFromDeadLetterToQueue("dlq" + queueName, queueName, null);
+  public void moveMessageFromDeadLetterToQueueDefaultSize() {
+    doReturn(new MessageMoveResult(100, true))
+        .when(rqueueMessageTemplate)
+        .moveMessageListToList(anyString(), anyString(), anyInt());
+    rqueueMessageSender.moveMessageFromDeadLetterToQueue(deadLetterQueueName, queueName, null);
+    verify(rqueueMessageTemplate, times(1))
+        .moveMessageListToList(eq(deadLetterQueueName), eq(queueName), anyInt());
+    verify(rqueueMessageTemplate, times(1))
+        .moveMessageListToList(deadLetterQueueName, queueName, 100);
   }
 
   @Test
-  public void moveMessageFromDeadLetterToQueue2() {
-    doReturn(true).when(rqueueMessageTemplate).moveMessage("dlq" + queueName, queueName, 10);
-    rqueueMessageSender.moveMessageFromDeadLetterToQueue("dlq" + queueName, queueName, 10);
+  public void moveMessageFromDeadLetterToQueueFixedSize() {
+    doReturn(new MessageMoveResult(10, true))
+        .when(rqueueMessageTemplate)
+        .moveMessageListToList(anyString(), anyString(), anyInt());
+    rqueueMessageSender.moveMessageFromDeadLetterToQueue(deadLetterQueueName, queueName, 10);
+
+    verify(rqueueMessageTemplate, times(1))
+        .moveMessageListToList(eq(deadLetterQueueName), eq(queueName), anyInt());
+    verify(rqueueMessageTemplate, times(1))
+        .moveMessageListToList(eq(deadLetterQueueName), eq(queueName), eq(10));
   }
 }

@@ -16,10 +16,11 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.QueueUtils.QUEUE_NAME;
+import static org.springframework.util.Assert.notEmpty;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -40,7 +41,6 @@ import org.springframework.messaging.handler.invocation.AbstractExceptionHandler
 import org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.HandlerMethodReturnValueHandler;
-import org.springframework.util.Assert;
 import org.springframework.util.comparator.ComparableComparator;
 
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
@@ -82,40 +82,64 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   protected MappingInformation getMappingForMethod(Method method, Class<?> handlerType) {
     RqueueListener rqueueListener = AnnotationUtils.findAnnotation(method, RqueueListener.class);
     if (rqueueListener != null) {
+      Set<String> queueNames = resolveQueueNames(rqueueListener);
+      boolean isDelayedQueue = isDeadLetterQueue(rqueueListener);
+      String deadLetterQueueName = resolveDelayedQueue(rqueueListener);
+      int numRetries = resolveNumRetries(rqueueListener);
+      long visibilityTimeout = resolveVisibilityTimeout(rqueueListener);
+      boolean active = isActive(rqueueListener);
       MappingInformation mappingInformation =
           new MappingInformation(
-              resolveQueueNames(rqueueListener.value()),
-              ValueResolver.resolveToBoolean(
-                  getApplicationContext(), rqueueListener.delayedQueue()),
-              ValueResolver.resolveValueToInteger(
-                  getApplicationContext(), rqueueListener.numRetries()),
-              resolveDelayedQueue(rqueueListener.deadLetterQueue()),
-              ValueResolver.resolveValueToLong(
-                  getApplicationContext(), rqueueListener.maxJobExecutionTime()));
+              queueNames,
+              isDelayedQueue,
+              numRetries,
+              deadLetterQueueName,
+              visibilityTimeout,
+              active);
+
       if (mappingInformation.isValid()) {
         return mappingInformation;
       }
-      logger.warn("Queue '" + mappingInformation + "' not configured properly");
+      logger.warn("Queue '" + mappingInformation + "' not configured");
     }
     return null;
   }
 
-  private String resolveDelayedQueue(String dlqName) {
+  private long resolveVisibilityTimeout(RqueueListener rqueueListener) {
+    return ValueResolver.resolveKeyToLong(
+        getApplicationContext(), rqueueListener.visibilityTimeout());
+  }
+
+  private int resolveNumRetries(RqueueListener rqueueListener) {
+    return ValueResolver.resolveKeyToInteger(getApplicationContext(), rqueueListener.numRetries());
+  }
+
+  private String resolveDelayedQueue(RqueueListener rqueueListener) {
+    String dlqName = rqueueListener.deadLetterQueue();
     String[] resolvedValues =
-        ValueResolver.resolveValueToArrayOfStrings(getApplicationContext(), dlqName);
+        ValueResolver.resolveKeyToArrayOfStrings(getApplicationContext(), dlqName);
     if (resolvedValues.length == 1) {
       return resolvedValues[0];
     }
     throw new IllegalStateException(
-        "more than one dead letter queue can not be configure '" + dlqName + "'");
+        "more than one dead letter queue cannot be configured '" + dlqName + "'");
   }
 
-  private Set<String> resolveQueueNames(String[] queueNames) {
+  private boolean isDeadLetterQueue(RqueueListener rqueueListener) {
+    return ValueResolver.resolveToBoolean(getApplicationContext(), rqueueListener.delayedQueue());
+  }
+
+  private boolean isActive(RqueueListener rqueueListener) {
+    return ValueResolver.resolveToBoolean(getApplicationContext(), rqueueListener.active());
+  }
+
+  private Set<String> resolveQueueNames(RqueueListener rqueueListener) {
+    String[] queueNames = rqueueListener.value();
     Set<String> result = new HashSet<>(queueNames.length);
     for (String queueName : queueNames) {
       result.addAll(
           Arrays.asList(
-              ValueResolver.resolveValueToArrayOfStrings(getApplicationContext(), queueName)));
+              ValueResolver.resolveKeyToArrayOfStrings(getApplicationContext(), queueName)));
     }
     return result;
   }
@@ -127,7 +151,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected String getDestination(Message<?> message) {
-    return (String) message.getHeaders().get(QUEUE_NAME);
+    return (String) message.getHeaders().get(QueueUtils.getMessageHeaderKey());
   }
 
   @Override
@@ -161,7 +185,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   public void setMessageConverters(List<MessageConverter> messageConverters) {
-    Assert.notEmpty(messageConverters, "messageConverters list can not be empty or null");
+    notEmpty(messageConverters, "messageConverters list cannot be empty or null");
     this.messageConverters = messageConverters;
     addDefaultMessageConverter();
   }

@@ -16,12 +16,18 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.test.dto.Email;
+import com.github.sonus21.rqueue.test.dto.Job;
+import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
+import com.github.sonus21.rqueue.test.service.FailureManager;
+import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,22 +36,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import rqueue.test.dto.Email;
-import rqueue.test.dto.Job;
-import rqueue.test.dto.Notification;
-import rqueue.test.service.ConsumedMessageService;
-import rqueue.test.service.FailureManager;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = Application.class)
 @TestPropertySource(properties = {"spring.redis.port=6381", "mysql.db.name=test1"})
 @SpringBootTest
 public class MessageRetryTest {
-  static {
-    System.setProperty("TEST_NAME", MessageRetryTest.class.getSimpleName());
-  }
-
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private FailureManager failureManager;

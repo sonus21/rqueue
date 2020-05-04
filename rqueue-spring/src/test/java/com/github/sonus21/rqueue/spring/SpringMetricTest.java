@@ -18,37 +18,31 @@ package com.github.sonus21.rqueue.spring;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
+import com.github.sonus21.rqueue.test.tests.MetricTestBase;
+import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-import rqueue.test.tests.MetricTestBase;
 
 @ContextConfiguration(classes = AppWithMetricEnabled.class)
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(RqueueSpringTestRunner.class)
 @Slf4j
 @WebAppConfiguration
 public class SpringMetricTest extends MetricTestBase {
-  static {
-    System.setProperty("TEST_NAME", SpringMetricTest.class.getSimpleName());
-  }
-
   @Test
   public void delayedQueueStatus() throws TimedOutException {
-    this.delayedQueueStatus(redisTemplate);
+    this.verifyDelayedQueueStatus();
   }
 
   @Test
   public void metricStatus() throws TimedOutException {
-    this.metricStatus(redisTemplate);
+    this.verifyMetricStatus();
   }
 
   @Test
-  @Ignore
   public void countStatusTest() throws TimedOutException {
-    this.countStatus();
+    this.verifyCountStatus();
   }
 }

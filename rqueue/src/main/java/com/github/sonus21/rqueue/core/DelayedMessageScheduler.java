@@ -20,27 +20,18 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 
+@Slf4j
 public class DelayedMessageScheduler extends MessageScheduler {
-  private final Logger logger = LoggerFactory.getLogger(DelayedMessageScheduler.class);
-
-  public DelayedMessageScheduler(
-      RedisTemplate<String, Long> redisTemplate,
-      int poolSize,
-      boolean scheduleTaskAtStartup,
-      boolean redisEnabled) {
-    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled);
-  }
 
   @Override
   protected void initializeState(Map<String, QueueDetail> queueDetailMap) {}
 
   @Override
-  public Logger getLogger() {
-    return logger;
+  protected Logger getLogger() {
+    return log;
   }
 
   @Override
@@ -57,12 +48,12 @@ public class DelayedMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueUtils.getChannelName(queueName);
+    return QueueUtils.getDelayedQueueChannelName(queueName);
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueUtils.getTimeQueueName(queueName);
+    return QueueUtils.getDelayedQueueName(queueName);
   }
 
   @Override
@@ -73,5 +64,10 @@ public class DelayedMessageScheduler extends MessageScheduler {
   @Override
   protected boolean isQueueValid(QueueDetail queueDetail) {
     return queueDetail.isDelayedQueue();
+  }
+
+  @Override
+  protected int getThreadPoolSize() {
+    return rqueueSchedulerConfig.getDelayedMessagePoolSize();
   }
 }

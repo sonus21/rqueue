@@ -22,32 +22,24 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 
+@Slf4j
 public class ProcessingMessageScheduler extends MessageScheduler {
-  private final Logger logger = LoggerFactory.getLogger(ProcessingMessageScheduler.class);
-
-  public ProcessingMessageScheduler(
-      RedisTemplate<String, Long> redisTemplate,
-      int poolSize,
-      boolean scheduleTaskAtStartup,
-      boolean redisEnabled) {
-    super(redisTemplate, poolSize, scheduleTaskAtStartup, redisEnabled);
-  }
+  private Map<String, Long> queueNameToDelay;
 
   @Override
   protected void initializeState(Map<String, QueueDetail> queueDetailMap) {
     this.queueNameToDelay = new ConcurrentHashMap<>(queueDetailMap.size());
     for (QueueDetail queueDetail : queueDetailMap.values()) {
-      this.queueNameToDelay.put(queueDetail.getQueueName(), queueDetail.getMaxJobExecutionTime());
+      this.queueNameToDelay.put(queueDetail.getQueueName(), queueDetail.getVisibilityTimeout());
     }
   }
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -63,6 +55,11 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   @Override
   protected boolean isQueueValid(QueueDetail queueDetail) {
     return true;
+  }
+
+  @Override
+  protected int getThreadPoolSize() {
+    return rqueueSchedulerConfig.getProcessingMessagePoolSize();
   }
 
   @Override

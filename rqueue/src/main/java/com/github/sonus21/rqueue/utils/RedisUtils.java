@@ -16,23 +16,48 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
+import java.util.List;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 public class RedisUtils {
   private RedisUtils() {}
 
-  public static <T> RedisTemplate<String, T> getRedisTemplate(
+  public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
-    RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
+    RedisTemplate<String, V> redisTemplate = new RedisTemplate<>();
+    StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+    RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
     redisTemplate.setConnectionFactory(redisConnectionFactory);
-    redisTemplate.setKeySerializer(new StringRedisSerializer());
-    redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-    redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-    redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-    redisTemplate.afterPropertiesSet();
+    redisTemplate.setKeySerializer(stringRedisSerializer);
+    redisTemplate.setValueSerializer(rqueueRedisSerializer);
+    redisTemplate.setHashKeySerializer(stringRedisSerializer);
+    redisTemplate.setHashValueSerializer(rqueueRedisSerializer);
     return redisTemplate;
+  }
+
+  public static <V> List<Object> executePipeLine(
+      RedisTemplate<String, V> template, RedisPipelineCallback callback) {
+    return template.executePipelined(
+        (RedisCallback<Object>)
+            connection -> {
+              RqueueRedisSerializer valueSerializer =
+                  (RqueueRedisSerializer) template.getValueSerializer();
+              StringRedisSerializer keySerializer =
+                  (StringRedisSerializer) template.getKeySerializer();
+              callback.doInRedis(connection, keySerializer, valueSerializer);
+              return null;
+            });
+  }
+
+  public interface RedisPipelineCallback {
+    void doInRedis(
+        RedisConnection connection,
+        StringRedisSerializer keySerializer,
+        RqueueRedisSerializer valueSerializer);
   }
 }

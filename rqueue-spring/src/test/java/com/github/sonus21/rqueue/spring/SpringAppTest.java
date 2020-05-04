@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
+import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -29,18 +30,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = AppWithMetricEnabled.class)
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(RqueueSpringTestRunner.class)
 @Slf4j
 @WebAppConfiguration
 public class SpringAppTest {
-  static {
-    System.setProperty("TEST_NAME", SpringAppTest.class.getSimpleName());
-  }
-
   @Autowired private RqueueMessageListenerContainer container;
 
   @Value("${email.queue.name}")

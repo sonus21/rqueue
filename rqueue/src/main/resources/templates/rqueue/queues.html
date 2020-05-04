@@ -1,0 +1,70 @@
+{% extends 'classpath:/templates/rqueue/base.html' %}
+{% block main %}
+<div class="container">
+  <div class="row table-responsive ">
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Queue</th>
+        <th>Delayed</th>
+        <th>Max Number of Retry</th>
+        <th>Visibility Timeout</th>
+        <th>Dead Letter queues</th>
+        <th>Created On</th>
+        <th>Updated On</th>
+        <th>Deleted</th>
+        <th>Deleted On</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for meta in queues %}
+      <tr>
+        <td><a href="/rqueue/queues/{{meta.name}}">{{meta.name}}</a></td>
+        <td>{% if meta.delayed %} Yes {% else %} No {% endif %}</td>
+        <td>{{meta.numRetry}}</td>
+        <td>{{meta.visibilityTimeout}}</td>
+        <td>
+          {{ join(meta.deadLetterQueues, ', ') }}
+        </td>
+        <td>{{ time(meta.createdOn) }}</td>
+        <td>{{ time(meta.updatedOn) }}</td>
+        <td>{% if meta.deleted %} Yes {% else %} No {% endif %}</td>
+        <td>
+          {% if meta.deleted %}
+          {{ time(meta.deletedOn) }}
+          {% else %}
+          <button class="btn btn-danger delete-queue btn-sm" data-name="{{meta.name}}">Delete</button>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="container">
+  {% for config in queueConfigs %}
+  <div class="row">
+    <h2>{{config.key}}</h2>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Size</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for meta in config.value %}
+      <tr>
+        <td> {{ meta.key }}</td>
+        <td> {{ meta.value.name }}</td>
+        <td> {{ meta.value.size }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

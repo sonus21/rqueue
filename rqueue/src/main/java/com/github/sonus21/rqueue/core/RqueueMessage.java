@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,18 @@
 
 package com.github.sonus21.rqueue.core;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.io.Serializable;
+import com.github.sonus21.rqueue.models.SerializableBase;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class RqueueMessage implements Serializable, Cloneable {
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+public class RqueueMessage extends SerializableBase implements Cloneable {
 
   private static final long serialVersionUID = -3488860960637488519L;
   private String id;
@@ -33,16 +39,15 @@ public class RqueueMessage implements Serializable, Cloneable {
   private Long reEnqueuedAt;
   private int failureCount;
 
-  public RqueueMessage() {}
-
   public RqueueMessage(String queueName, String message, Integer retryCount, Long delay) {
     this.queueName = queueName;
     this.message = message;
     this.retryCount = retryCount;
-    queuedTime = System.currentTimeMillis();
-    id = queueName + UUID.randomUUID().toString();
+    this.queuedTime = System.currentTimeMillis();
+    this.id = UUID.randomUUID().toString();
+    this.processAt = this.queuedTime;
     if (delay != null) {
-      processAt = queuedTime + delay;
+      this.processAt += delay;
     }
   }
 
@@ -50,76 +55,8 @@ public class RqueueMessage implements Serializable, Cloneable {
     reEnqueuedAt = System.currentTimeMillis();
   }
 
-  public String getQueueName() {
-    return queueName;
-  }
-
-  public void setQueueName(String queueName) {
-    this.queueName = queueName;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  public Integer getRetryCount() {
-    return retryCount;
-  }
-
-  public void setRetryCount(Integer retryCount) {
-    this.retryCount = retryCount;
-  }
-
-  public long getQueuedTime() {
-    return queuedTime;
-  }
-
-  public void setQueuedTime(long queuedTime) {
-    this.queuedTime = queuedTime;
-  }
-
-  public long getProcessAt() {
-    return processAt;
-  }
-
-  public void setProcessAt(Long processAt) {
-    this.processAt = processAt;
-  }
-
-  public Long getReEnqueuedAt() {
-    return reEnqueuedAt;
-  }
-
-  public void setReEnqueuedAt(Long reEnqueuedAt) {
-    this.reEnqueuedAt = reEnqueuedAt;
-  }
-
   @Override
-  public String toString() {
-    return "RqueueMessage(id="
-        + getId()
-        + ", queueName="
-        + getQueueName()
-        + ", message="
-        + getMessage()
-        + ", retryCount="
-        + getRetryCount()
-        + ", queuedTime="
-        + getQueuedTime()
-        + ", processAt="
-        + getProcessAt()
-        + ", reEnqueuedAt="
-        + getReEnqueuedAt()
-        + ", failureCount="
-        + getFailureCount()
-        + ")";
-  }
-
-  @Override
+  @SuppressWarnings("squid:S2975")
   public RqueueMessage clone() throws CloneNotSupportedException {
     return (RqueueMessage) super.clone();
   }
@@ -133,21 +70,5 @@ public class RqueueMessage implements Serializable, Cloneable {
       }
     }
     return false;
-  }
-
-  public int getFailureCount() {
-    return failureCount;
-  }
-
-  public void setFailureCount(int failureCount) {
-    this.failureCount = failureCount;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
   }
 }

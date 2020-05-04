@@ -16,12 +16,20 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.test.dto.Email;
+import com.github.sonus21.rqueue.test.dto.Job;
+import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
+import com.github.sonus21.rqueue.test.service.FailureManager;
+import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -30,25 +38,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import rqueue.test.dto.Email;
-import rqueue.test.dto.Job;
-import rqueue.test.dto.Notification;
-import rqueue.test.service.ConsumedMessageService;
-import rqueue.test.service.FailureManager;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
 public class ApplicationTest {
-  static {
-    System.setProperty("TEST_NAME", ApplicationTest.class.getSimpleName());
-  }
 
+  @Autowired private RqueueMessageListenerContainer rqueueMessageListenerContainer;
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private FailureManager failureManager;
+  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
 
   @Value("${job.queue.name}")
   private String jobQueueName;
@@ -91,31 +92,26 @@ public class ApplicationTest {
   public void messageMovedToDelayedQueue() throws TimedOutException {
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), -1, 0);
+    log.debug("queue: {} msg: {}", emailQueue, email);
     messageSender.put(emailQueue, email, 1000L);
     waitFor(
         () -> emailRetryCount == failureManager.getFailureCount(email.getId()),
+        30000000,
         "all retry to be exhausted");
     waitFor(
-        () -> {
-          List<Object> messages = messageSender.getAllMessages(emailDeadLetterQueue);
-          return messages.contains(email);
-        },
+        () -> stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue) > 0,
         "message should be moved to delayed queue");
     assertEquals(emailRetryCount, failureManager.getFailureCount(email.getId()));
     failureManager.delete(email.getId());
-
-    log.info("Move message from DLQ to original queue");
-    messageSender.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
-    assertEquals(0, messageSender.getAllMessages(emailDeadLetterQueue).size());
   }
 
   @Test
   public void messageIsDiscardedAfterRetries() throws TimedOutException {
     Notification notification = Notification.newInstance();
-    failureManager.createFailureDetail(notification.getId(), -1, 0);
+    failureManager.createFailureDetail(notification.getId(), -1, notificationRetryCount);
     messageSender.put(notificationQueue, notification, 1000L);
     waitFor(
-        () -> emailRetryCount == failureManager.getFailureCount(notification.getId()),
+        () -> notificationRetryCount == failureManager.getFailureCount(notification.getId()),
         "all retry to be exhausted");
     waitFor(
         () -> {
@@ -123,6 +119,6 @@ public class ApplicationTest {
           return !messages.contains(notification);
         },
         "message to be discarded");
-    assertEquals(emailRetryCount, failureManager.getFailureCount(notification.getId()));
+    assertEquals(notificationRetryCount, failureManager.getFailureCount(notification.getId()));
   }
 }

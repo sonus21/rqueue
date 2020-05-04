@@ -16,55 +16,45 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
-import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
+import static com.github.sonus21.rqueue.core.support.RqueueMessageFactory.buildMessage;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static rqueue.test.TestUtils.buildMessage;
 
-import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
+import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.utils.QueueUtils;
-import javax.annotation.PostConstruct;
+import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import rqueue.test.dto.Email;
-import rqueue.test.service.ConsumedMessageService;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = ApplicationListenerDisabled.class)
 @Slf4j
 @TestPropertySource(
-    properties = {"auto.start.scheduler=false", "spring.redis.port=6382", "mysql.db.name=test2"})
+    properties = {
+      "rqueue.scheduler.auto.start=false",
+      "spring.redis.port=6382",
+      "mysql.db.name=test2"
+    })
 @SpringBootTest
 public class MessageChannelTest {
-  static {
-    System.setProperty("TEST_NAME", MessageChannelTest.class.getSimpleName());
-  }
-
-  @Autowired private ConsumedMessageService consumedMessageService;
+  @Autowired private RqueueMessageTemplate rqueueMessageTemplate;
   @Autowired private RqueueMessageSender messageSender;
-  @Autowired private RedisConnectionFactory redisConnectionFactory;
-  private RedisTemplate<String, RqueueMessage> redisTemplate;
+  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
 
   @Value("${email.queue.name}")
   private String emailQueue;
-
-  @PostConstruct
-  public void init() {
-    redisTemplate = getRedisTemplate(redisConnectionFactory);
-  }
 
   @Test
   public void publishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
@@ -73,22 +63,21 @@ public class MessageChannelTest {
     int messageCount = 200;
     for (int i = 0; i < messageCount; i++) {
       email = Email.newInstance();
-      redisTemplate
-          .opsForZSet()
-          .add(
-              QueueUtils.getTimeQueueName(emailQueue),
-              buildMessage(email, emailQueue, null, null),
-              currentTime - 1000L);
+      rqueueMessageTemplate.addToZset(
+          QueueUtils.getDelayedQueueName(emailQueue),
+          buildMessage(email, emailQueue, null, null),
+          currentTime - 1000L);
     }
     email = Email.newInstance();
     log.info("adding new message {}", email);
     messageSender.put(emailQueue, email, 1000L);
     waitFor(
-        () -> redisTemplate.opsForZSet().size(QueueUtils.getTimeQueueName(emailQueue)) <= 1,
-        "one or less messages in zset");
+        () ->
+            stringRqueueRedisTemplate.getZsetSize(QueueUtils.getDelayedQueueName(emailQueue)) <= 1,
+        "one or zero messages in zset");
     assertTrue(
         "Messages are correctly moved",
-        redisTemplate.opsForList().size(emailQueue) >= messageCount);
+        stringRqueueRedisTemplate.getListSize(emailQueue) >= messageCount);
     assertEquals(messageCount + 1, messageSender.getAllMessages(emailQueue).size());
   }
 }
