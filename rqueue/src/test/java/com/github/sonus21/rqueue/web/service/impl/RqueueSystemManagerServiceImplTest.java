@@ -34,19 +34,17 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.redis.core.RedisTemplate;
 
 public class RqueueSystemManagerServiceImplTest {
-  private RedisTemplate<String, String> redisTemplate = mock(RedisTemplate.class);
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
   private RqueueSystemManagerServiceImpl rqueueSystemManagerService =
@@ -54,39 +52,25 @@ public class RqueueSystemManagerServiceImplTest {
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
   private String normalQueue = "normal-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, 3, "", true, 900000L);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, 3, "fast-dlq", false, 200000L);
+  private QueueDetail slowQueueDetail =
+      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
+  private QueueDetail fastQueueDetail =
+      TestUtils.createQueueDetail(fastQueue, 3, false, 200000L, "fast-dlq");
   private QueueDetail normalQueueDetail =
-      new QueueDetail(normalQueue, 3, "normal-dlq", false, 100000L);
+      TestUtils.createQueueDetail(normalQueue, 3, false, 100000L, "normal-dlq");
   private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
-  private QueueConfig slowQueueConfig;
-  private QueueConfig fastQueueConfig;
+  private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
+  private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
 
   @Before
   public void init() {
     queueNameToQueueDetail.put(slowQueue, slowQueueDetail);
     queueNameToQueueDetail.put(fastQueue, fastQueueDetail);
-    slowQueueConfig =
-        new QueueConfig(
-            QueueUtils.getQueueConfigKey(slowQueue),
-            slowQueue,
-            slowQueueDetail.getNumRetries(),
-            slowQueueDetail.isDelayedQueue(),
-            slowQueueDetail.getVisibilityTimeout());
-    fastQueueConfig =
-        new QueueConfig(
-            QueueUtils.getQueueConfigKey(fastQueue),
-            fastQueue,
-            fastQueueDetail.getNumRetries(),
-            fastQueueDetail.isDelayedQueue(),
-            fastQueueDetail.getVisibilityTimeout(),
-            fastQueueDetail.getDeadLetterQueueName());
   }
 
   @Test
   public void onApplicationEventStop() {
-    QueueInitializationEvent event =
-        new QueueInitializationEvent("Container", queueNameToQueueDetail, false);
+    QueueInitializationEvent event = new QueueInitializationEvent("Container", false);
     rqueueSystemManagerService.onApplicationEvent(event);
     verifyNoInteractions(stringRqueueRedisTemplate);
     verifyNoInteractions(rqueueSystemConfigDao);
@@ -94,8 +78,7 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStartEmpty() {
-    QueueInitializationEvent event =
-        new QueueInitializationEvent("Container", Collections.emptyMap(), true);
+    QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
     rqueueSystemManagerService.onApplicationEvent(event);
     verifyNoInteractions(stringRqueueRedisTemplate);
     verifyNoInteractions(rqueueSystemConfigDao);
@@ -116,8 +99,7 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStartCreateAllQueueConfigs() {
-    QueueInitializationEvent event =
-        new QueueInitializationEvent("Container", queueNameToQueueDetail, true);
+    QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
     doAnswer(
             invocation -> {
               if (slowQueue.equals(invocation.getArgument(1))) {
@@ -130,7 +112,7 @@ public class RqueueSystemManagerServiceImplTest {
               return 2L;
             })
         .when(stringRqueueRedisTemplate)
-        .addToSet(eq(QueueUtils.getQueuesKey()), any());
+        .addToSet(eq(SystemUtils.getQueuesKey()), any());
     doAnswer(
             invocation -> {
               List<QueueConfig> queueConfigs = invocation.getArgument(0);
@@ -155,33 +137,29 @@ public class RqueueSystemManagerServiceImplTest {
   public void onApplicationEventStartCreateAndUpdateQueueConfigs() {
     Map<String, QueueDetail> queueDetailMap = new HashMap<>(queueNameToQueueDetail);
     queueDetailMap.put(normalQueue, normalQueueDetail);
-    QueueInitializationEvent event =
-        new QueueInitializationEvent("Container", queueDetailMap, true);
+    QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
     QueueConfig fastQueueConfig =
-        new QueueConfig(
-            QueueUtils.getQueueConfigKey(fastQueue),
+        TestUtils.createQueueConfig(
             fastQueue,
-            fastQueueDetail.getNumRetries(),
+            fastQueueDetail.getNumRetry(),
             fastQueueDetail.isDelayedQueue(),
-            fastQueueDetail.getVisibilityTimeout());
-
+            fastQueueDetail.getVisibilityTimeout(),
+            null);
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(anyCollection());
 
     QueueConfig expectedFastQueueConfig =
-        new QueueConfig(
-            QueueUtils.getQueueConfigKey(fastQueue),
+        TestUtils.createQueueConfig(
             fastQueue,
-            fastQueueDetail.getNumRetries(),
+            fastQueueDetail.getNumRetry(),
             fastQueueDetail.isDelayedQueue(),
             fastQueueDetail.getVisibilityTimeout(),
             fastQueueDetail.getDeadLetterQueueName());
     QueueConfig normalQueueConfig =
-        new QueueConfig(
-            QueueUtils.getQueueConfigKey(normalQueue),
+        TestUtils.createQueueConfig(
             normalQueue,
-            normalQueueDetail.getNumRetries(),
+            normalQueueDetail.getNumRetry(),
             normalQueueDetail.isDelayedQueue(),
             normalQueueDetail.getVisibilityTimeout(),
             normalQueueDetail.getDeadLetterQueueName());

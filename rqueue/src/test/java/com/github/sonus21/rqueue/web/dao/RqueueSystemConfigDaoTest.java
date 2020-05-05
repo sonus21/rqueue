@@ -25,7 +25,8 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.dao.impl.RqueueSystemConfigDaoImpl;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,22 +45,20 @@ public class RqueueSystemConfigDaoTest {
 
   @Test
   public void getQConfig() {
-    assertNull(rqueueSystemConfigDao.getQConfig(QueueUtils.getQueueConfigKey("job")));
-    QueueConfig queueConfig =
-        new QueueConfig(QueueUtils.getQueueConfigKey("job"), "job", 3, false, 10000L);
-    doReturn(queueConfig).when(rqueueRedisTemplate).get(QueueUtils.getQueueConfigKey("job"));
+    assertNull(rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
+    QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
+    doReturn(queueConfig).when(rqueueRedisTemplate).get(SystemUtils.getQueueConfigKey("job"));
     assertEquals(
-        queueConfig, rqueueSystemConfigDao.getQConfig(QueueUtils.getQueueConfigKey("job")));
+        queueConfig, rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
   }
 
   @Test
   public void findAllQConfig() {
-    assertNull(rqueueSystemConfigDao.getQConfig(QueueUtils.getQueueConfigKey("job")));
-    QueueConfig queueConfig =
-        new QueueConfig(QueueUtils.getQueueConfigKey("job"), "job", 3, false, 10000L);
+    assertNull(rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
+    QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
     List<String> keys =
         Arrays.asList(
-            QueueUtils.getQueueConfigKey("job"), QueueUtils.getQueueConfigKey("notification"));
+            SystemUtils.getQueueConfigKey("job"), SystemUtils.getQueueConfigKey("notification"));
     doReturn(Arrays.asList(queueConfig, null)).when(rqueueRedisTemplate).mget(keys);
     assertEquals(
         Collections.singletonList(queueConfig), rqueueSystemConfigDao.findAllQConfig(keys));
@@ -67,12 +66,9 @@ public class RqueueSystemConfigDaoTest {
 
   @Test
   public void saveAllQConfig() {
-    assertNull(rqueueSystemConfigDao.getQConfig(QueueUtils.getQueueConfigKey("job")));
-    QueueConfig queueConfig =
-        new QueueConfig(QueueUtils.getQueueConfigKey("job"), "job", 3, false, 10000L);
-    QueueConfig queueConfig2 =
-        new QueueConfig(
-            QueueUtils.getQueueConfigKey("notification"), "notification", 3, true, 20000L);
+    assertNull(rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
+    QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
+    QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification", 3, true, 20000L, null);
     doAnswer(
             invocation -> {
               Map<String, QueueConfig> configMap = new HashMap<>();

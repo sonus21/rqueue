@@ -33,12 +33,10 @@ import static org.mockito.Mockito.doReturn;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -80,28 +78,28 @@ public class DelayedMessageSchedulerTest {
 
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, 3, "", true, 900000L);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, 3, "", false, 900000L);
-  private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
+  private QueueDetail slowQueueDetail =
+      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
+  private QueueDetail fastQueueDetail =
+      TestUtils.createQueueDetail(fastQueue, 3, false, 900000L, null);
 
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
-    queueNameToQueueDetail.put(slowQueue, slowQueueDetail);
-    queueNameToQueueDetail.put(fastQueue, fastQueueDetail);
+    QueueRegistry.delete();
+    QueueRegistry.register(fastQueueDetail);
+    QueueRegistry.register(slowQueueDetail);
   }
 
   @Test
   public void getChannelName() {
     assertEquals(
-        QueueUtils.getDelayedQueueChannelName(slowQueue),
-        messageScheduler.getChannelName(slowQueue));
+        slowQueueDetail.getDelayedQueueChannelName(), messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
   public void getZsetName() {
-    assertEquals(
-        QueueUtils.getDelayedQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
+    assertEquals(slowQueueDetail.getDelayedQueueName(), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
@@ -123,8 +121,8 @@ public class DelayedMessageSchedulerTest {
 
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", Collections.emptyMap(), true));
+    QueueRegistry.delete();
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     assertNull(FieldUtils.readField(messageScheduler, "scheduler", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true));
@@ -135,14 +133,13 @@ public class DelayedMessageSchedulerTest {
 
   @Test
   public void start() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
     assertEquals(1, queueRunningState.size());
@@ -159,7 +156,7 @@ public class DelayedMessageSchedulerTest {
 
   @Test
   public void startAddsChannelToMessageListener() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
@@ -168,26 +165,23 @@ public class DelayedMessageSchedulerTest {
     doNothing()
         .when(redisMessageListenerContainer)
         .addMessageListener(
-            any(), eq(new ChannelTopic(QueueUtils.getDelayedQueueChannelName(slowQueue))));
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+            any(), eq(new ChannelTopic(slowQueueDetail.getDelayedQueueChannelName())));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     Thread.sleep(500L);
     messageScheduler.destroy();
   }
 
   @Test
   public void stop() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     Thread.sleep(500L);
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, false));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", false));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
     assertEquals(1, queueRunningState.size());
@@ -203,7 +197,7 @@ public class DelayedMessageSchedulerTest {
 
   @Test
   public void destroy() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
@@ -214,8 +208,7 @@ public class DelayedMessageSchedulerTest {
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     Thread.sleep(500L);
     messageScheduler.destroy();
     Map<String, Boolean> queueRunningState =
@@ -229,7 +222,7 @@ public class DelayedMessageSchedulerTest {
 
   @Test
   public void startSubmitsTask() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
@@ -240,15 +233,14 @@ public class DelayedMessageSchedulerTest {
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     assertTrue(scheduler.tasks.size() >= 1);
     messageScheduler.destroy();
   }
 
   @Test
   public void startSubmitsTaskAndThatGetsExecuted() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
@@ -262,15 +254,14 @@ public class DelayedMessageSchedulerTest {
             })
         .when(redisTemplate)
         .execute(any(RedisCallback.class));
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     waitFor(() -> counter.get() >= 1, "scripts are getting executed");
     messageScheduler.destroy();
   }
 
   @Test
   public void onCompletionOfExistingTaskNewTaskIsSubmitted() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
@@ -289,8 +280,7 @@ public class DelayedMessageSchedulerTest {
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     waitFor(() -> counter.get() >= 1, "scripts are getting executed");
     sleep(10);
     messageScheduler.destroy();
@@ -299,14 +289,13 @@ public class DelayedMessageSchedulerTest {
 
   @Test
   public void onMessageListenerTest() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
 
     MessageListener messageListener =
         (MessageListener) FieldUtils.readField(messageScheduler, "messageSchedulerListener", true);
@@ -318,7 +307,7 @@ public class DelayedMessageSchedulerTest {
     // invalid body
     messageListener.onMessage(
         new DefaultMessage(
-            QueueUtils.getDelayedQueueChannelName(slowQueue).getBytes(), "sss".getBytes()),
+            slowQueueDetail.getDelayedQueueChannelName().getBytes(), "sss".getBytes()),
         null);
     Thread.sleep(50);
     assertEquals(1, messageScheduler.scheduleList.stream().filter(e -> !e).count());
@@ -326,7 +315,7 @@ public class DelayedMessageSchedulerTest {
     // both are correct
     messageListener.onMessage(
         new DefaultMessage(
-            QueueUtils.getDelayedQueueChannelName(slowQueue).getBytes(),
+            slowQueueDetail.getDelayedQueueChannelName().getBytes(),
             String.valueOf(System.currentTimeMillis()).getBytes()),
         null);
     Thread.sleep(50);

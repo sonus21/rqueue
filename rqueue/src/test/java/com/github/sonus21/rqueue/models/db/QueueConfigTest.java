@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.models.db;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
@@ -63,16 +63,22 @@ public class QueueConfigTest {
   }
 
   @Test
-  public void testConstruction() {
-    QueueConfig queueConfig = new QueueConfig("__rq::q", "q", -1, true, 100L);
+  public void testBuilder() {
+    QueueConfig queueConfig =
+        QueueConfig.builder()
+            .id("__rq::q")
+            .name("q")
+            .visibilityTimeout(100L)
+            .numRetry(100)
+            .delayed(true)
+            .build();
     assertTrue(queueConfig.isDelayed());
     assertEquals("__rq::q", queueConfig.getId());
     assertEquals("q", queueConfig.getName());
     assertEquals(100L, queueConfig.getVisibilityTimeout());
     assertEquals(-1, queueConfig.getNumRetry());
-    assertNotNull(queueConfig.getDeadLetterQueues());
-    assertNotNull(queueConfig.getUpdatedOn());
-    assertNotNull(queueConfig.getCreatedOn());
-    assertEquals(queueConfig.getUpdatedOn(), queueConfig.getCreatedOn());
+    assertNull(queueConfig.getDeadLetterQueues());
+    assertNull(queueConfig.getUpdatedOn());
+    assertNull(queueConfig.getCreatedOn());
   }
 }

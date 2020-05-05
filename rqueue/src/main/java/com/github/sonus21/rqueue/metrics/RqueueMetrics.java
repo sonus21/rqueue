@@ -18,14 +18,13 @@ package com.github.sonus21.rqueue.metrics;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
+import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
@@ -37,10 +36,11 @@ import org.springframework.scheduling.annotation.Async;
  * letter queue if dead letter queue is configured.
  */
 public class RqueueMetrics implements ApplicationListener<QueueInitializationEvent> {
-  private static final String QUEUE_SIZE = "queue.size";
-  private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
-  private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
-  private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
+  static final String QUEUE_KEY = "key";
+  static final String QUEUE_SIZE = "queue.size";
+  static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
+  static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
+  static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
   private RqueueRedisTemplate<String> rqueueMessageTemplate;
   @Autowired private MetricsProperties metricsProperties;
   @Autowired private MeterRegistry meterRegistry;
@@ -65,28 +65,26 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
     return val;
   }
 
-  private void monitor(Map<String, QueueDetail> queueDetailMap) {
-    for (QueueDetail queueDetail : queueDetailMap.values()) {
+  private void monitor() {
+    for (QueueDetail queueDetail : QueueRegistry.getQueueDetails()) {
       Tags queueTags =
-          Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getQueueName());
+          Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getName());
       Gauge.builder(QUEUE_SIZE, queueDetail, c -> size(queueDetail.getQueueName(), false))
-          .tags(queueTags)
+          .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
           .description("The number of entries in this queue")
           .register(meterRegistry);
       Gauge.builder(
               PROCESSING_QUEUE_SIZE,
               queueDetail,
-              c -> size(QueueUtils.getProcessingQueueName(queueDetail.getQueueName()), true))
-          .tags(queueTags)
+              c -> size(queueDetail.getProcessingQueueName(), true))
+          .tags(queueTags.and(QUEUE_KEY, queueDetail.getProcessingQueueName()))
           .description("The number of entries in the processing queue")
           .register(meterRegistry);
 
       if (queueDetail.isDelayedQueue()) {
         Gauge.builder(
-                DELAYED_QUEUE_SIZE,
-                queueDetail,
-                c -> size(QueueUtils.getDelayedQueueName(queueDetail.getQueueName()), true))
-            .tags(queueTags)
+                DELAYED_QUEUE_SIZE, queueDetail, c -> size(queueDetail.getDelayedQueueName(), true))
+            .tags(queueTags.and(QUEUE_KEY, queueDetail.getDelayedQueueName()))
             .description("The number of entries waiting in the delayed queue")
             .register(meterRegistry);
       }
@@ -100,8 +98,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
         builder.description("The number of entries in the dead letter queue");
         builder.register(meterRegistry);
       }
-      queueCounter.registerQueue(
-          metricsProperties, queueTags, meterRegistry, queueDetail.getQueueName());
+      queueCounter.registerQueue(metricsProperties, queueTags, meterRegistry, queueDetail);
     }
   }
 
@@ -109,7 +106,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
   @Async
   public void onApplicationEvent(QueueInitializationEvent event) {
     if (event.isStart()) {
-      monitor(event.getQueueDetailMap());
+      monitor();
     }
   }
 

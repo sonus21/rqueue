@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.spring;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
@@ -50,7 +51,7 @@ public class SpringAppTest {
 
   @Test
   public void numListeners() {
-    Map<String, QueueDetail> registeredQueue = container.getRegisteredQueues();
+    Map<String, QueueDetail> registeredQueue = QueueRegistry.getQueueMap();
     assertEquals(3, registeredQueue.size());
     assertTrue(registeredQueue.containsKey(notificationQueueName));
     assertTrue(registeredQueue.containsKey(emailQueue));

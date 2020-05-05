@@ -18,16 +18,11 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 @Slf4j
 public class DelayedMessageScheduler extends MessageScheduler {
-
-  @Override
-  protected void initializeState(Map<String, QueueDetail> queueDetailMap) {}
 
   @Override
   protected Logger getLogger() {
@@ -48,17 +43,17 @@ public class DelayedMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueUtils.getDelayedQueueChannelName(queueName);
+    return QueueRegistry.get(queueName).getDelayedQueueChannelName();
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueUtils.getDelayedQueueName(queueName);
+    return QueueRegistry.get(queueName).getDelayedQueueName();
   }
 
   @Override
   protected String getThreadNamePrefix() {
-    return "RQDelayed-";
+    return "delayedMessageScheduler-";
   }
 
   @Override
@@ -68,6 +63,6 @@ public class DelayedMessageScheduler extends MessageScheduler {
 
   @Override
   protected int getThreadPoolSize() {
-    return rqueueSchedulerConfig.getDelayedMessagePoolSize();
+    return rqueueSchedulerConfig.getDelayedMessageThreadPoolSize();
   }
 }

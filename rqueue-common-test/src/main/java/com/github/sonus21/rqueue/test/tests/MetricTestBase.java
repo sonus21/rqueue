@@ -22,21 +22,19 @@ import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.test.TestUtils;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
@@ -47,9 +45,7 @@ public class MetricTestBase {
   @Autowired protected RedisConnectionFactory redisConnectionFactory;
   @Autowired protected MeterRegistry meterRegistry;
   @Autowired protected RqueueMessageTemplate rqueueMessageTemplate;
-
-  @Qualifier("stringRqueueRedisTemplate")
-  private RqueueRedisTemplate<String> rqueueRedisTemplate;
+  @Autowired protected RqueueConfig rqueueConfig;
 
   @Value("${email.dead.letter.queue.name}")
   private String emailDlq;
@@ -75,7 +71,7 @@ public class MetricTestBase {
       Notification notification = Notification.newInstance();
       if (i < maxMessages / 2) {
         rqueueMessageTemplate.addToZset(
-            QueueUtils.getDelayedQueueName(notificationQueue),
+            rqueueConfig.getDelayedQueueName(notificationQueue),
             buildMessage(notification, notificationQueue, null, null),
             System.currentTimeMillis() - delay);
       } else {
@@ -161,7 +157,9 @@ public class MetricTestBase {
         "job process",
         () ->
             TestUtils.printQueueStats(
-                newArrayList(jobQueue, emailQueueName, notificationQueue), rqueueMessageTemplate));
+                rqueueConfig,
+                newArrayList(jobQueue, emailQueueName, notificationQueue),
+                rqueueMessageTemplate));
     waitFor(
         () ->
             meterRegistry
@@ -174,7 +172,9 @@ public class MetricTestBase {
         "message process",
         () ->
             TestUtils.printQueueStats(
-                newArrayList(jobQueue, emailQueueName, notificationQueue), rqueueMessageTemplate));
+                rqueueConfig,
+                newArrayList(jobQueue, emailQueueName, notificationQueue),
+                rqueueMessageTemplate));
 
     assertEquals(
         0,

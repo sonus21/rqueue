@@ -16,38 +16,53 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
 import java.io.Serializable;
+import java.util.LinkedHashSet;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 
 @Getter
+@Builder
+@EqualsAndHashCode
 public class QueueDetail implements Serializable {
-
   private static final long serialVersionUID = -4274795210784695201L;
-  private final String queueName;
-  private final boolean delayedQueue;
-  private final String deadLetterQueueName;
-  private final int numRetries;
-  private final long visibilityTimeout;
-
-  public QueueDetail(
-      @NonNull String queueName,
-      int numRetries,
-      String deadLetterQueueName,
-      boolean delayedQueue,
-      long visibilityTimeout) {
-    if (numRetries == -1) {
-      throw new IllegalArgumentException("numRetries must be greater than one");
-    }
-    this.queueName = queueName;
-    this.numRetries = numRetries;
-    this.delayedQueue = delayedQueue;
-    this.deadLetterQueueName = deadLetterQueueName;
-    this.visibilityTimeout = visibilityTimeout;
-  }
+  private String name;
+  private boolean delayedQueue;
+  private int numRetry;
+  private long visibilityTimeout;
+  private String queueName;
+  private String deadLetterQueueName;
+  private String processingQueueName;
+  private String processingQueueChannelName;
+  private String delayedQueueName;
+  private String delayedQueueChannelName;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
+  }
+
+  public QueueConfig toConfig() {
+    QueueConfig queueConfig =
+        QueueConfig.builder()
+            .id(SystemUtils.getQueueConfigKey(name))
+            .name(name)
+            .delayed(delayedQueue)
+            .numRetry(numRetry)
+            .queueName(queueName)
+            .delayedQueueName(delayedQueueName)
+            .processingQueueName(processingQueueName)
+            .visibilityTimeout(visibilityTimeout)
+            .createdOn(System.currentTimeMillis())
+            .updatedOn(System.currentTimeMillis())
+            .deadLetterQueues(new LinkedHashSet<>())
+            .build();
+    if (isDlqSet()) {
+      queueConfig.addDeadLetterQueue(deadLetterQueueName);
+    }
+    return queueConfig;
   }
 }

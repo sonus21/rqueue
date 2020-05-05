@@ -32,7 +32,7 @@ import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -87,21 +87,21 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (queueConfig == null) {
       return Collections.emptyList();
     }
-    String name = queueConfig.getName();
-    Long pending = stringRqueueRedisTemplate.getListSize(name);
-    String processingQueueName = QueueUtils.getProcessingQueueName(name);
+    Long pending = stringRqueueRedisTemplate.getListSize(queueConfig.getQueueName());
+    String processingQueueName = queueConfig.getProcessingQueueName();
     Long running = stringRqueueRedisTemplate.getZsetSize(processingQueueName);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails =
         newArrayList(
             new HashMap.SimpleEntry<>(
                 NavTab.PENDING,
-                new RedisDataDetail(name, DataType.LIST, pending == null ? 0 : pending)),
+                new RedisDataDetail(
+                    queueConfig.getQueueName(), DataType.LIST, pending == null ? 0 : pending)),
             new HashMap.SimpleEntry<>(
                 NavTab.RUNNING,
                 new RedisDataDetail(
                     processingQueueName, DataType.ZSET, running == null ? 0 : running)));
     if (queueConfig.isDelayed()) {
-      String timeQueueName = QueueUtils.getDelayedQueueName(name);
+      String timeQueueName = queueConfig.getDelayedQueueName();
       Long scheduled = stringRqueueRedisTemplate.getZsetSize(timeQueueName);
       queueRedisDataDetails.add(
           new HashMap.SimpleEntry<>(
@@ -171,7 +171,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<String> ids =
         rqueueMessages.stream()
             .map(e -> Objects.requireNonNull(e.getValue()).getId())
-            .map(QueueUtils::getMessageMetadataKey)
+            .map(MessageUtils::getMessageMetaId)
             .collect(Collectors.toList());
 
     List<MessageMetadata> vals = rqueueMessageMetadataService.findAll(ids);
@@ -192,10 +192,9 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       String src, String name, DataType type, int pageNumber, int itemPerPage) {
     QueueConfig queueConfig = rqueueSystemManagerService.getQueueConfig(src);
     DataViewResponse response = new DataViewResponse();
-    boolean deadLetterQueue = queueConfig.isDelayedQueue(name);
-    boolean timeQueue = QueueUtils.isTimeQueue(name);
+    boolean deadLetterQueue = queueConfig.isDeadLetterQueue(name);
+    boolean timeQueue = queueConfig.getDelayedQueueName().equals(name);
     setHeadersIfRequired(deadLetterQueue, type, response, pageNumber);
-
     if (deadLetterQueue) {
       response.addAction(ActionType.DELETE);
     } else {
@@ -321,46 +320,48 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getRunningTasks() {
-    List<String> queues = rqueueSystemManagerService.getQueues();
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(queues)) {
+    if (!CollectionUtils.isEmpty(queueConfigs)) {
       result =
           RedisUtils.executePipeLine(
               stringRqueueRedisTemplate.getRedisTemplate(),
               ((connection, keySerializer, valueSerializer) -> {
-                for (String queue : queues) {
-                  connection.zCard(QueueUtils.getProcessingQueueName(queue).getBytes());
+                for (QueueConfig queueConfig : queueConfigs) {
+                  connection.zCard(queueConfig.getProcessingQueueName().getBytes());
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Processing ZSET", "Size"));
-    for (int i = 0; i < queues.size(); i++) {
+    rows.add(Arrays.asList("Queue", "Processing [ZSET]", "Size"));
+    for (int i = 0; i < queueConfigs.size(); i++) {
+      QueueConfig queueConfig = queueConfigs.get(i);
       rows.add(
           Arrays.asList(
-              queues.get(i), QueueUtils.getProcessingQueueName(queues.get(i)), result.get(i)));
+              queueConfig.getName(), queueConfig.getProcessingQueueName(), result.get(i)));
     }
     return rows;
   }
 
   @Override
   public List<List<Object>> getWaitingTasks() {
-    List<String> queues = rqueueSystemManagerService.getQueues();
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(queues)) {
+    if (!CollectionUtils.isEmpty(queueConfigs)) {
       result =
           RedisUtils.executePipeLine(
               stringRqueueRedisTemplate.getRedisTemplate(),
               ((connection, keySerializer, valueSerializer) -> {
-                for (String queue : queues) {
-                  connection.lLen(queue.getBytes());
+                for (QueueConfig queueConfig : queueConfigs) {
+                  connection.lLen(queueConfig.getQueueName().getBytes());
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Size"));
-    for (int i = 0; i < queues.size(); i++) {
-      rows.add(Arrays.asList(queues.get(i), result.get(i)));
+    rows.add(Arrays.asList("Queue", "Queue [LIST]", "Size"));
+    for (int i = 0; i < queueConfigs.size(); i++) {
+      QueueConfig queueConfig = queueConfigs.get(i);
+      rows.add(Arrays.asList(queueConfig.getName(), queueConfig.getQueueName(), result.get(i)));
     }
     return rows;
   }
@@ -380,69 +381,70 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
               stringRqueueRedisTemplate.getRedisTemplate(),
               ((connection, keySerializer, valueSerializer) -> {
                 for (QueueConfig queueConfig : queueConfigs) {
-                  connection.zCard(
-                      QueueUtils.getDelayedQueueName(queueConfig.getName()).getBytes());
+                  connection.zCard(queueConfig.getDelayedQueueName().getBytes());
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Scheduled ZSET", "Size"));
+    rows.add(Arrays.asList("Queue", "Scheduled [ZSET]", "Size"));
     for (int i = 0; i < queueConfigs.size(); i++) {
       QueueConfig queueConfig = queueConfigs.get(i);
       rows.add(
-          Arrays.asList(
-              queueConfig.getName(),
-              QueueUtils.getDelayedQueueName(queueConfig.getName()),
-              result.get(i)));
+          Arrays.asList(queueConfig.getName(), queueConfig.getDelayedQueueName(), result.get(i)));
     }
     return rows;
   }
 
   private void addRows(
-      List<Object> result, List<List<Object>> rows, List<Entry<String, String>> queueNameAndDlq) {
-    for (int i = 0, j = 0; i < queueNameAndDlq.size(); i++) {
-      Entry<String, String> entry = queueNameAndDlq.get(i);
+      List<Object> result,
+      List<List<Object>> rows,
+      List<Entry<QueueConfig, String>> queueConfigAndDlq) {
+    for (int i = 0, j = 0; i < queueConfigAndDlq.size(); i++) {
+      Entry<QueueConfig, String> entry = queueConfigAndDlq.get(i);
+      QueueConfig queueConfig = entry.getKey();
       if (entry.getValue().isEmpty()) {
-        rows.add(Arrays.asList(entry.getKey(), "", ""));
+        rows.add(Arrays.asList(queueConfig.getName(), "", ""));
       } else {
-        String val = "";
+        String name = "";
         if (i == 0
-            || !queueNameAndDlq.get(i).getKey().equals(queueNameAndDlq.get(i - 1).getKey())) {
-          val = entry.getKey();
+            || !queueConfig
+                .getQueueName()
+                .equals(queueConfigAndDlq.get(i - 1).getKey().getQueueName())) {
+          name = queueConfig.getName();
         }
-        rows.add(Arrays.asList(val, entry.getValue(), result.get(j++)));
+        rows.add(Arrays.asList(name, entry.getValue(), result.get(j++)));
       }
     }
   }
 
   @Override
   public List<List<Object>> getDeadLetterTasks() {
-    List<String> queues = rqueueSystemManagerService.getQueues();
-    List<Entry<String, String>> queueNameAndDlq = new ArrayList<>();
-    for (QueueConfig queueConfig : rqueueSystemManagerService.getQueueConfigs(queues)) {
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
+    List<Entry<QueueConfig, String>> queueConfigAndDlq = new ArrayList<>();
+    for (QueueConfig queueConfig : queueConfigs) {
       if (queueConfig.hasDeadLetterQueue()) {
         for (String dlq : queueConfig.getDeadLetterQueues()) {
-          queueNameAndDlq.add(new HashMap.SimpleEntry<>(queueConfig.getName(), dlq));
+          queueConfigAndDlq.add(new HashMap.SimpleEntry<>(queueConfig, dlq));
         }
       } else {
-        queueNameAndDlq.add(new HashMap.SimpleEntry<>(queueConfig.getName(), ""));
+        queueConfigAndDlq.add(new HashMap.SimpleEntry<>(queueConfig, ""));
       }
     }
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(queueNameAndDlq)) {
+    if (!CollectionUtils.isEmpty(queueConfigAndDlq)) {
       result =
           RedisUtils.executePipeLine(
               stringRqueueRedisTemplate.getRedisTemplate(),
               ((connection, keySerializer, valueSerializer) -> {
-                for (Entry<String, String> entry : queueNameAndDlq) {
+                for (Entry<QueueConfig, String> entry : queueConfigAndDlq) {
                   if (!entry.getValue().isEmpty()) {
                     connection.lLen(entry.getValue().getBytes());
                   }
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Dead Letter Queue", "Size"));
-    addRows(result, rows, queueNameAndDlq);
+    rows.add(Arrays.asList("Queue", "Dead Letter Queue [LIST]", "Size"));
+    addRows(result, rows, queueConfigAndDlq);
     return rows;
   }
 

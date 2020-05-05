@@ -27,7 +27,6 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.event.QueueTaskEvent;
 import com.github.sonus21.rqueue.utils.MessageUtils;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
@@ -43,11 +42,10 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
   private final QueueDetail queueDetail;
   private final Message<String> message;
   private final RqueueMessage rqueueMessage;
-  private final String processingQueueName;
-  private final String messageMetadataId;
-  private final Semaphore semaphore;
   private final RqueueMessageHandler rqueueMessageHandler;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
+  private final String messageMetadataId;
+  private final Semaphore semaphore;
   private MessageMetadata messageMetadata;
   private Object userMessage;
 
@@ -60,13 +58,12 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     super(container);
     this.rqueueMessage = rqueueMessage;
     this.queueDetail = queueDetail;
-    this.processingQueueName = QueueUtils.getProcessingQueueName(queueDetail.getQueueName());
-    this.messageMetadataId = QueueUtils.getMessageMetadataKey(rqueueMessage.getId());
     this.semaphore = semaphore;
     this.rqueueMessageHandler = rqueueMessageHandler;
+    this.messageMetadataId = MessageUtils.getMessageMetaId(rqueueMessage.getId());
     this.message =
         new GenericMessage<>(
-            rqueueMessage.getMessage(), QueueUtils.getQueueHeaders(queueDetail.getQueueName()));
+            rqueueMessage.getMessage(), MessageUtils.getMessageHeader(queueDetail.getName()));
     try {
       this.userMessage =
           MessageUtils.convertMessageToObject(message, rqueueMessageHandler.getMessageConverters());
@@ -91,7 +88,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
 
   private int getMaxRetryCount() {
     return rqueueMessage.getRetryCount() == null
-        ? queueDetail.getNumRetries()
+        ? queueDetail.getNumRetry()
         : rqueueMessage.getRetryCount();
   }
 
@@ -133,9 +130,9 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
       return;
     }
     if (failOrExecution) {
-      rqueueCounter.updateFailureCount(queueDetail.getQueueName());
+      rqueueCounter.updateFailureCount(queueDetail.getName());
     } else {
-      rqueueCounter.updateExecutionCount(queueDetail.getQueueName());
+      rqueueCounter.updateExecutionCount(queueDetail.getName());
     }
   }
 
@@ -143,7 +140,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     if (Objects.requireNonNull(container.get()).getRqueueWebConfig().isCollectListenerStats()) {
       addOrDeleteMetadata(jobExecutionStartTime, false);
       QueueTaskEvent event =
-          new QueueTaskEvent(queueDetail.getQueueName(), status, rqueueMessage, messageMetadata);
+          new QueueTaskEvent(queueDetail.getName(), status, rqueueMessage, messageMetadata);
       Objects.requireNonNull(container.get()).getApplicationEventPublisher().publishEvent(event);
     }
   }
@@ -172,7 +169,8 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
 
   private void deleteMessage(
       TaskStatus status, int currentFailureCount, long jobExecutionStartTime) {
-    getRqueueMessageTemplate().removeElementFromZset(processingQueueName, rqueueMessage);
+    getRqueueMessageTemplate()
+        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
     rqueueMessage.setFailureCount(currentFailureCount);
     callMessageProcessor(status, rqueueMessage);
     publishEvent(status, jobExecutionStartTime);
@@ -184,7 +182,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
       log.warn(
           "Message {} Moved to dead letter queue: {}, dead letter queue: {}",
           userMessage,
-          queueDetail.getQueueName(),
+          queueDetail.getName(),
           queueDetail.getDeadLetterQueueName());
     }
     RqueueMessage newMessage = rqueueMessage.clone();
@@ -196,7 +194,8 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
         (connection, keySerializer, valueSerializer) -> {
           byte[] newMessageBytes = valueSerializer.serialize(newMessage);
           byte[] oldMessageBytes = valueSerializer.serialize(rqueueMessage);
-          byte[] processingQueueNameBytes = keySerializer.serialize(processingQueueName);
+          byte[] processingQueueNameBytes =
+              keySerializer.serialize(queueDetail.getProcessingQueueName());
           byte[] dlqNameBytes = keySerializer.serialize(queueDetail.getDeadLetterQueueName());
           connection.rPush(dlqNameBytes, newMessageBytes);
           connection.zRem(processingQueueNameBytes, oldMessageBytes);
@@ -208,15 +207,17 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
       throws CloneNotSupportedException {
     if (isDebugEnabled()) {
       log.debug(
-          "Message {} will be retried later, queue: {}, processing queue: {}",
+          "Message {} will be retried later, queue: {}, Redis Queue: {} processing queue: {}",
           userMessage,
+          queueDetail.getName(),
           queueDetail.getQueueName(),
-          processingQueueName);
+          queueDetail.getProcessingQueueName());
     }
     RqueueMessage newMessage = rqueueMessage.clone();
     newMessage.setFailureCount(currentFailureCount);
     newMessage.updateReEnqueuedAt();
-    getRqueueMessageTemplate().replaceMessage(processingQueueName, rqueueMessage, newMessage);
+    getRqueueMessageTemplate()
+        .replaceMessage(queueDetail.getProcessingQueueName(), rqueueMessage, newMessage);
     addOrDeleteMetadata(jobExecutionStartTime, true);
   }
 
@@ -225,7 +226,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
       log.warn(
           "Message {} discarded due to retry limit exhaust queue: {}",
           userMessage,
-          queueDetail.getQueueName());
+          queueDetail.getName());
     }
     deleteMessage(TaskStatus.DISCARDED, currentFailureCount, jobExecutionStartTime);
   }
@@ -233,9 +234,9 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
   private void handleManualDeletion(int currentFailureCount, long jobExecutionStartTime) {
     if (isWarningEnabled()) {
       log.warn(
-          "Message Deleted manually {} successfully, Queue: {} ",
+          "Message Deleted manually {} successfully, Queue: {}",
           rqueueMessage,
-          queueDetail.getQueueName());
+          queueDetail.getName());
     }
     deleteMessage(TaskStatus.DELETED, currentFailureCount, jobExecutionStartTime);
   }
@@ -243,9 +244,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
   private void taskExecutedSuccessfully(int currentFailureCount, long jobExecutionStartTime) {
     if (isDebugEnabled()) {
       log.debug(
-          "Message consumed {} successfully, Queue: {} ",
-          rqueueMessage,
-          queueDetail.getQueueName());
+          "Message consumed {} successfully, Queue: {}", rqueueMessage, queueDetail.getName());
     }
     deleteMessage(TaskStatus.SUCCESSFUL, currentFailureCount, jobExecutionStartTime);
   }
@@ -257,7 +256,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
       int currentFailureCount,
       int maxRetryCount,
       long jobExecutionStartTime) {
-    if (!isQueueActive(queueDetail.getQueueName())) {
+    if (!isQueueActive(queueDetail.getName())) {
       return;
     }
     try {
@@ -285,7 +284,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
 
   private void handleIgnoredMessage(int currentFailureCount, long jobExecutionStartTime) {
     if (isDebugEnabled()) {
-      log.debug("Message {} ignored, Queue: {} ", rqueueMessage, queueDetail.getQueueName());
+      log.debug("Message {} ignored, Queue: {}", rqueueMessage, queueDetail.getName());
     }
     deleteMessage(TaskStatus.IGNORED, currentFailureCount, jobExecutionStartTime);
   }
@@ -322,7 +321,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     boolean ignored = false;
     try {
       do {
-        if (!isQueueActive(queueDetail.getQueueName())) {
+        if (!isQueueActive(queueDetail.getName())) {
           return;
         }
         if (!shouldProcess()) {

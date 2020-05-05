@@ -32,7 +32,7 @@ import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.test.RqueueSpringTestRunner;

@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -43,13 +44,12 @@ import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled.DeleteMessageListener;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.Collections;
@@ -75,11 +75,10 @@ import org.springframework.web.context.WebApplicationContext;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=6379",
+      "spring.redis.port=6386",
       "mysql.db.name=RqueueRestController",
       "max.workers.count=40",
       "notification.queue.active=false",
-      "use.system.redis=true"
     })
 public class RqueueRestControllerTest {
   @Autowired private RqueueMessageSender rqueueMessageSender;
@@ -196,7 +195,7 @@ public class RqueueRestControllerTest {
                 get("/rqueue/api/v1/explore")
                     .param("type", "ZSET")
                     .param("src", emailQueueName)
-                    .param("name", QueueUtils.getDelayedQueueName(emailQueueName)))
+                    .param("name", "_rq::" + emailQueueName))
             .andReturn();
 
     DataViewResponse dataViewResponse =
@@ -300,22 +299,24 @@ public class RqueueRestControllerTest {
     Email job = Email.newInstance();
     deleteMessageListener.clear();
     rqueueMessageSender.enqueueIn(emailQueueName, job, 10 * Constants.ONE_MILLI);
-    RqueueMessage message =
-        rqueueMessageTemplate
-            .readFromZset(QueueUtils.getDelayedQueueName(emailQueueName), 0, -1)
-            .get(0);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                delete("/rqueue/api/v1/data-set/" + emailQueueName + "/" + message.getId())
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
-    BooleanResponse response =
-        mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
-    assertEquals(0, response.getCode());
-    Object metadata =
-        stringRqueueRedisTemplate.get(QueueUtils.getMessageMetadataKey(message.getId()));
-    assertTrue(((MessageMetadata) metadata).isDeleted());
+//    RqueueMessage message =
+//        rqueueMessageTemplate
+//            .readFromZset(SystemUtils.getDelayedQueueName(emailQueueName), 0, -1)
+//            .get(0);
+//    rqueueMessageSender.enqueueIn(
+//        jobQueueName, job, Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
+//    MvcResult result =
+//        this.mockMvc
+//            .perform(
+//                delete("/rqueue/api/v1/data-set/" + jobQueueName + "/" + job.getId())
+//                    .contentType(MediaType.APPLICATION_JSON))
+//            .andReturn();
+//    BooleanResponse response =
+//        mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
+//    assertEquals(0, response.getCode());
+//    Object metadata =
+//        stringRqueueRedisTemplate.get(SystemUtils.getMessageMetadataKey(message.getId()));
+//    assertTrue(((MessageMetadata) metadata).isDeleted());
     TimeoutUtils.waitFor(
         () -> {
           List<Object> messages = deleteMessageListener.getMessages();

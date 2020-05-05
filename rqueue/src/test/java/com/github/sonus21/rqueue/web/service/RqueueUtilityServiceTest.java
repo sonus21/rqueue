@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.web.service;
 
+import static com.github.sonus21.rqueue.utils.TestUtils.createQueueConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -37,7 +38,6 @@ import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueUtilityServiceImpl;
 import java.io.Serializable;
@@ -72,9 +72,7 @@ public class RqueueUtilityServiceTest {
     assertEquals(1, response.getCode());
     assertEquals("Queue config not found!", response.getMessage());
 
-    QueueConfig queueConfig =
-        new QueueConfig(
-            QueueUtils.getQueueConfigKey("notification"), "notification", 3, false, 10000L);
+    QueueConfig queueConfig = createQueueConfig("notification", 3, false, 10000L, null);
     doReturn(queueConfig).when(rqueueSystemConfigDao).getQConfig(queueConfig.getId());
     response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(0, response.getCode());

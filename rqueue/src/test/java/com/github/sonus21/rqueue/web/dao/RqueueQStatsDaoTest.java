@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.web.dao.impl.RqueueQStatsDaoImpl;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +44,7 @@ public class RqueueQStatsDaoTest {
 
   @Test
   public void findById() {
-    String id = QueueUtils.getQueueStatKey("job");
+    String id = SystemUtils.getQueueStatKey("job");
     assertNull(rqueueQStatsDao.findById(id));
     QueueStatistics queueStatistics = new QueueStatistics();
     doReturn(queueStatistics).when(rqueueRedisTemplate).get(id);
@@ -56,7 +56,7 @@ public class RqueueQStatsDaoTest {
   public void findAll() {
     List<String> keys =
         Arrays.asList(
-            QueueUtils.getQueueStatKey("job"), QueueUtils.getQueueStatKey("notification"));
+            SystemUtils.getQueueStatKey("job"), SystemUtils.getQueueStatKey("notification"));
     QueueStatistics queueStatistics = new QueueStatistics();
     doReturn(Arrays.asList(null, queueStatistics)).when(rqueueRedisTemplate).mget(keys);
     assertEquals(Collections.singletonList(queueStatistics), rqueueQStatsDao.findAll(keys));
@@ -75,7 +75,7 @@ public class RqueueQStatsDaoTest {
 
   @Test
   public void save() {
-    QueueStatistics queueStatistics = new QueueStatistics(QueueUtils.getQueueStatKey("job"));
+    QueueStatistics queueStatistics = new QueueStatistics(SystemUtils.getQueueStatKey("job"));
     rqueueQStatsDao.save(queueStatistics);
     verify(rqueueRedisTemplate, times(1)).set(queueStatistics.getId(), queueStatistics);
   }

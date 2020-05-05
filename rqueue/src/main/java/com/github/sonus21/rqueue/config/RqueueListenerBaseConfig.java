@@ -26,6 +26,7 @@ import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
+import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.view.DateTimeFunction;
 import org.jtwig.environment.EnvironmentConfiguration;
 import org.jtwig.environment.EnvironmentConfigurationBuilder;
@@ -71,8 +72,10 @@ public abstract class RqueueListenerBaseConfig {
       simpleRqueueListenerContainerFactory.setRedisConnectionFactory(
           beanFactory.getBean(RedisConnectionFactory.class));
     }
-    return new RqueueConfig(
-        simpleRqueueListenerContainerFactory.getRedisConnectionFactory(), sharedConnection);
+    RedisConnectionFactory connectionFactory =
+        simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
+    int version = RedisUtils.updateAndGetVersion(connectionFactory, 2);
+    return new RqueueConfig(connectionFactory, sharedConnection, version);
   }
 
   @Bean

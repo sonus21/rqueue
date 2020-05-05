@@ -16,9 +16,9 @@
 
 package com.github.sonus21.rqueue.producer;
 
-import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,9 +27,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
-import java.util.Random;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,15 +49,14 @@ public class RqueueMessageSenderTest {
   private RqueueMessageSender rqueueMessageSender =
       new RqueueMessageSenderImpl(rqueueMessageTemplate);
   private String queueName = "test-queue";
+  private QueueDetail queueDetail = TestUtils.createQueueDetail(queueName, 3, true, 90000L, null);
   private String slowQueue = "slow-queue";
   private String deadLetterQueueName = "dead-test-queue";
   private String message = "Test Message";
-  private MessageWriter messageWriter = mock(MessageWriter.class);
-  private Random random = new Random();
 
   @Before
-  public void init() throws Exception {
-    writeField(rqueueMessageSender, "messageWriter", messageWriter, true);
+  public void init() {
+    QueueRegistry.register(queueDetail);
   }
 
   @Test
@@ -71,30 +75,40 @@ public class RqueueMessageSenderTest {
 
   @Test
   public void put() {
-    boolean returnValue = random.nextBoolean();
-    doReturn(returnValue).when(messageWriter).pushMessage(queueName, message, null, null);
-    assertEquals(returnValue, rqueueMessageSender.put(queueName, message));
+    doReturn(1L)
+        .when(rqueueMessageTemplate)
+        .addMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class));
+    assertTrue(rqueueMessageSender.put(queueName, message));
   }
 
   @Test
   public void putWithRetry() {
-    boolean returnValue = random.nextBoolean();
-    doReturn(returnValue).when(messageWriter).pushMessage(queueName, message, 3, null);
-    assertEquals(returnValue, rqueueMessageSender.put(queueName, message, 3));
+    doReturn(1L)
+        .when(rqueueMessageTemplate)
+        .addMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class));
+    assertTrue(rqueueMessageSender.put(queueName, message, 3));
   }
 
   @Test
   public void putWithDelay() {
-    boolean returnValue = random.nextBoolean();
-    doReturn(returnValue).when(messageWriter).pushMessage(queueName, message, null, 1000L);
-    assertEquals(returnValue, rqueueMessageSender.put(queueName, message, 1000L));
+    doReturn(1L)
+        .when(rqueueMessageTemplate)
+        .addMessageWithDelay(
+            eq(queueDetail.getDelayedQueueName()),
+            eq(queueDetail.getDelayedQueueChannelName()),
+            any(RqueueMessage.class));
+    assertTrue(rqueueMessageSender.put(queueName, message, 1000L));
   }
 
   @Test
   public void putWithDelayAndRetry() {
-    boolean returnValue = random.nextBoolean();
-    doReturn(returnValue).when(messageWriter).pushMessage(queueName, message, 3, 1000L);
-    assertEquals(returnValue, rqueueMessageSender.put(queueName, message, 3, 1000L));
+    doReturn(1L)
+        .when(rqueueMessageTemplate)
+        .addMessageWithDelay(
+            eq(queueDetail.getDelayedQueueName()),
+            eq(queueDetail.getDelayedQueueChannelName()),
+            any(RqueueMessage.class));
+    assertTrue(rqueueMessageSender.put(queueName, message, 3, 1000L));
   }
 
   @Test

@@ -16,7 +16,7 @@
 
 package rqueue.spring.example;
 
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import java.util.UUID;
 import lombok.AllArgsConstructor;

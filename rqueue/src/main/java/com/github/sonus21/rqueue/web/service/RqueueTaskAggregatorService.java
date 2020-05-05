@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.web.service;
 
-import static com.github.sonus21.rqueue.utils.QueueUtils.getLockKey;
-
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -29,7 +27,7 @@ import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.event.QueueTaskEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
@@ -234,7 +232,7 @@ public class RqueueTaskAggregatorService
         localDateTasksStatMap.put(date, stat);
       }
       String queueName = (String) queueTaskEvent.getSource();
-      String queueStatKey = QueueUtils.getQueueStatKey(queueName);
+      String queueStatKey = SystemUtils.getQueueStatKey(queueName);
       QueueStatistics queueStatistics = rqueueQStatsDao.findById(queueStatKey);
       if (queueStatistics == null) {
         queueStatistics = new QueueStatistics(queueStatKey);
@@ -253,8 +251,8 @@ public class RqueueTaskAggregatorService
       if (!CollectionUtils.isEmpty(queueTaskEvents)) {
         QueueTaskEvent queueTaskEvent = queueTaskEvents.get(0);
         String queueName = (String) queueTaskEvent.getSource();
-        String queueStatKey = QueueUtils.getQueueStatKey(queueName);
-        String lockKey = getLockKey(queueStatKey);
+        String queueStatKey = SystemUtils.getQueueStatKey(queueName);
+        String lockKey = SystemUtils.getLockKey(queueStatKey);
         if (rqueueLockManager.acquireLock(
             lockKey, Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
           aggregate(events);

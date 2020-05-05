@@ -16,9 +16,9 @@
 
 package com.github.sonus21.rqueue.test;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,26 +32,29 @@ public class TestUtils {
   private TestUtils() {}
 
   public static Map<String, List<RqueueMessage>> getMessageMap(
-      String queueName, RqueueMessageTemplate redisTemplate) {
+      RqueueConfig rqueueConfig, String queueName, RqueueMessageTemplate redisTemplate) {
     Map<String, List<RqueueMessage>> queueNameToMessage = new HashMap<>();
 
-    List<RqueueMessage> messages = redisTemplate.readFromList(queueName, 0, -1);
-    queueNameToMessage.put(queueName, messages);
+    List<RqueueMessage> messages =
+        redisTemplate.readFromList(rqueueConfig.getQueueName(queueName), 0, -1);
+    queueNameToMessage.put(rqueueConfig.getQueueName(queueName), messages);
 
     List<RqueueMessage> messagesFromZset =
-        redisTemplate.readFromZset(QueueUtils.getDelayedQueueName(queueName), 0, -1);
-    queueNameToMessage.put(QueueUtils.getDelayedQueueName(queueName), messagesFromZset);
+        redisTemplate.readFromZset(rqueueConfig.getDelayedQueueName(queueName), 0, -1);
+    queueNameToMessage.put(rqueueConfig.getDelayedQueueName(queueName), messagesFromZset);
 
     List<RqueueMessage> messagesInProcessingQueue =
-        redisTemplate.readFromZset(QueueUtils.getProcessingQueueName(queueName), 0, -1);
-    queueNameToMessage.put(QueueUtils.getProcessingQueueName(queueName), messagesInProcessingQueue);
+        redisTemplate.readFromZset(rqueueConfig.getProcessingQueueName(queueName), 0, -1);
+    queueNameToMessage.put(
+        rqueueConfig.getProcessingQueueName(queueName), messagesInProcessingQueue);
     return queueNameToMessage;
   }
 
-  public static void printQueueStats(List<String> queueNames, RqueueMessageTemplate redisTemplate) {
+  public static void printQueueStats(
+      RqueueConfig rqueueConfig, List<String> queueNames, RqueueMessageTemplate redisTemplate) {
     for (String queueName : queueNames) {
       for (Entry<String, List<RqueueMessage>> entry :
-          TestUtils.getMessageMap(queueName, redisTemplate).entrySet()) {
+          TestUtils.getMessageMap(rqueueConfig, queueName, redisTemplate).entrySet()) {
         for (RqueueMessage message : entry.getValue()) {
           log.info("Queue: {} Msg: {}", entry.getKey(), message);
         }

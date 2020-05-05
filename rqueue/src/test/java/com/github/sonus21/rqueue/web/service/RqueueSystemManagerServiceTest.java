@@ -27,7 +27,8 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
 import java.util.Arrays;
@@ -47,23 +48,12 @@ public class RqueueSystemManagerServiceTest {
       new RqueueSystemManagerServiceImpl(stringRqueueRedisTemplate, rqueueSystemConfigDao);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, 3, "", true, 900000L);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, 3, "fast-dlq", false, 200000L);
-  private QueueConfig slowQueueConfig =
-      new QueueConfig(
-          QueueUtils.getQueueConfigKey(slowQueue),
-          slowQueue,
-          slowQueueDetail.getNumRetries(),
-          slowQueueDetail.isDelayedQueue(),
-          slowQueueDetail.getVisibilityTimeout());
-  private QueueConfig fastQueueConfig =
-      new QueueConfig(
-          QueueUtils.getQueueConfigKey(fastQueue),
-          fastQueue,
-          fastQueueDetail.getNumRetries(),
-          fastQueueDetail.isDelayedQueue(),
-          fastQueueDetail.getVisibilityTimeout(),
-          fastQueueDetail.getDeadLetterQueueName());
+  private QueueDetail slowQueueDetail =
+      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
+  private QueueDetail fastQueueDetail =
+      TestUtils.createQueueDetail(fastQueue, 3, false, 200000L, "fast-dlq");
+  private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
+  private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private Set<String> queues;
 
   @Before
@@ -78,13 +68,11 @@ public class RqueueSystemManagerServiceTest {
     BaseResponse baseResponse = rqueueSystemManagerService.deleteQueue("test");
     assertEquals(1, baseResponse.getCode());
     assertEquals("Queue not found", baseResponse.getMessage());
-    // String id, String name, int numRetry, boolean delayed, long visibilityTimeout
-    QueueConfig queueConfig =
-        new QueueConfig(QueueUtils.getQueueConfigKey("test"), "test", 10, true, 10000L);
+    QueueConfig queueConfig = TestUtils.createQueueConfig("test", 10, true, 10000L, null);
     assertFalse(queueConfig.isDeleted());
     doReturn(queueConfig)
         .when(rqueueSystemConfigDao)
-        .getQConfig(QueueUtils.getQueueConfigKey("test"));
+        .getQConfig(SystemUtils.getQueueConfigKey("test"));
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     baseResponse = rqueueSystemManagerService.deleteQueue("test");
     assertEquals(0, baseResponse.getCode());
@@ -95,21 +83,21 @@ public class RqueueSystemManagerServiceTest {
 
   @Test
   public void getQueues() {
-    doReturn(null).when(stringRqueueRedisTemplate).getMembers(QueueUtils.getQueuesKey());
+    doReturn(null).when(stringRqueueRedisTemplate).getMembers(SystemUtils.getQueuesKey());
     assertEquals(Collections.emptyList(), rqueueSystemManagerService.getQueues());
     doReturn(Collections.singleton("job"))
         .when(stringRqueueRedisTemplate)
-        .getMembers(QueueUtils.getQueuesKey());
+        .getMembers(SystemUtils.getQueuesKey());
     assertEquals(Collections.singletonList("job"), rqueueSystemManagerService.getQueues());
   }
 
   @Test
   public void getQueueConfigs() {
-    doReturn(queues).when(stringRqueueRedisTemplate).getMembers(QueueUtils.getQueuesKey());
+    doReturn(queues).when(stringRqueueRedisTemplate).getMembers(SystemUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(
-            queues.stream().map(QueueUtils::getQueueConfigKey).collect(Collectors.toList()));
+            queues.stream().map(SystemUtils::getQueueConfigKey).collect(Collectors.toList()));
     assertEquals(
         Arrays.asList(slowQueueConfig, fastQueueConfig),
         rqueueSystemManagerService.getQueueConfigs());
@@ -120,7 +108,7 @@ public class RqueueSystemManagerServiceTest {
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(
-            queues.stream().map(QueueUtils::getQueueConfigKey).collect(Collectors.toList()));
+            queues.stream().map(SystemUtils::getQueueConfigKey).collect(Collectors.toList()));
     assertEquals(
         Arrays.asList(slowQueueConfig, fastQueueConfig),
         rqueueSystemManagerService.getQueueConfigs(queues));
@@ -130,7 +118,7 @@ public class RqueueSystemManagerServiceTest {
   public void getQueueConfig() {
     doReturn(Collections.singletonList(slowQueueConfig))
         .when(rqueueSystemConfigDao)
-        .findAllQConfig(Collections.singletonList(QueueUtils.getQueueConfigKey(slowQueue)));
+        .findAllQConfig(Collections.singletonList(SystemUtils.getQueueConfigKey(slowQueue)));
     assertEquals(slowQueueConfig, rqueueSystemManagerService.getQueueConfig(slowQueue));
   }
 }

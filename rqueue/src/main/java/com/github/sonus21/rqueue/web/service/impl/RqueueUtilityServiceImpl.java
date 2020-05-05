@@ -30,8 +30,8 @@ import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
@@ -47,9 +47,9 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class RqueueUtilityServiceImpl implements RqueueUtilityService {
+  private final RqueueWebConfig rqueueWebConfig;
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
-  private final RqueueWebConfig rqueueWebConfig;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageMetadataService messageMetadataService;
   private String latestVersion = "NA";
@@ -71,7 +71,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public BooleanResponse deleteMessage(String queueName, String id) {
-    String queueConfigKey = QueueUtils.getQueueConfigKey(queueName);
+    String queueConfigKey = SystemUtils.getQueueConfigKey(queueName);
     QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey);
     BooleanResponse booleanResponse = new BooleanResponse();
     if (queueConfig == null) {

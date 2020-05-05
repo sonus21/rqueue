@@ -17,14 +17,16 @@
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -93,22 +95,20 @@ public class RqueueMessageTemplateTest {
 
   @Test
   public void moveMessageListToZset() throws TimedOutException {
-    stringRqueueRedisTemplate.delete(notificationQueue);
-    stringRqueueRedisTemplate.delete(QueueUtils.getDelayedQueueName(notificationQueue));
+    QueueDetail queueDetail = QueueRegistry.get(notificationQueue);
+    stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
+    stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
     for (int i = 0; i < 10; i++) {
       Notification notification = Notification.newInstance();
       messageSender.enqueue(notificationQueue, notification);
     }
     long score = System.currentTimeMillis() - 10000;
     rqueueMessageTemplate.moveMessageListToZset(
-        notificationQueue, QueueUtils.getDelayedQueueName(notificationQueue), 10, score);
+        queueDetail.getQueueName(), queueDetail.getDelayedQueueName(), 10, score);
 
     Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(notificationQueue).intValue());
     Assert.assertEquals(
-        10,
-        stringRqueueRedisTemplate
-            .getZsetSize(QueueUtils.getDelayedQueueName(notificationQueue))
-            .intValue());
+        10, stringRqueueRedisTemplate.getZsetSize(queueDetail.getDelayedQueueName()).intValue());
   }
 
   @Test
@@ -118,10 +118,11 @@ public class RqueueMessageTemplateTest {
       Notification notification = Notification.newInstance();
       messageSender.enqueueIn(queue, notification, 50000L);
     }
-    rqueueMessageTemplate.moveMessageZsetToList(QueueUtils.getDelayedQueueName(queue), queue, 10);
+    rqueueMessageTemplate.moveMessageZsetToList(jobQueueName, queue, 10);
     Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(queue).intValue());
     Assert.assertEquals(
-        0, stringRqueueRedisTemplate.getZsetSize(QueueUtils.getDelayedQueueName(queue)).intValue());
+        0,
+        stringRqueueRedisTemplate.getZsetSize(jobQueueName).intValue());
   }
 
   @Test
@@ -131,18 +132,13 @@ public class RqueueMessageTemplateTest {
       Job job = Job.newInstance();
       messageSender.enqueueIn(jobQueueName, job, 50000L);
     }
-    rqueueMessageTemplate.moveMessageZsetToZset(
-        QueueUtils.getDelayedQueueName(jobQueueName), tgtZset, 10, 0, false);
+    rqueueMessageTemplate.moveMessageZsetToZset(jobQueueName, tgtZset, 10, 0, false);
     Assert.assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
     Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(jobQueueName).intValue());
 
-    rqueueMessageTemplate.moveMessageZsetToZset(
-        tgtZset, QueueUtils.getDelayedQueueName(jobQueueName), 10, 0, false);
+    rqueueMessageTemplate.moveMessageZsetToZset(tgtZset, "_rq::xx" + jobQueueName, 10, 0, false);
     Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
     Assert.assertEquals(
-        10,
-        stringRqueueRedisTemplate
-            .getZsetSize(QueueUtils.getDelayedQueueName(jobQueueName))
-            .intValue());
+        10, stringRqueueRedisTemplate.getZsetSize("_rq::xx" + jobQueueName).intValue());
   }
 }

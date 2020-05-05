@@ -30,6 +30,71 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 public class RqueueConfig {
   private final RedisConnectionFactory connectionFactory;
   private final boolean sharedConnection;
+  private final int dbVersion;
+
   @Value("${rqueue.version:2.0.0-RELEASE}")
   private String version;
+
+  @Value("${rqueue.key.prefix:__rq::}")
+  private String prefix;
+
+  @Value("${rqueue.cluster.mode:true}")
+  private boolean clusterMode;
+
+  @Value("${rqueue.simple.queue.name.prefix:queue::}")
+  private String simpleQueueNamePrefix;
+
+  @Value("${rqueue.delayed.queue.name.prefix:d-queue::}")
+  private String delayedQueueNamePrefix;
+
+  @Value("${rqueue.delayed.queue.channel.name.prefix:d-channel::}")
+  private String delayedQueueChannelNamePrefix;
+
+  @Value("${rqueue.processing.queue.name.prefix:p-queue::}")
+  private String processingQueueNamePrefix;
+
+  @Value("${rqueue.processing.queue.channel.name.prefix:p-channel::}")
+  private String processingQueueChannelNamePrefix;
+
+  public String getQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + simpleQueueNamePrefix + getTaggedName(queueName);
+    }
+    return queueName;
+  }
+
+  public String getDelayedQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + delayedQueueNamePrefix + getTaggedName(queueName);
+    }
+    return "rqueue-delay::" + queueName;
+  }
+
+  public String getDelayedQueueChannelName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + delayedQueueChannelNamePrefix + getTaggedName(queueName);
+    }
+    return "rqueue-channel::" + queueName;
+  }
+
+  public String getProcessingQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + processingQueueNamePrefix + getTaggedName(queueName);
+    }
+    return "rqueue-processing::" + queueName;
+  }
+
+  public String getProcessingQueueChannelName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + processingQueueChannelNamePrefix + getTaggedName(queueName);
+    }
+    return "rqueue-processing-channel::" + queueName;
+  }
+
+  private String getTaggedName(String queueName) {
+    if (!clusterMode) {
+      return queueName;
+    }
+    return "{" + queueName + "}";
+  }
 }

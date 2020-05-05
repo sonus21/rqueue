@@ -64,13 +64,13 @@ public class RqueueMessageTemplateTest {
 
   @Test
   public void pop() {
-    rqueueMessageTemplate.pop(key, Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
+    rqueueMessageTemplate.pop(key, key + "rq", key + "dq", Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 
   @Test
   public void addWithDelay() {
-    rqueueMessageTemplate.addMessageWithDelay(key, message);
+    rqueueMessageTemplate.addMessageWithDelay(key, key + "rq", message);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 

@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.models.db;
 
 import com.github.sonus21.rqueue.models.SerializableBase;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,7 +43,7 @@ public class MessageMetadata extends SerializableBase {
   }
 
   public MessageMetadata(String messageId) {
-    this.id = QueueUtils.getMessageMetadataKey(messageId);
+    this.id = MessageUtils.getMessageMetaId(messageId);
     this.messageId = messageId;
   }
 

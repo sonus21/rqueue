@@ -17,16 +17,11 @@
 package com.github.sonus21.rqueue.core;
 
 import static com.github.sonus21.rqueue.core.RedisScriptFactory.getScript;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getDelayedQueueChannelName;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getDelayedQueueName;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueChannelName;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueName;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,25 +50,29 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
-  public RqueueMessage pop(String queueName, long visibilityTimeout) {
+  public RqueueMessage pop(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout) {
     long currentTime = System.currentTimeMillis();
     RedisScript<RqueueMessage> script =
         (RedisScript<RqueueMessage>) getScript(ScriptType.POP_MESSAGE);
     return scriptExecutor.execute(
         script,
-        Arrays.asList(
-            queueName, getProcessingQueueName(queueName), getProcessingQueueChannelName(queueName)),
+        Arrays.asList(queueName, processingChannelName, processingChannelName),
         currentTime,
-        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, visibilityTimeout));
+        currentTime + visibilityTimeout);
   }
 
   @Override
-  public void addMessageWithDelay(String queueName, RqueueMessage rqueueMessage) {
+  public Long addMessageWithDelay(
+      String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage) {
     long queuedTime = rqueueMessage.getQueuedTime();
     RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ADD_MESSAGE);
-    scriptExecutor.execute(
+    return scriptExecutor.execute(
         script,
-        Arrays.asList(getDelayedQueueName(queueName), getDelayedQueueChannelName(queueName)),
+        Arrays.asList(delayQueueName, delayQueueChannelName),
         rqueueMessage,
         rqueueMessage.getProcessAt(),
         queuedTime);
@@ -96,19 +95,21 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
-  public List<RqueueMessage> getAllMessages(String queueName) {
+  public List<RqueueMessage> getAllMessages(
+      String queueName, String processingQueueName, String delayQueueName) {
     List<RqueueMessage> messages = lrange(queueName, 0, -1);
     if (CollectionUtils.isEmpty(messages)) {
       messages = new ArrayList<>();
     }
-    Set<RqueueMessage> messagesFromZset = zrange(QueueUtils.getDelayedQueueName(queueName), 0, -1);
-    if (!CollectionUtils.isEmpty(messagesFromZset)) {
-      messages.addAll(messagesFromZset);
-    }
-    Set<RqueueMessage> messagesInProcessingQueue =
-        zrange(QueueUtils.getProcessingQueueName(queueName), 0, -1);
+    Set<RqueueMessage> messagesInProcessingQueue = zrange(processingQueueName, 0, -1);
     if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
       messages.addAll(messagesInProcessingQueue);
+    }
+    if (delayQueueName != null) {
+      Set<RqueueMessage> messagesFromZset = zrange(delayQueueName, 0, -1);
+      if (!CollectionUtils.isEmpty(messagesFromZset)) {
+        messages.addAll(messagesFromZset);
+      }
     }
     return messages;
   }

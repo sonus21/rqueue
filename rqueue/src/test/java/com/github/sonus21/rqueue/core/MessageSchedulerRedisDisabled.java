@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestThreadPoolScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,25 +55,26 @@ public class MessageSchedulerRedisDisabled {
   @InjectMocks private DelayedMessageScheduler messageScheduler = new DelayedMessageScheduler();
 
   private String slowQueue = "slow-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, 3, "", true, 900000L);
+  private QueueDetail slowQueueDetail =
+      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
   private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
 
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
+    QueueRegistry.register(slowQueueDetail);
     queueNameToQueueDetail.put(slowQueue, slowQueueDetail);
   }
 
   @Test
   public void startShouldSubmitsTaskWhenRedisIsDisabled() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
     PowerMockito.stub(
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     assertEquals(1, scheduler.tasks.size());
     assertNull(FieldUtils.readField(messageScheduler, "messageSchedulerListener", true));
     messageScheduler.destroy();

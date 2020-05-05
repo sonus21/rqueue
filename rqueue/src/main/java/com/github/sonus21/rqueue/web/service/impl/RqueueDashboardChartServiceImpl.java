@@ -28,7 +28,7 @@ import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
@@ -348,11 +348,11 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
   private Collection<String> getQueueStatsId(ChartDataRequest chartDataRequest) {
     Collection<String> ids = Collections.emptyList();
     if (!StringUtils.isEmpty(chartDataRequest.getQueue())) {
-      ids = Collections.singleton(QueueUtils.getQueueStatKey(chartDataRequest.getQueue()));
+      ids = Collections.singleton(SystemUtils.getQueueStatKey(chartDataRequest.getQueue()));
     } else {
       List<String> queues = rqueueSystemManagerService.getQueues();
       if (!CollectionUtils.isEmpty(queues)) {
-        ids = queues.stream().map(QueueUtils::getQueueStatKey).collect(Collectors.toList());
+        ids = queues.stream().map(SystemUtils::getQueueStatKey).collect(Collectors.toList());
       }
     }
     return ids;

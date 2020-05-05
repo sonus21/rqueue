@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,7 +59,7 @@ public class RqueueMessageHandlerTest {
 
   private Message<String> buildMessage(String queueName, String message) {
     return new GenericMessage<>(
-        message, Collections.singletonMap(QueueUtils.getMessageHeaderKey(), queueName));
+        message, Collections.singletonMap(MessageUtils.getMessageHeaderKey(), queueName));
   }
 
   @Test

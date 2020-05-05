@@ -20,16 +20,16 @@ import static com.github.sonus21.rqueue.core.support.RqueueMessageFactory.buildM
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
 import com.github.sonus21.rqueue.test.TestUtils;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import com.github.sonus21.test.RunTestUntilFail;
@@ -63,6 +63,7 @@ public class ProcessingMessageSchedulerTest {
   @Autowired private ConsumedMessageService consumedMessageService;
   @Autowired private RqueueMessageSender messageSender;
   @Autowired private RqueueMessageTemplate rqueueMessageTemplate;
+  @Autowired private RqueueConfig rqueueConfig;
   @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
 
   @Value("${job.queue.name}")
@@ -75,7 +76,7 @@ public class ProcessingMessageSchedulerTest {
           3,
           () -> {
             for (Entry<String, List<RqueueMessage>> entry :
-                TestUtils.getMessageMap(jobQueueName, rqueueMessageTemplate).entrySet()) {
+                TestUtils.getMessageMap(rqueueConfig, jobQueueName, rqueueMessageTemplate).entrySet()) {
               log.error("FAILING Queue {}", entry.getKey());
               for (RqueueMessage message : entry.getValue()) {
                 log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
@@ -88,7 +89,7 @@ public class ProcessingMessageSchedulerTest {
   @Test
   public void publishMessageIsTriggeredOnMessageRemoval()
       throws InterruptedException, TimedOutException {
-    String processingQueueName = QueueUtils.getProcessingQueueName(jobQueueName);
+    String processingQueueName = jobQueueName;
     long currentTime = System.currentTimeMillis();
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();

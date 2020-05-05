@@ -22,12 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
 import com.github.sonus21.rqueue.test.dto.Email;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -64,16 +63,13 @@ public class MessageChannelTest {
     for (int i = 0; i < messageCount; i++) {
       email = Email.newInstance();
       rqueueMessageTemplate.addToZset(
-          QueueUtils.getDelayedQueueName(emailQueue),
-          buildMessage(email, emailQueue, null, null),
-          currentTime - 1000L);
+          emailQueue, buildMessage(email, emailQueue, null, null), currentTime - 1000L);
     }
     email = Email.newInstance();
     log.info("adding new message {}", email);
     messageSender.put(emailQueue, email, 1000L);
     waitFor(
-        () ->
-            stringRqueueRedisTemplate.getZsetSize(QueueUtils.getDelayedQueueName(emailQueue)) <= 1,
+        () -> stringRqueueRedisTemplate.getZsetSize(emailQueue) <= 1,
         "one or zero messages in zset");
     assertTrue(
         "Messages are correctly moved",

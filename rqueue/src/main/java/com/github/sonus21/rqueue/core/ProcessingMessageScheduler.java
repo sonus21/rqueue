@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.core;
 import static java.lang.Long.max;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +30,12 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   private Map<String, Long> queueNameToDelay;
 
   @Override
-  protected void initializeState(Map<String, QueueDetail> queueDetailMap) {
-    this.queueNameToDelay = new ConcurrentHashMap<>(queueDetailMap.size());
-    for (QueueDetail queueDetail : queueDetailMap.values()) {
-      this.queueNameToDelay.put(queueDetail.getQueueName(), queueDetail.getVisibilityTimeout());
+  protected void initialize() {
+    super.initialize();
+    List<QueueDetail> queueDetails = QueueRegistry.getQueueDetails();
+    this.queueNameToDelay = new ConcurrentHashMap<>(queueDetails.size());
+    for (QueueDetail queueDetail : queueDetails) {
+      this.queueNameToDelay.put(queueDetail.getName(), queueDetail.getVisibilityTimeout());
     }
   }
 
@@ -44,12 +46,12 @@ public class ProcessingMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueUtils.getProcessingQueueChannelName(queueName);
+    return QueueRegistry.get(queueName).getProcessingQueueChannelName();
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueUtils.getProcessingQueueName(queueName);
+    return QueueRegistry.get(queueName).getProcessingQueueName();
   }
 
   @Override
@@ -59,12 +61,12 @@ public class ProcessingMessageScheduler extends MessageScheduler {
 
   @Override
   protected int getThreadPoolSize() {
-    return rqueueSchedulerConfig.getProcessingMessagePoolSize();
+    return rqueueSchedulerConfig.getProcessingMessageThreadPoolSize();
   }
 
   @Override
   protected String getThreadNamePrefix() {
-    return "RQProcessing-";
+    return "processingMessageScheduler-";
   }
 
   @Override
@@ -72,7 +74,7 @@ public class ProcessingMessageScheduler extends MessageScheduler {
     long currentTime = System.currentTimeMillis();
     if (value == null) {
       long delay = queueNameToDelay.get(queueName);
-      return QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, delay);
+      return currentTime + delay;
     }
     return max(currentTime, value);
   }

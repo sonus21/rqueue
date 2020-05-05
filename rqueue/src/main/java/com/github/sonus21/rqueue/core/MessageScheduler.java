@@ -21,7 +21,6 @@ import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -32,7 +31,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -57,7 +55,6 @@ import org.springframework.util.CollectionUtils;
 abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<QueueInitializationEvent> {
   @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Autowired protected RqueueConfig rqueueConfig;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
@@ -72,8 +69,6 @@ abstract class MessageScheduler
   @Autowired
   @Qualifier("rqueueRedisLongTemplate")
   private RedisTemplate<String, Long> redisTemplate;
-
-  protected abstract void initializeState(Map<String, QueueDetail> queueDetailMap);
 
   protected abstract Logger getLogger();
 
@@ -102,7 +97,7 @@ abstract class MessageScheduler
       this.rqueueRedisListenerContainerFactory
           .getContainer()
           .addMessageListener(messageSchedulerListener, new ChannelTopic(channelName));
-      channelNameToQueueName.put(getChannelName(queueName), queueName);
+      channelNameToQueueName.put(channelName, queueName);
       queueNameToZsetName.put(queueName, getZsetName(queueName));
     }
   }
@@ -246,13 +241,11 @@ abstract class MessageScheduler
   }
 
   @SuppressWarnings("unchecked")
-  private void initialize(Map<String, QueueDetail> queueDetailMap) {
+  protected void initialize() {
     Set<String> queueNames = new HashSet<>();
-    for (Entry<String, QueueDetail> entry : queueDetailMap.entrySet()) {
-      String queueName = entry.getKey();
-      QueueDetail queueDetail = entry.getValue();
+    for (QueueDetail queueDetail : QueueRegistry.getQueueDetails()) {
       if (isQueueValid(queueDetail)) {
-        queueNames.add(queueName);
+        queueNames.add(queueDetail.getName());
       }
     }
     defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
@@ -269,7 +262,6 @@ abstract class MessageScheduler
     for (String queueName : queueNames) {
       queueRunningState.put(queueName, false);
     }
-    initializeState(queueDetailMap);
   }
 
   @Override
@@ -277,10 +269,11 @@ abstract class MessageScheduler
   public void onApplicationEvent(QueueInitializationEvent event) {
     doStop();
     if (event.isStart()) {
-      if (CollectionUtils.isEmpty(event.getQueueDetailMap())) {
+      if (QueueRegistry.getQueueCount() == 0) {
+        getLogger().warn("No queues are configured");
         return;
       }
-      initialize(event.getQueueDetailMap());
+      initialize();
       doStart();
     }
   }
@@ -341,8 +334,8 @@ abstract class MessageScheduler
           return;
         }
         schedule(queueName, zsetName, startTime, false);
-      } catch (NumberFormatException e) {
-        getLogger().error("Invalid data {} on a channel {}", body, channel);
+      } catch (Exception e) {
+        getLogger().error("Error occurred on a channel {}, body: {}", channel, body, e);
       }
     }
   }

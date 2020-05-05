@@ -27,23 +27,23 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class MessagePoller extends MessageContainerBase implements Runnable {
-  private final String queueName;
   private final QueueDetail queueDetail;
   private final Semaphore semaphore;
 
   MessagePoller(
-      String queueName,
-      QueueDetail value,
-      RqueueMessageListenerContainer container,
-      Semaphore semaphore) {
+      QueueDetail queueDetail, RqueueMessageListenerContainer container, Semaphore semaphore) {
     super(container);
-    this.queueName = queueName;
-    this.queueDetail = value;
+    this.queueDetail = queueDetail;
     this.semaphore = semaphore;
   }
 
   private RqueueMessage getMessage() {
-    return getRqueueMessageTemplate().pop(queueName, queueDetail.getVisibilityTimeout());
+    return getRqueueMessageTemplate()
+        .pop(
+            queueDetail.getQueueName(),
+            queueDetail.getProcessingQueueName(),
+            queueDetail.getProcessingQueueChannelName(),
+            queueDetail.getVisibilityTimeout());
   }
 
   private void enqueueTask(RqueueMessage message) {
@@ -59,18 +59,18 @@ class MessagePoller extends MessageContainerBase implements Runnable {
 
   @Override
   public void run() {
-    log.debug("Running Queue {}", queueName);
-    while (isQueueActive(queueName)) {
+    log.debug("Running Queue {}", queueDetail.getName());
+    while (isQueueActive(queueDetail.getName())) {
       boolean acquired = false;
       try {
         acquired = semaphore.tryAcquire(Constants.MIN_DELAY, TimeUnit.MILLISECONDS);
       } catch (Exception e) {
         log.warn("Exception {}", e.getMessage(), e);
       }
-      if (acquired && isQueueActive(queueName)) {
+      if (acquired && isQueueActive(queueDetail.getName())) {
         try {
           RqueueMessage message = getMessage();
-          log.debug("Queue: {} Fetched Msg {}", queueName, message);
+          log.debug("Queue: {} Fetched Msg {}", queueDetail.getName(), message);
           if (message != null) {
             enqueueTask(message);
           } else {
@@ -81,7 +81,7 @@ class MessagePoller extends MessageContainerBase implements Runnable {
           semaphore.release();
           log.warn(
               "Message listener failed for the queue {}, it will be retried in {} Ms",
-              queueName,
+              queueDetail.getName(),
               getBackOffTime(),
               e);
           TimeoutUtils.sleepLog(getBackOffTime(), false);
