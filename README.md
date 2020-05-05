@@ -96,27 +96,24 @@ public class MessageListener {
     log.info("simple-queue: {}", message);
   }
 
-  @RqueueListener(value = "delayed-queue", delayedQueue = "true")
-  public void delayedMessage(String message) {
-    log.info("delayedMessage: {}", message);
-  }
-  
-  @RqueueListener(value = "delayed-queue-2", delayedQueue = "true",
-   numRetries="3", deadLetterQueue="failed-delayed-queue")
-  public void delayedMessageWithDlq(String message) {
-    log.info("delayedMessageWithDlq: {}", message);
-  }
-  
+  // Scheduled Job notification
   @RqueueListener(value = "job-queue", delayedQueue = "true",
    numRetries="3", deadLetterQueue="failed-job-queue")
   public void onMessage(Job job) {
     log.info("Job created: {}", job);
   }
   
-  @RqueueListener(value = "notification-queue", delayedQueue = "true", 
+  // Scheduled push notification
+  @RqueueListener(value = "push-notification-queue", delayedQueue = "true", 
   numRetries="3", deadLetterQueue="failed-notification-queue")
   public void onMessage(Notification notification) {
     log.info("Notification message: {}", notification);
+  }
+  
+  // asynchronously send otp to the user
+  @RqueueListener(value = "otp", delayedQueue = "true")
+  public void onMessage(Otp otp) {
+    log.info("Otp message: {}", otp);
   }
 }
 ```
@@ -338,7 +335,5 @@ Please report problem, bug or feature(s) to [issue](https://github.com/sonus21/r
 
 ## License
 The Rqueue is released under version 2.0 of the Apache License.
-
-
 
     
