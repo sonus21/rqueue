@@ -21,15 +21,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
+import com.github.sonus21.rqueue.test.tests.SpringTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -37,23 +35,13 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @RunWith(RqueueSpringTestRunner.class)
 @Slf4j
 @WebAppConfiguration
-public class SpringAppTest {
-  @Autowired private RqueueMessageListenerContainer container;
-
-  @Value("${email.queue.name}")
-  private String emailQueue;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
-  @Value("${notification.queue.name}")
-  private String notificationQueueName;
+public class SpringAppTest extends SpringTestBase {
 
   @Test
   public void numListeners() {
     Map<String, QueueDetail> registeredQueue = QueueRegistry.getQueueMap();
     assertEquals(3, registeredQueue.size());
-    assertTrue(registeredQueue.containsKey(notificationQueueName));
+    assertTrue(registeredQueue.containsKey(notificationQueue));
     assertTrue(registeredQueue.containsKey(emailQueue));
     assertTrue(registeredQueue.containsKey(jobQueueName));
   }

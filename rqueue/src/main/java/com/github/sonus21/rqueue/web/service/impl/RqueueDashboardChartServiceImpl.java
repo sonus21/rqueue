@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MinMax;
@@ -28,7 +29,6 @@ import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
@@ -52,15 +52,17 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartService {
   private final RqueueQStatsDao rqueueQStatsDao;
+  private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueSystemManagerService rqueueSystemManagerService;
 
   @Autowired
   public RqueueDashboardChartServiceImpl(
       RqueueQStatsDao rqueueQStatsDao,
-      RqueueWebConfig rqueueWebConfig,
+      RqueueConfig rqueueConfig, RqueueWebConfig rqueueWebConfig,
       RqueueSystemManagerService rqueueSystemManagerService) {
     this.rqueueQStatsDao = rqueueQStatsDao;
+    this.rqueueConfig = rqueueConfig;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueSystemManagerService = rqueueSystemManagerService;
   }
@@ -274,7 +276,7 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
     Map<Integer, TasksStat> monthToChartDataType =
         aggregateData(
             (date, today) ->
-                (int) Math.ceil((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 30.0f),
+                (int) Math.floor((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 30.0f),
             queueStatisticsList,
             chartDataTypeList,
             getCount(Constants.DAYS_IN_A_MONTH));
@@ -304,7 +306,7 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
     Map<Integer, TasksStat> weekToChartDataType =
         aggregateData(
             (date, today) ->
-                (int) Math.ceil((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 7.0f),
+                (int) Math.floor((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 7.0f),
             queueStatisticsList,
             chartDataTypeList,
             getCount(Constants.DAYS_IN_A_WEEK));
@@ -348,11 +350,11 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
   private Collection<String> getQueueStatsId(ChartDataRequest chartDataRequest) {
     Collection<String> ids = Collections.emptyList();
     if (!StringUtils.isEmpty(chartDataRequest.getQueue())) {
-      ids = Collections.singleton(SystemUtils.getQueueStatKey(chartDataRequest.getQueue()));
+      ids = Collections.singleton(rqueueConfig.getQueueStatisticsKey(chartDataRequest.getQueue()));
     } else {
       List<String> queues = rqueueSystemManagerService.getQueues();
       if (!CollectionUtils.isEmpty(queues)) {
-        ids = queues.stream().map(SystemUtils::getQueueStatKey).collect(Collectors.toList());
+        ids = queues.stream().map(rqueueConfig::getQueueStatisticsKey).collect(Collectors.toList());
       }
     }
     return ids;

@@ -25,7 +25,6 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.dao.impl.RqueueSystemConfigDaoImpl;
 import java.util.Arrays;
@@ -45,20 +44,19 @@ public class RqueueSystemConfigDaoTest {
 
   @Test
   public void getQConfig() {
-    assertNull(rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
+    assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
     QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
-    doReturn(queueConfig).when(rqueueRedisTemplate).get(SystemUtils.getQueueConfigKey("job"));
-    assertEquals(
-        queueConfig, rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
+    doReturn(queueConfig).when(rqueueRedisTemplate).get(TestUtils.getQueueConfigKey("job"));
+    assertEquals(queueConfig, rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
   }
 
   @Test
   public void findAllQConfig() {
-    assertNull(rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
+    assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
     QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
     List<String> keys =
         Arrays.asList(
-            SystemUtils.getQueueConfigKey("job"), SystemUtils.getQueueConfigKey("notification"));
+            TestUtils.getQueueConfigKey("job"), TestUtils.getQueueConfigKey("notification"));
     doReturn(Arrays.asList(queueConfig, null)).when(rqueueRedisTemplate).mget(keys);
     assertEquals(
         Collections.singletonList(queueConfig), rqueueSystemConfigDao.findAllQConfig(keys));
@@ -66,7 +64,7 @@ public class RqueueSystemConfigDaoTest {
 
   @Test
   public void saveAllQConfig() {
-    assertNull(rqueueSystemConfigDao.getQConfig(SystemUtils.getQueueConfigKey("job")));
+    assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
     QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
     QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification", 3, true, 20000L, null);
     doAnswer(

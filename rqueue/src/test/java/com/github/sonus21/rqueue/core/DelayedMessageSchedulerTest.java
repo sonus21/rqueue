@@ -127,7 +127,6 @@ public class DelayedMessageSchedulerTest {
     assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true));
     assertNull(FieldUtils.readField(messageScheduler, "channelNameToQueueName", true));
-    assertNull(FieldUtils.readField(messageScheduler, "queueNameToZsetName", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageSeenTime", true));
   }
 
@@ -148,8 +147,6 @@ public class DelayedMessageSchedulerTest {
         1, ((Map) FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true)).size());
     assertEquals(
         1, ((Map) FieldUtils.readField(messageScheduler, "channelNameToQueueName", true)).size());
-    assertEquals(
-        1, ((Map) FieldUtils.readField(messageScheduler, "queueNameToZsetName", true)).size());
     Thread.sleep(500L);
     messageScheduler.destroy();
   }
@@ -188,8 +185,6 @@ public class DelayedMessageSchedulerTest {
     assertFalse(queueRunningState.get(slowQueue));
     assertEquals(
         1, ((Map) FieldUtils.readField(messageScheduler, "channelNameToQueueName", true)).size());
-    assertEquals(
-        1, ((Map) FieldUtils.readField(messageScheduler, "queueNameToZsetName", true)).size());
     assertTrue(
         ((Map) FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true)).isEmpty());
     messageScheduler.destroy();
@@ -363,9 +358,8 @@ public class DelayedMessageSchedulerTest {
     }
 
     @Override
-    protected synchronized void schedule(
-        String queueName, String zsetName, Long startTime, boolean forceSchedule) {
-      super.schedule(queueName, zsetName, startTime, forceSchedule);
+    protected synchronized void schedule(String queueName, Long startTime, boolean forceSchedule) {
+      super.schedule(queueName, startTime, forceSchedule);
       this.scheduleList.add(forceSchedule);
     }
   }

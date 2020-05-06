@@ -41,54 +41,82 @@ public class RqueueConfig {
   @Value("${rqueue.cluster.mode:true}")
   private boolean clusterMode;
 
-  @Value("${rqueue.simple.queue.name.prefix:queue::}")
-  private String simpleQueueNamePrefix;
+  @Value("${rqueue.simple.queue.prefix:queue::}")
+  private String simpleQueuePrefix;
 
-  @Value("${rqueue.delayed.queue.name.prefix:d-queue::}")
-  private String delayedQueueNamePrefix;
+  @Value("${rqueue.delayed.queue.prefix:d-queue::}")
+  private String delayedQueuePrefix;
 
-  @Value("${rqueue.delayed.queue.channel.name.prefix:d-channel::}")
-  private String delayedQueueChannelNamePrefix;
+  @Value("${rqueue.delayed.queue.channel.prefix:d-channel::}")
+  private String delayedQueueChannelPrefix;
 
   @Value("${rqueue.processing.queue.name.prefix:p-queue::}")
-  private String processingQueueNamePrefix;
+  private String processingQueuePrefix;
 
-  @Value("${rqueue.processing.queue.channel.name.prefix:p-channel::}")
-  private String processingQueueChannelNamePrefix;
+  @Value("${rqueue.processing.queue.channel.prefix:p-channel::}")
+  private String processingQueueChannelPrefix;
+
+  @Value("${rqueue.queues.key.suffix:queues}")
+  private String queuesKeySuffix;
+
+  public String getQueuesKey() {
+    return prefix + queuesKeySuffix;
+  }
+
+  @Value("${rqueue.lock.key.prefix:lock::}")
+  private String lockKeyPrefix;
+
+  @Value("${rqueue.queue.stat.key.prefix:q-stat::}")
+  private String queueStatKeyPrefix;
+
+  @Value("${rqueue.queue.config.key.prefix:q-config::}")
+  private String queueConfigKeyPrefix;
 
   public String getQueueName(String queueName) {
     if (dbVersion >= 2) {
-      return prefix + simpleQueueNamePrefix + getTaggedName(queueName);
+      return prefix + simpleQueuePrefix + getTaggedName(queueName);
     }
     return queueName;
   }
 
   public String getDelayedQueueName(String queueName) {
     if (dbVersion >= 2) {
-      return prefix + delayedQueueNamePrefix + getTaggedName(queueName);
+      return prefix + delayedQueuePrefix + getTaggedName(queueName);
     }
     return "rqueue-delay::" + queueName;
   }
 
   public String getDelayedQueueChannelName(String queueName) {
     if (dbVersion >= 2) {
-      return prefix + delayedQueueChannelNamePrefix + getTaggedName(queueName);
+      return prefix + delayedQueueChannelPrefix + getTaggedName(queueName);
     }
     return "rqueue-channel::" + queueName;
   }
 
   public String getProcessingQueueName(String queueName) {
     if (dbVersion >= 2) {
-      return prefix + processingQueueNamePrefix + getTaggedName(queueName);
+      return prefix + processingQueuePrefix + getTaggedName(queueName);
     }
     return "rqueue-processing::" + queueName;
   }
 
   public String getProcessingQueueChannelName(String queueName) {
     if (dbVersion >= 2) {
-      return prefix + processingQueueChannelNamePrefix + getTaggedName(queueName);
+      return prefix + processingQueueChannelPrefix + getTaggedName(queueName);
     }
     return "rqueue-processing-channel::" + queueName;
+  }
+
+  public String getLockKey(String key) {
+    return prefix + lockKeyPrefix + key;
+  }
+
+  public String getQueueStatisticsKey(String name) {
+    return prefix + queueStatKeyPrefix + name;
+  }
+
+  public String getQueueConfigKey(String name) {
+    return prefix + queueConfigKeyPrefix + name;
   }
 
   private String getTaggedName(String queueName) {

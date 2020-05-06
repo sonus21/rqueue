@@ -60,7 +60,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
         (RedisScript<RqueueMessage>) getScript(ScriptType.POP_MESSAGE);
     return scriptExecutor.execute(
         script,
-        Arrays.asList(queueName, processingChannelName, processingChannelName),
+        Arrays.asList(queueName, processingQueueName, processingChannelName),
         currentTime,
         currentTime + visibilityTimeout);
   }

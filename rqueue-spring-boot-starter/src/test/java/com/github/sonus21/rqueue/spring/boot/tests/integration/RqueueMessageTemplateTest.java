@@ -16,24 +16,18 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.QueueRegistry;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.utils.SystemUtils;
+import com.github.sonus21.rqueue.test.tests.SpringTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -43,48 +37,20 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @Slf4j
 @TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:6385"})
-public class RqueueMessageTemplateTest {
-  @Autowired private RqueueMessageTemplate rqueueMessageTemplate;
-  @Autowired private RqueueMessageSender messageSender;
-  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
-  @Value("${email.queue.name}")
-  private String emailQueue;
-
-  @Value("${email.dead.letter.queue.name}")
-  private String emailDeadLetterQueue;
-
-  @Value("${email.queue.retry.count}")
-  private int emailRetryCount;
-
-  @Value("${notification.queue.name}")
-  private String notificationQueue;
-
-  @Value("${notification.queue.retry.count}")
-  private int notificationRetryCount;
-
+public class RqueueMessageTemplateTest extends SpringTestBase {
   @Test
-  public void moveMessageFromDeadLetterQueueToOriginalQueue() throws TimedOutException {
-    for (int i = 0; i < 10; i++) {
-      Email email = Email.newInstance();
-      messageSender.enqueue(emailDeadLetterQueue, email);
-    }
+  public void moveMessageFromDeadLetterQueueToOriginalQueue() {
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10);
     messageSender.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
     Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(emailQueue).intValue());
     Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue).intValue());
   }
 
   @Test
-  public void moveMessageFromOneQueueToAnother() throws TimedOutException {
+  public void moveMessageFromOneQueueToAnother() {
     String queue1 = emailDeadLetterQueue + "t";
     String queue2 = emailQueue + "t";
-    for (int i = 0; i < 10; i++) {
-      Email email = Email.newInstance();
-      messageSender.enqueue(queue1, email);
-    }
+    enqueue(queue1, i -> Email.newInstance(), 10);
     rqueueMessageTemplate.moveMessageListToList(queue1, queue2, 10);
     Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(queue2).intValue());
     Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(queue1).intValue());
@@ -94,7 +60,7 @@ public class RqueueMessageTemplateTest {
   }
 
   @Test
-  public void moveMessageListToZset() throws TimedOutException {
+  public void moveMessageListToZset() {
     QueueDetail queueDetail = QueueRegistry.get(notificationQueue);
     stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
     stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
@@ -106,35 +72,30 @@ public class RqueueMessageTemplateTest {
     rqueueMessageTemplate.moveMessageListToZset(
         queueDetail.getQueueName(), queueDetail.getDelayedQueueName(), 10, score);
 
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(notificationQueue).intValue());
+    Assert.assertEquals(
+        0, stringRqueueRedisTemplate.getListSize(queueDetail.getQueueName()).intValue());
     Assert.assertEquals(
         10, stringRqueueRedisTemplate.getZsetSize(queueDetail.getDelayedQueueName()).intValue());
   }
 
   @Test
-  public void moveMessageZsetToList() throws TimedOutException {
-    String queue = notificationQueue + "t";
-    for (int i = 0; i < 10; i++) {
-      Notification notification = Notification.newInstance();
-      messageSender.enqueueIn(queue, notification, 50000L);
-    }
-    rqueueMessageTemplate.moveMessageZsetToList(jobQueueName, queue, 10);
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(queue).intValue());
-    Assert.assertEquals(
-        0,
-        stringRqueueRedisTemplate.getZsetSize(jobQueueName).intValue());
+  public void moveMessageZsetToList() {
+    String zset = notificationQueue + "zset";
+    String list = notificationQueue + "list";
+    enqueueIn(zset, i -> Notification.newInstance(), i -> 50000L, 10);
+    rqueueMessageTemplate.moveMessageZsetToList(zset, list, 10);
+    Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(list).intValue());
+    Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(zset).intValue());
   }
 
   @Test
-  public void moveMessageZsetToZset() throws TimedOutException {
-    String tgtZset = jobQueueName + "t";
-    for (int i = 0; i < 10; i++) {
-      Job job = Job.newInstance();
-      messageSender.enqueueIn(jobQueueName, job, 50000L);
-    }
-    rqueueMessageTemplate.moveMessageZsetToZset(jobQueueName, tgtZset, 10, 0, false);
+  public void moveMessageZsetToZset() {
+    String srcZset = jobQueueName + "src";
+    String tgtZset = jobQueueName + "tgt";
+    enqueueIn(srcZset, i -> Job.newInstance(), i -> 5000L, 10);
+    rqueueMessageTemplate.moveMessageZsetToZset(srcZset, tgtZset, 10, 0, false);
     Assert.assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(jobQueueName).intValue());
+    Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(srcZset).intValue());
 
     rqueueMessageTemplate.moveMessageZsetToZset(tgtZset, "_rq::xx" + jobQueueName, 10, 0, false);
     Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());

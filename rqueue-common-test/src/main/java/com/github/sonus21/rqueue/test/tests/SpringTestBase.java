@@ -1,0 +1,139 @@
+/*
+ * Copyright 2020 Sonu Kumar
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.github.sonus21.rqueue.test.tests;
+
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageFactory;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
+import com.github.sonus21.rqueue.test.service.FailureManager;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
+@Slf4j
+public class SpringTestBase {
+  @Autowired protected RqueueMessageSender rqueueMessageSender;
+  @Autowired protected RqueueMessageTemplate rqueueMessageTemplate;
+  @Autowired protected RqueueConfig rqueueConfig;
+  @Autowired protected RqueueWebConfig rqueueWebConfig;
+  @Autowired protected RqueueMessageSender messageSender;
+  @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Autowired protected ConsumedMessageService consumedMessageService;
+  @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
+  @Autowired protected FailureManager failureManager;
+
+  @Value("${email.queue.name}")
+  protected String emailQueue;
+
+  @Value("${job.queue.name}")
+  protected String jobQueueName;
+
+  @Value("${email.dead.letter.queue.name}")
+  protected String emailDeadLetterQueue;
+
+  @Value("${email.queue.retry.count}")
+  protected int emailRetryCount;
+
+  @Value("${notification.queue.name}")
+  protected String notificationQueue;
+
+  @Value("${notification.queue.retry.count}")
+  protected int notificationRetryCount;
+
+  @Value("${email.dead.letter.queue.name}")
+  protected String emailDlq;
+
+  @Value("${email.queue.name}")
+  protected String emailQueueName;
+
+  @Value("${job.queue.name}")
+  protected String jobQueue;
+
+  protected void enqueue(Object message, String queueName) {
+    RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, queueName, null, null);
+    rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
+  }
+
+  public interface Factory {
+    Object next(int i);
+  }
+
+  public interface Delay {
+    long getDelay(int i);
+  }
+
+  protected void enqueue(String queueName, Factory factory, int n) {
+    for (int i = 0; i < n; i++) {
+      Object object = factory.next(i);
+      RqueueMessage rqueueMessage =
+          RqueueMessageFactory.buildMessage(object, queueName, null, null);
+      rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
+    }
+  }
+
+  protected void enqueueIn(String zsetName, Factory factory, Delay delay, int n) {
+    for (int i = 0; i < n; i++) {
+      Object object = factory.next(i);
+      long score = delay.getDelay(i);
+      RqueueMessage rqueueMessage =
+          RqueueMessageFactory.buildMessage(object, zsetName, null, score);
+      rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, score);
+    }
+  }
+
+  protected void enqueueIn(Object message, String zsetName, long delay) {
+    RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, zsetName, null, delay);
+    rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
+  }
+
+  protected Map<String, List<RqueueMessage>> getMessageMap(String queueName) {
+    Map<String, List<RqueueMessage>> queueNameToMessage = new HashMap<>();
+    List<RqueueMessage> messages =
+        rqueueMessageTemplate.readFromList(rqueueConfig.getQueueName(queueName), 0, -1);
+    queueNameToMessage.put(rqueueConfig.getQueueName(queueName), messages);
+
+    List<RqueueMessage> messagesFromZset =
+        rqueueMessageTemplate.readFromZset(rqueueConfig.getDelayedQueueName(queueName), 0, -1);
+    queueNameToMessage.put(rqueueConfig.getDelayedQueueName(queueName), messagesFromZset);
+
+    List<RqueueMessage> messagesInProcessingQueue =
+        rqueueMessageTemplate.readFromZset(rqueueConfig.getProcessingQueueName(queueName), 0, -1);
+    queueNameToMessage.put(
+        rqueueConfig.getProcessingQueueName(queueName), messagesInProcessingQueue);
+    return queueNameToMessage;
+  }
+
+  protected void printQueueStats(List<String> queueNames) {
+    for (String queueName : queueNames) {
+      for (Entry<String, List<RqueueMessage>> entry : getMessageMap(queueName).entrySet()) {
+        for (RqueueMessage message : entry.getValue()) {
+          log.info("Queue: {} Msg: {}", entry.getKey(), message);
+        }
+      }
+    }
+  }
+}

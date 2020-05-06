@@ -34,6 +34,7 @@ import org.jtwig.spring.JtwigViewResolver;
 import org.jtwig.web.servlet.JtwigRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -65,7 +66,9 @@ public abstract class RqueueListenerBaseConfig {
    * @return {@link RedisConnectionFactory} object.
    */
   @Bean
-  public RqueueConfig rqueueConfig(ConfigurableBeanFactory beanFactory) {
+  public RqueueConfig rqueueConfig(
+      ConfigurableBeanFactory beanFactory,
+      @Value("${rqueue.version.key:__rq::version}") String versionKey) {
     boolean sharedConnection = false;
     if (simpleRqueueListenerContainerFactory.getRedisConnectionFactory() == null) {
       sharedConnection = true;
@@ -74,7 +77,7 @@ public abstract class RqueueListenerBaseConfig {
     }
     RedisConnectionFactory connectionFactory =
         simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
-    int version = RedisUtils.updateAndGetVersion(connectionFactory, 2);
+    int version = RedisUtils.updateAndGetVersion(connectionFactory, versionKey, 2);
     return new RqueueConfig(connectionFactory, sharedConnection, version);
   }
 

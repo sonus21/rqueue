@@ -27,12 +27,15 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class ProcessingMessageSchedulerTest {
   @Mock private RedisTemplate<String, Long> redisTemplate;
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;

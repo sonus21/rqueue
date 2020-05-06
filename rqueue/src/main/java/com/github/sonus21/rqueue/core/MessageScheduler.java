@@ -61,7 +61,6 @@ abstract class MessageScheduler
   private Map<String, Boolean> queueRunningState;
   private Map<String, ScheduledTaskDetail> queueNameToScheduledTask;
   private Map<String, String> channelNameToQueueName;
-  private Map<String, String> queueNameToZsetName;
   private Map<String, Long> queueNameToLastMessageSeenTime;
   private ThreadPoolTaskScheduler scheduler;
   @Autowired private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
@@ -98,7 +97,6 @@ abstract class MessageScheduler
           .getContainer()
           .addMessageListener(messageSchedulerListener, new ChannelTopic(channelName));
       channelNameToQueueName.put(channelName, queueName);
-      queueNameToZsetName.put(queueName, getZsetName(queueName));
     }
   }
 
@@ -109,7 +107,7 @@ abstract class MessageScheduler
     queueRunningState.put(queueName, true);
     if (scheduleTaskAtStartup() || !isRedisEnabled()) {
       long scheduleAt = System.currentTimeMillis() + MIN_DELAY;
-      schedule(queueName, getZsetName(queueName), scheduleAt, false);
+      schedule(queueName, scheduleAt, false);
     }
     subscribeToRedisTopic(queueName);
   }
@@ -183,11 +181,10 @@ abstract class MessageScheduler
 
   private void addTask(MessageMoverTask timerTask, ScheduledTaskDetail scheduledTaskDetail) {
     getLogger().debug("Timer: {} Task {}", timerTask, scheduledTaskDetail);
-    queueNameToScheduledTask.put(timerTask.getQueueName(), scheduledTaskDetail);
+    queueNameToScheduledTask.put(timerTask.getName(), scheduledTaskDetail);
   }
 
-  protected synchronized void schedule(
-      String queueName, String zsetName, Long startTime, boolean forceSchedule) {
+  protected synchronized void schedule(String queueName, Long startTime, boolean forceSchedule) {
     boolean isQueueActive = isQueueActive(queueName);
     if (!isQueueActive || scheduler == null) {
       return;
@@ -201,10 +198,14 @@ abstract class MessageScheduler
     queueNameToLastMessageSeenTime.put(queueName, currentTime);
 
     ScheduledTaskDetail scheduledTaskDetail = queueNameToScheduledTask.get(queueName);
+    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    String zsetName = getZsetName(queueName);
+
     if (scheduledTaskDetail == null || forceSchedule) {
       long requiredDelay = max(1, startTime - currentTime);
       long taskStartTime = startTime;
-      MessageMoverTask timerTask = new MessageMoverTask(queueName, zsetName);
+      MessageMoverTask timerTask =
+          new MessageMoverTask(queueDetail.getName(), queueDetail.getQueueName(), zsetName);
       Future<?> future;
       if (requiredDelay < MIN_DELAY) {
         future = scheduler.submit(timerTask);
@@ -228,12 +229,13 @@ abstract class MessageScheduler
           submittedTask,
           Constants.DEFAULT_SCRIPT_EXECUTION_TIME,
           "LIST: {} ZSET: {}, Task: {} failed",
-          queueName,
+          queueDetail.getQueueName(),
           zsetName,
           scheduledTaskDetail);
     }
     // Run was succeeded or cancelled submit new one
-    MessageMoverTask timerTask = new MessageMoverTask(queueName, zsetName);
+    MessageMoverTask timerTask =
+        new MessageMoverTask(queueDetail.getName(), queueDetail.getQueueName(), zsetName);
     Future<?> future =
         scheduler.schedule(
             timerTask, Instant.ofEpochMilli(getNextScheduleTime(queueName, startTime)));
@@ -253,7 +255,6 @@ abstract class MessageScheduler
     queueRunningState = new ConcurrentHashMap<>(queueNames.size());
     queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
     channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
-    queueNameToZsetName = new ConcurrentHashMap<>(queueNames.size());
     queueNameToLastMessageSeenTime = new ConcurrentHashMap<>(queueNames.size());
     createScheduler(queueNames.size());
     if (isRedisEnabled()) {
@@ -280,35 +281,37 @@ abstract class MessageScheduler
 
   @ToString
   private class MessageMoverTask implements Runnable {
+    private final String name;
     private final String queueName;
     private final String zsetName;
 
-    MessageMoverTask(String queueName, String zsetName) {
+    MessageMoverTask(String name, String queueName, String zsetName) {
+      this.name = name;
       this.queueName = queueName;
       this.zsetName = zsetName;
-    }
-
-    String getQueueName() {
-      return queueName;
     }
 
     @Override
     public void run() {
       getLogger().debug("Running {}", this);
       try {
-        if (isQueueActive(queueName)) {
+        if (isQueueActive(name)) {
           long currentTime = System.currentTimeMillis();
           Long value =
               defaultScriptExecutor.execute(
                   redisScript, Arrays.asList(queueName, zsetName), currentTime, MAX_MESSAGES);
-          long nextExecutionTime = getNextScheduleTime(queueName, value);
-          schedule(queueName, zsetName, nextExecutionTime, true);
+          long nextExecutionTime = getNextScheduleTime(name, value);
+          schedule(name, nextExecutionTime, true);
         }
       } catch (RedisSystemException e) {
         // no op
       } catch (Exception e) {
-        getLogger().warn("Task execution failed for the queue: {}", queueName, e);
+        getLogger().warn("Task execution failed for the queue: {}", name, e);
       }
+    }
+
+    public String getName() {
+      return this.name;
     }
   }
 
@@ -320,7 +323,7 @@ abstract class MessageScheduler
       }
       String body = new String(message.getBody());
       String channel = new String(message.getChannel());
-      getLogger().debug("Body: {}  Channel: {}", body, channel);
+      getLogger().debug("Body: {} Channel: {}", body, channel);
       try {
         Long startTime = Long.parseLong(body);
         String queueName = channelNameToQueueName.get(channel);
@@ -328,12 +331,7 @@ abstract class MessageScheduler
           getLogger().warn("Unknown channel name {}", channel);
           return;
         }
-        String zsetName = queueNameToZsetName.get(queueName);
-        if (zsetName == null) {
-          getLogger().warn("Unknown zset name {}", queueName);
-          return;
-        }
-        schedule(queueName, zsetName, startTime, false);
+        schedule(queueName, startTime, false);
       } catch (Exception e) {
         getLogger().error("Error occurred on a channel {}, body: {}", channel, body, e);
       }

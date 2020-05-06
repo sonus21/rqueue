@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
-@SpringBootApplication()
+@SpringBootApplication
 @EnableRedisRepositories
 public class RQueueApplication {
   @Value("${workers.count:3}")

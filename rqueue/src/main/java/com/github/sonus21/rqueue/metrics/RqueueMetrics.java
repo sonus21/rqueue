@@ -37,10 +37,10 @@ import org.springframework.scheduling.annotation.Async;
  */
 public class RqueueMetrics implements ApplicationListener<QueueInitializationEvent> {
   static final String QUEUE_KEY = "key";
-  static final String QUEUE_SIZE = "queue.size";
-  static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
-  static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
-  static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
+  private static final String QUEUE_SIZE = "queue.size";
+  private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
+  private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
+  private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
   private RqueueRedisTemplate<String> rqueueMessageTemplate;
   @Autowired private MetricsProperties metricsProperties;
   @Autowired private MeterRegistry meterRegistry;
@@ -59,7 +59,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
     } else {
       val = rqueueMessageTemplate.getZsetSize(name);
     }
-    if (val == null || val < 0) {
+    if (val == null) {
       return 0;
     }
     return val;

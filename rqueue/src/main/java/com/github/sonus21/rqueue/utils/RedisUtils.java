@@ -63,9 +63,9 @@ public class RedisUtils {
   }
 
   public static int updateAndGetVersion(
-      RedisConnectionFactory redisConnectionFactory, int defaultVersion) {
+      RedisConnectionFactory redisConnectionFactory, String versionDbKey, int defaultVersion) {
     RedisConnection connection = redisConnectionFactory.getConnection();
-    byte[] versionKey = SystemUtils.getVersionKey().getBytes();
+    byte[] versionKey = versionDbKey.getBytes();
     byte[] versionFromDb = connection.get(versionKey);
     if (SerializationUtils.isEmpty(versionFromDb)) {
       Long count =

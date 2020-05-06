@@ -24,6 +24,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
@@ -52,12 +53,14 @@ import org.junit.Test;
 
 @Slf4j
 public class RqueueTaskAggregatorServiceTest {
-  @Rule public RunTestUntilFail retry = new RunTestUntilFail(log, 3, null);
+  @Rule public RunTestUntilFail retry = new RunTestUntilFail(log);
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueTaskAggregatorService rqueueTaskAggregatorService =
-      new RqueueTaskAggregatorService(rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
+      new RqueueTaskAggregatorService(
+          rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
   private String queueName = "test-queue";
 
   @Before
@@ -125,12 +128,15 @@ public class RqueueTaskAggregatorServiceTest {
   }
 
   @Test
-  public void onApplicationEvent() throws IllegalAccessException, TimedOutException {
+  public void onApplicationEvent() throws TimedOutException {
     if (LocalDateTime.now(ZoneOffset.UTC).getHour() == 23) {
       log.info("This test cannot be run at this time");
       return;
     }
     String id = "__rq::q-stat::" + queueName;
+    doReturn(id).when(rqueueConfig).getQueueStatisticsKey(queueName);
+    doReturn("__rq::lock::" + id).when(rqueueConfig).getLockKey(id);
+
     doReturn(true)
         .when(rqueueLockManager)
         .acquireLock(
@@ -145,7 +151,7 @@ public class RqueueTaskAggregatorServiceTest {
         .when(rqueueQStatsDao)
         .save(any());
 
-    QueueTaskEvent event = null;
+    QueueTaskEvent event;
     TasksStat tasksStat = new TasksStat();
     int totalEvents = 0;
     for (; totalEvents < 498; totalEvents++) {

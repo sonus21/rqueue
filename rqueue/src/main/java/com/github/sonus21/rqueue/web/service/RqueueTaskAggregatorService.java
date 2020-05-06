@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.aggregator.QueueEvents;
@@ -27,7 +28,6 @@ import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.event.QueueTaskEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
@@ -56,6 +56,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class RqueueTaskAggregatorService
     implements ApplicationListener<QueueTaskEvent>, DisposableBean, SmartLifecycle {
+  private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueLockManager rqueueLockManager;
   private final RqueueQStatsDao rqueueQStatsDao;
@@ -69,9 +70,11 @@ public class RqueueTaskAggregatorService
 
   @Autowired
   public RqueueTaskAggregatorService(
+      RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueLockManager rqueueLockManager,
       RqueueQStatsDao rqueueQStatsDao) {
+    this.rqueueConfig = rqueueConfig;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueLockManager = rqueueLockManager;
     this.rqueueQStatsDao = rqueueQStatsDao;
@@ -232,7 +235,7 @@ public class RqueueTaskAggregatorService
         localDateTasksStatMap.put(date, stat);
       }
       String queueName = (String) queueTaskEvent.getSource();
-      String queueStatKey = SystemUtils.getQueueStatKey(queueName);
+      String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueName);
       QueueStatistics queueStatistics = rqueueQStatsDao.findById(queueStatKey);
       if (queueStatistics == null) {
         queueStatistics = new QueueStatistics(queueStatKey);
@@ -251,8 +254,8 @@ public class RqueueTaskAggregatorService
       if (!CollectionUtils.isEmpty(queueTaskEvents)) {
         QueueTaskEvent queueTaskEvent = queueTaskEvents.get(0);
         String queueName = (String) queueTaskEvent.getSource();
-        String queueStatKey = SystemUtils.getQueueStatKey(queueName);
-        String lockKey = SystemUtils.getLockKey(queueStatKey);
+        String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueName);
+        String lockKey = rqueueConfig.getLockKey(queueStatKey);
         if (rqueueLockManager.acquireLock(
             lockKey, Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
           aggregate(events);

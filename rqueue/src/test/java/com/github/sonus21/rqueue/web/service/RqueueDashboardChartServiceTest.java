@@ -18,11 +18,14 @@ package com.github.sonus21.rqueue.web.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.db.JobRunTime;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
@@ -52,16 +55,24 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class RqueueDashboardChartServiceTest {
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueSystemManagerService rqueueSystemManagerService =
       mock(RqueueSystemManagerService.class);
   private RqueueDashboardChartService rqueueDashboardChartService =
       new RqueueDashboardChartServiceImpl(
-          rqueueQStatsDao, rqueueWebConfig, rqueueSystemManagerService);
+          rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
   private List<String> queues = new ArrayList<>();
 
   @Before
   public void init() {
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
+    doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(0);
+              return "__rq::q-stat::" + name;
+            })
+        .when(rqueueConfig)
+        .getQueueStatisticsKey(anyString());
     queues.clear();
     queues.add("job");
     queues.add("notification");

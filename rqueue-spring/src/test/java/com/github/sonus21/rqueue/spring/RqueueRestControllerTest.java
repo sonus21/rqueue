@@ -25,12 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
@@ -48,26 +43,23 @@ import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled.DeleteMessageListener;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
+import com.github.sonus21.rqueue.test.tests.SpringWebTestBase;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.SystemUtils;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 @ContextConfiguration(classes = AppWithMetricEnabled.class)
 @RunWith(RqueueSpringTestRunner.class)
@@ -79,34 +71,11 @@ import org.springframework.web.context.WebApplicationContext;
       "mysql.db.name=RqueueRestController",
       "max.workers.count=40",
       "notification.queue.active=false",
+      "rqueue.web.statistic.history.day=180"
     })
-public class RqueueRestControllerTest {
-  @Autowired private RqueueMessageSender rqueueMessageSender;
-  @Autowired private WebApplicationContext wac;
+@Ignore
+public class RqueueRestControllerTest extends SpringWebTestBase {
   @Autowired private DeleteMessageListener deleteMessageListener;
-  @Autowired private RqueueMessageTemplate rqueueMessageTemplate;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
-  @Value("${notification.queue.name}")
-  private String notificationQueue;
-
-  @Value("${email.queue.name}")
-  private String emailQueueName;
-
-  @Value("${email.dead.letter.queue.name}")
-  private String emailDlq;
-
-  private MockMvc mockMvc;
-  private ObjectMapper mapper = new ObjectMapper();
-
-  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-
-  @Before
-  public void init() throws TimedOutException {
-    this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
-  }
 
   @Test
   public void testGetChartLatency() throws Exception {
@@ -299,24 +268,23 @@ public class RqueueRestControllerTest {
     Email job = Email.newInstance();
     deleteMessageListener.clear();
     rqueueMessageSender.enqueueIn(emailQueueName, job, 10 * Constants.ONE_MILLI);
-//    RqueueMessage message =
-//        rqueueMessageTemplate
-//            .readFromZset(SystemUtils.getDelayedQueueName(emailQueueName), 0, -1)
-//            .get(0);
-//    rqueueMessageSender.enqueueIn(
-//        jobQueueName, job, Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
-//    MvcResult result =
-//        this.mockMvc
-//            .perform(
-//                delete("/rqueue/api/v1/data-set/" + jobQueueName + "/" + job.getId())
-//                    .contentType(MediaType.APPLICATION_JSON))
-//            .andReturn();
-//    BooleanResponse response =
-//        mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
-//    assertEquals(0, response.getCode());
-//    Object metadata =
-//        stringRqueueRedisTemplate.get(SystemUtils.getMessageMetadataKey(message.getId()));
-//    assertTrue(((MessageMetadata) metadata).isDeleted());
+    RqueueMessage message =
+        rqueueMessageTemplate
+            .readFromZset(rqueueConfig.getDelayedQueueName(emailQueueName), 0, -1)
+            .get(0);
+    rqueueMessageSender.enqueueIn(
+        jobQueueName, job, Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
+    MvcResult result =
+        this.mockMvc
+            .perform(
+                delete("/rqueue/api/v1/data-set/" + jobQueueName + "/" + job.getId())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+    BooleanResponse response =
+        mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
+    assertEquals(0, response.getCode());
+    Object metadata = stringRqueueRedisTemplate.get(MessageUtils.getMessageMetaId(message.getId()));
+    assertTrue(((MessageMetadata) metadata).isDeleted());
     TimeoutUtils.waitFor(
         () -> {
           List<Object> messages = deleteMessageListener.getMessages();

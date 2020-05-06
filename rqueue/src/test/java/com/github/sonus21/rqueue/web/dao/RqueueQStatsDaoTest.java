@@ -18,19 +18,22 @@ package com.github.sonus21.rqueue.web.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
-import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.web.dao.impl.RqueueQStatsDaoImpl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -41,10 +44,22 @@ public class RqueueQStatsDaoTest {
   private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate =
       mock(RqueueRedisTemplate.class);
   private RqueueQStatsDao rqueueQStatsDao = new RqueueQStatsDaoImpl(rqueueRedisTemplate);
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+
+  @Before
+  public void init() {
+    doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(0);
+              return "__rq::q-stat::" + name;
+            })
+        .when(rqueueConfig)
+        .getQueueStatisticsKey(anyString());
+  }
 
   @Test
   public void findById() {
-    String id = SystemUtils.getQueueStatKey("job");
+    String id = rqueueConfig.getQueueStatisticsKey("job");
     assertNull(rqueueQStatsDao.findById(id));
     QueueStatistics queueStatistics = new QueueStatistics();
     doReturn(queueStatistics).when(rqueueRedisTemplate).get(id);
@@ -56,7 +71,8 @@ public class RqueueQStatsDaoTest {
   public void findAll() {
     List<String> keys =
         Arrays.asList(
-            SystemUtils.getQueueStatKey("job"), SystemUtils.getQueueStatKey("notification"));
+            rqueueConfig.getQueueStatisticsKey("job"),
+            rqueueConfig.getQueueStatisticsKey("notification"));
     QueueStatistics queueStatistics = new QueueStatistics();
     doReturn(Arrays.asList(null, queueStatistics)).when(rqueueRedisTemplate).mget(keys);
     assertEquals(Collections.singletonList(queueStatistics), rqueueQStatsDao.findAll(keys));
@@ -75,7 +91,8 @@ public class RqueueQStatsDaoTest {
 
   @Test
   public void save() {
-    QueueStatistics queueStatistics = new QueueStatistics(SystemUtils.getQueueStatKey("job"));
+    QueueStatistics queueStatistics =
+        new QueueStatistics(rqueueConfig.getQueueStatisticsKey("job"));
     rqueueQStatsDao.save(queueStatistics);
     verify(rqueueRedisTemplate, times(1)).set(queueStatistics.getId(), queueStatistics);
   }

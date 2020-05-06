@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.web.service.impl;
 import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
@@ -31,7 +32,6 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
@@ -52,26 +52,29 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageMetadataService messageMetadataService;
+  private final RqueueConfig rqueueConfig;
   private String latestVersion = "NA";
   private long versionFetchTime = 0;
 
   @Autowired
   public RqueueUtilityServiceImpl(
+      RqueueConfig rqueueConfig,
+      RqueueWebConfig rqueueWebConfig,
       @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate,
       RqueueSystemConfigDao rqueueSystemConfigDao,
-      RqueueWebConfig rqueueWebConfig,
       RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMessageMetadataService messageMetadataService) {
     this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
     this.rqueueWebConfig = rqueueWebConfig;
+    this.rqueueConfig = rqueueConfig;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.messageMetadataService = messageMetadataService;
   }
 
   @Override
   public BooleanResponse deleteMessage(String queueName, String id) {
-    String queueConfigKey = SystemUtils.getQueueConfigKey(queueName);
+    String queueConfigKey = rqueueConfig.getQueueConfigKey(queueName);
     QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey);
     BooleanResponse booleanResponse = new BooleanResponse();
     if (queueConfig == null) {

@@ -24,32 +24,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
 import com.github.sonus21.rqueue.test.dto.Job;
+import com.github.sonus21.rqueue.test.tests.SpringWebTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 @ContextConfiguration(classes = AppWithMetricEnabled.class)
 @RunWith(RqueueSpringTestRunner.class)
@@ -61,32 +52,7 @@ import org.springframework.web.context.WebApplicationContext;
       "mysql.db.name=RqueueRestController",
       "rqueue.web.enable=false"
     })
-public class RqueueViewsDisabledTest {
-  @Autowired private RqueueMessageSender rqueueMessageSender;
-  @Autowired private WebApplicationContext wac;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
-  @Value("${notification.queue.name}")
-  private String notificationQueue;
-
-  @Value("${email.queue.name}")
-  private String emailQueueName;
-
-  @Value("${email.dead.letter.queue.name}")
-  private String emailDlq;
-
-  private MockMvc mockMvc;
-  private ObjectMapper mapper = new ObjectMapper();
-
-  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-
-  @Before
-  public void init() throws TimedOutException {
-    this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
-  }
-
+public class RqueueViewsDisabledTest extends SpringWebTestBase {
   @Test
   public void home() throws Exception {
     assertNull(

@@ -59,7 +59,7 @@ public class RqueueListenerBaseConfigTest {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
     doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory));
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version"));
     assertNotNull(factory.getRedisConnectionFactory());
   }
 
@@ -68,7 +68,7 @@ public class RqueueListenerBaseConfigTest {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory));
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version"));
     assertNotNull(factory.getRedisConnectionFactory());
     assertEquals(redisConnectionFactory, factory.getRedisConnectionFactory());
     verify(beanFactory, times(0)).getBean(RedisConnectionFactory.class);

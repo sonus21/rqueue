@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -31,29 +32,29 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
-import com.github.sonus21.rqueue.utils.SystemUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.powermock.api.mockito.PowerMockito;
 
-@Ignore
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueSystemManagerServiceImplTest {
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueSystemManagerServiceImpl rqueueSystemManagerService =
-      new RqueueSystemManagerServiceImpl(stringRqueueRedisTemplate, rqueueSystemConfigDao);
+      new RqueueSystemManagerServiceImpl(
+          rqueueConfig, stringRqueueRedisTemplate, rqueueSystemConfigDao);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
   private String normalQueue = "normal-queue";
@@ -63,14 +64,15 @@ public class RqueueSystemManagerServiceImplTest {
       TestUtils.createQueueDetail(fastQueue, 3, false, 200000L, "fast-dlq");
   private QueueDetail normalQueueDetail =
       TestUtils.createQueueDetail(normalQueue, 3, false, 100000L, "normal-dlq");
-  private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
   private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
   private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
 
   @Before
   public void init() {
-    queueNameToQueueDetail.put(slowQueue, slowQueueDetail);
-    queueNameToQueueDetail.put(fastQueue, fastQueueDetail);
+    slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
+    fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
+    QueueRegistry.register(slowQueueDetail);
+    QueueRegistry.register(fastQueueDetail);
   }
 
   @Test
@@ -83,6 +85,7 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStartEmpty() {
+    QueueRegistry.delete();
     QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
     rqueueSystemManagerService.onApplicationEvent(event);
     verifyNoInteractions(stringRqueueRedisTemplate);
@@ -104,6 +107,14 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStartCreateAllQueueConfigs() {
+    doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
+    PowerMockito.doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(0);
+              return "__rq::q-config::" + name;
+            })
+        .when(rqueueConfig)
+        .getQueueConfigKey(anyString());
     QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
     doAnswer(
             invocation -> {
@@ -117,7 +128,7 @@ public class RqueueSystemManagerServiceImplTest {
               return 2L;
             })
         .when(stringRqueueRedisTemplate)
-        .addToSet(eq(SystemUtils.getQueuesKey()), any());
+        .addToSet(eq(TestUtils.getQueuesKey()), any());
     doAnswer(
             invocation -> {
               List<QueueConfig> queueConfigs = invocation.getArgument(0);
@@ -140,9 +151,15 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStartCreateAndUpdateQueueConfigs() {
-    Map<String, QueueDetail> queueDetailMap = new HashMap<>(queueNameToQueueDetail);
-    queueDetailMap.put(normalQueue, normalQueueDetail);
     QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
+    QueueRegistry.register(normalQueueDetail);
+    PowerMockito.doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(0);
+              return "__rq::q-config::" + name;
+            })
+        .when(rqueueConfig)
+        .getQueueConfigKey(anyString());
     QueueConfig fastQueueConfig =
         TestUtils.createQueueConfig(
             fastQueue,

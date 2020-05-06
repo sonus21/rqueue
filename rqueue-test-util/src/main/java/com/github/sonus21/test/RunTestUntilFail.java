@@ -98,11 +98,19 @@ import org.slf4j.Logger;
  */
 public class RunTestUntilFail implements TestRule {
 
-  private static final int DEFAULT_RETRY_COUNT = 10;
+  private static final int DEFAULT_RETRY_COUNT = 3;
   private static final String ENVIRONMENT_VAR_NAME = "RETRY_COUNT";
   private Runnable callback;
   private int retryCount;
   private Logger logger;
+
+  public RunTestUntilFail(Logger logger, Runnable failureCallback) {
+    this(logger, null, failureCallback);
+  }
+
+  public RunTestUntilFail(Logger logger) {
+    this(logger, null, null);
+  }
 
   /**
    * Create a object of this class
@@ -117,13 +125,16 @@ public class RunTestUntilFail implements TestRule {
     callback = failureCallback;
   }
 
-  private void printData(String message, Object... args) {
+  private void printData(String message, Throwable t, Object... args) {
     String msg = String.format(message, args);
     if (logger == null) {
       System.err.println(msg);
+      if (t != null) {
+        t.printStackTrace();
+      }
       return;
     }
-    logger.info(msg);
+    logger.info(msg, t);
   }
 
   private int getRetryCount(Integer retryCount) {
@@ -140,7 +151,8 @@ public class RunTestUntilFail implements TestRule {
     try {
       return Integer.parseInt(retryCountStr);
     } catch (NumberFormatException e) {
-      printData("Environment '" + ENVIRONMENT_VAR_NAME + "' '" + retryCountStr + "' is not valid");
+      printData(
+          "Environment '" + ENVIRONMENT_VAR_NAME + "' '" + retryCountStr + "' is not valid", null);
       return DEFAULT_RETRY_COUNT;
     }
   }
@@ -150,8 +162,8 @@ public class RunTestUntilFail implements TestRule {
     return statement(base, description);
   }
 
-  private void performPostFailureActions(final Description description, int iteration) {
-    printData("%s run : %d  failed", description.getDisplayName(), iteration);
+  private void performPostFailureActions(final String testName, int iteration, Throwable t) {
+    printData("************* FAILED Test: %s Iteration: %d *************", t, testName, iteration);
     if (callback == null) {
       return;
     }
@@ -162,16 +174,24 @@ public class RunTestUntilFail implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        for (int i = 1; i <= retryCount; i++) {
-          printData("Running Iteration: %d", i);
+        String testName = description.getMethodName();
+        int i = 1;
+        do {
+          printData(
+              "************* RUNNING Test: %s Iteration: %d *************", null, testName, i);
           try {
             base.evaluate();
+            printData(
+                "************* PASS Test: %s Iteration: %d  **************", null, testName, i);
+            return;
           } catch (Throwable t) {
-            performPostFailureActions(description, i);
-            throw t;
+            performPostFailureActions(testName, i, t);
+            if (i == retryCount) {
+              throw t;
+            }
           }
-        }
-        printData("%s : giving up after %s passes", description.getDisplayName(), retryCount);
+          i += 1;
+        } while (i < retryCount);
       }
     };
   }

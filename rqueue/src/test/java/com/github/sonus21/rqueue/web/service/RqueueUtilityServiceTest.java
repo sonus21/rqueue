@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
@@ -52,21 +53,25 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueUtilityServiceTest {
-  RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
-  RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
-  RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
-  RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  RqueueMessageMetadataService messageMetadataService = mock(RqueueMessageMetadataService.class);
+  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
+  private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
+  private RqueueMessageMetadataService messageMetadataService =
+      mock(RqueueMessageMetadataService.class);
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueUtilityService rqueueUtilityService =
       new RqueueUtilityServiceImpl(
+          rqueueConfig,
+          rqueueWebConfig,
           stringRqueueRedisTemplate,
           rqueueSystemConfigDao,
-          rqueueWebConfig,
           rqueueMessageTemplate,
           messageMetadataService);
 
   @Test
   public void deleteMessage() {
+    doReturn("__rq::q-config::notification").when(rqueueConfig).getQueueConfigKey("notification");
     String id = UUID.randomUUID().toString();
     BaseResponse response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(1, response.getCode());

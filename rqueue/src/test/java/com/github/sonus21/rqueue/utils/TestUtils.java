@@ -24,7 +24,10 @@ public class TestUtils {
 
   public static QueueConfig createQueueConfig(
       String name, int numRetry, boolean delayed, long visibilityTimeout, String dlq) {
-    return createQueueDetail(name, numRetry, delayed, visibilityTimeout, dlq).toConfig();
+    QueueConfig queueConfig =
+        createQueueDetail(name, numRetry, delayed, visibilityTimeout, dlq).toConfig();
+    queueConfig.setId(getQueueConfigKey(name));
+    return queueConfig;
   }
 
   public static QueueDetail createQueueDetail(
@@ -41,5 +44,13 @@ public class TestUtils {
         .visibilityTimeout(visibilityTimeout)
         .deadLetterQueueName(dlq)
         .build();
+  }
+
+  public static String getQueueConfigKey(String name) {
+    return "__rq::q-config::" + name;
+  }
+
+  public static String getQueuesKey() {
+    return "__rq::queues";
   }
 }

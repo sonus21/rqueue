@@ -23,7 +23,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class QueueStatisticsTest {
   private String id = "__rq::q-stat::slow-queue";
 

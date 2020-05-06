@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.utils.SystemUtils;
 import java.io.Serializable;
 import java.util.LinkedHashSet;
 import lombok.Builder;
@@ -48,7 +47,6 @@ public class QueueDetail implements Serializable {
   public QueueConfig toConfig() {
     QueueConfig queueConfig =
         QueueConfig.builder()
-            .id(SystemUtils.getQueueConfigKey(name))
             .name(name)
             .delayed(delayedQueue)
             .numRetry(numRetry)

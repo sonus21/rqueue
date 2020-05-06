@@ -36,7 +36,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueMessageMetadataServiceTest {
   private RqueueRedisTemplate<MessageMetadata> rqueueRedisTemplate =
       mock(RqueueRedisTemplate.class);
