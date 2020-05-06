@@ -17,11 +17,11 @@
   </appender>
 
   <logger level="DEBUG" name="com.github.sonus21">
-    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="FILE"/>
   </logger>
 
   <root level="INFO">
-    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="FILE"/>
   </root>
 
 </configuration>
