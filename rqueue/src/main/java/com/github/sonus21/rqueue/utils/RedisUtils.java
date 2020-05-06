@@ -65,19 +65,20 @@ public class RedisUtils {
   public static int updateAndGetVersion(
       RedisConnectionFactory redisConnectionFactory, int defaultVersion) {
     RedisConnection connection = redisConnectionFactory.getConnection();
-    byte[] versionBytes = connection.get(SystemUtils.getVersionKey().getBytes());
-    if (SerializationUtils.isEmpty(versionBytes)) {
+    byte[] versionKey = SystemUtils.getVersionKey().getBytes();
+    byte[] versionFromDb = connection.get(versionKey);
+    if (SerializationUtils.isEmpty(versionFromDb)) {
       Long count =
           connection.eval(
               "return #redis.pcall('keys', 'rqueue-*')".getBytes(), ReturnType.INTEGER, 0);
       if (count != null && count > 0L) {
         int version = 1;
-        connection.set(versionBytes, String.valueOf(version).getBytes());
+        connection.set(versionKey, String.valueOf(version).getBytes());
         return version;
       }
-      connection.set(versionBytes, String.valueOf(defaultVersion).getBytes());
+      connection.set(versionKey, String.valueOf(defaultVersion).getBytes());
       return defaultVersion;
     }
-    return Integer.parseInt(new String(versionBytes));
+    return Integer.parseInt(new String(versionFromDb));
   }
 }

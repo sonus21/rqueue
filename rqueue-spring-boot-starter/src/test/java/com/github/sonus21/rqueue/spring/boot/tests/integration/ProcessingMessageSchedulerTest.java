@@ -54,10 +54,10 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(
     properties = {
       "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=6379",
+      "spring.redis.port=6389",
       "mysql.db.name=test3",
       "max.workers.count=120",
-      "use.system.redis=true"
+      "use.system.redis=false"
     })
 public class ProcessingMessageSchedulerTest {
   @Autowired private ConsumedMessageService consumedMessageService;

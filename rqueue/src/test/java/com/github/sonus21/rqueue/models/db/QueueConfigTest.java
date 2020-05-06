@@ -76,7 +76,7 @@ public class QueueConfigTest {
     assertEquals("__rq::q", queueConfig.getId());
     assertEquals("q", queueConfig.getName());
     assertEquals(100L, queueConfig.getVisibilityTimeout());
-    assertEquals(-1, queueConfig.getNumRetry());
+    assertEquals(100, queueConfig.getNumRetry());
     assertNull(queueConfig.getDeadLetterQueues());
     assertNull(queueConfig.getUpdatedOn());
     assertNull(queueConfig.getCreatedOn());
