@@ -79,7 +79,7 @@ public class MetricTestBase extends SpringTestBase {
   }
 
   public void verifyMetricStatus() throws TimedOutException {
-    enqueue(emailDlq, i -> Email.newInstance(), 10);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10);
 
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
@@ -90,7 +90,7 @@ public class MetricTestBase extends SpringTestBase {
         meterRegistry
             .get("dead.letter.queue.size")
             .tags("rqueue", "test")
-            .tags("queue", emailQueueName)
+            .tags("queue", emailQueue)
             .gauge()
             .value(),
         0);
@@ -107,7 +107,7 @@ public class MetricTestBase extends SpringTestBase {
   }
 
   public void verifyCountStatus() throws TimedOutException {
-    messageSender.put(emailQueueName, Email.newInstance());
+    messageSender.put(emailQueue, Email.newInstance());
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), 1, 1);
     messageSender.put(jobQueue, job);
@@ -122,25 +122,25 @@ public class MetricTestBase extends SpringTestBase {
                 >= 1,
         30000,
         "job process",
-        () -> printQueueStats(newArrayList(jobQueue, emailQueueName, notificationQueue)));
+        () -> printQueueStats(newArrayList(jobQueue, emailQueue, notificationQueue)));
     waitFor(
         () ->
             meterRegistry
                     .get("execution.count")
                     .tags("rqueue", "test")
-                    .tags("queue", emailQueueName)
+                    .tags("queue", emailQueue)
                     .counter()
                     .count()
                 == 1,
         "message process",
-        () -> printQueueStats(newArrayList(jobQueue, emailQueueName, notificationQueue)));
+        () -> printQueueStats(newArrayList(jobQueue, emailQueue, notificationQueue)));
 
     assertEquals(
         0,
         meterRegistry
             .get("failure.count")
             .tags("rqueue", "test")
-            .tags("queue", emailQueueName)
+            .tags("queue", emailQueue)
             .counter()
             .count(),
         0);

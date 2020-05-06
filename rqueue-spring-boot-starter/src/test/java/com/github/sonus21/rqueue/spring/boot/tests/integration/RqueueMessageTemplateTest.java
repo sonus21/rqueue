@@ -90,16 +90,15 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
 
   @Test
   public void moveMessageZsetToZset() {
-    String srcZset = jobQueueName + "src";
-    String tgtZset = jobQueueName + "tgt";
+    String srcZset = jobQueue + "src";
+    String tgtZset = jobQueue + "tgt";
     enqueueIn(srcZset, i -> Job.newInstance(), i -> 5000L, 10);
     rqueueMessageTemplate.moveMessageZsetToZset(srcZset, tgtZset, 10, 0, false);
     Assert.assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
     Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(srcZset).intValue());
 
-    rqueueMessageTemplate.moveMessageZsetToZset(tgtZset, "_rq::xx" + jobQueueName, 10, 0, false);
+    rqueueMessageTemplate.moveMessageZsetToZset(tgtZset, "_rq::xx" + jobQueue, 10, 0, false);
     Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
-    Assert.assertEquals(
-        10, stringRqueueRedisTemplate.getZsetSize("_rq::xx" + jobQueueName).intValue());
+    Assert.assertEquals(10, stringRqueueRedisTemplate.getZsetSize("_rq::xx" + jobQueue).intValue());
   }
 }

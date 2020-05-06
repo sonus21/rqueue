@@ -57,8 +57,7 @@ public class ProcessingMessageSchedulerTest extends SpringTestBase {
       new RunTestUntilFail(
           log,
           () -> {
-            for (Entry<String, List<RqueueMessage>> entry :
-                getMessageMap(jobQueueName).entrySet()) {
+            for (Entry<String, List<RqueueMessage>> entry : getMessageMap(jobQueue).entrySet()) {
               log.error("FAILING Queue {}", entry.getKey());
               for (RqueueMessage message : entry.getValue()) {
                 log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
@@ -70,7 +69,7 @@ public class ProcessingMessageSchedulerTest extends SpringTestBase {
 
   @Test
   public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
-    String processingQueueName = jobQueueName;
+    String processingQueueName = jobQueue;
     long currentTime = System.currentTimeMillis();
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();
@@ -88,7 +87,7 @@ public class ProcessingMessageSchedulerTest extends SpringTestBase {
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == messageSender.getAllMessages(jobQueueName).size(),
+        () -> 0 == messageSender.getAllMessages(jobQueue).size(),
         30 * Constants.ONE_MILLI,
         "messages to be consumed");
     waitFor(

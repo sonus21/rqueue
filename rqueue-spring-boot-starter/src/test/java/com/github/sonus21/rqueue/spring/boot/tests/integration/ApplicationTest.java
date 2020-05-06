@@ -43,7 +43,7 @@ public class ApplicationTest extends SpringTestBase {
   public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), 3, 10);
-    messageSender.put(jobQueueName, job);
+    messageSender.put(jobQueue, job);
     waitFor(
         () -> {
           Job jobInDb = consumedMessageService.getMessage(job.getId(), Job.class);
@@ -52,7 +52,7 @@ public class ApplicationTest extends SpringTestBase {
         "job to be executed");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueueName);
+          List<Object> messages = messageSender.getAllMessages(jobQueue);
           return !messages.contains(job);
         },
         "message should be deleted from internal storage");

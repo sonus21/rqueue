@@ -71,15 +71,15 @@ public class MessageRetryTest extends SpringTestBase {
   public void jobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
-    messageSender.put(jobQueueName, job);
+    messageSender.put(jobQueue, job);
     waitFor(() -> failureManager.getFailureCount(job.getId()) >= 3, "Job to be retried");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueueName);
+          List<Object> messages = messageSender.getAllMessages(jobQueue);
           return messages.contains(job);
         },
         "message should be present in internal storage");
     // more then one copy should not be present
-    assertEquals(1, messageSender.getAllMessages(jobQueueName).size());
+    assertEquals(1, messageSender.getAllMessages(jobQueue).size());
   }
 }

@@ -43,6 +43,6 @@ public class SpringAppTest extends SpringTestBase {
     assertEquals(3, registeredQueue.size());
     assertTrue(registeredQueue.containsKey(notificationQueue));
     assertTrue(registeredQueue.containsKey(emailQueue));
-    assertTrue(registeredQueue.containsKey(jobQueueName));
+    assertTrue(registeredQueue.containsKey(jobQueue));
   }
 }

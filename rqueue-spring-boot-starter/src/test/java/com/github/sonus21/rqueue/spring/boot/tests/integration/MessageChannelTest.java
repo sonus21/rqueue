@@ -43,19 +43,27 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @Slf4j
 public class MessageChannelTest extends SpringTestBase {
+  /**
+   * This test verified whether any pending message in the delayed queue are moved or not Whenever a
+   * delayed message is pushed then it's checked whether there're any pending messages on delay
+   * queue. if expired delayed messages are found on the head then a message is published on delayed
+   * channel.
+   */
   @Test
   public void publishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     int messageCount = 200;
-    enqueueIn(rqueueConfig.getQueueName(emailQueue), i -> Email.newInstance(), i -> -1000L, 10);
+    String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
+    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, messageCount);
     Email email = Email.newInstance();
     log.info("adding new message {}", email);
     messageSender.put(emailQueue, email, 1000L);
     waitFor(
-        () -> stringRqueueRedisTemplate.getZsetSize(emailQueue) <= 1,
+        () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
         "one or zero messages in zset");
     assertTrue(
         "Messages are correctly moved",
-        stringRqueueRedisTemplate.getListSize(emailQueue) >= messageCount);
+        stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
+            >= messageCount);
     assertEquals(messageCount + 1, messageSender.getAllMessages(emailQueue).size());
   }
 }

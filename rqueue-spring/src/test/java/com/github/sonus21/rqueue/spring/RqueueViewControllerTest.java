@@ -112,13 +112,13 @@ public class RqueueViewControllerTest extends SpringTestBase {
 
   @Test
   public void queueDetail() throws Exception {
-    MvcResult result = this.mockMvc.perform(get("/rqueue/queues/" + jobQueueName)).andReturn();
+    MvcResult result = this.mockMvc.perform(get("/rqueue/queues/" + jobQueue)).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
     assertEquals("classpath:/templates/rqueue/queue_detail.html", jtwigView.getUrl());
     verifyBasicData(model, NavTab.QUEUES);
-    assertEquals("Queue: " + jobQueueName, model.get("title"));
-    assertEquals(jobQueueName, model.get("queueName"));
+    assertEquals("Queue: " + jobQueue, model.get("title"));
+    assertEquals(jobQueue, model.get("queueName"));
     assertEquals(
         Arrays.asList(AggregationType.DAILY, AggregationType.WEEKLY, AggregationType.MONTHLY),
         model.get("aggregatorTypes"));

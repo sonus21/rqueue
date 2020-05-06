@@ -77,7 +77,7 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
   public void queueDetail() throws Exception {
     assertNull(
         this.mockMvc
-            .perform(get("/rqueue/queues/" + jobQueueName))
+            .perform(get("/rqueue/queues/" + jobQueue))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getModelAndView());
@@ -158,8 +158,8 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
             .perform(
                 get("/rqueue/api/v1/explore")
                     .param("type", "LIST")
-                    .param("src", emailQueueName)
-                    .param("name", emailDlq))
+                    .param("src", emailQueue)
+                    .param("name", emailDeadLetterQueue))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -171,7 +171,7 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(delete("/rqueue/api/v1/data-set/" + emailDlq))
+            .perform(delete("/rqueue/api/v1/data-set/" + emailDeadLetterQueue))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -183,7 +183,7 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(get("/rqueue/api/v1/data-type").param("name", emailDlq))
+            .perform(get("/rqueue/api/v1/data-type").param("name", emailDeadLetterQueue))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -193,7 +193,7 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
   @Test
   public void moveMessage() throws Exception {
     MessageMoveRequest request =
-        new MessageMoveRequest(emailDlq, DataType.LIST, emailQueueName, DataType.LIST);
+        new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
 
     assertEquals(
         "",
@@ -215,7 +215,7 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
         this.mockMvc
             .perform(
                 get("/rqueue/api/v1/data")
-                    .param("name", emailDlq)
+                    .param("name", emailDeadLetterQueue)
                     .param("type", DataType.LIST.name())
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
@@ -230,8 +230,7 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
         "",
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/queues/" + jobQueueName)
-                    .contentType(MediaType.APPLICATION_JSON))
+                delete("/rqueue/api/v1/queues/" + jobQueue).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -245,7 +244,7 @@ public class RqueueViewsDisabledTest extends SpringWebTestBase {
         "",
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/data-set/" + jobQueueName + "/" + job.getId())
+                delete("/rqueue/api/v1/data-set/" + jobQueue + "/" + job.getId())
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()

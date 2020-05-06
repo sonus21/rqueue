@@ -43,6 +43,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -275,7 +276,11 @@ public class RqueueTaskAggregatorService
           if (log.isTraceEnabled()) {
             log.trace("Aggregating queue stats");
           }
-          events = queue.take();
+          events =
+              queue.poll(rqueueWebConfig.getAggregateShutdownWaitTime() / 2, TimeUnit.MILLISECONDS);
+          if (events == null) {
+            continue;
+          }
           processEvents(events);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();

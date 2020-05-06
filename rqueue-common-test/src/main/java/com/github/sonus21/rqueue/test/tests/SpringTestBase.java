@@ -50,7 +50,7 @@ public class SpringTestBase {
   protected String emailQueue;
 
   @Value("${job.queue.name}")
-  protected String jobQueueName;
+  protected String jobQueue;
 
   @Value("${email.dead.letter.queue.name}")
   protected String emailDeadLetterQueue;
@@ -63,15 +63,6 @@ public class SpringTestBase {
 
   @Value("${notification.queue.retry.count}")
   protected int notificationRetryCount;
-
-  @Value("${email.dead.letter.queue.name}")
-  protected String emailDlq;
-
-  @Value("${email.queue.name}")
-  protected String emailQueueName;
-
-  @Value("${job.queue.name}")
-  protected String jobQueue;
 
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, queueName, null, null);
@@ -101,7 +92,7 @@ public class SpringTestBase {
       long score = delay.getDelay(i);
       RqueueMessage rqueueMessage =
           RqueueMessageFactory.buildMessage(object, zsetName, null, score);
-      rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, score);
+      rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
     }
   }
 
