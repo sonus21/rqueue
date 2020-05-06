@@ -23,7 +23,10 @@ import static org.mockito.Mockito.mock;
 import java.util.Collections;
 import org.jtwig.functions.FunctionRequest;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class DateTimeFunctionTest {
   private DateTimeFunction function = new DateTimeFunction();
 

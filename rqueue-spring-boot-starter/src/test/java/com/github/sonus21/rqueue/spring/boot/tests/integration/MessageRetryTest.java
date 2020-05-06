@@ -20,19 +20,15 @@ import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
-import com.github.sonus21.rqueue.test.service.FailureManager;
+import com.github.sonus21.rqueue.test.tests.SpringTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -41,26 +37,7 @@ import org.springframework.test.context.TestPropertySource;
 @ContextConfiguration(classes = Application.class)
 @TestPropertySource(properties = {"spring.redis.port=6381", "mysql.db.name=test1"})
 @SpringBootTest
-public class MessageRetryTest {
-  @Autowired private ConsumedMessageService consumedMessageService;
-  @Autowired private RqueueMessageSender messageSender;
-  @Autowired private FailureManager failureManager;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
-  @Value("${email.queue.name}")
-  private String emailQueue;
-
-  @Value("${email.queue.retry.count}")
-  private int emailRetryCount;
-
-  @Value("${notification.queue.name}")
-  private String notificationQueue;
-
-  @Value("${notification.queue.retry.count}")
-  private int notificationRetryCount;
-
+public class MessageRetryTest extends SpringTestBase {
   @Test
   public void notificationOnMessageIsTriggered() throws TimedOutException {
     Notification notification = Notification.newInstance();
@@ -94,15 +71,15 @@ public class MessageRetryTest {
   public void jobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
-    messageSender.put(jobQueueName, job);
+    messageSender.put(jobQueue, job);
     waitFor(() -> failureManager.getFailureCount(job.getId()) >= 3, "Job to be retried");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueueName);
+          List<Object> messages = messageSender.getAllMessages(jobQueue);
           return messages.contains(job);
         },
         "message should be present in internal storage");
     // more then one copy should not be present
-    assertEquals(1, messageSender.getAllMessages(jobQueueName).size());
+    assertEquals(1, messageSender.getAllMessages(jobQueue).size());
   }
 }

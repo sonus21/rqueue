@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.models.event;
+package com.github.sonus21.rqueue.exception;
 
-import lombok.Getter;
-import org.springframework.context.ApplicationEvent;
+public class QueueDoesNotExist extends RuntimeException {
 
-@Getter
-public class QueueInitializationEvent extends ApplicationEvent {
+  private static final long serialVersionUID = 598739372785907190L;
 
-  private static final long serialVersionUID = 1955427920805054136L;
-  private final boolean start;
-
-  public QueueInitializationEvent(Object source, boolean start) {
-    super(source);
-    this.start = start;
+  public QueueDoesNotExist(String name) {
+    super(name);
   }
 }

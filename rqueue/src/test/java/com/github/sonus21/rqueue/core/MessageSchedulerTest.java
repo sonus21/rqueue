@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestMessageSch
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestThreadPoolScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -47,8 +48,10 @@ public class MessageSchedulerTest {
 
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, 3, "", true, 900000L);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, 3, "", false, 900000L);
+  private QueueDetail slowQueueDetail =
+      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
+  private QueueDetail fastQueueDetail =
+      TestUtils.createQueueDetail(fastQueue, 3, false, 900000L, null);
   private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
 
   @Before
@@ -60,18 +63,21 @@ public class MessageSchedulerTest {
 
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", null, true));
+    QueueRegistry.delete();
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     assertEquals(0, messageScheduler.scheduleList.size());
     messageScheduler.destroy();
   }
 
   @Test
   public void startShouldNotSubmitsTask() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessagePoolSize();
+    QueueRegistry.delete();
+    QueueRegistry.register(slowQueueDetail);
+    QueueRegistry.register(fastQueueDetail);
+    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
     FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
-    messageScheduler.onApplicationEvent(
-        new QueueInitializationEvent("Test", queueNameToQueueDetail, true));
+    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
     assertEquals(0, scheduler.tasks.size());
     messageScheduler.destroy();
   }

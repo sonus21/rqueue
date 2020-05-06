@@ -18,25 +18,31 @@ package com.github.sonus21.rqueue.models.db;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.sonus21.rqueue.models.SerializableBase;
-import com.github.sonus21.rqueue.utils.StringUtils;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.util.CollectionUtils;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @ToString
+@Builder
+@EqualsAndHashCode(callSuper = false)
+@AllArgsConstructor
+@NoArgsConstructor
 public class QueueConfig extends SerializableBase {
   private static final long serialVersionUID = 2644813429709395582L;
   private String id;
   private String name;
+  private String queueName;
+  private String processingQueueName;
+  private String delayedQueueName;
   private boolean delayed;
   private int numRetry;
   private long visibilityTimeout;
@@ -45,31 +51,6 @@ public class QueueConfig extends SerializableBase {
   private Long updatedOn;
   private Long deletedOn;
   private Set<String> deadLetterQueues;
-
-  public QueueConfig(
-      String id, String name, int numRetry, boolean delayed, long visibilityTimeout) {
-    this(id, name, numRetry, delayed, visibilityTimeout, null);
-  }
-
-  public QueueConfig(
-      String id,
-      String name,
-      int numRetry,
-      boolean delayed,
-      long visibilityTimeout,
-      String deadLetterQueue) {
-    this.id = id;
-    this.name = name;
-    this.numRetry = numRetry;
-    this.delayed = delayed;
-    this.visibilityTimeout = visibilityTimeout;
-    this.createdOn = System.currentTimeMillis();
-    this.deadLetterQueues = new LinkedHashSet<>();
-    updateTime();
-    if (!StringUtils.isEmpty(deadLetterQueue)) {
-      addDeadLetterQueue(deadLetterQueue);
-    }
-  }
 
   public void updateTime() {
     this.updatedOn = System.currentTimeMillis();
@@ -111,7 +92,7 @@ public class QueueConfig extends SerializableBase {
   }
 
   @JsonIgnore
-  public boolean isDelayedQueue(String name) {
+  public boolean isDeadLetterQueue(String name) {
     return deadLetterQueues.contains(name);
   }
 

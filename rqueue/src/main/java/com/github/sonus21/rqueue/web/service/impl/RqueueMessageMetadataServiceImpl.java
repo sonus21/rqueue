@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.web.service.impl;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collection;
@@ -61,10 +61,10 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
 
   @Override
   public void deleteMessage(String messageId, Duration duration) {
-    String id = QueueUtils.getMessageMetadataKey(messageId);
+    String id = MessageUtils.getMessageMetaId(messageId);
     MessageMetadata messageMetadata = get(id);
     if (messageMetadata == null) {
-      messageMetadata = new MessageMetadata(messageId);
+      messageMetadata = new MessageMetadata(id, messageId);
     }
     messageMetadata.setDeleted(true);
     messageMetadata.setDeletedOn(System.currentTimeMillis());

@@ -20,20 +20,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtils;
-import java.util.HashMap;
-import java.util.Map;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class ProcessingMessageSchedulerTest {
   @Mock private RedisTemplate<String, Long> redisTemplate;
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
@@ -42,29 +44,30 @@ public class ProcessingMessageSchedulerTest {
 
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, 3, "", true, 100000L);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, 3, "", false, 200000L);
+  private QueueDetail slowQueueDetail =
+      TestUtils.createQueueDetail(slowQueue, 3, true, 100000L, null);
+  private QueueDetail fastQueueDetail =
+      TestUtils.createQueueDetail(fastQueue, 3, false, 200000L, null);
 
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
-    Map<String, QueueDetail> queueDetailMap = new HashMap<>();
-    queueDetailMap.put(slowQueue, slowQueueDetail);
-    queueDetailMap.put(fastQueue, fastQueueDetail);
-    messageScheduler.initializeState(queueDetailMap);
+    QueueRegistry.register(slowQueueDetail);
+    QueueRegistry.register(fastQueueDetail);
+    doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
+    messageScheduler.initialize();
   }
 
   @Test
   public void getChannelName() {
     assertEquals(
-        QueueUtils.getProcessingQueueChannelName(slowQueue),
+        slowQueueDetail.getProcessingQueueChannelName(),
         messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
   public void getZsetName() {
-    assertEquals(
-        QueueUtils.getProcessingQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
+    assertEquals(slowQueueDetail.getProcessingQueueName(), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test

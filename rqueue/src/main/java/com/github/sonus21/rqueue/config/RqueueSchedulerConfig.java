@@ -58,9 +58,9 @@ public class RqueueSchedulerConfig {
 
   // Number of threads used to process delayed queue messages
   @Value("${rqueue.scheduler.delayed.message.thread.pool.size:5}")
-  private int delayedMessagePoolSize;
+  private int delayedMessageThreadPoolSize;
 
   //  Number of threads used to process processing queue messages
   @Value("${rqueue.scheduler.processing.message.thread.pool.size:1}")
-  private int processingMessagePoolSize;
+  private int processingMessageThreadPoolSize;
 }

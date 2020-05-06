@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -82,7 +82,7 @@ public class MessageExecutorTest {
 
   @Test
   public void callDiscardProcessor() {
-    QueueDetail queueDetail = new QueueDetail("test", 3, "", false, 900000);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 900000, null);
     MessageExecutor messageExecutor =
         new MessageExecutor(
             rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
@@ -92,7 +92,7 @@ public class MessageExecutorTest {
 
   @Test
   public void callDeadLetterProcessor() {
-    QueueDetail queueDetail = new QueueDetail("test", 3, "dead-test", false, 900000);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 900000, "dead-test");
 
     MessageExecutor messageExecutor =
         new MessageExecutor(
@@ -103,22 +103,19 @@ public class MessageExecutorTest {
 
   @Test
   public void messageIsParkedForRetry() {
-    QueueDetail queueDetail = new QueueDetail("test", 1000, "", false, 0);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 1000, false, 0, "");
     MessageExecutor messageExecutor =
         new MessageExecutor(
             rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     messageExecutor.run();
     verify(messageTemplate, times(1))
-        .replaceMessage(
-            eq(QueueUtils.getProcessingQueueName(queueDetail.getQueueName())),
-            eq(rqueueMessage),
-            any());
+        .replaceMessage(eq(queueDetail.getProcessingQueueName()), eq(rqueueMessage), any());
   }
 
   @Test
   public void messageIsNotExecutedWhenDeletedManually() {
-    QueueDetail queueDetail = new QueueDetail("test", 3, "", false, 0);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 0, null);
     MessageExecutor messageExecutor =
         new MessageExecutor(
             rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
@@ -133,7 +130,7 @@ public class MessageExecutorTest {
 
   @Test
   public void messageIsDeletedWhileExecuting() {
-    QueueDetail queueDetail = new QueueDetail("test", 3, "", false, 0);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 0, null);
     MessageExecutor messageExecutor =
         new MessageExecutor(
             rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);

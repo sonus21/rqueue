@@ -20,7 +20,6 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -32,11 +31,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueListenerBaseConfigTest {
-  private RqueueConfig rqueueConfig = new RqueueConfig(mock(RedisConnectionFactory.class), false);
+  @Mock private RedisConnection redisConnection;
   @Mock private ConfigurableBeanFactory beanFactory;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
@@ -44,6 +44,7 @@ public class RqueueListenerBaseConfigTest {
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
+    doReturn(redisConnection).when(redisConnectionFactory).getConnection();
   }
 
   private RqueueListenerConfig createConfig(SimpleRqueueListenerContainerFactory factory)
@@ -58,7 +59,7 @@ public class RqueueListenerBaseConfigTest {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
     doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory));
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version"));
     assertNotNull(factory.getRedisConnectionFactory());
   }
 
@@ -67,7 +68,7 @@ public class RqueueListenerBaseConfigTest {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory));
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version"));
     assertNotNull(factory.getRedisConnectionFactory());
     assertEquals(redisConnectionFactory, factory.getRedisConnectionFactory());
     verify(beanFactory, times(0)).getBean(RedisConnectionFactory.class);
@@ -77,7 +78,7 @@ public class RqueueListenerBaseConfigTest {
   public void testGetMessageTemplateUseFromFactory() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueListenerConfig = createConfig(factory);
-    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false);
+    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false, 1);
     factory.setRqueueMessageTemplate(rqueueMessageTemplate);
     assertEquals(rqueueMessageTemplate, rqueueListenerConfig.getMessageTemplate(rqueueConfig));
   }
@@ -86,7 +87,7 @@ public class RqueueListenerBaseConfigTest {
   public void testGetMessageTemplateSetTemplateInFactory() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueListenerConfig = createConfig(factory);
-    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false);
+    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false, 1);
     RqueueMessageTemplate template = rqueueListenerConfig.getMessageTemplate(rqueueConfig);
     assertNotNull(template);
     assertEquals(template, factory.getRqueueMessageTemplate());

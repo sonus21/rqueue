@@ -30,6 +30,99 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 public class RqueueConfig {
   private final RedisConnectionFactory connectionFactory;
   private final boolean sharedConnection;
+  private final int dbVersion;
+
   @Value("${rqueue.version:2.0.0-RELEASE}")
   private String version;
+
+  @Value("${rqueue.key.prefix:__rq::}")
+  private String prefix;
+
+  @Value("${rqueue.cluster.mode:true}")
+  private boolean clusterMode;
+
+  @Value("${rqueue.simple.queue.prefix:queue::}")
+  private String simpleQueuePrefix;
+
+  @Value("${rqueue.delayed.queue.prefix:d-queue::}")
+  private String delayedQueuePrefix;
+
+  @Value("${rqueue.delayed.queue.channel.prefix:d-channel::}")
+  private String delayedQueueChannelPrefix;
+
+  @Value("${rqueue.processing.queue.name.prefix:p-queue::}")
+  private String processingQueuePrefix;
+
+  @Value("${rqueue.processing.queue.channel.prefix:p-channel::}")
+  private String processingQueueChannelPrefix;
+
+  @Value("${rqueue.queues.key.suffix:queues}")
+  private String queuesKeySuffix;
+
+  public String getQueuesKey() {
+    return prefix + queuesKeySuffix;
+  }
+
+  @Value("${rqueue.lock.key.prefix:lock::}")
+  private String lockKeyPrefix;
+
+  @Value("${rqueue.queue.stat.key.prefix:q-stat::}")
+  private String queueStatKeyPrefix;
+
+  @Value("${rqueue.queue.config.key.prefix:q-config::}")
+  private String queueConfigKeyPrefix;
+
+  public String getQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + simpleQueuePrefix + getTaggedName(queueName);
+    }
+    return queueName;
+  }
+
+  public String getDelayedQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + delayedQueuePrefix + getTaggedName(queueName);
+    }
+    return "rqueue-delay::" + queueName;
+  }
+
+  public String getDelayedQueueChannelName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + delayedQueueChannelPrefix + getTaggedName(queueName);
+    }
+    return "rqueue-channel::" + queueName;
+  }
+
+  public String getProcessingQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + processingQueuePrefix + getTaggedName(queueName);
+    }
+    return "rqueue-processing::" + queueName;
+  }
+
+  public String getProcessingQueueChannelName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + processingQueueChannelPrefix + getTaggedName(queueName);
+    }
+    return "rqueue-processing-channel::" + queueName;
+  }
+
+  public String getLockKey(String key) {
+    return prefix + lockKeyPrefix + key;
+  }
+
+  public String getQueueStatisticsKey(String name) {
+    return prefix + queueStatKeyPrefix + name;
+  }
+
+  public String getQueueConfigKey(String name) {
+    return prefix + queueConfigKeyPrefix + name;
+  }
+
+  private String getTaggedName(String queueName) {
+    if (!clusterMode) {
+      return queueName;
+    }
+    return "{" + queueName + "}";
+  }
 }

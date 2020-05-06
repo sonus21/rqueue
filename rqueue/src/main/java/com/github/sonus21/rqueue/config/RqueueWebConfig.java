@@ -46,7 +46,8 @@ public class RqueueWebConfig {
   @Value("${rqueue.web.collect.listener.stats.thread.count:1}")
   private int statsAggregatorThreadCount;
 
-  @Value("${rqueue.web.statistic.history.day:180}")
+  // 3 months
+  @Value("${rqueue.web.statistic.history.day:90}")
   private int historyDay;
 
   @Value("${rqueue.web.collect.statistic.aggregate.event.count:500}")

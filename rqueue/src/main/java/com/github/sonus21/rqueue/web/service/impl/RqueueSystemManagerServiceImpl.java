@@ -16,12 +16,15 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
@@ -30,7 +33,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,25 +44,28 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class RqueueSystemManagerServiceImpl
     implements RqueueSystemManagerService, ApplicationListener<QueueInitializationEvent> {
+  private final RqueueConfig rqueueConfig;
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
 
   @Autowired
   public RqueueSystemManagerServiceImpl(
+      RqueueConfig rqueueConfig,
       RqueueRedisTemplate<String> stringRqueueRedisTemplate,
       RqueueSystemConfigDao rqueueSystemConfigDao) {
+    this.rqueueConfig = rqueueConfig;
     this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
   }
 
   private List<String> queueKeys(QueueConfig queueConfig) {
     List<String> keys =
-        Arrays.asList(
-            queueConfig.getName(),
-            QueueUtils.getProcessingQueueName(queueConfig.getName()),
-            QueueUtils.getQueueStatKey(queueConfig.getName()));
+        newArrayList(
+            queueConfig.getQueueName(),
+            queueConfig.getProcessingQueueName(),
+            rqueueConfig.getQueueStatisticsKey(queueConfig.getName()));
     if (queueConfig.isDelayed()) {
-      keys.add(QueueUtils.getDelayedQueueName(queueConfig.getName()));
+      keys.add(queueConfig.getDelayedQueueName());
     }
     if (queueConfig.hasDeadLetterQueue()) {
       keys.addAll(queueConfig.getDeadLetterQueues());
@@ -71,7 +76,7 @@ public class RqueueSystemManagerServiceImpl
   @Override
   public BaseResponse deleteQueue(String queueName) {
     QueueConfig queueConfig =
-        rqueueSystemConfigDao.getQConfig(QueueUtils.getQueueConfigKey(queueName));
+        rqueueSystemConfigDao.getQConfig(rqueueConfig.getQueueConfigKey(queueName));
     BaseResponse baseResponse = new BaseResponse();
     if (queueConfig == null) {
       baseResponse.setCode(1);
@@ -94,20 +99,14 @@ public class RqueueSystemManagerServiceImpl
   }
 
   private QueueConfig createOrUpdateConfig(QueueConfig queueConfig, QueueDetail queueDetail) {
-    String queueName = queueDetail.getQueueName();
-    String qConfigId = QueueUtils.getQueueConfigKey(queueName);
+    String qConfigId = rqueueConfig.getQueueConfigKey(queueDetail.getName());
     QueueConfig systemQueueConfig = queueConfig;
     boolean updated = false;
     boolean created = false;
     if (systemQueueConfig == null) {
       created = true;
-      systemQueueConfig =
-          new QueueConfig(
-              qConfigId,
-              queueName,
-              queueDetail.getNumRetries(),
-              queueDetail.isDelayedQueue(),
-              queueDetail.getVisibilityTimeout());
+      systemQueueConfig = queueDetail.toConfig();
+      systemQueueConfig.setId(qConfigId);
     }
     if (queueDetail.isDlqSet()) {
       updated = systemQueueConfig.addDeadLetterQueue(queueDetail.getDeadLetterQueueName());
@@ -115,7 +114,7 @@ public class RqueueSystemManagerServiceImpl
     updated =
         systemQueueConfig.updateVisibilityTimeout(queueDetail.getVisibilityTimeout()) || updated;
     updated = systemQueueConfig.updateIsDelay(queueDetail.isDelayedQueue()) || updated;
-    updated = systemQueueConfig.updateRetryCount(queueDetail.getNumRetries()) || updated;
+    updated = systemQueueConfig.updateRetryCount(queueDetail.getNumRetry()) || updated;
     if (updated && !created) {
       systemQueueConfig.updateTime();
     }
@@ -125,22 +124,19 @@ public class RqueueSystemManagerServiceImpl
     return null;
   }
 
-  private void createOrUpdateConfigs(
-      Map<String, QueueDetail> queueDetailMap, Set<String> queueNames) {
-    String[] queues = new String[queueNames.size()];
+  private void createOrUpdateConfigs(List<QueueDetail> queueDetails) {
+    String[] queues = new String[queueDetails.size()];
     int i = 0;
-    for (String queue : queueNames) {
-      queues[i++] = queue;
+    for (QueueDetail queueDetail : queueDetails) {
+      queues[i++] = queueDetail.getName();
     }
-    stringRqueueRedisTemplate.addToSet(QueueUtils.getQueuesKey(), queues);
+    stringRqueueRedisTemplate.addToSet(rqueueConfig.getQueuesKey(), queues);
     List<QueueConfig> queueConfigs = rqueueSystemConfigDao.findAllQConfig(Arrays.asList(queues));
     List<QueueConfig> newConfigs = new ArrayList<>();
-    for (i = 0; i < queues.length; i++) {
-      QueueDetail queueDetail = queueDetailMap.get(queues[i]);
-      String queue = queues[i];
+    for (QueueDetail queueDetail : queueDetails) {
       QueueConfig dbConfig = null;
       for (QueueConfig queueConfig : queueConfigs) {
-        if (queueConfig.getName().equals(queue)) {
+        if (queueConfig.getQueueName().equals(queueDetail.getQueueName())) {
           dbConfig = queueConfig;
           break;
         }
@@ -159,18 +155,17 @@ public class RqueueSystemManagerServiceImpl
   @Async
   public void onApplicationEvent(QueueInitializationEvent event) {
     if (event.isStart()) {
-      Map<String, QueueDetail> queueNameToQueueDetailMap = event.getQueueDetailMap();
-      Set<String> queueNames = queueNameToQueueDetailMap.keySet();
-      if (queueNames.isEmpty()) {
+      List<QueueDetail> queueDetails = QueueRegistry.getQueueDetails();
+      if (queueDetails.isEmpty()) {
         return;
       }
-      createOrUpdateConfigs(queueNameToQueueDetailMap, queueNames);
+      createOrUpdateConfigs(queueDetails);
     }
   }
 
   @Override
   public List<String> getQueues() {
-    Set<String> members = stringRqueueRedisTemplate.getMembers(QueueUtils.getQueuesKey());
+    Set<String> members = stringRqueueRedisTemplate.getMembers(rqueueConfig.getQueuesKey());
     if (CollectionUtils.isEmpty(members)) {
       return Collections.emptyList();
     }
@@ -181,7 +176,7 @@ public class RqueueSystemManagerServiceImpl
   public List<QueueConfig> getQueueConfigs(Collection<String> queues) {
     Collection<String> ids = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queues)) {
-      ids = queues.stream().map(QueueUtils::getQueueConfigKey).collect(Collectors.toList());
+      ids = queues.stream().map(rqueueConfig::getQueueConfigKey).collect(Collectors.toList());
     }
     if (!CollectionUtils.isEmpty(ids)) {
       return rqueueSystemConfigDao.findAllQConfig(ids);

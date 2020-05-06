@@ -22,17 +22,23 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
 public interface RqueueMessageTemplate {
-  RqueueMessage pop(String queueName, long visibilityTimeout);
+  RqueueMessage pop(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout);
 
-  void addMessageWithDelay(String queueName, RqueueMessage rqueueMessage);
+  Long addMessageWithDelay(
+      String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage);
 
   void replaceMessage(String zsetName, RqueueMessage src, RqueueMessage tgt);
 
-  Long addMessage(String listName, RqueueMessage rqueueMessage);
+  Long addMessage(String queueName, RqueueMessage rqueueMessage);
 
   Boolean addToZset(String zsetName, RqueueMessage rqueueMessage, long score);
 
-  List<RqueueMessage> getAllMessages(String queueName);
+  List<RqueueMessage> getAllMessages(
+      String queueName, String processingQueueName, String delayQueueName);
 
   MessageMoveResult moveMessageListToList(
       String srcQueueName, String dstQueueName, int numberOfMessage);

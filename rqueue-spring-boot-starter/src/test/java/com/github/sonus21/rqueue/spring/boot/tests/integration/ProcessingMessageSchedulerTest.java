@@ -16,20 +16,14 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.core.support.RqueueMessageFactory.buildMessage;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
-import com.github.sonus21.rqueue.test.TestUtils;
 import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
+import com.github.sonus21.rqueue.test.tests.SpringTestBase;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import com.github.sonus21.test.RunTestUntilFail;
@@ -41,8 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -54,28 +46,18 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(
     properties = {
       "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=6379",
+      "spring.redis.port=6389",
       "mysql.db.name=test3",
       "max.workers.count=120",
-      "use.system.redis=true"
+      "use.system.redis=false"
     })
-public class ProcessingMessageSchedulerTest {
-  @Autowired private ConsumedMessageService consumedMessageService;
-  @Autowired private RqueueMessageSender messageSender;
-  @Autowired private RqueueMessageTemplate rqueueMessageTemplate;
-  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
+public class ProcessingMessageSchedulerTest extends SpringTestBase {
   @Rule
   public RunTestUntilFail retry =
       new RunTestUntilFail(
           log,
-          3,
           () -> {
-            for (Entry<String, List<RqueueMessage>> entry :
-                TestUtils.getMessageMap(jobQueueName, rqueueMessageTemplate).entrySet()) {
+            for (Entry<String, List<RqueueMessage>> entry : getMessageMap(jobQueue).entrySet()) {
               log.error("FAILING Queue {}", entry.getKey());
               for (RqueueMessage message : entry.getValue()) {
                 log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
@@ -86,9 +68,8 @@ public class ProcessingMessageSchedulerTest {
   private int messageCount = 110;
 
   @Test
-  public void publishMessageIsTriggeredOnMessageRemoval()
-      throws InterruptedException, TimedOutException {
-    String processingQueueName = QueueUtils.getProcessingQueueName(jobQueueName);
+  public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
+    String processingQueueName = jobQueue;
     long currentTime = System.currentTimeMillis();
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();
@@ -102,12 +83,11 @@ public class ProcessingMessageSchedulerTest {
       if (random.nextBoolean()) {
         delay = delay * -1;
       }
-      rqueueMessageTemplate.addToZset(
-          processingQueueName, buildMessage(job, jobQueueName, null, null), currentTime + delay);
+      enqueueIn(job, processingQueueName, delay);
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == messageSender.getAllMessages(jobQueueName).size(),
+        () -> 0 == messageSender.getAllMessages(jobQueue).size(),
         30 * Constants.ONE_MILLI,
         "messages to be consumed");
     waitFor(

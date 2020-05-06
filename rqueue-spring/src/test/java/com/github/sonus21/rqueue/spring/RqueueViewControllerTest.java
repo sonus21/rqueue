@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
+import com.github.sonus21.rqueue.test.tests.SpringTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -53,12 +53,10 @@ import org.springframework.web.context.WebApplicationContext;
       "mysql.db.name=RqueueViewControllerTest",
       "max.workers.count=40",
       "notification.queue.active=false",
+      "rqueue.web.statistic.history.day=180",
     })
-public class RqueueViewControllerTest {
+public class RqueueViewControllerTest extends SpringTestBase {
   @Autowired private WebApplicationContext wac;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
 
   private MockMvc mockMvc;
 
@@ -114,13 +112,13 @@ public class RqueueViewControllerTest {
 
   @Test
   public void queueDetail() throws Exception {
-    MvcResult result = this.mockMvc.perform(get("/rqueue/queues/" + jobQueueName)).andReturn();
+    MvcResult result = this.mockMvc.perform(get("/rqueue/queues/" + jobQueue)).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
     assertEquals("classpath:/templates/rqueue/queue_detail.html", jtwigView.getUrl());
     verifyBasicData(model, NavTab.QUEUES);
-    assertEquals("Queue: " + jobQueueName, model.get("title"));
-    assertEquals(jobQueueName, model.get("queueName"));
+    assertEquals("Queue: " + jobQueue, model.get("title"));
+    assertEquals(jobQueue, model.get("queueName"));
     assertEquals(
         Arrays.asList(AggregationType.DAILY, AggregationType.WEEKLY, AggregationType.MONTHLY),
         model.get("aggregatorTypes"));

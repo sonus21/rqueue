@@ -18,11 +18,14 @@ package com.github.sonus21.rqueue.web.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.db.JobRunTime;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
@@ -32,6 +35,7 @@ import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueDashboardChartServiceImpl;
 import java.io.Serializable;
@@ -51,16 +55,24 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class RqueueDashboardChartServiceTest {
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueSystemManagerService rqueueSystemManagerService =
       mock(RqueueSystemManagerService.class);
   private RqueueDashboardChartService rqueueDashboardChartService =
       new RqueueDashboardChartServiceImpl(
-          rqueueQStatsDao, rqueueWebConfig, rqueueSystemManagerService);
+          rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
   private List<String> queues = new ArrayList<>();
 
   @Before
   public void init() {
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
+    doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(0);
+              return "__rq::q-stat::" + name;
+            })
+        .when(rqueueConfig)
+        .getQueueStatisticsKey(anyString());
     queues.clear();
     queues.add("job");
     queues.add("notification");
@@ -200,7 +212,7 @@ public class RqueueDashboardChartServiceTest {
     }
     String id = "__rq::q-stat::job";
     QueueStatistics queueStatistics = new QueueStatistics(id);
-    LocalDate localDate = LocalDate.now();
+    LocalDate localDate = DateTimeUtils.today();
     for (int i = 0; i < rqueueWebConfig.getHistoryDay(); i++) {
       QueueStatisticsTest.addData(queueStatistics, localDate, i);
     }
@@ -214,7 +226,7 @@ public class RqueueDashboardChartServiceTest {
     ChartDataResponse response =
         rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
     assertEquals(rqueueWebConfig.getHistoryDay() + 1, response.getData().size());
-    localDate = LocalDate.now();
+    localDate = DateTimeUtils.today();
     for (int i = 1; i <= rqueueWebConfig.getHistoryDay(); i++) {
       LocalDate date = localDate.plusDays(-rqueueWebConfig.getHistoryDay() + i);
       JobRunTime jobRunTime = queueStatistics.jobRunTime(date.toString());
@@ -238,7 +250,7 @@ public class RqueueDashboardChartServiceTest {
     }
     String id = "__rq::q-stat::job";
     QueueStatistics queueStatistics = new QueueStatistics(id);
-    LocalDate localDate = LocalDate.now();
+    LocalDate localDate = DateTimeUtils.today();
     for (int i = 0; i < rqueueWebConfig.getHistoryDay(); i++) {
       QueueStatisticsTest.addData(queueStatistics, localDate, i);
     }
@@ -252,7 +264,7 @@ public class RqueueDashboardChartServiceTest {
     ChartDataResponse response =
         rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
     assertEquals(rqueueWebConfig.getHistoryDay() + 1, response.getData().size());
-    localDate = LocalDate.now();
+    localDate = DateTimeUtils.today();
     for (int i = 1; i <= rqueueWebConfig.getHistoryDay(); i++) {
       LocalDate date = localDate.plusDays(-rqueueWebConfig.getHistoryDay() + i);
       long discarded = queueStatistics.tasksDiscarded(date.toString());
@@ -276,7 +288,7 @@ public class RqueueDashboardChartServiceTest {
     }
     String id = "__rq::q-stat::job";
     QueueStatistics queueStatistics = new QueueStatistics(id);
-    LocalDate localDate = LocalDate.now();
+    LocalDate localDate = DateTimeUtils.today();
     for (int i = 10; i < rqueueWebConfig.getHistoryDay() - 10; i++) {
       QueueStatisticsTest.addData(queueStatistics, localDate, i);
     }
@@ -290,7 +302,7 @@ public class RqueueDashboardChartServiceTest {
     ChartDataResponse response =
         rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
     assertEquals(rqueueWebConfig.getHistoryDay() + 1, response.getData().size());
-    localDate = LocalDate.now();
+    localDate = DateTimeUtils.today();
     for (int i = 1; i <= rqueueWebConfig.getHistoryDay(); i++) {
       LocalDate date = localDate.plusDays(-rqueueWebConfig.getHistoryDay() + i);
       long discarded = queueStatistics.tasksDiscarded(date.toString());

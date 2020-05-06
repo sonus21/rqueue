@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.producer;
+package com.github.sonus21.rqueue.core;
 
+import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
+import static com.github.sonus21.rqueue.utils.MessageUtils.buildMessage;
 import static org.springframework.util.Assert.isTrue;
 import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
@@ -23,22 +25,24 @@ import static org.springframework.util.Assert.notNull;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
-import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.Validator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 
+@Slf4j
 public class RqueueMessageSenderImpl implements RqueueMessageSender {
-  private MessageWriter messageWriter;
   private RqueueMessageTemplate messageTemplate;
+  private final CompositeMessageConverter messageConverter;
   @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
 
   private RqueueMessageSenderImpl(
@@ -48,8 +52,8 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     notNull(messageTemplate, "messageTemplate cannot be null");
     notEmpty(messageConverters, "messageConverters cannot be empty");
     this.messageTemplate = messageTemplate;
-    messageWriter =
-        new MessageWriter(messageTemplate, getMessageConverters(addDefault, messageConverters));
+    this.messageConverter =
+        new CompositeMessageConverter(getMessageConverters(addDefault, messageConverters));
   }
 
   public RqueueMessageSenderImpl(RqueueMessageTemplate messageTemplate) {
@@ -58,20 +62,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
 
   public RqueueMessageSenderImpl(
       RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    this(messageTemplate, messageConverters, true);
-  }
-
-  private List<MessageConverter> getMessageConverters(
-      boolean addDefault, List<MessageConverter> messageConverters) {
-    List<MessageConverter> messageConverterList = new ArrayList<>();
-    StringMessageConverter stringMessageConverter = new StringMessageConverter();
-    stringMessageConverter.setSerializedPayloadClass(String.class);
-    messageConverterList.add(stringMessageConverter);
-    if (addDefault) {
-      messageConverterList.add(new GenericMessageConverter());
-    }
-    messageConverterList.addAll(messageConverters);
-    return messageConverterList;
+    this(messageTemplate, messageConverters, false);
   }
 
   /**
@@ -91,7 +82,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
   @Override
   public boolean enqueue(String queueName, Object message) {
     Validator.validateQueueNameAndMessage(queueName, message);
-    return messageWriter.pushMessage(queueName, message, null, null);
+    return pushMessage(queueName, message, null, null);
   }
 
   /**
@@ -127,7 +118,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
   public boolean enqueue(String queueName, Object message, int retryCount) {
     Validator.validateQueueNameAndMessage(queueName, message);
     Validator.validateRetryCount(retryCount);
-    return messageWriter.pushMessage(queueName, message, retryCount, null);
+    return pushMessage(queueName, message, retryCount, null);
   }
 
   /**
@@ -159,7 +150,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
   public boolean enqueueIn(String queueName, Object message, long delayInMilliSecs) {
     Validator.validateQueueNameAndMessage(queueName, message);
     Validator.validateDelay(delayInMilliSecs);
-    return messageWriter.pushMessage(queueName, message, null, delayInMilliSecs);
+    return pushMessage(queueName, message, null, delayInMilliSecs);
   }
 
   /**
@@ -172,8 +163,13 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
   @Override
   public List<Object> getAllMessages(String queueName) {
     List<Object> messages = new ArrayList<>();
-    for (RqueueMessage message : messageTemplate.getAllMessages(queueName)) {
-      messages.add(messageWriter.convertMessageToObject(message));
+    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    for (RqueueMessage message :
+        messageTemplate.getAllMessages(
+            queueDetail.getQueueName(),
+            queueDetail.getProcessingQueueName(),
+            queueDetail.getDelayedQueueName())) {
+      messages.add(MessageUtils.convertMessageToObject(message, messageConverter));
     }
     return messages;
   }
@@ -201,12 +197,12 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     Validator.validateQueueNameAndMessage(queueName, message);
     Validator.validateRetryCount(retryCount);
     Validator.validateDelay(delayInMilliSecs);
-    return messageWriter.pushMessage(queueName, message, retryCount, delayInMilliSecs);
+    return pushMessage(queueName, message, retryCount, delayInMilliSecs);
   }
 
   @Override
   public List<MessageConverter> getMessageConverters() {
-    return messageWriter.getMessageConverters();
+    return messageConverter.getConverters();
   }
 
   /**
@@ -267,9 +263,45 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
    */
   @Override
   public boolean deleteAllMessages(String queueName) {
-    stringRqueueRedisTemplate.delete(queueName);
-    stringRqueueRedisTemplate.delete(QueueUtils.getProcessingQueueName(queueName));
-    stringRqueueRedisTemplate.delete(QueueUtils.getDelayedQueueName(queueName));
+    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
+    stringRqueueRedisTemplate.delete(queueDetail.getProcessingQueueName());
+    stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
     return true;
+  }
+
+  private boolean pushMessage(
+      String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
+    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    RqueueMessage rqueueMessage =
+        buildMessage(
+            messageConverter, queueDetail.getQueueName(), message, retryCount, delayInMilliSecs);
+    try {
+      if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
+        messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
+      } else {
+        messageTemplate.addMessageWithDelay(
+            queueDetail.getDelayedQueueName(),
+            queueDetail.getDelayedQueueChannelName(),
+            rqueueMessage);
+      }
+    } catch (Exception e) {
+      log.error("Message could not be pushed ", e);
+      return false;
+    }
+    return true;
+  }
+
+  private List<MessageConverter> getMessageConverters(
+      boolean addDefault, List<MessageConverter> messageConverters) {
+    List<MessageConverter> messageConverterList = new ArrayList<>();
+    StringMessageConverter stringMessageConverter = new StringMessageConverter();
+    stringMessageConverter.setSerializedPayloadClass(String.class);
+    messageConverterList.add(stringMessageConverter);
+    if (addDefault) {
+      messageConverterList.add(new GenericMessageConverter());
+    }
+    messageConverterList.addAll(messageConverters);
+    return messageConverterList;
   }
 }

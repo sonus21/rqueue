@@ -20,7 +20,7 @@ import static org.springframework.util.Assert.notEmpty;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -151,7 +151,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected String getDestination(Message<?> message) {
-    return (String) message.getHeaders().get(QueueUtils.getMessageHeaderKey());
+    return (String) message.getHeaders().get(MessageUtils.getMessageHeaderKey());
   }
 
   @Override

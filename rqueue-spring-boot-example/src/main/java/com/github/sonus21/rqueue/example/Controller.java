@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.example;
 
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

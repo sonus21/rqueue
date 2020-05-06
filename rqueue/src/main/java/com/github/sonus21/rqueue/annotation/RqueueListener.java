@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.annotation;
 
+import com.github.sonus21.rqueue.utils.Constants;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -80,7 +81,7 @@ public @interface RqueueListener {
    * <p>Default behaviour is to try to deliver the same message until it's delivered, upper limit of
    * the delivery retry is {@link Integer#MAX_VALUE} when dead letter queue is not provided. If dead
    * letter queue is provided then it will retry {@link
-   * com.github.sonus21.rqueue.utils.Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE} of times.
+   * Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE} of times.
    *
    * @return integer value
    */
