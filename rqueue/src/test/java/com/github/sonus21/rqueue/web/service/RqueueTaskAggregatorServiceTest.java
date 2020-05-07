@@ -33,7 +33,7 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.models.db.QueueStatisticsTest;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
-import com.github.sonus21.rqueue.models.event.QueueTaskEvent;
+import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
@@ -78,16 +78,16 @@ public class RqueueTaskAggregatorServiceTest {
     assertNotNull(FieldUtils.readField(this.rqueueTaskAggregatorService, "taskExecutor", true));
   }
 
-  private QueueTaskEvent generateTaskEventWithStatus(TaskStatus status) {
+  private RqueueExecutionEvent generateTaskEventWithStatus(TaskStatus status) {
     double r = Math.random();
     RqueueMessage rqueueMessage = new RqueueMessage("test-queue", "test", null, null);
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage.getId());
     messageMetadata.setTotalExecutionTime(10 + (long) r * 10000);
     rqueueMessage.setFailureCount((int) r * 10);
-    return new QueueTaskEvent(queueName, status, rqueueMessage, messageMetadata);
+    return new RqueueExecutionEvent(queueName, status, rqueueMessage, messageMetadata);
   }
 
-  private QueueTaskEvent generateTaskEvent() {
+  private RqueueExecutionEvent generateTaskEvent() {
     double r = Math.random();
     TaskStatus taskStatus;
     if (r < 0.3) {
@@ -100,7 +100,7 @@ public class RqueueTaskAggregatorServiceTest {
     return generateTaskEventWithStatus(taskStatus);
   }
 
-  private void addEvent(QueueTaskEvent event, TasksStat stats, boolean updateTaskStat) {
+  private void addEvent(RqueueExecutionEvent event, TasksStat stats, boolean updateTaskStat) {
     rqueueTaskAggregatorService.onApplicationEvent(event);
     if (!updateTaskStat) {
       return;
@@ -151,7 +151,7 @@ public class RqueueTaskAggregatorServiceTest {
         .when(rqueueQStatsDao)
         .save(any());
 
-    QueueTaskEvent event;
+    RqueueExecutionEvent event;
     TasksStat tasksStat = new TasksStat();
     int totalEvents = 0;
     for (; totalEvents < 498; totalEvents++) {

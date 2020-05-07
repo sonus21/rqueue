@@ -19,7 +19,8 @@ package com.github.sonus21.rqueue.example;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,9 +28,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor(onConstructor = @__(@Autowired))
-@Slf4j
 public class Controller {
   private RqueueMessageSender rqueueMessageSender;
+  private static Logger log = LoggerFactory.getLogger(Controller.class);
 
   @GetMapping(value = "/push")
   public String push(
@@ -44,6 +45,7 @@ public class Controller {
     } else {
       rqueueMessageSender.put(q, msg, numRetries, delay);
     }
+    log.info("Message {}", msg);
     return "Message sent successfully";
   }
 

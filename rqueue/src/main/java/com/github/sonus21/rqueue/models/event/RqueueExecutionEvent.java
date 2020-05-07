@@ -23,7 +23,7 @@ import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 @Getter
-public class QueueTaskEvent extends ApplicationEvent {
+public class RqueueExecutionEvent extends ApplicationEvent {
   private static final long serialVersionUID = -7762050873209497221L;
   private final TaskStatus status;
   private final RqueueMessage rqueueMessage;
@@ -37,7 +37,7 @@ public class QueueTaskEvent extends ApplicationEvent {
    * @param queueName the queue on which event occur
    * @param messageMetadata message metadata.
    */
-  public QueueTaskEvent(
+  public RqueueExecutionEvent(
       String queueName,
       TaskStatus status,
       RqueueMessage rqueueMessage,

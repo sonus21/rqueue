@@ -24,6 +24,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public class ThreadUtils {
@@ -41,10 +42,25 @@ public class ThreadUtils {
     return scheduler;
   }
 
+  public static ThreadPoolTaskExecutor createTaskExecutor(
+      String beanName, String threadPrefix, int corePoolSize, int maxPoolSize) {
+    ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+    threadPoolTaskExecutor.setThreadNamePrefix(threadPrefix);
+    threadPoolTaskExecutor.setBeanName(beanName);
+    if (corePoolSize > 0) {
+      threadPoolTaskExecutor.setCorePoolSize(corePoolSize);
+      threadPoolTaskExecutor.setMaxPoolSize(Math.max(corePoolSize, maxPoolSize));
+      threadPoolTaskExecutor.setQueueCapacity(0);
+      threadPoolTaskExecutor.afterPropertiesSet();
+    }
+    return threadPoolTaskExecutor;
+  }
+
   public static ThreadCount getThreadCount(
       boolean onlySpinning, int queueSize, int maxWorkersRequired) {
-    int corePoolSize = onlySpinning ? queueSize : queueSize + queueSize;
-    int maxPoolSize = onlySpinning ? queueSize : queueSize + maxWorkersRequired;
+    int corePoolSize = onlySpinning ? queueSize : 2 * queueSize;
+    int maxPoolSize =
+        onlySpinning ? queueSize : Math.max(corePoolSize, queueSize + maxWorkersRequired);
     return new ThreadCount(corePoolSize, maxPoolSize);
   }
 

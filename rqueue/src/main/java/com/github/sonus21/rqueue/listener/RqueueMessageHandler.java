@@ -84,7 +84,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     if (rqueueListener != null) {
       Set<String> queueNames = resolveQueueNames(rqueueListener);
       boolean isDelayedQueue = isDeadLetterQueue(rqueueListener);
-      String deadLetterQueueName = resolveDelayedQueue(rqueueListener);
+      String deadLetterQueueName = resolveDeadLetterQueue(rqueueListener);
       int numRetries = resolveNumRetries(rqueueListener);
       long visibilityTimeout = resolveVisibilityTimeout(rqueueListener);
       boolean active = isActive(rqueueListener);
@@ -114,7 +114,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return ValueResolver.resolveKeyToInteger(getApplicationContext(), rqueueListener.numRetries());
   }
 
-  private String resolveDelayedQueue(RqueueListener rqueueListener) {
+  private String resolveDeadLetterQueue(RqueueListener rqueueListener) {
     String dlqName = rqueueListener.deadLetterQueue();
     String[] resolvedValues =
         ValueResolver.resolveKeyToArrayOfStrings(getApplicationContext(), dlqName);

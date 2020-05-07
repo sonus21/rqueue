@@ -24,7 +24,7 @@ import static java.lang.Math.min;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import java.time.Instant;
@@ -53,7 +53,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 abstract class MessageScheduler
-    implements DisposableBean, ApplicationListener<QueueInitializationEvent> {
+    implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
   @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
@@ -267,7 +267,7 @@ abstract class MessageScheduler
 
   @Override
   @Async
-  public void onApplicationEvent(QueueInitializationEvent event) {
+  public void onApplicationEvent(RqueueBootstrapEvent event) {
     doStop();
     if (event.isStart()) {
       if (QueueRegistry.getQueueCount() == 0) {

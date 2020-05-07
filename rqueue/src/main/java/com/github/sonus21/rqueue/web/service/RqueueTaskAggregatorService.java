@@ -25,7 +25,7 @@ import com.github.sonus21.rqueue.models.aggregator.TasksStat;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
-import com.github.sonus21.rqueue.models.event.QueueTaskEvent;
+import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
@@ -56,7 +56,7 @@ import org.springframework.util.CollectionUtils;
 @Service
 @Slf4j
 public class RqueueTaskAggregatorService
-    implements ApplicationListener<QueueTaskEvent>, DisposableBean, SmartLifecycle {
+    implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueLockManager rqueueLockManager;
@@ -156,7 +156,7 @@ public class RqueueTaskAggregatorService
   }
 
   @Override
-  public void onApplicationEvent(QueueTaskEvent event) {
+  public void onApplicationEvent(RqueueExecutionEvent event) {
     synchronized (aggregatorLock) {
       if (log.isTraceEnabled()) {
         log.trace("Event {}", event);
@@ -206,7 +206,7 @@ public class RqueueTaskAggregatorService
   }
 
   private class EventAggregator implements Runnable {
-    private void aggregate(QueueTaskEvent event, TasksStat stat) {
+    private void aggregate(RqueueExecutionEvent event, TasksStat stat) {
       if (event.getStatus() == TaskStatus.DISCARDED) {
         stat.discarded += 1;
       } else if (event.getStatus() == TaskStatus.SUCCESSFUL) {
@@ -226,16 +226,16 @@ public class RqueueTaskAggregatorService
     }
 
     private void aggregate(QueueEvents events) {
-      List<QueueTaskEvent> queueTaskEvents = events.taskEvents;
-      QueueTaskEvent queueTaskEvent = queueTaskEvents.get(0);
+      List<RqueueExecutionEvent> queueRqueueExecutionEvents = events.rqueueExecutionEvents;
+      RqueueExecutionEvent queueRqueueExecutionEvent = queueRqueueExecutionEvents.get(0);
       Map<LocalDate, TasksStat> localDateTasksStatMap = new HashMap<>();
-      for (QueueTaskEvent event : queueTaskEvents) {
-        LocalDate date = DateTimeUtils.localDateFromMilli(queueTaskEvent.getTimestamp());
+      for (RqueueExecutionEvent event : queueRqueueExecutionEvents) {
+        LocalDate date = DateTimeUtils.localDateFromMilli(queueRqueueExecutionEvent.getTimestamp());
         TasksStat stat = localDateTasksStatMap.getOrDefault(date, new TasksStat());
         aggregate(event, stat);
         localDateTasksStatMap.put(date, stat);
       }
-      String queueName = (String) queueTaskEvent.getSource();
+      String queueName = (String) queueRqueueExecutionEvent.getSource();
       String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueName);
       QueueStatistics queueStatistics = rqueueQStatsDao.findById(queueStatKey);
       if (queueStatistics == null) {
@@ -251,10 +251,10 @@ public class RqueueTaskAggregatorService
     }
 
     private void processEvents(QueueEvents events) {
-      List<QueueTaskEvent> queueTaskEvents = events.taskEvents;
-      if (!CollectionUtils.isEmpty(queueTaskEvents)) {
-        QueueTaskEvent queueTaskEvent = queueTaskEvents.get(0);
-        String queueName = (String) queueTaskEvent.getSource();
+      List<RqueueExecutionEvent> queueRqueueExecutionEvents = events.rqueueExecutionEvents;
+      if (!CollectionUtils.isEmpty(queueRqueueExecutionEvents)) {
+        RqueueExecutionEvent queueRqueueExecutionEvent = queueRqueueExecutionEvents.get(0);
+        String queueName = (String) queueRqueueExecutionEvent.getSource();
         String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueName);
         String lockKey = rqueueConfig.getLockKey(queueStatKey);
         if (rqueueLockManager.acquireLock(

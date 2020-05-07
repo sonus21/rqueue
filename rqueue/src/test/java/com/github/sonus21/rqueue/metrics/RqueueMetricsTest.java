@@ -28,7 +28,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
@@ -123,7 +123,7 @@ public class RqueueMetricsTest {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     metricsProperties.setMetricTags(tags);
     RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
-    metrics.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verify(queueCounter, times(1))
         .registerQueue(
             metricsProperties,
@@ -152,7 +152,7 @@ public class RqueueMetricsTest {
   public void queueStatistics() throws IllegalAccessException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
-    metrics.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
     verifyQueueStatistics(meterRegistry, delayedQueue, 200, 15, 0, 5);
   }

@@ -50,4 +50,9 @@ public class RQueueApplication {
   public ControllerProfiler controllerProfiler() {
     return new ControllerProfiler();
   }
+
+  @Bean
+  public MessageListenerProfiler messageListenerProfiler() {
+    return new MessageListenerProfiler();
+  }
 }

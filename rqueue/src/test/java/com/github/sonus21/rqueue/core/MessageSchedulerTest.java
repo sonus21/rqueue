@@ -23,7 +23,7 @@ import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestMessageScheduler;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestThreadPoolScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +64,7 @@ public class MessageSchedulerTest {
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
     QueueRegistry.delete();
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertEquals(0, messageScheduler.scheduleList.size());
     messageScheduler.destroy();
   }
@@ -77,7 +77,7 @@ public class MessageSchedulerTest {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
     FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertEquals(0, scheduler.tasks.size());
     messageScheduler.destroy();
   }

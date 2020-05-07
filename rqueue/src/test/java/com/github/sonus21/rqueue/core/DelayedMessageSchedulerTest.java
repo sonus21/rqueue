@@ -32,7 +32,7 @@ import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import java.time.Instant;
@@ -122,7 +122,7 @@ public class DelayedMessageSchedulerTest {
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
     QueueRegistry.delete();
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertNull(FieldUtils.readField(messageScheduler, "scheduler", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true));
@@ -138,7 +138,7 @@ public class DelayedMessageSchedulerTest {
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
     assertEquals(1, queueRunningState.size());
@@ -163,7 +163,7 @@ public class DelayedMessageSchedulerTest {
         .when(redisMessageListenerContainer)
         .addMessageListener(
             any(), eq(new ChannelTopic(slowQueueDetail.getDelayedQueueChannelName())));
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     Thread.sleep(500L);
     messageScheduler.destroy();
   }
@@ -176,9 +176,9 @@ public class DelayedMessageSchedulerTest {
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     Thread.sleep(500L);
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", false));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", false));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
     assertEquals(1, queueRunningState.size());
@@ -203,7 +203,7 @@ public class DelayedMessageSchedulerTest {
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     Thread.sleep(500L);
     messageScheduler.destroy();
     Map<String, Boolean> queueRunningState =
@@ -228,7 +228,7 @@ public class DelayedMessageSchedulerTest {
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertTrue(scheduler.tasks.size() >= 1);
     messageScheduler.destroy();
   }
@@ -249,7 +249,7 @@ public class DelayedMessageSchedulerTest {
             })
         .when(redisTemplate)
         .execute(any(RedisCallback.class));
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     waitFor(() -> counter.get() >= 1, "scripts are getting executed");
     messageScheduler.destroy();
   }
@@ -275,7 +275,7 @@ public class DelayedMessageSchedulerTest {
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     waitFor(() -> counter.get() >= 1, "scripts are getting executed");
     sleep(10);
     messageScheduler.destroy();
@@ -290,7 +290,7 @@ public class DelayedMessageSchedulerTest {
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
 
     MessageListener messageListener =
         (MessageListener) FieldUtils.readField(messageScheduler, "messageSchedulerListener", true);

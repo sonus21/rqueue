@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.test;
+package com.github.sonus21.rqueue.example;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -24,12 +24,11 @@ import org.aspectj.lang.annotation.Pointcut;
 
 @Aspect
 @Slf4j
-public class ControllerProfiler {
-  @Pointcut(
-      "execution(* com.github.sonus21.rqueue.*.controller..*.*(..))||execution(* com.github.sonus21.rqueue.*.Controller.*(..))")
-  public void controller() {}
+public class MessageListenerProfiler {
+  @Pointcut("execution(* com.github.sonus21.rqueue.*.MessageListener.*(..))")
+  public void listener() {}
 
-  @Around("controller()")
+  @Around("listener()")
   public Object profile(ProceedingJoinPoint pjp) throws Throwable {
     long startTime = System.currentTimeMillis();
     Object response = pjp.proceed();

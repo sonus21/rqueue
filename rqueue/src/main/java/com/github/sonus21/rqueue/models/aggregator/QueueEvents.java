@@ -16,27 +16,27 @@
 
 package com.github.sonus21.rqueue.models.aggregator;
 
-import com.github.sonus21.rqueue.models.event.QueueTaskEvent;
+import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.List;
 
 public class QueueEvents {
-  public List<QueueTaskEvent> taskEvents;
+  public List<RqueueExecutionEvent> rqueueExecutionEvents;
   private Long createdAt;
 
-  public QueueEvents(QueueTaskEvent event) {
+  public QueueEvents(RqueueExecutionEvent event) {
     createdAt = System.currentTimeMillis();
-    taskEvents = new ArrayList<>();
+    rqueueExecutionEvents = new ArrayList<>();
     addEvent(event);
   }
 
-  public void addEvent(QueueTaskEvent event) {
-    taskEvents.add(event);
+  public void addEvent(RqueueExecutionEvent event) {
+    rqueueExecutionEvents.add(event);
   }
 
   public boolean processingRequired(int maxWaitTimeInSeconds, int maxEvents) {
     return (System.currentTimeMillis() - createdAt) >= maxWaitTimeInSeconds * Constants.ONE_MILLI
-        || taskEvents.size() >= maxEvents;
+        || rqueueExecutionEvents.size() >= maxEvents;
   }
 }

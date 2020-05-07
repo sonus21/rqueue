@@ -36,7 +36,7 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import java.util.Arrays;
@@ -77,7 +77,7 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStop() {
-    QueueInitializationEvent event = new QueueInitializationEvent("Container", false);
+    RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", false);
     rqueueSystemManagerService.onApplicationEvent(event);
     verifyNoInteractions(stringRqueueRedisTemplate);
     verifyNoInteractions(rqueueSystemConfigDao);
@@ -86,7 +86,7 @@ public class RqueueSystemManagerServiceImplTest {
   @Test
   public void onApplicationEventStartEmpty() {
     QueueRegistry.delete();
-    QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
+    RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     rqueueSystemManagerService.onApplicationEvent(event);
     verifyNoInteractions(stringRqueueRedisTemplate);
     verifyNoInteractions(rqueueSystemConfigDao);
@@ -115,7 +115,7 @@ public class RqueueSystemManagerServiceImplTest {
             })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
-    QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
+    RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     doAnswer(
             invocation -> {
               if (slowQueue.equals(invocation.getArgument(1))) {
@@ -151,7 +151,7 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStartCreateAndUpdateQueueConfigs() {
-    QueueInitializationEvent event = new QueueInitializationEvent("Container", true);
+    RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     QueueRegistry.register(normalQueueDetail);
     PowerMockito.doAnswer(
             invocation -> {

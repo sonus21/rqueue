@@ -20,12 +20,12 @@ import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 @Getter
-public class QueueInitializationEvent extends ApplicationEvent {
+public class RqueueBootstrapEvent extends ApplicationEvent {
 
   private static final long serialVersionUID = 1955427920805054136L;
   private final boolean start;
 
-  public QueueInitializationEvent(Object source, boolean start) {
+  public RqueueBootstrapEvent(Object source, boolean start) {
     super(source);
     this.start = start;
   }

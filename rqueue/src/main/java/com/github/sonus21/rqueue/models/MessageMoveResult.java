@@ -16,14 +16,12 @@
 
 package com.github.sonus21.rqueue.models;
 
-import com.github.sonus21.rqueue.models.response.BaseResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class MessageMoveResult extends BaseResponse {
-  private static final long serialVersionUID = 2419344664633952274L;
+public class MessageMoveResult {
   private int numberOfMessages;
   private boolean success;
 }

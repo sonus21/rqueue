@@ -20,7 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -35,7 +35,7 @@ import org.springframework.scheduling.annotation.Async;
  * queue messages can be in delayed queue because time has not reached. Some messages can be in dead
  * letter queue if dead letter queue is configured.
  */
-public class RqueueMetrics implements ApplicationListener<QueueInitializationEvent> {
+public class RqueueMetrics implements ApplicationListener<RqueueBootstrapEvent> {
   static final String QUEUE_KEY = "key";
   private static final String QUEUE_SIZE = "queue.size";
   private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
@@ -104,7 +104,7 @@ public class RqueueMetrics implements ApplicationListener<QueueInitializationEve
 
   @Override
   @Async
-  public void onApplicationEvent(QueueInitializationEvent event) {
+  public void onApplicationEvent(RqueueBootstrapEvent event) {
     if (event.isStart()) {
       monitor();
     }

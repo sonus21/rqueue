@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.utils.Constants;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -48,8 +49,10 @@ public class SimpleRqueueListenerContainerFactory {
   private RqueueMessageHandler rqueueMessageHandler;
   // List of message converters to convert messages to/from
   private List<MessageConverter> messageConverters;
+  // Send message poll time when no messages are available
+  private long pollingInterval = 200L;
   // In case of failure how much time, we should wait for next job
-  private Long backOffTime;
+  private long backOffTime = 5 * Constants.ONE_MILLI;
   // Number of workers requires for execution
   private Integer maxNumWorkers;
 
@@ -128,7 +131,7 @@ public class SimpleRqueueListenerContainerFactory {
    * @return The number of milliseconds the polling thread must wait before trying to recover when
    *     an error occurs (e.g. connection timeout)
    */
-  public Long getBackOffTime() {
+  public long getBackOffTime() {
     return backOffTime;
   }
 
@@ -227,9 +230,8 @@ public class SimpleRqueueListenerContainerFactory {
     if (maxNumWorkers != null) {
       messageListenerContainer.setMaxNumWorkers(maxNumWorkers);
     }
-    if (backOffTime != null) {
-      messageListenerContainer.setBackOffTime(backOffTime);
-    }
+    messageListenerContainer.setBackOffTime(getBackOffTime());
+    messageListenerContainer.setPollingInterval(getPollingInterval());
     if (postExecutionMessageProcessor != null) {
       messageListenerContainer.setPostExecutionMessageProcessor(getPostExecutionMessageProcessor());
     }
@@ -324,5 +326,23 @@ public class SimpleRqueueListenerContainerFactory {
   public void setPreExecutionMessageProcessor(MessageProcessor preExecutionMessageProcessor) {
     notNull(preExecutionMessageProcessor, "preMessageProcessor cannot be null");
     this.preExecutionMessageProcessor = preExecutionMessageProcessor;
+  }
+
+  /**
+   * Get configured polling interval
+   *
+   * @return the time in milli seconds
+   */
+  public long getPollingInterval() {
+    return pollingInterval;
+  }
+
+  /**
+   * Set polling time interval, this controls the listener polling interval
+   *
+   * @param pollingInterval time in milli seconds
+   */
+  public void setPollingInterval(long pollingInterval) {
+    this.pollingInterval = pollingInterval;
   }
 }

@@ -23,7 +23,7 @@ import static org.mockito.Mockito.doReturn;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestThreadPoolScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class MessageSchedulerRedisDisabled {
             PowerMockito.method(
                 ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
         .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(new QueueInitializationEvent("Test", true));
+    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertEquals(1, scheduler.tasks.size());
     assertNull(FieldUtils.readField(messageScheduler, "messageSchedulerListener", true));
     messageScheduler.destroy();

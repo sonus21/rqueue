@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,10 +38,6 @@ public class QueueRegistry {
     return queueDetail;
   }
 
-  public static boolean isRegistered(String queueName) {
-    return queueNameToDetail.containsKey(queueName);
-  }
-
   public static void register(QueueDetail queueDetail) {
     synchronized (lock) {
       queueNameToDetail.put(queueDetail.getName(), queueDetail);
@@ -53,15 +48,6 @@ public class QueueRegistry {
   public static void delete() {
     synchronized (lock) {
       queueNameToDetail.clear();
-      lock.notifyAll();
-    }
-  }
-
-  public static void register(Collection<QueueDetail> queueDetails) {
-    synchronized (lock) {
-      for (QueueDetail queueDetail : queueDetails) {
-        queueNameToDetail.put(queueDetail.getName(), queueDetail);
-      }
       lock.notifyAll();
     }
   }

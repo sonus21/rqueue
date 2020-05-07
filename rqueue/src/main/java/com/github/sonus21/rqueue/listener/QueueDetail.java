@@ -39,6 +39,7 @@ public class QueueDetail implements Serializable {
   private String processingQueueChannelName;
   private String delayedQueueName;
   private String delayedQueueChannelName;
+  private boolean active;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);

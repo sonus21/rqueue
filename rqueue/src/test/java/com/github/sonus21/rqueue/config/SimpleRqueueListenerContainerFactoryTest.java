@@ -80,12 +80,12 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void getBackOffTime() {
-    assertNull(simpleRqueueListenerContainerFactory.getBackOffTime());
+    assertEquals(5000L, simpleRqueueListenerContainerFactory.getBackOffTime());
   }
 
   @Test
   public void setBackOffTime() {
-    Long backOffTime = 1000L;
+    long backOffTime = 1000L;
     simpleRqueueListenerContainerFactory.setBackOffTime(backOffTime);
     assertEquals(backOffTime, simpleRqueueListenerContainerFactory.getBackOffTime());
   }

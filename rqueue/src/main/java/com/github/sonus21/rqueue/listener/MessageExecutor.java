@@ -25,7 +25,7 @@ import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
-import com.github.sonus21.rqueue.models.event.QueueTaskEvent;
+import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -139,8 +139,8 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
   private void publishEvent(TaskStatus status, long jobExecutionStartTime) {
     if (Objects.requireNonNull(container.get()).getRqueueWebConfig().isCollectListenerStats()) {
       addOrDeleteMetadata(jobExecutionStartTime, false);
-      QueueTaskEvent event =
-          new QueueTaskEvent(queueDetail.getName(), status, rqueueMessage, messageMetadata);
+      RqueueExecutionEvent event =
+          new RqueueExecutionEvent(queueDetail.getName(), status, rqueueMessage, messageMetadata);
       Objects.requireNonNull(container.get()).getApplicationEventPublisher().publishEvent(event);
     }
   }

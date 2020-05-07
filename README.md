@@ -9,9 +9,17 @@
 
 Rqueue is an asynchronous task executor(worker) built for spring framework based on the spring framework's messaging library backed by Redis.
 
+### Some of the features
+
 * A message can be delayed for an arbitrary period of time or delivered immediately.
 * Multiple messages can be consumed in parallel by different workers.
 * Message delivery: It's guaranteed that a message is consumed **at least once**.  (Message would be consumed by a worker more than once due to the failure in the underlying worker/restart-process etc, otherwise exactly one delivery)
+* Support Redis cluster
+* Queue metrics
+* Different Redis connection for application and worker
+* Web interface for queue management and  queue stats
+* Automatic message serialization and deserialization
+
 
 
 ### Adding a task
@@ -45,7 +53,6 @@ Add Dependency
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
         <version>2.0.0-RELEASE</version>
-        <type>pom</type>
     </dependency>
     ```
     
@@ -63,7 +70,6 @@ Add Dependency
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
        <version>2.0.0-RELEASE</version>
-       <type>pom</type>
      </dependency>
     ```
     
@@ -334,6 +340,8 @@ All paths are under `/rqueue/**`. for authentication add interceptor(s) that wou
 Please report problem, bug or feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for feature, issue or enhancement.
 
 ## License
+© [Sonu Kumar](mailto:sonunitw12@gmail.com) 2019-Instant.now
+
 The Rqueue is released under version 2.0 of the Apache License.
 
     

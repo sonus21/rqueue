@@ -23,7 +23,7 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
@@ -43,7 +43,7 @@ import org.springframework.util.CollectionUtils;
 
 @Service
 public class RqueueSystemManagerServiceImpl
-    implements RqueueSystemManagerService, ApplicationListener<QueueInitializationEvent> {
+    implements RqueueSystemManagerService, ApplicationListener<RqueueBootstrapEvent> {
   private final RqueueConfig rqueueConfig;
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
@@ -153,7 +153,7 @@ public class RqueueSystemManagerServiceImpl
 
   @Override
   @Async
-  public void onApplicationEvent(QueueInitializationEvent event) {
+  public void onApplicationEvent(RqueueBootstrapEvent event) {
     if (event.isStart()) {
       List<QueueDetail> queueDetails = QueueRegistry.getQueueDetails();
       if (queueDetails.isEmpty()) {

@@ -22,6 +22,7 @@ import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -64,7 +65,7 @@ public class RedisUtils {
 
   public static int updateAndGetVersion(
       RedisConnectionFactory redisConnectionFactory, String versionDbKey, int defaultVersion) {
-    RedisConnection connection = redisConnectionFactory.getConnection();
+    RedisConnection connection = RedisConnectionUtils.getConnection(redisConnectionFactory);
     byte[] versionKey = versionDbKey.getBytes();
     byte[] versionFromDb = connection.get(versionKey);
     if (SerializationUtils.isEmpty(versionFromDb)) {

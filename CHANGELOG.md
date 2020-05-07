@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow deactivating a consumer in a given environment
 
 ### Breaking Changes
-- Renamed delayed queue to `__rq::d-queue::<queueName>` (Migration: Move all messages from `rqueue-delay::<queueName>` to `__rq::d-queue::<queueName>`)
+- Queue names are prefixed, that can lead to error.  1.x users set REDIS key `__rq::version` to `1`. It does try to find the version using key prefix, but if all queues are empty or no key exist in REDIS with prefix `rqueue-` then it will consider version 2.
 - Renamed annotation field `maxJobExecutionTime` to `visibilityTimeout`
 
 ### Fixes
@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **Fixed** Bootstrap issue due to optional dependencies of micrometer
 
 
-## [1.3] - 11-'Dec-2019
+## [1.3] - 11-Dec-2019
 ### Added
 * Expose 6 queue metrics using micrometer. (queue-size, delay queue size, processing queue size, dead letter queue size, execution counter, failure counter)
 * An api to move messages from dead letter queue to other queue. (Any source queue to target queue).

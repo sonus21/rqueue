@@ -26,7 +26,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.models.ThreadCount;
-import com.github.sonus21.rqueue.models.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -252,20 +252,15 @@ public class RqueueMessageListenerContainer
 
   private AsyncTaskExecutor createTaskExecutor(boolean onlySpinningThread) {
     String name = getBeanName();
-    ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-    threadPoolTaskExecutor.setThreadNamePrefix(
-        name != null ? name + "-" : DEFAULT_THREAD_NAME_PREFIX);
-    threadPoolTaskExecutor.setBeanName(DEFAULT_THREAD_NAME_PREFIX);
+    String prefix = name != null ? name + "-" : DEFAULT_THREAD_NAME_PREFIX;
     ThreadCount threadCount =
         ThreadUtils.getThreadCount(
             onlySpinningThread, QueueRegistry.getQueueCount(), getWorkersCount());
-    if (threadCount.getCorePoolSize() > 0) {
-      threadPoolTaskExecutor.setCorePoolSize(threadCount.getCorePoolSize());
-      threadPoolTaskExecutor.setMaxPoolSize(threadCount.getMaxPoolSize());
-    }
-    threadPoolTaskExecutor.setQueueCapacity(0);
-    threadPoolTaskExecutor.afterPropertiesSet();
-    return threadPoolTaskExecutor;
+    return ThreadUtils.createTaskExecutor(
+        DEFAULT_THREAD_NAME_PREFIX,
+        prefix,
+        threadCount.getCorePoolSize(),
+        threadCount.getMaxPoolSize());
   }
 
   public AsyncTaskExecutor createDefaultTaskExecutor() {
@@ -299,7 +294,7 @@ public class RqueueMessageListenerContainer
     synchronized (lifecycleMgr) {
       running = true;
       doStart();
-      applicationEventPublisher.publishEvent(new QueueInitializationEvent("Container", true));
+      applicationEventPublisher.publishEvent(new RqueueBootstrapEvent("Container", true));
       lifecycleMgr.notifyAll();
     }
   }
@@ -342,7 +337,7 @@ public class RqueueMessageListenerContainer
     log.info("Stopping Rqueue Message container");
     synchronized (lifecycleMgr) {
       running = false;
-      applicationEventPublisher.publishEvent(new QueueInitializationEvent("Container", false));
+      applicationEventPublisher.publishEvent(new RqueueBootstrapEvent("Container", false));
       doStop();
       lifecycleMgr.notifyAll();
     }
