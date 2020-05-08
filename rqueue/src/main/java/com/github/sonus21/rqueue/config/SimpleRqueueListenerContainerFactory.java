@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -71,6 +72,17 @@ public class SimpleRqueueListenerContainerFactory {
   private MessageProcessor postExecutionMessageProcessor;
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
+
+  /**
+   * Whenever a consumer call fails then the consumed message can be delayed for further
+   * consumption. The delay of that can be configured, by default same message would be consumed in
+   * 5 seconds and this will continue due to default task interval. {@link
+   * com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff#DEFAULT_INTERVAL}
+   *
+   * @see com.github.sonus21.rqueue.utils.backoff.ExponentialTaskExecutionBackOff
+   * @see com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff
+   */
+  private TaskExecutionBackOff taskExecutionBackOff;
 
   /**
    * Get configured task executor
@@ -249,6 +261,9 @@ public class SimpleRqueueListenerContainerFactory {
     if (getPreExecutionMessageProcessor() != null) {
       messageListenerContainer.setPreExecutionMessageProcessor(preExecutionMessageProcessor);
     }
+    if (getTaskExecutionBackOff() != null) {
+      messageListenerContainer.setTaskExecutionBackOff(getTaskExecutionBackOff());
+    }
     return messageListenerContainer;
   }
 
@@ -344,5 +359,24 @@ public class SimpleRqueueListenerContainerFactory {
    */
   public void setPollingInterval(long pollingInterval) {
     this.pollingInterval = pollingInterval;
+  }
+
+  /**
+   * Return the task execution back-off
+   *
+   * @return the back-off provider
+   */
+  public TaskExecutionBackOff getTaskExecutionBackOff() {
+    return taskExecutionBackOff;
+  }
+
+  /**
+   * Set custom task executor back-off.
+   *
+   * @param taskExecutionBackOff task execution back-off.
+   */
+  public void setTaskExecutionBackOff(TaskExecutionBackOff taskExecutionBackOff) {
+    notNull(taskExecutionBackOff, "taskExecutionBackOff cannot be null");
+    this.taskExecutionBackOff = taskExecutionBackOff;
   }
 }

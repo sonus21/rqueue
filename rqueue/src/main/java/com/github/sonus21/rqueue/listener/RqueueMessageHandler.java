@@ -20,6 +20,7 @@ import static org.springframework.util.Assert.notEmpty;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
@@ -78,25 +79,73 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return true;
   }
 
+  private MinMax<Integer> resolveConcurrency(RqueueListener rqueueListener) {
+    String val =
+        ValueResolver.resolveKeyToString(getApplicationContext(), rqueueListener.concurrency());
+    if (val.equals("-1")) {
+      return new MinMax<>(-1, -1);
+    }
+    String[] vals = val.split("-");
+    if (vals.length > 2 || vals.length == 0) {
+      throw new IllegalStateException(
+          "Concurrency must be either some number e.g. 5 or in the form of 5-10");
+    }
+    if (vals.length == 1) {
+      try {
+        int concurrency = Integer.parseInt(vals[0]);
+        if (concurrency == 0) {
+          throw new IllegalStateException("Concurrency must be non-zero");
+        }
+        return new MinMax<>(1, concurrency);
+      } catch (NumberFormatException e) {
+        throw new IllegalStateException("Concurrency is not a number", e);
+      }
+    }
+
+    int lowerLimit;
+    try {
+      lowerLimit = Integer.parseInt(vals[0]);
+      if (lowerLimit == 0) {
+        throw new IllegalStateException("Concurrency lower limit must be non-zero");
+      }
+    } catch (NumberFormatException e) {
+      throw new IllegalStateException("Concurrency lower limit is not a number", e);
+    }
+
+    int upperLimit;
+    try {
+      upperLimit = Integer.parseInt(vals[0]);
+      if (upperLimit == 0) {
+        throw new IllegalStateException("Concurrency upper limit must be non-zero");
+      }
+    } catch (NumberFormatException e) {
+      throw new IllegalStateException("Concurrency upper limit is not a number", e);
+    }
+    if (lowerLimit > upperLimit) {
+      throw new IllegalStateException("upper limit of concurrency is smaller than the lower limit");
+    }
+    return new MinMax<>(lowerLimit, upperLimit);
+  }
+
   @Override
   protected MappingInformation getMappingForMethod(Method method, Class<?> handlerType) {
     RqueueListener rqueueListener = AnnotationUtils.findAnnotation(method, RqueueListener.class);
     if (rqueueListener != null) {
       Set<String> queueNames = resolveQueueNames(rqueueListener);
-      boolean isDelayedQueue = isDeadLetterQueue(rqueueListener);
       String deadLetterQueueName = resolveDeadLetterQueue(rqueueListener);
       int numRetries = resolveNumRetries(rqueueListener);
       long visibilityTimeout = resolveVisibilityTimeout(rqueueListener);
       boolean active = isActive(rqueueListener);
+      MinMax<Integer> concurrency = resolveConcurrency(rqueueListener);
       MappingInformation mappingInformation =
-          new MappingInformation(
-              queueNames,
-              isDelayedQueue,
-              numRetries,
-              deadLetterQueueName,
-              visibilityTimeout,
-              active);
-
+          MappingInformation.builder()
+              .active(active)
+              .concurrency(concurrency)
+              .deadLetterQueueName(deadLetterQueueName)
+              .numRetries(numRetries)
+              .queueNames(queueNames)
+              .visibilityTimeout(visibilityTimeout)
+              .build();
       if (mappingInformation.isValid()) {
         return mappingInformation;
       }
@@ -123,10 +172,6 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     }
     throw new IllegalStateException(
         "more than one dead letter queue cannot be configured '" + dlqName + "'");
-  }
-
-  private boolean isDeadLetterQueue(RqueueListener rqueueListener) {
-    return ValueResolver.resolveToBoolean(getApplicationContext(), rqueueListener.delayedQueue());
   }
 
   private boolean isActive(RqueueListener rqueueListener) {

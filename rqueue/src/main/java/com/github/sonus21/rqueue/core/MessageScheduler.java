@@ -29,9 +29,8 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import lombok.ToString;
@@ -78,8 +77,6 @@ abstract class MessageScheduler
   protected abstract String getZsetName(String queueName);
 
   protected abstract String getThreadNamePrefix();
-
-  protected abstract boolean isQueueValid(QueueDetail queueDetail);
 
   protected abstract int getThreadPoolSize();
 
@@ -244,12 +241,7 @@ abstract class MessageScheduler
 
   @SuppressWarnings("unchecked")
   protected void initialize() {
-    Set<String> queueNames = new HashSet<>();
-    for (QueueDetail queueDetail : QueueRegistry.getQueueDetails()) {
-      if (isQueueValid(queueDetail)) {
-        queueNames.add(queueDetail.getName());
-      }
-    }
+    List<String> queueNames = QueueRegistry.getActiveQueues();
     defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
     redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.PUSH_MESSAGE);
     queueRunningState = new ConcurrentHashMap<>(queueNames.size());
@@ -270,7 +262,7 @@ abstract class MessageScheduler
   public void onApplicationEvent(RqueueBootstrapEvent event) {
     doStop();
     if (event.isStart()) {
-      if (QueueRegistry.getQueueCount() == 0) {
+      if (QueueRegistry.getActiveQueueCount() == 0) {
         getLogger().warn("No queues are configured");
         return;
       }

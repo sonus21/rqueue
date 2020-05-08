@@ -103,21 +103,21 @@ public class MessageListener {
   }
 
   // Scheduled Job notification
-  @RqueueListener(value = "job-queue", delayedQueue = "true",
+  @RqueueListener(value = "job-queue",
    numRetries="3", deadLetterQueue="failed-job-queue")
   public void onMessage(Job job) {
     log.info("Job created: {}", job);
   }
   
   // Scheduled push notification
-  @RqueueListener(value = "push-notification-queue", delayedQueue = "true", 
+  @RqueueListener(value = "push-notification-queue", 
   numRetries="3", deadLetterQueue="failed-notification-queue")
   public void onMessage(Notification notification) {
     log.info("Notification message: {}", notification);
   }
   
   // asynchronously send otp to the user
-  @RqueueListener(value = "otp", delayedQueue = "true")
+  @RqueueListener(value = "otp")
   public void onMessage(Otp otp) {
     log.info("Otp message: {}", otp);
   }

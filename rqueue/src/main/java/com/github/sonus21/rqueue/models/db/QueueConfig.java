@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.models.db;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -43,25 +44,17 @@ public class QueueConfig extends SerializableBase {
   private String queueName;
   private String processingQueueName;
   private String delayedQueueName;
-  private boolean delayed;
   private int numRetry;
   private long visibilityTimeout;
   private boolean deleted;
   private Long createdOn;
   private Long updatedOn;
   private Long deletedOn;
+  private MinMax<Integer> concurrency;
   private Set<String> deadLetterQueues;
 
   public void updateTime() {
     this.updatedOn = System.currentTimeMillis();
-  }
-
-  public boolean updateIsDelay(boolean delayed) {
-    if (this.delayed != delayed) {
-      this.delayed = delayed;
-      return true;
-    }
-    return false;
   }
 
   public boolean updateRetryCount(int newRetryCount) {
@@ -86,6 +79,14 @@ public class QueueConfig extends SerializableBase {
   public boolean updateVisibilityTimeout(long newTimeOut) {
     if (visibilityTimeout != newTimeOut) {
       this.visibilityTimeout = newTimeOut;
+      return true;
+    }
+    return false;
+  }
+
+  public boolean updateConcurrency(MinMax<Integer> concurrency) {
+    if (this.concurrency == null || !this.concurrency.equals(concurrency)) {
+      this.concurrency = concurrency;
       return true;
     }
     return false;

@@ -16,14 +16,21 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import com.github.sonus21.rqueue.models.ThreadCount;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.slf4j.Logger;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
@@ -56,14 +63,6 @@ public class ThreadUtils {
     return threadPoolTaskExecutor;
   }
 
-  public static ThreadCount getThreadCount(
-      boolean onlySpinning, int queueSize, int maxWorkersRequired) {
-    int corePoolSize = onlySpinning ? queueSize : 2 * queueSize;
-    int maxPoolSize =
-        onlySpinning ? queueSize : Math.max(corePoolSize, queueSize + maxWorkersRequired);
-    return new ThreadCount(corePoolSize, maxPoolSize);
-  }
-
   private static void waitForShutdown(
       Logger log, Future<?> future, long waitTimeInMillis, String msg, Object... msgParams) {
     boolean completedOrCancelled = future.isCancelled() || future.isDone();
@@ -94,5 +93,39 @@ public class ThreadUtils {
       }
     }
     waitForShutdown(log, future, waitTimeInMillis, msg, msgParams);
+  }
+
+  public static boolean waitForTermination(
+      final Collection<QueueThread> queueThreads, long waitTime) {
+    long maxTime = System.currentTimeMillis() + waitTime;
+    List<QueueThread> remaining = new ArrayList<>(queueThreads);
+    while (System.currentTimeMillis() < maxTime && !remaining.isEmpty()) {
+      List<QueueThread> newRemaining = new ArrayList<>();
+      for (QueueThread queueThread : remaining) {
+        if (queueThread.semaphore.availablePermits() < queueThread.size) {
+          newRemaining.add(queueThread);
+        }
+      }
+      if (!newRemaining.isEmpty()) {
+        TimeoutUtils.sleep(10);
+      }
+      remaining = newRemaining;
+    }
+    return remaining.isEmpty();
+  }
+
+  public static String getWorkerName(String name) {
+    String camelCase = StringUtils.convertToCamelCase(name);
+    return camelCase + "Consumer";
+  }
+
+  @AllArgsConstructor
+  @Getter
+  @EqualsAndHashCode
+  public static class QueueThread {
+    private final boolean defaultExecutor;
+    private final AsyncTaskExecutor taskExecutor;
+    private final Semaphore semaphore;
+    private final int size;
   }
 }

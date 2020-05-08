@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.example;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.test.ControllerProfiler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -41,7 +42,7 @@ public class RQueueApplication {
     SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
         new SimpleRqueueListenerContainerFactory();
     simpleRqueueListenerContainerFactory.setMaxNumWorkers(workersCount);
-
+    simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
     return simpleRqueueListenerContainerFactory;
   }

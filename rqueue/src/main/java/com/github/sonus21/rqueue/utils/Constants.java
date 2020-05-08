@@ -31,11 +31,10 @@ public class Constants {
   public static final int SECONDS_IN_A_DAY = MINUTES_IN_A_DAY * SECONDS_IN_A_MINUTE;
   public static final long MILLIS_IN_A_DAY = SECONDS_IN_A_DAY * ONE_MILLI;
   public static final int SECONDS_IN_A_WEEK = DAYS_IN_A_WEEK * SECONDS_IN_A_DAY;
-  public static final long DEFAULT_DELAY = 5 * ONE_MILLI;
-  public static final long DEFAULT_SCRIPT_EXECUTION_TIME = DEFAULT_DELAY;
+  public static final long DEFAULT_SCRIPT_EXECUTION_TIME = 5 * ONE_MILLI;
   public static final long MIN_DELAY = 100L;
   public static final long MIN_EXECUTION_TIME = MIN_DELAY;
-  public static final long DELTA_BETWEEN_RE_ENQUEUE_TIME = 5 * MIN_DELAY;
+  public static final long DELTA_BETWEEN_RE_ENQUEUE_TIME = ONE_MILLI;
   public static final long TASK_ALIVE_TIME = -30 * ONE_MILLI;
   public static final int DEFAULT_RETRY_DEAD_LETTER_QUEUE = 3;
   public static final int MAX_MESSAGES = 100;

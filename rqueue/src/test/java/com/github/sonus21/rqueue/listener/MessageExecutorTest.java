@@ -85,7 +85,8 @@ public class MessageExecutorTest {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 900000, null);
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
+            retryPerPoll, taskBackOff);
     messageExecutor.run();
     assertEquals(1, discardProcessor.getCount());
   }
@@ -96,7 +97,8 @@ public class MessageExecutorTest {
 
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
+            retryPerPoll, taskBackOff);
     messageExecutor.run();
     assertEquals(1, deadLetterProcessor.getCount());
   }
@@ -106,7 +108,8 @@ public class MessageExecutorTest {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test", 1000, false, 0, "");
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
+            retryPerPoll, taskBackOff);
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     messageExecutor.run();
     verify(messageTemplate, times(1))
@@ -118,7 +121,8 @@ public class MessageExecutorTest {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 0, null);
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
+            retryPerPoll, taskBackOff);
     MessageMetadata messageMetadata = new MessageMetadata();
     messageMetadata.setDeleted(true);
     doReturn(messageMetadata)
@@ -133,7 +137,8 @@ public class MessageExecutorTest {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 0, null);
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler);
+            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
+            retryPerPoll, taskBackOff);
     AtomicInteger atomicInteger = new AtomicInteger(0);
     doAnswer(
             invocation -> {

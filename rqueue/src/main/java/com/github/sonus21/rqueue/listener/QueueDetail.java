@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.io.Serializable;
@@ -30,7 +31,6 @@ import lombok.Getter;
 public class QueueDetail implements Serializable {
   private static final long serialVersionUID = -4274795210784695201L;
   private String name;
-  private boolean delayedQueue;
   private int numRetry;
   private long visibilityTimeout;
   private String queueName;
@@ -40,6 +40,7 @@ public class QueueDetail implements Serializable {
   private String delayedQueueName;
   private String delayedQueueChannelName;
   private boolean active;
+  private MinMax<Integer> concurrency;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
@@ -49,7 +50,6 @@ public class QueueDetail implements Serializable {
     QueueConfig queueConfig =
         QueueConfig.builder()
             .name(name)
-            .delayed(delayedQueue)
             .numRetry(numRetry)
             .queueName(queueName)
             .delayedQueueName(delayedQueueName)
@@ -58,6 +58,7 @@ public class QueueDetail implements Serializable {
             .createdOn(System.currentTimeMillis())
             .updatedOn(System.currentTimeMillis())
             .deadLetterQueues(new LinkedHashSet<>())
+            .concurrency(concurrency)
             .build();
     if (isDlqSet()) {
       queueConfig.addDeadLetterQueue(deadLetterQueueName);

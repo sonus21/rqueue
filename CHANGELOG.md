@@ -10,11 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Strict or weighted algorithm for message execution
 
 
-## [2.1.0] - TBD
-- Single or multiple execution of polled messages
-- Single click message move  (dead letter queue to original queue)
-- Queue level concurrency
-
 ## [2.0.0] - TBD
 ### Added
 - Web interface to visualize queue
@@ -22,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Latency visualizer
 - Delete message from the queue
 - Allow deactivating a consumer in a given environment
+- Single or multiple execution of polled messages
+- Queue level concurrency
+- BackOff for failed message, linear or exponential
+- 
 
 ### Breaking Changes
 - Queue names are prefixed, that can lead to error.  1.x users set REDIS key `__rq::version` to `1`. It does try to find the version using key prefix, but if all queues are empty or no key exist in REDIS with prefix `rqueue-` then it will consider version 2.

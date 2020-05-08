@@ -18,12 +18,16 @@ package com.github.sonus21.rqueue.models;
 
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
 public class MinMax<T extends Serializable> extends SerializableBase {
 
   private static final long serialVersionUID = 455990603344829053L;

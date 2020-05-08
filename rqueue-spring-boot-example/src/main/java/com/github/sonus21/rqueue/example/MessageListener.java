@@ -70,7 +70,8 @@ public class MessageListener {
       value = "job-queue",
       delayedQueue = "true",
       deadLetterQueue = "job-morgue",
-      numRetries = "2")
+      numRetries = "2",
+      concurrency = "5")
   @NewSpan
   public void onMessage(Job job) {
     execute("job-queue: {}", job);

@@ -6,8 +6,8 @@
       <thead>
       <tr>
         <th>Queue</th>
-        <th>Delayed</th>
-        <th>Max Number of Retry</th>
+        <th>Concurrency</th>
+        <th>Retry Count</th>
         <th>Visibility Timeout</th>
         <th>Dead Letter queues</th>
         <th>Created On</th>
@@ -20,7 +20,7 @@
         {{ queueName }}
         {% else %}
         <td>{{config.name}}</td>
-        <td>{% if config.delayed %} Yes {% else %} No {% endif %}</td>
+        <td>{{config.concurrency.min}},{{config.concurrency.max}}</td>
         <td>{{config.numRetry}}</td>
         <td>{{config.visibilityTimeout}}</td>
         <td>

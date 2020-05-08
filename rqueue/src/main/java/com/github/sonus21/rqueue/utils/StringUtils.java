@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import java.beans.Introspector;
+
 public class StringUtils {
   StringUtils() {}
 
@@ -31,5 +33,24 @@ public class StringUtils {
       return null;
     }
     return string.trim();
+  }
+
+  public static boolean isAlpha(Character c) {
+    return Character.isUpperCase(c) || Character.isLowerCase(c);
+  }
+
+  public static String convertToCamelCase(String queueName) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < queueName.length(); i++) {
+      Character c = queueName.charAt(i);
+      if (isAlpha(c)) {
+        if (i > 0 && !isAlpha(queueName.charAt(i - 1))) {
+          sb.append(Character.toUpperCase(c));
+        } else {
+          sb.append(c);
+        }
+      }
+    }
+    return Introspector.decapitalize(sb.toString());
   }
 }

@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
+import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
@@ -46,6 +47,8 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final String messageMetadataId;
   private final Semaphore semaphore;
+  private final int retryPerPoll;
+  private final TaskExecutionBackOff taskExecutionBackoff;
   private MessageMetadata messageMetadata;
   private Object userMessage;
 
@@ -54,13 +57,17 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
       QueueDetail queueDetail,
       Semaphore semaphore,
       WeakReference<RqueueMessageListenerContainer> container,
-      RqueueMessageHandler rqueueMessageHandler) {
+      RqueueMessageHandler rqueueMessageHandler,
+      int retryPerPoll,
+      TaskExecutionBackOff taskExecutionBackoff) {
     super(container);
     this.rqueueMessage = rqueueMessage;
     this.queueDetail = queueDetail;
     this.semaphore = semaphore;
     this.rqueueMessageHandler = rqueueMessageHandler;
     this.messageMetadataId = MessageUtils.getMessageMetaId(rqueueMessage.getId());
+    this.retryPerPoll = retryPerPoll;
+    this.taskExecutionBackoff = taskExecutionBackoff;
     this.message =
         new GenericMessage<>(
             rqueueMessage.getMessage(), MessageUtils.getMessageHeader(queueDetail.getName()));
@@ -203,21 +210,26 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     publishEvent(TaskStatus.MOVED_TO_DLQ, jobExecutionStartTime);
   }
 
-  private void parkMessageForRetry(int currentFailureCount, long jobExecutionStartTime)
+  private void parkMessageForRetry(int currentFailureCount, long jobExecutionStartTime, long delay)
       throws CloneNotSupportedException {
     if (isDebugEnabled()) {
       log.debug(
-          "Message {} will be retried later, queue: {}, Redis Queue: {} processing queue: {}",
+          "Message {} will be retried in {}Ms, queue: {}, Redis Queue: {}",
           userMessage,
+          delay,
           queueDetail.getName(),
-          queueDetail.getQueueName(),
-          queueDetail.getProcessingQueueName());
+          queueDetail.getQueueName());
     }
     RqueueMessage newMessage = rqueueMessage.clone();
     newMessage.setFailureCount(currentFailureCount);
     newMessage.updateReEnqueuedAt();
     getRqueueMessageTemplate()
-        .replaceMessage(queueDetail.getProcessingQueueName(), rqueueMessage, newMessage);
+        .moveMessage(
+            queueDetail.getProcessingQueueName(),
+            queueDetail.getDelayedQueueName(),
+            rqueueMessage,
+            newMessage,
+            delay);
     addOrDeleteMetadata(jobExecutionStartTime, true);
   }
 
@@ -241,12 +253,36 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     deleteMessage(TaskStatus.DELETED, currentFailureCount, jobExecutionStartTime);
   }
 
-  private void taskExecutedSuccessfully(int currentFailureCount, long jobExecutionStartTime) {
+  private void handleSuccessFullExecution(int currentFailureCount, long jobExecutionStartTime) {
     if (isDebugEnabled()) {
       log.debug(
           "Message consumed {} successfully, Queue: {}", rqueueMessage, queueDetail.getName());
     }
     deleteMessage(TaskStatus.SUCCESSFUL, currentFailureCount, jobExecutionStartTime);
+  }
+
+  private void handleLimitExceededMessage(int currentFailureCount, long jobExecutionStartTime)
+      throws CloneNotSupportedException {
+    if (queueDetail.isDlqSet()) {
+      moveMessageToDlq(currentFailureCount, jobExecutionStartTime);
+    } else {
+      discardMessage(currentFailureCount, jobExecutionStartTime);
+    }
+  }
+
+  private void handleFailure(int currentFailureCount, int maxRetryCount, long jobExecutionStartTime)
+      throws CloneNotSupportedException {
+    if (currentFailureCount < maxRetryCount) {
+      long delay =
+          taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, currentFailureCount);
+      if (delay == TaskExecutionBackOff.STOP) {
+        handleLimitExceededMessage(currentFailureCount, jobExecutionStartTime);
+      } else {
+        parkMessageForRetry(currentFailureCount, jobExecutionStartTime, delay);
+      }
+    } else {
+      handleLimitExceededMessage(currentFailureCount, jobExecutionStartTime);
+    }
   }
 
   private void handlePostProcessing(
@@ -266,15 +302,9 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
         handleManualDeletion(currentFailureCount, jobExecutionStartTime);
       } else {
         if (!executed) {
-          if (queueDetail.isDlqSet()) {
-            moveMessageToDlq(currentFailureCount, jobExecutionStartTime);
-          } else if (currentFailureCount < maxRetryCount) {
-            parkMessageForRetry(currentFailureCount, jobExecutionStartTime);
-          } else {
-            discardMessage(currentFailureCount, jobExecutionStartTime);
-          }
+          handleFailure(currentFailureCount, maxRetryCount, jobExecutionStartTime);
         } else {
-          taskExecutedSuccessfully(currentFailureCount, jobExecutionStartTime);
+          handleSuccessFullExecution(currentFailureCount, jobExecutionStartTime);
         }
       }
     } catch (Exception e) {
@@ -310,6 +340,13 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
         .process(userMessage);
   }
 
+  private int getRetryCount() {
+    if (retryPerPoll == -1) {
+      return getMaxRetryCount();
+    }
+    return retryPerPoll;
+  }
+
   @Override
   public void run() {
     boolean executed = false;
@@ -319,6 +356,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     long startTime = System.currentTimeMillis();
     boolean deleted = false;
     boolean ignored = false;
+    int retryCount = getRetryCount();
     try {
       do {
         if (!isQueueActive(queueDetail.getName())) {
@@ -340,7 +378,9 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
           updateCounter(true);
           currentFailureCount += 1;
         }
+        retryCount--;
       } while (currentFailureCount < maxRetryCount
+          && retryCount > 0
           && !executed
           && System.currentTimeMillis() < maxRetryTime);
       handlePostProcessing(

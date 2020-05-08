@@ -107,6 +107,14 @@ public class ValueResolver {
     return cleanedStrings;
   }
 
+  public static String resolveKeyToString(ApplicationContext applicationContext, String name) {
+    String[] values = resolveKeyToArrayOfStrings(applicationContext, name);
+    if (values.length == 1) {
+      return values[0];
+    }
+    throw new IllegalArgumentException("More than one value provided");
+  }
+
   public static Integer resolveKeyToInteger(ApplicationContext applicationContext, String name) {
     Object result = resolveExpression(applicationContext, name);
     if (result instanceof Integer) {

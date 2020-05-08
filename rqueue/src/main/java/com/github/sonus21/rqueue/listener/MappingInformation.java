@@ -19,23 +19,24 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_EXECUTION_TIME;
 
+import com.github.sonus21.rqueue.models.MinMax;
 import java.util.Set;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
 @Getter(AccessLevel.PACKAGE)
-@AllArgsConstructor
 @EqualsAndHashCode
+@Builder
 class MappingInformation implements Comparable<MappingInformation> {
-  private final Set<String> queueNames;
-  private final boolean delayedQueue;
-  private final int numRetries;
-  private final String deadLetterQueueName;
-  private final long visibilityTimeout;
-  private final boolean active;
+  private Set<String> queueNames;
+  private int numRetries;
+  private String deadLetterQueueName;
+  private long visibilityTimeout;
+  private boolean active;
+  private MinMax<Integer> concurrency;
 
   @Override
   public int compareTo(MappingInformation o) {

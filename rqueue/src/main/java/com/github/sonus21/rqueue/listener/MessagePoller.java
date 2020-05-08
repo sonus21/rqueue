@@ -19,22 +19,34 @@ package com.github.sonus21.rqueue.listener;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.util.Objects;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.task.AsyncTaskExecutor;
 
 @Slf4j
 class MessagePoller extends MessageContainerBase implements Runnable {
   private final QueueDetail queueDetail;
   private final Semaphore semaphore;
+  private final AsyncTaskExecutor executor;
+  private final TaskExecutionBackOff taskBackOff;
+  private final int retryPerPoll;
 
   MessagePoller(
-      QueueDetail queueDetail, RqueueMessageListenerContainer container, Semaphore semaphore) {
+      QueueDetail queueDetail,
+      RqueueMessageListenerContainer container,
+      Semaphore semaphore,
+      AsyncTaskExecutor executor,
+      int retryPerPoll,
+      TaskExecutionBackOff taskBackOff) {
     super(container);
     this.queueDetail = queueDetail;
     this.semaphore = semaphore;
+    this.executor = executor;
+    this.retryPerPoll = retryPerPoll;
+    this.taskBackOff = taskBackOff;
   }
 
   private RqueueMessage getMessage() {
@@ -47,14 +59,15 @@ class MessagePoller extends MessageContainerBase implements Runnable {
   }
 
   private void enqueueTask(RqueueMessage message) {
-    getTaskExecutor()
-        .execute(
-            new MessageExecutor(
-                message,
-                queueDetail,
-                semaphore,
-                container,
-                Objects.requireNonNull(container.get()).getRqueueMessageHandler()));
+    executor.execute(
+        new MessageExecutor(
+            message,
+            queueDetail,
+            semaphore,
+            container,
+            Objects.requireNonNull(container.get()).getRqueueMessageHandler(),
+            retryPerPoll,
+            taskBackOff));
   }
 
   @Override
@@ -96,9 +109,5 @@ class MessagePoller extends MessageContainerBase implements Runnable {
 
   private long getBackOffTime() {
     return Objects.requireNonNull(container.get()).getBackOffTime();
-  }
-
-  private Executor getTaskExecutor() {
-    return Objects.requireNonNull(container.get()).getTaskExecutor();
   }
 }

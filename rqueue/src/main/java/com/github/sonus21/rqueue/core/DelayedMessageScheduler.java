@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.core;
 
-import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
@@ -33,12 +31,12 @@ public class DelayedMessageScheduler extends MessageScheduler {
   protected long getNextScheduleTime(String queueName, Long value) {
     long currentTime = System.currentTimeMillis();
     if (value == null) {
-      return currentTime + Constants.DEFAULT_DELAY;
+      return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeInterval();
     }
     if (value < currentTime) {
       return currentTime;
     }
-    return currentTime + Constants.DEFAULT_DELAY;
+    return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeInterval();
   }
 
   @Override
@@ -54,11 +52,6 @@ public class DelayedMessageScheduler extends MessageScheduler {
   @Override
   protected String getThreadNamePrefix() {
     return "delayedMessageScheduler-";
-  }
-
-  @Override
-  protected boolean isQueueValid(QueueDetail queueDetail) {
-    return queueDetail.isDelayedQueue();
   }
 
   @Override

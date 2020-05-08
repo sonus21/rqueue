@@ -58,16 +58,8 @@ public @interface RqueueListener {
    */
   String[] value() default {};
 
-  /**
-   * Whether this is a delayed queue or not. Delay queue are those queues where message(s) will be
-   * held in the queue till the time has elapsed. For example delay the message delivery by 30
-   * minutes from the time of enqueue. Delayed queues are handled slightly different from the
-   * classical FIFO.
-   *
-   * <p>Read more at: https://medium.com/@sonus21/introducing-rqueue-redis-queue-d344f5c36e1b
-   *
-   * @return true/false
-   */
+  // There's no use of this flag.
+  @Deprecated
   String delayedQueue() default "false";
 
   /**
@@ -80,8 +72,8 @@ public @interface RqueueListener {
    *
    * <p>Default behaviour is to try to deliver the same message until it's delivered, upper limit of
    * the delivery retry is {@link Integer#MAX_VALUE} when dead letter queue is not provided. If dead
-   * letter queue is provided then it will retry {@link
-   * Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE} of times.
+   * letter queue is provided then it will retry {@link Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE}
+   * of times.
    *
    * @return integer value
    */
@@ -131,4 +123,16 @@ public @interface RqueueListener {
    * @return whether listener is active or not.
    */
   String active() default "true";
+
+  /**
+   * Specify concurrency limits via a "lower-upper" String, e.g. "5-10", or a simple upper limit
+   * String, e.g. "10" (the lower limit will be 1 in this case).
+   *
+   * <p>Concurrency of this consumer, number of workers used to process the message from each queue
+   * If more than one queue are provided using {@link #value()} then each queue will have this
+   * concurrency.
+   *
+   * @return concurrency for this worker.
+   */
+  String concurrency() default "-1";
 }

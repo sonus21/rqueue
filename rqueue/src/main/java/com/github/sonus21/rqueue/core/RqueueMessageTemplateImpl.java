@@ -24,7 +24,6 @@ import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -89,9 +88,15 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
-  public void replaceMessage(String zsetName, RqueueMessage src, RqueueMessage tgt) {
+  public void moveMessage(
+      String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay) {
     RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.REPLACE_MESSAGE);
-    scriptExecutor.execute(script, Collections.singletonList(zsetName), src, tgt);
+    scriptExecutor.execute(
+        script,
+        Arrays.asList(srcZsetName, tgtZsetName),
+        src,
+        tgt,
+        System.currentTimeMillis() + delay);
   }
 
   @Override

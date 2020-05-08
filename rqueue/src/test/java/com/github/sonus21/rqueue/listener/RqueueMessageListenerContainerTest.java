@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doAnswer;
@@ -110,16 +109,6 @@ public class RqueueMessageListenerContainerTest {
     assertEquals(
         "testExecutor",
         ((ThreadPoolTaskExecutor) container.getTaskExecutor()).getThreadNamePrefix());
-  }
-
-  @Test
-  public void setTaskExecutorCreatesSpinningThread() throws Exception {
-    assertNull(container.getTaskExecutor());
-    ThreadPoolTaskExecutor asyncTaskExecutor = new ThreadPoolTaskExecutor();
-    asyncTaskExecutor.setThreadNamePrefix("testExecutor");
-    container.setTaskExecutor(asyncTaskExecutor);
-    container.afterPropertiesSet();
-    assertNotNull(container.getSpinningTaskExecutor());
   }
 
   @Test

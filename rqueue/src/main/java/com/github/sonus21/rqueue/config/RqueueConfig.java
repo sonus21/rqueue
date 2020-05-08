@@ -72,6 +72,9 @@ public class RqueueConfig {
   @Value("${rqueue.queue.config.key.prefix:q-config::}")
   private String queueConfigKeyPrefix;
 
+  @Value("${retries.per.poll:1}")
+  private int retriesPerPoll;
+
   public String getQueueName(String queueName) {
     if (dbVersion >= 2) {
       return prefix + simpleQueuePrefix + getTaggedName(queueName);

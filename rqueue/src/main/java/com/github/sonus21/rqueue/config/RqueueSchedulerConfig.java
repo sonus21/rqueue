@@ -63,4 +63,8 @@ public class RqueueSchedulerConfig {
   //  Number of threads used to process processing queue messages
   @Value("${rqueue.scheduler.processing.message.thread.pool.size:1}")
   private int processingMessageThreadPoolSize;
+
+  // How frequently messages should be moved from delayed queues to source queue
+  @Value("${rqueue.scheduler.delayed.message.time.interval:500}")
+  private long delayedMessageTimeInterval;
 }

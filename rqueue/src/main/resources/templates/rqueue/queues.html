@@ -6,13 +6,13 @@
       <thead>
       <tr>
         <th>Queue</th>
-        <th>Delayed</th>
-        <th>Max Number of Retry</th>
+        <th>Concurrency</th>
+        <th>Retry Count</th>
         <th>Visibility Timeout</th>
         <th>Dead Letter queues</th>
         <th>Created On</th>
         <th>Updated On</th>
-        <th>Deleted</th>
+<!--        <th>Deleted</th>-->
 <!--        <th>Deleted On</th>-->
       </tr>
       </thead>
@@ -20,7 +20,7 @@
       {% for meta in queues %}
       <tr>
         <td><a href="/rqueue/queues/{{meta.name}}">{{meta.name}}</a></td>
-        <td>{% if meta.delayed %} Yes {% else %} No {% endif %}</td>
+        <td>{{meta.concurrency.min}},{{meta.concurrency.max}}</td>
         <td>{{meta.numRetry}}</td>
         <td>{{meta.visibilityTimeout}}</td>
         <td>
@@ -28,7 +28,7 @@
         </td>
         <td>{{ time(meta.createdOn) }}</td>
         <td>{{ time(meta.updatedOn) }}</td>
-        <td>{% if meta.deleted %} Yes {% else %} No {% endif %}</td>
+<!--        <td>{% if meta.deleted %} Yes {% else %} No {% endif %}</td>-->
 <!--        <td>-->
 <!--          {% if meta.deleted %}-->
 <!--          {{ time(meta.deletedOn) }}-->

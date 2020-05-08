@@ -100,15 +100,12 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 NavTab.RUNNING,
                 new RedisDataDetail(
                     processingQueueName, DataType.ZSET, running == null ? 0 : running)));
-    if (queueConfig.isDelayed()) {
-      String timeQueueName = queueConfig.getDelayedQueueName();
-      Long scheduled = stringRqueueRedisTemplate.getZsetSize(timeQueueName);
-      queueRedisDataDetails.add(
-          new HashMap.SimpleEntry<>(
-              NavTab.SCHEDULED,
-              new RedisDataDetail(
-                  timeQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
-    }
+    String timeQueueName = queueConfig.getDelayedQueueName();
+    Long scheduled = stringRqueueRedisTemplate.getZsetSize(timeQueueName);
+    queueRedisDataDetails.add(
+        new HashMap.SimpleEntry<>(
+            NavTab.SCHEDULED,
+            new RedisDataDetail(timeQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
     if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
       for (String dlq : queueConfig.getDeadLetterQueues()) {
         Long dlqSize = stringRqueueRedisTemplate.getListSize(dlq);
@@ -126,9 +123,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<NavTab> navTabs = new ArrayList<>();
     if (queueConfig != null) {
       navTabs.add(NavTab.PENDING);
-      if (queueConfig.isDelayed()) {
-        navTabs.add(NavTab.SCHEDULED);
-      }
+      navTabs.add(NavTab.SCHEDULED);
       navTabs.add(NavTab.RUNNING);
       if (queueConfig.hasDeadLetterQueue()) {
         navTabs.add(NavTab.DEAD);
@@ -369,10 +364,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   @Override
   public List<List<Object>> getScheduledTasks() {
     List<String> queues = rqueueSystemManagerService.getQueues();
-    List<QueueConfig> queueConfigs =
-        rqueueSystemManagerService.getQueueConfigs(queues).stream()
-            .filter(QueueConfig::isDelayed)
-            .collect(Collectors.toList());
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs(queues);
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {

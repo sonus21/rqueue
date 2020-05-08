@@ -20,9 +20,9 @@ import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class QueueRegistry {
   QueueRegistry() {}
@@ -52,19 +52,34 @@ public class QueueRegistry {
     }
   }
 
-  public static List<String> getQueues() {
-    return Collections.unmodifiableList(new LinkedList<>(queueNameToDetail.keySet()));
-  }
-
-  public static List<QueueDetail> getQueueDetails() {
-    return Collections.unmodifiableList(new LinkedList<>(queueNameToDetail.values()));
-  }
-
   public static Map<String, QueueDetail> getQueueMap() {
     return Collections.unmodifiableMap(queueNameToDetail);
   }
 
-  public static int getQueueCount() {
-    return queueNameToDetail.size();
+  public static List<String> getActiveQueues() {
+    synchronized (lock) {
+      List<String> queues =
+          queueNameToDetail.values().stream()
+              .filter(QueueDetail::isActive)
+              .map(QueueDetail::getName)
+              .collect(Collectors.toList());
+      lock.notifyAll();
+      return queues;
+    }
+  }
+
+  public static List<QueueDetail> getActiveQueueDetails() {
+    synchronized (lock) {
+      List<QueueDetail> queueDetails =
+          queueNameToDetail.values().stream()
+              .filter(QueueDetail::isActive)
+              .collect(Collectors.toList());
+      lock.notifyAll();
+      return queueDetails;
+    }
+  }
+
+  public static int getActiveQueueCount() {
+    return getActiveQueues().size();
   }
 }

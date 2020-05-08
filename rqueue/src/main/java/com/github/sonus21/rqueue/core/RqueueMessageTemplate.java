@@ -31,7 +31,8 @@ public interface RqueueMessageTemplate {
   Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage);
 
-  void replaceMessage(String zsetName, RqueueMessage src, RqueueMessage tgt);
+  void moveMessage(
+      String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay);
 
   Long addMessage(String queueName, RqueueMessage rqueueMessage);
 
