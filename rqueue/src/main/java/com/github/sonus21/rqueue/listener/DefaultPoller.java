@@ -18,56 +18,27 @@ package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.task.AsyncTaskExecutor;
 
 @Slf4j
-class MessagePoller extends MessageContainerBase implements Runnable {
+class DefaultPoller extends AbstractPoller implements Runnable {
   private final QueueDetail queueDetail;
-  private final Semaphore semaphore;
-  private final AsyncTaskExecutor executor;
-  private final TaskExecutionBackOff taskBackOff;
-  private final int retryPerPoll;
+  private final QueueThread queueThread;
 
-  MessagePoller(
+  DefaultPoller(
+      QueueThread queueThread,
       QueueDetail queueDetail,
       RqueueMessageListenerContainer container,
-      Semaphore semaphore,
-      AsyncTaskExecutor executor,
-      int retryPerPoll,
-      TaskExecutionBackOff taskBackOff) {
-    super(container);
+      TaskExecutionBackOff taskBackOff,
+      int retryPerPoll) {
+    super(container, taskBackOff, retryPerPoll);
     this.queueDetail = queueDetail;
-    this.semaphore = semaphore;
-    this.executor = executor;
-    this.retryPerPoll = retryPerPoll;
-    this.taskBackOff = taskBackOff;
-  }
-
-  private RqueueMessage getMessage() {
-    return getRqueueMessageTemplate()
-        .pop(
-            queueDetail.getQueueName(),
-            queueDetail.getProcessingQueueName(),
-            queueDetail.getProcessingQueueChannelName(),
-            queueDetail.getVisibilityTimeout());
-  }
-
-  private void enqueueTask(RqueueMessage message) {
-    executor.execute(
-        new MessageExecutor(
-            message,
-            queueDetail,
-            semaphore,
-            container,
-            Objects.requireNonNull(container.get()).getRqueueMessageHandler(),
-            retryPerPoll,
-            taskBackOff));
+    this.queueThread = queueThread;
   }
 
   @Override
@@ -75,6 +46,7 @@ class MessagePoller extends MessageContainerBase implements Runnable {
     log.debug("Running Queue {}", queueDetail.getName());
     while (isQueueActive(queueDetail.getName())) {
       boolean acquired = false;
+      Semaphore semaphore = queueThread.getSemaphore();
       try {
         acquired = semaphore.tryAcquire(Constants.MIN_DELAY, TimeUnit.MILLISECONDS);
       } catch (Exception e) {
@@ -82,10 +54,10 @@ class MessagePoller extends MessageContainerBase implements Runnable {
       }
       if (acquired && isQueueActive(queueDetail.getName())) {
         try {
-          RqueueMessage message = getMessage();
+          RqueueMessage message = getMessage(queueDetail);
           log.debug("Queue: {} Fetched Msg {}", queueDetail.getName(), message);
           if (message != null) {
-            enqueueTask(message);
+            enqueue(queueThread, queueDetail, message);
           } else {
             semaphore.release();
             TimeoutUtils.sleepLog(getPollingInterval(), false);
@@ -101,13 +73,5 @@ class MessagePoller extends MessageContainerBase implements Runnable {
         }
       }
     }
-  }
-
-  private long getPollingInterval() {
-    return Objects.requireNonNull(container.get()).getPollingInterval();
-  }
-
-  private long getBackOffTime() {
-    return Objects.requireNonNull(container.get()).getBackOffTime();
   }
 }

@@ -21,14 +21,17 @@ import static org.springframework.util.Assert.notEmpty;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.models.MinMax;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.messaging.Message;
@@ -127,6 +130,35 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return new MinMax<>(lowerLimit, upperLimit);
   }
 
+  private String resolvePriorityGroup(RqueueListener rqueueListener) {
+    return ValueResolver.resolveKeyToString(
+        getApplicationContext(), rqueueListener.priorityGroup());
+  }
+
+  private Map<String, Integer> resolvePriority(RqueueListener rqueueListener) {
+    String[] priorities =
+        ValueResolver.resolveKeyToArrayOfStrings(
+            getApplicationContext(), rqueueListener.priority());
+    HashMap<String, Integer> priorityMap = new HashMap<>();
+    if (priorities.length == 0 || (priorities[0].equals(Constants.BLANK))) {
+      return priorityMap;
+    }
+    for (String s : priorities) {
+      String[] vals = s.split(":");
+      if (vals.length == 0) {
+        vals = s.split("=");
+      }
+      if (vals.length == 1) {
+        priorityMap.clear();
+        priorityMap.put(Constants.DEFAULT_PRIORITY_KEY, Integer.parseInt(vals[0]));
+        break;
+      } else {
+        priorityMap.put(vals[0], Integer.parseInt(vals[1]));
+      }
+    }
+    return priorityMap;
+  }
+
   @Override
   protected MappingInformation getMappingForMethod(Method method, Class<?> handlerType) {
     RqueueListener rqueueListener = AnnotationUtils.findAnnotation(method, RqueueListener.class);
@@ -137,6 +169,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       long visibilityTimeout = resolveVisibilityTimeout(rqueueListener);
       boolean active = isActive(rqueueListener);
       MinMax<Integer> concurrency = resolveConcurrency(rqueueListener);
+      Map<String, Integer> priorityMap = resolvePriority(rqueueListener);
+      String priorityGroup = resolvePriorityGroup(rqueueListener);
       MappingInformation mappingInformation =
           MappingInformation.builder()
               .active(active)
@@ -145,6 +179,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
               .numRetries(numRetries)
               .queueNames(queueNames)
               .visibilityTimeout(visibilityTimeout)
+              .priorityGroup(priorityGroup)
+              .priorities(priorityMap)
               .build();
       if (mappingInformation.isValid()) {
         return mappingInformation;

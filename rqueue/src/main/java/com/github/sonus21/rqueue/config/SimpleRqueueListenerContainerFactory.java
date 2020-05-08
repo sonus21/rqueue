@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.util.List;
@@ -72,6 +73,9 @@ public class SimpleRqueueListenerContainerFactory {
   private MessageProcessor postExecutionMessageProcessor;
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
+
+  // Set priority mode for the workers
+  private PriorityMode priorityMode;
 
   /**
    * Whenever a consumer call fails then the consumed message can be delayed for further
@@ -264,6 +268,9 @@ public class SimpleRqueueListenerContainerFactory {
     if (getTaskExecutionBackOff() != null) {
       messageListenerContainer.setTaskExecutionBackOff(getTaskExecutionBackOff());
     }
+    if (getPriorityMode() != null) {
+      messageListenerContainer.setPriorityMode(getPriorityMode());
+    }
     return messageListenerContainer;
   }
 
@@ -378,5 +385,13 @@ public class SimpleRqueueListenerContainerFactory {
   public void setTaskExecutionBackOff(TaskExecutionBackOff taskExecutionBackOff) {
     notNull(taskExecutionBackOff, "taskExecutionBackOff cannot be null");
     this.taskExecutionBackOff = taskExecutionBackOff;
+  }
+
+  public PriorityMode getPriorityMode() {
+    return priorityMode;
+  }
+
+  public void setPriorityMode(PriorityMode priorityMode) {
+    this.priorityMode = priorityMode;
   }
 }

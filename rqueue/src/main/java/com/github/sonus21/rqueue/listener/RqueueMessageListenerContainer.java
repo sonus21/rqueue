@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.Constants.DEFAULT_WORKER_COUNT_PER_QUEUE;
 import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForTermination;
+import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForWorkerTermination;
 import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -27,6 +28,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.models.MinMax;
+import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
@@ -34,12 +36,15 @@ import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.DisposableBean;
@@ -95,6 +100,7 @@ public class RqueueMessageListenerContainer
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private boolean active = true;
+  private PriorityMode priorityMode;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -352,6 +358,8 @@ public class RqueueMessageListenerContainer
         .concurrency(mappingInformation.getConcurrency())
         .active(mappingInformation.isActive())
         .numRetry(numRetries)
+        .priority(mappingInformation.getPriorities())
+        .priorityGroup(mappingInformation.getPriorityGroup())
         .build();
   }
 
@@ -369,9 +377,70 @@ public class RqueueMessageListenerContainer
   }
 
   protected void doStart() {
+    Map<String, List<QueueDetail>> queueGroupToDetails = new HashMap<>();
     for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
-      startQueue(queueDetail.getName(), queueDetail);
+      int prioritySize = queueDetail.getPriority().size();
+      if (prioritySize == 0) {
+        startQueue(queueDetail.getName(), queueDetail);
+      } else if (prioritySize == 1) {
+        List<QueueDetail> queueDetails =
+            queueGroupToDetails.getOrDefault(queueDetail.getPriorityGroup(), new ArrayList<>());
+        queueDetails.add(queueDetail);
+        queueGroupToDetails.put(queueDetail.getPriorityGroup(), queueDetails);
+      } else {
+        List<QueueDetail> queueDetails =
+            queueDetail.expandQueueDetail(
+                rqueueConfig.isAddDefaultQueueWithQueueLevelPriority(),
+                rqueueConfig.getDefaultQueueWithQueueLevelPriority());
+        queueGroupToDetails.put(queueDetail.getQueueName(), queueDetails);
+      }
     }
+
+    for (Entry<String, List<QueueDetail>> entry : queueGroupToDetails.entrySet()) {
+      startGroup(entry.getKey(), entry.getValue());
+    }
+  }
+
+  private Map<String, QueueThread> getQueueThreadMap(
+      String groupName, List<QueueDetail> queueDetails) {
+    QueueThread queueThread = queueThreadMap.get(groupName);
+    if (queueThread != null) {
+      return queueDetails.stream()
+          .collect(Collectors.toMap(QueueDetail::getQueueName, e -> queueThread));
+    }
+    return queueDetails.stream()
+        .collect(Collectors.toMap(QueueDetail::getQueueName, e -> queueThreadMap.get(e.getName())));
+  }
+
+  protected void startGroup(String groupName, List<QueueDetail> queueDetails) {
+    if (getPriorityMode() == null) {
+      throw new IllegalStateException("Priority mode is not set");
+    }
+    for (QueueDetail queueDetail : queueDetails) {
+      queueRunningState.put(queueDetail.getName(), true);
+    }
+    Map<String, QueueThread> queueThread = getQueueThreadMap(groupName, queueDetails);
+    Future<?> future;
+    if (getPriorityMode() == PriorityMode.STRICT) {
+      future =
+          taskExecutor.submit(
+              new StrictPriorityPoller(
+                  this,
+                  queueDetails,
+                  queueThread,
+                  taskExecutionBackOff,
+                  rqueueConfig.getRetriesPerPoll()));
+    } else {
+      future =
+          taskExecutor.submit(
+              new WeightedPriorityPoller(
+                  this,
+                  queueDetails,
+                  queueThread,
+                  taskExecutionBackOff,
+                  rqueueConfig.getRetriesPerPoll()));
+    }
+    scheduledFutureByQueue.put(groupName, future);
   }
 
   protected void startQueue(String queueName, QueueDetail queueDetail) {
@@ -380,14 +449,9 @@ public class RqueueMessageListenerContainer
     }
     queueRunningState.put(queueName, true);
     QueueThread queueThread = queueThreadMap.get(queueName);
-    MessagePoller messagePoller =
-        new MessagePoller(
-            queueDetail,
-            this,
-            queueThread.getSemaphore(),
-            queueThread.getTaskExecutor(),
-            rqueueConfig.getRetriesPerPoll(),
-            taskExecutionBackOff);
+    DefaultPoller messagePoller =
+        new DefaultPoller(
+            queueThread, queueDetail, this, taskExecutionBackOff, rqueueConfig.getRetriesPerPoll());
     Future<?> future = getTaskExecutor().submit(messagePoller);
     scheduledFutureByQueue.put(queueName, future);
   }
@@ -437,7 +501,7 @@ public class RqueueMessageListenerContainer
           "An exception occurred while stopping queue '{}'",
           queueName);
     }
-    if (!waitForTermination(queueThreadMap.values(), getMaxWorkerWaitTime())) {
+    if (!waitForWorkerTermination(queueThreadMap.values(), getMaxWorkerWaitTime())) {
       log.error("Some workers are not stopped within time");
     }
   }
@@ -532,5 +596,13 @@ public class RqueueMessageListenerContainer
 
   public TaskExecutionBackOff getTaskExecutionBackOff() {
     return taskExecutionBackOff;
+  }
+
+  public void setPriorityMode(PriorityMode priorityMode) {
+    this.priorityMode = priorityMode;
+  }
+
+  public PriorityMode getPriorityMode() {
+    return priorityMode;
   }
 }

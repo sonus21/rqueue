@@ -16,11 +16,20 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.utils.Constants.DEFAULT_PRIORITY_KEY;
+
 import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,6 +50,8 @@ public class QueueDetail implements Serializable {
   private String delayedQueueChannelName;
   private boolean active;
   private MinMax<Integer> concurrency;
+  private Map<String, Integer> priority;
+  private String priorityGroup;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
@@ -64,5 +75,49 @@ public class QueueDetail implements Serializable {
       queueConfig.addDeadLetterQueue(deadLetterQueueName);
     }
     return queueConfig;
+  }
+
+  public List<QueueDetail> expandQueueDetail(boolean addDefault, int priority) {
+    List<QueueDetail> queueDetails = new ArrayList<>();
+    for (Entry<String, Integer> entry : getPriority().entrySet()) {
+      String suffix = "_" + entry.getKey();
+      QueueDetail cloneQueueDetail =
+          QueueDetail.builder()
+              .numRetry(numRetry)
+              .visibilityTimeout(visibilityTimeout)
+              .deadLetterQueueName(deadLetterQueueName)
+              .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, entry.getValue()))
+              .name(name + suffix)
+              .queueName(queueName + suffix)
+              .processingQueueName(processingQueueName + suffix)
+              .processingQueueChannelName(processingQueueChannelName + suffix)
+              .delayedQueueName(delayedQueueName + suffix)
+              .delayedQueueChannelName(delayedQueueChannelName + suffix)
+              .build();
+      queueDetails.add(cloneQueueDetail);
+    }
+    if (addDefault) {
+      int defaultPriority = priority;
+      if (defaultPriority == -1) {
+        List<Integer> priorities = new ArrayList<>(getPriority().values());
+        priorities.sort(Comparator.comparingInt(o -> o));
+        defaultPriority = priorities.get(priorities.size() / 2);
+      }
+      QueueDetail cloneQueueDetail =
+          QueueDetail.builder()
+              .name(name)
+              .numRetry(numRetry)
+              .visibilityTimeout(visibilityTimeout)
+              .queueName(queueName)
+              .deadLetterQueueName(deadLetterQueueName)
+              .processingQueueChannelName(processingQueueChannelName)
+              .processingQueueName(processingQueueName)
+              .delayedQueueChannelName(delayedQueueChannelName)
+              .delayedQueueName(delayedQueueName)
+              .priority(Collections.singletonMap(DEFAULT_PRIORITY_KEY, defaultPriority))
+              .build();
+      queueDetails.add(cloneQueueDetail);
+    }
+    return queueDetails;
   }
 }

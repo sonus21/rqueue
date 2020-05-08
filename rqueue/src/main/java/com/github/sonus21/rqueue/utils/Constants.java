@@ -17,12 +17,14 @@
 package com.github.sonus21.rqueue.utils;
 
 public class Constants {
+
   private Constants() {}
 
   public static final String BLANK = "";
   public static final long ONE_MILLI = 1000;
   public static final int ONE_MILLI_INT = 1000;
   public static final int SECONDS_IN_A_MINUTE = 60;
+  public static final long MILLIS_IN_A_MINUTE = SECONDS_IN_A_MINUTE * ONE_MILLI;
   public static final int MINUTES_IN_AN_HOUR = 60;
   public static final int HOURS_IN_A_DAY = 24;
   public static final int DAYS_IN_A_MONTH = 30;
@@ -42,4 +44,5 @@ public class Constants {
   public static final int AGGREGATION_LOCK_DURATION_IN_SECONDS = 5;
   public static final String MAVEN_REPO_LINK =
       "https://repo1.maven.org/maven2/com/github/sonus21/rqueue";
+  public static final String DEFAULT_PRIORITY_KEY = "default";
 }

@@ -75,6 +75,12 @@ public class RqueueConfig {
   @Value("${retries.per.poll:1}")
   private int retriesPerPoll;
 
+  @Value("${rqueue.add.default.queue.with.queue.level.priority:true}")
+  private boolean addDefaultQueueWithQueueLevelPriority;
+
+  @Value("${rqueue.default.queue.with.queue.level.priority:-1}")
+  private int defaultQueueWithQueueLevelPriority;
+
   public String getQueueName(String queueName) {
     if (dbVersion >= 2) {
       return prefix + simpleQueuePrefix + getTaggedName(queueName);

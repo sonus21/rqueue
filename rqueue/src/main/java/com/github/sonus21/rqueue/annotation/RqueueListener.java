@@ -135,4 +135,24 @@ public @interface RqueueListener {
    * @return concurrency for this worker.
    */
   String concurrency() default "-1";
+
+  /**
+   * Use this to set priority of this listener. A listener can have two types of priority, global
+   * and queue level priority. In the case of queue level priority, values should be provided as
+   * "critical:10,high:5, medium:3,low:1", these same name must be used to enqueue message.
+   *
+   * <p>When using priority group then this should be a number between 1 and 100 both are inclusive
+   *
+   * @return the priority for this listener.
+   */
+  String priority() default "";
+
+  /**
+   * Priority group for this listener. You can configure more than one priority group. Priority
+   * groups are useful when inside a group some queue has to have higher priority then another
+   * queue.
+   *
+   * @return priority group name.
+   */
+  String priorityGroup() default "";
 }

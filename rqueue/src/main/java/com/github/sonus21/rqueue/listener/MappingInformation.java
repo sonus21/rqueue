@@ -20,6 +20,7 @@ import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE
 import static com.github.sonus21.rqueue.utils.Constants.MIN_EXECUTION_TIME;
 
 import com.github.sonus21.rqueue.models.MinMax;
+import java.util.Map;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,6 +38,8 @@ class MappingInformation implements Comparable<MappingInformation> {
   private long visibilityTimeout;
   private boolean active;
   private MinMax<Integer> concurrency;
+  private String priorityGroup;
+  private Map<String, Integer> priorities;
 
   @Override
   public int compareTo(MappingInformation o) {

@@ -95,7 +95,7 @@ public class ThreadUtils {
     waitForShutdown(log, future, waitTimeInMillis, msg, msgParams);
   }
 
-  public static boolean waitForTermination(
+  public static boolean waitForWorkerTermination(
       final Collection<QueueThread> queueThreads, long waitTime) {
     long maxTime = System.currentTimeMillis() + waitTime;
     List<QueueThread> remaining = new ArrayList<>(queueThreads);
