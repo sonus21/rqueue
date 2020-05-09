@@ -4,11 +4,6 @@ All notable changes to Rqueue project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.2.0] - TBD
-- Global queue priority
-- Queue level priority
-- Strict or weighted algorithm for message execution
-
 
 ## [2.0.0] - TBD
 ### Added
@@ -20,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Single or multiple execution of polled messages
 - Queue level concurrency
 - BackOff for failed message, linear or exponential
-- 
+- Group level queue priority
+- Multi level queue priority
+- Strict or weighted algorithm for message execution
 
 ### Breaking Changes
 - Queue names are prefixed, that can lead to error.  1.x users set REDIS key `__rq::version` to `1`. It does try to find the version using key prefix, but if all queues are empty or no key exist in REDIS with prefix `rqueue-` then it will consider version 2.

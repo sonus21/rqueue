@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -52,9 +53,9 @@ public class RqueueMessageListenerContainerTest {
   private static final String fastProcessingQueue = "rqueue-processing::" + fastQueue;
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
+  private RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
   private RqueueMessageListenerContainer container =
-      new RqueueMessageListenerContainer(
-          mock(RqueueMessageHandler.class), mock(RqueueMessageTemplate.class));
+      new RqueueMessageListenerContainer(rqueueMessageHandler, mock(RqueueMessageTemplate.class));
 
   @Before
   public void init() throws IllegalAccessException {
@@ -329,7 +330,7 @@ public class RqueueMessageListenerContainerTest {
   }
 
   @Test
-  public void internalTasksAreNotSharedWithTaskExecutor() throws Exception {
+  public void internalTasksAreSubmittedToTaskExecutor() throws Exception {
     @Getter
     class TestTaskExecutor extends ThreadPoolTaskExecutor {
 
@@ -354,10 +355,12 @@ public class RqueueMessageListenerContainerTest {
     RqueueMessageListenerContainer container =
         createContainer(messageHandler, mock(RqueueMessageTemplate.class));
     TestTaskExecutor taskExecutor = new TestTaskExecutor();
+    taskExecutor.afterPropertiesSet();
+
     container.setTaskExecutor(taskExecutor);
     container.afterPropertiesSet();
     container.start();
-    assertEquals(0, taskExecutor.getSubmittedTaskCount());
+    assertEquals(1, taskExecutor.getSubmittedTaskCount());
     container.stop();
     container.doDestroy();
   }

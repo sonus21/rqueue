@@ -14,35 +14,37 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring;
+package com.github.sonus21.rqueue.spring.tests.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import com.github.sonus21.rqueue.core.QueueRegistry;
-import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.AppWithMetricEnabled;
-import com.github.sonus21.rqueue.test.tests.SpringTestBase;
+import com.github.sonus21.rqueue.test.tests.MetricTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = AppWithMetricEnabled.class)
 @RunWith(RqueueSpringTestRunner.class)
 @Slf4j
 @WebAppConfiguration
-public class SpringAppTest extends SpringTestBase {
+@TestPropertySource(properties = {"rqueue.retry.per.poll=20", "spring.redis.port=7005"})
+public class SpringMetricTest extends MetricTestBase {
+  @Test
+  public void delayedQueueStatus() throws TimedOutException {
+    this.verifyDelayedQueueStatus();
+  }
 
   @Test
-  public void numListeners() {
-    Map<String, QueueDetail> registeredQueue = QueueRegistry.getQueueMap();
-    assertEquals(3, registeredQueue.size());
-    assertTrue(registeredQueue.containsKey(notificationQueue));
-    assertTrue(registeredQueue.containsKey(emailQueue));
-    assertTrue(registeredQueue.containsKey(jobQueue));
+  public void metricStatus() throws TimedOutException {
+    this.verifyMetricStatus();
+  }
+
+  @Test
+  public void countStatusTest() throws TimedOutException {
+    this.verifyCountStatus();
   }
 }

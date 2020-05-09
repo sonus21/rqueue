@@ -36,6 +36,7 @@ import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import com.github.sonus21.test.RunTestUntilFail;
@@ -84,7 +85,8 @@ public class RqueueTaskAggregatorServiceTest {
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage.getId());
     messageMetadata.setTotalExecutionTime(10 + (long) r * 10000);
     rqueueMessage.setFailureCount((int) r * 10);
-    return new RqueueExecutionEvent(queueName, status, rqueueMessage, messageMetadata);
+    return new RqueueExecutionEvent(
+        TestUtils.createQueueDetail(queueName), rqueueMessage, status, messageMetadata);
   }
 
   private RqueueExecutionEvent generateTaskEvent() {

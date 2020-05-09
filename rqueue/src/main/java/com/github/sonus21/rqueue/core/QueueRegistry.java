@@ -18,10 +18,10 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class QueueRegistry {
@@ -52,10 +52,6 @@ public class QueueRegistry {
     }
   }
 
-  public static Map<String, QueueDetail> getQueueMap() {
-    return Collections.unmodifiableMap(queueNameToDetail);
-  }
-
   public static List<String> getActiveQueues() {
     synchronized (lock) {
       List<String> queues =
@@ -74,6 +70,17 @@ public class QueueRegistry {
           queueNameToDetail.values().stream()
               .filter(QueueDetail::isActive)
               .collect(Collectors.toList());
+      lock.notifyAll();
+      return queueDetails;
+    }
+  }
+
+  public static Map<String, QueueDetail> getActiveQueueMap() {
+    synchronized (lock) {
+      Map<String, QueueDetail> queueDetails =
+          queueNameToDetail.values().stream()
+              .filter(QueueDetail::isActive)
+              .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
       lock.notifyAll();
       return queueDetails;
     }

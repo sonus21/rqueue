@@ -21,7 +21,6 @@ import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -30,6 +29,7 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -54,7 +54,6 @@ import org.springframework.util.CollectionUtils;
 abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
   @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Autowired protected RqueueConfig rqueueConfig;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
@@ -62,7 +61,6 @@ abstract class MessageScheduler
   private Map<String, ScheduledTaskDetail> queueNameToScheduledTask;
   private Map<String, String> channelNameToQueueName;
   private Map<String, Long> queueNameToLastMessageSeenTime;
-  private Map<String, QueueDetail> queueDetails = new ConcurrentHashMap<>();
   private ThreadPoolTaskScheduler scheduler;
   @Autowired private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
@@ -74,9 +72,9 @@ abstract class MessageScheduler
 
   protected abstract long getNextScheduleTime(String queueName, Long value);
 
-  protected abstract String getChannelName(QueueDetail queueDetail);
+  protected abstract String getChannelName(String queueName);
 
-  protected abstract String getZsetName(QueueDetail queueDetail);
+  protected abstract String getZsetName(String queueName);
 
   protected abstract String getThreadNamePrefix();
 
@@ -88,14 +86,14 @@ abstract class MessageScheduler
     }
   }
 
-  private void subscribeToRedisTopic(QueueDetail queueDetail) {
+  private void subscribeToRedisTopic(String queueName) {
     if (isRedisEnabled()) {
-      String channelName = getChannelName(queueDetail);
-      getLogger().debug("Queue {} subscribe to channel {}", queueDetail.getName(), channelName);
+      String channelName = getChannelName(queueName);
+      getLogger().debug("Queue {} subscribe to channel {}", queueName, channelName);
       this.rqueueRedisListenerContainerFactory
           .getContainer()
           .addMessageListener(messageSchedulerListener, new ChannelTopic(channelName));
-      channelNameToQueueName.put(channelName, queueDetail.getName());
+      channelNameToQueueName.put(channelName, queueName);
     }
   }
 
@@ -108,7 +106,7 @@ abstract class MessageScheduler
       long scheduleAt = System.currentTimeMillis() + MIN_DELAY;
       schedule(queueName, scheduleAt, false);
     }
-    subscribeToRedisTopic(queueDetails.get(queueName));
+    subscribeToRedisTopic(queueName);
   }
 
   private void doStop() {
@@ -197,8 +195,8 @@ abstract class MessageScheduler
     queueNameToLastMessageSeenTime.put(queueName, currentTime);
 
     ScheduledTaskDetail scheduledTaskDetail = queueNameToScheduledTask.get(queueName);
-    QueueDetail queueDetail = queueDetails.get(queueName);
-    String zsetName = getZsetName(queueDetail);
+    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    String zsetName = getZsetName(queueName);
 
     if (scheduledTaskDetail == null || forceSchedule) {
       long requiredDelay = max(1, startTime - currentTime);
@@ -243,31 +241,19 @@ abstract class MessageScheduler
 
   @SuppressWarnings("unchecked")
   protected void initialize() {
-    this.queueDetails.clear();
-    for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
-      if (queueDetail.getPriority().size() > 1) {
-        for (QueueDetail clonedQueueDetail :
-            queueDetail.expandQueueDetail(
-                rqueueConfig.isAddDefaultQueueWithQueueLevelPriority(),
-                rqueueConfig.getDefaultQueueWithQueueLevelPriority())) {
-          this.queueDetails.put(clonedQueueDetail.getName(), queueDetail);
-        }
-      } else {
-        this.queueDetails.put(queueDetail.getName(), queueDetail);
-      }
-    }
+    List<String> queueNames = QueueRegistry.getActiveQueues();
     defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
     redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.PUSH_MESSAGE);
-    queueRunningState = new ConcurrentHashMap<>(queueDetails.size());
-    queueNameToScheduledTask = new ConcurrentHashMap<>(queueDetails.size());
-    channelNameToQueueName = new ConcurrentHashMap<>(queueDetails.size());
-    queueNameToLastMessageSeenTime = new ConcurrentHashMap<>(queueDetails.size());
-    createScheduler(queueDetails.size());
+    queueRunningState = new ConcurrentHashMap<>(queueNames.size());
+    queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
+    channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
+    queueNameToLastMessageSeenTime = new ConcurrentHashMap<>(queueNames.size());
+    createScheduler(queueNames.size());
     if (isRedisEnabled()) {
       messageSchedulerListener = new MessageSchedulerListener();
     }
-    for (String name : queueDetails.keySet()) {
-      queueRunningState.put(name, false);
+    for (String queueName : queueNames) {
+      queueRunningState.put(queueName, false);
     }
   }
 

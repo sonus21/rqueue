@@ -36,7 +36,7 @@ import org.springframework.test.context.TestPropertySource;
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:6385"})
+@TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:8006"})
 public class RqueueMessageTemplateTest extends SpringTestBase {
   @Test
   public void moveMessageFromDeadLetterQueueToOriginalQueue() {

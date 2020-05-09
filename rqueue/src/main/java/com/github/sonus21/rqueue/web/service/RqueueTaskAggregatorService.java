@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.QueueEvents;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -161,7 +162,8 @@ public class RqueueTaskAggregatorService
       if (log.isTraceEnabled()) {
         log.trace("Event {}", event);
       }
-      String queueName = (String) event.getSource();
+      QueueDetail queueDetail = (QueueDetail) event.getSource();
+      String queueName = queueDetail.getName();
       QueueEvents queueEvents = queueNameToEvents.get(queueName);
       if (queueEvents == null) {
         queueEvents = new QueueEvents(event);
@@ -235,8 +237,8 @@ public class RqueueTaskAggregatorService
         aggregate(event, stat);
         localDateTasksStatMap.put(date, stat);
       }
-      String queueName = (String) queueRqueueExecutionEvent.getSource();
-      String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueName);
+      QueueDetail queueDetail = (QueueDetail) queueRqueueExecutionEvent.getSource();
+      String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueDetail.getName());
       QueueStatistics queueStatistics = rqueueQStatsDao.findById(queueStatKey);
       if (queueStatistics == null) {
         queueStatistics = new QueueStatistics(queueStatKey);
@@ -254,8 +256,8 @@ public class RqueueTaskAggregatorService
       List<RqueueExecutionEvent> queueRqueueExecutionEvents = events.rqueueExecutionEvents;
       if (!CollectionUtils.isEmpty(queueRqueueExecutionEvents)) {
         RqueueExecutionEvent queueRqueueExecutionEvent = queueRqueueExecutionEvents.get(0);
-        String queueName = (String) queueRqueueExecutionEvent.getSource();
-        String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueName);
+        QueueDetail queueDetail = (QueueDetail) queueRqueueExecutionEvent.getSource();
+        String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueDetail.getName());
         String lockKey = rqueueConfig.getLockKey(queueStatKey);
         if (rqueueLockManager.acquireLock(
             lockKey, Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {

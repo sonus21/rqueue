@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.web.service;
 
 import static com.github.sonus21.rqueue.utils.TestUtils.createQueueConfig;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
@@ -79,8 +80,8 @@ public class RqueueQDetailServiceTest {
 
   @Before
   public void init() {
-    queueConfig = createQueueConfig("test", 10, true, 10000L, "test-dlq");
-    queueConfig2 = createQueueConfig("test2", 10, false, 10000L, null);
+    queueConfig = createQueueConfig("test", 10, 10000L, "test-dlq");
+    queueConfig2 = createQueueConfig("test2", 10, 10000L, null);
     queueConfigList = Arrays.asList(queueConfig, queueConfig2);
     queues = Arrays.asList(queueConfig.getName(), queueConfig2.getName());
   }
@@ -135,6 +136,7 @@ public class RqueueQDetailServiceTest {
 
     doReturn(5L).when(stringRqueueRedisTemplate).getListSize("__rq::queue::test2");
     doReturn(2L).when(stringRqueueRedisTemplate).getZsetSize("__rq::p-queue::test2");
+    doReturn(8L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test2");
 
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails2 = new ArrayList<>();
     queueRedisDataDetails2.add(
@@ -143,6 +145,9 @@ public class RqueueQDetailServiceTest {
     queueRedisDataDetails2.add(
         new HashMap.SimpleEntry<>(
             NavTab.RUNNING, new RedisDataDetail("__rq::p-queue::test2", DataType.ZSET, 2)));
+    queueRedisDataDetails2.add(
+        new HashMap.SimpleEntry<>(
+            NavTab.SCHEDULED, new RedisDataDetail("__rq::d-queue::test2", DataType.ZSET, 8)));
 
     Map<String, List<Entry<NavTab, RedisDataDetail>>> map = new HashMap<>();
     map.put("test", queueRedisDataDetails);
@@ -155,9 +160,8 @@ public class RqueueQDetailServiceTest {
     assertEquals(Collections.emptyList(), rqueueQDetailService.getNavTabs(null));
     List<NavTab> navTabs = new ArrayList<>();
     navTabs.add(NavTab.PENDING);
+    navTabs.add(NavTab.SCHEDULED);
     navTabs.add(NavTab.RUNNING);
-    assertEquals(navTabs, rqueueQDetailService.getNavTabs(queueConfig2));
-    navTabs.add(1, NavTab.SCHEDULED);
     navTabs.add(NavTab.DEAD);
     assertEquals(navTabs, rqueueQDetailService.getNavTabs(queueConfig));
   }
@@ -203,7 +207,7 @@ public class RqueueQDetailServiceTest {
 
   @Test
   public void getExplorePageDataTypeListDeleteFewItems() {
-    QueueConfig queueConfig = createQueueConfig("test", 10, true, 10000L, null);
+    QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue("test-dlq");
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     List<RqueueMessage> rqueueMessages = RqueueMessageFactory.generateMessages("test", 10);
@@ -243,7 +247,7 @@ public class RqueueQDetailServiceTest {
 
   @Test
   public void getExplorePageDataTypeZset() {
-    QueueConfig queueConfig = createQueueConfig("test", 10, true, 10000L, null);
+    QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue("test-dlq");
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     List<RqueueMessage> rqueueMessages = RqueueMessageFactory.generateMessages("test", 100000, 10);
@@ -384,37 +388,27 @@ public class RqueueQDetailServiceTest {
   @Test
   public void getScheduledTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
-    QueueConfig queueConfig = createQueueConfig("test", 10, true, 10000L, null);
+    QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue("test-dlq");
-    QueueConfig queueConfig2 = createQueueConfig("test2", 10, false, 10000L, null);
+    QueueConfig queueConfig2 = createQueueConfig("test2", 10, 10000L, null);
     queueConfig.addDeadLetterQueue("test-dlq-2");
-    List<QueueConfig> queueConfigList = new ArrayList<>();
-    queueConfigList.add(queueConfig);
-    queueConfigList.add(queueConfig2);
-    Collection<String> queues = new ArrayList<>();
-    queues.add("test");
-    queues.add("test2");
 
-    doReturn(queues).when(rqueueSystemManagerService).getQueues();
-    doReturn(queueConfigList).when(rqueueSystemManagerService).getQueueConfigs(queues);
+    doReturn(Arrays.asList(queueConfig, queueConfig2))
+        .when(rqueueSystemManagerService)
+        .getQueueConfigs();
 
-    doReturn(Collections.singletonList(100L))
+    doReturn(newArrayList(100L, 200L))
         .when(redisTemplate)
         .executePipelined(any(RedisCallback.class));
     List<List<Object>> response = rqueueQDetailService.getScheduledTasks();
-    assertEquals(2, response.size());
+    assertEquals(3, response.size());
     List<List<Object>> expectedResponse = new ArrayList<>();
-    List<Object> headers = new ArrayList<>();
-    headers.add("Queue");
-    headers.add("Scheduled [ZSET]");
-    headers.add("Size");
+    List<Object> headers = Arrays.asList("Queue", "Scheduled [ZSET]", "Size");
     expectedResponse.add(headers);
-    List<Object> row = new ArrayList<>();
-    row.add(queueConfig.getName());
-    row.add(queueConfig.getDelayedQueueName());
-    row.add(100L);
-    expectedResponse.add(row);
-
+    expectedResponse.add(
+        Arrays.asList(queueConfig.getName(), queueConfig.getDelayedQueueName(), 100L));
+    expectedResponse.add(
+        Arrays.asList(queueConfig2.getName(), queueConfig2.getDelayedQueueName(), 200L));
     assertEquals(expectedResponse, response);
   }
 

@@ -49,7 +49,7 @@ public class RqueueMessageSenderTest {
   private RqueueMessageSender rqueueMessageSender =
       new RqueueMessageSenderImpl(rqueueMessageTemplate);
   private String queueName = "test-queue";
-  private QueueDetail queueDetail = TestUtils.createQueueDetail(queueName, 3, true, 90000L, null);
+  private QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
   private String slowQueue = "slow-queue";
   private String deadLetterQueueName = "dead-test-queue";
   private String message = "Test Message";

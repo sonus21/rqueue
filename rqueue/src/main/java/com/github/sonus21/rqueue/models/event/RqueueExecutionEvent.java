@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.models.event;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
 import lombok.Getter;
@@ -27,22 +28,24 @@ public class RqueueExecutionEvent extends ApplicationEvent {
   private static final long serialVersionUID = -7762050873209497221L;
   private final TaskStatus status;
   private final RqueueMessage rqueueMessage;
+  private final QueueDetail queueDetail;
   private final MessageMetadata messageMetadata;
 
   /**
    * Create a new QueueTaskEvent.
    *
-   * @param status task status
+   * @param queueDetail queue detail on which this event occur
    * @param rqueueMessage rqueue message object
-   * @param queueName the queue on which event occur
+   * @param status task status
    * @param messageMetadata message metadata.
    */
   public RqueueExecutionEvent(
-      String queueName,
-      TaskStatus status,
+      QueueDetail queueDetail,
       RqueueMessage rqueueMessage,
+      TaskStatus status,
       MessageMetadata messageMetadata) {
-    super(queueName);
+    super(queueDetail);
+    this.queueDetail = queueDetail;
     this.status = status;
     this.rqueueMessage = rqueueMessage;
     this.messageMetadata = messageMetadata;

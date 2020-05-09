@@ -32,11 +32,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 @RunWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
+@TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8001"})
 public class ApplicationTest extends SpringTestBase {
 
   @Test

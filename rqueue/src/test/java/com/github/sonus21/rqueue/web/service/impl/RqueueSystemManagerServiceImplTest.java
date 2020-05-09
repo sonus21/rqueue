@@ -58,12 +58,11 @@ public class RqueueSystemManagerServiceImplTest {
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
   private String normalQueue = "normal-queue";
-  private QueueDetail slowQueueDetail =
-      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
+  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private QueueDetail fastQueueDetail =
-      TestUtils.createQueueDetail(fastQueue, 3, false, 200000L, "fast-dlq");
+      TestUtils.createQueueDetail(fastQueue, 3, 200000L, "fast-dlq");
   private QueueDetail normalQueueDetail =
-      TestUtils.createQueueDetail(normalQueue, 3, false, 100000L, "normal-dlq");
+      TestUtils.createQueueDetail(normalQueue, 3, 100000L, "normal-dlq");
   private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
   private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
 
@@ -99,7 +98,6 @@ public class RqueueSystemManagerServiceImplTest {
     assertNotNull(queueConfig.getUpdatedOn());
     assertEquals(expectedConfig.getId(), queueConfig.getId());
     assertEquals(expectedConfig.getName(), queueConfig.getName());
-    assertEquals(expectedConfig.isDelayed(), queueConfig.isDelayed());
     assertEquals(expectedConfig.getNumRetry(), queueConfig.getNumRetry());
     assertEquals(expectedConfig.getVisibilityTimeout(), queueConfig.getVisibilityTimeout());
     assertEquals(expectedConfig.getDeadLetterQueues(), queueConfig.getDeadLetterQueues());
@@ -162,11 +160,7 @@ public class RqueueSystemManagerServiceImplTest {
         .getQueueConfigKey(anyString());
     QueueConfig fastQueueConfig =
         TestUtils.createQueueConfig(
-            fastQueue,
-            fastQueueDetail.getNumRetry(),
-            fastQueueDetail.isDelayedQueue(),
-            fastQueueDetail.getVisibilityTimeout(),
-            null);
+            fastQueue, fastQueueDetail.getNumRetry(), fastQueueDetail.getVisibilityTimeout(), null);
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(anyCollection());
@@ -175,14 +169,12 @@ public class RqueueSystemManagerServiceImplTest {
         TestUtils.createQueueConfig(
             fastQueue,
             fastQueueDetail.getNumRetry(),
-            fastQueueDetail.isDelayedQueue(),
             fastQueueDetail.getVisibilityTimeout(),
             fastQueueDetail.getDeadLetterQueueName());
     QueueConfig normalQueueConfig =
         TestUtils.createQueueConfig(
             normalQueue,
             normalQueueDetail.getNumRetry(),
-            normalQueueDetail.isDelayedQueue(),
             normalQueueDetail.getVisibilityTimeout(),
             normalQueueDetail.getDeadLetterQueueName());
 

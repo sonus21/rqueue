@@ -35,7 +35,8 @@ import org.springframework.test.context.TestPropertySource;
 
 @RunWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = Application.class)
-@TestPropertySource(properties = {"spring.redis.port=6381", "mysql.db.name=test1"})
+@TestPropertySource(
+    properties = {"spring.redis.port=8003", "mysql.db.name=test1", "rqueue.retry.per.poll=1000"})
 @SpringBootTest
 public class MessageRetryTest extends SpringTestBase {
   @Test

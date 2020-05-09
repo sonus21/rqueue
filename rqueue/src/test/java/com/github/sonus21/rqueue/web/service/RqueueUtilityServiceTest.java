@@ -77,7 +77,7 @@ public class RqueueUtilityServiceTest {
     assertEquals(1, response.getCode());
     assertEquals("Queue config not found!", response.getMessage());
 
-    QueueConfig queueConfig = createQueueConfig("notification", 3, false, 10000L, null);
+    QueueConfig queueConfig = createQueueConfig("notification", 3, 10000L, null);
     doReturn(queueConfig).when(rqueueSystemConfigDao).getQConfig(queueConfig.getId());
     response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(0, response.getCode());

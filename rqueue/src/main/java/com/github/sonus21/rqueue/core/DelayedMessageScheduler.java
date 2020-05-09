@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.core;
 
-import com.github.sonus21.rqueue.listener.QueueDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
@@ -41,13 +40,13 @@ public class DelayedMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected String getChannelName(QueueDetail queueDetail) {
-    return queueDetail.getDelayedQueueChannelName();
+  protected String getChannelName(String queueName) {
+    return QueueRegistry.get(queueName).getDelayedQueueChannelName();
   }
 
   @Override
-  protected String getZsetName(QueueDetail queueDetail) {
-    return queueDetail.getDelayedQueueName();
+  protected String getZsetName(String queueName) {
+    return QueueRegistry.get(queueName).getDelayedQueueName();
   }
 
   @Override

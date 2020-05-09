@@ -137,11 +137,17 @@ public @interface RqueueListener {
   String concurrency() default "-1";
 
   /**
-   * Use this to set priority of this listener. A listener can have two types of priority, global
-   * and queue level priority. In the case of queue level priority, values should be provided as
-   * "critical:10,high:5, medium:3,low:1", these same name must be used to enqueue message.
+   * Use this to set priority of this listener. A listener can have two types of priorities.
    *
-   * <p>When using priority group then this should be a number between 1 and 100 both are inclusive
+   * <p>1. Group level priority, for group level priority specify group name, if no group is
+   * provided then a default group is used.
+   *
+   * <p>2. Queue level priority. In the case of queue level priority, values should be provided as
+   * "critical:10,high:5,medium:3,low:1", these same name must be used to enqueue message.
+   *
+   * <p>Priorities can be any number. There're two priority control modes. 1. Strict 2. Weighted, in
+   * strict priority mode queue with higher priority is preferred over other queues. In case of
+   * weighted a round robin approach is used, and weight is followed.
    *
    * @return the priority for this listener.
    */

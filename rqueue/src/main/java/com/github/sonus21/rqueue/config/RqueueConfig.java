@@ -72,8 +72,8 @@ public class RqueueConfig {
   @Value("${rqueue.queue.config.key.prefix:q-config::}")
   private String queueConfigKeyPrefix;
 
-  @Value("${retries.per.poll:1}")
-  private int retriesPerPoll;
+  @Value("${rqueue.retry.per.poll:1}")
+  private int retryPerPoll;
 
   @Value("${rqueue.add.default.queue.with.queue.level.priority:true}")
   private boolean addDefaultQueueWithQueueLevelPriority;

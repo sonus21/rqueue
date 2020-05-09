@@ -207,8 +207,7 @@ public class RqueueMessageHandlerTest {
     applicationContext.refresh();
 
     DummyMessageHandler messageHandler = applicationContext.getBean(DummyMessageHandler.class);
-    assertTrue(messageHandler.mappingInformation.isDelayedQueue());
-    assertEquals(3, messageHandler.mappingInformation.getNumRetries());
+    assertEquals(3, messageHandler.mappingInformation.getNumRetry());
     Set<String> queueNames = new HashSet<>();
     queueNames.add(slowQueue);
     queueNames.add(smartQueue);

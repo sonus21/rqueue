@@ -55,9 +55,9 @@ public class MessageListener {
 
   @RqueueListener(
       value = {"${rqueue.delay.queue}", "${rqueue.delay2.queue}"},
-      delayedQueue = "${rqueue.delay.queue.delayed-queue}",
       numRetries = "${rqueue.delay.queue.retries}",
-      visibilityTimeout = "60*60*1000")
+      visibilityTimeout = "60*60*1000",
+      active = "true")
   @NewSpan
   public void onMessage(String message) {
     execute("delay: {}", message);
@@ -68,10 +68,10 @@ public class MessageListener {
 
   @RqueueListener(
       value = "job-queue",
-      delayedQueue = "true",
       deadLetterQueue = "job-morgue",
       numRetries = "2",
-      concurrency = "5")
+      concurrency = "5-10",
+      active = "true")
   @NewSpan
   public void onMessage(Job job) {
     execute("job-queue: {}", job);

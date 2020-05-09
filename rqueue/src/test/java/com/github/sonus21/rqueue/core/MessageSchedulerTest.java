@@ -48,10 +48,8 @@ public class MessageSchedulerTest {
 
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail =
-      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
-  private QueueDetail fastQueueDetail =
-      TestUtils.createQueueDetail(fastQueue, 3, false, 900000L, null);
+  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
   private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
 
   @Before

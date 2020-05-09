@@ -81,13 +81,11 @@ public class QueueCounterTest {
 
   @Test
   public void updateFailureCount() {
-    validateCountStatistics(
-        TestUtils.createQueueDetail("simple-queue", 3, false, 10000L, null), "failure");
+    validateCountStatistics(TestUtils.createQueueDetail("simple-queue", 10000L), "failure");
   }
 
   @Test
   public void updateExecutionCount() {
-    validateCountStatistics(
-        TestUtils.createQueueDetail("delayed-queue", 5, true, 900000L, null), "success");
+    validateCountStatistics(TestUtils.createQueueDetail("delayed-queue", 900000L), "success");
   }
 }

@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.core;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
@@ -44,10 +43,8 @@ public class ProcessingMessageSchedulerTest {
 
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail =
-      TestUtils.createQueueDetail(slowQueue, 3, true, 100000L, null);
-  private QueueDetail fastQueueDetail =
-      TestUtils.createQueueDetail(fastQueue, 3, false, 200000L, null);
+  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
 
   @Before
   public void init() {
@@ -68,12 +65,6 @@ public class ProcessingMessageSchedulerTest {
   @Test
   public void getZsetName() {
     assertEquals(slowQueueDetail.getProcessingQueueName(), messageScheduler.getZsetName(slowQueue));
-  }
-
-  @Test
-  public void isQueueValid() {
-    assertTrue(messageScheduler.isQueueValid(slowQueueDetail));
-    assertTrue(messageScheduler.isQueueValid(fastQueueDetail));
   }
 
   @Test

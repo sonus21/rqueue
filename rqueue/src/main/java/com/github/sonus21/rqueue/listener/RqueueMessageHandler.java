@@ -94,36 +94,20 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
           "Concurrency must be either some number e.g. 5 or in the form of 5-10");
     }
     if (vals.length == 1) {
-      try {
-        int concurrency = Integer.parseInt(vals[0]);
-        if (concurrency == 0) {
-          throw new IllegalStateException("Concurrency must be non-zero");
-        }
-        return new MinMax<>(1, concurrency);
-      } catch (NumberFormatException e) {
-        throw new IllegalStateException("Concurrency is not a number", e);
-      }
+      int concurrency =
+          parseInt(vals[0], "Concurrency is not a number", "Concurrency is not a number");
+      return new MinMax<>(1, concurrency);
     }
-
-    int lowerLimit;
-    try {
-      lowerLimit = Integer.parseInt(vals[0]);
-      if (lowerLimit == 0) {
-        throw new IllegalStateException("Concurrency lower limit must be non-zero");
-      }
-    } catch (NumberFormatException e) {
-      throw new IllegalStateException("Concurrency lower limit is not a number", e);
-    }
-
-    int upperLimit;
-    try {
-      upperLimit = Integer.parseInt(vals[0]);
-      if (upperLimit == 0) {
-        throw new IllegalStateException("Concurrency upper limit must be non-zero");
-      }
-    } catch (NumberFormatException e) {
-      throw new IllegalStateException("Concurrency upper limit is not a number", e);
-    }
+    int lowerLimit =
+        parseInt(
+            vals[0],
+            "Concurrency lower limit is not a number",
+            "Concurrency lower limit must be non-zero");
+    int upperLimit =
+        parseInt(
+            vals[1],
+            "Concurrency upper limit is not a number",
+            "Concurrency upper limit must be non-zero");
     if (lowerLimit > upperLimit) {
       throw new IllegalStateException("upper limit of concurrency is smaller than the lower limit");
     }
@@ -133,6 +117,18 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   private String resolvePriorityGroup(RqueueListener rqueueListener) {
     return ValueResolver.resolveKeyToString(
         getApplicationContext(), rqueueListener.priorityGroup());
+  }
+
+  private int parseInt(String txt, String message, String nonZeroText) {
+    try {
+      int n = Integer.parseInt(txt);
+      if (n <= 0) {
+        throw new IllegalStateException(nonZeroText);
+      }
+      return n;
+    } catch (NumberFormatException e) {
+      throw new IllegalStateException(message, e);
+    }
   }
 
   private Map<String, Integer> resolvePriority(RqueueListener rqueueListener) {
@@ -149,11 +145,17 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
         vals = s.split("=");
       }
       if (vals.length == 1) {
-        priorityMap.clear();
+        if (!priorityMap.isEmpty()) {
+          throw new IllegalArgumentException("Invalid priority configuration is used.");
+        }
         priorityMap.put(Constants.DEFAULT_PRIORITY_KEY, Integer.parseInt(vals[0]));
-        break;
       } else {
-        priorityMap.put(vals[0], Integer.parseInt(vals[1]));
+        priorityMap.put(
+            vals[0],
+            parseInt(
+                vals[1],
+                "priority is not a number.",
+                "priority must be greater than or equal to 1"));
       }
     }
     return priorityMap;
@@ -176,11 +178,11 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
               .active(active)
               .concurrency(concurrency)
               .deadLetterQueueName(deadLetterQueueName)
-              .numRetries(numRetries)
+              .numRetry(numRetries)
               .queueNames(queueNames)
               .visibilityTimeout(visibilityTimeout)
               .priorityGroup(priorityGroup)
-              .priorities(priorityMap)
+              .priority(priorityMap)
               .build();
       if (mappingInformation.isValid()) {
         return mappingInformation;

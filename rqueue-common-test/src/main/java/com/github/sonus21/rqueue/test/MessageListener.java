@@ -17,9 +17,13 @@
 package com.github.sonus21.rqueue.test;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.Email;
+import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.test.dto.Otp;
+import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import lombok.NonNull;
@@ -72,5 +76,56 @@ public class MessageListener {
       throw new Exception("Failing email task to be retried" + email);
     }
     consumedMessageService.save(email);
+  }
+
+  @RqueueListener(
+      value = "${otp.queue}",
+      active = "${otp.queue.active}",
+      priority = "critical:5,high:3, low:2")
+  public void onMessage(Otp otp) throws Exception {
+    log.info("Otp: {}", otp);
+    if (failureManager.shouldFail(otp.getId())) {
+      throw new Exception("Failing otp task to be retried" + otp);
+    }
+    consumedMessageService.save(otp);
+  }
+
+  @RqueueListener(
+      value = "${chat.indexing.queue}",
+      active = "${chat.indexing.queue.active}",
+      priority = "10",
+      priorityGroup = "test")
+  public void onMessage(ChatIndexing chatIndexing) throws Exception {
+    log.info("ChatIndexing: {}", chatIndexing);
+    if (failureManager.shouldFail(chatIndexing.getId())) {
+      throw new Exception("Failing chat indexing task to be retried" + chatIndexing);
+    }
+    consumedMessageService.save(chatIndexing);
+  }
+
+  @RqueueListener(
+      value = "${feed.generation.queue}",
+      active = "${feed.generation.queue.active}",
+      priority = "50",
+      priorityGroup = "test")
+  public void onMessage(FeedGeneration feedGeneration) throws Exception {
+    log.info("FeedGeneration: {}", feedGeneration);
+    if (failureManager.shouldFail(feedGeneration.getId())) {
+      throw new Exception("Failing feedGeneration task to be retried" + feedGeneration);
+    }
+    consumedMessageService.save(feedGeneration);
+  }
+
+  @RqueueListener(
+      value = "${reservation.queue}",
+      active = "${reservation.queue.active}",
+      priority = "100",
+      priorityGroup = "test2")
+  public void onMessage(Reservation reservation) throws Exception {
+    log.info("Reservation: {}", reservation);
+    if (failureManager.shouldFail(reservation.getId())) {
+      throw new Exception("Failing reservation task to be retried" + reservation);
+    }
+    consumedMessageService.save(reservation);
   }
 }

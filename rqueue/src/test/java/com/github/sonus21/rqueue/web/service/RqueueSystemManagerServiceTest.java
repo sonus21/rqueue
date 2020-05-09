@@ -55,10 +55,8 @@ public class RqueueSystemManagerServiceTest {
           rqueueConfig, stringRqueueRedisTemplate, rqueueSystemConfigDao);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail =
-      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
-  private QueueDetail fastQueueDetail =
-      TestUtils.createQueueDetail(fastQueue, 3, false, 200000L, "fast-dlq");
+  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue, 900000L);
+  private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue, 200000L, "fast-dlq");
   private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
   private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private Set<String> queues;
@@ -83,7 +81,7 @@ public class RqueueSystemManagerServiceTest {
     BaseResponse baseResponse = rqueueSystemManagerService.deleteQueue("test");
     assertEquals(1, baseResponse.getCode());
     assertEquals("Queue not found", baseResponse.getMessage());
-    QueueConfig queueConfig = TestUtils.createQueueConfig("test", 10, true, 10000L, null);
+    QueueConfig queueConfig = TestUtils.createQueueConfig("test", 10, 10000L, null);
     assertFalse(queueConfig.isDeleted());
     doReturn(queueConfig)
         .when(rqueueSystemConfigDao)

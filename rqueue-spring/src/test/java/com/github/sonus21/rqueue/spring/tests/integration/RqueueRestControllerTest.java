@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring;
+package com.github.sonus21.rqueue.spring.tests.integration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,7 +66,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=6386",
+      "spring.redis.port=7001",
       "mysql.db.name=RqueueRestController",
       "max.workers.count=40",
       "notification.queue.active=false",

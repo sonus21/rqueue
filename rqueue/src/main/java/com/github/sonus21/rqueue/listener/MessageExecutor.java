@@ -147,7 +147,7 @@ class MessageExecutor extends MessageContainerBase implements Runnable {
     if (Objects.requireNonNull(container.get()).getRqueueWebConfig().isCollectListenerStats()) {
       addOrDeleteMetadata(jobExecutionStartTime, false);
       RqueueExecutionEvent event =
-          new RqueueExecutionEvent(queueDetail.getName(), status, rqueueMessage, messageMetadata);
+          new RqueueExecutionEvent(queueDetail, rqueueMessage, status, messageMetadata);
       Objects.requireNonNull(container.get()).getApplicationEventPublisher().publishEvent(event);
     }
   }

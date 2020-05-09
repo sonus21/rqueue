@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring;
+package com.github.sonus21.rqueue.spring.tests.integration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,7 +49,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=6387",
+      "spring.redis.port=7002",
       "mysql.db.name=RqueueViewControllerTest",
       "max.workers.count=40",
       "notification.queue.active=false",
@@ -131,7 +131,8 @@ public class RqueueViewControllerTest extends SpringTestBase {
         model.get("typeSelectors"));
     assertNotNull(model.get("config"));
     assertNotNull(model.get("queueRedisDataDetails"));
-    assertEquals(Arrays.asList(NavTab.PENDING, NavTab.RUNNING), model.get("queueActions"));
+    assertEquals(
+        Arrays.asList(NavTab.PENDING, NavTab.SCHEDULED, NavTab.RUNNING), model.get("queueActions"));
   }
 
   @Test

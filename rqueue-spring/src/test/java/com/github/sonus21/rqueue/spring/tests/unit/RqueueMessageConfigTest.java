@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring;
+package com.github.sonus21.rqueue.spring.tests.unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -26,6 +26,7 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.spring.RqueueListenerConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -85,6 +85,11 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     return pushMessage(queueName, message, null, null);
   }
 
+  @Override
+  public boolean enqueue(String queueName, String priorityLevel, Object message) {
+    return enqueue(queueName + "_" + priorityLevel, message);
+  }
+
   /**
    * This is an extension to the method {@link #put(String, Object)}. By default container would try
    * to deliver the same message for {@link Integer#MAX_VALUE} times, but that can be either
@@ -151,6 +156,12 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     Validator.validateQueueNameAndMessage(queueName, message);
     Validator.validateDelay(delayInMilliSecs);
     return pushMessage(queueName, message, null, delayInMilliSecs);
+  }
+
+  @Override
+  public boolean enqueueIn(
+      String queueName, String priorityLevel, Object message, long delayInMilliSecs) {
+    return enqueueIn(queueName + "_" + priorityLevel, message, delayInMilliSecs);
   }
 
   /**

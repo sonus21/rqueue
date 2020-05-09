@@ -37,6 +37,7 @@ import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +100,6 @@ public class RqueueMessageListenerContainer
   private long maxWorkerWaitTime = 20 * Constants.ONE_MILLI;
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
-  private boolean active = true;
   private PriorityMode priorityMode;
 
   public RqueueMessageListenerContainer(
@@ -159,12 +159,8 @@ public class RqueueMessageListenerContainer
   @Override
   public void destroy() throws Exception {
     synchronized (lifecycleMgr) {
-      if (active) {
-        stop();
-        doDestroy();
-      } else {
-        running = false;
-      }
+      stop();
+      doDestroy();
     }
   }
 
@@ -233,19 +229,19 @@ public class RqueueMessageListenerContainer
       for (MappingInformation mappingInformation :
           rqueueMessageHandler.getHandlerMethods().keySet()) {
         for (String queue : mappingInformation.getQueueNames()) {
-          QueueDetail queueDetail = getQueueDetail(queue, mappingInformation);
-          QueueRegistry.register(queueDetail);
+          for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
+            QueueRegistry.register(queueDetail);
+          }
         }
       }
       if (QueueRegistry.getActiveQueueCount() == 0) {
-        active = false;
         return;
       }
       if (taskExecutor == null) {
         defaultTaskExecutor = true;
         taskExecutor = createDefaultTaskExecutor();
       } else {
-        initializeDefaultExecutor(false, taskExecutor, getMaxNumWorkers());
+        initializeDefaultExecutor(false, taskExecutor, getWorkersCount());
       }
       initializeRunningQueueState();
       lifecycleMgr.notifyAll();
@@ -302,7 +298,10 @@ public class RqueueMessageListenerContainer
 
   public AsyncTaskExecutor createDefaultTaskExecutor() {
     int withConcurrency = 0;
-    List<QueueDetail> queueDetails = QueueRegistry.getActiveQueueDetails();
+    List<QueueDetail> queueDetails =
+        QueueRegistry.getActiveQueueDetails().stream()
+            .filter(e -> !e.isSystemGenerated())
+            .collect(Collectors.toList());
     for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
       if (queueDetail.getConcurrency().getMin() > 0) {
         withConcurrency += 1;
@@ -339,28 +338,35 @@ public class RqueueMessageListenerContainer
     return ThreadUtils.createTaskExecutor(name, name + "-", corePoolSize, maxPoolSize);
   }
 
-  private QueueDetail getQueueDetail(String queue, MappingInformation mappingInformation) {
-    int numRetries = mappingInformation.getNumRetries();
+  private List<QueueDetail> getQueueDetail(String queue, MappingInformation mappingInformation) {
+    int numRetries = mappingInformation.getNumRetry();
     if (!mappingInformation.getDeadLetterQueueName().isEmpty() && numRetries == -1) {
       numRetries = Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE;
     } else if (numRetries == -1) {
       numRetries = Integer.MAX_VALUE;
     }
-    return QueueDetail.builder()
-        .name(queue)
-        .queueName(rqueueConfig.getQueueName(queue))
-        .processingQueueName(rqueueConfig.getProcessingQueueName(queue))
-        .delayedQueueName(rqueueConfig.getDelayedQueueName(queue))
-        .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queue))
-        .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queue))
-        .deadLetterQueueName(mappingInformation.getDeadLetterQueueName())
-        .visibilityTimeout(mappingInformation.getVisibilityTimeout())
-        .concurrency(mappingInformation.getConcurrency())
-        .active(mappingInformation.isActive())
-        .numRetry(numRetries)
-        .priority(mappingInformation.getPriorities())
-        .priorityGroup(mappingInformation.getPriorityGroup())
-        .build();
+    QueueDetail queueDetail =
+        QueueDetail.builder()
+            .name(queue)
+            .queueName(rqueueConfig.getQueueName(queue))
+            .processingQueueName(rqueueConfig.getProcessingQueueName(queue))
+            .delayedQueueName(rqueueConfig.getDelayedQueueName(queue))
+            .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queue))
+            .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queue))
+            .deadLetterQueueName(mappingInformation.getDeadLetterQueueName())
+            .visibilityTimeout(mappingInformation.getVisibilityTimeout())
+            .concurrency(mappingInformation.getConcurrency())
+            .active(mappingInformation.isActive())
+            .numRetry(numRetries)
+            .priority(mappingInformation.getPriority())
+            .priorityGroup(mappingInformation.getPriorityGroup())
+            .build();
+    if (queueDetail.getPriority().size() <= 1) {
+      return Collections.singletonList(queueDetail);
+    }
+    return queueDetail.expandQueueDetail(
+        rqueueConfig.isAddDefaultQueueWithQueueLevelPriority(),
+        rqueueConfig.getDefaultQueueWithQueueLevelPriority());
   }
 
   @Override
@@ -368,11 +374,9 @@ public class RqueueMessageListenerContainer
     log.info("Starting Rqueue Message container");
     synchronized (lifecycleMgr) {
       running = true;
-      if (active) {
-        doStart();
-        applicationEventPublisher.publishEvent(new RqueueBootstrapEvent("Container", true));
-        lifecycleMgr.notifyAll();
-      }
+      doStart();
+      applicationEventPublisher.publishEvent(new RqueueBootstrapEvent("Container", true));
+      lifecycleMgr.notifyAll();
     }
   }
 
@@ -382,17 +386,11 @@ public class RqueueMessageListenerContainer
       int prioritySize = queueDetail.getPriority().size();
       if (prioritySize == 0) {
         startQueue(queueDetail.getName(), queueDetail);
-      } else if (prioritySize == 1) {
+      } else {
         List<QueueDetail> queueDetails =
             queueGroupToDetails.getOrDefault(queueDetail.getPriorityGroup(), new ArrayList<>());
         queueDetails.add(queueDetail);
         queueGroupToDetails.put(queueDetail.getPriorityGroup(), queueDetails);
-      } else {
-        List<QueueDetail> queueDetails =
-            queueDetail.expandQueueDetail(
-                rqueueConfig.isAddDefaultQueueWithQueueLevelPriority(),
-                rqueueConfig.getDefaultQueueWithQueueLevelPriority());
-        queueGroupToDetails.put(queueDetail.getQueueName(), queueDetails);
       }
     }
 
@@ -429,7 +427,7 @@ public class RqueueMessageListenerContainer
                   queueDetails,
                   queueThread,
                   taskExecutionBackOff,
-                  rqueueConfig.getRetriesPerPoll()));
+                  rqueueConfig.getRetryPerPoll()));
     } else {
       future =
           taskExecutor.submit(
@@ -438,7 +436,7 @@ public class RqueueMessageListenerContainer
                   queueDetails,
                   queueThread,
                   taskExecutionBackOff,
-                  rqueueConfig.getRetriesPerPoll()));
+                  rqueueConfig.getRetryPerPoll()));
     }
     scheduledFutureByQueue.put(groupName, future);
   }
@@ -451,7 +449,7 @@ public class RqueueMessageListenerContainer
     QueueThread queueThread = queueThreadMap.get(queueName);
     DefaultPoller messagePoller =
         new DefaultPoller(
-            queueThread, queueDetail, this, taskExecutionBackOff, rqueueConfig.getRetriesPerPoll());
+            queueThread, queueDetail, this, taskExecutionBackOff, rqueueConfig.getRetryPerPoll());
     Future<?> future = getTaskExecutor().submit(messagePoller);
     scheduledFutureByQueue.put(queueName, future);
   }
@@ -473,11 +471,9 @@ public class RqueueMessageListenerContainer
     log.info("Stopping Rqueue Message container");
     synchronized (lifecycleMgr) {
       running = false;
-      if (active) {
-        applicationEventPublisher.publishEvent(new RqueueBootstrapEvent("Container", false));
-        doStop();
-        lifecycleMgr.notifyAll();
-      }
+      applicationEventPublisher.publishEvent(new RqueueBootstrapEvent("Container", false));
+      doStop();
+      lifecycleMgr.notifyAll();
     }
   }
 

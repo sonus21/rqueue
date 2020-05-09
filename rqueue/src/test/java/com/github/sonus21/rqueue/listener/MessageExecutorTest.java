@@ -27,11 +27,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
+import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -52,6 +55,7 @@ public class MessageExecutorTest {
   private RqueueMessageListenerContainer container = mock(RqueueMessageListenerContainer.class);
   private WeakReference<RqueueMessageListenerContainer> containerWeakReference =
       new WeakReference<>(container);
+  private RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
   private RqueueMessageMetadataService rqueueMessageMetadataService =
       mock(RqueueMessageMetadataService.class);
   private TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
@@ -61,6 +65,8 @@ public class MessageExecutorTest {
   private RqueueMessageHandler messageHandler = mock(RqueueMessageHandler.class);
   private RqueueMessage rqueueMessage = new RqueueMessage();
   private Semaphore semaphore = new Semaphore(100);
+  private int retryPerPoll = 3;
+  private TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
 
   @Before
   public void init() throws IllegalAccessException {
@@ -68,6 +74,7 @@ public class MessageExecutorTest {
         Collections.singletonList(new GenericMessageConverter());
     rqueueMessage.setMessage("test message");
     rqueueMessage.setId(UUID.randomUUID().toString());
+    doReturn(rqueueWebConfig).when(container).getRqueueWebConfig();
     doReturn(rqueueMessageMetadataService).when(container).getRqueueMessageMetadataService();
     doReturn(deadLetterProcessor).when(container).getDeadLetterQueueMessageProcessor();
     doReturn(discardProcessor).when(container).getDiscardMessageProcessor();
@@ -82,47 +89,71 @@ public class MessageExecutorTest {
 
   @Test
   public void callDiscardProcessor() {
-    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 900000, null);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
-            retryPerPoll, taskBackOff);
+            rqueueMessage,
+            queueDetail,
+            semaphore,
+            containerWeakReference,
+            messageHandler,
+            10,
+            taskBackOff);
     messageExecutor.run();
     assertEquals(1, discardProcessor.getCount());
   }
 
   @Test
   public void callDeadLetterProcessor() {
-    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 900000, "dead-test");
-
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test", "test-dlq");
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
-            retryPerPoll, taskBackOff);
+            rqueueMessage,
+            queueDetail,
+            semaphore,
+            containerWeakReference,
+            messageHandler,
+            10,
+            taskBackOff);
     messageExecutor.run();
     assertEquals(1, deadLetterProcessor.getCount());
   }
 
   @Test
   public void messageIsParkedForRetry() {
-    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 1000, false, 0, "");
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
-            retryPerPoll, taskBackOff);
+            rqueueMessage,
+            queueDetail,
+            semaphore,
+            containerWeakReference,
+            messageHandler,
+            1,
+            taskBackOff);
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     messageExecutor.run();
     verify(messageTemplate, times(1))
-        .replaceMessage(eq(queueDetail.getProcessingQueueName()), eq(rqueueMessage), any());
+        .moveMessage(
+            eq(queueDetail.getProcessingQueueName()),
+            eq(queueDetail.getDelayedQueueName()),
+            eq(rqueueMessage),
+            any(),
+            eq(5000L));
   }
 
   @Test
   public void messageIsNotExecutedWhenDeletedManually() {
-    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 0, null);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
-            retryPerPoll, taskBackOff);
+            rqueueMessage,
+            queueDetail,
+            semaphore,
+            containerWeakReference,
+            messageHandler,
+            retryPerPoll,
+            taskBackOff);
     MessageMetadata messageMetadata = new MessageMetadata();
     messageMetadata.setDeleted(true);
     doReturn(messageMetadata)
@@ -134,11 +165,16 @@ public class MessageExecutorTest {
 
   @Test
   public void messageIsDeletedWhileExecuting() {
-    QueueDetail queueDetail = TestUtils.createQueueDetail("test", 3, false, 0, null);
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     MessageExecutor messageExecutor =
         new MessageExecutor(
-            rqueueMessage, queueDetail, semaphore, containerWeakReference, messageHandler,
-            retryPerPoll, taskBackOff);
+            rqueueMessage,
+            queueDetail,
+            semaphore,
+            containerWeakReference,
+            messageHandler,
+            1,
+            taskBackOff);
     AtomicInteger atomicInteger = new AtomicInteger(0);
     doAnswer(
             invocation -> {

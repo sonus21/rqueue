@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.Constants.DEFAULT_PRIORITY_KEY;
-
 import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -52,6 +50,7 @@ public class QueueDetail implements Serializable {
   private MinMax<Integer> concurrency;
   private Map<String, Integer> priority;
   private String priorityGroup;
+  private boolean systemGenerated;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
@@ -70,6 +69,9 @@ public class QueueDetail implements Serializable {
             .updatedOn(System.currentTimeMillis())
             .deadLetterQueues(new LinkedHashSet<>())
             .concurrency(concurrency)
+            .priority(priority)
+            .priorityGroup(priorityGroup)
+            .systemGenerated(systemGenerated)
             .build();
     if (isDlqSet()) {
       queueConfig.addDeadLetterQueue(deadLetterQueueName);
@@ -77,23 +79,12 @@ public class QueueDetail implements Serializable {
     return queueConfig;
   }
 
-  public List<QueueDetail> expandQueueDetail(boolean addDefault, int priority) {
+  List<QueueDetail> expandQueueDetail(boolean addDefault, int priority) {
     List<QueueDetail> queueDetails = new ArrayList<>();
     for (Entry<String, Integer> entry : getPriority().entrySet()) {
-      String suffix = "_" + entry.getKey();
-      QueueDetail cloneQueueDetail =
-          QueueDetail.builder()
-              .numRetry(numRetry)
-              .visibilityTimeout(visibilityTimeout)
-              .deadLetterQueueName(deadLetterQueueName)
-              .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, entry.getValue()))
-              .name(name + suffix)
-              .queueName(queueName + suffix)
-              .processingQueueName(processingQueueName + suffix)
-              .processingQueueChannelName(processingQueueChannelName + suffix)
-              .delayedQueueName(delayedQueueName + suffix)
-              .delayedQueueChannelName(delayedQueueChannelName + suffix)
-              .build();
+      QueueDetail cloneQueueDetail = cloneQueueDetail(entry.getKey(), entry.getValue());
+      cloneQueueDetail.systemGenerated = true;
+      cloneQueueDetail.priorityGroup = name;
       queueDetails.add(cloneQueueDetail);
     }
     if (addDefault) {
@@ -103,21 +94,29 @@ public class QueueDetail implements Serializable {
         priorities.sort(Comparator.comparingInt(o -> o));
         defaultPriority = priorities.get(priorities.size() / 2);
       }
-      QueueDetail cloneQueueDetail =
-          QueueDetail.builder()
-              .name(name)
-              .numRetry(numRetry)
-              .visibilityTimeout(visibilityTimeout)
-              .queueName(queueName)
-              .deadLetterQueueName(deadLetterQueueName)
-              .processingQueueChannelName(processingQueueChannelName)
-              .processingQueueName(processingQueueName)
-              .delayedQueueChannelName(delayedQueueChannelName)
-              .delayedQueueName(delayedQueueName)
-              .priority(Collections.singletonMap(DEFAULT_PRIORITY_KEY, defaultPriority))
-              .build();
-      queueDetails.add(cloneQueueDetail);
+      this.priority.put(Constants.DEFAULT_PRIORITY_KEY, defaultPriority);
+      this.priorityGroup = name;
+      queueDetails.add(this);
     }
     return queueDetails;
+  }
+
+  private QueueDetail cloneQueueDetail(String priorityName, Integer priority) {
+    if (priority == null || priorityName == null) {
+      throw new IllegalStateException("priority name is null");
+    }
+    String suffix = "_" + priorityName;
+    return QueueDetail.builder()
+        .numRetry(numRetry)
+        .visibilityTimeout(visibilityTimeout)
+        .deadLetterQueueName(deadLetterQueueName)
+        .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, priority))
+        .name(name + suffix)
+        .queueName(queueName + suffix)
+        .processingQueueName(processingQueueName + suffix)
+        .processingQueueChannelName(processingQueueChannelName + suffix)
+        .delayedQueueName(delayedQueueName + suffix)
+        .delayedQueueChannelName(delayedQueueChannelName + suffix)
+        .build();
   }
 }

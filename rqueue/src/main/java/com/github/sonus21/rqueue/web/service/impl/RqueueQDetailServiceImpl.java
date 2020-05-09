@@ -42,6 +42,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -363,8 +364,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getScheduledTasks() {
-    List<String> queues = rqueueSystemManagerService.getQueues();
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs(queues);
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {

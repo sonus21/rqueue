@@ -49,10 +49,8 @@ public class RqueueMetricsTest {
   private String delayedQueue = "delayed-queue";
   private String deadLetterQueue = "dlq";
   private Tags tags = Tags.of("rQueue", "dc1");
-  private QueueDetail simpleQueueDetail =
-      TestUtils.createQueueDetail(simpleQueue, 3, false, 900000, deadLetterQueue);
-  private QueueDetail delayedQueueDetail =
-      TestUtils.createQueueDetail(delayedQueue, 3, true, 900000, null);
+  private QueueDetail simpleQueueDetail = TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
+  private QueueDetail delayedQueueDetail = TestUtils.createQueueDetail(delayedQueue);
 
   @Before
   public void init() {

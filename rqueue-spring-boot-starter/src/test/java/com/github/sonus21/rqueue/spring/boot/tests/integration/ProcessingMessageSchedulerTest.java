@@ -46,7 +46,7 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(
     properties = {
       "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=6389",
+      "spring.redis.port=8005",
       "mysql.db.name=test3",
       "max.workers.count=120",
       "use.system.redis=false"

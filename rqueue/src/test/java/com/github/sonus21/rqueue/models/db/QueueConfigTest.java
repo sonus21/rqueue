@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.Test;
@@ -54,28 +55,9 @@ public class QueueConfigTest {
   }
 
   @Test
-  public void testDelay() {
-    QueueConfig queueConfig = new QueueConfig();
-    assertFalse(queueConfig.isDelayed());
-    assertTrue(queueConfig.updateIsDelay(true));
-    assertTrue(queueConfig.isDelayed());
-    assertFalse(queueConfig.updateIsDelay(true));
-    assertTrue(queueConfig.isDelayed());
-    assertTrue(queueConfig.updateIsDelay(false));
-    assertFalse(queueConfig.isDelayed());
-  }
-
-  @Test
   public void testBuilder() {
     QueueConfig queueConfig =
-        QueueConfig.builder()
-            .id("__rq::q")
-            .name("q")
-            .visibilityTimeout(100L)
-            .numRetry(100)
-            .delayed(true)
-            .build();
-    assertTrue(queueConfig.isDelayed());
+        QueueConfig.builder().id("__rq::q").name("q").visibilityTimeout(100L).numRetry(100).build();
     assertEquals("__rq::q", queueConfig.getId());
     assertEquals("q", queueConfig.getName());
     assertEquals(100L, queueConfig.getVisibilityTimeout());
@@ -84,4 +66,30 @@ public class QueueConfigTest {
     assertNull(queueConfig.getUpdatedOn());
     assertNull(queueConfig.getCreatedOn());
   }
+
+  @Test
+  public void updateTime() {
+    TestUtils.createQueueConfig("test");
+  }
+
+  @Test
+  public void updateRetryCount() {}
+
+  @Test
+  public void testAddDeadLetterQueue() {}
+
+  @Test
+  public void updateVisibilityTimeout() {}
+
+  @Test
+  public void updateConcurrency() {}
+
+  @Test
+  public void updatePriority() {}
+
+  @Test
+  public void isDeadLetterQueue() {}
+
+  @Test
+  public void hasDeadLetterQueue() {}
 }

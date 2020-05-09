@@ -33,13 +33,13 @@ import lombok.Getter;
 @Builder
 class MappingInformation implements Comparable<MappingInformation> {
   private Set<String> queueNames;
-  private int numRetries;
+  private int numRetry;
   private String deadLetterQueueName;
   private long visibilityTimeout;
   private boolean active;
   private MinMax<Integer> concurrency;
   private String priorityGroup;
-  private Map<String, Integer> priorities;
+  private Map<String, Integer> priority;
 
   @Override
   public int compareTo(MappingInformation o) {
@@ -52,8 +52,7 @@ class MappingInformation implements Comparable<MappingInformation> {
   }
 
   boolean isValid() {
-    return active
-        && getQueueNames().size() > 0
+    return getQueueNames().size() > 0
         && visibilityTimeout > MIN_EXECUTION_TIME + DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 }

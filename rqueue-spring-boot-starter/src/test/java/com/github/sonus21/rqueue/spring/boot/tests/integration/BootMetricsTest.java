@@ -33,13 +33,14 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
+      "rqueue.retry.per.poll=20",
       "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=6384",
+      "spring.redis.port=8004",
       "mysql.db.name=test4",
       "rqueue.metrics.count.failure=true",
       "rqueue.metrics.count.execution=true",
     })
-public class MetricsTest extends MetricTestBase {
+public class BootMetricsTest extends MetricTestBase {
 
   @Test
   public void delayedQueueStatus() throws TimedOutException {

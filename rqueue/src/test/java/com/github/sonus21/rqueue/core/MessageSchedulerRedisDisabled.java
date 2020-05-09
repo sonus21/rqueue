@@ -26,8 +26,6 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -55,15 +53,12 @@ public class MessageSchedulerRedisDisabled {
   @InjectMocks private DelayedMessageScheduler messageScheduler = new DelayedMessageScheduler();
 
   private String slowQueue = "slow-queue";
-  private QueueDetail slowQueueDetail =
-      TestUtils.createQueueDetail(slowQueue, 3, true, 900000L, null);
-  private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
+  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
 
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
     QueueRegistry.register(slowQueueDetail);
-    queueNameToQueueDetail.put(slowQueue, slowQueueDetail);
   }
 
   @Test

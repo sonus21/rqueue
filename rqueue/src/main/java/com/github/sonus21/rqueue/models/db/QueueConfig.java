@@ -19,7 +19,10 @@ package com.github.sonus21.rqueue.models.db;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.models.SerializableBase;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,12 +49,15 @@ public class QueueConfig extends SerializableBase {
   private String delayedQueueName;
   private int numRetry;
   private long visibilityTimeout;
+  private MinMax<Integer> concurrency;
+  private Set<String> deadLetterQueues;
+  private boolean systemGenerated;
+  private String priorityGroup;
+  private Map<String, Integer> priority;
   private boolean deleted;
   private Long createdOn;
   private Long updatedOn;
   private Long deletedOn;
-  private MinMax<Integer> concurrency;
-  private Set<String> deadLetterQueues;
 
   public void updateTime() {
     this.updatedOn = System.currentTimeMillis();
@@ -90,6 +96,41 @@ public class QueueConfig extends SerializableBase {
       return true;
     }
     return false;
+  }
+
+  public boolean updatePriorityGroup(String priorityGroup) {
+    if (this.priorityGroup == null || !this.priorityGroup.equals(priorityGroup)) {
+      this.priorityGroup = priorityGroup;
+      return true;
+    }
+    return false;
+  }
+
+  public boolean updatePriority(Map<String, Integer> newPriority) {
+    if (CollectionUtils.isEmpty(newPriority) && !CollectionUtils.isEmpty(priority)) {
+      this.priority = new HashMap<>();
+      return true;
+    }
+    // when both are empty
+    if (CollectionUtils.isEmpty(newPriority)) {
+      return false;
+    }
+    boolean updated = false;
+    for (Entry<String, Integer> entry : newPriority.entrySet()) {
+      Integer val = priority.get(entry.getKey());
+      if (val == null || !val.equals(entry.getValue())) {
+        updated = true;
+        priority.put(entry.getKey(), entry.getValue());
+      }
+    }
+    for (String key : priority.keySet()) {
+      Integer val = newPriority.get(key);
+      if (val == null) {
+        updated = true;
+        priority.remove(key);
+      }
+    }
+    return updated;
   }
 
   @JsonIgnore

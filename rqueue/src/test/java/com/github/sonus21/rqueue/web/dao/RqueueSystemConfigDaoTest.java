@@ -45,7 +45,7 @@ public class RqueueSystemConfigDaoTest {
   @Test
   public void getQConfig() {
     assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
-    QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
+    QueueConfig queueConfig = TestUtils.createQueueConfig("job");
     doReturn(queueConfig).when(rqueueRedisTemplate).get(TestUtils.getQueueConfigKey("job"));
     assertEquals(queueConfig, rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
   }
@@ -53,7 +53,7 @@ public class RqueueSystemConfigDaoTest {
   @Test
   public void findAllQConfig() {
     assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
-    QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
+    QueueConfig queueConfig = TestUtils.createQueueConfig("job");
     List<String> keys =
         Arrays.asList(
             TestUtils.getQueueConfigKey("job"), TestUtils.getQueueConfigKey("notification"));
@@ -65,8 +65,8 @@ public class RqueueSystemConfigDaoTest {
   @Test
   public void saveAllQConfig() {
     assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
-    QueueConfig queueConfig = TestUtils.createQueueConfig("job", 3, false, 10000L, null);
-    QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification", 3, true, 20000L, null);
+    QueueConfig queueConfig = TestUtils.createQueueConfig("job");
+    QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification");
     doAnswer(
             invocation -> {
               Map<String, QueueConfig> configMap = new HashMap<>();

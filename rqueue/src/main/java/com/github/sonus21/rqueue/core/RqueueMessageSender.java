@@ -100,6 +100,16 @@ public interface RqueueMessageSender {
   boolean enqueue(String queueName, Object message);
 
   /**
+   * Submit a message on given queue without any delay at the specified priority level.
+   *
+   * @param queueName on which queue message has to be send
+   * @param priorityLevel priority level for this message
+   * @param message message object it could be any arbitrary object.
+   * @return message was submitted successfully or failed.
+   */
+  boolean enqueue(String queueName, String priorityLevel, Object message);
+
+  /**
    * This is an extension to the method {@link #put(String, Object)}. By default container would try
    * to deliver the same message for {@link Integer#MAX_VALUE} times, but that can be either
    * overridden using {@link RqueueListener#numRetries()}, even that value can be overridden using
@@ -124,6 +134,18 @@ public interface RqueueMessageSender {
    * @return message was submitted successfully or failed.
    */
   boolean enqueueIn(String queueName, Object message, long delayInMilliSecs);
+
+  /**
+   * Submit a task to the consumer in a given queue at the given priority level.
+   *
+   * @param queueName on which queue message has to be send
+   * @param priorityLevel name of the priority level
+   * @param message message object it could be any arbitrary object.
+   * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
+   *     listener when number of millisecond has elapsed.
+   * @return message was submitted successfully or failed.
+   */
+  boolean enqueueIn(String queueName, String priorityLevel, Object message, long delayInMilliSecs);
 
   /**
    * Enqueue a task that would be scheduled to run after N milli seconds.

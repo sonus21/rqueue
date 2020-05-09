@@ -113,6 +113,8 @@ public class RqueueSystemManagerServiceImpl
         systemQueueConfig.updateVisibilityTimeout(queueDetail.getVisibilityTimeout()) || updated;
     updated = systemQueueConfig.updateConcurrency(queueDetail.getConcurrency()) || updated;
     updated = systemQueueConfig.updateRetryCount(queueDetail.getNumRetry()) || updated;
+    updated = systemQueueConfig.updatePriorityGroup(queueDetail.getPriorityGroup()) || updated;
+    updated = systemQueueConfig.updatePriority(queueDetail.getPriority()) || updated;
     if (updated && !created) {
       systemQueueConfig.updateTime();
     }

@@ -45,13 +45,13 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected String getChannelName(QueueDetail queueDetail) {
-    return queueDetail.getProcessingQueueChannelName();
+  protected String getChannelName(String queueName) {
+    return QueueRegistry.get(queueName).getProcessingQueueChannelName();
   }
 
   @Override
-  protected String getZsetName(QueueDetail queueDetail) {
-    return queueDetail.getProcessingQueueName();
+  protected String getZsetName(String queueName) {
+    return QueueRegistry.get(queueName).getProcessingQueueName();
   }
 
   @Override
