@@ -347,7 +347,7 @@ factory.setMessageConverters(messageConverters);
 More than one message converter can be used as well, when more than one message converters are provided then they are used in the order, whichever returns **non null** value is used.
 
 ## Migration from 1.x to 2.0
-**Set redis key __rq::version=2**
+**Set redis key __rq::version=1**,this is required to handles data present in the old queues. Rqueue would attempt to identify version from the Redis keys, if it can't determine then it will use 2 as the default version. 
 
 ## Support
 Please report problem, bug or feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for feature, issue or enhancement.
