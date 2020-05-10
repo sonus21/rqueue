@@ -16,10 +16,10 @@
 
 package com.github.sonus21.rqueue.spring.boot;
 
+import com.github.sonus21.rqueue.config.MetricsProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties(prefix = "rqueue.metrics")
-public class RqueueMetricsProperties
-    extends com.github.sonus21.rqueue.metrics.RqueueMetricsProperties {}
+public class RqueueMetricsProperties extends MetricsProperties {}

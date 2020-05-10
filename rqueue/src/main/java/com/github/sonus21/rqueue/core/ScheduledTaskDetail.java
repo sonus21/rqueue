@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@ import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
 
+@Getter
 class ScheduledTaskDetail {
   private Future<?> future;
   private long startTime;
@@ -29,23 +31,7 @@ class ScheduledTaskDetail {
   ScheduledTaskDetail(long startTime, Future<?> future) {
     this.startTime = startTime;
     this.future = future;
-    id = UUID.randomUUID().toString();
-  }
-
-  Future<?> getFuture() {
-    return future;
-  }
-
-  void setFuture(Future<?> future) {
-    this.future = future;
-  }
-
-  long getStartTime() {
-    return startTime;
-  }
-
-  void setStartTime(Long startTime) {
-    this.startTime = startTime;
+    this.id = UUID.randomUUID().toString();
   }
 
   @Override

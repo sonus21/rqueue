@@ -1,0 +1,25 @@
+{% extends 'classpath:/templates/rqueue/base.html' %}
+{% block main %}
+<div class="container">
+  <div class="row table-responsive ">
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        {% for h in header %}
+          <th>{{h}}</th>
+        {% endfor %}
+      </tr>
+      </thead>
+      <tbody>
+      {% for task in tasks %}
+      <tr>
+        {% for td in task %}
+        <td>{{td}}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

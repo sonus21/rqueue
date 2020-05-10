@@ -16,16 +16,20 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.QueueUtils.QUEUE_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.models.Concurrency;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -34,6 +38,7 @@ import lombok.Setter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.env.MapPropertySource;
@@ -56,7 +61,8 @@ public class RqueueMessageHandlerTest {
       ((Message<String>) messageConverter.toMessage(messagePayload, null)).getPayload();
 
   private Message<String> buildMessage(String queueName, String message) {
-    return new GenericMessage<>(message, Collections.singletonMap(QUEUE_NAME, queueName));
+    return new GenericMessage<>(
+        message, Collections.singletonMap(MessageUtils.getMessageHeaderKey(), queueName));
   }
 
   @Test
@@ -192,9 +198,10 @@ public class RqueueMessageHandlerTest {
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPlaceHolders.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
     Map<String, Object> map = new HashMap<>();
-    map.put("queue.name", slowQueue);
+    map.put("queue.name", slowQueue + "," + smartQueue);
     map.put("queue.dead.letter.queue", true);
     map.put("queue.num.retries", 3);
+    map.put("queue.visibility.timeout", "30*30*60");
     map.put("dead.letter.queue.name", slowQueue + "-dlq");
     applicationContext
         .getEnvironment()
@@ -203,11 +210,147 @@ public class RqueueMessageHandlerTest {
     applicationContext.refresh();
 
     DummyMessageHandler messageHandler = applicationContext.getBean(DummyMessageHandler.class);
-    assertTrue(messageHandler.mappingInformation.isDelayedQueue());
-    assertEquals(3, messageHandler.mappingInformation.getNumRetries());
-    assertEquals(
-        Collections.singleton(slowQueue), messageHandler.mappingInformation.getQueueNames());
+    assertEquals(3, messageHandler.mappingInformation.getNumRetry());
+    Set<String> queueNames = new HashSet<>();
+    queueNames.add(slowQueue);
+    queueNames.add(smartQueue);
+    assertEquals(queueNames, messageHandler.mappingInformation.getQueueNames());
+    assertEquals(30 * 30 * 60L, messageHandler.mappingInformation.getVisibilityTimeout());
     assertEquals(slowQueue + "-dlq", messageHandler.mappingInformation.getDeadLetterQueueName());
+  }
+
+  @Test(expected = BeanCreationException.class)
+  public void concurrencyResolverInvalidValue() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.concurrency", slowQueue);
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+  }
+
+  @Test
+  public void concurrencyResolverSingleValue() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.concurrency", "5");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+    DummyMessageHandler messageHandler = applicationContext.getBean(DummyMessageHandler.class);
+    assertEquals(new Concurrency(1, 5), messageHandler.mappingInformation.getConcurrency());
+  }
+
+  @Test
+  public void concurrencyResolverMinMax() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.concurrency", "5-10");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+    DummyMessageHandler messageHandler = applicationContext.getBean(DummyMessageHandler.class);
+    assertEquals(new Concurrency(5, 10), messageHandler.mappingInformation.getConcurrency());
+  }
+
+  @Test(expected = BeanCreationException.class)
+  public void concurrencyResolverMinMaxMaxIsSmallerThanMin() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.concurrency", "5-2");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+  }
+
+  @Test(expected = BeanCreationException.class)
+  public void priorityResolverInvalidValue() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.priority", "-3");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+  }
+
+  @Test(expected = BeanCreationException.class)
+  public void priorityResolverInvalidValue2() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.priority", "1,1,1");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+  }
+
+  @Test
+  public void priorityResolverMultiLevelQueue() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.priority", "critical=10,high=5,low=2");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+    DummyMessageHandler messageHandler = applicationContext.getBean(DummyMessageHandler.class);
+    Map<String, Integer> priority = new HashMap<>();
+    priority.put("critical", 10);
+    priority.put("high", 5);
+    priority.put("low", 2);
+    assertEquals(priority, messageHandler.mappingInformation.getPriority());
+  }
+
+  @Test
+  public void priorityResolverSingleValue() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "," + smartQueue);
+    map.put("queue.priority", "100");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+    DummyMessageHandler messageHandler = applicationContext.getBean(DummyMessageHandler.class);
+    assertEquals(
+        Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, 100),
+        messageHandler.mappingInformation.getPriority());
   }
 
   @AllArgsConstructor
@@ -291,9 +434,31 @@ public class RqueueMessageHandlerTest {
 
     @RqueueListener(
         value = "${queue.name}",
-        delayedQueue = "${queue.dead.letter.queue}",
         numRetries = "${queue.num.retries}",
-        deadLetterQueue = "${dead.letter.queue.name}")
+        deadLetterQueue = "${dead.letter.queue.name}",
+        visibilityTimeout = "${queue.visibility.timeout}")
+    public void onMessage(String value) {
+      lastReceivedMessage = value;
+    }
+  }
+
+  @Getter
+  @Setter
+  private static class MessageHandlerWithConcurrency {
+    private String lastReceivedMessage;
+
+    @RqueueListener(value = "${queue.name}", concurrency = "${queue.concurrency}")
+    public void onMessage(String value) {
+      lastReceivedMessage = value;
+    }
+  }
+
+  @Getter
+  @Setter
+  private static class MessageHandlerWithPriority {
+    private String lastReceivedMessage;
+
+    @RqueueListener(value = "${queue.name}", priority = "${queue.priority}")
     public void onMessage(String value) {
       lastReceivedMessage = value;
     }

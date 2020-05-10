@@ -16,17 +16,49 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import static org.springframework.util.Assert.notEmpty;
+
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.util.Assert;
+import org.springframework.messaging.support.GenericMessage;
 
 public class MessageUtils {
+  private static final String MESSAGE_HEADER_KEY = "Rqueue";
+  private static final String MESSAGE_META_DATA_KEY_PREFIX = "__rq::m-mdata::";
+
   public MessageUtils() {}
 
   public static Object convertMessageToObject(
-      Message<?> message, List<MessageConverter> messageConverters) {
-    Assert.notEmpty(messageConverters, "messageConverters cannot be empty");
+      RqueueMessage message, MessageConverter messageConverter) {
+    return convertMessageToObject(new GenericMessage<>(message.getMessage()), messageConverter);
+  }
+
+  public static RqueueMessage buildMessage(
+      MessageConverter messageConverter,
+      String queueName,
+      Object message,
+      Integer retryCount,
+      Long delayInMilliSecs) {
+    Message<?> msg = messageConverter.toMessage(message, null);
+    if (msg == null) {
+      throw new MessageConversionException("Message could not be build (null)");
+    }
+    return new RqueueMessage(queueName, (String) msg.getPayload(), retryCount, delayInMilliSecs);
+  }
+
+  public static Object convertMessageToObject(
+      Message<String> message, MessageConverter messageConverter) {
+    return messageConverter.fromMessage(message, null);
+  }
+
+  public static Object convertMessageToObject(
+      Message<String> message, List<MessageConverter> messageConverters) {
+    notEmpty(messageConverters, "messageConverters cannot be empty");
     for (MessageConverter messageConverter : messageConverters) {
       try {
         return messageConverter.fromMessage(message, null);
@@ -34,5 +66,17 @@ public class MessageUtils {
       }
     }
     return null;
+  }
+
+  public static String getMessageHeaderKey() {
+    return MESSAGE_HEADER_KEY;
+  }
+
+  public static Map<String, Object> getMessageHeader(String queueName) {
+    return Collections.singletonMap(getMessageHeaderKey(), queueName);
+  }
+
+  public static String getMessageMetaId(String messageId) {
+    return MESSAGE_META_DATA_KEY_PREFIX + messageId;
   }
 }

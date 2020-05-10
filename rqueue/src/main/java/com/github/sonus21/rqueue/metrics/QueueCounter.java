@@ -16,6 +16,10 @@
 
 package com.github.sonus21.rqueue.metrics;
 
+import static com.github.sonus21.rqueue.metrics.RqueueMetrics.QUEUE_KEY;
+
+import com.github.sonus21.rqueue.config.MetricsProperties;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
@@ -26,8 +30,8 @@ import java.util.Map;
  * count, it supports queue registrations.
  */
 public class QueueCounter {
-  private static final String FAILURE_COUNT = "failure.count";
-  private static final String EXECUTION_COUNT = "execution.count";
+  static final String FAILURE_COUNT = "failure.count";
+  static final String EXECUTION_COUNT = "execution.count";
   private Map<String, Counter> queueNameToFailureCounter = new HashMap<>();
   private Map<String, Counter> queueNameToExecutionCounter = new HashMap<>();
 
@@ -48,21 +52,25 @@ public class QueueCounter {
   }
 
   void registerQueue(
-      RqueueMetricsProperties metricsProperties,
+      MetricsProperties metricsProperties,
       Tags queueTags,
       MeterRegistry registry,
-      String queueName) {
+      QueueDetail queueDetail) {
     if (metricsProperties.countFailure()) {
       Counter.Builder builder =
-          Counter.builder(FAILURE_COUNT).tags(queueTags).description("Failure count");
+          Counter.builder(FAILURE_COUNT)
+              .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
+              .description("Failure count");
       Counter counter = builder.register(registry);
-      queueNameToFailureCounter.put(queueName, counter);
+      queueNameToFailureCounter.put(queueDetail.getName(), counter);
     }
     if (metricsProperties.countExecution()) {
       Counter.Builder builder =
-          Counter.builder(EXECUTION_COUNT).tags(queueTags).description("Task execution count");
+          Counter.builder(EXECUTION_COUNT)
+              .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
+              .description("Task execution count");
       Counter counter = builder.register(registry);
-      queueNameToExecutionCounter.put(queueName, counter);
+      queueNameToExecutionCounter.put(queueDetail.getName(), counter);
     }
   }
 }

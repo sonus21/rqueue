@@ -28,13 +28,13 @@ public class MessageListener {
     log.info("test: {}", message);
   }
 
-  @RqueueListener(value = "dtest", delayedQueue = "true")
-  public void delayedMessage(String message) {
+  @RqueueListener(value = "dtest")
+  public void onMessageQueue(String message) {
     log.info("dtest: {}", message);
   }
 
-  @RqueueListener(value = "job-queue", delayedQueue = "true")
-  public void onMessage(Job job) {
+  @RqueueListener(value = "job-queue")
+  public void onMessageJob(Job job) {
     log.info("job-queue: {}", job);
   }
 }

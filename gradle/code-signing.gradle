@@ -111,7 +111,7 @@ def customizePom(pom) {
             }
             developers {
                 developer {
-                    name "Sonu Kumar"
+                    name 'Sonu Kumar'
                     email "sonunitw12@gmail.com"
                 }
             }

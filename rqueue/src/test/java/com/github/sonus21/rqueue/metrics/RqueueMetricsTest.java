@@ -17,8 +17,6 @@
 package com.github.sonus21.rqueue.metrics;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -26,16 +24,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.event.QueueInitializationEvent;
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.MetricsProperties;
+import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,29 +42,31 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueMetricsTest {
-  private RqueueMessageTemplate template = mock(RqueueMessageTemplate.class);
-  private RqueueMetricsProperties metricsProperties = new RqueueMetricsProperties() {};
+  private RqueueRedisTemplate<String> template = mock(RqueueRedisTemplate.class);
+  private MetricsProperties metricsProperties = new MetricsProperties() {};
   private QueueCounter queueCounter = mock(QueueCounter.class);
-  private Map<String, QueueDetail> queueDetails = new HashMap<>();
   private String simpleQueue = "simple-queue";
   private String delayedQueue = "delayed-queue";
   private String deadLetterQueue = "dlq";
   private Tags tags = Tags.of("rQueue", "dc1");
+  private QueueDetail simpleQueueDetail = TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
+  private QueueDetail delayedQueueDetail = TestUtils.createQueueDetail(delayedQueue);
 
   @Before
   public void init() {
-    queueDetails.put(simpleQueue, new QueueDetail(simpleQueue, -1, deadLetterQueue, false, 900000));
-    queueDetails.put(delayedQueue, new QueueDetail(delayedQueue, -1, "", true, 900000));
+    QueueRegistry.delete();
+    QueueRegistry.register(simpleQueueDetail);
+    QueueRegistry.register(delayedQueueDetail);
     doAnswer(
             invocation -> {
-              String zsetName = (String) invocation.getArguments()[0];
-              if (zsetName.equals(QueueUtils.getTimeQueueName(delayedQueue))) {
+              String zsetName = invocation.getArgument(0);
+              if (zsetName.equals(delayedQueueDetail.getDelayedQueueName())) {
                 return 5L;
               }
-              if (zsetName.equals(QueueUtils.getProcessingQueueName(simpleQueue))) {
+              if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {
                 return 10L;
               }
-              if (zsetName.equals(QueueUtils.getProcessingQueueName(delayedQueue))) {
+              if (zsetName.equals(delayedQueueDetail.getProcessingQueueName())) {
                 return 15L;
               }
               return null;
@@ -75,11 +76,11 @@ public class RqueueMetricsTest {
 
     doAnswer(
             invocation -> {
-              String listName = (String) invocation.getArguments()[0];
-              if (listName.equals(simpleQueue)) {
+              String listName = invocation.getArgument(0);
+              if (listName.equals(simpleQueueDetail.getQueueName())) {
                 return 100L;
               }
-              if (listName.equals(delayedQueue)) {
+              if (listName.equals(delayedQueueDetail.getQueueName())) {
                 return 200L;
               }
               if (listName.equals(deadLetterQueue)) {
@@ -88,26 +89,7 @@ public class RqueueMetricsTest {
               return null;
             })
         .when(template)
-        .getListLength(anyString());
-  }
-
-  private void verifyQueueDetail(
-      MeterRegistry registry, String name, boolean deadLetter, boolean delayed, Tags expectedTags) {
-    Tags tags = Tags.concat(expectedTags, "queue", name);
-    registry.get("queue.size").tags(tags).gauge();
-    registry.get("processing.queue.size").tags(tags).gauge();
-    try {
-      registry.get("dead.letter.queue.size").tags(tags).gauge();
-      assertTrue(deadLetter);
-    } catch (MeterNotFoundException e) {
-      assertFalse(deadLetter);
-    }
-    try {
-      registry.get("delayed.queue.size").tags(tags).gauge();
-      assertTrue(delayed);
-    } catch (MeterNotFoundException e) {
-      assertFalse(delayed);
-    }
+        .getListSize(anyString());
   }
 
   private void verifyQueueStatistics(
@@ -135,41 +117,51 @@ public class RqueueMetricsTest {
     }
   }
 
-  @Test
-  public void queueStatistics() {
-    MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetrics metrics =
-        new RqueueMetrics(template, metricsProperties, meterRegistry, queueCounter);
-    metrics.onApplicationEvent(new QueueInitializationEvent("Test", queueDetails, true));
-    verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
-    verifyQueueStatistics(meterRegistry, delayedQueue, 200, 15, 0, 5);
-  }
-
-  private void verifyCounterRegisterMethodIsCalled(Tags tags) {
+  private void verifyCounterRegisterMethodIsCalled(Tags tags) throws IllegalAccessException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     metricsProperties.setMetricTags(tags);
-    RqueueMetrics metrics =
-        new RqueueMetrics(template, metricsProperties, meterRegistry, queueCounter);
-    metrics.onApplicationEvent(new QueueInitializationEvent("Test", queueDetails, true));
+    RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
+    metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verify(queueCounter, times(1))
         .registerQueue(
-            metricsProperties, Tags.concat(tags, "queue", simpleQueue), meterRegistry, simpleQueue);
+            metricsProperties,
+            Tags.concat(tags, "queue", simpleQueue),
+            meterRegistry,
+            simpleQueueDetail);
     verify(queueCounter, times(1))
         .registerQueue(
             metricsProperties,
             Tags.concat(tags, "queue", delayedQueue),
             meterRegistry,
-            delayedQueue);
-    verify(queueCounter, times(2)).registerQueue(any(), any(), any(), anyString());
+            delayedQueueDetail);
+    verify(queueCounter, times(2)).registerQueue(any(), any(), any(), any(QueueDetail.class));
+  }
+
+  private RqueueMetrics rqueueMetrics(
+      MeterRegistry meterRegistry, MetricsProperties metricsProperties)
+      throws IllegalAccessException {
+    RqueueMetrics metrics = new RqueueMetrics(template, queueCounter);
+    FieldUtils.writeField(metrics, "meterRegistry", meterRegistry, true);
+    FieldUtils.writeField(metrics, "metricsProperties", metricsProperties, true);
+    return metrics;
   }
 
   @Test
-  public void counterRegisterMethodIsCalled() {
+  public void queueStatistics() throws IllegalAccessException {
+    MeterRegistry meterRegistry = new SimpleMeterRegistry();
+    RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
+    metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
+    verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
+    verifyQueueStatistics(meterRegistry, delayedQueue, 200, 15, 0, 5);
+  }
+
+  @Test
+  public void counterRegisterMethodIsCalled() throws IllegalAccessException {
     verifyCounterRegisterMethodIsCalled(Tags.empty());
   }
 
   @Test
-  public void counterRegisterMethodIsCalledWithCorrectTag() {
+  public void counterRegisterMethodIsCalledWithCorrectTag() throws IllegalAccessException {
     verifyCounterRegisterMethodIsCalled(tags);
   }
 }

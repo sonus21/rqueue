@@ -19,62 +19,39 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_EXECUTION_TIME;
 
-import java.util.Collections;
+import com.github.sonus21.rqueue.models.Concurrency;
+import java.util.Map;
 import java.util.Set;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-@SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
+@Getter(AccessLevel.PACKAGE)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Builder
 class MappingInformation implements Comparable<MappingInformation> {
-  private final Set<String> queueNames;
-  private final int numRetries;
-  private final boolean delayedQueue;
-  private final String deadLetterQueueName;
-  private final long maxJobExecutionTime;
-
-  MappingInformation(
-      Set<String> queueNames,
-      boolean delayedQueue,
-      int numRetries,
-      String deadLetterQueueName,
-      long maxJobExecutionTime) {
-    this.queueNames = Collections.unmodifiableSet(queueNames);
-    this.delayedQueue = delayedQueue;
-    this.numRetries = numRetries;
-    this.deadLetterQueueName = deadLetterQueueName;
-    this.maxJobExecutionTime = maxJobExecutionTime;
-  }
-
-  Set<String> getQueueNames() {
-    return queueNames;
-  }
-
-  @Override
-  public int compareTo(MappingInformation o) {
-    return 0;
-  }
+  @EqualsAndHashCode.Include private Set<String> queueNames;
+  private int numRetry;
+  private String deadLetterQueueName;
+  private long visibilityTimeout;
+  private boolean active;
+  private Concurrency concurrency;
+  private String priorityGroup;
+  private Map<String, Integer> priority;
 
   @Override
   public String toString() {
     return String.join(", ", queueNames);
   }
 
-  int getNumRetries() {
-    return numRetries;
-  }
-
-  boolean isDelayedQueue() {
-    return delayedQueue;
-  }
-
-  String getDeadLetterQueueName() {
-    return deadLetterQueueName;
-  }
-
   boolean isValid() {
     return getQueueNames().size() > 0
-        && maxJobExecutionTime > MIN_EXECUTION_TIME + DELTA_BETWEEN_RE_ENQUEUE_TIME;
+        && visibilityTimeout > MIN_EXECUTION_TIME + DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 
-  public long getMaxJobExecutionTime() {
-    return maxJobExecutionTime;
+  @Override
+  public int compareTo(MappingInformation o) {
+    return 0;
   }
 }

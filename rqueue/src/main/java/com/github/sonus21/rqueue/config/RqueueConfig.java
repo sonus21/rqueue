@@ -16,115 +16,122 @@
 
 package com.github.sonus21.rqueue.config;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
-
-import com.github.sonus21.rqueue.core.DelayedMessageScheduler;
-import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
-/**
- * This is a base configuration class, that is used in Spring and Spring boot Rqueue packages for a
- * configuration. This class creates required beans to work Rqueue library. It internally maintains
- * two types of scheduled tasks for different functionality, for delayed queue messages have to be
- * moved from ZSET to LIST, in other case to at least once message delivery guarantee, messages have
- * to be moved from ZSET to LIST again, we expect very small number of messages in processing queue.
- * Reason being we delete messages once it's consumed, but due to failure in listeners message might
- * not be removed, whereas message in a delayed queue can be very high based on the use case.
- */
-public abstract class RqueueConfig {
+@Getter
+@Setter
+@RequiredArgsConstructor
+@Configuration
+public class RqueueConfig {
+  private final RedisConnectionFactory connectionFactory;
+  private final boolean sharedConnection;
+  private final int dbVersion;
 
-  @Autowired(required = false)
-  protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
-      new SimpleRqueueListenerContainerFactory();
+  @Value("${rqueue.version:2.0.0-RELEASE}")
+  private String version;
 
-  @Autowired protected BeanFactory beanFactory;
+  @Value("${rqueue.key.prefix:__rq::}")
+  private String prefix;
 
-  /**
-   * This is used to control message scheduler auto start feature, if it's disabled then messages
-   * are moved only when a message is received from Redis PUB/SUB channel.
-   */
-  @Value("${rqueue.scheduler.auto.start:true}")
-  private boolean schedulerAutoStart;
+  @Value("${rqueue.cluster.mode:true}")
+  private boolean clusterMode;
 
-  /**
-   * This is used to control message scheduler redis pub/sub interaction, this can be used to
-   * completely disable the redis PUB/SUB interaction
-   */
-  @Value("${rqueue.scheduler.redis.enabled:true}")
-  private boolean schedulerRedisEnabled;
+  @Value("${rqueue.simple.queue.prefix:queue::}")
+  private String simpleQueuePrefix;
 
-  // Number of threads used to process delayed queue messages by scheduler
-  @Value("${rqueue.scheduler.delayed.queue.thread.pool.size:5}")
-  private int delayedQueueSchedulerPoolSize;
+  @Value("${rqueue.delayed.queue.prefix:d-queue::}")
+  private String delayedQueuePrefix;
 
-  //  Number of threads used to process processing queue messages by scheduler
-  @Value("${rqueue.processing.delayed.queue.thread.pool.size:1}")
-  private int processingQueueSchedulerPoolSize;
+  @Value("${rqueue.delayed.queue.channel.prefix:d-channel::}")
+  private String delayedQueueChannelPrefix;
 
-  /**
-   * Get redis connection factory either from listener container factory or from bean factory. 1st
-   * priority is given to container factory. This redis connection factory is used to connect to
-   * Database for different ops.
-   *
-   * @return {@link RedisConnectionFactory} object
-   */
-  protected RedisConnectionFactory getRedisConnectionFactory() {
-    if (simpleRqueueListenerContainerFactory.getRedisConnectionFactory() == null) {
-      simpleRqueueListenerContainerFactory.setRedisConnectionFactory(
-          beanFactory.getBean(RedisConnectionFactory.class));
+  @Value("${rqueue.processing.queue.name.prefix:p-queue::}")
+  private String processingQueuePrefix;
+
+  @Value("${rqueue.processing.queue.channel.prefix:p-channel::}")
+  private String processingQueueChannelPrefix;
+
+  @Value("${rqueue.queues.key.suffix:queues}")
+  private String queuesKeySuffix;
+
+  public String getQueuesKey() {
+    return prefix + queuesKeySuffix;
+  }
+
+  @Value("${rqueue.lock.key.prefix:lock::}")
+  private String lockKeyPrefix;
+
+  @Value("${rqueue.queue.stat.key.prefix:q-stat::}")
+  private String queueStatKeyPrefix;
+
+  @Value("${rqueue.queue.config.key.prefix:q-config::}")
+  private String queueConfigKeyPrefix;
+
+  @Value("${rqueue.retry.per.poll:1}")
+  private int retryPerPoll;
+
+  @Value("${rqueue.add.default.queue.with.queue.level.priority:true}")
+  private boolean addDefaultQueueWithQueueLevelPriority;
+
+  @Value("${rqueue.default.queue.with.queue.level.priority:-1}")
+  private int defaultQueueWithQueueLevelPriority;
+
+  public String getQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + simpleQueuePrefix + getTaggedName(queueName);
     }
-    return simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
+    return queueName;
   }
 
-  /**
-   * Get Rqueue message template either from listener container factory or create new one. 1st
-   * priority is given to container factory. Message template is used to serialize message and
-   * sending message to Redis.
-   *
-   * @param connectionFactory connection factory object
-   * @return {@link RqueueMessageTemplate} object
-   */
-  protected RqueueMessageTemplate getMessageTemplate(RedisConnectionFactory connectionFactory) {
-    if (simpleRqueueListenerContainerFactory.getRqueueMessageTemplate() != null) {
-      return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
+  public String getDelayedQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + delayedQueuePrefix + getTaggedName(queueName);
     }
-    simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(
-        new RqueueMessageTemplate(connectionFactory));
-    return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
+    return "rqueue-delay::" + queueName;
   }
 
-  /**
-   * This scheduler is used to pull messages from delayed queue to their respective queue.
-   * Internally it moves messages from ZSET to LIST based on the priority and current time.
-   *
-   * @return {@link DelayedMessageScheduler} object
-   */
-  @Bean
-  public DelayedMessageScheduler delayedMessageScheduler() {
-    return new DelayedMessageScheduler(
-        getRedisTemplate(getRedisConnectionFactory()),
-        delayedQueueSchedulerPoolSize,
-        schedulerAutoStart,
-        schedulerRedisEnabled);
+  public String getDelayedQueueChannelName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + delayedQueueChannelPrefix + getTaggedName(queueName);
+    }
+    return "rqueue-channel::" + queueName;
   }
 
-  /**
-   * This scheduler is used to pull messages from processing queue to their respective queue.
-   * Internally it moves messages from ZSET to LIST based on the priority and current time.
-   *
-   * @return {@link ProcessingMessageScheduler} object
-   */
-  @Bean
-  public ProcessingMessageScheduler processingMessageScheduler() {
-    return new ProcessingMessageScheduler(
-        getRedisTemplate(getRedisConnectionFactory()),
-        processingQueueSchedulerPoolSize,
-        schedulerAutoStart,
-        schedulerRedisEnabled);
+  public String getProcessingQueueName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + processingQueuePrefix + getTaggedName(queueName);
+    }
+    return "rqueue-processing::" + queueName;
+  }
+
+  public String getProcessingQueueChannelName(String queueName) {
+    if (dbVersion >= 2) {
+      return prefix + processingQueueChannelPrefix + getTaggedName(queueName);
+    }
+    return "rqueue-processing-channel::" + queueName;
+  }
+
+  public String getLockKey(String key) {
+    return prefix + lockKeyPrefix + key;
+  }
+
+  public String getQueueStatisticsKey(String name) {
+    return prefix + queueStatKeyPrefix + name;
+  }
+
+  public String getQueueConfigKey(String name) {
+    return prefix + queueConfigKeyPrefix + name;
+  }
+
+  private String getTaggedName(String queueName) {
+    if (!clusterMode) {
+      return queueName;
+    }
+    return "{" + queueName + "}";
   }
 }

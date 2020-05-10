@@ -23,12 +23,16 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.processor.MessageProcessor;
-import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
+import com.github.sonus21.rqueue.models.enums.PriorityMode;
+import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
+import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,12 +85,12 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void getBackOffTime() {
-    assertNull(simpleRqueueListenerContainerFactory.getBackOffTime());
+    assertEquals(5000L, simpleRqueueListenerContainerFactory.getBackOffTime());
   }
 
   @Test
   public void setBackOffTime() {
-    Long backOffTime = 1000L;
+    long backOffTime = 1000L;
     simpleRqueueListenerContainerFactory.setBackOffTime(backOffTime);
     assertEquals(backOffTime, simpleRqueueListenerContainerFactory.getBackOffTime());
   }
@@ -171,7 +175,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void deadLetterMessageProcessor() {
-    MessageProcessor messageProcessor = new NoOpMessageProcessor();
+    MessageProcessor messageProcessor = new MessageProcessor() {};
     simpleRqueueListenerContainerFactory.setDeadLetterQueueMessageProcessor(messageProcessor);
     assertEquals(
         messageProcessor,
@@ -181,7 +185,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
-    assertEquals(messageProcessor, container.getDlqMessageProcessor());
+    assertEquals(messageProcessor, container.getDeadLetterQueueMessageProcessor());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -191,7 +195,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void discardMessageProcessor() {
-    MessageProcessor messageProcessor = new NoOpMessageProcessor();
+    MessageProcessor messageProcessor = new MessageProcessor() {};
     simpleRqueueListenerContainerFactory.setDiscardMessageProcessor(messageProcessor);
     assertEquals(
         messageProcessor, simpleRqueueListenerContainerFactory.getDiscardMessageProcessor());
@@ -201,5 +205,119 @@ public class SimpleRqueueListenerContainerFactoryTest {
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
     assertEquals(messageProcessor, container.getDiscardMessageProcessor());
+  }
+
+  @Test
+  public void getTaskExecutionBackOff() {
+    assertNull(simpleRqueueListenerContainerFactory.getTaskExecutionBackOff());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void setNullTaskExecutionBackOff() {
+    simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(null);
+  }
+
+  @Test
+  public void setTaskExecutionBackOff() {
+    FixedTaskExecutionBackOff backOff = new FixedTaskExecutionBackOff(10000L, 10);
+    simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(backOff);
+    assertEquals(backOff, simpleRqueueListenerContainerFactory.getTaskExecutionBackOff());
+  }
+
+  @Test
+  public void getPriorityMode() {
+    assertNull(simpleRqueueListenerContainerFactory.getPriorityMode());
+  }
+
+  @Test
+  public void setPriorityMode() {
+    simpleRqueueListenerContainerFactory.setPriorityMode(PriorityMode.STRICT);
+    assertEquals(PriorityMode.STRICT, simpleRqueueListenerContainerFactory.getPriorityMode());
+  }
+
+  @Test
+  public void setPollingInterval() {
+    simpleRqueueListenerContainerFactory.setPollingInterval(1000L);
+    assertEquals(1000L, simpleRqueueListenerContainerFactory.getPollingInterval());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void setNullPreExecutionMessageProcessor() {
+    simpleRqueueListenerContainerFactory.setPreExecutionMessageProcessor(null);
+  }
+
+  @Test
+  public void setPreExecutionMessageProcessor() {
+    MessageProcessor messageProcessor = new MessageProcessor() {};
+    simpleRqueueListenerContainerFactory.setPreExecutionMessageProcessor(messageProcessor);
+    assertEquals(
+        messageProcessor.hashCode(),
+        simpleRqueueListenerContainerFactory.getPreExecutionMessageProcessor().hashCode());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void setNullPostExecutionMessageProcessor() {
+    simpleRqueueListenerContainerFactory.setPostExecutionMessageProcessor(null);
+  }
+
+  @Test
+  public void setPostExecutionMessageProcessor() {
+    MessageProcessor messageProcessor = new MessageProcessor() {};
+    simpleRqueueListenerContainerFactory.setPostExecutionMessageProcessor(messageProcessor);
+    assertEquals(
+        messageProcessor.hashCode(),
+        simpleRqueueListenerContainerFactory.getPostExecutionMessageProcessor().hashCode());
+  }
+
+  @Test
+  public void createContainer() {
+    MessageProcessor pre = new MessageProcessor() {};
+    MessageProcessor post = new MessageProcessor() {};
+    MessageProcessor deadLetter = new MessageProcessor() {};
+    MessageProcessor deletion = new MessageProcessor() {};
+    MessageProcessor discardMessageProcessor = new MessageProcessor() {};
+    TaskExecutionBackOff backOff = new FixedTaskExecutionBackOff(1000L, 4);
+    AsyncTaskExecutor executor = new TestAsyncTaskExecutor();
+    simpleRqueueListenerContainerFactory.setPostExecutionMessageProcessor(post);
+    simpleRqueueListenerContainerFactory.setPreExecutionMessageProcessor(pre);
+    simpleRqueueListenerContainerFactory.setDeadLetterQueueMessageProcessor(deadLetter);
+    simpleRqueueListenerContainerFactory.setManualDeletionMessageProcessor(deletion);
+    simpleRqueueListenerContainerFactory.setDiscardMessageProcessor(discardMessageProcessor);
+    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(backOff);
+    simpleRqueueListenerContainerFactory.setTaskExecutor(executor);
+    simpleRqueueListenerContainerFactory.setPriorityMode(PriorityMode.WEIGHTED);
+
+    RqueueMessageListenerContainer container =
+        simpleRqueueListenerContainerFactory.createMessageListenerContainer();
+    assertNotNull(container);
+    assertEquals(PriorityMode.WEIGHTED, container.getPriorityMode());
+    assertEquals(backOff, container.getTaskExecutionBackOff());
+    assertEquals(executor, container.getTaskExecutor());
+    assertEquals(pre, container.getPreExecutionMessageProcessor());
+    assertEquals(post, container.getPostExecutionMessageProcessor());
+    assertEquals(deadLetter, container.getDeadLetterQueueMessageProcessor());
+    assertEquals(deletion, container.getManualDeletionMessageProcessor());
+    assertEquals(discardMessageProcessor, container.getDiscardMessageProcessor());
+  }
+
+  private class TestAsyncTaskExecutor implements AsyncTaskExecutor {
+
+    @Override
+    public void execute(Runnable task, long startTimeout) {}
+
+    @Override
+    public Future<?> submit(Runnable task) {
+      return null;
+    }
+
+    @Override
+    public <T> Future<T> submit(Callable<T> task) {
+      return null;
+    }
+
+    @Override
+    public void execute(Runnable task) {}
   }
 }

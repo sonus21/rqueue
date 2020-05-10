@@ -16,69 +16,48 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
-import static com.github.sonus21.rqueue.utils.TimeUtils.waitFor;
-import static rqueue.test.TestUtils.buildMessage;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
-import com.github.sonus21.rqueue.utils.QueueUtils;
+import com.github.sonus21.rqueue.test.dto.Job;
+import com.github.sonus21.rqueue.test.tests.SpringTestBase;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.RunTestUntilFail;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import rqueue.test.RunTestUntilFail;
-import rqueue.test.TestUtils;
-import rqueue.test.dto.Job;
-import rqueue.test.service.ConsumedMessageService;
 
 @SpringBootTest
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
 @Slf4j
 @TestPropertySource(
     properties = {
-      "auto.start.scheduler=false",
-      "spring.redis.port=6383",
+      "rqueue.scheduler.auto.start=false",
+      "spring.redis.port=8005",
       "mysql.db.name=test3",
-      "max.workers.count=120"
+      "max.workers.count=120",
+      "use.system.redis=false"
     })
-public class ProcessingMessageSchedulerTest {
-  static {
-    System.setProperty("TEST_NAME", ProcessingMessageSchedulerTest.class.getSimpleName());
-  }
-
-  @Autowired protected ConsumedMessageService consumedMessageService;
-  @Autowired protected RqueueMessageSender messageSender;
-  @Autowired protected RedisConnectionFactory redisConnectionFactory;
-  private RedisTemplate<String, RqueueMessage> redisTemplate;
-
-  @Value("${job.queue.name}")
-  private String jobQueueName;
-
+public class ProcessingMessageSchedulerTest extends SpringTestBase {
   @Rule
   public RunTestUntilFail retry =
       new RunTestUntilFail(
           log,
-          1,
           () -> {
-            for (Entry<String, List<RqueueMessage>> entry :
-                TestUtils.getMessageMap(jobQueueName, redisTemplate).entrySet()) {
+            for (Entry<String, List<RqueueMessage>> entry : getMessageMap(jobQueue).entrySet()) {
               log.error("FAILING Queue {}", entry.getKey());
               for (RqueueMessage message : entry.getValue()) {
                 log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
@@ -88,15 +67,9 @@ public class ProcessingMessageSchedulerTest {
 
   private int messageCount = 110;
 
-  @PostConstruct
-  public void init() {
-    redisTemplate = getRedisTemplate(redisConnectionFactory);
-  }
-
   @Test
-  public void publishMessageIsTriggeredOnMessageRemoval()
-      throws InterruptedException, TimedOutException {
-    String processingQueueName = QueueUtils.getProcessingQueueName(jobQueueName);
+  public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
+    String processingQueueName = jobQueue;
     long currentTime = System.currentTimeMillis();
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();
@@ -110,17 +83,12 @@ public class ProcessingMessageSchedulerTest {
       if (random.nextBoolean()) {
         delay = delay * -1;
       }
-      redisTemplate
-          .opsForZSet()
-          .add(
-              processingQueueName,
-              buildMessage(job, jobQueueName, null, null),
-              currentTime + delay);
+      enqueueIn(job, processingQueueName, delay);
     }
-    Thread.sleep(maxDelay);
+    TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == messageSender.getAllMessages(jobQueueName).size(),
-        60 * 1000L,
+        () -> 0 == messageSender.getAllMessages(jobQueue).size(),
+        30 * Constants.ONE_MILLI,
         "messages to be consumed");
     waitFor(
         () -> messageCount == consumedMessageService.getMessages(ids, Job.class).size(),

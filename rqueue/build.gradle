@@ -2,13 +2,24 @@ ext.projectDescription = 'Asynchronous and delayed task executor'
 ext.name = 'Rqueue Core Java'
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"
+    apply from: "${rootDir}/gradle/packaging.gradle"
 }
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: "${jacksonVersion}"
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${jacksonVersion}"
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${jacksonVersion}"
+
+    // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
+    compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
+    // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
+    compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
+    // https://mvnrepository.com/artifact/org.jtwig/jtwig-spring
+    compile group: 'org.jtwig', name: 'jtwig-spring', version: "${twigVersion}"
+
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
     compile "io.micrometer:micrometer-core:${microMeterVersion}", optional
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
+    testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
+    testCompile project(":rqueue-test-util")
 }

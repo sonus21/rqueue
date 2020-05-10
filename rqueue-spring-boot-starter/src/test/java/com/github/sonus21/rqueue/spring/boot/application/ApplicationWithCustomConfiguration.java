@@ -17,9 +17,10 @@
 package com.github.sonus21.rqueue.spring.boot.application;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.processor.NoOpMessageProcessor;
+import com.github.sonus21.rqueue.test.BaseApplication;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -29,12 +30,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import rqueue.test.BaseApplication;
 
 @PropertySource("classpath:application.properties")
-@SpringBootApplication(scanBasePackages = {"rqueue.test"})
+@SpringBootApplication(scanBasePackages = {"com.github.sonus21.rqueue.test"})
 @EnableRedisRepositories
-@EnableJpaRepositories(basePackages = {"rqueue.test.repository"})
+@EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class ApplicationWithCustomConfiguration extends BaseApplication {
   @Value("${max.workers.count:6}")
@@ -45,14 +45,16 @@ public class ApplicationWithCustomConfiguration extends BaseApplication {
   }
 
   @Bean
+  public RqueueMessageTemplate rqueueMessageTemplate(
+      RedisConnectionFactory redisConnectionFactory) {
+    return new RqueueMessageTemplateImpl(redisConnectionFactory);
+  }
+
+  @Bean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
-      RqueueMessageHandler rqueueMessageHandler, RedisConnectionFactory redisConnectionFactory) {
+      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
     RqueueMessageListenerContainer rqueueMessageListenerContainer =
-        new RqueueMessageListenerContainer(
-            rqueueMessageHandler,
-            new RqueueMessageTemplate(redisConnectionFactory),
-            new NoOpMessageProcessor(),
-            new NoOpMessageProcessor());
+        new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate);
     rqueueMessageListenerContainer.setMaxNumWorkers(maxWorkers);
     return rqueueMessageListenerContainer;
   }

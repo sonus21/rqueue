@@ -16,39 +16,52 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import static com.github.sonus21.rqueue.utils.StringUtils.clean;
+
 import org.springframework.beans.factory.config.BeanExpressionContext;
 import org.springframework.beans.factory.config.BeanExpressionResolver;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.NonNull;
 
 public class ValueResolver {
   private ValueResolver() {}
+
+  @SuppressWarnings("unchecked")
+  public static <T> T parseStringUsingSpel(String val, Class<?> t) {
+    ExpressionParser parser = new SpelExpressionParser();
+    Expression exp = parser.parseExpression(val);
+    return (T) exp.getValue(t);
+  }
 
   public static Long parseStringToLong(String val) {
     if (val == null) {
       return null;
     }
-    String tmpVal = val.trim();
+    String tmpVal = clean(val);
     if (tmpVal.equals("null")) {
       return null;
     }
-    return Long.parseLong(tmpVal);
+    return parseStringUsingSpel(val, Long.class);
   }
 
   public static Integer parseStringToInt(String val) {
     if (val == null) {
       return null;
     }
-    String tmpVal = val.trim();
-    if (tmpVal.equals("null")) {
+    String tmpVal = clean(val);
+    if (tmpVal.equals("null") || tmpVal.isEmpty()) {
       return null;
     }
-    return Integer.parseInt(tmpVal);
+    return parseStringUsingSpel(val, Integer.class);
   }
 
   public static boolean convertToBoolean(String s) {
-    String tmpString = s.trim();
+    String tmpString = clean(s);
     if (tmpString.equalsIgnoreCase("true")) {
       return true;
     }
@@ -58,97 +71,73 @@ public class ValueResolver {
     throw new IllegalArgumentException(s + " cannot be converted to boolean");
   }
 
-  private static String[] wrapInStringArray(Object valueToWrap) {
-    return new String[] {valueToWrap.toString()};
+  @NonNull
+  private static Object resolveExpression(ApplicationContext applicationContext, String name) {
+    if (applicationContext instanceof ConfigurableApplicationContext) {
+      ConfigurableBeanFactory configurableBeanFactory =
+          ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
+      String placeholdersResolved = configurableBeanFactory.resolveEmbeddedValue(name);
+      BeanExpressionResolver exprResolver = configurableBeanFactory.getBeanExpressionResolver();
+      if (exprResolver == null) {
+        return name;
+      }
+      Object result =
+          exprResolver.evaluate(
+              placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
+      if (result != null) {
+        return result;
+      }
+    }
+    return name;
   }
 
-  public static String[] resolveValueToArrayOfStrings(
+  public static String[] resolveKeyToArrayOfStrings(
       ApplicationContext applicationContext, String name) {
-    if (applicationContext instanceof ConfigurableApplicationContext) {
-      ConfigurableBeanFactory configurableBeanFactory =
-          ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
-      String placeholdersResolved = configurableBeanFactory.resolveEmbeddedValue(name);
-      BeanExpressionResolver exprResolver = configurableBeanFactory.getBeanExpressionResolver();
-      if (exprResolver == null) {
-        return wrapInStringArray(name);
-      }
-      Object result =
-          exprResolver.evaluate(
-              placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
-      if (result instanceof String[]) {
-        return (String[]) result;
-      } else if (result != null) {
-        return wrapInStringArray(result);
-      } else {
-        return wrapInStringArray(name);
-      }
+    Object result = resolveExpression(applicationContext, name);
+    String[] values;
+    if (result instanceof String[]) {
+      values = (String[]) result;
+    } else {
+      values = ((String) result).split(",");
     }
-    return wrapInStringArray(name);
+    String[] cleanedStrings = new String[values.length];
+    for (int i = 0; i < values.length; i++) {
+      cleanedStrings[i] = clean(values[i]);
+    }
+    return cleanedStrings;
   }
 
-  public static Integer resolveValueToInteger(ApplicationContext applicationContext, String name) {
-    if (applicationContext instanceof ConfigurableApplicationContext) {
-      ConfigurableBeanFactory configurableBeanFactory =
-          ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
-      String placeholdersResolved = configurableBeanFactory.resolveEmbeddedValue(name);
-      BeanExpressionResolver exprResolver = configurableBeanFactory.getBeanExpressionResolver();
-      if (exprResolver == null) {
-        return parseStringToInt(name);
-      }
-      Object result =
-          exprResolver.evaluate(
-              placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
-      if (result instanceof Integer) {
-        return (Integer) result;
-      } else if (result instanceof String) {
-        return parseStringToInt((String) result);
-      }
+  public static String resolveKeyToString(ApplicationContext applicationContext, String name) {
+    String[] values = resolveKeyToArrayOfStrings(applicationContext, name);
+    if (values.length == 1) {
+      return values[0];
     }
-    return parseStringToInt(name);
+    throw new IllegalArgumentException("More than one value provided");
   }
 
-  public static Long resolveValueToLong(ApplicationContext applicationContext, String name) {
-    if (applicationContext instanceof ConfigurableApplicationContext) {
-      ConfigurableBeanFactory configurableBeanFactory =
-          ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
-      String placeholdersResolved = configurableBeanFactory.resolveEmbeddedValue(name);
-      BeanExpressionResolver exprResolver = configurableBeanFactory.getBeanExpressionResolver();
-      if (exprResolver == null) {
-        return parseStringToLong(name);
-      }
-      Object result =
-          exprResolver.evaluate(
-              placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
-      if (result instanceof Long) {
-        return (Long) result;
-      } else if (result instanceof Integer) {
-        return ((Integer) result).longValue();
-      } else if (result instanceof String) {
-        return parseStringToLong((String) result);
-      }
-      throw new IllegalArgumentException(result + " can not be converted to long");
+  public static Integer resolveKeyToInteger(ApplicationContext applicationContext, String name) {
+    Object result = resolveExpression(applicationContext, name);
+    if (result instanceof Integer) {
+      return (Integer) result;
     }
-    return parseStringToLong(name);
+    return parseStringToInt((String) result);
+  }
+
+  public static Long resolveKeyToLong(ApplicationContext applicationContext, String name) {
+    Object result = resolveExpression(applicationContext, name);
+    if (result instanceof Long) {
+      return (Long) result;
+    } else if (result instanceof Integer) {
+      return ((Integer) result).longValue();
+    }
+    return parseStringToLong((String) result);
   }
 
   public static boolean resolveToBoolean(ApplicationContext applicationContext, String name) {
-    if (applicationContext instanceof ConfigurableApplicationContext) {
-      ConfigurableBeanFactory configurableBeanFactory =
-          ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
-      String placeholdersResolved = configurableBeanFactory.resolveEmbeddedValue(name);
-      BeanExpressionResolver exprResolver = configurableBeanFactory.getBeanExpressionResolver();
-      if (exprResolver == null) {
-        return convertToBoolean(name);
-      }
-      Object result =
-          exprResolver.evaluate(
-              placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
-      if (result instanceof Boolean) {
-        return (Boolean) result;
-      } else if (result instanceof String) {
-        return convertToBoolean((String) result);
-      }
+    Object result = resolveExpression(applicationContext, name);
+    if (result instanceof Boolean) {
+      return (Boolean) result;
     }
-    return convertToBoolean(name);
+    return convertToBoolean((String) result);
   }
 }

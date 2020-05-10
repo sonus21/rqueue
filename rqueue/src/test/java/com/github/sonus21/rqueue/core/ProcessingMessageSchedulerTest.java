@@ -16,61 +16,64 @@
 
 package com.github.sonus21.rqueue.core;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
 
+import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.QueueUtils;
-import java.util.HashMap;
-import java.util.Map;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class ProcessingMessageSchedulerTest {
-  private int poolSize = 1;
   @Mock private RedisTemplate<String, Long> redisTemplate;
-  private ProcessingMessageScheduler messageScheduler =
-      new ProcessingMessageScheduler(redisTemplate, poolSize, true, true);
+  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
+  @InjectMocks private ProcessingMessageScheduler messageScheduler;
+
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = new QueueDetail(slowQueue, -1, "", true, 100000L);
-  private QueueDetail fastQueueDetail = new QueueDetail(fastQueue, -1, "", false, 200000L);
+  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
 
   @Before
   public void init() {
-    Map<String, QueueDetail> queueDetailMap = new HashMap<>();
-    queueDetailMap.put(slowQueue, slowQueueDetail);
-    queueDetailMap.put(fastQueue, fastQueueDetail);
-    messageScheduler.initializeState(queueDetailMap);
+    MockitoAnnotations.initMocks(this);
+    QueueRegistry.delete();
+    QueueRegistry.register(slowQueueDetail);
+    QueueRegistry.register(fastQueueDetail);
+    doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
+    messageScheduler.initialize();
   }
 
   @Test
   public void getChannelName() {
     assertEquals(
-        QueueUtils.getProcessingQueueChannelName(slowQueue),
+        slowQueueDetail.getProcessingQueueChannelName(),
         messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
   public void getZsetName() {
-    assertEquals(
-        QueueUtils.getProcessingQueueName(slowQueue), messageScheduler.getZsetName(slowQueue));
-  }
-
-  @Test
-  public void isQueueValid() {
-    assertTrue(messageScheduler.isQueueValid(slowQueueDetail));
-    assertTrue(messageScheduler.isQueueValid(fastQueueDetail));
+    assertEquals(slowQueueDetail.getProcessingQueueName(), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
   public void getNextScheduleTimeSlowQueue() {
     long currentTime = System.currentTimeMillis();
-    assertEquals(
-        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, 100000),
-        messageScheduler.getNextScheduleTime(slowQueue, null));
+    assertThat(
+        messageScheduler.getNextScheduleTime(slowQueue, null),
+        greaterThanOrEqualTo(currentTime + 100000));
     assertEquals(
         currentTime + 1000L, messageScheduler.getNextScheduleTime(slowQueue, currentTime + 1000L));
   }
@@ -78,9 +81,9 @@ public class ProcessingMessageSchedulerTest {
   @Test
   public void getNextScheduleTimeFastQueue() {
     long currentTime = System.currentTimeMillis();
-    assertEquals(
-        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, 200000),
-        messageScheduler.getNextScheduleTime(fastQueue, null));
+    assertThat(
+        messageScheduler.getNextScheduleTime(fastQueue, null),
+        greaterThanOrEqualTo(currentTime + 200000));
     assertEquals(
         currentTime + 1000L, messageScheduler.getNextScheduleTime(fastQueue, currentTime + 1000L));
   }
