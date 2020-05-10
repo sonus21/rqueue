@@ -117,10 +117,10 @@ public class MessageListener {
     log.info("Notification message: {}", notification);
   }
   
-  // asynchronously send otp to the user
-  @RqueueListener(value = "otp", priority="critical=10,high=8,medium=4,low=1")
-  public void onMessage(Otp otp) {
-    log.info("Otp message: {}", otp);
+  // asynchronously send sms to the user
+  @RqueueListener(value = "sms", priority="critical=10,high=8,medium=4,low=1")
+  public void onMessage(Sms sms) {
+    log.info("Sms message: {}", sms);
   }
 }
 ```

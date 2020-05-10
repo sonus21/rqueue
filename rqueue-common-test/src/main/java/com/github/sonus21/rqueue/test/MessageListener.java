@@ -22,7 +22,7 @@ import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.test.dto.Otp;
+import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
@@ -77,17 +77,17 @@ public class MessageListener {
   }
 
   @RqueueListener(
-      value = "${otp.queue}",
-      active = "${otp.queue.active}",
-      priority = "${otp.queue.priority}",
-      priorityGroup = "${otp.queue.group}",
-      concurrency = "${otp.queue.concurrency}")
-  public void onMessage(Otp otp) throws Exception {
-    log.info("OtpListener: {}", otp);
-    if (failureManager.shouldFail(otp.getId())) {
-      throw new Exception("Failing otp task to be retried" + otp);
+      value = "${sms.queue}",
+      active = "${sms.queue.active}",
+      priority = "${sms.queue.priority}",
+      priorityGroup = "${sms.queue.group}",
+      concurrency = "${sms.queue.concurrency}")
+  public void onMessage(Sms sms) throws Exception {
+    log.info("SmsListener: {}", sms);
+    if (failureManager.shouldFail(sms.getId())) {
+      throw new Exception("Failing sms task to be retried" + sms);
     }
-    consumedMessageService.save(otp);
+    consumedMessageService.save(sms);
   }
 
   @RqueueListener(

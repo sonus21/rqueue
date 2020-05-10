@@ -21,7 +21,7 @@ import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.dto.Otp;
+import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
@@ -41,20 +41,20 @@ public abstract class AllQueueMode extends SpringTestBase {
   }
 
   protected void checkQueueLevelConsumer() throws TimedOutException {
-    rqueueMessageSender.enqueue(otpQueue, Otp.newInstance());
-    rqueueMessageSender.enqueueWithPriority(otpQueue, "critical", Otp.newInstance());
-    rqueueMessageSender.enqueueWithPriority(otpQueue, "high", Otp.newInstance());
-    rqueueMessageSender.enqueueWithPriority(otpQueue, "medium", Otp.newInstance());
-    rqueueMessageSender.enqueueWithPriority(otpQueue, "low", Otp.newInstance());
+    rqueueMessageSender.enqueue(smsQueue, Sms.newInstance());
+    rqueueMessageSender.enqueueWithPriority(smsQueue, "critical", Sms.newInstance());
+    rqueueMessageSender.enqueueWithPriority(smsQueue, "high", Sms.newInstance());
+    rqueueMessageSender.enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
+    rqueueMessageSender.enqueueWithPriority(smsQueue, "low", Sms.newInstance());
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(
                     Arrays.asList(
-                        otpQueue,
-                        otpQueue + "_critical",
-                        otpQueue + "_high",
-                        otpQueue + "_medium",
-                        otpQueue + "_low"))
+                        smsQueue,
+                        smsQueue + "_critical",
+                        smsQueue + "_high",
+                        smsQueue + "_medium",
+                        smsQueue + "_low"))
                 == 0,
         20 * Constants.ONE_MILLI,
         "multi level queues to drain");

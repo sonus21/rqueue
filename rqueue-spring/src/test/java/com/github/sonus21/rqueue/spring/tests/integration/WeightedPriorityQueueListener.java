@@ -35,7 +35,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
     properties = {
       "spring.redis.port=7010",
       "mysql.db.name=WeightedPriorityQueueListener",
-      "otp.queue.active=false",
+      "sms.queue.active=false",
       "notification.queue.active=false",
       "email.queue.active=false",
       "job.queue.active=false",

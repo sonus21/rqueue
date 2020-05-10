@@ -67,8 +67,8 @@ public abstract class SpringTestBase {
   @Value("${notification.queue.retry.count}")
   protected int notificationRetryCount;
 
-  @Value("${otp.queue}")
-  protected String otpQueue;
+  @Value("${sms.queue}")
+  protected String smsQueue;
 
   @Value("${feed.generation.queue}")
   protected String feedGenerationQueue;

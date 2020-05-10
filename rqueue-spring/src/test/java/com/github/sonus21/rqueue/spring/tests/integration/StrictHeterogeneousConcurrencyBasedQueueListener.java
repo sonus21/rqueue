@@ -35,7 +35,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
     properties = {
       "spring.redis.port=7013",
       "mysql.db.name=StrictHeterogeneousConcurrencyBasedQueueListener",
-      "otp.queue.active=true",
+      "sms.queue.active=true",
       "notification.queue.active=false",
       "email.queue.active=true",
       "job.queue.active=true",
@@ -43,7 +43,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "reservation.queue.active=true",
       "feed.generation.queue.active=true",
       "chat.indexing.queue.active=true",
-      "otp.queue.concurrency=5",
+      "sms.queue.concurrency=5",
       "reservation.queue.concurrency=2",
       "feed.generation.queue.concurrency=1-5",
       "chat.indexing.queue.concurrency=3-5",

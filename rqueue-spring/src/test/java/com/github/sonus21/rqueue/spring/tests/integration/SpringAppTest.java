@@ -47,7 +47,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
     properties = {
       "spring.redis.port=7004",
       "mysql.db.name=SpringAppTest",
-      "otp.queue.active=true",
+      "sms.queue.active=true",
       "notification.queue.active=false",
       "email.queue.active=true",
       "job.queue.active=true",
@@ -71,7 +71,7 @@ public class SpringAppTest extends AllQueueMode {
     assertTrue(registeredQueue.containsKey(jobQueue));
     assertTrue(registeredQueue.containsKey(feedGenerationQueue));
     assertTrue(registeredQueue.containsKey(reservationQueue));
-    assertTrue(registeredQueue.containsKey(otpQueue));
+    assertTrue(registeredQueue.containsKey(smsQueue));
   }
 
   @Test

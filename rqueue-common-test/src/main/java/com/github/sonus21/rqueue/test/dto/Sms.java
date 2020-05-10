@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.test.dto;
 
-import java.util.Random;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -32,16 +31,14 @@ import org.apache.commons.lang3.RandomStringUtils;
 @Setter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class Otp extends BaseQueueMessage {
+public class Sms extends BaseQueueMessage {
   private String phoneNumber;
-  private String otp;
+  private String sms;
 
-  public static Otp newInstance() {
-    Otp otp =
-        new Otp(
-            "+91" + RandomStringUtils.randomNumeric(10),
-            String.valueOf(new Random().nextInt(100000)));
-    otp.setId(UUID.randomUUID().toString());
-    return otp;
+  public static Sms newInstance() {
+    String txt = "Dear , Version 2.0 of Rqueue is released.";
+    Sms sms = new Sms("+91" + RandomStringUtils.randomNumeric(10), txt);
+    sms.setId(UUID.randomUUID().toString());
+    return sms;
   }
 }

@@ -36,7 +36,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "spring.redis.port=7007",
       "mysql.db.name=StrictMultiLevelQueueListener",
       "max.workers.count=10",
-      "otp.queue.active=true",
+      "sms.queue.active=true",
       "notification.queue.active=false",
       "email.queue.active=false",
       "job.queue.active=false",
