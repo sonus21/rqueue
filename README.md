@@ -26,13 +26,10 @@ Rqueue is an asynchronous task executor(worker) built for spring framework based
 * Task execution back off, exponential and fixed back off
 
 
-
-
 ### Adding a task
 Rqueue supports two types of tasks.
 1. Execute tasks as soon as possible
 2. Delayed tasks (task that would be scheduled at given delay, run task at 2:30PM)
-
 
 ### Task execution  configuration
 Task execution can be configured in different ways
@@ -42,13 +39,12 @@ Task execution can be configured in different ways
 
 ## Usage
 
-### Application configuration
+### Configuration
 
 #### Spring-boot
 
-Add Dependency
-
 * Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
+* Add dependency
     * Gradle
     ```groovy
         implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.0.0-RELEASE'
@@ -64,8 +60,8 @@ Add Dependency
     
 #### Spring framework
 
-1. Add Dependency
-    Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
+* Get latest one from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
+* Add Dependency
     * Gradle
     ```groovy
         implementation 'com.github.sonus21:rqueue-spring:2.0.0-RELEASE'
@@ -82,7 +78,6 @@ Add Dependency
 2. Add annotation `EnableRqueue` on application config class
 3. Provide a RedisConnectionFactory bean
 
-
 ```java
 @EnableRqueue
 public class Application{
@@ -96,7 +91,7 @@ public class Application{
 
 
 ### Worker/Task executor
-A  method can be marked as worker/message listener using `RqueueListener` annotation
+Any method that's part of spring bean, can be marked as worker/message listener using `RqueueListener` annotation
 
 
 ```java
@@ -160,7 +155,76 @@ public class MessageService {
 * Method arguments are handled automatically, as in above example even task of `Job` type can be executed by workers.
 
 
-#### Demo Applications
+## Monitoring Queue Statistics
+NOTE: Rqueue support micrometer library for monitoring.
+
+**It provides 4 types gauge of metrics.**
+```
+1. queue.size : number of tasks to be run
+2. dead.letter.queue.size : number of tasks in the dead letter queue
+3. delayed.queue.size : number of tasks scheduled for later time, it's an approximate number, since some tasks might not have moved to be processed despite best efforts
+4. processing.queue.size : number of tasks are being processed. It's also an approximate number due to retry and tasks acknowledgements.
+```
+
+**Execution and failure counters can be enabled (by default this is disabled).**
+
+We need to set count.execution and count.failure fields of RqueueMetricsProperties
+```
+1. execution.count
+2. failure.count 
+```
+
+All these metrics are tagged
+
+**Spring Boot Application**
+1.  Add micrometer and the exporter dependencies
+2.  Set tags if any using `rqueue.metrics.tags.<name> = <value>`
+3.  Enable counting features using `rqueue.metrics.count.execution=true`, `rqueue.metrics.count.failure=true`
+
+**Spring Application**
+
+1. Add micrometer and the exporter dependencies provide MeterRegistry as bean
+2. Provide bean of RqueueMetricsProperties, in this bean set all the required fields.
+
+
+[![Grafana Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)
+
+
+## Web Interface
+* Queue stats (Scheduled, waiting to run, running, moved to dead letter queue)
+* Latency:  Min/Max and Average task execution time
+* Queue Management: Move tasks from one queue to another
+* Delete enqueued tasks
+* Enqueued tasks insights
+
+
+[![Execution Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
+[![Queues Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)
+[![Explore Queue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
+[![Running tasks](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)
+
+
+Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
+
+**Configuration**
+* Add resource handler to handle the static resources.
+```java
+  public class MvcConfig implements WebMvcConfigurer {
+
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    //...
+    if (!registry.hasMappingForPattern("/**")) {
+      registry.addResourceHandler("/**").addResourceLocations("classpath:/public/");
+    }
+  }
+}
+```
+
+All paths are under `/rqueue/**`. for authentication add interceptor(s) that would check for the session etc.
+
+
+## Demo Applications
 
 1. [Rqueue Spring Boot-1](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example) 
 2. [Rqueue Spring Boot-2](https://github.com/sonus21/rqueue-task-exector) 
@@ -282,65 +346,8 @@ factory.setMessageConverters(messageConverters);
    
 More than one message converter can be used as well, when more than one message converters are provided then they are used in the order, whichever returns **non null** value is used.
 
-## Monitoring Queue Statistics
-NOTE: Rqueue support micrometer library for monitoring. 
-
-**It provides 4 types gauge of metrics.**
-```
-1. queue.size : number of tasks to be run
-2. dead.letter.queue.size : number of tasks in the dead letter queue
-3. delayed.queue.size : number of tasks scheduled for later time, it's an approximate number, since some tasks might not have moved to be processed despite best efforts
-4. processing.queue.size : number of tasks are being processed. It's also an approximate number due to retry and tasks acknowledgements.
-```
-
-**Execution and failure counters can be enabled (by default this is disabled).**
-
-We need to set count.execution and count.failure fields of RqueueMetricsProperties
-```
-1. execution.count
-2. failure.count 
-```
-
-All these metrics are tagged 
-
-**Spring Boot Application**
-1.  Add micrometer and the exporter dependencies
-2.  Set tags if any using `rqueue.metrics.tags.<name> = <value>`
-3.  Enable counting features using `rqueue.metrics.count.execution=true`, `rqueue.metrics.count.failure=true` 
-
-**Spring Application**
-
-1. Add micrometer and the exporter dependencies provide MeterRegistry as bean
-2. Provide bean of RqueueMetricsProperties, in this bean set all the required fields.
-
-
-[![Grafana Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)
-
-
-## Web Interface
-* Queue stats (Scheduled, waiting to run, running, moved to dead letter queue)
-* Latency:  Min/Max and Average task execution time
-* Queue Management: Move tasks from one queue to another
-* Delete enqueued tasks
-
-Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
-
-**Configuration**
-* Add resource handler to handle the static resources.
-```java
-  public class MvcConfig implements WebMvcConfigurer {
-
-  @Override
-  public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    //...
-    if (!registry.hasMappingForPattern("/**")) {
-      registry.addResourceHandler("/**").addResourceLocations("classpath:/public/");
-    }
-  }
-}
-```
-
-All paths are under `/rqueue/**`. for authentication add interceptor(s) that would check for the session etc.
+## Migration from 1.x to 2.0
+**Set redis key __rq::version=2**
 
 ## Support
 Please report problem, bug or feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for feature, issue or enhancement.
