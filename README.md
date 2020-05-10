@@ -159,12 +159,12 @@ public class MessageService {
 NOTE: Rqueue support micrometer library for monitoring.
 
 **It provides 4 types gauge of metrics.**
-```
-1. queue.size : number of tasks to be run
-2. dead.letter.queue.size : number of tasks in the dead letter queue
-3. delayed.queue.size : number of tasks scheduled for later time, it's an approximate number, since some tasks might not have moved to be processed despite best efforts
-4. processing.queue.size : number of tasks are being processed. It's also an approximate number due to retry and tasks acknowledgements.
-```
+
+* **queue.size** : number of tasks to be run
+* **dead.letter.queue.size** : number of tasks in the dead letter queue
+* **delayed.queue.size** : number of tasks scheduled for later time, it's an approximate number, since some tasks might not have moved to be processed despite best efforts
+* **processing.queue.size** : number of tasks are being processed. It's also an approximate number due to retry and tasks acknowledgements.
+
 
 **Execution and failure counters can be enabled (by default this is disabled).**
 
