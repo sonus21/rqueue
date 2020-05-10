@@ -197,6 +197,7 @@ All these metrics are tagged
 * Delete enqueued tasks
 * Enqueued tasks insights
 
+Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
 [![Execution Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
 [![Queues Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)
@@ -204,7 +205,6 @@ All these metrics are tagged
 [![Running tasks](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)
 
 
-Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
 **Configuration**
 * Add resource handler to handle the static resources.
