@@ -1,5 +1,5 @@
-<img style="float: left; margin-right: 10px" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
-<h1>Rqueue: Redis Queue,Task Queue, Delayed Queue for Spring and Spring Boot</h1>
+<img align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
+# Rqueue: Redis Queue,Task Queue, Delayed Queue for Spring and Spring Boot
 
 [![Build Status](https://travis-ci.org/sonus21/rqueue.svg?branch=master)](https://travis-ci.org/sonus21/rqueue)
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
