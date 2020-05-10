@@ -1,0 +1,23 @@
+<h2 class="text-center">Latency Graph!</h2>
+<div class="row ">
+  <div class="col-md-9">
+    <div id="latency_chart" style="width: 100%; height: 500px;"></div>
+  </div>
+  <div class="col-md-2">
+    <div class="row dashboard-chart-form latency-chart-form">
+      <div class="dashboard-form-action ">
+        <div class="form-group">
+          <label for="latency-aggregator-type">Select Aggregator Type</label>
+          <select class="form-control" id="latency-aggregator-type" name="latency-aggregator-type">
+            {% for aggregator in aggregatorTypes %}
+            <option {% if (loop.first) %} selected {% endif %}>{{aggregator}}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-success" id="refresh-latency-chart">Display</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

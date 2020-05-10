@@ -7,23 +7,13 @@ mainClassName = 'rqueue.spring.example.Main'
 
 dependencies {
     compile project(":rqueue-spring")
-
-    // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
-
-    // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
+    compile project(":rqueue-common-test")
 
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
     compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
 
-    // https://mvnrepository.com/artifact/org.projectlombok/lombok
-    compile group: 'org.projectlombok', name: 'lombok', version: "${lombokVersion}"
-
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
     compile group: 'org.slf4j', name: 'slf4j-simple', version: "${sl4jVersion}"
-
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: "${tomcatVersion}"
 

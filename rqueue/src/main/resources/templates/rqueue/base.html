@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>{{ default(title, 'Rqueue Dashboard') }}</title>
+  <meta content='Rqueue' name="description">
+  <meta content='Rqueue, task, queue, delayed queue, delayed tasks' name="keywords">
+
+  <link rel="shortcut icon" href="/rqueue/img/favicon.ico">
+  <link href="/rqueue/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/rqueue/img/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/rqueue/img/favicon-32x32.png">
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i">
+  <link href="/rqueue/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/rqueue/vendor/icofont/icofont.min.css" rel="stylesheet">
+  <link href="/rqueue/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="/rqueue/vendor/line-awesome/css/line-awesome.min.css" rel="stylesheet">
+  <link href="/rqueue/css/rqueue.css" rel="stylesheet">
+</head>
+<body>
+<header id="header" class="fixed-top">
+  <div class="container d-flex">
+    <div class="logo mr-auto">
+      <h1 class="text-green"><a href="/rqueue">Rqueue</a></h1>
+    </div>
+    <nav class="nav-menu display-none d-lg-block">
+      <ul>
+        <li class="{% if queuesActive %}active{% endif %}">
+          <a href="/rqueue/queues">
+            <i class='bx bx-coin-stack'></i>
+            <span>Queues</span>
+          </a>
+        </li>
+        <li class="{% if runningActive %}active{% endif %}">
+          <a href="/rqueue/running">
+            <i class="las la-sync"></i>
+            <span>Running</span>
+          </a>
+        </li>
+        <li class="{% if scheduledActive %}active{% endif %}">
+          <a href="/rqueue/scheduled">
+            <i class="las la-hourglass-half"></i>
+            <span>Scheduled</span>
+          </a>
+        </li>
+        <li class="{% if pendingActive %}active{% endif %}">
+          <a href="/rqueue/pending">
+            <i class="icofont-tasks"></i></i>
+            <span>Pending</span>
+          </a>
+        </li>
+        <li class="{% if deadActive %}active{% endif %}">
+          <a href="/rqueue/dead">
+            <i class="las la-book-dead"></i>
+            <span>Dead</span>
+          </a>
+        </li>
+        <li class="{% if utilityActive %}active{% endif %}">
+          <a href="/rqueue/utility">
+            <i class="las la-wrench"></i>
+            <span>Utility</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="alert alert-primary alert-dismissible fade display-none" id="global-error-container"
+       role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    <p id="global-error-message"></p>
+  </div>
+  {% block main %}
+  {% endblock %}
+</main>
+
+<footer id="footer">
+  <div class="container">
+    <div class="row">
+      <ul class="footer-links">
+        <li>
+          <h3><a href="https://github.com/sonus21/rqueue" target="_blank">Rqueue</a></h3>
+        </li>
+        <li>
+          <a href="#">Version:&nbsp;<p class="text-white float-right">{{version}}</p></a>
+        </li>
+        <li>
+          <a href="{{mavenRepoLink}}" target="_blank">Latest Version:&nbsp;
+            <p class="text-white float-right">{{latestVersion}}</p>
+          </a>
+        </li>
+        <li>
+          <a href="#">Time:&nbsp;<p class="text-white float-right">{{time}} ({{timeInMilli}}Ms)</p></a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<div id="delete-modal" class="modal fade">
+  <div class="modal-dialog modal-confirm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="delete-modal-title">Are you sure?</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="delete-modal-body">
+          Do you really want to delete this? This process cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger delete-btn">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="info-modal" class="modal fade">
+  <div class="modal-dialog modal-info">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="info-modal-title">Title</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="info-modal-body">Some text</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="/rqueue/vendor/jquery/jquery.min.js"></script>
+<script src="/rqueue/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/rqueue/js/rqueue.js"></script>
+{% block additional_script %}{% endblock %}
+</body>
+</html>

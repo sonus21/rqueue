@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.spring;
 
+import com.github.sonus21.rqueue.config.MetricsProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RqueueMetricsProperties
-    extends com.github.sonus21.rqueue.metrics.RqueueMetricsProperties {}
+public class RqueueMetricsProperties extends MetricsProperties {}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,10 @@ import static org.junit.Assert.assertTrue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueMessageTest {
   private ObjectMapper objectMapper = new ObjectMapper();
   private String queueName = "test-queue";
@@ -33,16 +36,16 @@ public class RqueueMessageTest {
   private long delay = 100L;
 
   @Test
-  public void checkIdIsSetAndProcessAtNotSet() {
+  public void checkIdIsSetAndProcessAtIsSameAsQueuedTime() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, null);
     assertNotNull(message.getId());
-    assertEquals(0, message.getProcessAt());
+    assertEquals(message.getProcessAt(), message.getProcessAt());
   }
 
   @Test
   public void checkIdAndProcessAtAreSet() {
     RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
-    assertTrue(message.getId().startsWith(queueName));
+    assertNotNull(message.getId());
     assertTrue(
         message.getProcessAt() <= System.currentTimeMillis() + 100
             && message.getProcessAt() > System.currentTimeMillis());

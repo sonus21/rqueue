@@ -16,7 +16,7 @@
 
 package rqueue.spring.example;
 
-import com.github.sonus21.rqueue.producer.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -43,11 +43,11 @@ public class Controller {
       @RequestParam(required = false) Integer numRetries,
       @RequestParam(required = false) Long delay) {
     if (numRetries == null && delay == null) {
-      rqueueMessageSender.put(q, msg);
+      rqueueMessageSender.enqueue(q, msg);
     } else if (numRetries == null) {
-      rqueueMessageSender.put(q, msg, delay);
+      rqueueMessageSender.enqueueIn(q, msg, delay);
     } else {
-      rqueueMessageSender.put(q, msg, numRetries, delay);
+      rqueueMessageSender.enqueueInWithRetry(q, msg, numRetries.intValue(), delay.longValue());
     }
     return "Message sent successfully";
   }
@@ -57,7 +57,7 @@ public class Controller {
     Job job = new Job();
     job.setId(UUID.randomUUID().toString());
     job.setMessage("Hi this is " + job.getId());
-    rqueueMessageSender.put("job-queue", job);
+    rqueueMessageSender.enqueue("job-queue", job);
     return job.toString();
   }
 
@@ -66,7 +66,7 @@ public class Controller {
     Job job = new Job();
     job.setId(UUID.randomUUID().toString());
     job.setMessage("Hi this is " + job.getId());
-    rqueueMessageSender.put("job-queue", job, 2000L);
+    rqueueMessageSender.enqueueIn("job-queue", job, 2000L);
     return job.toString();
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Sonu Kumar
+ * Copyright 2020 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,13 @@ package com.github.sonus21.rqueue.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.sonus21.rqueue.utils.SerializationUtils;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
@@ -30,9 +34,9 @@ import org.springframework.messaging.support.GenericMessage;
  * A converter to turn the payload of a {@link Message} from serialized form to a typed String and
  * vice versa.
  */
+@Slf4j
 public class GenericMessageConverter implements MessageConverter {
   private static ObjectMapper objectMapper = new ObjectMapper();
-  private static Logger logger = LoggerFactory.getLogger(GenericMessageConverter.class);
 
   /**
    * Convert the payload of a {@link Message} from a serialized form to a typed Object of type
@@ -43,18 +47,21 @@ public class GenericMessageConverter implements MessageConverter {
    * @param message the input message
    * @param targetClass the target class for the conversion
    * @return the result of the conversion, or {@code null} if the converter cannot perform the
-   *     conversion
+   *     conversion.
    */
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass) {
     try {
-      Msg msg = objectMapper.readValue((String) message.getPayload(), Msg.class);
-      Class<?> c = Class.forName(msg.getName());
-      return objectMapper.readValue(msg.msg, c);
+      String payload = (String) message.getPayload();
+      if (SerializationUtils.isJson(payload)) {
+        Msg msg = objectMapper.readValue(payload, Msg.class);
+        Class<?> c = Class.forName(msg.getName());
+        return objectMapper.readValue(msg.msg, c);
+      }
     } catch (IOException | ClassCastException | ClassNotFoundException e) {
-      logger.warn("Exception", e);
-      return null;
+      log.warn("Exception", e);
     }
+    return null;
   }
 
   /**
@@ -75,36 +82,17 @@ public class GenericMessageConverter implements MessageConverter {
       Msg message = new Msg(msg, name);
       return new GenericMessage<>(objectMapper.writeValueAsString(message));
     } catch (JsonProcessingException e) {
-      logger.error("Serialisation failed", e);
+      log.error("Serialisation failed", e);
       return null;
     }
   }
 
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  @AllArgsConstructor
   private static class Msg {
     private String msg;
     private String name;
-
-    public Msg() {}
-
-    public Msg(String msg, String name) {
-      this.msg = msg;
-      this.name = name;
-    }
-
-    public String getMsg() {
-      return msg;
-    }
-
-    public void setMsg(String msg) {
-      this.msg = msg;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
   }
 }

@@ -16,113 +16,50 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static com.github.sonus21.rqueue.core.RedisScriptFactory.getScript;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getChannelName;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueChannelName;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getProcessingQueueName;
-import static com.github.sonus21.rqueue.utils.QueueUtils.getTimeQueueName;
-
-import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
-import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.QueueUtils;
-import com.github.sonus21.rqueue.utils.RqueueRedisTemplate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import com.github.sonus21.rqueue.models.MessageMoveResult;
 import java.util.List;
-import java.util.Set;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.script.DefaultScriptExecutor;
-import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.util.CollectionUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
-@SuppressWarnings("unchecked")
-public class RqueueMessageTemplate extends RqueueRedisTemplate<RqueueMessage> {
-  private DefaultScriptExecutor<String> scriptExecutor;
+public interface RqueueMessageTemplate {
+  RqueueMessage pop(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout);
 
-  public RqueueMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
-    super(redisConnectionFactory);
-    scriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
-  }
+  Long addMessageWithDelay(
+      String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage);
 
-  public void add(String queueName, RqueueMessage message) {
-    redisTemplate.opsForList().rightPush(queueName, message);
-  }
+  void moveMessage(
+      String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay);
 
-  public RqueueMessage pop(String queueName, long maxJobExecutionTime) {
-    long currentTime = System.currentTimeMillis();
-    RedisScript<RqueueMessage> script =
-        (RedisScript<RqueueMessage>) getScript(ScriptType.REMOVE_MESSAGE);
-    return scriptExecutor.execute(
-        script,
-        Arrays.asList(
-            queueName, getProcessingQueueName(queueName), getProcessingQueueChannelName(queueName)),
-        currentTime,
-        QueueUtils.getMessageReEnqueueTimeWithDelay(currentTime, maxJobExecutionTime));
-  }
+  Long addMessage(String queueName, RqueueMessage rqueueMessage);
 
-  public void addWithDelay(String queueName, RqueueMessage rqueueMessage) {
-    long queuedTime = rqueueMessage.getQueuedTime();
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ADD_MESSAGE);
-    scriptExecutor.execute(
-        script,
-        Arrays.asList(getTimeQueueName(queueName), getChannelName(queueName)),
-        rqueueMessage,
-        rqueueMessage.getProcessAt(),
-        queuedTime);
-  }
+  Boolean addToZset(String zsetName, RqueueMessage rqueueMessage, long score);
 
-  public void removeFromZset(String zsetName, RqueueMessage rqueueMessage) {
-    redisTemplate.opsForZSet().remove(zsetName, rqueueMessage);
-  }
+  List<RqueueMessage> getAllMessages(
+      String queueName, String processingQueueName, String delayQueueName);
 
-  public void replaceMessage(String zsetName, RqueueMessage src, RqueueMessage tgt) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.REPLACE_MESSAGE);
-    scriptExecutor.execute(script, Collections.singletonList(zsetName), src, tgt);
-  }
+  MessageMoveResult moveMessageListToList(
+      String srcQueueName, String dstQueueName, int numberOfMessage);
 
-  public List<RqueueMessage> getAllMessages(String queueName) {
-    List<RqueueMessage> messages = redisTemplate.opsForList().range(queueName, 0, -1);
-    if (CollectionUtils.isEmpty(messages)) {
-      messages = new ArrayList<>();
-    }
-    Set<RqueueMessage> messagesFromZset =
-        redisTemplate.opsForZSet().range(QueueUtils.getTimeQueueName(queueName), 0, -1);
-    if (!CollectionUtils.isEmpty(messagesFromZset)) {
-      messages.addAll(messagesFromZset);
-    }
-    Set<RqueueMessage> messagesInProcessingQueue =
-        redisTemplate.opsForZSet().range(QueueUtils.getProcessingQueueName(queueName), 0, -1);
-    if (!CollectionUtils.isEmpty(messagesInProcessingQueue)) {
-      messages.addAll(messagesInProcessingQueue);
-    }
-    return messages;
-  }
+  MessageMoveResult moveMessageZsetToList(
+      String sourceZset, String destinationList, int maxMessage);
 
-  public Long getListLength(String lName) {
-    return redisTemplate.opsForList().size(lName);
-  }
+  MessageMoveResult moveMessageListToZset(
+      String sourceList, String destinationZset, int maxMessage, long score);
 
-  public Long getZsetSize(String zsetName) {
-    return redisTemplate.opsForZSet().size(zsetName);
-  }
+  MessageMoveResult moveMessageZsetToZset(
+      String sourceZset, String destinationZset, int maxMessage, long newScore, boolean fixedScore);
 
-  public boolean moveMessage(String srcQueueName, String dstQueueName, int maxMessage) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.MOVE_MESSAGE);
-    int offset = Constants.MAX_MESSAGES;
-    while (true) {
-      long remainingMessages =
-          scriptExecutor.execute(
-              script, Arrays.asList(srcQueueName, dstQueueName), Constants.MAX_MESSAGES);
-      if (remainingMessages <= 0 || offset >= maxMessage) {
-        break;
-      }
-      offset += Constants.MAX_MESSAGES;
-    }
-    return true;
-  }
+  List<RqueueMessage> readFromZset(String name, long start, long end);
 
-  public void deleteKey(String key) {
-    redisTemplate.delete(key);
-  }
+  List<RqueueMessage> readFromList(String name, long start, long end);
+
+  RedisTemplate<String, RqueueMessage> getTemplate();
+
+  Long removeElementFromZset(String zsetName, RqueueMessage rqueueMessage);
+
+  List<TypedTuple<RqueueMessage>> readFromZsetWithScore(String name, long start, long end);
 }

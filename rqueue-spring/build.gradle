@@ -2,9 +2,10 @@ ext.projectDescription = 'Asynchronous and delayed task executor for spring fram
 ext.name = 'Rqueue Spring Java'
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"
+    apply from: "${rootDir}/gradle/packaging.gradle"
 }
 
 dependencies {
     compile project(":rqueue")
-    testCompile project(":rqueue-test-common")
+    testCompile project(":rqueue-common-test")
 }

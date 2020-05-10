@@ -5,13 +5,18 @@
       "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
       "name": "rqueue.metrics",
       "type": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue",
+      "type": "com.github.sonus21.rqueue.config.RqueueConfig"
     }
   ],
   "properties": [
     {
       "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
       "name": "rqueue.metrics.count",
-      "type": "com.github.sonus21.rqueue.metrics.RqueueMetricsProperties$Count"
+      "type": "com.github.sonus21.rqueue.config.RqueueMetricsProperties$Count"
     },
     {
       "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",

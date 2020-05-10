@@ -34,7 +34,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
@@ -42,11 +41,10 @@ public class RqueueMessageTemplateTest {
   private RedisConnectionFactory redisConnectionFactory = mock(RedisConnectionFactory.class);
   private RedisTemplate<String, RqueueMessage> redisTemplate = mock(RedisTemplate.class);
   private ListOperations<String, RqueueMessage> listOperations = mock(ListOperations.class);
-  private ZSetOperations<String, RqueueMessage> zsetOperations = mock(ZSetOperations.class);
   private DefaultScriptExecutor<String> scriptExecutor = mock(DefaultScriptExecutor.class);
 
   private RqueueMessageTemplate rqueueMessageTemplate =
-      new RqueueMessageTemplate(redisConnectionFactory);
+      new RqueueMessageTemplateImpl(redisConnectionFactory);
 
   private String key = "test-queue";
   private RqueueMessage message = new RqueueMessage(key, "This is a message", null, 100L);
@@ -61,33 +59,19 @@ public class RqueueMessageTemplateTest {
   public void add() {
     doReturn(listOperations).when(redisTemplate).opsForList();
     doReturn(1L).when(listOperations).rightPush(key, message);
-    rqueueMessageTemplate.add(key, message);
+    rqueueMessageTemplate.addMessage(key, message);
   }
 
   @Test
   public void pop() {
-    rqueueMessageTemplate.pop(key, Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
+    rqueueMessageTemplate.pop(key, key + "rq", key + "dq", Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 
   @Test
   public void addWithDelay() {
-    rqueueMessageTemplate.addWithDelay(key, message);
+    rqueueMessageTemplate.addMessageWithDelay(key, key + "rq", message);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
-  }
-
-  @Test
-  public void getListLength() {
-    doReturn(listOperations).when(redisTemplate).opsForList();
-    rqueueMessageTemplate.getListLength(key);
-    verify(listOperations, times(1)).size(key);
-  }
-
-  @Test
-  public void getZsetSize() {
-    doReturn(zsetOperations).when(redisTemplate).opsForZSet();
-    rqueueMessageTemplate.getZsetSize(key);
-    verify(zsetOperations, times(1)).size(key);
   }
 
   @Test
@@ -95,9 +79,11 @@ public class RqueueMessageTemplateTest {
     List<String> args = new ArrayList<>();
     args.add("dlq" + key);
     args.add(key);
-    doReturn(70L).when(scriptExecutor).execute(any(), eq(args), eq(100));
-    rqueueMessageTemplate.moveMessage(args.get(0), args.get(1), 150);
-    verify(scriptExecutor, times(2)).execute(any(), eq(args), eq(100));
+    doReturn(70L).when(scriptExecutor).execute(any(), eq(args), eq(100L));
+    doReturn(20L).when(scriptExecutor).execute(any(), eq(args), eq(50L));
+    rqueueMessageTemplate.moveMessageListToList(args.get(0), args.get(1), 150);
+    verify(scriptExecutor, times(1)).execute(any(), eq(args), eq(100L));
+    verify(scriptExecutor, times(1)).execute(any(), eq(args), eq(50L));
   }
 
   @Test
@@ -105,8 +91,28 @@ public class RqueueMessageTemplateTest {
     List<String> args = new ArrayList<>();
     args.add("dlq" + key);
     args.add(key);
-    doReturn(0L).when(scriptExecutor).execute(any(), eq(args), eq(100));
-    rqueueMessageTemplate.moveMessage(args.get(0), args.get(1), 150);
-    verify(scriptExecutor, times(1)).execute(any(), eq(args), eq(100));
+    doReturn(0L).when(scriptExecutor).execute(any(), eq(args), eq(100L));
+    rqueueMessageTemplate.moveMessageListToList(args.get(0), args.get(1), 150);
+    verify(scriptExecutor, times(1)).execute(any(), eq(args), eq(100L));
+  }
+
+  @Test
+  public void moveMessageAcrossZset() {
+    List<String> args = new ArrayList<>();
+    args.add("zset1-" + key);
+    args.add("zset2-" + key);
+    doReturn(0L).when(scriptExecutor).execute(any(), eq(args), eq(100L), eq(10L), eq(false));
+    rqueueMessageTemplate.moveMessageZsetToZset(args.get(0), args.get(1), 150, 10L, false);
+  }
+
+  @Test
+  public void moveMessageAcrossZset2() {
+    List<String> args = new ArrayList<>();
+    args.add("zset1-" + key);
+    args.add("zset2-" + key);
+    long score = System.currentTimeMillis();
+    doReturn(70L).when(scriptExecutor).execute(any(), eq(args), eq(100L), eq(score), eq(true));
+    doReturn(20L).when(scriptExecutor).execute(any(), eq(args), eq(50L), eq(score), eq(true));
+    rqueueMessageTemplate.moveMessageZsetToZset(args.get(0), args.get(1), 150, score, true);
   }
 }

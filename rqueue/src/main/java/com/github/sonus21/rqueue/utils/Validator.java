@@ -16,14 +16,13 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import org.springframework.util.Assert;
+import static org.springframework.util.Assert.notNull;
 
 public class Validator {
   private Validator() {}
 
-  public static void validateQueueNameAndMessage(String queueName, Object message) {
-    Assert.notNull(queueName, "queueName cannot be null");
-    Assert.notNull(message, "message cannot be null");
+  public static void validateMessage(Object message) {
+    notNull(message, "message cannot be null");
   }
 
   public static void validateRetryCount(int retryCount) {
@@ -35,6 +34,18 @@ public class Validator {
   public static void validateDelay(long delayInMilliSecs) {
     if (delayInMilliSecs < 0) {
       throw new IllegalArgumentException("delayInMilliSecs must be positive");
+    }
+  }
+
+  public static void validateQueue(String queue) {
+    if (StringUtils.isEmpty(queue)) {
+      throw new IllegalArgumentException("queue cannot be empty");
+    }
+  }
+
+  public static void validatePriority(String priority) {
+    if (StringUtils.isEmpty(priority)) {
+      throw new IllegalArgumentException("priority cannot be empty");
     }
   }
 }

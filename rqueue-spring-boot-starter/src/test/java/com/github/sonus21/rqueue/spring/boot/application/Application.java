@@ -16,18 +16,18 @@
 
 package com.github.sonus21.rqueue.spring.boot.application;
 
+import com.github.sonus21.rqueue.test.BaseApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import rqueue.test.BaseApplication;
 
 @PropertySource("classpath:application.properties")
-@SpringBootApplication(scanBasePackages = {"rqueue.test"})
+@SpringBootApplication(scanBasePackages = {"com.github.sonus21.rqueue.test"})
 @EnableRedisRepositories
-@EnableJpaRepositories(basePackages = {"rqueue.test.repository"})
+@EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class Application extends BaseApplication {
   public static void main(String[] args) {

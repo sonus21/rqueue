@@ -16,53 +16,57 @@
 
 package com.github.sonus21.rqueue.metrics;
 
+import static com.github.sonus21.rqueue.metrics.QueueCounter.EXECUTION_COUNT;
+import static com.github.sonus21.rqueue.metrics.QueueCounter.FAILURE_COUNT;
+import static com.github.sonus21.rqueue.metrics.RqueueMetrics.QUEUE_KEY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import com.github.sonus21.rqueue.metrics.RqueueMetricsPropertiesTest.MetricProperties;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.metrics.MetricsPropertiesTest.MetricProperties;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class QueueCounterTest {
-  private String simpleQueue = "simple-queue";
-  private String delayedQueue = "delayed-queue";
   private MetricProperties metricsProperties = new MetricProperties();
 
-  private void updateCount(String type, QueueCounter q, String queueName) {
+  private void updateCount(String type, QueueCounter counter, String queueName) {
     if (type.equals("failure")) {
-      q.updateFailureCount(queueName);
+      counter.updateFailureCount(queueName);
     } else {
-      q.updateExecutionCount(queueName);
+      counter.updateExecutionCount(queueName);
     }
   }
 
   private void registerQueue(
       MetricProperties metricsProperties,
       MeterRegistry meterRegistry,
-      String queueName,
+      QueueDetail queueDetail,
       String type) {
-    QueueCounter q = new QueueCounter();
-    q.registerQueue(metricsProperties, Tags.of("queue", queueName), meterRegistry, queueName);
-    updateCount(type, q, queueName);
-    updateCount(type, q, queueName + queueName);
+    QueueCounter counter = new QueueCounter();
+    counter.registerQueue(
+        metricsProperties, Tags.of("queue", queueDetail.getName()), meterRegistry, queueDetail);
+    updateCount(type, counter, queueDetail.getName());
   }
 
-  private void validateCountStatistics(String queueName, String type) {
-    String dataName = "execution.count";
+  private void validateCountStatistics(QueueDetail queueDetail, String type) {
+    String dataName = EXECUTION_COUNT;
     if (type.equals("failure")) {
-      dataName = "failure.count";
+      dataName = FAILURE_COUNT;
     }
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    registerQueue(metricsProperties, meterRegistry, queueName, type);
+    registerQueue(metricsProperties, meterRegistry, queueDetail, type);
+    Tags tags = Tags.of("queue", queueDetail.getName(), QUEUE_KEY, queueDetail.getQueueName());
     try {
-      meterRegistry.get(dataName).tags(Tags.of("queue", queueName)).counter().count();
-      Assert.fail();
+      meterRegistry.get(dataName).tags(tags).counter();
+      fail();
     } catch (MeterNotFoundException e) {
     }
     meterRegistry = new SimpleMeterRegistry();
@@ -71,18 +75,17 @@ public class QueueCounterTest {
     } else {
       metricsProperties.getCount().setExecution(true);
     }
-    registerQueue(metricsProperties, meterRegistry, queueName, type);
-    assertEquals(
-        1, meterRegistry.get(dataName).tags(Tags.of("queue", queueName)).counter().count(), 0);
+    registerQueue(metricsProperties, meterRegistry, queueDetail, type);
+    assertEquals(1, meterRegistry.get(dataName).tags(tags).counter().count(), 0);
   }
 
   @Test
   public void updateFailureCount() {
-    validateCountStatistics(simpleQueue, "failure");
+    validateCountStatistics(TestUtils.createQueueDetail("simple-queue", 10000L), "failure");
   }
 
   @Test
   public void updateExecutionCount() {
-    validateCountStatistics(delayedQueue, "success");
+    validateCountStatistics(TestUtils.createQueueDetail("delayed-queue", 900000L), "success");
   }
 }
