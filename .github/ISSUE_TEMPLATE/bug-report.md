@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 about: What's not working?
-title: Anything ...
+title: What's not working?
 labels: ''
 assignees: sonus21
 
