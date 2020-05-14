@@ -472,8 +472,6 @@ It's safe to use version 2.x if existing queues do not have any tasks to process
 ```
 If all of these commands gives zero then all tasks have been consumed.
 
-**NOTE**: The library would attempt to identify the version from the Redis keys, if it can't determine then it will use `2` as the default version.
-
 ## Support
 Please report bug,question,feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for any feature/bug/enhancement.
 
