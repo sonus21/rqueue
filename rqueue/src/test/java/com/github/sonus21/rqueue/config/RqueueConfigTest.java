@@ -65,7 +65,9 @@ public class RqueueConfigTest {
   public void getDelayedQueueChannelName() {
     assertEquals("rqueue-channel::test", rqueueConfigVersion1.getDelayedQueueChannelName("test"));
     assertEquals("__rq::d-channel::test", rqueueConfigVersion2.getDelayedQueueChannelName("test"));
-    assertEquals("__rq::d-channel::{test}", rqueueConfigVersion2ClusterMode.getDelayedQueueChannelName("test"));
+    assertEquals(
+        "__rq::d-channel::{test}",
+        rqueueConfigVersion2ClusterMode.getDelayedQueueChannelName("test"));
   }
 
   @Test

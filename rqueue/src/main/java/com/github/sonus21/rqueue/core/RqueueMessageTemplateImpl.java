@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
@@ -39,6 +40,7 @@ import org.springframework.util.CollectionUtils;
  * <p>It communicates with the Redis using Lua script and direct calls.
  */
 @SuppressWarnings("unchecked")
+@Slf4j
 public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage>
     implements RqueueMessageTemplate {
   private DefaultScriptExecutor<String> scriptExecutor;
@@ -90,13 +92,17 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public void moveMessage(
       String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.REPLACE_MESSAGE);
-    scriptExecutor.execute(
-        script,
-        Arrays.asList(srcZsetName, tgtZsetName),
-        src,
-        tgt,
-        System.currentTimeMillis() + delay);
+    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.MOVE_MESSAGE);
+    Long response =
+        scriptExecutor.execute(
+            script,
+            Arrays.asList(srcZsetName, tgtZsetName),
+            src,
+            tgt,
+            System.currentTimeMillis() + delay);
+    if (response == null) {
+      log.error("Duplicate processing for the message {}", src);
+    }
   }
 
   @Override

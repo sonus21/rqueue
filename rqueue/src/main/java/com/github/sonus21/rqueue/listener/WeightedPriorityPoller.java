@@ -28,9 +28,9 @@ import java.util.stream.Collectors;
 import org.slf4j.event.Level;
 
 class WeightedPriorityPoller extends RqueueMessagePoller {
-  private List<QueueDetail> queueDetailList;
   private final Map<String, QueueThread> queueNameToThread;
   private final Map<String, QueueDetail> queueNameToDetail;
+  private List<QueueDetail> queueDetailList;
   private int[] currentWeight;
   private int[] weight;
   private float[] probability;

@@ -30,5 +30,7 @@ public interface RqueueSystemManagerService {
 
   List<QueueConfig> getQueueConfigs();
 
+  List<QueueConfig> getSortedQueueConfigs();
+
   QueueConfig getQueueConfig(String queueName);
 }

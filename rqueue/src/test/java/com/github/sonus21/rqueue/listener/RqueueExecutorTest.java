@@ -113,7 +113,7 @@ public class RqueueExecutorTest {
             semaphore,
             containerWeakReference,
             messageHandler,
-            10,
+            -1,
             taskBackOff);
     rqueueExecutor.run();
     assertEquals(1, deadLetterProcessor.getCount());
@@ -191,6 +191,33 @@ public class RqueueExecutorTest {
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     rqueueExecutor.run();
     verify(messageHandler, times(1)).handleMessage(any());
+  }
+
+  @Test
+  public void handleIgnoredMessage() {
+    QueueDetail queueDetail = TestUtils.createQueueDetail("test");
+    MessageProcessor messageProcessor =
+        new MessageProcessor() {
+          @Override
+          public boolean process(Object message) {
+            return false;
+          }
+        };
+    doReturn(messageProcessor).when(container).getPreExecutionMessageProcessor();
+
+    RqueueExecutor rqueueExecutor =
+        new RqueueExecutor(
+            rqueueMessage,
+            queueDetail,
+            semaphore,
+            containerWeakReference,
+            messageHandler,
+            1,
+            taskBackOff);
+    rqueueExecutor.run();
+    verify(messageHandler, times(0)).handleMessage(any());
+    verify(messageTemplate, times(1))
+        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
   }
 
   private class TestMessageProcessor implements MessageProcessor {

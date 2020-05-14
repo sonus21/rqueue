@@ -22,16 +22,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.utils.Constants;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Random;
+import java.time.Instant;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class MetricTestBase extends SpringTestBase {
+public abstract class MetricTest extends SpringTestBase {
   @Autowired protected MeterRegistry meterRegistry;
-  private Random random = new Random();
 
   protected void verifyDelayedQueueStatus() throws TimedOutException {
     long maxDelay = 0;
@@ -45,7 +46,7 @@ public abstract class MetricTestBase extends SpringTestBase {
       if (i < maxMessages / 2) {
         enqueueIn(notification, rqueueConfig.getDelayedQueueName(notificationQueue), -delay);
       } else {
-        messageSender.enqueueIn(notificationQueue, notification, delay);
+        messageSender.enqueueAt(notificationQueue, notification, Instant.now().plusMillis(delay));
       }
     }
 
@@ -103,6 +104,7 @@ public abstract class MetricTestBase extends SpringTestBase {
                     .gauge()
                     .value()
                 == 1,
+        30 * Constants.ONE_MILLI,
         "processing queue message");
   }
 

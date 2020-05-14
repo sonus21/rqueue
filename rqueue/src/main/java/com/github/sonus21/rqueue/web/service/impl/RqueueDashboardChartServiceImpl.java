@@ -59,7 +59,8 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
   @Autowired
   public RqueueDashboardChartServiceImpl(
       RqueueQStatsDao rqueueQStatsDao,
-      RqueueConfig rqueueConfig, RqueueWebConfig rqueueWebConfig,
+      RqueueConfig rqueueConfig,
+      RqueueWebConfig rqueueWebConfig,
       RqueueSystemManagerService rqueueSystemManagerService) {
     this.rqueueQStatsDao = rqueueQStatsDao;
     this.rqueueConfig = rqueueConfig;

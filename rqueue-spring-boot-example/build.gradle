@@ -6,6 +6,9 @@ plugins {
 dependencies {
     compile project(":rqueue-spring-boot-starter")
     compile project(":rqueue-common-test")
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools
+    compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.1.0.RELEASE'
+
     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-sleuth
     compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth', version: '2.1.0.RELEASE'
     compile 'org.springframework.boot:spring-boot-starter-data-redis'

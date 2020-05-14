@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.listener;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.junit.Test;
 
 public class RqueueMessagePollerTest {

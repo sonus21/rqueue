@@ -20,7 +20,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.test.BaseApplication;
+import com.github.sonus21.rqueue.test.application.BaseApplication;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

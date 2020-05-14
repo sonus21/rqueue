@@ -20,28 +20,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.test.tests.SpringTestBase;
+import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.jtwig.spring.JtwigView;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.context.WebApplicationContext;
 
 @ContextConfiguration(classes = SpringApp.class)
 @RunWith(RqueueSpringTestRunner.class)
@@ -55,20 +49,11 @@ import org.springframework.web.context.WebApplicationContext;
       "notification.queue.active=false",
       "rqueue.web.statistic.history.day=180",
     })
-public class RqueueViewControllerTest extends SpringTestBase {
-  @Autowired private WebApplicationContext wac;
-
-  private MockMvc mockMvc;
-
-  @Before
-  public void init() throws TimedOutException {
-    this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
-  }
-
+public class RqueueViewControllerTest extends SpringWebTestBase {
   public void verifyBasicData(ModelMap model, NavTab navTab) {
     assertNotNull(model.get("latestVersion"));
     assertNotNull(model.get("version"));
-    assertNotNull(model.get("mavenRepoLink"));
+    assertNotNull(model.get("releaseLink"));
     assertNotNull(model.get("time"));
     assertNotNull(model.get("timeInMilli"));
     for (NavTab tab : NavTab.values()) {

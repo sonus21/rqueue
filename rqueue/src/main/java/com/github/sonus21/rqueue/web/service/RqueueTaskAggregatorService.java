@@ -43,7 +43,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -101,7 +101,7 @@ public class RqueueTaskAggregatorService
       }
       this.eventAggregatorTasks = new ArrayList<>();
       this.queueNameToEvents = new ConcurrentHashMap<>();
-      this.queue = new LinkedBlockingDeque<>();
+      this.queue = new LinkedBlockingQueue<>();
       int threadCount = rqueueWebConfig.getStatsAggregatorThreadCount();
       this.taskExecutor = ThreadUtils.createTaskScheduler(threadCount, "RqueueTaskAggregator-", 30);
       for (int i = 0; i < threadCount; i++) {

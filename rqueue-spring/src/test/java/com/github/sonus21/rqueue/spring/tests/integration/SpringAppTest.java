@@ -22,14 +22,19 @@ import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.dto.Email;
+import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.tests.AllQueueMode;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.RqueueSpringTestRunner;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -90,7 +95,7 @@ public class SpringAppTest extends AllQueueMode {
   }
 
   @Test
-  public void verifyEmailIsDiscardedAfter3RetriesDueToDlq() throws TimedOutException {
+  public void verifyDefaultDeadLetterQueueRetry() throws TimedOutException {
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), 3, 10);
     rqueueMessageSender.enqueue(emailQueue, email);
@@ -102,5 +107,36 @@ public class SpringAppTest extends AllQueueMode {
             MessageUtils.convertMessageToObject(
                 messages.get(0), rqueueMessageSender.getMessageConverter());
     assertEquals(email.getId(), email1.getId());
+  }
+
+  @Test(expected = QueueDoesNotExist.class)
+  public void testQueueDoesNotExist() {
+    assertTrue(rqueueMessageSender.enqueue("job-push", Email.newInstance()));
+  }
+
+  @Test
+  public void testOnlyPushMode() {
+    Date date = Date.from(Instant.now().plusMillis(1000));
+    rqueueMessageSender.registerQueue("job-push");
+    rqueueMessageSender.registerQueue("sms-push", "critical", "high", "low");
+
+    assertTrue(rqueueMessageSender.enqueue("job-push", Email.newInstance()));
+    assertTrue(rqueueMessageSender.enqueueAt("job-push", Email.newInstance(), date));
+    assertTrue(rqueueMessageSender.enqueue("sms-push", Sms.newInstance()));
+    assertTrue(rqueueMessageSender.enqueueAt("sms-push", Sms.newInstance(), date.toInstant()));
+    assertTrue(rqueueMessageSender.enqueueWithPriority("sms-push", "critical", Sms.newInstance()));
+    assertTrue(
+        rqueueMessageSender.enqueueAtWithPriority("sms-push", "critical", Sms.newInstance(), date));
+    assertTrue(
+        rqueueMessageSender.enqueueAtWithPriority(
+            "sms-push", "high", Sms.newInstance(), date.toInstant()));
+    assertTrue(
+        rqueueMessageSender.enqueueAtWithPriority(
+            "sms-push", "low", Sms.newInstance(), date.toInstant().toEpochMilli()));
+    assertEquals(
+        8,
+        getMessageCount(
+            Arrays.asList(
+                "job-push", "sms-push", "sms-push_critical", "sms-push_high", "sms-push_low")));
   }
 }

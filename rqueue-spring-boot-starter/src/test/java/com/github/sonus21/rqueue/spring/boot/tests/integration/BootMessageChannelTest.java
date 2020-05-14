@@ -16,16 +16,16 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
-import com.github.sonus21.rqueue.test.dto.Email;
-import com.github.sonus21.rqueue.test.tests.SpringTestBase;
+import com.github.sonus21.rqueue.test.tests.MessageChannelTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.RunTestUntilFail;
+import java.util.List;
+import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,32 +38,35 @@ import org.springframework.test.context.TestPropertySource;
     properties = {
       "rqueue.scheduler.auto.start=false",
       "spring.redis.port=8002",
-      "mysql.db.name=test2"
+      "mysql.db.name=test2",
+      "max.workers.count=120",
+      "use.system.redis=false"
+
     })
 @SpringBootTest
 @Slf4j
-public class MessageChannelTest extends SpringTestBase {
-  /**
-   * This test verified whether any pending message in the delayed queue are moved or not Whenever a
-   * delayed message is pushed then it's checked whether there're any pending messages on delay
-   * queue. if expired delayed messages are found on the head then a message is published on delayed
-   * channel.
-   */
+public class BootMessageChannelTest extends MessageChannelTest {
+
+  @Rule
+  public RunTestUntilFail retry =
+      new RunTestUntilFail(
+          log,
+          () -> {
+            for (Entry<String, List<RqueueMessage>> entry : getMessageMap(jobQueue).entrySet()) {
+              log.error("FAILING Queue {}", entry.getKey());
+              for (RqueueMessage message : entry.getValue()) {
+                log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
+              }
+            }
+          });
+
   @Test
   public void publishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
-    int messageCount = 200;
-    String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
-    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, messageCount);
-    Email email = Email.newInstance();
-    log.info("adding new message {}", email);
-    messageSender.enqueueIn(emailQueue, email, 1000L);
-    waitFor(
-        () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
-        "one or zero messages in zset");
-    assertTrue(
-        "Messages are correctly moved",
-        stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
-            >= messageCount);
-    assertEquals(messageCount + 1, messageSender.getAllMessages(emailQueue).size());
+    verifyPublishMessageIsTriggeredOnMessageAddition();
+  }
+
+  @Test
+  public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
+    verifyPublishMessageIsTriggeredOnMessageRemoval();
   }
 }

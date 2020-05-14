@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.spring.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.test.tests.MultiLevelQueueListenerTestBase;
+import com.github.sonus21.rqueue.test.tests.MultiLevelQueueTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -43,7 +43,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "use.system.redis=false",
       "priority.mode=STRICT",
     })
-public class StrictMultiLevelQueueListener extends MultiLevelQueueListenerTestBase {
+public class StrictMultiLevelQueueListener extends MultiLevelQueueTest {
 
   @Test
   public void simple() throws TimedOutException {

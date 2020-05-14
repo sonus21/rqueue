@@ -28,6 +28,7 @@ import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
@@ -45,9 +46,10 @@ import org.springframework.messaging.converter.StringMessageConverter;
 
 @Slf4j
 public class RqueueMessageSenderImpl implements RqueueMessageSender {
-  private RqueueMessageTemplate messageTemplate;
   private final CompositeMessageConverter messageConverter;
+  private RqueueMessageTemplate messageTemplate;
   @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Autowired private RqueueConfig rqueueConfig;
 
   private RqueueMessageSenderImpl(
       RqueueMessageTemplate messageTemplate,
@@ -67,26 +69,6 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
   public RqueueMessageSenderImpl(
       RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
     this(messageTemplate, messageConverters, false);
-  }
-
-  @Override
-  public boolean put(String queueName, Object message) {
-    return enqueue(queueName, message);
-  }
-
-  @Override
-  public boolean put(String queueName, Object message, long delayInMilliSecs) {
-    return enqueueIn(queueName, message, delayInMilliSecs);
-  }
-
-  @Override
-  public boolean put(String queueName, Object message, int retryCount) {
-    return enqueueWithRetry(queueName, message, retryCount);
-  }
-
-  @Override
-  public boolean put(String queueName, Object message, int retryCount, long delayInMilliSecs) {
-    return enqueueInWithRetry(queueName, message, retryCount, delayInMilliSecs);
   }
 
   @Override
@@ -220,7 +202,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
             rqueueMessage);
       }
     } catch (Exception e) {
-      log.error("Message could not be pushed ", e);
+      log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
       return false;
     }
     return true;
@@ -237,5 +219,37 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     }
     messageConverterList.addAll(messageConverters);
     return messageConverterList;
+  }
+
+  @Override
+  public void registerQueue(String queueName, String... priorities) {
+    validateQueue(queueName);
+    notNull(priorities, "priorities cannot be null");
+    QueueDetail queueDetail =
+        QueueDetail.builder()
+            .name(queueName)
+            .active(false)
+            .queueName(rqueueConfig.getQueueName(queueName))
+            .delayedQueueName(rqueueConfig.getDelayedQueueName(queueName))
+            .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queueName))
+            .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
+            .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
+            .build();
+    QueueRegistry.register(queueDetail);
+    for (String priority : priorities) {
+      String suffix = PriorityUtils.getSuffix(priority);
+      queueDetail =
+          QueueDetail.builder()
+              .name(queueName + suffix)
+              .active(false)
+              .queueName(rqueueConfig.getQueueName(queueName) + suffix)
+              .delayedQueueName(rqueueConfig.getDelayedQueueName(queueName) + suffix)
+              .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queueName) + suffix)
+              .processingQueueName(rqueueConfig.getProcessingQueueName(queueName) + suffix)
+              .processingQueueChannelName(
+                  rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)
+              .build();
+      QueueRegistry.register(queueDetail);
+    }
   }
 }

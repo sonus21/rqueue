@@ -17,15 +17,17 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.dto.Reservation;
+import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AllQueueMode extends SpringTestBase {
   protected void checkGroupConsumer() throws TimedOutException {
@@ -65,7 +67,7 @@ public abstract class AllQueueMode extends SpringTestBase {
     rqueueMessageSender.enqueueIn(emailQueue, Email.newInstance(), 1000L);
 
     rqueueMessageSender.enqueue(jobQueue, Job.newInstance());
-    rqueueMessageSender.enqueueIn(jobQueue, Job.newInstance(), 2000L);
+    rqueueMessageSender.enqueueIn(jobQueue, Job.newInstance(), 2000L, TimeUnit.MILLISECONDS);
 
     TimeoutUtils.waitFor(
         () -> getMessageCount(Arrays.asList(emailQueue, jobQueue)) == 0,

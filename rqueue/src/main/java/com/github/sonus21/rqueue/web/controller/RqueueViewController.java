@@ -24,7 +24,6 @@ import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
-import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
@@ -37,11 +36,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import org.jtwig.spring.JtwigViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,8 +82,9 @@ public class RqueueViewController {
   }
 
   private void addBasicDetails(Model model) {
-    model.addAttribute("latestVersion", rqueueUtilityService.getLatestVersion());
-    model.addAttribute("mavenRepoLink", Constants.MAVEN_REPO_LINK);
+    Pair<String, String> releaseAndVersion = rqueueUtilityService.getLatestVersion();
+    model.addAttribute("releaseLink", releaseAndVersion.getFirst());
+    model.addAttribute("latestVersion", releaseAndVersion.getSecond());
     model.addAttribute(
         "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     model.addAttribute("timeInMilli", System.currentTimeMillis());
@@ -114,10 +114,7 @@ public class RqueueViewController {
     addBasicDetails(model);
     addNavData(model, NavTab.QUEUES);
     model.addAttribute("title", "Queues");
-    List<QueueConfig> queueConfigs =
-        rqueueSystemManagerService.getQueueConfigs().stream()
-            .sorted(Comparator.comparing(QueueConfig::getName))
-            .collect(Collectors.toList());
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
     List<Entry<String, List<Entry<NavTab, RedisDataDetail>>>> queueNameConfigs =
         new ArrayList<>(rqueueQDetailService.getQueueDataStructureDetails(queueConfigs).entrySet());
     queueNameConfigs.sort(Comparator.comparing(Entry::getKey));

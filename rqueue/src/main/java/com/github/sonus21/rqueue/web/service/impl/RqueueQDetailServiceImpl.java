@@ -42,7 +42,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -316,7 +315,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getRunningTasks() {
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {
@@ -341,7 +340,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getWaitingTasks() {
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {
@@ -364,7 +363,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getScheduledTasks() {
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {
@@ -410,7 +409,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getDeadLetterTasks() {
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getQueueConfigs();
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
     List<Entry<QueueConfig, String>> queueConfigAndDlq = new ArrayList<>();
     for (QueueConfig queueConfig : queueConfigs) {
       if (queueConfig.hasDeadLetterQueue()) {

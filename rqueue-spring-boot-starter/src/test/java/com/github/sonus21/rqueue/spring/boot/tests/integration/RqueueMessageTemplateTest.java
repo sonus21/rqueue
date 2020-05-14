@@ -20,7 +20,7 @@ import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.test.tests.SpringTestBase;
+import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -34,7 +34,7 @@ import org.springframework.test.context.TestPropertySource;
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:8006"})
+@TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:8004"})
 public class RqueueMessageTemplateTest extends SpringTestBase {
   @Test
   public void moveMessageFromDeadLetterQueueToOriginalQueue() {

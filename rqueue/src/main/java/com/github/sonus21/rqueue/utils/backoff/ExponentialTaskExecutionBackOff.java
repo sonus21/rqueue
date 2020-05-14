@@ -104,29 +104,49 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
     }
   }
 
-  /** Set the initial interval in milliseconds. */
+  /**
+   * Return the initial interval in milliseconds.
+   *
+   * @return configured initial interval.
+   */
+  public long getInitialInterval() {
+    return this.initialInterval;
+  }
+
+  /**
+   * Set the initial interval in milliseconds.
+   *
+   * @param initialInterval initial interval in milli seconds.
+   */
   public void setInitialInterval(long initialInterval) {
     checkInitialInterval(initialInterval);
     this.initialInterval = initialInterval;
   }
 
-  /** Return the initial interval in milliseconds. */
-  public long getInitialInterval() {
-    return this.initialInterval;
+  /**
+   * Return the maximum number of retries.
+   *
+   * @return maximum retries that will be performed.
+   */
+  public int getMaxRetries() {
+    return this.maxRetries;
   }
 
-  /** Set the maximum number of retries */
+  /**
+   * Set the maximum number of retries
+   *
+   * @param maxRetries maximum retries
+   */
   public void setMaxRetries(int maxRetries) {
     checkMaxRetries(maxRetries);
     this.maxRetries = maxRetries;
   }
 
-  /** Return the maximum number of retries. */
-  public int getMaxRetries() {
-    return this.maxRetries;
-  }
-
-  /** get the multiplier */
+  /**
+   * get the multiplier
+   *
+   * @return multiplier for this back off.
+   */
   public double getMultiplier() {
     return multiplier;
   }
@@ -160,6 +180,7 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
     this.maxInterval = maxInterval;
   }
 
+  /** {@inheritDoc} */
   @Override
   public long nextBackOff(Object object, RqueueMessage rqueueMessage, int failureCount) {
     if (failureCount >= getMaxRetries()) {

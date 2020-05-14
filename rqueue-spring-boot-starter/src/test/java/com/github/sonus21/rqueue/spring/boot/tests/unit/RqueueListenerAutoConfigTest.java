@@ -23,9 +23,9 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import java.util.ArrayList;
 import java.util.Collections;

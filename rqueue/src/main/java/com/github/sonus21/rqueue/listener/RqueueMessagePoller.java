@@ -28,17 +28,9 @@ import org.slf4j.event.Level;
 
 @Slf4j
 abstract class RqueueMessagePoller extends MessageContainerBase {
-  List<String> queues;
-
-  enum DeactivateType {
-    POLL_FAILED,
-    NO_MESSAGE,
-    SEMAPHORE_EXCEPTION,
-    SEMAPHORE_UNAVAILABLE,
-  }
-
   private final TaskExecutionBackOff taskBackOff;
   private final int retryPerPoll;
+  List<String> queues;
 
   RqueueMessagePoller(
       String groupName,
@@ -46,7 +38,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
       TaskExecutionBackOff taskExecutionBackOff,
       int retryPerPoll) {
     super(log, groupName, container);
-    taskBackOff = taskExecutionBackOff;
+    this.taskBackOff = taskExecutionBackOff;
     this.retryPerPoll = retryPerPoll;
   }
 
@@ -125,4 +117,11 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
   abstract long getSemaphoreWaiTime();
 
   abstract void deactivate(int index, String queue, DeactivateType deactivateType);
+
+  enum DeactivateType {
+    POLL_FAILED,
+    NO_MESSAGE,
+    SEMAPHORE_EXCEPTION,
+    SEMAPHORE_UNAVAILABLE,
+  }
 }

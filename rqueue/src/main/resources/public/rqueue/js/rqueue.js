@@ -21,17 +21,7 @@ var dataName = null;
 var dataType = null;
 var currentPage = 0;
 var defaultPageSize = null;
-var deleteAllKey = null;
-
-function drawChartElement(data, options, div_id) {
-  google.charts.load('current', {'packages': ['corechart']});
-  google.charts.setOnLoadCallback(function () {
-    var chart = new google.visualization.LineChart(
-        document.getElementById(div_id));
-    var chartData = google.visualization.arrayToDataTable(data, false);
-    chart.draw(chartData, options);
-  });
-}
+var deleteButtonId = null;
 
 function showError(message) {
   $("#global-error-container").show();
@@ -48,6 +38,27 @@ function ajaxRequest(url, type, payload, successHandler, failureHandler) {
     processData: false,
     success: successHandler,
     fail: failureHandler
+  });
+}
+
+function getSelectedOption(id) {
+  return $('#' + id + ' :selected').val();
+}
+
+function json(data) {
+  return JSON.stringify(data);
+}
+
+//====================================================
+// Queue Charts
+//====================================================
+function drawChartElement(data, options, div_id) {
+  google.charts.load('current', {'packages': ['corechart']});
+  google.charts.setOnLoadCallback(function () {
+    var chart = new google.visualization.LineChart(
+        document.getElementById(div_id));
+    var chartData = google.visualization.arrayToDataTable(data, false);
+    chart.draw(chartData, options);
   });
 }
 
@@ -71,10 +82,6 @@ function drawChart(payload, div_id) {
       });
 }
 
-function getSelectedOption(id) {
-  return $('#' + id + ' :selected').val();
-}
-
 function refreshStatsChart(chartParams, div_id) {
   var types = [];
   var aggregatorType = $('#stats-aggregator-type :selected').val();
@@ -92,15 +99,15 @@ function refreshLatencyChart(chartParams, div_id) {
   drawChart(chartParams, div_id);
 }
 
+//==================================================================
+//  Data Exploration
+//==================================================================
+
 function exploreData(e) {
   var element = $(e);
   dataName = element.data('name');
   dataType = element.data('type');
   dataKey = element.data('key');
-}
-
-function json(data) {
-  return JSON.stringify(data);
 }
 
 function displayTable(nextOrPrev) {
@@ -165,7 +172,7 @@ function displayTable(nextOrPrev) {
           tds += ("<td>" + row[j] + "</td>");
         }
         if (row[row.length - 1] === 'DELETE') {
-          tds += ("<td><a href='#' class='delete-message-btn' onclick='deleteMessage(this)'>Delete </a></td>");
+          tds += ("<td><a href='#' class='delete-message-btn btn-danger' onclick='deleteMessage(this)'>Delete </a></td>");
         } else {
           tds += ("<td>" + row[j] + "</td>");
         }
@@ -176,35 +183,6 @@ function displayTable(nextOrPrev) {
     fail: function (response) {
       console.log('failed, ' + response);
       showError("Something wet wrong! Please reload!");
-    }
-  });
-}
-
-function deleteAll() {
-  deleteAllKey = queueName;
-  $('#delete-modal-body').empty().append(
-      "Do you really want to delete <b>Queue: </b>" + queueName
-      + "&nbsp;?&nbsp;This process cannot be undone.");
-  $('#delete-modal').modal('show');
-}
-
-function deleteMessage(e) {
-  var id = e.parentNode.parentNode.children[0].textContent;
-  var url = '/rqueue/api/v1/data-set/' + queueName + "/" + id;
-  $.ajax({
-    url: url,
-    type: 'DELETE',
-    success: function (response) {
-      if (response.code === 0) {
-        refreshPage();
-      } else {
-        alert("Failed:" + response.message + " Please retry!");
-        console.log(response);
-      }
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please reload!");
     }
   });
 }
@@ -262,62 +240,9 @@ $('#explore-queue').on('hidden.bs.modal', function () {
   $('#page-size').val(defaultPageSize);
 });
 
-$('.delete-queue').on("click", function () {
-  queueName = $(this).data('name');
-  $('#delete-modal-body').empty().append(
-      "Do you really want to delete <b>Queue: </b>?" + queueName
-      + "&nbsp; &nbsp; This process cannot be undone.");
-  $('#delete-modal').modal('show');
-});
-
-function makeQueueEmpty() {
-  $.ajax({
-    url: "/rqueue/api/v1/data-set/" + deleteAllKey,
-    type: 'DELETE',
-    success: function (response) {
-      if (response.code === 0) {
-        currentPage = 0;
-        refreshPage();
-      } else {
-        alert("Failed:" + response.message + " Please retry!");
-        console.log(response);
-      }
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please reload!");
-    }
-  });
-}
-
-function deleteQueue() {
-  $.ajax({
-    url: "/rqueue/api/v1/queues/" + queueName,
-    type: 'DELETE',
-    success: function (response) {
-      if (response.code === 0) {
-        window.location.replace(window.location.href);
-      } else {
-        alert("Failed:" + response.message + " Please retry!");
-        console.log(response);
-      }
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please reload!");
-    }
-  })
-}
-
-$('.delete-btn').on("click", function () {
-  if (queueName !== null) {
-    deleteQueue();
-  } else if (deleteAllKey !== null) {
-    makeQueueEmpty();
-  } else {
-    console.log("Something is not correct :(");
-  }
-});
+//==============================================================
+// Message Move form
+//==============================================================
 
 function enableKeyForm() {
   var dataType = $('#data-name-type').text();
@@ -414,3 +339,107 @@ $('#move-button').on("click", function () {
         showError("Something wet wrong! Please retry!");
       });
 });
+
+//================================================
+// Delete Handler
+//=================================================
+
+
+function deleteModalBody() {
+  if (deleteButtonId === "DELETE_ALL" && dataName !== undefined) {
+    return "Do you really want to delete <b>Queue: </b>" + dataName
+        + "&nbsp;?&nbsp;This process cannot be undone.";
+  } else if (deleteButtonId === "DELETE_QUEUE" && queueName !== undefined) {
+    return "Do you really want to delete <b>Queue: </b>" + queueName
+        + "&nbsp;?&nbsp;This process cannot be undone.";
+  }
+  throw deleteButtonId;
+}
+
+function updateDeleteModal() {
+  $('#delete-modal-body').empty().append(deleteModalBody());
+  $('#delete-modal').modal('show');
+}
+
+function deleteMessage(e) {
+  var id = e.parentNode.parentNode.children[0].textContent;
+  var url = '/rqueue/api/v1/data-set/' + queueName + "/" + id;
+  $.ajax({
+    url: url,
+    type: 'DELETE',
+    success: function (response) {
+      if (response.code === 0) {
+        refreshPage();
+      } else {
+        alert("Failed:" + response.message + " Please retry!");
+        console.log(response);
+      }
+    },
+    fail: function (response) {
+      console.log('failed, ' + response);
+      showError("Something went wrong! Please reload!");
+    }
+  });
+}
+
+function deleteAll() {
+  deleteButtonId = "DELETE_ALL";
+  updateDeleteModal();
+}
+
+$('.delete-queue').on("click", function () {
+  deleteButtonId = "DELETE_QUEUE";
+  queueName = $(this).data('name');
+  updateDeleteModal();
+});
+
+function makeQueueEmpty() {
+  $.ajax({
+    url: "/rqueue/api/v1/data-set/" + dataName,
+    type: 'DELETE',
+    success: function (response) {
+      if (response.code === 0) {
+        currentPage = 0;
+        refreshPage();
+      } else {
+        alert("Failed:" + response.message + " Please retry!");
+        console.log(response);
+      }
+    },
+    fail: function (response) {
+      console.log('failed, ' + response);
+      showError("Something went wrong! Please reload!");
+    }
+  });
+}
+
+function deleteQueue() {
+  $.ajax({
+    url: "/rqueue/api/v1/queues/" + queueName,
+    type: 'DELETE',
+    success: function (response) {
+      if (response.code === 0) {
+        window.location.replace(window.location.href);
+      } else {
+        alert("Failed:" + response.message + " Please retry!");
+        console.log(response);
+      }
+    },
+    fail: function (response) {
+      console.log('failed, ' + response);
+      showError("Something went wrong! Please reload!");
+    }
+  })
+}
+
+$('.delete-btn').on("click", function () {
+  $('#delete-modal').modal('hide');
+  if (deleteButtonId === "DELETE_QUEUE") {
+    deleteQueue();
+  } else if (deleteButtonId === "DELETE_ALL") {
+    makeQueueEmpty();
+  } else {
+    throw deleteButtonId;
+  }
+});
+//=======================================================================

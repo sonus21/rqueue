@@ -31,7 +31,9 @@ public enum TaskStatus {
   DELETED("Message deleted", false),
   DISCARDED("Message discarded", true),
   RETRIED("Retired at least once", true),
-  IGNORED("Ignored task", false);
+  FAILED("failed", false),
+  IGNORED("Ignored task", false),
+  QUEUE_INACTIVE("Queue inactive", false);
   private String description;
   private boolean chartEnabled;
 

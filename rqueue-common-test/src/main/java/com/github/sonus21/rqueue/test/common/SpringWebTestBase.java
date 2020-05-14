@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.test.tests;
+package com.github.sonus21.rqueue.test.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.sonus21.rqueue.exception.TimedOutException;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,7 +29,7 @@ public abstract class SpringWebTestBase extends SpringTestBase {
   protected ObjectMapper mapper = new ObjectMapper();
 
   @Before
-  public void init() throws TimedOutException {
+  public void init() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
   }
 }

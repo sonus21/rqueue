@@ -25,14 +25,14 @@ public class HttpUtils {
 
   private HttpUtils() {}
 
-  public static String readUrl(String url) {
+  public static <T> T readUrl(String url, Class<T> clazz) {
     try {
       RestTemplate restTemplate = new RestTemplate();
       SimpleClientHttpRequestFactory rf =
           (SimpleClientHttpRequestFactory) restTemplate.getRequestFactory();
       rf.setReadTimeout(2 * Constants.ONE_MILLI_INT);
       rf.setConnectTimeout(2 * Constants.ONE_MILLI_INT);
-      return restTemplate.getForObject(url, String.class);
+      return restTemplate.getForObject(url, clazz);
     } catch (Exception e) {
       log.error("GET call failed for {}", url, e);
       return null;

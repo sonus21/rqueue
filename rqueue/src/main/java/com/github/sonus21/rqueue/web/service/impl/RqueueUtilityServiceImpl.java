@@ -36,12 +36,12 @@ import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -54,6 +54,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueMessageMetadataService messageMetadataService;
   private final RqueueConfig rqueueConfig;
   private String latestVersion = "NA";
+  private String releaseLink = "#";
   private long versionFetchTime = 0;
 
   @Autowired
@@ -167,22 +168,23 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   }
 
   @Override
-  public String getLatestVersion() {
+  @SuppressWarnings("unchecked")
+  public Pair<String, String> getLatestVersion() {
     if (System.currentTimeMillis() - versionFetchTime > Constants.MILLIS_IN_A_DAY) {
-      String response = readUrl(Constants.MAVEN_REPO_LINK + "/maven-metadata.xml");
+      Map<String, Object> response =
+          readUrl(Constants.GITHUB_API_FOR_LATEST_RELEASE, LinkedHashMap.class);
       if (response != null) {
-        List<String> lines =
-            Arrays.stream(response.split("\n"))
-                .map(String::trim)
-                .filter(e -> e.startsWith("<latest>"))
-                .collect(Collectors.toList());
-        if (!lines.isEmpty()) {
-          latestVersion = lines.get(0);
-          versionFetchTime = System.currentTimeMillis();
+        String tagName = (String) response.get("tag_name");
+        if (tagName != null && !tagName.isEmpty()) {
+          if (Character.toLowerCase(tagName.charAt(0)) == 'v') {
+            releaseLink = (String) response.get("html_url");
+            latestVersion = tagName.substring(1);
+            versionFetchTime = System.currentTimeMillis();
+          }
         }
       }
     }
-    return latestVersion;
+    return Pair.of(releaseLink, latestVersion);
   }
 
   @Override

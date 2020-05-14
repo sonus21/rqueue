@@ -32,7 +32,7 @@ class RedisScriptFactory {
     script.setLocation(resource);
     switch (type) {
       case ADD_MESSAGE:
-      case REPLACE_MESSAGE:
+      case MOVE_MESSAGE:
       case PUSH_MESSAGE:
       case MOVE_MESSAGE_LIST_TO_LIST:
       case MOVE_MESSAGE_LIST_TO_ZSET:
@@ -51,7 +51,7 @@ class RedisScriptFactory {
   enum ScriptType {
     ADD_MESSAGE("scripts/add_message.lua"),
     POP_MESSAGE("scripts/pop_message.lua"),
-    REPLACE_MESSAGE("scripts/replace_message.lua"),
+    MOVE_MESSAGE("scripts/move_message.lua"),
     PUSH_MESSAGE("scripts/push_message.lua"),
     MOVE_MESSAGE_LIST_TO_LIST("scripts/move_message_list_to_list.lua"),
     MOVE_MESSAGE_LIST_TO_ZSET("scripts/move_message_list_to_zset.lua"),

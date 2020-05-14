@@ -16,17 +16,10 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
-
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
-import com.github.sonus21.rqueue.test.dto.Email;
-import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.test.tests.SpringTestBase;
+import com.github.sonus21.rqueue.test.tests.MessageRetryTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,58 +32,35 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @Slf4j
 @TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8001"})
-public class ApplicationTest extends SpringTestBase {
+public class ApplicationTest extends MessageRetryTest {
 
   @Test
   public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
-    Job job = Job.newInstance();
-    failureManager.createFailureDetail(job.getId(), 3, 10);
-    messageSender.put(jobQueue, job);
-    waitFor(
-        () -> {
-          Job jobInDb = consumedMessageService.getMessage(job.getId(), Job.class);
-          return job.equals(jobInDb);
-        },
-        "job to be executed");
-    waitFor(
-        () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueue);
-          return !messages.contains(job);
-        },
-        "message should be deleted from internal storage");
+    verifyAfterNRetryTaskIsDeletedFromProcessingQueue();
   }
 
   @Test
   public void messageMovedToDelayedQueue() throws TimedOutException {
-    Email email = Email.newInstance();
-    failureManager.createFailureDetail(email.getId(), -1, 0);
-    log.debug("queue: {} msg: {}", emailQueue, email);
-    messageSender.put(emailQueue, email, 1000L);
-    waitFor(
-        () -> emailRetryCount == failureManager.getFailureCount(email.getId()),
-        30000000,
-        "all retry to be exhausted");
-    waitFor(
-        () -> stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue) > 0,
-        "message should be moved to delayed queue");
-    assertEquals(emailRetryCount, failureManager.getFailureCount(email.getId()));
-    failureManager.delete(email.getId());
+    verifyMessageMovedToDelayedQueue();
   }
 
   @Test
   public void messageIsDiscardedAfterRetries() throws TimedOutException {
-    Notification notification = Notification.newInstance();
-    failureManager.createFailureDetail(notification.getId(), -1, notificationRetryCount);
-    messageSender.enqueueIn(notificationQueue, notification, 1000L);
-    waitFor(
-        () -> notificationRetryCount == failureManager.getFailureCount(notification.getId()),
-        "all retry to be exhausted");
-    waitFor(
-        () -> {
-          List<Object> messages = messageSender.getAllMessages(notificationQueue);
-          return !messages.contains(notification);
-        },
-        "message to be discarded");
-    assertEquals(notificationRetryCount, failureManager.getFailureCount(notification.getId()));
+    verifyMessageIsDiscardedAfterRetries();
+  }
+
+  @Test
+  public void notificationOnMessageIsTriggered() throws TimedOutException {
+    verifySimpleTaskExecution();
+  }
+
+  @Test
+  public void emailIsRetried() throws TimedOutException {
+    verifyRetry();
+  }
+
+  @Test
+  public void jobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
+    verifyMessageIsInProcessingQueue();
   }
 }

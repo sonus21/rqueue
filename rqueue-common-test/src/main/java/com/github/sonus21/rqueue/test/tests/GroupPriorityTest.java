@@ -17,13 +17,14 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Arrays;
 
-public abstract class GroupPriorityListener extends SpringTestBase {
+public abstract class GroupPriorityTest extends SpringTestBase {
 
   protected void checkGroupConsumer() throws TimedOutException {
     rqueueMessageSender.enqueue(chatIndexingQueue, ChatIndexing.newInstance());

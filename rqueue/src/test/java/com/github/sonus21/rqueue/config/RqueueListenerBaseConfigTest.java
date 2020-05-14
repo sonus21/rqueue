@@ -59,8 +59,26 @@ public class RqueueListenerBaseConfigTest {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
     doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version"));
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", null));
     assertNotNull(factory.getRedisConnectionFactory());
+  }
+
+  @Test
+  public void testRqueueConfigSetConnectionFactoryFromBeanFactoryWithDbVersion()
+      throws IllegalAccessException {
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
+    doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", 1));
+    assertNotNull(factory.getRedisConnectionFactory());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testRqueueConfigInvalidDbVersion() throws IllegalAccessException {
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
+    doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
+    rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", 3);
   }
 
   @Test
@@ -68,7 +86,7 @@ public class RqueueListenerBaseConfigTest {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version"));
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", null));
     assertNotNull(factory.getRedisConnectionFactory());
     assertEquals(redisConnectionFactory, factory.getRedisConnectionFactory());
     verify(beanFactory, times(0)).getBean(RedisConnectionFactory.class);

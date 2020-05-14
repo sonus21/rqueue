@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.spring.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.test.tests.MetricTestBase;
+import com.github.sonus21.rqueue.test.tests.MetricTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -32,7 +32,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(properties = {"rqueue.retry.per.poll=20", "spring.redis.port=7005"})
-public class SpringMetricTest extends MetricTestBase {
+public class SpringMetricTest extends MetricTest {
   @Test
   public void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();

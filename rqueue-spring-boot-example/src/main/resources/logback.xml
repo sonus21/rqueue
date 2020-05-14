@@ -4,6 +4,17 @@
       <pattern>[%date{dd-MM-yyyy HH:mm:ss.SSS}]  [%thread] %-5level %X{traceId:-} %X{spanId:-} ${PID:-} %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
+    <encoder>
+      <pattern>[%date{dd-MM-yyyy HH:mm:ss.SSS}]  [%thread] %-5level %X{traceId:-} %X{spanId:-} ${PID:-} %logger{36} - %msg%n</pattern>
+    </encoder>
+    <file>log/app.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>log/app.%d{yyyy-MM-dd-HH}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>200MB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
 
   <logger level="INFO" name="root">
     <appender-ref ref="STDOUT"/>

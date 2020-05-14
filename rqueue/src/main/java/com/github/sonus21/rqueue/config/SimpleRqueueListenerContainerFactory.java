@@ -102,7 +102,7 @@ public class SimpleRqueueListenerContainerFactory {
    * the handler methods. If no {@link TaskExecutor} is set, a default one is created.
    *
    * @param taskExecutor The {@link TaskExecutor} used by the container.
-   * @see RqueueMessageListenerContainer#createDefaultTaskExecutor()
+   * @see RqueueMessageListenerContainer#createDefaultTaskExecutor(List)
    */
   public void setTaskExecutor(AsyncTaskExecutor taskExecutor) {
     notNull(taskExecutor, "taskExecutor can not be null");
