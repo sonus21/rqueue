@@ -48,11 +48,10 @@ import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.annotation.support.AnnotationExceptionHandlerMethodResolver;
-import org.springframework.messaging.handler.annotation.support.DestinationVariableMethodArgumentResolver;
 import org.springframework.messaging.handler.annotation.support.HeaderMethodArgumentResolver;
 import org.springframework.messaging.handler.annotation.support.HeadersMethodArgumentResolver;
 import org.springframework.messaging.handler.annotation.support.MessageMethodArgumentResolver;
-import org.springframework.messaging.handler.annotation.support.PayloadMethodArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.PayloadArgumentResolver;
 import org.springframework.messaging.handler.invocation.AbstractExceptionHandlerMethodResolver;
 import org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -92,7 +91,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     // Type-based argument resolution
     resolvers.add(new PrincipalMethodArgumentResolver());
     resolvers.add(new MessageMethodArgumentResolver(messageConverter));
-    resolvers.add(new PayloadMethodArgumentResolver(messageConverter, null));
+    resolvers.add(new PayloadArgumentResolver(messageConverter, null));
 
     return resolvers;
   }
