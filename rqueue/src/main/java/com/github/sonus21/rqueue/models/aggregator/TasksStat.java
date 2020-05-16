@@ -17,7 +17,9 @@
 package com.github.sonus21.rqueue.models.aggregator;
 
 import com.github.sonus21.rqueue.models.db.JobRunTime;
+import lombok.ToString;
 
+@ToString
 public class TasksStat {
   public long discarded = 0;
   public long success = 0;

@@ -296,7 +296,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   public void setMessageConverters(List<MessageConverter> messageConverters) {
     notEmpty(messageConverters, "messageConverters list cannot be empty or null");
-    this.messageConverters = messageConverters;
+    this.messageConverters = new ArrayList<>(messageConverters);
     addDefaultMessageConverter();
   }
 }
