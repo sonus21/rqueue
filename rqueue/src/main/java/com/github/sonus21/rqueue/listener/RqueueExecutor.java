@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
-import org.springframework.messaging.support.GenericMessage;
+import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 class RqueueExecutor extends MessageContainerBase {
@@ -71,11 +71,12 @@ class RqueueExecutor extends MessageContainerBase {
     this.retryPerPoll = retryPerPoll;
     this.taskExecutionBackoff = taskExecutionBackoff;
     this.message =
-        new GenericMessage<>(
-            rqueueMessage.getMessage(), MessageUtils.getMessageHeader(queueDetail.getName()));
+        MessageBuilder.createMessage(
+            rqueueMessage.getMessage(),
+            RqueueMessageHeaders.buildMessageHeaders(queueDetail.getName(), rqueueMessage));
     try {
       this.userMessage =
-          MessageUtils.convertMessageToObject(message, rqueueMessageHandler.getMessageConverters());
+          MessageUtils.convertMessageToObject(message, rqueueMessageHandler.getMessageConverter());
     } catch (Exception e) {
       log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
     }

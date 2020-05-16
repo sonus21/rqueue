@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static org.springframework.util.Assert.notEmpty;
+import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
@@ -24,7 +24,6 @@ import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
@@ -37,42 +36,64 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.annotation.support.AnnotationExceptionHandlerMethodResolver;
-import org.springframework.messaging.handler.annotation.support.PayloadArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.DestinationVariableMethodArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.HeaderMethodArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.HeadersMethodArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.MessageMethodArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.PayloadMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.AbstractExceptionHandlerMethodResolver;
 import org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.HandlerMethodReturnValueHandler;
+import org.springframework.messaging.simp.annotation.support.PrincipalMethodArgumentResolver;
 import org.springframework.util.comparator.ComparableComparator;
 
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
-  private List<MessageConverter> messageConverters;
+  private ConversionService conversionService = new DefaultFormattingConversionService();
+  private final MessageConverter messageConverter;
 
   public RqueueMessageHandler() {
-    messageConverters = new ArrayList<>();
-    addDefaultMessageConverter();
+    this(Collections.emptyList());
   }
 
   public RqueueMessageHandler(List<MessageConverter> messageConverters) {
-    setMessageConverters(messageConverters);
+    notNull(messageConverters, "messageConverters cannot be null");
+    List<MessageConverter> messageConverterList = new ArrayList<>(messageConverters);
+    messageConverterList.add(new GenericMessageConverter());
+    this.messageConverter = new CompositeMessageConverter(messageConverterList);
   }
 
-  private void addDefaultMessageConverter() {
-    messageConverters.add(new GenericMessageConverter());
+  private ConfigurableBeanFactory getBeanFactory() {
+    ApplicationContext context = getApplicationContext();
+    return (context instanceof ConfigurableApplicationContext
+        ? ((ConfigurableApplicationContext) context).getBeanFactory()
+        : null);
   }
 
   @Override
   protected List<? extends HandlerMethodArgumentResolver> initArgumentResolvers() {
     List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>(getCustomArgumentResolvers());
-    CompositeMessageConverter compositeMessageConverter =
-        new CompositeMessageConverter(getMessageConverters());
-    resolvers.add(new PayloadArgumentResolver(compositeMessageConverter));
+    // Annotation-based argument resolution
+    resolvers.add(new HeaderMethodArgumentResolver(this.conversionService, getBeanFactory()));
+    resolvers.add(new HeadersMethodArgumentResolver());
+
+    // Type-based argument resolution
+    resolvers.add(new PrincipalMethodArgumentResolver());
+    resolvers.add(new MessageMethodArgumentResolver(messageConverter));
+    resolvers.add(new PayloadMethodArgumentResolver(messageConverter, null));
+
     return resolvers;
   }
 
@@ -249,7 +270,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected String getDestination(Message<?> message) {
-    return (String) message.getHeaders().get(MessageUtils.getMessageHeaderKey());
+    return (String) message.getHeaders().get(RqueueMessageHeaders.DESTINATION);
   }
 
   @Override
@@ -290,13 +311,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     throw new MessagingException("An exception occurred while invoking the handler method", ex);
   }
 
-  public List<MessageConverter> getMessageConverters() {
-    return messageConverters;
-  }
-
-  public void setMessageConverters(List<MessageConverter> messageConverters) {
-    notEmpty(messageConverters, "messageConverters list cannot be empty or null");
-    this.messageConverters = new ArrayList<>(messageConverters);
-    addDefaultMessageConverter();
+  public MessageConverter getMessageConverter() {
+    return this.messageConverter;
   }
 }

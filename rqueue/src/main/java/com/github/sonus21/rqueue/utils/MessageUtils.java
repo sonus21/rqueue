@@ -19,17 +19,14 @@ package com.github.sonus21.rqueue.utils;
 import static org.springframework.util.Assert.notEmpty;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
 public class MessageUtils {
-  private static final String MESSAGE_HEADER_KEY = "Rqueue";
-  private static final String MESSAGE_META_DATA_KEY_PREFIX = "__rq::m-mdata::";
+  private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
 
   public MessageUtils() {}
 
@@ -68,15 +65,7 @@ public class MessageUtils {
     return null;
   }
 
-  public static String getMessageHeaderKey() {
-    return MESSAGE_HEADER_KEY;
-  }
-
-  public static Map<String, Object> getMessageHeader(String queueName) {
-    return Collections.singletonMap(getMessageHeaderKey(), queueName);
-  }
-
   public static String getMessageMetaId(String messageId) {
-    return MESSAGE_META_DATA_KEY_PREFIX + messageId;
+    return META_DATA_KEY_PREFIX + messageId;
   }
 }

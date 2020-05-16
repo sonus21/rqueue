@@ -74,16 +74,6 @@ public class RqueueListenerAutoConfigTest {
   }
 
   @Test
-  public void rqueueMessageHandlerCreatedWithMessageConverters() throws IllegalAccessException {
-    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    factory.setMessageConverters(messageConverterList);
-    RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
-    FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    RqueueMessageHandler messageHandler = messageAutoConfig.rqueueMessageHandler();
-    assertEquals(messageConverterList.get(0), messageHandler.getMessageConverters().get(0));
-  }
-
-  @Test
   public void rqueueMessageListenerContainer() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
