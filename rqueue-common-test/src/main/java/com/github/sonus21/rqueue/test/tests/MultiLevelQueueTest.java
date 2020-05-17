@@ -17,17 +17,41 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
-public abstract class MultiLevelQueueListenerTestBase extends SpringTestBase {
+public abstract class MultiLevelQueueTest extends SpringTestBase {
   protected void checkQueueLevelConsumer() throws TimedOutException {
     rqueueMessageSender.enqueue(smsQueue, Sms.newInstance());
     rqueueMessageSender.enqueueWithPriority(smsQueue, "critical", Sms.newInstance());
     rqueueMessageSender.enqueueWithPriority(smsQueue, "high", Sms.newInstance());
     rqueueMessageSender.enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
     rqueueMessageSender.enqueueWithPriority(smsQueue, "low", Sms.newInstance());
+    TimeoutUtils.waitFor(
+        () ->
+            getMessageCount(
+                    Arrays.asList(
+                        smsQueue,
+                        smsQueue + "_critical",
+                        smsQueue + "_high",
+                        smsQueue + "_medium",
+                        smsQueue + "_low"))
+                == 0,
+        "Waiting for multi level queues to drain");
+  }
+
+  protected void checkQueueLevelConsumerWithDelay() throws TimedOutException {
+    rqueueMessageSender.enqueue(smsQueue, Sms.newInstance());
+    rqueueMessageSender.enqueueInWithPriority(smsQueue, "critical", Sms.newInstance(), 1000L);
+    rqueueMessageSender.enqueueInWithPriority(
+        smsQueue, "high", Sms.newInstance(), 1000L, TimeUnit.MILLISECONDS);
+    rqueueMessageSender.enqueueInWithPriority(
+        smsQueue, "medium", Sms.newInstance(), Duration.ofMillis(1000L));
+    rqueueMessageSender.enqueueInWithPriority(smsQueue, "low", Sms.newInstance(), 1000L);
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(

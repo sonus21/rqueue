@@ -21,7 +21,7 @@ import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.spring.EnableRqueue;
 import com.github.sonus21.rqueue.spring.RqueueMetricsProperties;
-import com.github.sonus21.rqueue.test.BaseApplication;
+import com.github.sonus21.rqueue.test.application.BaseApplication;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
@@ -65,24 +65,6 @@ public class SpringApp extends BaseApplication {
     return metricsProperties;
   }
 
-  public class DeleteMessageListener implements MessageProcessor {
-    private List<Object> messages = new ArrayList<>();
-
-    @Override
-    public boolean process(Object message) {
-      messages.add(message);
-      return true;
-    }
-
-    public List<Object> getMessages() {
-      return messages;
-    }
-
-    public void clear() {
-      this.messages = new ArrayList<>();
-    }
-  }
-
   @Bean
   public DeleteMessageListener deleteMessageListener() {
     return new DeleteMessageListener();
@@ -104,5 +86,23 @@ public class SpringApp extends BaseApplication {
       factory.setTaskExecutor(threadPoolTaskExecutor);
     }
     return factory;
+  }
+
+  public class DeleteMessageListener implements MessageProcessor {
+    private List<Object> messages = new ArrayList<>();
+
+    @Override
+    public boolean process(Object message) {
+      messages.add(message);
+      return true;
+    }
+
+    public List<Object> getMessages() {
+      return messages;
+    }
+
+    public void clear() {
+      this.messages = new ArrayList<>();
+    }
   }
 }

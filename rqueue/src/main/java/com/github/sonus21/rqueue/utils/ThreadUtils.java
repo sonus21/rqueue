@@ -114,7 +114,7 @@ public class ThreadUtils {
   }
 
   public static String getWorkerName(String name) {
-    String camelCase = StringUtils.convertToCamelCase(name);
+    String camelCase = StringUtils.getBeanName(name);
     return camelCase + "Consumer";
   }
 

@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.spring.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.test.tests.GroupPriorityListener;
+import com.github.sonus21.rqueue.test.tests.GroupPriorityTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -45,7 +45,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "feed.generation.queue.active=true",
       "chat.indexing.queue.active=true"
     })
-public class WeightedPriorityQueueListener extends GroupPriorityListener {
+public class WeightedPriorityQueueListener extends GroupPriorityTest {
   @Test
   public void simple() throws TimedOutException {
     checkGroupConsumer();

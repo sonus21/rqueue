@@ -395,7 +395,7 @@ public class RqueueQDetailServiceTest {
 
     doReturn(Arrays.asList(queueConfig, queueConfig2))
         .when(rqueueSystemManagerService)
-        .getQueueConfigs();
+        .getSortedQueueConfigs();
 
     doReturn(newArrayList(100L, 200L))
         .when(redisTemplate)
@@ -415,7 +415,7 @@ public class RqueueQDetailServiceTest {
   @Test
   public void getWaitingTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
-    doReturn(queueConfigList).when(rqueueSystemManagerService).getQueueConfigs();
+    doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
         .when(redisTemplate)
         .executePipelined(any(RedisCallback.class));
@@ -430,7 +430,7 @@ public class RqueueQDetailServiceTest {
   @Test
   public void getRunningTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
-    doReturn(queueConfigList).when(rqueueSystemManagerService).getQueueConfigs();
+    doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
         .when(redisTemplate)
         .executePipelined(any(RedisCallback.class));
@@ -447,7 +447,7 @@ public class RqueueQDetailServiceTest {
   @Test
   public void getDeadLetterTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
-    doReturn(queueConfigList).when(rqueueSystemManagerService).getQueueConfigs();
+    doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
         .when(redisTemplate)
         .executePipelined(any(RedisCallback.class));

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.test;
+package com.github.sonus21.rqueue.test.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.annotation.PostConstruct;

@@ -32,7 +32,7 @@ public class RqueueConfig {
   private final boolean sharedConnection;
   private final int dbVersion;
 
-  @Value("${rqueue.version:2.0.0-RELEASE}")
+  @Value("${rqueue.version:2.0.1}")
   private String version;
 
   @Value("${rqueue.key.prefix:__rq::}")
@@ -59,10 +59,6 @@ public class RqueueConfig {
   @Value("${rqueue.queues.key.suffix:queues}")
   private String queuesKeySuffix;
 
-  public String getQueuesKey() {
-    return prefix + queuesKeySuffix;
-  }
-
   @Value("${rqueue.lock.key.prefix:lock::}")
   private String lockKeyPrefix;
 
@@ -80,6 +76,10 @@ public class RqueueConfig {
 
   @Value("${rqueue.default.queue.with.queue.level.priority:-1}")
   private int defaultQueueWithQueueLevelPriority;
+
+  public String getQueuesKey() {
+    return prefix + queuesKeySuffix;
+  }
 
   public String getQueueName(String queueName) {
     if (dbVersion >= 2) {

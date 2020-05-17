@@ -23,7 +23,6 @@ import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,8 +43,9 @@ import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
-import org.springframework.messaging.support.GenericMessage;
+import org.springframework.messaging.support.MessageBuilder;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueMessageHandlerTest {
@@ -61,8 +61,9 @@ public class RqueueMessageHandlerTest {
       ((Message<String>) messageConverter.toMessage(messagePayload, null)).getPayload();
 
   private Message<String> buildMessage(String queueName, String message) {
-    return new GenericMessage<>(
-        message, Collections.singletonMap(MessageUtils.getMessageHeaderKey(), queueName));
+    return MessageBuilder.createMessage(
+        message,
+        new MessageHeaders(Collections.singletonMap(RqueueMessageHeaders.DESTINATION, queueName)));
   }
 
   @Test

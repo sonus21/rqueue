@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.spring.boot.application;
 
-import com.github.sonus21.rqueue.test.BaseApplication;
+import com.github.sonus21.rqueue.test.application.BaseApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;

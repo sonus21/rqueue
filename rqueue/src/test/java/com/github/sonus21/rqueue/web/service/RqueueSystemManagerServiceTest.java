@@ -117,6 +117,21 @@ public class RqueueSystemManagerServiceTest {
   }
 
   @Test
+  public void getSortedQueueConfigs() {
+    doReturn(queues).when(stringRqueueRedisTemplate).getMembers(TestUtils.getQueuesKey());
+    doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
+        .when(rqueueSystemConfigDao)
+        .findAllQConfig(
+            queues.stream()
+                .map(TestUtils::getQueueConfigKey)
+                .sorted()
+                .collect(Collectors.toList()));
+    assertEquals(
+        Arrays.asList(fastQueueConfig, slowQueueConfig),
+        rqueueSystemManagerService.getSortedQueueConfigs());
+  }
+
+  @Test
   public void testGetQueueConfigs() {
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)

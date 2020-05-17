@@ -22,7 +22,6 @@ import org.junit.Test;
 
 public class FixedTaskExecutionBackOffTest {
 
-
   @Test
   public void construct() {
     FixedTaskExecutionBackOff backOff = new FixedTaskExecutionBackOff(1000, 100);

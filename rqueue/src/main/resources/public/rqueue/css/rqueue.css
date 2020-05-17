@@ -507,6 +507,10 @@ section {
   background: #ee3535;
 }
 
-.btn-delete-all{
+.btn-delete-all {
   margin-left: 10px;
+}
+
+.delete-message-btn {
+  padding: 0 10px;
 }

@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.core.support;
 
+import com.github.sonus21.rqueue.core.RqueueMessage;
+
 /**
  * This interface can be used to take some action when ever a message is processed
  *
@@ -39,7 +41,22 @@ public interface MessageProcessor {
    * @param message message
    * @return true/false.
    */
+  @Deprecated
   default boolean process(Object message) {
     return true;
+  }
+
+  /**
+   * This method would be called with the specified object, this will happen only when message is
+   * deserialize successfully. Return value is used for pre-processing, where if caller returns true
+   * then only message would be executed otherwise it will be discarded, returning false means task
+   * to ignore. It's considered that message has to be deleted.
+   *
+   * @param message message
+   * @param rqueueMessage rqueue message object
+   * @return true/false.
+   */
+  default boolean process(Object message, RqueueMessage rqueueMessage) {
+    return process(message);
   }
 }

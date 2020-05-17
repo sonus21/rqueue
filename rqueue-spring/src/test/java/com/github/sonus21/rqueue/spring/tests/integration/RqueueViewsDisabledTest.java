@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.tests.SpringWebTestBase;
+import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;

@@ -18,10 +18,10 @@ package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
 import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_WEEK;
-import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
+import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
@@ -37,7 +37,8 @@ import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.support.GenericMessage;
+import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 class RqueueExecutor extends MessageContainerBase {
@@ -70,11 +71,12 @@ class RqueueExecutor extends MessageContainerBase {
     this.retryPerPoll = retryPerPoll;
     this.taskExecutionBackoff = taskExecutionBackoff;
     this.message =
-        new GenericMessage<>(
-            rqueueMessage.getMessage(), MessageUtils.getMessageHeader(queueDetail.getName()));
+        MessageBuilder.createMessage(
+            rqueueMessage.getMessage(),
+            RqueueMessageHeaders.buildMessageHeaders(queueDetail.getName(), rqueueMessage));
     try {
       this.userMessage =
-          MessageUtils.convertMessageToObject(message, rqueueMessageHandler.getMessageConverters());
+          MessageUtils.convertMessageToObject(message, rqueueMessageHandler.getMessageConverter());
     } catch (Exception e) {
       log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
     }
@@ -112,20 +114,19 @@ class RqueueExecutor extends MessageContainerBase {
     if (messageProcessor != null) {
       try {
         log(Level.DEBUG, "Calling {} processor for {}", null, status, rqueueMessage);
-        messageProcessor.process(userMessage);
+        messageProcessor.process(userMessage, rqueueMessage);
       } catch (Exception e) {
         log(Level.ERROR, "Message processor {} call failed", e, status);
       }
     }
   }
 
-  @SuppressWarnings("ConstantConditions")
-  private void updateCounter(boolean failOrExecution) {
-    RqueueCounter rqueueCounter = container.get().getRqueueCounter();
+  private void updateCounter(boolean fail) {
+    RqueueCounter rqueueCounter = Objects.requireNonNull(container.get()).getRqueueCounter();
     if (rqueueCounter == null) {
       return;
     }
-    if (failOrExecution) {
+    if (fail) {
       rqueueCounter.updateFailureCount(queueDetail.getName());
     } else {
       rqueueCounter.updateExecutionCount(queueDetail.getName());
@@ -141,7 +142,7 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-  private void addOrDeleteMetadata(long jobExecutionTime, boolean saveOrDelete) {
+  private void addOrDeleteMetadata(long jobExecutionStartTime, boolean saveOrDelete) {
     if (messageMetadata == null) {
       messageMetadata = rqueueMessageMetadataService.get(messageMetadataId);
     }
@@ -149,11 +150,11 @@ class RqueueExecutor extends MessageContainerBase {
       messageMetadata = new MessageMetadata(messageMetadataId, rqueueMessage.getId());
       // do not call db delete method
       if (!saveOrDelete) {
-        messageMetadata.addExecutionTime(jobExecutionTime);
+        messageMetadata.addExecutionTime(jobExecutionStartTime);
         return;
       }
     }
-    messageMetadata.addExecutionTime(jobExecutionTime);
+    messageMetadata.addExecutionTime(jobExecutionStartTime);
     if (saveOrDelete) {
       Objects.requireNonNull(container.get())
           .getRqueueMessageMetadataService()
@@ -163,28 +164,26 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-  private void deleteMessage(
-      TaskStatus status, int currentFailureCount, long jobExecutionStartTime) {
+  private void deleteMessage(TaskStatus status, int failureCount, long jobExecutionStartTime) {
     getRqueueMessageTemplate()
         .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
-    rqueueMessage.setFailureCount(currentFailureCount);
+    rqueueMessage.setFailureCount(failureCount);
     callMessageProcessor(status, rqueueMessage);
     publishEvent(status, jobExecutionStartTime);
   }
 
-  private void moveMessageToDlq(int currentFailureCount, long jobExecutionStartTime)
+  private void moveMessageToDlq(int failureCount, long jobExecutionStartTime)
       throws CloneNotSupportedException {
     if (isWarningEnabled()) {
       log(
           Level.WARN,
-          "Message {} Moved to dead letter queue: {}, dead letter queue: {}",
+          "Message {} Moved to dead letter queue: {}",
           null,
           userMessage,
-          queueDetail.getName(),
           queueDetail.getDeadLetterQueueName());
     }
     RqueueMessage newMessage = rqueueMessage.clone();
-    newMessage.setFailureCount(currentFailureCount);
+    newMessage.setFailureCount(failureCount);
     newMessage.updateReEnqueuedAt();
     callMessageProcessor(TaskStatus.MOVED_TO_DLQ, newMessage);
     RedisUtils.executePipeLine(
@@ -201,20 +200,13 @@ class RqueueExecutor extends MessageContainerBase {
     publishEvent(TaskStatus.MOVED_TO_DLQ, jobExecutionStartTime);
   }
 
-  private void parkMessageForRetry(int currentFailureCount, long jobExecutionStartTime, long delay)
+  private void parkMessageForRetry(int failureCount, long jobExecutionStartTime, long delay)
       throws CloneNotSupportedException {
     if (isDebugEnabled()) {
-      log(
-          Level.DEBUG,
-          "Message {} will be retried in {}Ms, queue: {}, Redis Queue: {}",
-          null,
-          userMessage,
-          delay,
-          queueDetail.getName(),
-          queueDetail.getQueueName());
+      log(Level.DEBUG, "Message {} will be retried in {}Ms", null, userMessage, delay);
     }
     RqueueMessage newMessage = rqueueMessage.clone();
-    newMessage.setFailureCount(currentFailureCount);
+    newMessage.setFailureCount(failureCount);
     newMessage.updateReEnqueuedAt();
     getRqueueMessageTemplate()
         .moveMessage(
@@ -226,98 +218,83 @@ class RqueueExecutor extends MessageContainerBase {
     addOrDeleteMetadata(jobExecutionStartTime, true);
   }
 
-  private void discardMessage(int currentFailureCount, long jobExecutionStartTime) {
+  private void discardMessage(int failureCount, long jobExecutionStartTime) {
     if (isDebugEnabled()) {
-      log(
-          Level.DEBUG,
-          "Message {} discarded due to retry limit exhaust queue: {}",
-          null,
-          userMessage,
-          queueDetail.getName());
+      log(Level.DEBUG, "Message {} discarded due to retry limit exhaust", null, userMessage);
     }
-    deleteMessage(TaskStatus.DISCARDED, currentFailureCount, jobExecutionStartTime);
+    deleteMessage(TaskStatus.DISCARDED, failureCount, jobExecutionStartTime);
   }
 
-  private void handleManualDeletion(int currentFailureCount, long jobExecutionStartTime) {
+  private void handleManualDeletion(int failureCount, long jobExecutionStartTime) {
     if (isDebugEnabled()) {
-      log(
-          Level.DEBUG,
-          "Message Deleted manually {} successfully, Queue: {}",
-          null,
-          rqueueMessage,
-          queueDetail.getName());
+      log(Level.DEBUG, "Message Deleted {} successfully", null, rqueueMessage);
     }
-    deleteMessage(TaskStatus.DELETED, currentFailureCount, jobExecutionStartTime);
+    deleteMessage(TaskStatus.DELETED, failureCount, jobExecutionStartTime);
   }
 
-  private void handleSuccessFullExecution(int currentFailureCount, long jobExecutionStartTime) {
+  private void handleSuccessFullExecution(int failureCount, long jobExecutionStartTime) {
     if (isDebugEnabled()) {
-      log(
-          Level.DEBUG,
-          "Message consumed {} successfully, Queue: {}",
-          null,
-          rqueueMessage,
-          queueDetail.getName());
+      log(Level.DEBUG, "Message consumed {} successfully", null, rqueueMessage);
     }
-    deleteMessage(TaskStatus.SUCCESSFUL, currentFailureCount, jobExecutionStartTime);
+    deleteMessage(TaskStatus.SUCCESSFUL, failureCount, jobExecutionStartTime);
   }
 
-  private void handleLimitExceededMessage(int currentFailureCount, long jobExecutionStartTime)
+  private void handleRetryExceededMessage(int failureCount, long jobExecutionStartTime)
       throws CloneNotSupportedException {
     if (queueDetail.isDlqSet()) {
-      moveMessageToDlq(currentFailureCount, jobExecutionStartTime);
+      moveMessageToDlq(failureCount, jobExecutionStartTime);
     } else {
-      discardMessage(currentFailureCount, jobExecutionStartTime);
+      discardMessage(failureCount, jobExecutionStartTime);
     }
   }
 
-  private void handleFailure(int currentFailureCount, int maxRetryCount, long jobExecutionStartTime)
+  private void handleFailure(int failureCount, long jobExecutionStartTime)
       throws CloneNotSupportedException {
-    if (currentFailureCount < maxRetryCount) {
-      long delay =
-          taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, currentFailureCount);
+    int maxRetryCount = getMaxRetryCount();
+    if (failureCount < maxRetryCount) {
+      long delay = taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, failureCount);
       if (delay == TaskExecutionBackOff.STOP) {
-        handleLimitExceededMessage(currentFailureCount, jobExecutionStartTime);
+        handleRetryExceededMessage(failureCount, jobExecutionStartTime);
       } else {
-        parkMessageForRetry(currentFailureCount, jobExecutionStartTime, delay);
+        parkMessageForRetry(failureCount, jobExecutionStartTime, delay);
       }
     } else {
-      handleLimitExceededMessage(currentFailureCount, jobExecutionStartTime);
+      handleRetryExceededMessage(failureCount, jobExecutionStartTime);
     }
   }
 
   private void handlePostProcessing(
-      boolean executed,
-      boolean deleted,
-      boolean ignored,
-      int currentFailureCount,
-      int maxRetryCount,
-      long jobExecutionStartTime) {
-    if (!isQueueActive(queueDetail.getName())) {
+      TaskStatus status, int failureCount, long jobExecutionStartTime) {
+    if (status == TaskStatus.QUEUE_INACTIVE) {
       return;
     }
     try {
-      if (ignored) {
-        handleIgnoredMessage(currentFailureCount, jobExecutionStartTime);
-      } else if (deleted) {
-        handleManualDeletion(currentFailureCount, jobExecutionStartTime);
-      } else {
-        if (!executed) {
-          handleFailure(currentFailureCount, maxRetryCount, jobExecutionStartTime);
-        } else {
-          handleSuccessFullExecution(currentFailureCount, jobExecutionStartTime);
-        }
+      switch (status) {
+        case SUCCESSFUL:
+          handleSuccessFullExecution(failureCount, jobExecutionStartTime);
+          break;
+        case DELETED:
+          handleManualDeletion(failureCount, jobExecutionStartTime);
+          break;
+        case IGNORED:
+          handleIgnoredMessage(failureCount, jobExecutionStartTime);
+          break;
+        case FAILED:
+          handleFailure(failureCount, jobExecutionStartTime);
+          break;
+        default:
+          throw new UnknownSwitchCase(String.valueOf(status));
       }
     } catch (Exception e) {
       log(Level.ERROR, "Error occurred in post processing", e);
     }
   }
 
-  private void handleIgnoredMessage(int currentFailureCount, long jobExecutionStartTime) {
+  private void handleIgnoredMessage(int failureCount, long jobExecutionStartTime) {
     if (isDebugEnabled()) {
       log(Level.DEBUG, "Message {} ignored, Queue: {}", null, rqueueMessage, queueDetail.getName());
     }
-    deleteMessage(TaskStatus.IGNORED, currentFailureCount, jobExecutionStartTime);
+    deleteMessage(TaskStatus.IGNORED, failureCount, jobExecutionStartTime);
   }
 
   private long getMaxProcessingTime() {
@@ -326,8 +303,7 @@ class RqueueExecutor extends MessageContainerBase {
         - DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 
-  private boolean isMessageDeleted(String id) {
-    notNull(id, "Message id must be present");
+  private boolean isMessageDeleted() {
     messageMetadata = rqueueMessageMetadataService.get(messageMetadataId);
     if (messageMetadata == null) {
       return false;
@@ -335,10 +311,10 @@ class RqueueExecutor extends MessageContainerBase {
     return messageMetadata.isDeleted();
   }
 
-  private boolean shouldProcess() {
-    return Objects.requireNonNull(container.get())
+  private boolean shouldIgnore() {
+    return !Objects.requireNonNull(container.get())
         .getPreExecutionMessageProcessor()
-        .process(userMessage);
+        .process(userMessage, rqueueMessage);
   }
 
   private int getRetryCount() {
@@ -349,45 +325,51 @@ class RqueueExecutor extends MessageContainerBase {
     return Math.min(retryPerPoll, maxRetry);
   }
 
+  private boolean queueActive() {
+    return isQueueActive(queueDetail.getName());
+  }
+
+  private TaskStatus getStatus() {
+    if (!queueActive()) {
+      return TaskStatus.QUEUE_INACTIVE;
+    }
+    if (shouldIgnore()) {
+      return TaskStatus.IGNORED;
+    }
+    if (isMessageDeleted()) {
+      return TaskStatus.DELETED;
+    }
+    return null;
+  }
+
   @Override
   void start() {
-    boolean executed = false;
-    int currentFailureCount = rqueueMessage.getFailureCount();
-    int maxRetryCount = getMaxRetryCount();
-    long maxRetryTime = getMaxProcessingTime();
+    int failureCount = rqueueMessage.getFailureCount();
+    long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
-    boolean deleted = false;
-    boolean ignored = false;
     int retryCount = getRetryCount();
+    TaskStatus status;
     try {
       do {
-        if (!isQueueActive(queueDetail.getName())) {
-          return;
-        }
-        if (!shouldProcess()) {
-          ignored = true;
-        } else if (isMessageDeleted(rqueueMessage.getId())) {
-          deleted = true;
-        }
-        if (ignored || deleted) {
+        status = getStatus();
+        if (status != null) {
           break;
         }
         try {
           updateCounter(false);
           rqueueMessageHandler.handleMessage(message);
-          executed = true;
-        } catch (Exception e) {
-          log(Level.ERROR, "Message consumer failed", e);
+          status = TaskStatus.SUCCESSFUL;
+        } catch (MessagingException e) {
           updateCounter(true);
-          currentFailureCount += 1;
+          failureCount += 1;
+        } catch (Exception e) {
+          updateCounter(true);
+          failureCount += 1;
+          log(Level.ERROR, "Message execution failed", e);
         }
         retryCount--;
-      } while (currentFailureCount < maxRetryCount
-          && retryCount > 0
-          && !executed
-          && System.currentTimeMillis() < maxRetryTime);
-      handlePostProcessing(
-          executed, deleted, ignored, currentFailureCount, maxRetryCount, startTime);
+      } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
+      handlePostProcessing(status == null ? TaskStatus.FAILED : status, failureCount, startTime);
     } finally {
       semaphore.release();
     }

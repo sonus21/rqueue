@@ -14,43 +14,44 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring.tests.integration;
+package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.test.tests.MultiLevelQueueTest;
+import com.github.sonus21.rqueue.spring.boot.application.MultiRedisSetupApplication;
+import com.github.sonus21.rqueue.test.tests.MessageRetryTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.web.WebAppConfiguration;
 
-@ContextConfiguration(classes = SpringApp.class)
 @RunWith(RqueueSpringTestRunner.class)
+@ContextConfiguration(classes = MultiRedisSetupApplication.class)
+@SpringBootTest
 @Slf4j
-@WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=7006",
-      "mysql.db.name=WeightedMultiLevelQueueListener",
-      "sms.queue.active=true",
-      "notification.queue.active=false",
-      "email.queue.active=false",
-      "job.queue.active=false",
-      "use.system.redis=false",
-      "priority.mode=WEIGHTED",
+      "rqueue.retry.per.poll=1000",
+      "spring.redis.port=8005",
+      "spring.redis2.port=8006",
+      "spring.redis2.host=localhost"
     })
-public class WeightedMultiLevelQueueListener extends MultiLevelQueueTest {
+public class MultiRedisSetup extends MessageRetryTest {
 
   @Test
-  public void simple() throws TimedOutException {
-    checkQueueLevelConsumer();
+  public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
+    verifyAfterNRetryTaskIsDeletedFromProcessingQueue();
   }
 
   @Test
-  public void delayed() throws TimedOutException {
-    checkQueueLevelConsumerWithDelay();
+  public void messageMovedToDelayedQueue() throws TimedOutException {
+    verifyMessageMovedToDelayedQueue();
+  }
+
+  @Test
+  public void messageIsDiscardedAfterRetries() throws TimedOutException {
+    verifyMessageIsDiscardedAfterRetries();
   }
 }

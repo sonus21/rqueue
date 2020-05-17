@@ -55,7 +55,7 @@ public class GenericMessageConverter implements MessageConverter {
       String payload = (String) message.getPayload();
       if (SerializationUtils.isJson(payload)) {
         Msg msg = objectMapper.readValue(payload, Msg.class);
-        Class<?> c = Class.forName(msg.getName());
+        Class<?> c = Thread.currentThread().getContextClassLoader().loadClass(msg.getName());
         return objectMapper.readValue(msg.msg, c);
       }
     } catch (IOException | ClassCastException | ClassNotFoundException e) {

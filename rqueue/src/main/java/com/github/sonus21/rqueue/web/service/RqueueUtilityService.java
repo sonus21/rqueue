@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
+import org.springframework.data.util.Pair;
 
 public interface RqueueUtilityService {
 
@@ -29,7 +30,7 @@ public interface RqueueUtilityService {
 
   BooleanResponse deleteQueueMessages(String queueName, int remainingMessage);
 
-  String getLatestVersion();
+  Pair<String, String> getLatestVersion();
 
   StringResponse getDataType(String name);
 }

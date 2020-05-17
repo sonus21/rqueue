@@ -39,23 +39,36 @@ public class StringUtils {
     return Character.isUpperCase(c) || Character.isLowerCase(c);
   }
 
-  public static String convertToCamelCase(String queueName) {
+  public static String getBeanName(String queueName) {
+    return convertToCamelCase(queueName);
+  }
+
+  public static String convertToCamelCase(String string) {
+    String txt = clean(string);
+    if (isEmpty(txt)) {
+      throw new IllegalArgumentException("string is empty");
+    }
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < queueName.length(); i++) {
-      Character c = queueName.charAt(i);
+    for (int i = 0; i < txt.length(); i++) {
+      char c = txt.charAt(i);
       if (isAlpha(c)) {
-        if (i > 0 && !isAlpha(queueName.charAt(i - 1))) {
-          sb.append(Character.toUpperCase(c));
-        } else {
+        if (i == 0) {
           sb.append(c);
+        } else if (!isAlpha(txt.charAt(i - 1))) {
+          sb.append(Character.toUpperCase(c));
+        } else if (Character.isLowerCase(c)
+            || (Character.isUpperCase(c) && Character.isLowerCase(txt.charAt(i - 1)))) {
+          sb.append(c);
+        } else {
+          sb.append(Character.toLowerCase(c));
         }
       }
     }
-    String txt = sb.toString();
-    if (txt.isEmpty()) {
+    String convertedTxt = sb.toString();
+    if (convertedTxt.isEmpty()) {
       return txt;
     }
-    return Introspector.decapitalize(txt);
+    return Introspector.decapitalize(convertedTxt);
   }
 
   public static String groupName(String name) {

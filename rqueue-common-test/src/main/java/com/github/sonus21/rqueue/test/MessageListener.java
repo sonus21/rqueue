@@ -17,19 +17,23 @@
 package com.github.sonus21.rqueue.test;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.dto.Reservation;
+import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,8 +58,10 @@ public class MessageListener {
       value = "${notification.queue.name}",
       numRetries = "${notification.queue.retry.count}",
       active = "${notification.queue.active}")
-  public void onMessage(Notification notification) throws Exception {
-    log.info("Notification: {}", notification);
+  public void onMessage(
+      @Payload Notification notification, @Header(RqueueMessageHeaders.ID) String id)
+      throws Exception {
+    log.info("Notification: {}, Id: {}", notification, id);
     if (failureManager.shouldFail(notification.getId())) {
       throw new Exception("Failing notification task to be retried" + notification);
     }
@@ -68,8 +74,9 @@ public class MessageListener {
       numRetries = "${email.queue.retry.count}",
       visibilityTimeout = "${email.execution.time}",
       active = "${email.queue.active}")
-  public void onMessage(Email email) throws Exception {
-    log.info("Email: {}", email);
+  public void onMessage(Email email, @Header(RqueueMessageHeaders.MESSAGE) RqueueMessage message)
+      throws Exception {
+    log.info("Email: {} Message: {}", email, message);
     if (failureManager.shouldFail(email.getId())) {
       throw new Exception("Failing email task to be retried" + email);
     }

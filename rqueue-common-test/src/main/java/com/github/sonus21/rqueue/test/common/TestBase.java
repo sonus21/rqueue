@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.models;
+package com.github.sonus21.rqueue.test.common;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import java.util.Random;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-@AllArgsConstructor
-@EqualsAndHashCode
-public class Concurrency {
-  private int min;
-  private int max;
+@Slf4j
+public abstract class TestBase {
+  protected static Random random;
 
-  public MinMax<Integer> toMinMax() {
-    return new MinMax<>(min, max);
+  static {
+    String seed = System.getenv("TEST_SEED");
+    long randomSeed;
+    if (seed == null) {
+      randomSeed = System.currentTimeMillis();
+    } else {
+      randomSeed = Long.parseLong(seed);
+    }
+    random = new Random(randomSeed);
+    log.info("Test random seed is {}", randomSeed);
   }
 }

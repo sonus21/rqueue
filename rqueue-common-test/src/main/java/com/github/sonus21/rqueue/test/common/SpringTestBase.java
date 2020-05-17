@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.test.tests;
+package com.github.sonus21.rqueue.test.common;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
+import com.github.sonus21.rqueue.utils.StringUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
-public abstract class SpringTestBase {
+public abstract class SpringTestBase extends TestBase {
   @Autowired protected RqueueMessageSender rqueueMessageSender;
   @Autowired protected RqueueMessageTemplate rqueueMessageTemplate;
   @Autowired protected RqueueConfig rqueueConfig;
@@ -82,14 +83,6 @@ public abstract class SpringTestBase {
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, queueName, null, null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
-  }
-
-  public interface Factory {
-    Object next(int i);
-  }
-
-  public interface Delay {
-    long getDelay(int i);
   }
 
   protected void enqueue(String queueName, Factory factory, int n) {
@@ -155,5 +148,23 @@ public abstract class SpringTestBase {
         }
       }
     }
+  }
+
+  protected void cleanQueue(String queue) {
+    QueueDetail queueDetail = QueueRegistry.get(queue);
+    stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
+    stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
+    stringRqueueRedisTemplate.delete(queueDetail.getProcessingQueueName());
+    if (!StringUtils.isEmpty(queueDetail.getDeadLetterQueueName())) {
+      stringRqueueRedisTemplate.delete(queueDetail.getDeadLetterQueueName());
+    }
+  }
+
+  public interface Factory {
+    Object next(int i);
+  }
+
+  public interface Delay {
+    long getDelay(int i);
   }
 }

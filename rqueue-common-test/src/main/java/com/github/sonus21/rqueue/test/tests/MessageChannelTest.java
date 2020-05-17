@@ -14,67 +14,53 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring.boot.tests.integration;
+package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
+import com.github.sonus21.rqueue.test.common.SpringTestBase;
+import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.tests.SpringTestBase;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.test.RqueueSpringTestRunner;
-import com.github.sonus21.test.RunTestUntilFail;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 
-@SpringBootTest
-@RunWith(RqueueSpringTestRunner.class)
-@ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
 @Slf4j
-@TestPropertySource(
-    properties = {
-      "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=8005",
-      "mysql.db.name=test3",
-      "max.workers.count=120",
-      "use.system.redis=false"
-    })
-public class ProcessingMessageSchedulerTest extends SpringTestBase {
-  @Rule
-  public RunTestUntilFail retry =
-      new RunTestUntilFail(
-          log,
-          () -> {
-            for (Entry<String, List<RqueueMessage>> entry : getMessageMap(jobQueue).entrySet()) {
-              log.error("FAILING Queue {}", entry.getKey());
-              for (RqueueMessage message : entry.getValue()) {
-                log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
-              }
-            }
-          });
+public abstract class MessageChannelTest extends SpringTestBase {
+  private int messageCount = 200;
+  /**
+   * This test verified whether any pending message in the delayed queue are moved or not Whenever a
+   * delayed message is pushed then it's checked whether there're any pending messages on delay
+   * queue. if expired delayed messages are found on the head then a message is published on delayed
+   * channel.
+   */
+  protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
+    String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
+    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, messageCount);
+    Email email = Email.newInstance();
+    log.info("adding new message {}", email);
+    messageSender.enqueueIn(emailQueue, email, Duration.ofMillis(1000));
+    waitFor(
+        () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
+        "one or zero messages in zset");
+    assertTrue(
+        "Messages are correctly moved",
+        stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
+            >= messageCount);
+    assertEquals(messageCount + 1L, messageSender.getAllMessages(emailQueue).size());
+  }
 
-  private int messageCount = 110;
-
-  @Test
-  public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
+  protected void verifyPublishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
     String processingQueueName = jobQueue;
-    long currentTime = System.currentTimeMillis();
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();
     int maxDelay = 2000;
-    Random random = new Random();
     for (int i = 0; i < messageCount; i++) {
       Job job = Job.newInstance();
       jobs.add(job);

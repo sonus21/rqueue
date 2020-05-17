@@ -55,26 +55,30 @@ public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
     this.maxRetries = maxRetries;
   }
 
+  /**
+   * Return the delay between two attempts in milliseconds.
+   *
+   * @return the configured interval in milli seconds.
+   */
+  public long getInterval() {
+    return this.interval;
+  }
+
   /** Set the delay between two attempts in milliseconds. */
   public void setInterval(long interval) {
     checkInterval(interval);
     this.interval = interval;
   }
 
-  /** Return the delay between two attempts in milliseconds. */
-  public long getInterval() {
-    return this.interval;
+  /** Return the maximum number of retries. */
+  public int getMaxRetries() {
+    return this.maxRetries;
   }
 
   /** Set the maximum number of retries */
   public void setMaxRetries(int maxRetries) {
     checkMaxRetries(maxRetries);
     this.maxRetries = maxRetries;
-  }
-
-  /** Return the maximum number of retries. */
-  public int getMaxRetries() {
-    return this.maxRetries;
   }
 
   @Override

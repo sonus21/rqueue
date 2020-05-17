@@ -23,9 +23,9 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,16 +71,6 @@ public class RqueueListenerAutoConfigTest {
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertEquals(
         rqueueMessageHandler.hashCode(), messageAutoConfig.rqueueMessageHandler().hashCode());
-  }
-
-  @Test
-  public void rqueueMessageHandlerCreatedWithMessageConverters() throws IllegalAccessException {
-    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    factory.setMessageConverters(messageConverterList);
-    RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
-    FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    RqueueMessageHandler messageHandler = messageAutoConfig.rqueueMessageHandler();
-    assertEquals(messageConverterList.get(0), messageHandler.getMessageConverters().get(0));
   }
 
   @Test

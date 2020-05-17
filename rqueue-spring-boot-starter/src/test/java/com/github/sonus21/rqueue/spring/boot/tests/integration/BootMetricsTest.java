@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
-import com.github.sonus21.rqueue.test.tests.MetricTestBase;
+import com.github.sonus21.rqueue.test.tests.MetricTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -35,12 +35,12 @@ import org.springframework.test.context.TestPropertySource;
     properties = {
       "rqueue.retry.per.poll=20",
       "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=8004",
+      "spring.redis.port=8003",
       "mysql.db.name=test4",
       "rqueue.metrics.count.failure=true",
       "rqueue.metrics.count.execution=true",
     })
-public class BootMetricsTest extends MetricTestBase {
+public class BootMetricsTest extends MetricTest {
 
   @Test
   public void delayedQueueStatus() throws TimedOutException {

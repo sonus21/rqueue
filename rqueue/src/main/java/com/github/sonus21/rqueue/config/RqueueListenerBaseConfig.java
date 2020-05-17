@@ -52,6 +52,7 @@ import org.springframework.data.redis.core.RedisTemplate;
  * be very high based on the use case.
  */
 public abstract class RqueueListenerBaseConfig {
+  public static final int MAX_DB_VERSION = 2;
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
@@ -63,12 +64,15 @@ public abstract class RqueueListenerBaseConfig {
    * Database for different ops.
    *
    * @param beanFactory configurable bean factory
+   * @param versionKey Rqueue db version key
+   * @param dbVersion database version
    * @return {@link RedisConnectionFactory} object.
    */
   @Bean
   public RqueueConfig rqueueConfig(
       ConfigurableBeanFactory beanFactory,
-      @Value("${rqueue.version.key:__rq::version}") String versionKey) {
+      @Value("${rqueue.version.key:__rq::version}") String versionKey,
+      @Value("${rqueue.db.version:}") Integer dbVersion) {
     boolean sharedConnection = false;
     if (simpleRqueueListenerContainerFactory.getRedisConnectionFactory() == null) {
       sharedConnection = true;
@@ -77,7 +81,15 @@ public abstract class RqueueListenerBaseConfig {
     }
     RedisConnectionFactory connectionFactory =
         simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
-    int version = RedisUtils.updateAndGetVersion(connectionFactory, versionKey, 2);
+    int version;
+    if (dbVersion == null) {
+      version = RedisUtils.updateAndGetVersion(connectionFactory, versionKey, 2);
+    } else if (dbVersion >= 1 && dbVersion <= MAX_DB_VERSION) {
+      RedisUtils.setVersion(connectionFactory, versionKey, dbVersion);
+      version = dbVersion;
+    } else {
+      throw new IllegalStateException("Rqueue db version '" + dbVersion + "' is not correct");
+    }
     return new RqueueConfig(connectionFactory, sharedConnection, version);
   }
 

@@ -18,8 +18,6 @@ package com.github.sonus21.rqueue.utils;
 
 public class Constants {
 
-  private Constants() {}
-
   public static final String BLANK = "";
   public static final long ONE_MILLI = 1000;
   public static final int ONE_MILLI_INT = 1000;
@@ -42,7 +40,10 @@ public class Constants {
   public static final int MAX_MESSAGES = 100;
   public static final int DEFAULT_WORKER_COUNT_PER_QUEUE = 2;
   public static final int AGGREGATION_LOCK_DURATION_IN_SECONDS = 5;
-  public static final String MAVEN_REPO_LINK =
-      "https://repo1.maven.org/maven2/com/github/sonus21/rqueue";
+  public static final String GITHUB_API_FOR_LATEST_RELEASE =
+      "https://api.github.com/repos/sonus21/rqueue/releases/latest";
   public static final String DEFAULT_PRIORITY_KEY = "DEFAULT_PRIORITY";
+  public static final String DEFAULT_PRIORITY_GROUP = "Default";
+
+  private Constants() {}
 }

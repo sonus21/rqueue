@@ -56,11 +56,11 @@ public class RedisUtils {
             });
   }
 
-  public interface RedisPipelineCallback {
-    void doInRedis(
-        RedisConnection connection,
-        StringRedisSerializer keySerializer,
-        RqueueRedisSerializer valueSerializer);
+  public static void setVersion(
+      RedisConnectionFactory connectionFactory, String versionKey, int version) {
+    RedisConnection connection = RedisConnectionUtils.getConnection(connectionFactory);
+    byte[] versionKeyBytes = versionKey.getBytes();
+    connection.set(versionKeyBytes, String.valueOf(version).getBytes());
   }
 
   public static int updateAndGetVersion(
@@ -81,5 +81,12 @@ public class RedisUtils {
       return defaultVersion;
     }
     return Integer.parseInt(new String(versionFromDb));
+  }
+
+  public interface RedisPipelineCallback {
+    void doInRedis(
+        RedisConnection connection,
+        StringRedisSerializer keySerializer,
+        RqueueRedisSerializer valueSerializer);
   }
 }

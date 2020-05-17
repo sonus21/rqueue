@@ -168,9 +168,6 @@ public class RqueueMessageListenerContainer
   }
 
   protected void doDestroy() {
-    if (defaultTaskExecutor && taskExecutor != null) {
-      ((ThreadPoolTaskExecutor) taskExecutor).destroy();
-    }
     Set<String> destroyedExecutors = new HashSet<>();
     for (Entry<String, QueueThread> entry : queueThreadMap.entrySet()) {
       QueueThread queueThread = entry.getValue();
@@ -181,6 +178,12 @@ public class RqueueMessageListenerContainer
           destroyedExecutors.add(name);
           executor.destroy();
         }
+      }
+    }
+    if (defaultTaskExecutor && taskExecutor != null) {
+      ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) taskExecutor;
+      if (!destroyedExecutors.contains(executor.getThreadNamePrefix())) {
+        executor.destroy();
       }
     }
   }
@@ -243,24 +246,28 @@ public class RqueueMessageListenerContainer
           }
         }
       }
-      if (QueueRegistry.getActiveQueueCount() == 0) {
+      List<QueueDetail> queueDetails = QueueRegistry.getActiveQueueDetails();
+      if (queueDetails.isEmpty()) {
         return;
       }
       if (taskExecutor == null) {
         defaultTaskExecutor = true;
-        taskExecutor = createDefaultTaskExecutor();
+        taskExecutor = createDefaultTaskExecutor(queueDetails);
       } else {
-        initializeDefaultExecutor(false, taskExecutor, getWorkersCount());
+        initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
       }
       initializeRunningQueueState();
       lifecycleMgr.notifyAll();
     }
   }
 
-  private void initializeDefaultExecutor(
-      boolean defaultExecutor, AsyncTaskExecutor taskExecutor, int workersCount) {
+  private void initializeThreadMap(
+      List<QueueDetail> queueDetails,
+      AsyncTaskExecutor taskExecutor,
+      boolean defaultExecutor,
+      int workersCount) {
     Semaphore semaphore = new Semaphore(workersCount);
-    for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
+    for (QueueDetail queueDetail : queueDetails) {
       queueThreadMap.put(
           queueDetail.getName(),
           new QueueThread(defaultExecutor, taskExecutor, semaphore, workersCount));
@@ -273,10 +280,8 @@ public class RqueueMessageListenerContainer
     }
   }
 
-  private int getWorkersCount() {
-    return (maxNumWorkers == null
-        ? QueueRegistry.getActiveQueueCount() * DEFAULT_WORKER_COUNT_PER_QUEUE
-        : maxNumWorkers);
+  private int getWorkersCount(int queueCount) {
+    return (maxNumWorkers == null ? queueCount * DEFAULT_WORKER_COUNT_PER_QUEUE : maxNumWorkers);
   }
 
   private AsyncTaskExecutor createTaskExecutor(int corePoolSize, int maxPoolSize) {
@@ -286,13 +291,14 @@ public class RqueueMessageListenerContainer
         DEFAULT_THREAD_NAME_PREFIX, prefix, corePoolSize, maxPoolSize);
   }
 
-  private AsyncTaskExecutor createNonConcurrencyBasedExecutor(List<QueueDetail> queueDetails) {
-    int workersCount = getWorkersCount();
-    int maxPoolSize = workersCount + queueDetails.size();
+  private AsyncTaskExecutor createNonConcurrencyBasedExecutor(
+      List<QueueDetail> queueDetails, int pollerCount) {
+    int workersCount = getWorkersCount(queueDetails.size());
+    int maxPoolSize = workersCount + pollerCount;
     // one thread for message poller and one for executor
-    int corePoolSize = 2 * queueDetails.size();
+    int corePoolSize = queueDetails.size() + pollerCount;
     AsyncTaskExecutor executor = createTaskExecutor(corePoolSize, maxPoolSize);
-    initializeDefaultExecutor(true, executor, workersCount);
+    initializeThreadMap(queueDetails, executor, true, workersCount);
     return executor;
   }
 
@@ -305,40 +311,21 @@ public class RqueueMessageListenerContainer
         queueDetail.getName(), new QueueThread(true, executor, semaphore, concurrency.getMax()));
   }
 
-  public AsyncTaskExecutor createDefaultTaskExecutor() {
-    int withConcurrency = 0;
+  public AsyncTaskExecutor createDefaultTaskExecutor(
+      List<QueueDetail> registeredActiveQueueDetail) {
     List<QueueDetail> queueDetails =
-        QueueRegistry.getActiveQueueDetails().stream()
+        registeredActiveQueueDetail.stream()
             .filter(e -> !e.isSystemGenerated())
             .collect(Collectors.toList());
-    for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
-      if (queueDetail.getConcurrency().getMin() > 0) {
-        withConcurrency += 1;
-      }
-    }
-    if (withConcurrency == 0) {
-      return createNonConcurrencyBasedExecutor(queueDetails);
-    }
-    int remainingWorkers = 0;
-    for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
+    List<QueueDetail> withoutConcurrency = new ArrayList<>();
+    for (QueueDetail queueDetail : queueDetails) {
       if (queueDetail.getConcurrency().getMin() > 0) {
         createExecutor(queueDetail);
       } else {
-        remainingWorkers += 1;
+        withoutConcurrency.add(queueDetail);
       }
     }
-    int workersCount = remainingWorkers * DEFAULT_WORKER_COUNT_PER_QUEUE;
-    int corePoolSize = queueDetails.size() + remainingWorkers;
-    int maxPoolSize = queueDetails.size() + workersCount;
-    AsyncTaskExecutor executor = createTaskExecutor(corePoolSize, maxPoolSize);
-    Semaphore semaphore = new Semaphore(workersCount);
-    for (QueueDetail queueDetail : queueDetails) {
-      if (queueDetail.getConcurrency().getMin() < 0) {
-        queueThreadMap.put(
-            queueDetail.getName(), new QueueThread(true, executor, semaphore, workersCount));
-      }
-    }
-    return executor;
+    return createNonConcurrencyBasedExecutor(withoutConcurrency, queueDetails.size());
   }
 
   private AsyncTaskExecutor createTaskExecutor(
@@ -348,12 +335,18 @@ public class RqueueMessageListenerContainer
   }
 
   private List<QueueDetail> getQueueDetail(String queue, MappingInformation mappingInformation) {
-    int numRetries = mappingInformation.getNumRetry();
-    if (!mappingInformation.getDeadLetterQueueName().isEmpty() && numRetries == -1) {
-      numRetries = Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE;
-    } else if (numRetries == -1) {
-      numRetries = Integer.MAX_VALUE;
+    int numRetry = mappingInformation.getNumRetry();
+    if (!mappingInformation.getDeadLetterQueueName().isEmpty() && numRetry == -1) {
+      numRetry = Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE;
+    } else if (numRetry == -1) {
+      numRetry = Integer.MAX_VALUE;
     }
+    String priorityGroup = mappingInformation.getPriorityGroup();
+    Map<String, Integer> priority = mappingInformation.getPriority();
+    if (StringUtils.isEmpty(priorityGroup) && priority.size() == 1) {
+      priorityGroup = Constants.DEFAULT_PRIORITY_GROUP;
+    }
+
     QueueDetail queueDetail =
         QueueDetail.builder()
             .name(queue)
@@ -366,9 +359,9 @@ public class RqueueMessageListenerContainer
             .visibilityTimeout(mappingInformation.getVisibilityTimeout())
             .concurrency(mappingInformation.getConcurrency())
             .active(mappingInformation.isActive())
-            .numRetry(numRetries)
-            .priority(mappingInformation.getPriority())
-            .priorityGroup(mappingInformation.getPriorityGroup())
+            .numRetry(numRetry)
+            .priority(priority)
+            .priorityGroup(priorityGroup)
             .build();
     if (queueDetail.getPriority().size() <= 1) {
       return Collections.singletonList(queueDetail);
@@ -584,21 +577,21 @@ public class RqueueMessageListenerContainer
     this.preExecutionMessageProcessor = preExecutionMessageProcessor;
   }
 
+  public TaskExecutionBackOff getTaskExecutionBackOff() {
+    return taskExecutionBackOff;
+  }
+
   public void setTaskExecutionBackOff(TaskExecutionBackOff taskExecutionBackOff) {
     notNull(taskExecutionBackOff, "taskExecutionBackOff cannot be null");
     this.taskExecutionBackOff = taskExecutionBackOff;
   }
 
-  public TaskExecutionBackOff getTaskExecutionBackOff() {
-    return taskExecutionBackOff;
+  public PriorityMode getPriorityMode() {
+    return priorityMode;
   }
 
   public void setPriorityMode(PriorityMode priorityMode) {
     this.priorityMode = priorityMode;
-  }
-
-  public PriorityMode getPriorityMode() {
-    return priorityMode;
   }
 
   RqueueCounter getRqueueCounter() {

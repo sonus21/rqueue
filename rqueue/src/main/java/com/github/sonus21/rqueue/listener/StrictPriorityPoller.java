@@ -32,9 +32,9 @@ import org.slf4j.event.Level;
 
 class StrictPriorityPoller extends RqueueMessagePoller {
   private final Map<String, QueueDetail> queueNameToDetail;
-  private Map<String, Long> lastFetchedTime = new HashMap<>();
   private final Map<String, QueueThread> queueNameToThread;
   private final Map<String, Long> queueDeactivationTime = new HashMap<>();
+  private Map<String, Long> lastFetchedTime = new HashMap<>();
 
   StrictPriorityPoller(
       String groupName,
@@ -68,11 +68,11 @@ class StrictPriorityPoller extends RqueueMessagePoller {
     }
     for (String queue : queues) {
       if (isQueueActive(queue)) {
-        Long lastDeactivationTime = queueDeactivationTime.get(queue);
-        if (lastDeactivationTime == null) {
+        Long deactivationTime = queueDeactivationTime.get(queue);
+        if (deactivationTime == null) {
           return queue;
         }
-        if (now - lastDeactivationTime > getPollingInterval()) {
+        if (now - deactivationTime > getPollingInterval()) {
           return queue;
         }
       }
