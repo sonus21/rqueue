@@ -70,7 +70,7 @@ public class MessageListener {
       value = "job-queue",
       deadLetterQueue = "job-morgue",
       numRetries = "2",
-      concurrency = "5-10",
+      concurrency = "1-3",
       active = "true")
   @NewSpan
   public void onMessage(Job job) {

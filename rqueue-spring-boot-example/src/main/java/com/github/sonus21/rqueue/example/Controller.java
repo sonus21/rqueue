@@ -42,7 +42,7 @@ public class Controller {
     } else if (numRetries == null) {
       rqueueMessageSender.enqueueIn(q, msg, delay);
     } else {
-      rqueueMessageSender.enqueueInWithPriority(q, msg, numRetries, delay);
+      rqueueMessageSender.enqueueInWithRetry(q, msg, numRetries, delay);
     }
     log.info("Message {}", msg);
     return "Message sent successfully";
