@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.config;
 import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
+import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
@@ -39,6 +40,7 @@ import org.springframework.messaging.converter.MessageConverter;
  *
  * <p>Factory has multiple methods to support different types of requirements.
  */
+@SuppressWarnings("WeakerAccess")
 public class SimpleRqueueListenerContainerFactory {
   // Provide task executor, this can be used to provide some additional details like some threads
   // name, etc otherwise a default task executor would be created
@@ -74,7 +76,7 @@ public class SimpleRqueueListenerContainerFactory {
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
 
-  // Set priority mode for the workers
+  // Set priority mode for the pollers
   private PriorityMode priorityMode;
 
   /**
@@ -99,13 +101,15 @@ public class SimpleRqueueListenerContainerFactory {
 
   /**
    * Configures the {@link TaskExecutor} which is used to poll messages and execute them by calling
-   * the handler methods. If no {@link TaskExecutor} is set, a default one is created.
+   * the handler methods. If no {@link TaskExecutor} is set, a default one is created. If you're
+   * setting this then you should set {@link #maxNumWorkers}.
    *
    * @param taskExecutor The {@link TaskExecutor} used by the container.
    * @see RqueueMessageListenerContainer#createDefaultTaskExecutor(List)
+   * @see #setMaxNumWorkers(int)
    */
   public void setTaskExecutor(AsyncTaskExecutor taskExecutor) {
-    notNull(taskExecutor, "taskExecutor can not be null");
+    notNull(taskExecutor, "taskExecutor cannot be null");
     this.taskExecutor = taskExecutor;
   }
 
@@ -114,8 +118,12 @@ public class SimpleRqueueListenerContainerFactory {
   }
 
   /**
-   * Configures if {@link com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer}
-   * container should be automatically started. The default value is true.
+   * Configures if {@link RqueueMessageListenerContainer} container should be automatically started.
+   * The default value is true.
+   *
+   * <p>Setting this to false means, you must call start, stop and destroy methods of {@link
+   * RqueueMessageListenerContainer#start()}, {@link RqueueMessageListenerContainer#stop() },{@link
+   * RqueueMessageListenerContainer#destroy()}
    *
    * @param autoStartup - false if the container will be manually started
    */
@@ -155,7 +163,7 @@ public class SimpleRqueueListenerContainerFactory {
    * The number of milliseconds the polling thread must wait before trying to recover when an error
    * occurs (e.g. connection timeout). Default value is 10000 milliseconds.
    *
-   * @param backOffTime in milliseconds
+   * @param backOffTime in milliseconds.
    */
   public void setBackOffTime(long backOffTime) {
     this.backOffTime = backOffTime;
@@ -166,7 +174,21 @@ public class SimpleRqueueListenerContainerFactory {
   }
 
   /**
-   * Maximum number of workers, that would be used to run tasks.
+   * Maximum number of workers, that would be used to run tasks. The default size which is 2 threads
+   * for every queue.
+   *
+   * <p>When you're using custom executor then you should set this number as (thread pool max size -
+   * number of queues) given executor is not shared. The maxNumWorkers tells how many workers you
+   * want to run in parallel for all listeners, for example if you have 3 listeners, and you have
+   * set this as 10 then all 3 listeners would be running maximum **combined 10 jobs** at any point
+   * of time.
+   *
+   * <p>What would happen if I set this to very high value while using custom executor? <br>
+   * 1. Task(s) would be rejected by the executor unless queue size is non-zero <br>
+   * 2. When queue size is non-zero then it can create duplicate message problem, since the polled
+   * message has not been processed yet. This will happen when {@link
+   * RqueueListener#visibilityTimeout()} is smaller than the time a task took to execute from the
+   * time of polling to final execution.
    *
    * @param maxNumWorkers Maximum number of workers.
    */
@@ -391,6 +413,11 @@ public class SimpleRqueueListenerContainerFactory {
     return priorityMode;
   }
 
+  /**
+   * Set priority mode for queues.
+   *
+   * @param priorityMode strict or weighted.
+   */
   public void setPriorityMode(PriorityMode priorityMode) {
     this.priorityMode = priorityMode;
   }

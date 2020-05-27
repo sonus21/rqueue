@@ -66,6 +66,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(fullyQualifiedNames = {"com.github.sonus21.rqueue.utils.ThreadUtils"})
+@SuppressWarnings("unchecked")
 public class DelayedMessageSchedulerTest {
   @Rule public MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
@@ -299,7 +300,7 @@ public class DelayedMessageSchedulerTest {
         (MessageListener) FieldUtils.readField(messageScheduler, "messageSchedulerListener", true);
     // invalid channel
     messageListener.onMessage(new DefaultMessage(slowQueue.getBytes(), "312".getBytes()), null);
-    Thread.sleep(100);
+    Thread.sleep(50);
     assertEquals(2, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
     // invalid body
