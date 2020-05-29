@@ -472,6 +472,11 @@ It's safe to use version 2.x if existing queues do not have any tasks to process
 ```
 If all of these commands gives zero then all tasks have been consumed.
 
+## Rqueue users
+If you're one of the Rqueue users, please raise a PR/issue to get your organization listed here.
+
+[TuneYou](https://tuneyou.com/)
+
 ## Support
 Please report bug,question,feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for any feature/bug/enhancement.
 
