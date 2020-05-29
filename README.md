@@ -183,9 +183,9 @@ If you're one of the Rqueue users, please raise a PR/issue to get your organizat
 Please report bug,question,feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for any feature/bug/enhancement.
 
 ## Links
-Documentation:[https://github.com/sonus21/rqueue/wiki](https://github.com/sonus21/rqueue/wiki) <br/>
-Releases: [https://github.com/sonus21/rqueue/releases](https://github.com/sonus21/rqueue/releases) <br/>
-Issue tracker: [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues) <br/>
+* Documentation:[https://github.com/sonus21/rqueue/wiki](https://github.com/sonus21/rqueue/wiki)
+* Releases: [https://github.com/sonus21/rqueue/releases](https://github.com/sonus21/rqueue/releases)
+* Issue tracker: [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues) 
 
 ## License
 © [Sonu Kumar](mailto:sonunitw12@gmail.com) 2019-Instant.now
