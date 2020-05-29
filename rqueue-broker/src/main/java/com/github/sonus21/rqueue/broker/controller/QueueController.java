@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.broker.controller;
 
-public final class SerializationUtils {
-  private SerializationUtils() {}
+import org.springframework.web.bind.annotation.RestController;
 
-  public static boolean isEmpty(byte[] bytes) {
-    return bytes == null || bytes.length == 0;
-  }
+@RestController("api/v1/queue")
+public class QueueController {
 
-  public static boolean isJson(String data) {
-    return !StringUtils.isEmpty(data)
-        && data.charAt(0) == '{'
-        && data.charAt(data.length() - 1) == '}';
-  }
+
 }

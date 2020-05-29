@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.broker.dto.request;
 
-public final class SerializationUtils {
-  private SerializationUtils() {}
+import com.github.sonus21.rqueue.models.request.BooleanRequest;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-  public static boolean isEmpty(byte[] bytes) {
-    return bytes == null || bytes.length == 0;
-  }
-
-  public static boolean isJson(String data) {
-    return !StringUtils.isEmpty(data)
-        && data.charAt(0) == '{'
-        && data.charAt(data.length() - 1) == '}';
-  }
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString(callSuper = true)
+public class TopicRequest extends BooleanRequest {
+  private static final long serialVersionUID = 1362252999686592588L;
+  private List<Topic> topics;
 }

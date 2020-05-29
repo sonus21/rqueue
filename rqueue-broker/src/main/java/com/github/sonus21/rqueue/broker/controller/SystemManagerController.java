@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.broker.controller;
 
-public final class SerializationUtils {
-  private SerializationUtils() {}
+import com.github.sonus21.rqueue.broker.dto.request.SubscriptionRequest;
+import com.github.sonus21.rqueue.broker.dto.request.TopicRequest;
+import com.github.sonus21.rqueue.broker.dto.response.TopicResponse;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-  public static boolean isEmpty(byte[] bytes) {
-    return bytes == null || bytes.length == 0;
-  }
 
-  public static boolean isJson(String data) {
-    return !StringUtils.isEmpty(data)
-        && data.charAt(0) == '{'
-        && data.charAt(data.length() - 1) == '}';
-  }
-}
+public class SystemManagerController {
+ }

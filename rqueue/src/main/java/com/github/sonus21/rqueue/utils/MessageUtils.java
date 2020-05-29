@@ -25,10 +25,10 @@ import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
-public class MessageUtils {
+public final class MessageUtils {
   private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
 
-  public MessageUtils() {}
+  private MessageUtils() {}
 
   public static Object convertMessageToObject(
       RqueueMessage message, MessageConverter messageConverter) {

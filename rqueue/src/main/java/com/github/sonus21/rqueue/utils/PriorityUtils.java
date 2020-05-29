@@ -20,8 +20,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class PriorityUtils {
-  PriorityUtils() {}
+public final class PriorityUtils {
+  private PriorityUtils() {}
 
   public static Set<String> getNamesFromPriority(String queueName, Map<String, Integer> priority) {
     Set<String> keys = new HashSet<>();

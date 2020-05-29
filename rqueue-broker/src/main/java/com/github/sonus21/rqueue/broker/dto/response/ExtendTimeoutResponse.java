@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.broker.dto.response;
 
-public final class SerializationUtils {
-  private SerializationUtils() {}
+import com.github.sonus21.rqueue.models.response.BaseResponse;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-  public static boolean isEmpty(byte[] bytes) {
-    return bytes == null || bytes.length == 0;
-  }
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+public class ExtendTimeoutResponse extends BaseResponse {
 
-  public static boolean isJson(String data) {
-    return !StringUtils.isEmpty(data)
-        && data.charAt(0) == '{'
-        && data.charAt(data.length() - 1) == '}';
-  }
+  private static final long serialVersionUID = -6206700564973834010L;
+  private List<IdResponse> data;
 }

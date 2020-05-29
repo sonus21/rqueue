@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.utils;
 
-public class Constants {
-
+@SuppressWarnings("WeakerAccess")
+public final class Constants {
   public static final String BLANK = "";
   public static final long ONE_MILLI = 1000;
   public static final int ONE_MILLI_INT = 1000;

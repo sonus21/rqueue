@@ -28,7 +28,8 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.NonNull;
 
-public class ValueResolver {
+@SuppressWarnings("WeakerAccess")
+public final class ValueResolver {
   private ValueResolver() {}
 
   @SuppressWarnings("unchecked")

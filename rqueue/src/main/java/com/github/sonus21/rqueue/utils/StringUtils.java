@@ -18,8 +18,9 @@ package com.github.sonus21.rqueue.utils;
 
 import java.beans.Introspector;
 
-public class StringUtils {
-  StringUtils() {}
+@SuppressWarnings("WeakerAccess")
+public final class StringUtils {
+  private StringUtils() {}
 
   public static boolean isEmpty(String string) {
     if (string == null) {

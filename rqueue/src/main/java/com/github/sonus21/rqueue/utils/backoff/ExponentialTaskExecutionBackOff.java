@@ -32,6 +32,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
  * <p>Using multiplier 1 would mean using the fixed execution back off {@link
  * FixedTaskExecutionBackOff}
  */
+@SuppressWarnings("WeakerAccess")
 public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
   /** The default initial delay for the any task: 1500 ms (1.5 seconds) */
   public static final long DEFAULT_INITIAL_INTERVAL = 1500L;

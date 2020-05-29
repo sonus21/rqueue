@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.broker;
 
-public final class SerializationUtils {
-  private SerializationUtils() {}
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
-  public static boolean isEmpty(byte[] bytes) {
-    return bytes == null || bytes.length == 0;
-  }
+@SpringBootApplication
+@EnableRedisRepositories
+public class RqueueBroker {
+  @Value("${workers.count:3}")
+  private int workersCount;
 
-  public static boolean isJson(String data) {
-    return !StringUtils.isEmpty(data)
-        && data.charAt(0) == '{'
-        && data.charAt(data.length() - 1) == '}';
+  public static void main(String[] args) {
+    SpringApplication.run(RqueueBroker.class, args);
   }
 }

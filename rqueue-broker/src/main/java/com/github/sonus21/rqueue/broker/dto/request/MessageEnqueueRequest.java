@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.broker.dto.request;
 
-public final class SerializationUtils {
-  private SerializationUtils() {}
+import com.github.sonus21.rqueue.models.SerializableBase;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-  public static boolean isEmpty(byte[] bytes) {
-    return bytes == null || bytes.length == 0;
-  }
+@AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@SuppressWarnings("WeakerAccess")
+public class MessageEnqueueRequest extends SerializableBase {
 
-  public static boolean isJson(String data) {
-    return !StringUtils.isEmpty(data)
-        && data.charAt(0) == '{'
-        && data.charAt(data.length() - 1) == '}';
-  }
+  private static final long serialVersionUID = 1268909305073203770L;
+  private Message message;
+  private Long delay;
+  private String queue;
+  private String priority;
 }

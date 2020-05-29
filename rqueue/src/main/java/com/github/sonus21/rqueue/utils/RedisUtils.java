@@ -26,7 +26,7 @@ import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-public class RedisUtils {
+public final class RedisUtils {
   private RedisUtils() {}
 
   public static <V> RedisTemplate<String, V> getRedisTemplate(

@@ -33,7 +33,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-public class ThreadUtils {
+public final class ThreadUtils {
   private ThreadUtils() {}
 
   public static ThreadPoolTaskScheduler createTaskScheduler(

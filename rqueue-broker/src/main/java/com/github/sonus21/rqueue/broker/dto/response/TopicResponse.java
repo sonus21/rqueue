@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.broker.dto.response;
 
-public final class SerializationUtils {
-  private SerializationUtils() {}
+import com.github.sonus21.rqueue.models.response.BaseResponse;
+import lombok.Getter;
+import lombok.Setter;
 
-  public static boolean isEmpty(byte[] bytes) {
-    return bytes == null || bytes.length == 0;
-  }
-
-  public static boolean isJson(String data) {
-    return !StringUtils.isEmpty(data)
-        && data.charAt(0) == '{'
-        && data.charAt(data.length() - 1) == '}';
-  }
+@Getter
+@Setter
+public class TopicResponse extends BaseResponse {
+  private static final long serialVersionUID = -5657756475685646484L;
 }

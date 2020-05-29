@@ -21,7 +21,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
-public class HttpUtils {
+public final class HttpUtils {
 
   private HttpUtils() {}
 

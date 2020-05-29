@@ -21,7 +21,6 @@ import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -48,7 +47,7 @@ public class MessageListener {
   }
 
   @RqueueListener(value = "${rqueue.simple.queue}", active = "true")
-  @NewSpan
+  // @NewSpan
   public void consumeMessage(String message) {
     execute("simple: {}", message);
   }
@@ -58,7 +57,7 @@ public class MessageListener {
       numRetries = "${rqueue.delay.queue.retries}",
       visibilityTimeout = "60*60*1000",
       active = "true")
-  @NewSpan
+  // @NewSpan
   public void onMessage(String message) {
     execute("delay: {}", message);
     if (shouldFail()) {
@@ -72,7 +71,7 @@ public class MessageListener {
       numRetries = "2",
       concurrency = "1-3",
       active = "true")
-  @NewSpan
+  // @NewSpan
   public void onMessage(Job job) {
     execute("job-queue: {}", job);
     if (shouldFail()) {

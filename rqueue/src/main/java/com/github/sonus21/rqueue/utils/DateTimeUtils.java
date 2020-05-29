@@ -22,17 +22,19 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class DateTimeUtils {
+public final class DateTimeUtils {
   private static DateTimeFormatter simple = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
 
-  DateTimeUtils() {}
+  private DateTimeUtils() {}
 
   public static String milliToHumanRepresentation(long millis) {
     String prefix = "";
+    long absMillis = millis;
     if (millis < 0) {
       prefix = "-";
+      absMillis = -1 * millis;
     }
-    long seconds = millis / Constants.ONE_MILLI;
+    long seconds = absMillis / Constants.ONE_MILLI;
     long minutes = seconds / Constants.SECONDS_IN_A_MINUTE;
     seconds = seconds % Constants.SECONDS_IN_A_MINUTE; // remaining seconds
     long hours = minutes / Constants.MINUTES_IN_AN_HOUR;
