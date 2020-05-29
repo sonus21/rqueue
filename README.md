@@ -185,7 +185,8 @@ Please report bug,question,feature(s) to [issue](https://github.com/sonus21/rque
 ## Links
 * Documentation:[https://github.com/sonus21/rqueue/wiki](https://github.com/sonus21/rqueue/wiki)
 * Releases: [https://github.com/sonus21/rqueue/releases](https://github.com/sonus21/rqueue/releases)
-* Issue tracker: [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues) 
+* Issue tracker: [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues)
+* Maven Central: [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring/](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring/) , [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter/](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter/) 
 
 ## License
 © [Sonu Kumar](mailto:sonunitw12@gmail.com) 2019-Instant.now
