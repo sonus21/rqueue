@@ -27,8 +27,6 @@
 * Callbacks for different actions
 * Events 1. Bootstrap event 2. Task execution event.
 
-#### NOTE: For Redis cluster, it's required to provide MASTER [connection](https://github.com/sonus21/rqueue/issues/19)
-
 ## Getting Started
 
 ### Dependency 
@@ -79,7 +77,7 @@ public class Application{
 }
 ```
 
-## Message publishing/Task submission
+### Message publishing/Task submission
 All messages need to be sent using `RqueueMessageSender` bean's `enqueueXXX`, `enqueueInXXX` and `enqueueAtXXX` methods.
 It has handful number of `enqueue`, `enqueueIn`, `enqueueAt` methods, we can use one of them based on the use case.
 
@@ -120,7 +118,7 @@ public class MessageService {
 ```
 
 
-## Worker/Consumer/Task executor/Listener
+### Worker/Consumer/Task executor/Listener
 Any method that's part of spring bean, can be marked as worker/message listener using `RqueueListener` annotation
 
 ```java
