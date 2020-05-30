@@ -172,10 +172,12 @@ public class MessageListener {
 Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
 [![Execution Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
+<br/>
+<br/>
 [![Explore Queue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
 
 ## In Production
-If you're one of the Rqueue users, please raise a PR/issue to get your organization listed here.
+If you're one of the Rqueue users, please raise a PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users) to get your organization listed here.
 
 <a href="https://tuneyou.com/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>&nbsp;&nbsp;
 
