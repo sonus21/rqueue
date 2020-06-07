@@ -16,10 +16,30 @@
 
 package com.github.sonus21.rqueue.broker.controller;
 
+import com.github.sonus21.rqueue.broker.models.request.BatchMessageEnqueueRequest;
+import com.github.sonus21.rqueue.broker.models.request.CreateQueueRequest;
+import com.github.sonus21.rqueue.broker.models.request.MessageRequest;
+import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
+import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
+import com.github.sonus21.rqueue.broker.models.response.MessageResponse;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController("api/v1/queue")
 public class QueueController {
+  @PostMapping("new")
+  public CreateQueueResponse newQueue(@RequestBody CreateQueueRequest request) {
+    return null;
+  }
 
+  @PostMapping("enqueue")
+  public MessageEnqueueResponse enqueue(@RequestBody BatchMessageEnqueueRequest request) {
+    return null;
+  }
 
+  @PostMapping("dequeue")
+  public MessageResponse getMessage(@RequestBody MessageRequest messageRequest) {
+    return null;
+  }
 }

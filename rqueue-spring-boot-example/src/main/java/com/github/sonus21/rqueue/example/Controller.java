@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.example;
 
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,8 @@ public class Controller {
       String q,
       String msg,
       @RequestParam(required = false) Integer numRetries,
-      @RequestParam(required = false) Long delay) {
+      @RequestParam(required = false) Long delay,
+      @RequestParam List<String> val) {
     if (numRetries == null && delay == null) {
       rqueueMessageSender.enqueue(q, msg);
     } else if (numRetries == null) {
@@ -44,7 +46,7 @@ public class Controller {
     } else {
       rqueueMessageSender.enqueueInWithRetry(q, msg, numRetries, delay);
     }
-    log.info("Message {}", msg);
+    log.info("Message {}, val {}", msg, val);
     return "Message sent successfully";
   }
 

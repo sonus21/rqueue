@@ -16,23 +16,29 @@
 
 package com.github.sonus21.rqueue.config;
 
+import java.util.UUID;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
-@Configuration
 public class RqueueConfig {
   private final RedisConnectionFactory connectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
+  private final String id;
 
-  @Value("${rqueue.version:2.0.1}")
+  public RqueueConfig(
+      RedisConnectionFactory connectionFactory, boolean sharedConnection, int dbVersion) {
+    this.connectionFactory = connectionFactory;
+    this.sharedConnection = sharedConnection;
+    this.dbVersion = dbVersion;
+    this.id = UUID.randomUUID().toString();
+  }
+
+  @Value("${rqueue.version:2.1.0}")
   private String version;
 
   @Value("${rqueue.key.prefix:__rq::}")
@@ -76,6 +82,21 @@ public class RqueueConfig {
 
   @Value("${rqueue.default.queue.with.queue.level.priority:-1}")
   private int defaultQueueWithQueueLevelPriority;
+
+  @Value("${rqueue.topics.key.suffix:topics}")
+  private String topicsKeySuffix;
+
+  @Value("${rqueue.topic.name.prefix:topic::}")
+  private String topicNamePrefix;
+
+  @Value("${rqueue.topic.configuration.key:t-config::}")
+  private String topicConfigurationPrefix;
+
+  @Value("${rqueue.topic.subscription.key:t-subscription::}")
+  private String topicSubscriptionPrefix;
+
+  @Value("${rqueue.event.channel:e-channel}")
+  private String eventChannelSuffix;
 
   public String getQueuesKey() {
     return prefix + queuesKeySuffix;
@@ -126,6 +147,26 @@ public class RqueueConfig {
 
   public String getQueueConfigKey(String name) {
     return prefix + queueConfigKeyPrefix + name;
+  }
+
+  public String getTopicsKey() {
+    return getPrefix() + topicsKeySuffix;
+  }
+
+  public String getTopicName(String topic) {
+    return getPrefix() + topicNamePrefix + topic;
+  }
+
+  public String getTopicSubscriptionKey(String topic) {
+    return getPrefix() + topicSubscriptionPrefix + topic;
+  }
+
+  public String getTopicConfigurationKey(String topic) {
+    return getPrefix() + topicConfigurationPrefix + topic;
+  }
+
+  public String getInternalEventChannel() {
+    return getPrefix() + eventChannelSuffix;
   }
 
   private String getTaggedName(String queueName) {

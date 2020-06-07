@@ -39,7 +39,7 @@ import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.web.dao.RqueueQStore;
 import com.github.sonus21.rqueue.web.service.impl.RqueueUtilityServiceImpl;
 import java.io.Serializable;
 import java.time.Duration;
@@ -54,7 +54,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class RqueueUtilityServiceTest {
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
-  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private RqueueQStore rqueueQStore = mock(RqueueQStore.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageMetadataService messageMetadataService =
@@ -65,7 +65,7 @@ public class RqueueUtilityServiceTest {
           rqueueConfig,
           rqueueWebConfig,
           stringRqueueRedisTemplate,
-          rqueueSystemConfigDao,
+          rqueueQStore,
           rqueueMessageTemplate,
           messageMetadataService);
 
@@ -78,7 +78,7 @@ public class RqueueUtilityServiceTest {
     assertEquals("Queue config not found!", response.getMessage());
 
     QueueConfig queueConfig = createQueueConfig("notification", 3, 10000L, null);
-    doReturn(queueConfig).when(rqueueSystemConfigDao).getQConfig(queueConfig.getId());
+    doReturn(queueConfig).when(rqueueQStore).getQConfig(queueConfig.getId());
     response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(0, response.getCode());
     assertNull(response.getMessage());

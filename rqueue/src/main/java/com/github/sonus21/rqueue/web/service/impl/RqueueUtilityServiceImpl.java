@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -32,7 +33,7 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.web.dao.RqueueQStore;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import java.time.Duration;
@@ -49,7 +50,7 @@ import org.springframework.stereotype.Service;
 public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  private final RqueueSystemConfigDao rqueueSystemConfigDao;
+  private final RqueueQStore rqueueQStore;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageMetadataService messageMetadataService;
   private final RqueueConfig rqueueConfig;
@@ -62,11 +63,11 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate,
-      RqueueSystemConfigDao rqueueSystemConfigDao,
+      RqueueQStore rqueueQStore,
       RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMessageMetadataService messageMetadataService) {
     this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
-    this.rqueueSystemConfigDao = rqueueSystemConfigDao;
+    this.rqueueQStore = rqueueQStore;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueConfig = rqueueConfig;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
@@ -76,11 +77,10 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   @Override
   public BooleanResponse deleteMessage(String queueName, String id) {
     String queueConfigKey = rqueueConfig.getQueueConfigKey(queueName);
-    QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey);
+    QueueConfig queueConfig = rqueueQStore.getQConfig(queueConfigKey);
     BooleanResponse booleanResponse = new BooleanResponse();
     if (queueConfig == null) {
-      booleanResponse.setCode(1);
-      booleanResponse.setMessage("Queue config not found!");
+      booleanResponse.set(ErrorCode.ERROR, "Queue config not found!");
       return booleanResponse;
     }
     messageMetadataService.deleteMessage(id, Duration.ofDays(Constants.DAYS_IN_A_MONTH));
@@ -136,8 +136,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     String message = messageMoveRequest.validationMessage();
     if (!StringUtils.isEmpty(message)) {
       MessageMoveResponse transferResponse = new MessageMoveResponse();
-      transferResponse.setCode(1);
-      transferResponse.setMessage(message);
+      transferResponse.set(ErrorCode.ERROR, message);
       return transferResponse;
     }
     DataType dstType = messageMoveRequest.getDstType();

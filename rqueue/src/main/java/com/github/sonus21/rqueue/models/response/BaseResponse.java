@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.models.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.sonus21.rqueue.models.SerializableBase;
+import com.github.sonus21.rqueue.exception.ErrorCode;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,17 +29,17 @@ import lombok.ToString;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class BaseResponse extends SerializableBase {
-
+public class BaseResponse extends CodeAndMessage {
   private static final long serialVersionUID = 4830863373464370840L;
-  private int code;
-  private String message;
+  private List<FieldError> errors;
 
-  @JsonIgnore
-  public void set(int code, String message) {
-    this.code = code;
-    this.message = message;
+  public BaseResponse(ErrorCode code) {
+    super(code);
+  }
+
+  public BaseResponse(ErrorCode code, String message) {
+    super(code, message);
   }
 }

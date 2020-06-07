@@ -22,8 +22,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@EqualsAndHashCode
-public class Concurrency {
+@EqualsAndHashCode(callSuper = false)
+public class Concurrency extends SerializableBase {
+
+  private static final long serialVersionUID = 2524887284782758641L;
   private int min;
   private int max;
 

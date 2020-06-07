@@ -39,6 +39,7 @@ import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
+import com.github.sonus21.rqueue.web.service.impl.RqueueTaskAggregatorService;
 import com.github.sonus21.test.RunTestUntilFail;
 import java.time.Duration;
 import java.time.LocalDateTime;

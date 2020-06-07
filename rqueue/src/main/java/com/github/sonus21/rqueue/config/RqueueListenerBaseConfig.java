@@ -51,6 +51,7 @@ import org.springframework.data.redis.core.RedisTemplate;
  * due to failure in listeners message might not be removed, whereas message in a delayed queue can
  * be very high based on the use case.
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class RqueueListenerBaseConfig {
   public static final int MAX_DB_VERSION = 2;
 

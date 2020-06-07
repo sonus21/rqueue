@@ -21,12 +21,13 @@ import static com.google.common.collect.Lists.newArrayList;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.utils.RedisUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.web.dao.RqueueQStore;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,16 +48,16 @@ public class RqueueSystemManagerServiceImpl
     implements RqueueSystemManagerService, ApplicationListener<RqueueBootstrapEvent> {
   private final RqueueConfig rqueueConfig;
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  private final RqueueSystemConfigDao rqueueSystemConfigDao;
+  private final RqueueQStore rqueueQStore;
 
   @Autowired
   public RqueueSystemManagerServiceImpl(
       RqueueConfig rqueueConfig,
       RqueueRedisTemplate<String> stringRqueueRedisTemplate,
-      RqueueSystemConfigDao rqueueSystemConfigDao) {
+      RqueueQStore rqueueQStore) {
     this.rqueueConfig = rqueueConfig;
     this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
-    this.rqueueSystemConfigDao = rqueueSystemConfigDao;
+    this.rqueueQStore = rqueueQStore;
   }
 
   private List<String> queueKeys(QueueConfig queueConfig) {
@@ -75,11 +76,10 @@ public class RqueueSystemManagerServiceImpl
   @Override
   public BaseResponse deleteQueue(String queueName) {
     QueueConfig queueConfig =
-        rqueueSystemConfigDao.getQConfig(rqueueConfig.getQueueConfigKey(queueName));
+        rqueueQStore.getQConfig(rqueueConfig.getQueueConfigKey(queueName));
     BaseResponse baseResponse = new BaseResponse();
     if (queueConfig == null) {
-      baseResponse.setCode(1);
-      baseResponse.setMessage("Queue not found");
+      baseResponse.set(ErrorCode.ERROR, "Queue not found");
       return baseResponse;
     }
     queueConfig.setDeletedOn(System.currentTimeMillis());
@@ -92,8 +92,7 @@ public class RqueueSystemManagerServiceImpl
           }
           connection.set(queueConfig.getId().getBytes(), valueSerializer.serialize(queueConfig));
         }));
-    baseResponse.setCode(0);
-    baseResponse.setMessage("Queue deleted");
+    baseResponse.set(ErrorCode.ERROR, "Queue deleted");
     return baseResponse;
   }
 
@@ -135,7 +134,7 @@ public class RqueueSystemManagerServiceImpl
     stringRqueueRedisTemplate.addToSet(rqueueConfig.getQueuesKey(), queues);
     List<String> ids =
         Arrays.stream(queues).map(rqueueConfig::getQueueConfigKey).collect(Collectors.toList());
-    List<QueueConfig> queueConfigs = rqueueSystemConfigDao.findAllQConfig(ids);
+    List<QueueConfig> queueConfigs = rqueueQStore.findAllQConfig(ids);
     List<QueueConfig> newConfigs = new ArrayList<>();
     for (QueueDetail queueDetail : queueDetails) {
       QueueConfig dbConfig = null;
@@ -151,7 +150,7 @@ public class RqueueSystemManagerServiceImpl
       }
     }
     if (!CollectionUtils.isEmpty(newConfigs)) {
-      rqueueSystemConfigDao.saveAllQConfig(newConfigs);
+      rqueueQStore.saveAllQConfig(newConfigs);
     }
   }
 
@@ -183,7 +182,7 @@ public class RqueueSystemManagerServiceImpl
       ids = queues.stream().map(rqueueConfig::getQueueConfigKey).collect(Collectors.toList());
     }
     if (!CollectionUtils.isEmpty(ids)) {
-      return rqueueSystemConfigDao.findAllQConfig(ids);
+      return rqueueQStore.findAllQConfig(ids);
     }
     return Collections.emptyList();
   }

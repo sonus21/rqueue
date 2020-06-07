@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 @Slf4j
-public class ProcessingMessageScheduler extends MessageScheduler {
+public class ProcessingMessageScheduler extends AbstractMessageScheduler {
   private Map<String, Long> queueNameToDelay;
 
   @Override

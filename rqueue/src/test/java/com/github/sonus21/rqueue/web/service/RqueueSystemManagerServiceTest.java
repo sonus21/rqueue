@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.web.dao.RqueueQStore;
 import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,10 +49,10 @@ public class RqueueSystemManagerServiceTest {
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RedisTemplate<String, String> redisTemplate = mock(RedisTemplate.class);
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
-  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private RqueueQStore rqueueQStore = mock(RqueueQStore.class);
   private RqueueSystemManagerService rqueueSystemManagerService =
       new RqueueSystemManagerServiceImpl(
-          rqueueConfig, stringRqueueRedisTemplate, rqueueSystemConfigDao);
+          rqueueConfig, stringRqueueRedisTemplate, rqueueQStore);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
   private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue, 900000L);
@@ -84,7 +84,7 @@ public class RqueueSystemManagerServiceTest {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test", 10, 10000L, null);
     assertFalse(queueConfig.isDeleted());
     doReturn(queueConfig)
-        .when(rqueueSystemConfigDao)
+        .when(rqueueQStore)
         .getQConfig(TestUtils.getQueueConfigKey("test"));
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     baseResponse = rqueueSystemManagerService.deleteQueue("test");
@@ -108,7 +108,7 @@ public class RqueueSystemManagerServiceTest {
   public void getQueueConfigs() {
     doReturn(queues).when(stringRqueueRedisTemplate).getMembers(TestUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
-        .when(rqueueSystemConfigDao)
+        .when(rqueueQStore)
         .findAllQConfig(
             queues.stream().map(TestUtils::getQueueConfigKey).collect(Collectors.toList()));
     assertEquals(
@@ -120,7 +120,7 @@ public class RqueueSystemManagerServiceTest {
   public void getSortedQueueConfigs() {
     doReturn(queues).when(stringRqueueRedisTemplate).getMembers(TestUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
-        .when(rqueueSystemConfigDao)
+        .when(rqueueQStore)
         .findAllQConfig(
             queues.stream()
                 .map(TestUtils::getQueueConfigKey)
@@ -134,7 +134,7 @@ public class RqueueSystemManagerServiceTest {
   @Test
   public void testGetQueueConfigs() {
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
-        .when(rqueueSystemConfigDao)
+        .when(rqueueQStore)
         .findAllQConfig(
             queues.stream().map(TestUtils::getQueueConfigKey).collect(Collectors.toList()));
     assertEquals(
@@ -145,7 +145,7 @@ public class RqueueSystemManagerServiceTest {
   @Test
   public void getQueueConfig() {
     doReturn(Collections.singletonList(slowQueueConfig))
-        .when(rqueueSystemConfigDao)
+        .when(rqueueQStore)
         .findAllQConfig(Collections.singletonList(TestUtils.getQueueConfigKey(slowQueue)));
     assertEquals(slowQueueConfig, rqueueSystemManagerService.getQueueConfig(slowQueue));
   }

@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 @Slf4j
-public class DelayedMessageScheduler extends MessageScheduler {
+public class DelayedMessageScheduler extends AbstractMessageScheduler {
 
   @Override
   protected Logger getLogger() {

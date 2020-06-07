@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models.request;
 
+import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
@@ -46,11 +47,11 @@ public class ChartDataRequest extends SerializableBase {
   public ChartDataResponse validate() {
     ChartDataResponse chartDataResponse = new ChartDataResponse();
     if (getType() == null) {
-      chartDataResponse.set(1, "type cannot be null");
+      chartDataResponse.set(ErrorCode.ERROR, "type cannot be null");
       return chartDataResponse;
     }
     if (getAggregationType() == null) {
-      chartDataResponse.set(1, "aggregationType cannot be null");
+      chartDataResponse.set(ErrorCode.ERROR, "aggregationType cannot be null");
       return chartDataResponse;
     }
     return null;

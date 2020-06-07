@@ -16,27 +16,19 @@
 
 package com.github.sonus21.rqueue.broker.controller;
 
-import com.github.sonus21.rqueue.broker.dto.request.AckRequest;
-import com.github.sonus21.rqueue.broker.dto.request.BatchMessageEnqueueRequest;
-import com.github.sonus21.rqueue.broker.dto.request.BatchMessagePublishRequest;
-import com.github.sonus21.rqueue.broker.dto.request.ExtendTimeoutRequest;
-import com.github.sonus21.rqueue.broker.dto.request.MessageRequest;
-import com.github.sonus21.rqueue.broker.dto.response.AckResponse;
-import com.github.sonus21.rqueue.broker.dto.response.ExtendTimeoutResponse;
-import com.github.sonus21.rqueue.broker.dto.response.MessageEnqueueResponse;
-import com.github.sonus21.rqueue.broker.dto.response.MessagePublishResponse;
-import com.github.sonus21.rqueue.broker.dto.response.MessageResponse;
+import com.github.sonus21.rqueue.broker.models.request.AckRequest;
+import com.github.sonus21.rqueue.broker.models.request.ExtendTimeoutRequest;
+import com.github.sonus21.rqueue.broker.models.response.AckResponse;
+import com.github.sonus21.rqueue.broker.models.response.ExtendTimeoutResponse;
+import com.github.sonus21.rqueue.broker.models.response.IdResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController("api/v1/message")
+@RestController
+@RequestMapping("api/v1/message")
 public class MessageController {
-  @PostMapping("dequeue")
-  public MessageResponse getMessage(@RequestBody MessageRequest messageRequest) {
-    return null;
-  }
-
   @PostMapping("ack")
   public AckResponse ack(@RequestBody AckRequest request) {
     return null;
@@ -47,13 +39,8 @@ public class MessageController {
     return null;
   }
 
-  @PostMapping("enqueue")
-  public MessageEnqueueResponse enqueue(@RequestBody BatchMessageEnqueueRequest request) {
-    return null;
-  }
-
-  @PostMapping("publish")
-  public MessagePublishResponse publish(@RequestBody BatchMessagePublishRequest request) {
+  @PostMapping("delete")
+  public ExtendTimeoutResponse delete(@RequestBody IdResponse request) {
     return null;
   }
 }

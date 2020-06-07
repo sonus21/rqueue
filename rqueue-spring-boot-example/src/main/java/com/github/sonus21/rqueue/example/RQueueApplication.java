@@ -20,10 +20,12 @@ import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.test.ControllerProfiler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
 @SpringBootApplication
@@ -55,5 +57,15 @@ public class RQueueApplication {
   @Bean
   public MessageListenerProfiler messageListenerProfiler() {
     return new MessageListenerProfiler();
+  }
+
+  @Autowired
+  void conversionService(GenericConversionService genericConversionService) {
+    genericConversionService.addConverter(myStringToCollectionConvert());
+  }
+
+  @Bean
+  public MyStringToCollectionConvert myStringToCollectionConvert() {
+    return new MyStringToCollectionConvert();
   }
 }

@@ -60,7 +60,7 @@ ext {
     hibernateVersion = '5.4.9.Final'
 
     // other dependencies
-    javaxValidationApiVersion = '2.0.1.Final'
+    javaxValidationVersion = '2.0.1.Final'
 
 }
 

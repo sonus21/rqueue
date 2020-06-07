@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models.response;
 
+import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -40,8 +41,7 @@ public class DataViewResponse extends BaseResponse {
 
   public static DataViewResponse createErrorMessage(String message) {
     DataViewResponse response = new DataViewResponse();
-    response.setCode(1);
-    response.setMessage(message);
+    response.set(ErrorCode.ERROR, message);
     return response;
   }
 

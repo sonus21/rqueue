@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.models.Concurrency;
+import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
@@ -36,9 +37,11 @@ import lombok.ToString;
 
 @Getter
 @Builder
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = false)
 @ToString
-public class QueueDetail {
+public class QueueDetail extends SerializableBase {
+
+  private static final long serialVersionUID = -3835914471365118325L;
   private String name;
   private int numRetry;
   private long visibilityTimeout;

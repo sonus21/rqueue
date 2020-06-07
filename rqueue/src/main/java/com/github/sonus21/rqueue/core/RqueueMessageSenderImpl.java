@@ -252,4 +252,17 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
       QueueRegistry.register(queueDetail);
     }
   }
+
+  @Override
+  public String publish(String topic, Object message) {
+    String topicName = rqueueConfig.getTopicName(topic);
+    RqueueMessage rqueueMessage = buildMessage(messageConverter, topicName, message, null, null);
+    try {
+      messageTemplate.addMessage(topicName, rqueueMessage);
+      return rqueueMessage.getId();
+    } catch (Exception e) {
+      log.error("Message could not be published", e);
+    }
+    return null;
+  }
 }

@@ -12,6 +12,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
     compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
+    compile group: 'javax.validation', name: 'validation-api', version: "${javaxValidationVersion}"
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
     compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
     // https://mvnrepository.com/artifact/org.jtwig/jtwig-spring

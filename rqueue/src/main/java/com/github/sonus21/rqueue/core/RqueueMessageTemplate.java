@@ -34,7 +34,7 @@ public interface RqueueMessageTemplate {
   void moveMessage(
       String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay);
 
-  Long addMessage(String queueName, RqueueMessage rqueueMessage);
+  Long addMessage(String listName, RqueueMessage rqueueMessage);
 
   Boolean addToZset(String zsetName, RqueueMessage rqueueMessage, long score);
 

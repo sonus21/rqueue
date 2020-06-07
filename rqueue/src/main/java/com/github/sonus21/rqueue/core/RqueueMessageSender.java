@@ -376,4 +376,6 @@ public interface RqueueMessageSender {
    * @param priorities list of priorities to be used while sending message on this queue.
    */
   void registerQueue(String name, String... priorities);
+
+  String publish(String topic, Object message);
 }

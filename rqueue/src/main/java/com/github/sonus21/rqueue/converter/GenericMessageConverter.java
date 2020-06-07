@@ -91,8 +91,8 @@ public class GenericMessageConverter implements MessageConverter {
   @Setter
   @NoArgsConstructor
   @AllArgsConstructor
-  private static class Msg {
-    private String msg;
+  public static class Msg {
     private String name;
+    private String msg;
   }
 }
