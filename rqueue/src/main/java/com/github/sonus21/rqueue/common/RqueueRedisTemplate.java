@@ -122,11 +122,23 @@ public class RqueueRedisTemplate<V extends Serializable> {
     return redisTemplate.opsForSet().members(key);
   }
 
+  public Boolean isSetMember(String key, V val) {
+    return redisTemplate.opsForSet().isMember(key, val);
+  }
+
+  public Long removeFromSet(String key, V val) {
+    return redisTemplate.opsForSet().remove(key, val);
+  }
+
   public void ltrim(String key, Integer start, Integer end) {
     redisTemplate.opsForList().trim(key, start, end);
   }
 
   public Boolean zadd(String key, V val, long score) {
     return redisTemplate.opsForZSet().add(key, val, score);
+  }
+
+  public Long delete(Collection<String> keys) {
+    return redisTemplate.delete(keys);
   }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.broker.models;
+package com.github.sonus21.rqueue.broker.service.utils;
 
 import com.github.sonus21.rqueue.broker.models.db.Session;
 import javax.servlet.http.Cookie;
@@ -26,10 +26,15 @@ public final class AuthUtils {
 
   private static final String SESSION_ID = "SESSION-ID";
   public static final String AUTHORIZATION_HEADER = "Authorization";
+  public static final String LOGIN_PAGE_URL = "/login";
 
-  public static void addSession(HttpServletResponse response, Session session, int expiry) {
+  public static void addSession(
+      HttpServletResponse response, Session session, int expiry, boolean secureCookie) {
     Cookie cookie = new Cookie(SESSION_ID, session.getId());
     cookie.setMaxAge(expiry);
+    cookie.setHttpOnly(true);
+    cookie.setPath("/");
+    cookie.setSecure(secureCookie);
     response.addCookie(cookie);
   }
 
@@ -48,5 +53,10 @@ public final class AuthUtils {
 
   public static String getToken(HttpServletRequest request) {
     return request.getHeader(AUTHORIZATION_HEADER);
+  }
+
+  public static void removeSession(
+      HttpServletResponse response, Session session, boolean secureCookie) {
+    addSession(response, session, 0, secureCookie);
   }
 }

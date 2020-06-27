@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.broker.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.sonus21.rqueue.broker.config.RqueueBrokerSystemConfig;
 import com.github.sonus21.rqueue.broker.dao.TopicStore;
 import com.github.sonus21.rqueue.broker.models.db.TopicConfig;
 import com.github.sonus21.rqueue.broker.models.request.BatchMessagePublishRequest;
@@ -37,7 +38,6 @@ import com.github.sonus21.rqueue.broker.models.response.SubscriptionUpdateRespon
 import com.github.sonus21.rqueue.broker.models.response.UnsubscriptionResponse;
 import com.github.sonus21.rqueue.broker.service.TopicService;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.ErrorCode;
@@ -58,7 +58,7 @@ import org.springframework.util.CollectionUtils;
 
 @Service
 public class TopicServiceImpl implements TopicService {
-  private final RqueueConfig rqueueConfig;
+  private final RqueueBrokerSystemConfig rqueueBrokerSystemConfig;
   private final RqueueLockManager rqueueLockManager;
   private final TopicStore topicStore;
   private final RqueueRedisMessagePublisher rqueueRedisMessagePublisher;
@@ -67,13 +67,13 @@ public class TopicServiceImpl implements TopicService {
 
   @Autowired
   public TopicServiceImpl(
-      RqueueConfig rqueueConfig,
+      RqueueBrokerSystemConfig rqueueBrokerSystemConfig,
       RqueueLockManager rqueueLockManager,
       TopicStore topicStore,
       RqueueRedisMessagePublisher rqueueRedisMessagePublisher,
       RqueueMessageConverter rqueueMessageConverter,
       RqueueMessageTemplate rqueueMessageTemplate) {
-    this.rqueueConfig = rqueueConfig;
+    this.rqueueBrokerSystemConfig = rqueueBrokerSystemConfig;
     this.rqueueLockManager = rqueueLockManager;
     this.topicStore = topicStore;
     this.rqueueRedisMessagePublisher = rqueueRedisMessagePublisher;
@@ -101,7 +101,7 @@ public class TopicServiceImpl implements TopicService {
       throw new ValidationException(ErrorCode.TOPIC_LIST_CAN_NOT_BE_EMPTY);
     }
     Duration duration = Duration.ofSeconds(5);
-    String topicKey = rqueueConfig.getTopicsKey();
+    String topicKey = rqueueBrokerSystemConfig.getTopicsKey();
     if (rqueueLockManager.acquireLock(topicKey, duration)) {
       validateTopicCreation(topics);
       topicStore.addTopics(topics);
@@ -117,12 +117,12 @@ public class TopicServiceImpl implements TopicService {
   public SubscriptionResponse subscribe(SubscriptionRequest request)
       throws ValidationException, ProcessingException, LockException {
     Duration duration = Duration.ofSeconds(5);
-    String topicsKey = rqueueConfig.getTopicsKey();
+    String topicsKey = rqueueBrokerSystemConfig.getTopicsKey();
     if (rqueueLockManager.acquireLock(topicsKey, duration)) {
       Topic topic = request.getTopic();
       if (topicStore.isExist(topic)) {
         SubscriptionResponse response = new SubscriptionResponse();
-        String topicKey = rqueueConfig.getTopicName(topic.getName());
+        String topicKey = rqueueBrokerSystemConfig.getTopicName(topic.getName());
         if (rqueueLockManager.acquireLock(topicKey, duration)) {
           validateSubscription(topic, request.getSubscriptions());
           topicStore.addSubscriptions(request.getTopic(), request.getSubscriptions());
@@ -158,11 +158,11 @@ public class TopicServiceImpl implements TopicService {
   public UnsubscriptionResponse unsubscribe(UnsubscriptionRequest request)
       throws ValidationException, LockException, ProcessingException {
     Duration duration = Duration.ofSeconds(5);
-    String topicsKey = rqueueConfig.getTopicsKey();
+    String topicsKey = rqueueBrokerSystemConfig.getTopicsKey();
     if (rqueueLockManager.acquireLock(topicsKey, duration)) {
       Topic topic = request.getTopic();
       if (topicStore.isExist(topic)) {
-        String topicKey = rqueueConfig.getTopicName(topic.getName());
+        String topicKey = rqueueBrokerSystemConfig.getTopicName(topic.getName());
         if (rqueueLockManager.acquireLock(topicKey, duration)) {
           List<Subscription> subscriptions = topicStore.getSubscriptions(topic);
           Subscription subscription = new Subscription(request.getObserver());
@@ -210,7 +210,8 @@ public class TopicServiceImpl implements TopicService {
     for (MessagePushRequest messagePushRequest : messagePushRequests) {
       Topic topic = messagePushRequest.getTopic();
       if (topicStore.isExist(topic)) {
-        String topicKey = rqueueConfig.getTopicName(messagePushRequest.getTopic().getName());
+        String topicKey =
+            rqueueBrokerSystemConfig.getTopicName(messagePushRequest.getTopic().getName());
         RqueueMessage message = createMessage(messagePushRequest);
         rqueueMessageTemplate.addMessage(topicKey, message);
         responses.add(new IdResponse(message.getId()));
@@ -225,12 +226,12 @@ public class TopicServiceImpl implements TopicService {
   public SubscriptionUpdateResponse update(SubscriptionUpdateRequest request)
       throws ValidationException, ProcessingException, LockException {
     Duration duration = Duration.ofSeconds(5);
-    String topicsKey = rqueueConfig.getTopicsKey();
+    String topicsKey = rqueueBrokerSystemConfig.getTopicsKey();
     if (rqueueLockManager.acquireLock(topicsKey, duration)) {
       Topic topic = request.getTopic();
       if (topicStore.isExist(topic)) {
         SubscriptionUpdateResponse response = new SubscriptionUpdateResponse();
-        String topicKey = rqueueConfig.getTopicName(topic.getName());
+        String topicKey = rqueueBrokerSystemConfig.getTopicName(topic.getName());
         if (rqueueLockManager.acquireLock(topicKey, duration)) {
           List<Subscription> subscriptions = topicStore.getSubscriptions(topic);
           if (subscriptions.remove(request.getSubscription())) {
@@ -259,7 +260,7 @@ public class TopicServiceImpl implements TopicService {
   public DeleteTopicResponse delete(DeleteTopicRequest request)
       throws LockException, ProcessingException, ValidationException {
     Duration duration = Duration.ofSeconds(5);
-    String topicsKey = rqueueConfig.getTopicsKey();
+    String topicsKey = rqueueBrokerSystemConfig.getTopicsKey();
     if (rqueueLockManager.acquireLock(topicsKey, duration)) {
       TopicConfig topicConfig = topicStore.getTopicConfig(request.getTopic());
       if (topicConfig != null && !topicConfig.isDeleted()) {

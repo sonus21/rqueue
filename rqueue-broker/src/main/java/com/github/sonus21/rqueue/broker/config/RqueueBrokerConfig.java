@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.broker.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.broker.service.impl.RedisMessageListenerImpl;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
@@ -24,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class RqueueBrokerConfig {
@@ -51,5 +54,15 @@ public class RqueueBrokerConfig {
   @Bean
   public RedisMessageListenerImpl redisMessageListener() {
     return new RedisMessageListenerImpl();
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public ObjectMapper objectMapper() {
+    return new ObjectMapper();
   }
 }

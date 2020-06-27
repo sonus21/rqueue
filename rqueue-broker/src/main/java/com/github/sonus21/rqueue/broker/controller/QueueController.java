@@ -18,28 +18,53 @@ package com.github.sonus21.rqueue.broker.controller;
 
 import com.github.sonus21.rqueue.broker.models.request.BatchMessageEnqueueRequest;
 import com.github.sonus21.rqueue.broker.models.request.CreateQueueRequest;
+import com.github.sonus21.rqueue.broker.models.request.DeleteQueueRequest;
 import com.github.sonus21.rqueue.broker.models.request.MessageRequest;
+import com.github.sonus21.rqueue.broker.models.request.UpdateQueueRequest;
 import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
+import com.github.sonus21.rqueue.broker.models.response.DeleteQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageResponse;
+import com.github.sonus21.rqueue.broker.models.response.UpdateQueueResponse;
+import com.github.sonus21.rqueue.broker.service.QueueService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController("api/v1/queue")
 public class QueueController {
+  private final QueueService queueService;
+
+  @Autowired
+  public QueueController(QueueService queueService) {
+    this.queueService = queueService;
+  }
+
   @PostMapping("new")
   public CreateQueueResponse newQueue(@RequestBody CreateQueueRequest request) {
-    return null;
+    return queueService.create(request);
+  }
+
+  @PutMapping()
+  public UpdateQueueResponse update(@RequestBody UpdateQueueRequest request) {
+    return queueService.update(request);
+  }
+
+  @DeleteMapping
+  public DeleteQueueResponse delete(@RequestBody DeleteQueueRequest request) {
+    return queueService.delete(request);
   }
 
   @PostMapping("enqueue")
   public MessageEnqueueResponse enqueue(@RequestBody BatchMessageEnqueueRequest request) {
-    return null;
+    return queueService.enqueue(request);
   }
 
   @PostMapping("dequeue")
-  public MessageResponse getMessage(@RequestBody MessageRequest messageRequest) {
-    return null;
+  public MessageResponse dequeue(@RequestBody MessageRequest messageRequest) {
+    return queueService.dequeue(messageRequest);
   }
 }

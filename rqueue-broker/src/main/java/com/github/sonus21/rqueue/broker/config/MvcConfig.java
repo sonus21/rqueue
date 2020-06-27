@@ -16,6 +16,45 @@
 
 package com.github.sonus21.rqueue.broker.config;
 
-public class MvcConfig {
+import com.github.sonus21.rqueue.broker.aop.AuthenticationInterceptor;
+import com.github.sonus21.rqueue.broker.aop.LoggerInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+@EnableWebMvc
+@Configuration
+public class MvcConfig implements WebMvcConfigurer {
+
+  @Bean
+  public AuthenticationInterceptor authenticationInterceptor() {
+    return new AuthenticationInterceptor();
+  }
+
+  @Override
+  public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(new LoggerInterceptor());
+    registry
+        .addInterceptor(authenticationInterceptor())
+        .addPathPatterns("/**")
+        .excludePathPatterns("/public/**", "/login");
+  }
+
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    if (!registry.hasMappingForPattern("/webjars/**")) {
+      registry
+          .addResourceHandler("/webjars/**")
+          .addResourceLocations("classpath:/META-INF/resources/webjars/");
+    }
+    if (!registry.hasMappingForPattern("/**")) {
+      registry.addResourceHandler("/**").addResourceLocations("classpath:/public/");
+    }
+    registry
+        .addResourceHandler("swagger-ui.html")
+        .addResourceLocations("classpath:/META-INF/resources/");
+  }
 }

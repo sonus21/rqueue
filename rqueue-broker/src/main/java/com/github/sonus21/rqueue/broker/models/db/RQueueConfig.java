@@ -27,11 +27,13 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class QueueConfig extends SerializableBase {
+public class RQueueConfig extends SerializableBase {
   private static final long serialVersionUID = -7377265707903362101L;
   private String id;
   private String name;
-  private String queueName;
+  private String simpleQueuePrefix;
+  private String delayedQueuePrefix;
+  private String processingQueuePrefix;
   private Long visibilityTimeout;
   private Map<String, Integer> priority;
   private Boolean defaultQueue;

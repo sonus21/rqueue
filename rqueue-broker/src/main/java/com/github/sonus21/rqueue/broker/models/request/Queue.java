@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.broker.models.request;
 
-import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +31,8 @@ import lombok.ToString;
 public class Queue extends BasicQueue {
 
   private static final long serialVersionUID = -4384791928922053307L;
-  private List<String> priority;
+  private Long visibilityTimeout;
+  private Map<String, Integer> priority;
 
   @Override
   public boolean equals(Object other) {

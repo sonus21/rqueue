@@ -18,14 +18,12 @@ package com.github.sonus21.rqueue.broker.models.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
 public class UpdateQueueRequest extends Queue {
   private static final long serialVersionUID = 3398332843169486836L;

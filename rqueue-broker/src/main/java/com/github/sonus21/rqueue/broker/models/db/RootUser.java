@@ -16,6 +16,17 @@
 
 package com.github.sonus21.rqueue.broker.models.db;
 
-public class RootUser {
+import com.github.sonus21.rqueue.models.SerializableBase;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+public class RootUser extends SerializableBase {
+
+  private static final long serialVersionUID = 429511281060661135L;
+  private String username;
+  private String password;
 }

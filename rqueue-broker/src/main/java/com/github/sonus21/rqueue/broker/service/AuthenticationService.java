@@ -16,6 +16,35 @@
 
 package com.github.sonus21.rqueue.broker.service;
 
-public class Authentication {
+import com.github.sonus21.rqueue.broker.models.request.DeleteTokenRequest;
+import com.github.sonus21.rqueue.broker.models.request.NewTokenRequest;
+import com.github.sonus21.rqueue.broker.models.request.UpdateRootPassword;
+import com.github.sonus21.rqueue.broker.models.request.UpdateRootUsername;
+import com.github.sonus21.rqueue.broker.models.request.UsernamePassword;
+import com.github.sonus21.rqueue.models.response.BaseResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+public interface AuthenticationService {
+  boolean isValidToken(String token);
+
+  BaseResponse login(UsernamePassword usernamePassword, HttpServletResponse response);
+
+  BaseResponse logout(HttpServletRequest request, HttpServletResponse response);
+
+  BaseResponse updateRootPassword(
+      UpdateRootPassword updateRootPassword,
+      HttpServletRequest request,
+      HttpServletResponse response);
+
+  BaseResponse updateRootUsername(
+      UpdateRootUsername updateRootUsername,
+      HttpServletRequest request,
+      HttpServletResponse response);
+
+  BaseResponse createNewToken(NewTokenRequest request);
+
+  BaseResponse deleteToken(DeleteTokenRequest request);
+
+  boolean isValidSessionId(String value);
 }

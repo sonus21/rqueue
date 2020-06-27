@@ -26,7 +26,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString(callSuper = true)
 public class DeleteQueueResponse extends BaseResponse {
 

@@ -26,7 +26,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString(callSuper = true)
 public class CreateTopicResponse extends BaseResponse {
   private static final long serialVersionUID = -5657756475685646484L;

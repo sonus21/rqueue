@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.broker.models.db;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.sonus21.rqueue.broker.models.request.DestinationType;
+import com.github.sonus21.rqueue.broker.models.request.Subscription;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,7 +28,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SubscriptionConfig extends SerializableBase {
   private static final long serialVersionUID = -1261404662305659322L;
   private String id;
@@ -41,4 +40,11 @@ public class SubscriptionConfig extends SerializableBase {
   private long updatedOn;
   private boolean deleted;
   private Long deletedOn;
+
+  public Subscription toSubscription(){
+    Subscription subscription = new Subscription();
+    subscription.setDelay(
+        :122
+    );
+  }
 }

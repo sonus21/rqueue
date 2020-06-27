@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.broker.controller;
 
+import com.github.sonus21.rqueue.broker.models.request.DeleteTokenRequest;
+import com.github.sonus21.rqueue.broker.models.request.NewTokenRequest;
 import com.github.sonus21.rqueue.broker.models.request.UpdateRootPassword;
 import com.github.sonus21.rqueue.broker.models.request.UpdateRootUsername;
 import com.github.sonus21.rqueue.broker.models.request.UsernamePassword;
@@ -33,12 +35,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping
-public class AuthenticationController {
+@RequestMapping("api/v1/auth")
+public class AuthenticationApiController {
   private final AuthenticationService authenticationService;
 
   @Autowired
-  public AuthenticationController(AuthenticationService authenticationService) {
+  public AuthenticationApiController(AuthenticationService authenticationService) {
 
     this.authenticationService = authenticationService;
   }
@@ -56,13 +58,27 @@ public class AuthenticationController {
 
   @PutMapping("root-user-name")
   public BaseResponse updateRootUserName(
-      @Valid UpdateRootUsername username, HttpServletRequest request) {
-    return authenticationService.updateRootUsername(username, request);
+      @Valid UpdateRootUsername username,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    return authenticationService.updateRootUsername(username, request, response);
   }
 
   @PutMapping("root-user-password")
   public BaseResponse updateRootUserPassword(
-      @Valid UpdateRootPassword password, HttpServletRequest request) {
-    return authenticationService.updateRootPassword(password, request);
+      @Valid UpdateRootPassword password,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    return authenticationService.updateRootPassword(password, request, response);
+  }
+
+  @DeleteMapping("token")
+  public BaseResponse deleteToken(@RequestBody @Valid DeleteTokenRequest request) {
+    return authenticationService.deleteToken(request);
+  }
+
+  @PostMapping("token")
+  public BaseResponse createToken(@RequestBody @Valid NewTokenRequest request) {
+    return authenticationService.createNewToken(request);
   }
 }

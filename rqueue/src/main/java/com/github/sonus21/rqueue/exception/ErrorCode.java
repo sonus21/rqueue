@@ -32,7 +32,13 @@ public enum ErrorCode {
   TOPIC_DOES_NOT_EXIST(105, "Topic does not exist"),
   DUPLICATE_SUBSCRIPTION(106, "Already subscribed"),
   SUBSCRIPTION_DOES_NOT_EXIST(107, "Already subscribed"),
-  NO_MESSAGE_PROVIDED(107, "No message provided");
+  NO_MESSAGE_PROVIDED(107, "No message provided"),
+  INVALID_USERNAME_OR_PASSWORD(108, "Invalid username or password"),
+  TOKEN_DOES_NOT_EXIST(109, "Token does not exist"),
+  USERNAME_IS_REQUIRED(110, "Username is required"),
+  PASSWORD_IS_REQUIRED(111, "Password is required"),
+  PASSWORD_DOES_NOT_SATISFY_REQUIREMENTS(112, "Password does not satisfy requirement"),
+  UNAUTHORIZED_ACCESS(113, "Unauthorized access(Either login or provide Authorization headers)");
   private int code;
   private String message;
 
@@ -44,4 +50,8 @@ public enum ErrorCode {
   public String getMessage() {
     return message;
   }
+
+  public enum USER_NAME_IS_REQUIRED {}
+
+  public enum UNAUTHORIZED_ACCESS {}
 }

@@ -17,15 +17,27 @@
 package com.github.sonus21.rqueue.broker.dao;
 
 import com.github.sonus21.rqueue.broker.models.db.RootUser;
+import com.github.sonus21.rqueue.broker.models.db.Session;
+import com.github.sonus21.rqueue.broker.models.db.Token;
 
-public interface TokenStore {
+public interface AuthStore {
   RootUser getRootUser();
 
-  void deleteToken(String token);
+  boolean deleteToken(String tokenName);
 
-  void addToken(String token);
+  boolean addToken(Token token);
 
   boolean isTokenExist(String token);
 
-  void updateRootUser();
+  void updateRootUser(RootUser rootUser);
+
+  Session createSession(String username, int sessionExpiry);
+
+  boolean isSessionExist(String sessionId);
+
+  void deleteSession(String sessionId);
+
+  void cleanUserSessions(String rootUserName);
+
+  Session getSession(String sessionId);
 }

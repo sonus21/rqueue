@@ -38,6 +38,13 @@ dependencies {
     // https://mvnrepository.com/artifact/org.aspectj/aspectjrt
     compile group: 'org.aspectj', name: 'aspectjrt', version: '1.9.5'
 
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth:${springBootVersion}"
+
+    compile "io.springfox:springfox-swagger2:2.9.2"
+    compile "io.springfox:springfox-swagger-ui:2.9.2"
+    // https://mvnrepository.com/artifact/io.springfox/springfox-bean-validators
+    compile group: 'io.springfox', name: 'springfox-bean-validators', version: '2.9.2'
+
     compile 'io.lettuce:lettuce-core'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'

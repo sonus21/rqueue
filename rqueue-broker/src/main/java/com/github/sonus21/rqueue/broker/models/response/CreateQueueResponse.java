@@ -26,7 +26,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @Getter
 @Setter
-@NoArgsConstructor
 @ToString(callSuper = true)
 public class CreateQueueResponse extends BaseResponse {
 

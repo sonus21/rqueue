@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.broker.service.impl;
 
 import com.github.sonus21.rqueue.broker.models.request.BatchMessageEnqueueRequest;
 import com.github.sonus21.rqueue.broker.models.request.CreateQueueRequest;
+import com.github.sonus21.rqueue.broker.models.request.DeleteQueueRequest;
 import com.github.sonus21.rqueue.broker.models.request.MessageRequest;
 import com.github.sonus21.rqueue.broker.models.request.UpdateQueueRequest;
 import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
@@ -71,7 +72,7 @@ public class QueueServiceImpl implements QueueService {
   }
 
   @Override
-  public DeleteQueueResponse delete(DeleteQueueResponse request) {
+  public DeleteQueueResponse delete(DeleteQueueRequest request) {
     return null;
   }
 

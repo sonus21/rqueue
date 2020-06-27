@@ -16,58 +16,157 @@
 
 package com.github.sonus21.rqueue.broker.service.impl;
 
+import com.github.sonus21.rqueue.broker.config.RqueueBrokerSystemConfig;
+import com.github.sonus21.rqueue.broker.dao.AuthStore;
+import com.github.sonus21.rqueue.broker.models.db.RootUser;
+import com.github.sonus21.rqueue.broker.models.db.Session;
 import com.github.sonus21.rqueue.broker.models.request.DeleteTokenRequest;
 import com.github.sonus21.rqueue.broker.models.request.NewTokenRequest;
 import com.github.sonus21.rqueue.broker.models.request.UpdateRootPassword;
 import com.github.sonus21.rqueue.broker.models.request.UpdateRootUsername;
+import com.github.sonus21.rqueue.broker.models.request.UsernamePassword;
 import com.github.sonus21.rqueue.broker.service.AuthenticationService;
+import com.github.sonus21.rqueue.broker.service.utils.AuthUtils;
+import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
+import com.github.sonus21.rqueue.utils.StringUtils;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
+@Service
+@Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
+  private final RqueueBrokerSystemConfig rqueueBrokerSystemConfig;
+  private final AuthStore authStore;
+  private final PasswordEncoder passwordEncoder;
+
+  @Autowired
+  public AuthenticationServiceImpl(
+      RqueueBrokerSystemConfig rqueueBrokerSystemConfig,
+      AuthStore authStore,
+      PasswordEncoder passwordEncoder) {
+    this.rqueueBrokerSystemConfig = rqueueBrokerSystemConfig;
+    this.authStore = authStore;
+    this.passwordEncoder = passwordEncoder;
+  }
 
   @Override
   public boolean isValidToken(String token) {
-    return false;
+    if (StringUtils.isEmpty(token)) {
+      return false;
+    }
+    String[] tokens = token.split(" ");
+    return authStore.isTokenExist(tokens[tokens.length - 1]);
+  }
+
+  private RootUser getRootUser() {
+    RootUser rootUser = authStore.getRootUser();
+    if (rootUser == null) {
+      rootUser = new RootUser();
+      rootUser.setUsername(rqueueBrokerSystemConfig.getRootUsername());
+      rootUser.setPassword(passwordEncoder.encode(rqueueBrokerSystemConfig.getRootPassword()));
+      authStore.updateRootUser(rootUser);
+    }
+    return rootUser;
   }
 
   @Override
-  public BaseResponse login(HttpServletResponse response) {
-    return null;
+  public BaseResponse login(UsernamePassword usernamePassword, HttpServletResponse response) {
+    RootUser rootUser = getRootUser();
+    if (rootUser.getUsername().equals(usernamePassword.getUsername())
+        && rootUser.getPassword().equals(usernamePassword.getPassword())) {
+      Session session =
+          authStore.createSession(
+              rootUser.getUsername(), rqueueBrokerSystemConfig.getSessionExpiry());
+      int expiry = rqueueBrokerSystemConfig.getSessionExpiry();
+      if (rqueueBrokerSystemConfig.isCloseSessionOnBrowserClose()) {
+        expiry = -1;
+      }
+      AuthUtils.addSession(response, session, expiry, rqueueBrokerSystemConfig.isCookieSecure());
+      return new BaseResponse();
+    }
+    return new BaseResponse(ErrorCode.INVALID_USERNAME_OR_PASSWORD);
   }
 
   @Override
-  public BaseResponse logout(HttpServletResponse response) {
-    return null;
+  public BaseResponse logout(HttpServletRequest request, HttpServletResponse response) {
+    String sessionId = AuthUtils.getSessionId(request);
+    if (sessionId == null) {
+      log.warn("Session does not exist");
+    } else {
+      authStore.deleteSession(sessionId);
+    }
+    return new BaseResponse(ErrorCode.SUCCESS);
+  }
+
+  private BaseResponse updateUser(
+      RootUser rootUser,
+      String rootUserName,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    Session session = authStore.getSession(AuthUtils.getSessionId(request));
+    AuthUtils.removeSession(response, session, rqueueBrokerSystemConfig.isCookieSecure());
+    authStore.cleanUserSessions(rootUserName);
+    authStore.updateRootUser(rootUser);
+    return new BaseResponse(ErrorCode.SUCCESS);
   }
 
   @Override
-  public void generateSessionId(HttpServletResponse response) {
-
+  public BaseResponse updateRootPassword(
+      UpdateRootPassword updateRootPassword,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    if (StringUtils.isEmpty(updateRootPassword.getPassword())) {
+      return new BaseResponse(ErrorCode.PASSWORD_IS_REQUIRED);
+    }
+    if (updateRootPassword.getPassword().length() < 5) {
+      return new BaseResponse(ErrorCode.PASSWORD_DOES_NOT_SATISFY_REQUIREMENTS);
+    }
+    RootUser rootUser = getRootUser();
+    String rootUserName = rootUser.getUsername();
+    rootUser.setPassword(passwordEncoder.encode(updateRootPassword.getPassword()));
+    return updateUser(rootUser, rootUserName, request, response);
   }
 
   @Override
-  public BaseResponse updateRootPassword(UpdateRootPassword request) {
-    return null;
-  }
-
-  @Override
-  public BaseResponse updateRootUsername(UpdateRootUsername request) {
-    return null;
+  public BaseResponse updateRootUsername(
+      UpdateRootUsername updateRootUsername,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    if (StringUtils.isEmpty(updateRootUsername.getUsername())) {
+      return new BaseResponse(ErrorCode.USERNAME_IS_REQUIRED);
+    }
+    RootUser rootUser = getRootUser();
+    String rootUserName = rootUser.getUsername();
+    rootUser.setUsername(updateRootUsername.getUsername());
+    return updateUser(rootUser, rootUserName, request, response);
   }
 
   @Override
   public BaseResponse createNewToken(NewTokenRequest request) {
-    return null;
+    if (authStore.addToken(request)) {
+      return new BaseResponse();
+    }
+    return new BaseResponse(ErrorCode.ERROR);
   }
 
   @Override
   public BaseResponse deleteToken(DeleteTokenRequest request) {
-    return null;
+    if (authStore.deleteToken(request.getName())) {
+      return new BaseResponse(ErrorCode.SUCCESS);
+    }
+    return new BaseResponse(ErrorCode.TOKEN_DOES_NOT_EXIST);
   }
 
   @Override
-  public boolean isValidSessionId(String value) {
-    return false;
+  public boolean isValidSessionId(String sessionId) {
+    if (sessionId == null) {
+      return false;
+    }
+    return authStore.isSessionExist(sessionId);
   }
 }

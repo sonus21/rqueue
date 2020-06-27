@@ -50,7 +50,7 @@ public class TopicController {
   @PostMapping("new")
   public CreateTopicResponse newTopic(@RequestBody @Valid CreateTopicRequest request)
       throws LockException, ValidationException {
-    return topicService.newTopic(request);
+    return topicService.create(request);
   }
 
   @PostMapping("subscribe")

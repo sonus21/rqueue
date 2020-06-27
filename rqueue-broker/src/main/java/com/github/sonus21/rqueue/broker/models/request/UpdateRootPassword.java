@@ -16,6 +16,16 @@
 
 package com.github.sonus21.rqueue.broker.models.request;
 
-public class UpdateRootPassword {
+import com.github.sonus21.rqueue.models.SerializableBase;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Setter
+@Getter
+@NoArgsConstructor
+public class UpdateRootPassword extends SerializableBase {
+
+  private static final long serialVersionUID = -4948724549920231350L;
+  private String password;
 }

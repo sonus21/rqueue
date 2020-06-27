@@ -16,6 +16,17 @@
 
 package com.github.sonus21.rqueue.broker.models.request;
 
-public class UpdateRootUserName {
+import com.github.sonus21.rqueue.models.SerializableBase;
+import javax.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+public class UpdateRootUsername extends SerializableBase {
+
+  private static final long serialVersionUID = -8288693113437983004L;
+  @NotEmpty private String username;
 }
