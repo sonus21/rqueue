@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.broker.dao.impl;
 
-import com.github.sonus21.rqueue.broker.config.RqueueBrokerSystemConfig;
+import com.github.sonus21.rqueue.broker.config.SystemConfig;
 import com.github.sonus21.rqueue.broker.dao.TopicStore;
 import com.github.sonus21.rqueue.broker.models.db.SubscriptionConfig;
 import com.github.sonus21.rqueue.broker.models.db.TopicConfig;
@@ -31,24 +31,31 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
 @Repository
 public class TopicStoreImpl implements TopicStore {
-  private final RqueueBrokerSystemConfig rqueueBrokerSystemConfig;
+  private final SystemConfig systemConfig;
   private final RqueueRedisTemplate<String> redisTemplate;
   private final RqueueRedisTemplate<TopicConfig> topicConfigRqueueRedisTemplate;
   private final RqueueRedisTemplate<SubscriptionConfig> subscriptionConfigRqueueRedisTemplate;
+  private final CacheManager cacheManager;
+  private final Cache topicCache;
+  private final Cache topicConfigCache;
 
   @Autowired
   public TopicStoreImpl(
-      RqueueBrokerSystemConfig rqueueBrokerSystemConfig,
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> redisTemplate) {
+      SystemConfig systemConfig,
+      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> redisTemplate,
+      CacheManager cacheManager) {
+    this.cacheManager = cacheManager;
     RedisConnectionFactory connectionFactory =
         redisTemplate.getRedisTemplate().getConnectionFactory();
-    this.rqueueBrokerSystemConfig = rqueueBrokerSystemConfig;
+    this.systemConfig = systemConfig;
     this.redisTemplate = redisTemplate;
     this.topicConfigRqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
     this.subscriptionConfigRqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
@@ -56,7 +63,7 @@ public class TopicStoreImpl implements TopicStore {
 
   @Override
   public Set<Topic> getTopics() {
-    String key = rqueueBrokerSystemConfig.getTopicsKey();
+    String key = systemConfig.getTopicsKey();
     Set<String> topics = redisTemplate.getMembers(key);
     if (CollectionUtils.isEmpty(topics)) {
       return Collections.emptySet();
@@ -66,28 +73,26 @@ public class TopicStoreImpl implements TopicStore {
 
   @Override
   public List<TopicConfig> getTopicConfigs() {
-    String key = rqueueBrokerSystemConfig.getTopicsKey();
+    String key = systemConfig.getTopicsKey();
     Set<String> topics = redisTemplate.getMembers(key);
     if (CollectionUtils.isEmpty(topics)) {
       return Collections.emptyList();
     }
     List<String> keys =
-        topics.stream()
-            .map(rqueueBrokerSystemConfig::getTopicConfigurationKey)
-            .collect(Collectors.toList());
+        topics.stream().map(systemConfig::getTopicConfigurationKey).collect(Collectors.toList());
     List<TopicConfig> topicConfigs = topicConfigRqueueRedisTemplate.mget(keys);
     return topicConfigs.stream().filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   @Override
   public TopicConfig getTopicConfig(Topic topic) {
-    String key = rqueueBrokerSystemConfig.getTopicConfigurationKey(topic.getName());
+    String key = systemConfig.getTopicConfigurationKey(topic.getName());
     return topicConfigRqueueRedisTemplate.get(key);
   }
 
   @Override
   public List<SubscriptionConfig> getSubscriptionConfig(Topic topic) {
-    String key = rqueueBrokerSystemConfig.getTopicSubscriptionKey(topic.getName());
+    String key = systemConfig.getTopicSubscriptionKey(topic.getName());
     Set<SubscriptionConfig> configs = subscriptionConfigRqueueRedisTemplate.getMembers(key);
     if (CollectionUtils.isEmpty(configs)) {
       return Collections.emptyList();
@@ -97,7 +102,7 @@ public class TopicStoreImpl implements TopicStore {
 
   @Override
   public boolean isExist(Topic topic) {
-    String key = rqueueBrokerSystemConfig.getTopicsKey();
+    String key = systemConfig.getTopicsKey();
     return redisTemplate.isSetMember(key, topic.getName());
   }
 

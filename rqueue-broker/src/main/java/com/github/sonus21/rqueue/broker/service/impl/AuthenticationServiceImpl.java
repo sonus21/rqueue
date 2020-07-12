@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.broker.service.impl;
 
-import com.github.sonus21.rqueue.broker.config.RqueueBrokerSystemConfig;
+import com.github.sonus21.rqueue.broker.config.AuthConfig;
 import com.github.sonus21.rqueue.broker.dao.AuthStore;
 import com.github.sonus21.rqueue.broker.models.db.RootUser;
 import com.github.sonus21.rqueue.broker.models.db.Session;
@@ -40,16 +40,14 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
-  private final RqueueBrokerSystemConfig rqueueBrokerSystemConfig;
+  private final AuthConfig authConfig;
   private final AuthStore authStore;
   private final PasswordEncoder passwordEncoder;
 
   @Autowired
   public AuthenticationServiceImpl(
-      RqueueBrokerSystemConfig rqueueBrokerSystemConfig,
-      AuthStore authStore,
-      PasswordEncoder passwordEncoder) {
-    this.rqueueBrokerSystemConfig = rqueueBrokerSystemConfig;
+      AuthConfig authConfig, AuthStore authStore, PasswordEncoder passwordEncoder) {
+    this.authConfig = authConfig;
     this.authStore = authStore;
     this.passwordEncoder = passwordEncoder;
   }
@@ -67,8 +65,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     RootUser rootUser = authStore.getRootUser();
     if (rootUser == null) {
       rootUser = new RootUser();
-      rootUser.setUsername(rqueueBrokerSystemConfig.getRootUsername());
-      rootUser.setPassword(passwordEncoder.encode(rqueueBrokerSystemConfig.getRootPassword()));
+      rootUser.setUsername(authConfig.getRootUsername());
+      rootUser.setPassword(passwordEncoder.encode(authConfig.getRootPassword()));
       authStore.updateRootUser(rootUser);
     }
     return rootUser;
@@ -80,13 +78,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     if (rootUser.getUsername().equals(usernamePassword.getUsername())
         && rootUser.getPassword().equals(usernamePassword.getPassword())) {
       Session session =
-          authStore.createSession(
-              rootUser.getUsername(), rqueueBrokerSystemConfig.getSessionExpiry());
-      int expiry = rqueueBrokerSystemConfig.getSessionExpiry();
-      if (rqueueBrokerSystemConfig.isCloseSessionOnBrowserClose()) {
+          authStore.createSession(rootUser.getUsername(), authConfig.getSessionExpiry());
+      int expiry = authConfig.getSessionExpiry();
+      if (authConfig.isCloseSessionOnBrowserClose()) {
         expiry = -1;
       }
-      AuthUtils.addSession(response, session, expiry, rqueueBrokerSystemConfig.isCookieSecure());
+      AuthUtils.addSession(response, session, expiry, authConfig.isCookieSecure());
       return new BaseResponse();
     }
     return new BaseResponse(ErrorCode.INVALID_USERNAME_OR_PASSWORD);
@@ -109,7 +106,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       HttpServletRequest request,
       HttpServletResponse response) {
     Session session = authStore.getSession(AuthUtils.getSessionId(request));
-    AuthUtils.removeSession(response, session, rqueueBrokerSystemConfig.isCookieSecure());
+    AuthUtils.removeSession(response, session, authConfig.isCookieSecure());
     authStore.cleanUserSessions(rootUserName);
     authStore.updateRootUser(rootUser);
     return new BaseResponse(ErrorCode.SUCCESS);
@@ -120,15 +117,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       UpdateRootPassword updateRootPassword,
       HttpServletRequest request,
       HttpServletResponse response) {
-    if (StringUtils.isEmpty(updateRootPassword.getPassword())) {
+    if (StringUtils.isEmpty(updateRootPassword.getNewPassword())) {
       return new BaseResponse(ErrorCode.PASSWORD_IS_REQUIRED);
     }
-    if (updateRootPassword.getPassword().length() < 5) {
+    if (updateRootPassword.getNewPassword().length() < 5) {
       return new BaseResponse(ErrorCode.PASSWORD_DOES_NOT_SATISFY_REQUIREMENTS);
     }
     RootUser rootUser = getRootUser();
+    if (!passwordEncoder
+        .encode(rootUser.getPassword())
+        .equals(updateRootPassword.getOldPassword())) {
+      return new BaseResponse(ErrorCode.OLD_PASSWORD_NOT_MATCHING);
+    }
     String rootUserName = rootUser.getUsername();
-    rootUser.setPassword(passwordEncoder.encode(updateRootPassword.getPassword()));
+    rootUser.setPassword(passwordEncoder.encode(updateRootPassword.getNewPassword()));
     return updateUser(rootUser, rootUserName, request, response);
   }
 

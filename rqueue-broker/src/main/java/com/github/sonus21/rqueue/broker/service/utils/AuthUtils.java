@@ -23,7 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 
 public final class AuthUtils {
   private AuthUtils() {}
-
   private static final String SESSION_ID = "SESSION-ID";
   public static final String AUTHORIZATION_HEADER = "Authorization";
   public static final String LOGIN_PAGE_URL = "/login";

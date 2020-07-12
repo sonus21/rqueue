@@ -27,5 +27,6 @@ import lombok.Setter;
 public class UpdateRootPassword extends SerializableBase {
 
   private static final long serialVersionUID = -4948724549920231350L;
-  private String password;
+  private String oldPassword;
+  private String newPassword;
 }

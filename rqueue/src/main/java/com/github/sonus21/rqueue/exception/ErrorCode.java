@@ -38,7 +38,8 @@ public enum ErrorCode {
   USERNAME_IS_REQUIRED(110, "Username is required"),
   PASSWORD_IS_REQUIRED(111, "Password is required"),
   PASSWORD_DOES_NOT_SATISFY_REQUIREMENTS(112, "Password does not satisfy requirement"),
-  UNAUTHORIZED_ACCESS(113, "Unauthorized access(Either login or provide Authorization headers)");
+  UNAUTHORIZED_ACCESS(113, "Unauthorized access(Either login or provide Authorization headers)"),
+  OLD_PASSWORD_NOT_MATCHING(114, "Old password not matching");
   private int code;
   private String message;
 

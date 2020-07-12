@@ -22,19 +22,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RqueueBrokerSystemConfig {
+public class SystemConfig {
   private final RqueueConfig rqueueConfig;
 
   @Autowired
-  public RqueueBrokerSystemConfig(RqueueConfig rqueueConfig) {
+  public SystemConfig(RqueueConfig rqueueConfig) {
     this.rqueueConfig = rqueueConfig;
   }
-
-  @Value("${rqueue.root.password:admin}")
-  private String rootPassword;
-
-  @Value("${rqueue.root.username:admin}")
-  private String rootUsername;
 
   @Value("${rqueue.root.user.key.suffix:auth:root}")
   private String rootUserKeySuffix;
@@ -53,15 +47,6 @@ public class RqueueBrokerSystemConfig {
 
   @Value("${rqueue.authentication.user.session.key.suffix:auth:user:session:}")
   private String userSessionKeySuffix;
-
-  @Value("${rqueue.authentication.session.expiry:604800}")
-  private int sessionExpiry;
-
-  @Value("${rqueue.authentication.session.close.on.browser.close:false}")
-  private boolean closeSessionOnBrowserClose;
-
-  @Value("${rqueue.authentication.cookie.secure:false}")
-  private boolean cookieSecure;
 
   @Value("${rqueue.topics.key.suffix:topics}")
   private String topicsKeySuffix;
@@ -87,28 +72,8 @@ public class RqueueBrokerSystemConfig {
     return rqueueConfig.getPrefix() + sessionKeySuffix + sessionId;
   }
 
-  public int getSessionExpiry() {
-    return sessionExpiry;
-  }
-
-  public boolean isCloseSessionOnBrowserClose() {
-    return closeSessionOnBrowserClose;
-  }
-
-  public boolean isCookieSecure() {
-    return cookieSecure;
-  }
-
   public String getUserSessionKey(String userName) {
     return rqueueConfig.getPrefix() + userSessionKeySuffix + userName;
-  }
-
-  public String getRootPassword() {
-    return rootPassword;
-  }
-
-  public String getRootUsername() {
-    return rootUsername;
   }
 
   public String getTokenKey(String tokenName) {

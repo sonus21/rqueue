@@ -29,11 +29,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-public class RqueueBrokerConfig {
+public class BrokerConfig {
   private final RqueueConfig rqueueConfig;
 
   @Autowired
-  public RqueueBrokerConfig(RqueueConfig rqueueConfig) {
+  public BrokerConfig(RqueueConfig rqueueConfig) {
     this.rqueueConfig = rqueueConfig;
   }
 
