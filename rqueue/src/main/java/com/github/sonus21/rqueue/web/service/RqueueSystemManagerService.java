@@ -17,11 +17,13 @@
 package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.models.db.QueueConfig;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import java.util.Collection;
 import java.util.List;
+import org.springframework.context.ApplicationListener;
 
-public interface RqueueSystemManagerService {
+public interface RqueueSystemManagerService extends ApplicationListener<RqueueBootstrapEvent> {
   BaseResponse deleteQueue(String queueName);
 
   List<String> getQueues();
