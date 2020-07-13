@@ -26,7 +26,6 @@ import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
 
 /**
@@ -35,16 +34,16 @@ import org.springframework.scheduling.annotation.Async;
  * queue messages can be in delayed queue because time has not reached. Some messages can be in dead
  * letter queue if dead letter queue is configured.
  */
-public class RqueueMetrics implements ApplicationListener<RqueueBootstrapEvent> {
+public class RqueueMetrics implements RqueueMetricsRegistry {
   static final String QUEUE_KEY = "key";
   private static final String QUEUE_SIZE = "queue.size";
   private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
-  private RqueueRedisTemplate<String> rqueueMessageTemplate;
+  private final RqueueRedisTemplate<String> rqueueMessageTemplate;
+  private final QueueCounter queueCounter;
   @Autowired private MetricsProperties metricsProperties;
   @Autowired private MeterRegistry meterRegistry;
-  private QueueCounter queueCounter;
 
   public RqueueMetrics(
       RqueueRedisTemplate<String> rqueueMessageTemplate, QueueCounter queueCounter) {
@@ -107,6 +106,7 @@ public class RqueueMetrics implements ApplicationListener<RqueueBootstrapEvent> 
     }
   }
 
+  @Override
   public QueueCounter getQueueCounter() {
     return this.queueCounter;
   }

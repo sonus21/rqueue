@@ -51,7 +51,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-abstract class MessageScheduler
+public abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
   @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
   private RedisScript<Long> redisScript;

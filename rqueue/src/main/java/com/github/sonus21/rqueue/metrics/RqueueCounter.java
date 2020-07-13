@@ -21,17 +21,19 @@ package com.github.sonus21.rqueue.metrics;
  * many messages have been processed and how many of them have been failed. In the case of failure
  * count increases.
  */
-public class RqueueCounter {
+public class RqueueCounter implements RqueueMetricsCounter {
   private final QueueCounter queueCounter;
 
   public RqueueCounter(QueueCounter queueCounter) {
     this.queueCounter = queueCounter;
   }
 
+  @Override
   public void updateFailureCount(String queueName) {
     queueCounter.updateFailureCount(queueName);
   }
 
+  @Override
   public void updateExecutionCount(String queueName) {
     queueCounter.updateExecutionCount(queueName);
   }

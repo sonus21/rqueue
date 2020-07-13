@@ -14,25 +14,11 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.web.service;
+package com.github.sonus21.rqueue.metrics;
 
-import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
-import com.github.sonus21.rqueue.models.response.BaseResponse;
-import java.util.Collection;
-import java.util.List;
 import org.springframework.context.ApplicationListener;
 
-public interface RqueueSystemManagerService extends ApplicationListener<RqueueBootstrapEvent> {
-  BaseResponse deleteQueue(String queueName);
-
-  List<String> getQueues();
-
-  List<QueueConfig> getQueueConfigs(Collection<String> queues);
-
-  List<QueueConfig> getQueueConfigs();
-
-  List<QueueConfig> getSortedQueueConfigs();
-
-  QueueConfig getQueueConfig(String queueName);
+public interface RqueueMetricsRegistry extends ApplicationListener<RqueueBootstrapEvent> {
+  QueueCounter getQueueCounter();
 }
