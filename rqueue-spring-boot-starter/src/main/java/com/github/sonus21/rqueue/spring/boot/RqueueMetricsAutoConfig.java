@@ -20,6 +20,8 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.metrics.QueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
+import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
+import com.github.sonus21.rqueue.metrics.RqueueMetricsRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import java.lang.reflect.Method;
@@ -41,7 +43,7 @@ import org.springframework.context.annotation.Import;
 @Import(RqueueMetricsProperties.class)
 public class RqueueMetricsAutoConfig {
   @Bean
-  public RqueueMetrics rqueueMetrics(
+  public RqueueMetricsRegistry RqueueMetricsRegistry(
       MetricsProperties metricsProperties,
       @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> rqueueRedisTemplate,
       RqueueMetricsProperties rqueueMetricsProperties) {
@@ -68,7 +70,7 @@ public class RqueueMetricsAutoConfig {
   }
 
   @Bean
-  public RqueueCounter rqueueCounter(RqueueMetrics rqueueMetrics) {
-    return new RqueueCounter(rqueueMetrics.getQueueCounter());
+  public RqueueMetricsCounter rqueueMetricsCounter(RqueueMetricsRegistry rqueueMetricsRegistry) {
+    return new RqueueCounter(rqueueMetricsRegistry.getQueueCounter());
   }
 }

@@ -22,7 +22,7 @@ import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_WEEK;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
-import com.github.sonus21.rqueue.metrics.RqueueCounter;
+import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
@@ -122,14 +122,15 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void updateCounter(boolean fail) {
-    RqueueCounter rqueueCounter = Objects.requireNonNull(container.get()).getRqueueCounter();
-    if (rqueueCounter == null) {
+    RqueueMetricsCounter counter =
+        Objects.requireNonNull(container.get()).getRqueueMetricsCounter();
+    if (counter == null) {
       return;
     }
     if (fail) {
-      rqueueCounter.updateFailureCount(queueDetail.getName());
+      counter.updateFailureCount(queueDetail.getName());
     } else {
-      rqueueCounter.updateExecutionCount(queueDetail.getName());
+      counter.updateExecutionCount(queueDetail.getName());
     }
   }
 
