@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Import;
 @Import(RqueueMetricsProperties.class)
 public class RqueueMetricsAutoConfig {
   @Bean
-  public RqueueMetricsRegistry RqueueMetricsRegistry(
+  public RqueueMetricsRegistry rqueueMetricsRegistry(
       MetricsProperties metricsProperties,
       @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> rqueueRedisTemplate,
       RqueueMetricsProperties rqueueMetricsProperties) {

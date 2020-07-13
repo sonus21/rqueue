@@ -86,7 +86,7 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
   @Bean
   @Conditional(MetricsEnabled.class)
-  public RqueueMetricsCounter rqueueCounter(RqueueMetricsRegistry rqueueMetricsRegistry) {
+  public RqueueMetricsCounter rqueueMetricsCounter(RqueueMetricsRegistry rqueueMetricsRegistry) {
     return new RqueueCounter(rqueueMetricsRegistry.getQueueCounter());
   }
 }
