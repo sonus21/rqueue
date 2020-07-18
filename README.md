@@ -182,7 +182,19 @@ If you're one of the Rqueue users, please raise a PR/[issue](https://github.com/
 <a href="https://tuneyou.com/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>&nbsp;&nbsp;
 
 ## Support
-Please report bug,question,feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. You are most welcome for any pull requests for any feature/bug/enhancement.
+Please report bug,question,feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker. 
+
+You are most welcome for any pull requests for any feature/bug/enhancement.
+You would need Java8 and gradle to start with.  In root `build.gradle` file comment out spring related versions, or set environment variables for Spring versions. 
+
+**Please format your code with Google Java formatter.**
+ 
+```bash
+//    springBootVersion = '2.1.0.RELEASE'
+//    springVersion = '5.1.2.RELEASE'
+//    springDataVersion = '2.1.2.RELEASE'
+//    microMeterVersion = '1.1.0'
+```
 
 ## Links
 * Documentation:[https://github.com/sonus21/rqueue/wiki](https://github.com/sonus21/rqueue/wiki)

@@ -38,14 +38,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 @Service
-public class RqueueSystemManagerServiceImpl
-    implements RqueueSystemManagerService, ApplicationListener<RqueueBootstrapEvent> {
+public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerService {
   private final RqueueConfig rqueueConfig;
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   private final RqueueQStore rqueueQStore;

@@ -49,7 +49,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-abstract class AbstractMessageScheduler implements MessageScheduler {
+public abstract class AbstractMessageScheduler implements MessageScheduler {
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
   private DefaultScriptExecutor<String> defaultScriptExecutor;

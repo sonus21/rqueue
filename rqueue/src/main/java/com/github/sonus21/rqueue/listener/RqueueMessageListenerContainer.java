@@ -26,8 +26,7 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.QueueRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
-import com.github.sonus21.rqueue.metrics.MetricsCounter;
-import com.github.sonus21.rqueue.metrics.RqueueCounter;
+import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
@@ -88,7 +87,7 @@ public class RqueueMessageListenerContainer
   @Autowired private RqueueConfig rqueueConfig;
 
   @Autowired(required = false)
-  private RqueueCounter rqueueCounter;
+  private RqueueMetricsCounter rqueueMetricsCounter;
 
   @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
   private AsyncTaskExecutor taskExecutor;
@@ -595,8 +594,8 @@ public class RqueueMessageListenerContainer
     this.priorityMode = priorityMode;
   }
 
-  RqueueCounter getRqueueCounter() {
-    return rqueueCounter;
+  RqueueMetricsCounter getRqueueMetricsCounter() {
+    return rqueueMetricsCounter;
   }
 
   RqueueWebConfig getRqueueWebConfig() {
