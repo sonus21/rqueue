@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.models.SerializableBase;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,8 +31,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode(callSuper = false)
 public class Observer extends SerializableBase {
   private static final long serialVersionUID = 3390456803428337325L;
-  @NotEmpty private String name;
-  @NotNull private DestinationType type = DestinationType.QUEUE;
+  @NotEmpty private String target;
+  @NotNull private DestinationType targetType = DestinationType.QUEUE;
 }

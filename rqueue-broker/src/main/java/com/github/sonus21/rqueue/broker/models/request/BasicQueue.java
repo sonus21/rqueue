@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.broker.models.request;
 
 import com.github.sonus21.rqueue.models.SerializableBase;
+import javax.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,7 +30,7 @@ import lombok.ToString;
 public class BasicQueue extends SerializableBase {
 
   private static final long serialVersionUID = 7186553210053429559L;
-  private String name;
+  @NotEmpty private String name;
 
   @Override
   public boolean equals(Object other) {

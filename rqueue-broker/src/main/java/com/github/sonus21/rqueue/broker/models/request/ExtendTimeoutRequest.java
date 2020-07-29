@@ -32,6 +32,5 @@ import lombok.ToString;
 public class ExtendTimeoutRequest extends SerializableBase {
 
   private static final long serialVersionUID = -77962602167818133L;
-  private ExtendTimeout message;
   private List<ExtendTimeout> messages;
 }

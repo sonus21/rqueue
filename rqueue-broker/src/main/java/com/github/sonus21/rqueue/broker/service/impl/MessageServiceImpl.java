@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.broker.service;
+package com.github.sonus21.rqueue.broker.service.impl;
 
 import com.github.sonus21.rqueue.broker.models.request.AckRequest;
 import com.github.sonus21.rqueue.broker.models.request.DeleteMessageRequest;
@@ -22,11 +22,25 @@ import com.github.sonus21.rqueue.broker.models.request.ExtendTimeoutRequest;
 import com.github.sonus21.rqueue.broker.models.response.AckResponse;
 import com.github.sonus21.rqueue.broker.models.response.DeleteMessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.ExtendTimeoutResponse;
+import com.github.sonus21.rqueue.broker.service.MessageService;
+import org.springframework.stereotype.Service;
 
-public interface MessageService {
-  AckResponse ack(AckRequest request);
+@Service
+public class MessageServiceImpl implements MessageService {
 
-  ExtendTimeoutResponse extendVisibilityTimeout(ExtendTimeoutRequest request);
 
-  DeleteMessageResponse delete(DeleteMessageRequest request);
+  @Override
+  public AckResponse ack(AckRequest request) {
+    return null;
+  }
+
+  @Override
+  public ExtendTimeoutResponse extendVisibilityTimeout(ExtendTimeoutRequest request) {
+    return null;
+  }
+
+  @Override
+  public DeleteMessageResponse delete(DeleteMessageRequest request) {
+    return null;
+  }
 }

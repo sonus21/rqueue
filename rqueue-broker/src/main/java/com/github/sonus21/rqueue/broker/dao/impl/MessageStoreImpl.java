@@ -14,22 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.broker.models.request;
+package com.github.sonus21.rqueue.broker.dao.impl;
 
-import com.github.sonus21.rqueue.models.SerializableBase;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import com.github.sonus21.rqueue.broker.dao.MessageStore;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
-public class MessageAckRequest extends SerializableBase {
+public class MessageStoreImpl implements MessageStore {
 
-  private static final long serialVersionUID = 335586747742161885L;
-  private String id;
 }

@@ -16,10 +16,9 @@
 
 package com.github.sonus21.rqueue.broker.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.sonus21.rqueue.broker.models.request.BatchMessagePublishRequest;
 import com.github.sonus21.rqueue.broker.models.request.CreateTopicRequest;
 import com.github.sonus21.rqueue.broker.models.request.DeleteTopicRequest;
+import com.github.sonus21.rqueue.broker.models.request.MessagePublishRequest;
 import com.github.sonus21.rqueue.broker.models.request.SubscriptionRequest;
 import com.github.sonus21.rqueue.broker.models.request.SubscriptionUpdateRequest;
 import com.github.sonus21.rqueue.broker.models.request.UnsubscriptionRequest;
@@ -34,10 +33,8 @@ import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.exception.ValidationException;
 
 public interface TopicService {
-  CreateTopicResponse create(CreateTopicRequest request) throws LockException, ValidationException;
-
-  SubscriptionUpdateResponse update(SubscriptionUpdateRequest request)
-      throws ValidationException, ProcessingException, LockException;
+  CreateTopicResponse create(CreateTopicRequest request)
+      throws LockException, ValidationException, ProcessingException;
 
   DeleteTopicResponse delete(DeleteTopicRequest request)
       throws LockException, ValidationException, ProcessingException;
@@ -48,6 +45,9 @@ public interface TopicService {
   UnsubscriptionResponse unsubscribe(UnsubscriptionRequest request)
       throws ValidationException, LockException, ProcessingException;
 
-  MessagePublishResponse publish(BatchMessagePublishRequest request)
-      throws ValidationException, JsonProcessingException;
+  SubscriptionUpdateResponse updateSubscription(SubscriptionUpdateRequest request)
+      throws ValidationException, ProcessingException, LockException;
+
+  MessagePublishResponse publish(MessagePublishRequest request)
+      throws ValidationException, ProcessingException;
 }

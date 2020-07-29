@@ -28,23 +28,39 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class SubscriptionConfig extends SerializableBase {
+public class SubscriptionConfig extends SerializableBase implements Cloneable {
   private static final long serialVersionUID = -1261404662305659322L;
   private String id;
-  private String topicId;
-  private String name;
-  private String subscriptionName;
-  private DestinationType type;
+  private String target;
+  private DestinationType targetType;
+  private String priority;
+  private String systemTarget;
   private Long delay;
   private long createdOn;
   private long updatedOn;
-  private boolean deleted;
-  private Long deletedOn;
 
-  public Subscription toSubscription(){
+  public Subscription toSubscription() {
     Subscription subscription = new Subscription();
-    subscription.setDelay(
-        :122
-    );
+    subscription.setDelay(delay);
+    subscription.setTargetType(targetType);
+    subscription.setTarget(target);
+    subscription.setPriority(priority);
+    return subscription;
+  }
+
+  public static SubscriptionConfig fromSubscription(Subscription subscription) {
+    SubscriptionConfig subscriptionConfig = new SubscriptionConfig();
+    subscriptionConfig.setDelay(subscription.getDelay());
+    subscriptionConfig.setTarget(subscription.getTarget());
+    subscriptionConfig.setPriority(subscription.getPriority());
+    subscriptionConfig.setCreatedOn(System.currentTimeMillis());
+    subscriptionConfig.setUpdatedOn(subscriptionConfig.createdOn);
+    return subscriptionConfig;
+  }
+
+  @Override
+  @SuppressWarnings("squid:S2975")
+  public SubscriptionConfig clone() throws CloneNotSupportedException {
+    return (SubscriptionConfig) super.clone();
   }
 }

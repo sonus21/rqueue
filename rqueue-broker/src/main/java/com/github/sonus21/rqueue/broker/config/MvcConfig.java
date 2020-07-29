@@ -28,6 +28,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
+  private final String[] authExcludes = {"/public/**", "/login", "swagger-ui.html"};
 
   @Bean
   public AuthenticationInterceptor authenticationInterceptor() {
@@ -40,7 +41,7 @@ public class MvcConfig implements WebMvcConfigurer {
     registry
         .addInterceptor(authenticationInterceptor())
         .addPathPatterns("/**")
-        .excludePathPatterns("/public/**", "/login");
+        .excludePathPatterns(authExcludes);
   }
 
   @Override

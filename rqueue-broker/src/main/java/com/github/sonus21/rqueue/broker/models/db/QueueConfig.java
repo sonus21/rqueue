@@ -16,32 +16,39 @@
 
 package com.github.sonus21.rqueue.broker.models.db;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.sonus21.rqueue.models.SerializableBase;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.util.CollectionUtils;
 
-@NoArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
 @ToString
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class TopicConfig extends SerializableBase {
+public class QueueConfig extends SerializableBase {
   private static final long serialVersionUID = -7377265707903362101L;
   private String id;
   private String name;
-  private String systemName;
+  private String simpleQueue;
+  private String delayedQueue;
+  private String processingQueue;
+  private String
+  private long visibilityTimeout;
+  private Map<String, Integer> priority;
+  private Map<String, Integer> systemPriority;
+  private boolean systemQueue;
   private long createdOn;
   private long updatedOn;
-  private long deletedOn;
-  private boolean deleted;
 
-  public TopicConfig(String id, String name) {
-    this.id = id;
-    this.name = name;
-    this.createdOn = System.currentTimeMillis();
-    this.updatedOn = createdOn;
+  @JsonIgnore
+  public boolean isValidPriority(String priority) {
+    if (CollectionUtils.isEmpty(this.priority)) {
+      return false;
+    }
+    return this.priority.containsKey(priority);
   }
 }

@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.common;
 
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,6 +65,20 @@ public class RqueueRedisTemplate<V extends Serializable> {
 
   public Long addToSet(String setName, V... values) {
     return redisTemplate.opsForSet().add(setName, values);
+  }
+
+  public Long addToSet(String setName, Collection<V> values) {
+    V element = null;
+    for (V v : values) {
+      element = v;
+      break;
+    }
+    V[] val = (V[]) Array.newInstance(element.getClass(), values.size());
+    int i = 0;
+    for (V v : values) {
+      val[i++] = v;
+    }
+    return redisTemplate.opsForSet().add(setName, val);
   }
 
   public void set(String key, V val) {

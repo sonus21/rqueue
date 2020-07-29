@@ -39,7 +39,12 @@ public enum ErrorCode {
   PASSWORD_IS_REQUIRED(111, "Password is required"),
   PASSWORD_DOES_NOT_SATISFY_REQUIREMENTS(112, "Password does not satisfy requirement"),
   UNAUTHORIZED_ACCESS(113, "Unauthorized access(Either login or provide Authorization headers)"),
-  OLD_PASSWORD_NOT_MATCHING(114, "Old password not matching");
+  OLD_PASSWORD_NOT_MATCHING(114, "Old password not matching"),
+  QUEUE_ALREADY_EXIST(115, "Queue already exist"),
+  QUEUE_DOES_NOT_EXIST(116, "Queue does not exist"),
+  QUEUE_UPDATE_PARAMETERS_MISSING(117, "Queue update parameters are missing"),
+  NOTHING_TO_UPDATE(118, "nothing to be updated"),
+  INVALID_QUEUE_PRIORITY(119, "Invalid queue priority");
   private int code;
   private String message;
 
@@ -51,8 +56,4 @@ public enum ErrorCode {
   public String getMessage() {
     return message;
   }
-
-  public enum USER_NAME_IS_REQUIRED {}
-
-  public enum UNAUTHORIZED_ACCESS {}
 }

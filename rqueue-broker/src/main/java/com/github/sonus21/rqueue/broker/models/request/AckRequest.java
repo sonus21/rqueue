@@ -32,6 +32,5 @@ import lombok.ToString;
 public class AckRequest extends SerializableBase {
 
   private static final long serialVersionUID = 7557603269867321442L;
-  private List<MessageAckRequest> messages;
-  private MessageAckRequest message;
+  private List<IdRequest> messages;
 }

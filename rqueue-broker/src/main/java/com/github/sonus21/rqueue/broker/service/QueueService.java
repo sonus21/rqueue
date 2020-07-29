@@ -26,15 +26,21 @@ import com.github.sonus21.rqueue.broker.models.response.DeleteQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.UpdateQueueResponse;
+import com.github.sonus21.rqueue.exception.LockException;
+import com.github.sonus21.rqueue.exception.ProcessingException;
+import com.github.sonus21.rqueue.exception.ValidationException;
 
 public interface QueueService {
-  CreateQueueResponse create(CreateQueueRequest request);
+  CreateQueueResponse create(CreateQueueRequest request)
+      throws LockException, ValidationException, ProcessingException;
 
-  UpdateQueueResponse update(UpdateQueueRequest request);
+  UpdateQueueResponse update(UpdateQueueRequest request)
+      throws ValidationException, LockException, ProcessingException;
 
-  DeleteQueueResponse delete(DeleteQueueRequest request);
+  DeleteQueueResponse delete(DeleteQueueRequest request)
+      throws ProcessingException, ValidationException, LockException;
 
-  MessageEnqueueResponse enqueue(BatchMessageEnqueueRequest request);
+  MessageEnqueueResponse enqueue(BatchMessageEnqueueRequest request) throws ProcessingException;
 
-  MessageResponse dequeue(MessageRequest messageRequest);
+  MessageResponse dequeue(MessageRequest messageRequest) throws ValidationException;
 }

@@ -43,12 +43,12 @@ public class QueueController {
     this.queueService = queueService;
   }
 
-  @PostMapping("new")
+  @PostMapping
   public CreateQueueResponse newQueue(@RequestBody CreateQueueRequest request) {
     return queueService.create(request);
   }
 
-  @PutMapping()
+  @PutMapping
   public UpdateQueueResponse update(@RequestBody UpdateQueueRequest request) {
     return queueService.update(request);
   }

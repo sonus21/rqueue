@@ -5,6 +5,7 @@ plugins {
 }
 allprojects {
     apply plugin: 'idea'
+    apply plugin: 'eclipse'
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
@@ -61,7 +62,8 @@ ext {
 
     // other dependencies
     javaxValidationVersion = '2.0.1.Final'
-
+    protobufVersion = '3.12.3'
+    protobufGradlePluginVersion = '0.8.12'
 }
 
 

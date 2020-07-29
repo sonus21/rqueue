@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.exception;
+package com.github.sonus21.rqueue.broker.models.request;
 
-public class LockException extends Throwable {
-  private static final long serialVersionUID = -4046692446378045794L;
+import com.github.sonus21.rqueue.models.SerializableBase;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-  public LockException(String message) {
-    super(message);
-  }
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+public class IdRequest extends SerializableBase {
+  private static final long serialVersionUID = 8560591044613245091L;
+  private String id;
 }

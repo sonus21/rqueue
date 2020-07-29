@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.broker.models.request;
+package com.github.sonus21.rqueue.broker.models.response;
 
-import com.github.sonus21.rqueue.models.SerializableBase;
+import com.github.sonus21.rqueue.models.response.BaseResponse;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,11 +25,10 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@ToString
-public class BatchMessagePublishRequest extends SerializableBase {
-  private static final long serialVersionUID = 1268909305073203770L;
-  private MessagePushRequest message;
-  private List<MessagePushRequest> messages;
+@ToString(callSuper = true)
+public class DeleteMessageResponse extends BaseResponse {
+
+  private static final long serialVersionUID = -6094598709691053424L;
+  private List<IdResponse> data;
 }

@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.broker.models.request;
 
+import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,7 +33,7 @@ public class Queue extends BasicQueue {
 
   private static final long serialVersionUID = -4384791928922053307L;
   private Long visibilityTimeout;
-  private Map<String, Integer> priority;
+  private Map<String, Integer> priority = new HashMap<>();
 
   @Override
   public boolean equals(Object other) {

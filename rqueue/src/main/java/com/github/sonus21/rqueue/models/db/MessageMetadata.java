@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.models.db;
 
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import lombok.AllArgsConstructor;

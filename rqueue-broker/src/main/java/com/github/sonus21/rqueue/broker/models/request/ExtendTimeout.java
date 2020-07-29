@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.broker.models.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.sonus21.rqueue.models.SerializableBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,11 +27,10 @@ import lombok.ToString;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
-public class ExtendTimeout extends SerializableBase {
+@ToString(callSuper = true)
+public class ExtendTimeout extends IdRequest {
 
   private static final long serialVersionUID = 3223236363472266252L;
-  private String id;
 
   @JsonProperty("extend_for")
   private Long extendFor;

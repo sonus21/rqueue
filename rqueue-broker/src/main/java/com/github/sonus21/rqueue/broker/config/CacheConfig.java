@@ -37,9 +37,8 @@ import org.springframework.lang.Nullable;
 public class CacheConfig {
   public static final String AUTH_TOKEN_CACHE_NAME = "authToken";
   public static final String SESSION_CACHE_NAME = "sessionCache";
-  public static final String TOPIC_CONFIG_CACHE_NAME = "topicConfigCache";
-  public static final String TOPIC_CACHE =
-  public static final String QUEUE_CONFIG_CACHE_NAME = "queueConfigCache";
+  public static final String TOPIC_CACHE = "topicCache";
+  public static final String QUEUE_CACHE = "queueCache";
 
   @Value("${rqueue.authentication.token.cache.expiry:86400}")
   private Long tokenCacheExpiry;
@@ -50,20 +49,20 @@ public class CacheConfig {
   @Value("${rqueue.authentication.cookie.cache.expiry:86400}")
   private Long cookieCacheExpiry;
 
-  @Value("${rqueue.authentication.cookie.cache.size:5}")
+  @Value("${rqueue.authentication.cookie.cache.size:10}")
   private int cookieCacheSize;
 
-  @Value("${rqueue.topic.config.cache.expiry:86400}")
-  private Long topicConfigCacheExpiry;
+  @Value("${rqueue.topic.cache.expiry:86400}")
+  private Long topicCacheExpiry;
 
-  @Value("${rqueue.topic.config.cache.size:500}")
-  private int topicConfigCacheSize;
+  @Value("${rqueue.topic.cache.size:500}")
+  private int topicCacheSize;
 
-  @Value("${rqueue.queue.config.cache.expiry:86400}")
-  private Long queueConfigCacheExpiry;
+  @Value("${rqueue.queue.cache.expiry:86400}")
+  private Long queueCacheExpiry;
 
-  @Value("${rqueue.queue.config.cache.size:500}")
-  private int queueConfigCacheSize;
+  @Value("${rqueue.queue.cache.size:500}")
+  private int queueCacheSize;
 
   @Bean
   public CacheManager cacheManager() {
@@ -72,10 +71,8 @@ public class CacheConfig {
         createCache(SESSION_CACHE_NAME, cookieCacheExpiry, cookieCacheSize));
     rqueueCacheManager.addCache(
         createCache(AUTH_TOKEN_CACHE_NAME, tokenCacheExpiry, tokenCacheSize));
-    rqueueCacheManager.addCache(
-        createCache(TOPIC_CONFIG_CACHE_NAME, topicConfigCacheExpiry, topicConfigCacheSize));
-    rqueueCacheManager.addCache(
-        createCache(QUEUE_CONFIG_CACHE_NAME, queueConfigCacheExpiry, queueConfigCacheSize));
+    rqueueCacheManager.addCache(createCache(TOPIC_CACHE, topicCacheExpiry, topicCacheSize));
+    rqueueCacheManager.addCache(createCache(QUEUE_CACHE, queueCacheExpiry, queueCacheSize));
     return rqueueCacheManager;
   }
 

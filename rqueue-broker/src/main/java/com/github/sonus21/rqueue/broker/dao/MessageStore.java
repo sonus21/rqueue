@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.exception;
+package com.github.sonus21.rqueue.broker.dao;
 
-public class LockException extends Throwable {
-  private static final long serialVersionUID = -4046692446378045794L;
+public interface MessageStore {
 
-  public LockException(String message) {
-    super(message);
-  }
 }

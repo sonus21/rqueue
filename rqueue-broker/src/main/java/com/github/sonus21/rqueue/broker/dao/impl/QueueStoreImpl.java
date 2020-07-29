@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.broker.service;
+package com.github.sonus21.rqueue.broker.dao.impl;
 
-public interface ReplicationService {
-  void refreshTopics();
-}
+import com.github.sonus21.rqueue.broker.dao.QueueStore;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class QueueStoreImpl implements QueueStore {}

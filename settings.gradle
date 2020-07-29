@@ -1,10 +1,10 @@
 rootProject.name = 'redis-queue'
 include 'rqueue-test-util'
 include 'rqueue'
-include 'rqueue-broker'
-include 'rqueue-common-test'
 include 'rqueue-spring'
 include 'rqueue-spring-boot-starter'
+include 'rqueue-broker'
+include 'rqueue-common-test'
 include 'rqueue-spring-example'
 include 'rqueue-spring-boot-example'
 

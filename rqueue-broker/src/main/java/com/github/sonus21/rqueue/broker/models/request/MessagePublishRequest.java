@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.broker.models.db;
+package com.github.sonus21.rqueue.broker.models.request;
 
 import com.github.sonus21.rqueue.models.SerializableBase;
-import java.util.Map;
+import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,20 +26,10 @@ import lombok.ToString;
 
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class RQueueConfig extends SerializableBase {
-  private static final long serialVersionUID = -7377265707903362101L;
-  private String id;
-  private String name;
-  private String simpleQueuePrefix;
-  private String delayedQueuePrefix;
-  private String processingQueuePrefix;
-  private Long visibilityTimeout;
-  private Map<String, Integer> priority;
-  private Boolean defaultQueue;
-  private long createdOn;
-  private long updatedOn;
-  private boolean deleted;
-  private Long deletedOn;
+public class MessagePublishRequest extends SerializableBase {
+  private static final long serialVersionUID = 1268909305073203770L;
+  private List<MessagePushRequest> messages;
 }

@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.broker.models.db.SubscriptionConfig;
 import com.github.sonus21.rqueue.broker.models.db.TopicConfig;
 import com.github.sonus21.rqueue.broker.models.request.Subscription;
 import com.github.sonus21.rqueue.broker.models.request.Topic;
+import com.github.sonus21.rqueue.exception.ProcessingException;
 import java.util.List;
 import java.util.Set;
 
@@ -36,11 +37,15 @@ public interface TopicStore {
 
   List<Subscription> getSubscriptions(Topic topic);
 
-  void saveSubscription(Topic topic, List<Subscription> subscriptions);
-
   void addTopics(List<Topic> topics);
 
   void addSubscriptions(Topic topic, List<Subscription> subscriptions);
 
   void removeTopic(Topic topic);
+
+  void removeSubscription(Topic topic, SubscriptionConfig subscriptionConfig);
+
+  void updateSubscription(
+      Topic topic, SubscriptionConfig subscriptionConfig, Subscription subscription)
+      throws ProcessingException;
 }

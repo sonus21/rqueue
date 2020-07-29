@@ -16,6 +16,29 @@
 
 package com.github.sonus21.rqueue.broker.dao;
 
+import com.github.sonus21.rqueue.broker.models.db.QueueConfig;
+import com.github.sonus21.rqueue.broker.models.request.BasicQueue;
+import com.github.sonus21.rqueue.broker.models.request.Queue;
+import java.util.List;
+import java.util.Map;
+
 public interface QueueStore {
 
+  List<Queue> getAllQueue();
+
+  void addQueue(List<Queue> queues);
+
+  void addConfig(List<QueueConfig> queueConfigs);
+
+  boolean isQueueExist(BasicQueue request);
+
+  QueueConfig getConfig(BasicQueue request);
+
+  void update(
+      BasicQueue queue,
+      QueueConfig queueConfig,
+      Long visibilityTimeout,
+      Map<String, Integer> userPriority);
+
+  void delete(BasicQueue request);
 }

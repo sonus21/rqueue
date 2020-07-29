@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.broker.models.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.request.Message;
 import lombok.AllArgsConstructor;
@@ -30,8 +31,10 @@ import lombok.Setter;
 public class MessageEnqueueRequest extends SerializableBase {
 
   private static final long serialVersionUID = 1268909305073203770L;
+  private QueueWithPriority queue;
   private Message message;
   private Long delay;
-  private String queue;
-  private String priority;
+
+  @JsonProperty("retry_count")
+  private Integer retryCount;
 }

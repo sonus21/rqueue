@@ -41,7 +41,6 @@ public class AuthenticationApiController {
 
   @Autowired
   public AuthenticationApiController(AuthenticationService authenticationService) {
-
     this.authenticationService = authenticationService;
   }
 

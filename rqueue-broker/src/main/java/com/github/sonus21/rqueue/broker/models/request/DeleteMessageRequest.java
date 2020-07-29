@@ -33,5 +33,5 @@ public class DeleteMessageRequest extends SerializableBase {
 
   private static final long serialVersionUID = 1990792820900841009L;
 
-  private List<MessageAckRequest> messages;
+  private List<IdRequest> messages;
 }

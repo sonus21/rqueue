@@ -33,6 +33,6 @@ public class Subscription extends Observer {
   private String priority;
 
   public Subscription(Observer observer) {
-    super(observer.getName(), observer.getType());
+    super(observer.getTarget(), observer.getTargetType());
   }
 }

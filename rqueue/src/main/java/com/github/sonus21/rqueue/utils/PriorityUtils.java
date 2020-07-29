@@ -16,9 +16,11 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.util.CollectionUtils;
 
 public final class PriorityUtils {
   private PriorityUtils() {}
@@ -31,6 +33,15 @@ public final class PriorityUtils {
       }
     }
     return keys;
+  }
+
+  public static Map<String, Integer> getUserPriority(Map<String, Integer> priority) {
+    if (CollectionUtils.isEmpty(priority)) {
+      return new HashMap<>();
+    }
+    Map<String, Integer> userPriority = new HashMap<>(priority);
+    userPriority.remove(Constants.DEFAULT_PRIORITY_KEY);
+    return userPriority;
   }
 
   public static String getQueueNameForPriority(String queueName, String priority) {

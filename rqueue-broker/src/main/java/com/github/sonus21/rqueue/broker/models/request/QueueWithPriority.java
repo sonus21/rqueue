@@ -16,9 +16,8 @@
 
 package com.github.sonus21.rqueue.broker.models.request;
 
-import com.github.sonus21.rqueue.models.SerializableBase;
-import java.util.List;
-import javax.validation.constraints.NotEmpty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.sonus21.rqueue.utils.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,8 +29,12 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString(callSuper = true)
-public class BatchMessageEnqueueRequest extends SerializableBase {
+public class QueueWithPriority extends BasicQueue {
+  private static final long serialVersionUID = 4707490779511465604L;
+  private String priority;
 
-  private static final long serialVersionUID = -5858940991613280791L;
-  @NotEmpty private List<MessageEnqueueRequest> messages;
+  @JsonIgnore
+  public boolean hasPriority() {
+    return !StringUtils.isEmpty(priority);
+  }
 }
