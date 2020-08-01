@@ -36,7 +36,6 @@ public class QueueConfig extends SerializableBase {
   private String simpleQueue;
   private String delayedQueue;
   private String processingQueue;
-  private String
   private long visibilityTimeout;
   private Map<String, Integer> priority;
   private Map<String, Integer> systemPriority;

@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.utils.BaseLogger;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.web.dao.RqueueQStore;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ class PostProcessingHandler extends BaseLogger {
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final TaskExecutionBackOff taskExecutionBackoff;
   private final MessageProcessorHandler messageProcessorHandler;
-  private final RqueueSystemConfigDao rqueueSystemConfigDao;
+  private final RqueueQStore rqueueQStore;
   private final RqueueConfig rqueueConfig;
 
   PostProcessingHandler(
@@ -58,7 +58,7 @@ class PostProcessingHandler extends BaseLogger {
       RqueueMessageTemplate rqueueMessageTemplate,
       TaskExecutionBackOff taskExecutionBackoff,
       MessageProcessorHandler messageProcessorHandler,
-      RqueueSystemConfigDao rqueueSystemConfigDao) {
+      RqueueQStore rqueueQStore) {
     super(log, null);
     this.applicationEventPublisher = applicationEventPublisher;
     this.rqueueWebConfig = rqueueWebConfig;
@@ -66,7 +66,7 @@ class PostProcessingHandler extends BaseLogger {
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.taskExecutionBackoff = taskExecutionBackoff;
     this.messageProcessorHandler = messageProcessorHandler;
-    this.rqueueSystemConfigDao = rqueueSystemConfigDao;
+    this.rqueueQStore = rqueueQStore;
     this.rqueueConfig = rqueueConfig;
   }
 
@@ -207,7 +207,7 @@ class PostProcessingHandler extends BaseLogger {
     messageProcessorHandler.handleMessage(newMessage, userMessage, TaskStatus.MOVED_TO_DLQ);
     if (queueDetail.isDeadLetterConsumerEnabled()) {
       String configKey = rqueueConfig.getQueueConfigKey(queueDetail.getDeadLetterQueueName());
-      QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(configKey, true);
+      QueueConfig queueConfig = rqueueQStore.getQConfig(configKey, true);
       if (queueConfig == null) {
         log(
             Level.ERROR,

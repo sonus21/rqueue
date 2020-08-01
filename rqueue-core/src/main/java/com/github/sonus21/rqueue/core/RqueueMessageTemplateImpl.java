@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -56,14 +57,38 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       String processingQueueName,
       String processingChannelName,
       long visibilityTimeout) {
+    List<RqueueMessage> messages =
+        popN(queueName, processingQueueName, processingChannelName, visibilityTimeout, 1);
+    if (CollectionUtils.isEmpty(messages)) {
+      return null;
+    }
+    return messages.get(0);
+  }
+
+  @Override
+  public List<RqueueMessage> popN(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout,
+      int n) {
     long currentTime = System.currentTimeMillis();
-    RedisScript<RqueueMessage> script =
-        (RedisScript<RqueueMessage>) getScript(ScriptType.POP_MESSAGE);
-    return scriptExecutor.execute(
-        script,
-        Arrays.asList(queueName, processingQueueName, processingChannelName),
-        currentTime,
-        currentTime + visibilityTimeout);
+    RedisScript<List> script = (RedisScript<List>) getScript(ScriptType.POP_MESSAGE);
+    List messages =
+        scriptExecutor.execute(
+            script,
+            Arrays.asList(queueName, processingQueueName, processingChannelName),
+            currentTime,
+            currentTime + visibilityTimeout,
+            n);
+    if (CollectionUtils.isEmpty(messages)) {
+      return Collections.emptyList();
+    }
+    List<RqueueMessage> rqueueMessages = new ArrayList<>();
+    for (Object message : messages) {
+      rqueueMessages.add((RqueueMessage) message);
+    }
+    return rqueueMessages;
   }
 
   @Override

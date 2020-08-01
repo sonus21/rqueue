@@ -24,7 +24,7 @@ import com.github.sonus21.rqueue.broker.models.request.UpdateQueueRequest;
 import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.DeleteQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
-import com.github.sonus21.rqueue.broker.models.response.MessageResponse;
+import com.github.sonus21.rqueue.broker.models.response.BatchMessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.UpdateQueueResponse;
 import com.github.sonus21.rqueue.exception.LockException;
 import com.github.sonus21.rqueue.exception.ProcessingException;
@@ -42,5 +42,5 @@ public interface QueueService {
 
   MessageEnqueueResponse enqueue(BatchMessageEnqueueRequest request) throws ProcessingException;
 
-  MessageResponse dequeue(MessageRequest messageRequest) throws ValidationException;
+  BatchMessageResponse dequeue(MessageRequest messageRequest) throws ValidationException;
 }

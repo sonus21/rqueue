@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.DeleteQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.IdResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
-import com.github.sonus21.rqueue.broker.models.response.MessageResponse;
+import com.github.sonus21.rqueue.broker.models.response.BatchMessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.UpdateQueueResponse;
 import com.github.sonus21.rqueue.broker.service.QueueService;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
@@ -230,7 +230,7 @@ public class QueueServiceImpl implements QueueService {
   }
 
   @Override
-  public MessageResponse dequeue(MessageRequest messageRequest) throws ValidationException {
+  public BatchMessageResponse dequeue(MessageRequest messageRequest) throws ValidationException {
     QueueWithPriority queue = messageRequest.getQueue();
     QueueConfig queueConfig = queueStore.getConfig(queue);
     if(queueConfig == null){
@@ -239,7 +239,13 @@ public class QueueServiceImpl implements QueueService {
     if(!StringUtils.isEmpty(queue.getPriority()) && !queueConfig.isValidPriority(queue.getPriority())){
       throw new ValidationException(ErrorCode.INVALID_QUEUE_PRIORITY);
     }
-    rqueueMessageTemplate.pop()
+    //String queueName,
+    //      String processingQueueName,
+    //      String processingChannelName,
+    //      long visibilityTimeout,
+    //      int n
+    List<RqueueMessage> messages = rqueueMessageTemplate.popN(queueConfig.getSimpleQueue(),
+        queueConfig.getProcessingQueue(), queueConfig.getProcessingQueue())
     return null;
   }
 }

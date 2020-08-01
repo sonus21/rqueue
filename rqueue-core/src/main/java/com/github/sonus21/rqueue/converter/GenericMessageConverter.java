@@ -79,7 +79,7 @@ public class GenericMessageConverter implements MessageConverter {
     String name = payload.getClass().getName();
     try {
       String msg = objectMapper.writeValueAsString(payload);
-      Msg message = new Msg(msg, name);
+      Msg message = new Msg(name, msg);
       return new GenericMessage<>(objectMapper.writeValueAsString(message));
     } catch (JsonProcessingException e) {
       log.error("Serialisation failed", e);

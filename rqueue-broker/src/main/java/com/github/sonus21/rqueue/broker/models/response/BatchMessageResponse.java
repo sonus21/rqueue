@@ -16,10 +16,10 @@
 
 package com.github.sonus21.rqueue.broker.models.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.sonus21.rqueue.models.SerializableBase;
-import com.github.sonus21.rqueue.models.request.Message;
+import com.github.sonus21.rqueue.models.response.BaseResponse;
+import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,25 +30,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString(callSuper = true)
-public class MessageResponse extends SerializableBase {
+@EqualsAndHashCode(callSuper = true)
+public class BatchMessageResponse extends BaseResponse {
 
-  private static final long serialVersionUID = -753705665903141703L;
-  private String id;
-
-  private Message message;
-
-  @JsonProperty("retry_count")
-  private Integer retryCount;
-
-  @JsonProperty("queued_time")
-  private long queuedTime;
-
-  @JsonProperty("process_at")
-  private long processAt;
-
-  @JsonProperty("re_enqueued_at")
-  private Long reEnqueuedAt;
-
-  @JsonProperty("failure_count")
-  private int failureCount;
+  private static final long serialVersionUID = -1290119410351330028L;
+  private List<MessageResponse> messages;
 }

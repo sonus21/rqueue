@@ -59,6 +59,7 @@ public class RqueueMessageConverterImpl implements RqueueMessageConverter {
   @Override
   public com.github.sonus21.rqueue.models.request.Message toMessage(String message)
       throws IOException {
-    return objectMapper.readValue(message, com.github.sonus21.rqueue.models.request.Message.class);
+    Msg msg = objectMapper.readValue(message, Msg.class);
+    return new com.github.sonus21.rqueue.models.request.Message(msg.getName(), msg.getMsg());
   }
 }

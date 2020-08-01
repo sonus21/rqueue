@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
+import java.util.List;
 import lombok.ToString;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -41,7 +42,7 @@ class RedisScriptFactory {
         script.setResultType(Long.class);
         return script;
       case POP_MESSAGE:
-        script.setResultType(RqueueMessage.class);
+        script.setResultType(List.class);
         return script;
       default:
         throw new UnknownSwitchCase(type.toString());

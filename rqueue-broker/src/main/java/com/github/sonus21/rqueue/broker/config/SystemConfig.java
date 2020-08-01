@@ -48,17 +48,6 @@ public class SystemConfig {
   @Value("${rqueue.authentication.user.session.key.suffix:auth:user:session:}")
   private String userSessionKeySuffix;
 
-  @Value("${rqueue.topics.key.suffix:topics}")
-  private String topicsKeySuffix;
-
-  @Value("${rqueue.topic.name.prefix:topic::}")
-  private String topicNamePrefix;
-
-  @Value("${rqueue.topic.configuration.key.prefix:t-config::}")
-  private String topicConfigurationPrefix;
-
-  @Value("${rqueue.topic.subscription.key.prefix:t-subscription::}")
-  private String topicSubscriptionPrefix;
 
   public String getRootUserKey() {
     return rqueueConfig.getPrefix() + rootUserKeySuffix;
@@ -82,21 +71,5 @@ public class SystemConfig {
 
   public String getTokenNamesKey() {
     return rqueueConfig.getPrefix() + tokenNamesSuffix;
-  }
-
-  public String getTopicsKey() {
-    return rqueueConfig.getPrefix() + topicsKeySuffix;
-  }
-
-  public String getTopicName(String topic) {
-    return rqueueConfig.getPrefix() + topicNamePrefix + topic;
-  }
-
-  public String getTopicSubscriptionKey(String topic) {
-    return rqueueConfig.getPrefix() + topicSubscriptionPrefix + topic;
-  }
-
-  public String getTopicConfigurationKey(String topic) {
-    return rqueueConfig.getPrefix() + topicConfigurationPrefix + topic;
   }
 }

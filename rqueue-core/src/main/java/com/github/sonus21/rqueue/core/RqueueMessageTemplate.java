@@ -28,6 +28,13 @@ public interface RqueueMessageTemplate {
       String processingChannelName,
       long visibilityTimeout);
 
+  List<RqueueMessage> popN(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout,
+      int n);
+
   Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage);
 

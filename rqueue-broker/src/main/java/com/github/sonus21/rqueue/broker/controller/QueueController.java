@@ -24,7 +24,7 @@ import com.github.sonus21.rqueue.broker.models.request.UpdateQueueRequest;
 import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.DeleteQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
-import com.github.sonus21.rqueue.broker.models.response.MessageResponse;
+import com.github.sonus21.rqueue.broker.models.response.BatchMessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.UpdateQueueResponse;
 import com.github.sonus21.rqueue.broker.service.QueueService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +64,7 @@ public class QueueController {
   }
 
   @PostMapping("dequeue")
-  public MessageResponse dequeue(@RequestBody MessageRequest messageRequest) {
+  public BatchMessageResponse dequeue(@RequestBody MessageRequest messageRequest) {
     return queueService.dequeue(messageRequest);
   }
 }

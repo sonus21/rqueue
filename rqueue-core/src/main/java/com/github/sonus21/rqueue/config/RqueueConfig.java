@@ -86,6 +86,18 @@ public class RqueueConfig {
   @Value("${rqueue.event.channel:e-channel}")
   private String eventChannelSuffix;
 
+  @Value("${rqueue.topics.key.suffix:topics}")
+  private String topicsKeySuffix;
+
+  @Value("${rqueue.topic.name.prefix:topic::}")
+  private String topicNamePrefix;
+
+  @Value("${rqueue.topic.configuration.key.prefix:t-config::}")
+  private String topicConfigurationPrefix;
+
+  @Value("${rqueue.topic.subscription.key.prefix:t-subscription::}")
+  private String topicSubscriptionPrefix;
+
   public String getQueuesKey() {
     return prefix + queuesKeySuffix;
   }
@@ -146,5 +158,21 @@ public class RqueueConfig {
       return queueName;
     }
     return "{" + queueName + "}";
+  }
+
+  public String getTopicsKey() {
+    return getPrefix() + topicsKeySuffix;
+  }
+
+  public String getTopicName(String topic) {
+    return getPrefix() + topicNamePrefix + topic;
+  }
+
+  public String getTopicSubscriptionKey(String topic) {
+    return getPrefix() + topicSubscriptionPrefix + topic;
+  }
+
+  public String getTopicConfigurationKey(String topic) {
+    return getPrefix() + topicConfigurationPrefix + topic;
   }
 }

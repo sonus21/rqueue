@@ -36,7 +36,7 @@ import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.web.dao.RqueueQStore;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,7 +92,7 @@ public class RqueueMessageListenerContainer
   private RqueueMetricsCounter rqueueMetricsCounter;
 
   @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Autowired private RqueueQStore rqueueQStore;
   private AsyncTaskExecutor taskExecutor;
   private Map<String, QueueThread> queueThreadMap = new ConcurrentHashMap<>();
   private Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
@@ -404,7 +404,7 @@ public class RqueueMessageListenerContainer
                 deadLetterQueueMessageProcessor,
                 discardMessageProcessor,
                 postExecutionMessageProcessor),
-            rqueueSystemConfigDao);
+            rqueueQStore);
   }
 
   protected void doStart() {
