@@ -31,7 +31,13 @@ import org.springframework.test.context.TestPropertySource;
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8001"})
+@TestPropertySource(
+    properties = {
+      "rqueue.retry.per.poll=1000",
+      "spring.redis.port=8001",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+    })
 public class ApplicationTest extends MessageRetryTest {
 
   @Test
@@ -40,8 +46,8 @@ public class ApplicationTest extends MessageRetryTest {
   }
 
   @Test
-  public void messageMovedToDelayedQueue() throws TimedOutException {
-    verifyMessageMovedToDelayedQueue();
+  public void messageMovedToDeadLetterQueue() throws TimedOutException {
+    verifyMessageMovedToDeadLetterQueue();
   }
 
   @Test
@@ -62,5 +68,10 @@ public class ApplicationTest extends MessageRetryTest {
   @Test
   public void jobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
     verifyMessageIsInProcessingQueue();
+  }
+
+  @Test
+  public void messageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
+    verifyMessageIsConsumedByDeadLetterQueueListener();
   }
 }
