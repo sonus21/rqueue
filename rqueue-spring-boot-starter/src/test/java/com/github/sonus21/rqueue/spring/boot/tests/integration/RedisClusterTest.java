@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication
 import com.github.sonus21.rqueue.test.tests.MessageRetryTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,8 +41,8 @@ public class RedisClusterTest extends MessageRetryTest {
   }
 
   @Test
-  public void messageMovedToDelayedQueue() throws TimedOutException {
-    verifyMessageMovedToDelayedQueue();
+  public void messageMovedToDeadLetterQueue() throws TimedOutException {
+    verifyMessageMovedToDeadLetterQueue();
   }
 
   @Test

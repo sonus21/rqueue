@@ -7,6 +7,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.sonus21/rqueue)](https://repo1.maven.org/maven2/com/github/sonus21/rqueue)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Javadoc](https://javadoc.io/badge2/com.github.sonus21/rqueue-core/javadoc.svg)](https://javadoc.io/doc/com.github.sonus21/rqueue-core)
 
 **Rqueue** is an asynchronous task executor(worker) built for spring framework based on the spring framework's messaging library backed by Redis. It can be used as message broker as well, where all services code is in Spring.
 
@@ -36,14 +37,14 @@
 * Add dependency
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.0.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.0.3-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.0.1-RELEASE</version>
+        <version>2.0.3-RELEASE</version>
     </dependency>
     ```
     
@@ -52,14 +53,14 @@
 * Add Dependency
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.0.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.0.3-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.0.1-RELEASE</version>
+       <version>2.0.3-RELEASE</version>
      </dependency>
     ```
     

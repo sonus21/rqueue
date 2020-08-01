@@ -24,6 +24,8 @@ import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.test.dto.ReservationRequest;
+import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +50,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
         "message should be deleted from internal storage");
   }
 
-  protected void verifyMessageMovedToDelayedQueue() throws TimedOutException {
+  protected void verifyMessageMovedToDeadLetterQueue() throws TimedOutException {
     cleanQueue(emailQueue);
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), -1, 0);
@@ -60,7 +62,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
         "all retry to be exhausted");
     waitFor(
         () -> stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue) > 0,
-        "message should be moved to delayed queue");
+        "message should be moved to dead letter queue");
     assertEquals(emailRetryCount, failureManager.getFailureCount(email.getId()));
     failureManager.delete(email.getId());
   }
@@ -125,5 +127,32 @@ public abstract class MessageRetryTest extends SpringTestBase {
         "message should be present in internal storage");
     // more then one copy should not be present
     assertEquals(1, messageSender.getAllMessages(jobQueue).size());
+  }
+
+  public void verifyMessageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
+    cleanQueue(reservationRequestQueue);
+    cleanQueue(reservationRequestDeadLetterQueue);
+    ReservationRequest request = ReservationRequest.newInstance();
+    failureManager.createFailureDetail(
+        request.getId(), reservationRequestQueueRetryCount, reservationRequestQueueRetryCount);
+    messageSender.enqueue(reservationRequestQueue, request);
+    waitFor(
+        () -> failureManager.getFailureCount(request.getId()) >= reservationRequestQueueRetryCount,
+        60000,
+        "ReservationRequest to be retried");
+    waitFor(
+        () -> {
+          ReservationRequest requestInDb =
+              consumedMessageService.getMessage(request.getId(), ReservationRequest.class);
+          return request.equals(requestInDb);
+        },
+        30000,
+        "ReservationRequest to be run");
+    ConsumedMessage consumedMessage = consumedMessageService.getConsumedMessage(request.getId());
+    assertEquals(consumedMessage.getTag(), "reservation-request-dlq");
+    assertEquals(
+        new Long(0), stringRqueueRedisTemplate.getListSize(reservationRequestDeadLetterQueue));
+    assertEquals(0, getMessageCount(reservationQueue));
+    assertEquals(0, getMessageCount(reservationRequestDeadLetterQueue));
   }
 }

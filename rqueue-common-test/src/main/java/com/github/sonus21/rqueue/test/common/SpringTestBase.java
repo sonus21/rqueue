@@ -80,6 +80,15 @@ public abstract class SpringTestBase extends TestBase {
   @Value("${reservation.queue}")
   protected String reservationQueue;
 
+  @Value("${reservation.request.dead.letter.queue.name}")
+  protected String reservationRequestDeadLetterQueue;
+
+  @Value("${reservation.request.queue.name}")
+  protected String reservationRequestQueue;
+
+  @Value("${reservation.request.queue.retry.count}")
+  protected int reservationRequestQueueRetryCount;
+
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, queueName, null, null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
