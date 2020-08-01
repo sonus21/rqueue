@@ -33,7 +33,6 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @Slf4j
 @TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8007"})
-@Ignore
 public class RedisClusterTest extends MessageRetryTest {
 
   @Test
