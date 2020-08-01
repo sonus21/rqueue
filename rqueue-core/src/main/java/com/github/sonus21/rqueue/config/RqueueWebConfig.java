@@ -29,9 +29,6 @@ public class RqueueWebConfig {
    * Control whether web app is enabled or not. If it's marked false then it will throw HTTP 503
    * (Service unavailable) error.
    */
-  @Value("${rqueue.web.url.prefix:/}")
-  private String urlPrefix;
-
   @Value("${rqueue.web.enable:true}")
   private boolean enable;
 

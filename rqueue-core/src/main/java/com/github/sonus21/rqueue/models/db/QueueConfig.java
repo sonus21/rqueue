@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.models.db;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import java.util.HashMap;
@@ -50,7 +51,10 @@ public class QueueConfig extends SerializableBase {
   private int numRetry;
   private long visibilityTimeout;
   private MinMax<Integer> concurrency;
+
+  @JsonProperty("deadLetterQueuesV2")
   private List<DeadLetterQueue> deadLetterQueues;
+
   private boolean systemGenerated;
   private String priorityGroup;
   private Map<String, Integer> priority;
