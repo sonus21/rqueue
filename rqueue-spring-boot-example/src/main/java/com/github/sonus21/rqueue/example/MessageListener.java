@@ -70,11 +70,20 @@ public class MessageListener {
       value = "job-queue",
       deadLetterQueue = "job-morgue",
       numRetries = "2",
+      deadLetterQueueListenerEnabled = "false",
       concurrency = "1-3",
       active = "true")
   @NewSpan
   public void onMessage(Job job) {
     execute("job-queue: {}", job);
+    if (shouldFail()) {
+      throw new IllegalStateException("OMG!" + job);
+    }
+  }
+
+  @RqueueListener(value = "job-morgue", numRetries = "1", concurrency = "1-3")
+  public void onMessageJobDlq(Job job) {
+    execute("job-morgue: {}", job);
     if (shouldFail()) {
       throw new IllegalStateException("OMG!" + job);
     }

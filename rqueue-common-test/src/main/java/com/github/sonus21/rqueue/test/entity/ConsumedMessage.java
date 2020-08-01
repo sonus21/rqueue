@@ -39,4 +39,6 @@ public class ConsumedMessage {
   // Around 1 MB of data
   @Column(length = 1000000)
   private String message;
+
+  @Column private String tag;
 }

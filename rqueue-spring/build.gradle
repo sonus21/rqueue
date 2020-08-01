@@ -6,6 +6,6 @@ buildscript {
 }
 
 dependencies {
-    compile project(":rqueue")
+    compile project(":rqueue-core")
     testCompile project(":rqueue-common-test")
 }

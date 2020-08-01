@@ -36,10 +36,10 @@ public class ConsumedMessageService {
   @NonNull private ConsumedMessageRepository consumedMessageRepository;
   @NonNull private ObjectMapper objectMapper;
 
-  public <T extends BaseQueueMessage> ConsumedMessage save(BaseQueueMessage message)
+  public <T extends BaseQueueMessage> ConsumedMessage save(BaseQueueMessage message, String tag)
       throws JsonProcessingException {
     String textMessage = objectMapper.writeValueAsString(message);
-    ConsumedMessage consumedMessage = new ConsumedMessage(message.getId(), textMessage);
+    ConsumedMessage consumedMessage = new ConsumedMessage(message.getId(), textMessage, tag);
     consumedMessageRepository.save(consumedMessage);
     return consumedMessage;
   }
@@ -61,5 +61,9 @@ public class ConsumedMessageService {
           }
         });
     return idToMessage;
+  }
+
+  public ConsumedMessage getConsumedMessage(String id) {
+    return consumedMessageRepository.findById(id).orElse(null);
   }
 }

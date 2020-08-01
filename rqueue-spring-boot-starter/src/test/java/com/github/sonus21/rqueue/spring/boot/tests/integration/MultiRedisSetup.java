@@ -47,7 +47,7 @@ public class MultiRedisSetup extends MessageRetryTest {
 
   @Test
   public void messageMovedToDelayedQueue() throws TimedOutException {
-    verifyMessageMovedToDelayedQueue();
+    verifyMessageMovedToDeadLetterQueue();
   }
 
   @Test

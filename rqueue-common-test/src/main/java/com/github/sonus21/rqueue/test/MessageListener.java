@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.Reservation;
+import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
@@ -51,7 +52,7 @@ public class MessageListener {
     if (failureManager.shouldFail(job.getId())) {
       throw new Exception("Failing job task to be retried" + job);
     }
-    consumedMessageService.save(job);
+    consumedMessageService.save(job, null);
   }
 
   @RqueueListener(
@@ -65,7 +66,7 @@ public class MessageListener {
     if (failureManager.shouldFail(notification.getId())) {
       throw new Exception("Failing notification task to be retried" + notification);
     }
-    consumedMessageService.save(notification);
+    consumedMessageService.save(notification, null);
   }
 
   @RqueueListener(
@@ -80,7 +81,7 @@ public class MessageListener {
     if (failureManager.shouldFail(email.getId())) {
       throw new Exception("Failing email task to be retried" + email);
     }
-    consumedMessageService.save(email);
+    consumedMessageService.save(email, null);
   }
 
   @RqueueListener(
@@ -94,7 +95,7 @@ public class MessageListener {
     if (failureManager.shouldFail(sms.getId())) {
       throw new Exception("Failing sms task to be retried" + sms);
     }
-    consumedMessageService.save(sms);
+    consumedMessageService.save(sms, null);
   }
 
   @RqueueListener(
@@ -108,7 +109,7 @@ public class MessageListener {
     if (failureManager.shouldFail(chatIndexing.getId())) {
       throw new Exception("Failing chat indexing task to be retried" + chatIndexing);
     }
-    consumedMessageService.save(chatIndexing);
+    consumedMessageService.save(chatIndexing, null);
   }
 
   @RqueueListener(
@@ -122,7 +123,7 @@ public class MessageListener {
     if (failureManager.shouldFail(feedGeneration.getId())) {
       throw new Exception("Failing feedGeneration task to be retried" + feedGeneration);
     }
-    consumedMessageService.save(feedGeneration);
+    consumedMessageService.save(feedGeneration, null);
   }
 
   @RqueueListener(
@@ -136,6 +137,30 @@ public class MessageListener {
     if (failureManager.shouldFail(reservation.getId())) {
       throw new Exception("Failing reservation task to be retried" + reservation);
     }
-    consumedMessageService.save(reservation);
+    consumedMessageService.save(reservation, null);
+  }
+
+  @RqueueListener(
+      value = "${reservation.request.queue.name}",
+      deadLetterQueue = "${reservation.request.dead.letter.queue.name}",
+      deadLetterQueueListenerEnabled = "${reservation.request.dead.letter.consumer.enabled}",
+      active = "${reservation.request.active}",
+      numRetries = "${reservation.request.queue.retry.count}")
+  public void onMessageReservationRequest(ReservationRequest request) throws Exception {
+    log.info("ReservationRequest {}", request);
+    if (failureManager.shouldFail(request.getId())) {
+      throw new Exception("Failing reservation request task to be retried" + request);
+    }
+    consumedMessageService.save(request, null);
+  }
+
+  @RqueueListener(
+      value = "${reservation.request.dead.letter.queue.name}",
+      active = "${reservation.request.dead.letter.consumer.enabled}",
+      numRetries = "${reservation.request.dead.letter.queue.retry.count}")
+  public void onMessageReservationRequestDeadLetterQueue(ReservationRequest request)
+      throws Exception {
+    log.info("ReservationRequest Dead Letter Queue{}", request);
+    consumedMessageService.save(request, "reservation-request-dlq");
   }
 }
