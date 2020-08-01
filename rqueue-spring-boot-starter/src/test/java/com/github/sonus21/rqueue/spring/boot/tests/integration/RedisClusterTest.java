@@ -42,7 +42,7 @@ public class RedisClusterTest extends MessageRetryTest {
   }
 
   @Test
-  public void messageMovedToDelayedQueue() throws TimedOutException {
+  public void messageMovedToDeadLetterQueue() throws TimedOutException {
     verifyMessageMovedToDeadLetterQueue();
   }
 

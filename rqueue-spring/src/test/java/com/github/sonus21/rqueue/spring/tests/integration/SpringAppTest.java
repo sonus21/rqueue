@@ -44,7 +44,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-@ContextConfiguration(classes = SpringApp.class)w
+@ContextConfiguration(classes = SpringApp.class)
 @RunWith(RqueueSpringTestRunner.class)
 @Slf4j
 @WebAppConfiguration
