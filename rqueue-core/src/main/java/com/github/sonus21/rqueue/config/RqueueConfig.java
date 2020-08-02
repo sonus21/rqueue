@@ -32,7 +32,7 @@ public class RqueueConfig {
   private final boolean sharedConnection;
   private final int dbVersion;
 
-  @Value("${rqueue.version:2.0.3}")
+  @Value("${rqueue.version:2.0.4}")
   private String version;
 
   @Value("${rqueue.key.prefix:__rq::}")
