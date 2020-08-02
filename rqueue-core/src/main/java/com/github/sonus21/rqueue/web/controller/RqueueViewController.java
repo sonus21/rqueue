@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
@@ -36,6 +37,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.jtwig.spring.JtwigViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +83,7 @@ public class RqueueViewController {
     }
   }
 
-  private void addBasicDetails(Model model) {
+  private void addBasicDetails(Model model, HttpServletRequest request) {
     Pair<String, String> releaseAndVersion = rqueueUtilityService.getLatestVersion();
     model.addAttribute("releaseLink", releaseAndVersion.getFirst());
     model.addAttribute("latestVersion", releaseAndVersion.getSecond());
@@ -89,16 +91,25 @@ public class RqueueViewController {
         "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     model.addAttribute("timeInMilli", System.currentTimeMillis());
     model.addAttribute("version", rqueueConfig.getVersion());
-    model.addAttribute("urlPrefix", rqueueWebConfig.getUrlPrefix());
+    String xForwardedPrefix = request.getHeader("x-forwarded-prefix");
+    String prefix = "/";
+    if (!StringUtils.isEmpty(xForwardedPrefix)) {
+      if (xForwardedPrefix.endsWith("/")) {
+        xForwardedPrefix = xForwardedPrefix.substring(0, xForwardedPrefix.length() - 1);
+      }
+      prefix = xForwardedPrefix + prefix;
+    }
+    model.addAttribute("urlPrefix", prefix);
   }
 
   @GetMapping
-  public View index(Model model, HttpServletResponse response) throws Exception {
+  public View index(Model model, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, null);
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
@@ -107,12 +118,13 @@ public class RqueueViewController {
   }
 
   @GetMapping("queues")
-  public View queues(Model model, HttpServletResponse response) throws Exception {
+  public View queues(Model model, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, NavTab.QUEUES);
     model.addAttribute("title", "Queues");
     List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
@@ -125,7 +137,11 @@ public class RqueueViewController {
   }
 
   @GetMapping("queues/{queueName}")
-  public View queueDetail(@PathVariable String queueName, Model model, HttpServletResponse response)
+  public View queueDetail(
+      @PathVariable String queueName,
+      Model model,
+      HttpServletRequest request,
+      HttpServletResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
@@ -135,7 +151,7 @@ public class RqueueViewController {
     List<NavTab> queueActions = rqueueQDetailService.getNavTabs(queueConfig);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetail =
         rqueueQDetailService.getQueueDataStructureDetail(queueConfig);
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, NavTab.QUEUES);
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
@@ -148,12 +164,13 @@ public class RqueueViewController {
   }
 
   @GetMapping("running")
-  public View running(Model model, HttpServletResponse response) throws Exception {
+  public View running(Model model, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, NavTab.RUNNING);
     model.addAttribute("title", "Running Tasks");
     List<List<Object>> l = rqueueQDetailService.getRunningTasks();
@@ -163,12 +180,13 @@ public class RqueueViewController {
   }
 
   @GetMapping("scheduled")
-  public View scheduled(Model model, HttpServletResponse response) throws Exception {
+  public View scheduled(Model model, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, NavTab.SCHEDULED);
     model.addAttribute("title", "Scheduled Tasks");
     List<List<Object>> l = rqueueQDetailService.getScheduledTasks();
@@ -178,12 +196,13 @@ public class RqueueViewController {
   }
 
   @GetMapping("dead")
-  public View dead(Model model, HttpServletResponse response) throws Exception {
+  public View dead(Model model, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, NavTab.DEAD);
     model.addAttribute("title", "Tasks moved to dead letter queue");
     List<List<Object>> l = rqueueQDetailService.getDeadLetterTasks();
@@ -194,12 +213,13 @@ public class RqueueViewController {
   }
 
   @GetMapping("pending")
-  public View pending(Model model, HttpServletResponse response) throws Exception {
+  public View pending(Model model, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, NavTab.PENDING);
     model.addAttribute("title", "Tasks waiting for execution");
     List<List<Object>> l = rqueueQDetailService.getWaitingTasks();
@@ -209,12 +229,13 @@ public class RqueueViewController {
   }
 
   @GetMapping("utility")
-  public View utility(Model model, HttpServletResponse response) throws Exception {
+  public View utility(Model model, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model);
+    addBasicDetails(model, request);
     addNavData(model, NavTab.UTILITY);
     model.addAttribute("title", "Utility");
     model.addAttribute("supportedDataType", DataType.getEnabledDataTypes());

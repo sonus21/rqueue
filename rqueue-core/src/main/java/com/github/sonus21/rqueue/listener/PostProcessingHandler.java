@@ -134,36 +134,39 @@ class PostProcessingHandler extends BaseLogger {
       TaskStatus status,
       long jobExecutionStartTime) {
     if (rqueueWebConfig.isCollectListenerStats()) {
-      addOrDeleteMetadata(messageMetadata, rqueueMessage, jobExecutionStartTime, false);
+      MessageMetadata newMessageMetaData =
+          addOrDeleteMetadata(rqueueMessage, messageMetadata, jobExecutionStartTime, false);
       RqueueExecutionEvent event =
-          new RqueueExecutionEvent(queueDetail, rqueueMessage, status, messageMetadata);
+          new RqueueExecutionEvent(queueDetail, rqueueMessage, status, newMessageMetaData);
       applicationEventPublisher.publishEvent(event);
     }
   }
 
-  private void addOrDeleteMetadata(
-      MessageMetadata messageMetadata,
+  private MessageMetadata addOrDeleteMetadata(
       RqueueMessage rqueueMessage,
+      MessageMetadata messageMetadata,
       long jobExecutionStartTime,
       boolean saveOrDelete) {
+    MessageMetadata newMessageMetaData = messageMetadata;
     String messageMetadataId = MessageUtils.getMessageMetaId(rqueueMessage.getId());
-    if (messageMetadata == null) {
-      messageMetadata = rqueueMessageMetadataService.get(messageMetadataId);
+    if (newMessageMetaData == null) {
+      newMessageMetaData = rqueueMessageMetadataService.get(messageMetadataId);
     }
-    if (messageMetadata == null) {
-      messageMetadata = new MessageMetadata(messageMetadataId, rqueueMessage.getId());
+    if (newMessageMetaData == null) {
+      newMessageMetaData = new MessageMetadata(messageMetadataId, rqueueMessage.getId());
       // do not call db delete method
       if (!saveOrDelete) {
-        messageMetadata.addExecutionTime(jobExecutionStartTime);
-        return;
+        newMessageMetaData.addExecutionTime(jobExecutionStartTime);
+        return newMessageMetaData;
       }
     }
-    messageMetadata.addExecutionTime(jobExecutionStartTime);
+    newMessageMetaData.addExecutionTime(jobExecutionStartTime);
     if (saveOrDelete) {
-      rqueueMessageMetadataService.save(messageMetadata, Duration.ofSeconds(SECONDS_IN_A_WEEK));
+      rqueueMessageMetadataService.save(newMessageMetaData, Duration.ofSeconds(SECONDS_IN_A_WEEK));
     } else {
       rqueueMessageMetadataService.delete(messageMetadataId);
     }
+    return newMessageMetaData;
   }
 
   private void deleteMessage(
@@ -273,7 +276,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         newMessage,
         delay);
-    addOrDeleteMetadata(messageMetadata, rqueueMessage, jobExecutionStartTime, true);
+    addOrDeleteMetadata(rqueueMessage, messageMetadata, jobExecutionStartTime, true);
   }
 
   private void discardMessage(

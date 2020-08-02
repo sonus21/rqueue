@@ -256,13 +256,21 @@ public class RqueueTaskAggregatorService implements RqueueTaskAggregator {
         QueueDetail queueDetail = (QueueDetail) queueRqueueExecutionEvent.getSource();
         String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueDetail.getName());
         String lockKey = rqueueConfig.getLockKey(queueStatKey);
-        if (rqueueLockManager.acquireLock(
-            lockKey, Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
-          aggregate(events);
-          rqueueLockManager.releaseLock(lockKey);
-        } else {
-          log.warn("Unable to acquire lock, will retry later");
-          queue.add(events);
+        boolean locked = false;
+        try {
+          if (rqueueLockManager.acquireLock(
+              lockKey, Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
+            locked = true;
+            aggregate(events);
+          } else {
+            log.warn("Unable to acquire lock, will retry later");
+            TimeoutUtils.sleep(Constants.ONE_MILLI);
+            queue.add(events);
+          }
+        } finally {
+          if (locked) {
+            rqueueLockManager.releaseLock(lockKey);
+          }
         }
       }
     }
@@ -289,7 +297,7 @@ public class RqueueTaskAggregatorService implements RqueueTaskAggregator {
             queue.add(events);
           }
           log.error("Error in aggregator job ", e);
-          TimeoutUtils.sleepLog(Constants.MIN_DELAY, false);
+          TimeoutUtils.sleepLog(Constants.ONE_MILLI, false);
         }
       }
     }
