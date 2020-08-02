@@ -37,14 +37,14 @@
 * Add dependency
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.0.3-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.0.4-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.0.3-RELEASE</version>
+        <version>2.0.4-RELEASE</version>
     </dependency>
     ```
     
@@ -53,14 +53,14 @@
 * Add Dependency
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.0.3-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.0.4-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.0.3-RELEASE</version>
+       <version>2.0.4-RELEASE</version>
      </dependency>
     ```
     
