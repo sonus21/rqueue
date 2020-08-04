@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.models.MessageMoveResult;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
@@ -66,7 +67,9 @@ public interface RqueueMessageTemplate {
 
   RedisTemplate<String, RqueueMessage> getTemplate();
 
-  Long removeElementFromZset(String zsetName, RqueueMessage rqueueMessage);
+  Long removeFromZset(String zsetName, RqueueMessage rqueueMessage);
 
   List<TypedTuple<RqueueMessage>> readFromZsetWithScore(String name, long start, long end);
+
+  void removeFromZset(String zsetName, Collection<RqueueMessage> messages);
 }

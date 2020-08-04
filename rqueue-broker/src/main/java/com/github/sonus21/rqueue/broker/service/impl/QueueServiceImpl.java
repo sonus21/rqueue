@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.broker.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.broker.dao.QueueStore;
 import com.github.sonus21.rqueue.broker.models.db.QueueConfig;
 import com.github.sonus21.rqueue.broker.models.request.BatchMessageEnqueueRequest;
@@ -27,11 +26,12 @@ import com.github.sonus21.rqueue.broker.models.request.MessageRequest;
 import com.github.sonus21.rqueue.broker.models.request.Queue;
 import com.github.sonus21.rqueue.broker.models.request.QueueWithPriority;
 import com.github.sonus21.rqueue.broker.models.request.UpdateQueueRequest;
+import com.github.sonus21.rqueue.broker.models.response.BatchMessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.DeleteQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.IdResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
-import com.github.sonus21.rqueue.broker.models.response.BatchMessageResponse;
+import com.github.sonus21.rqueue.broker.models.response.MessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.UpdateQueueResponse;
 import com.github.sonus21.rqueue.broker.service.QueueService;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
@@ -42,26 +42,35 @@ import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.exception.LockException;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.exception.ValidationException;
+import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.EventType;
+import com.github.sonus21.rqueue.models.request.Message;
+import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageConverter;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueRedisMessagePublisher;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 @Service
+@Slf4j
 public class QueueServiceImpl implements QueueService {
   private final RqueueLockManager rqueueLockManager;
   private final QueueStore queueStore;
   private final RqueueConfig rqueueConfig;
   private final RqueueRedisMessagePublisher rqueueRedisMessagePublisher;
+  private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final RqueueMessageConverter rqueueMessageConverter;
   private final RqueueMessageTemplate rqueueMessageTemplate;
 
@@ -71,23 +80,20 @@ public class QueueServiceImpl implements QueueService {
       QueueStore queueStore,
       RqueueConfig rqueueConfig,
       RqueueRedisMessagePublisher rqueueRedisMessagePublisher,
+      RqueueMessageMetadataService rqueueMessageMetadataService,
       RqueueMessageConverter rqueueMessageConverter,
       RqueueMessageTemplate rqueueMessageTemplate) {
     this.rqueueLockManager = rqueueLockManager;
     this.queueStore = queueStore;
     this.rqueueConfig = rqueueConfig;
     this.rqueueRedisMessagePublisher = rqueueRedisMessagePublisher;
+    this.rqueueMessageMetadataService = rqueueMessageMetadataService;
     this.rqueueMessageConverter = rqueueMessageConverter;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
   }
 
   private RqueueMessage createMessage(MessageEnqueueRequest request) throws ProcessingException {
-    String msg;
-    try {
-      msg = rqueueMessageConverter.fromMessage(request.getMessage());
-    } catch (JsonProcessingException e) {
-      throw new ProcessingException(e);
-    }
+    String msg = rqueueMessageConverter.fromMessage(request.getMessage());
     String queueName = request.getQueue().getName();
     if (request.getQueue().getPriority() != null) {
       queueName =
@@ -110,7 +116,6 @@ public class QueueServiceImpl implements QueueService {
         }
       }
       queueStore.addQueue(request.getQueues());
-
       rqueueRedisMessagePublisher.publishBrokerQueue(EventType.ADD, queues);
       return new CreateQueueResponse();
     }
@@ -233,19 +238,84 @@ public class QueueServiceImpl implements QueueService {
   public BatchMessageResponse dequeue(MessageRequest messageRequest) throws ValidationException {
     QueueWithPriority queue = messageRequest.getQueue();
     QueueConfig queueConfig = queueStore.getConfig(queue);
-    if(queueConfig == null){
+    if (queueConfig == null) {
       throw new ValidationException(ErrorCode.QUEUE_DOES_NOT_EXIST);
     }
-    if(!StringUtils.isEmpty(queue.getPriority()) && !queueConfig.isValidPriority(queue.getPriority())){
+    if (!StringUtils.isEmpty(queue.getPriority())
+        && !queueConfig.isValidPriority(queue.getPriority())) {
       throw new ValidationException(ErrorCode.INVALID_QUEUE_PRIORITY);
     }
-    //String queueName,
-    //      String processingQueueName,
-    //      String processingChannelName,
-    //      long visibilityTimeout,
-    //      int n
-    List<RqueueMessage> messages = rqueueMessageTemplate.popN(queueConfig.getSimpleQueue(),
-        queueConfig.getProcessingQueue(), queueConfig.getProcessingQueue())
-    return null;
+    long expireAt = MessageUtils.getExpiryTime(queueConfig.getVisibilityTimeout());
+    List<RqueueMessage> rqueueMessages =
+        rqueueMessageTemplate.popN(
+            queueConfig.getSimpleQueue(),
+            queueConfig.getProcessingQueue(),
+            // TODO
+            queueConfig.getProcessingQueue(),
+            queueConfig.getVisibilityTimeout(),
+            messageRequest.getCount());
+    Map<String, MessageMetadata> messageMetadataMap =
+        rqueueMessageMetadataService.getMessageMetaMap(
+            rqueueMessages.stream()
+                .map(e -> MessageUtils.getMessageMetaId(e.getId()))
+                .collect(Collectors.toList()));
+
+    return getMessageResponse(queueConfig, expireAt, rqueueMessages, messageMetadataMap);
+  }
+
+  private boolean isRetryExceeded(
+      QueueConfig queueConfig, RqueueMessage rqueueMessage, int currentFailureCount) {
+    int maxRetryCount = queueConfig.getMaxRetryCount();
+    if (rqueueMessage.getRetryCount() != null) {
+      maxRetryCount = rqueueMessage.getRetryCount();
+    }
+    return maxRetryCount < currentFailureCount;
+  }
+
+  private BatchMessageResponse getMessageResponse(
+      QueueConfig queueConfig,
+      long expireAt,
+      List<RqueueMessage> rqueueMessages,
+      Map<String, MessageMetadata> messageMetadataMap) {
+    List<MessageMetadata> metadataToBeSaved = new ArrayList<>();
+    List<MessageMetadata> messagesToBeDeleted = new ArrayList<>();
+    List<MessageResponse> messages =
+        rqueueMessages.stream()
+            .map(
+                rqueueMessage -> {
+                  MessageMetadata messageMetadata = messageMetadataMap.get(rqueueMessage.getId());
+                  if (messageMetadata == null) {
+                    messageMetadata = new MessageMetadata(rqueueMessage);
+                  } else {
+                    if (isRetryExceeded(
+                        queueConfig, rqueueMessage, messageMetadata.getFailureCount())) {
+                      messageMetadata.setRqueueMessage(rqueueMessage);
+                      messagesToBeDeleted.add(messageMetadata);
+                      return null;
+                    }
+                    messageMetadata.incrementFailureCount();
+                    messageMetadata.setRqueueMessage(rqueueMessage);
+                    rqueueMessage.setFailureCount(messageMetadata.getFailureCount());
+                  }
+                  messageMetadata.setExpireAt(expireAt);
+                  metadataToBeSaved.add(messageMetadata);
+                  try {
+                    Message message = rqueueMessageConverter.toMessage(rqueueMessage.getMessage());
+                    return MessageResponse.fromRqueueMessage(rqueueMessage, message);
+                  } catch (ProcessingException e) {
+                    log.error("Message conversion failed Message {}", rqueueMessage, e);
+                    return null;
+                  }
+                })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    rqueueMessageMetadataService.save(
+        metadataToBeSaved, Duration.ofMillis(2 * queueConfig.getVisibilityTimeout()));
+    rqueueMessageTemplate.removeFromZset(
+        queueConfig.getProcessingQueue(),
+        messagesToBeDeleted.stream()
+            .map(MessageMetadata::getRqueueMessage)
+            .collect(Collectors.toList()));
+    return new BatchMessageResponse(messages);
   }
 }

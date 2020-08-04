@@ -24,11 +24,13 @@ import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 @Service
 public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataService {
@@ -60,6 +62,16 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
+  public void save(Collection<MessageMetadata> messageMetadata, Duration duration) {
+    if (CollectionUtils.isEmpty(messageMetadata)) {
+      return;
+    }
+    template.getRedisTemplate().multi();
+    messageMetadata.forEach(e -> template.set(e.getId(), e, duration));
+    template.getRedisTemplate().exec();
+  }
+
+  @Override
   public void deleteMessage(String messageId, Duration duration) {
     String id = MessageUtils.getMessageMetaId(messageId);
     MessageMetadata messageMetadata = get(id);
@@ -74,5 +86,10 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   @Override
   public void delete(String id) {
     template.delete(id);
+  }
+
+  @Override
+  public Map<String, MessageMetadata> getMessageMetaMap(Collection<String> ids) {
+    return null;
   }
 }

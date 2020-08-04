@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
-
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -96,9 +94,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private long getMaxProcessingTime() {
-    return System.currentTimeMillis()
-        + queueDetail.getVisibilityTimeout()
-        - DELTA_BETWEEN_RE_ENQUEUE_TIME;
+    return MessageUtils.getExpiryTime(queueDetail.getVisibilityTimeout());
   }
 
   private boolean isMessageDeleted() {

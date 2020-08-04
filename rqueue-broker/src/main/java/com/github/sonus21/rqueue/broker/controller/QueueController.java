@@ -21,12 +21,15 @@ import com.github.sonus21.rqueue.broker.models.request.CreateQueueRequest;
 import com.github.sonus21.rqueue.broker.models.request.DeleteQueueRequest;
 import com.github.sonus21.rqueue.broker.models.request.MessageRequest;
 import com.github.sonus21.rqueue.broker.models.request.UpdateQueueRequest;
+import com.github.sonus21.rqueue.broker.models.response.BatchMessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.CreateQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.DeleteQueueResponse;
 import com.github.sonus21.rqueue.broker.models.response.MessageEnqueueResponse;
-import com.github.sonus21.rqueue.broker.models.response.BatchMessageResponse;
 import com.github.sonus21.rqueue.broker.models.response.UpdateQueueResponse;
 import com.github.sonus21.rqueue.broker.service.QueueService;
+import com.github.sonus21.rqueue.exception.LockException;
+import com.github.sonus21.rqueue.exception.ProcessingException;
+import com.github.sonus21.rqueue.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,27 +47,32 @@ public class QueueController {
   }
 
   @PostMapping
-  public CreateQueueResponse newQueue(@RequestBody CreateQueueRequest request) {
+  public CreateQueueResponse newQueue(@RequestBody CreateQueueRequest request)
+      throws ProcessingException, LockException, ValidationException {
     return queueService.create(request);
   }
 
   @PutMapping
-  public UpdateQueueResponse update(@RequestBody UpdateQueueRequest request) {
+  public UpdateQueueResponse update(@RequestBody UpdateQueueRequest request)
+      throws ProcessingException, LockException, ValidationException {
     return queueService.update(request);
   }
 
   @DeleteMapping
-  public DeleteQueueResponse delete(@RequestBody DeleteQueueRequest request) {
+  public DeleteQueueResponse delete(@RequestBody DeleteQueueRequest request)
+      throws ValidationException, LockException, ProcessingException {
     return queueService.delete(request);
   }
 
   @PostMapping("enqueue")
-  public MessageEnqueueResponse enqueue(@RequestBody BatchMessageEnqueueRequest request) {
+  public MessageEnqueueResponse enqueue(@RequestBody BatchMessageEnqueueRequest request)
+      throws ProcessingException {
     return queueService.enqueue(request);
   }
 
   @PostMapping("dequeue")
-  public BatchMessageResponse dequeue(@RequestBody MessageRequest messageRequest) {
+  public BatchMessageResponse dequeue(@RequestBody MessageRequest messageRequest)
+      throws ValidationException {
     return queueService.dequeue(messageRequest);
   }
 }

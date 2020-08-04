@@ -16,18 +16,18 @@
 
 package com.github.sonus21.rqueue.web.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.PubSubMessage;
-import java.io.IOException;
 import org.springframework.data.redis.connection.Message;
 
 public interface RqueueMessageConverter {
-  byte[] toMessage(PubSubMessage message) throws JsonProcessingException;
+  byte[] toMessage(PubSubMessage message) throws ProcessingException;
 
-  PubSubMessage fromMessage(Message message) throws IOException;
+  PubSubMessage fromMessage(Message message) throws ProcessingException;
 
   String fromMessage(com.github.sonus21.rqueue.models.request.Message message)
-      throws JsonProcessingException;
+      throws ProcessingException;
 
-  com.github.sonus21.rqueue.models.request.Message toMessage(String message) throws IOException;
+  com.github.sonus21.rqueue.models.request.Message toMessage(String message)
+      throws ProcessingException;
 }

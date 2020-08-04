@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.models.db;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import lombok.AllArgsConstructor;
@@ -38,6 +37,9 @@ public class MessageMetadata extends SerializableBase {
   private long totalExecutionTime;
   private boolean deleted;
   private Long deletedOn;
+  private RqueueMessage rqueueMessage;
+  private long expireAt;
+  private int failureCount;
 
   public MessageMetadata(String id, String messageId) {
     this.id = id;
@@ -49,7 +51,17 @@ public class MessageMetadata extends SerializableBase {
     this.messageId = messageId;
   }
 
+  public MessageMetadata(RqueueMessage message) {
+    this.id = MessageUtils.getMessageMetaId(message.getId());
+    this.rqueueMessage = message;
+    this.messageId = rqueueMessage.getId();
+  }
+
   public void addExecutionTime(long jobStartTime) {
     this.totalExecutionTime += (System.currentTimeMillis() - jobStartTime);
+  }
+
+  public void incrementFailureCount() {
+    this.failureCount += 1;
   }
 }

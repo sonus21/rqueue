@@ -221,7 +221,7 @@ public class RqueueExecutorTest {
     rqueueExecutor.run();
     verify(messageHandler, times(0)).handleMessage(any());
     verify(messageTemplate, times(1))
-        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
+        .removeFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
   }
 
   private class TestMessageProcessor implements MessageProcessor {

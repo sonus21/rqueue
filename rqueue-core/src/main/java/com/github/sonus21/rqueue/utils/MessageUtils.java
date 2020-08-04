@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
 import static org.springframework.util.Assert.notEmpty;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -67,5 +68,9 @@ public final class MessageUtils {
 
   public static String getMessageMetaId(String messageId) {
     return META_DATA_KEY_PREFIX + messageId;
+  }
+
+  public static long getExpiryTime(long visibilityTimeout) {
+    return System.currentTimeMillis() + visibilityTimeout - DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 }

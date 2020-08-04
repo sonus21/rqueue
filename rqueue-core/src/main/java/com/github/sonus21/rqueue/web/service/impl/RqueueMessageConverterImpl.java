@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.web.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter.Msg;
+import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.PubSubMessage;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageConverter;
@@ -37,29 +38,46 @@ public class RqueueMessageConverterImpl implements RqueueMessageConverter {
   }
 
   @Override
-  public byte[] toMessage(PubSubMessage message) throws JsonProcessingException {
-    return objectMapper.writeValueAsBytes(message);
+  public byte[] toMessage(PubSubMessage message) throws ProcessingException {
+    try {
+      return objectMapper.writeValueAsBytes(message);
+    } catch (JsonProcessingException e) {
+      throw new ProcessingException(e);
+    }
   }
 
   @Override
-  public PubSubMessage fromMessage(Message message) throws IOException {
+  public PubSubMessage fromMessage(Message message) throws ProcessingException {
     if (SerializationUtils.isEmpty(message.getBody())) {
       return null;
     }
-    return objectMapper.readValue(message.getBody(), PubSubMessage.class);
+    try {
+      return objectMapper.readValue(message.getBody(), PubSubMessage.class);
+    } catch (IOException e) {
+      throw new ProcessingException(e);
+    }
   }
 
   @Override
   public String fromMessage(com.github.sonus21.rqueue.models.request.Message message)
-      throws JsonProcessingException {
+      throws ProcessingException {
     Msg msg = new Msg(message.getClazz(), message.getBody());
-    return objectMapper.writeValueAsString(msg);
+    try {
+      return objectMapper.writeValueAsString(msg);
+    } catch (JsonProcessingException e) {
+      throw new ProcessingException(e);
+    }
   }
 
   @Override
   public com.github.sonus21.rqueue.models.request.Message toMessage(String message)
-      throws IOException {
-    Msg msg = objectMapper.readValue(message, Msg.class);
+      throws ProcessingException {
+    Msg msg;
+    try {
+      msg = objectMapper.readValue(message, Msg.class);
+    } catch (JsonProcessingException e) {
+      throw new ProcessingException(e);
+    }
     return new com.github.sonus21.rqueue.models.request.Message(msg.getName(), msg.getMsg());
   }
 }

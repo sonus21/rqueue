@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -236,6 +237,18 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
+  public void removeFromZset(String zsetName, Collection<RqueueMessage> messages) {
+    if (CollectionUtils.isEmpty(messages)) {
+      return;
+    }
+    redisTemplate.multi();
+    for (RqueueMessage message : messages) {
+      removeFromZset(zsetName, message);
+    }
+    redisTemplate.exec();
+  }
+
+  @Override
   public List<RqueueMessage> readFromList(String name, long start, long end) {
     List<RqueueMessage> messages = lrange(name, start, end);
     if (messages == null) {
@@ -250,7 +263,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
-  public Long removeElementFromZset(String zsetName, RqueueMessage rqueueMessage) {
+  public Long removeFromZset(String zsetName, RqueueMessage rqueueMessage) {
     return super.removeFromZset(zsetName, rqueueMessage);
   }
 }

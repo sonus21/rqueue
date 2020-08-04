@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.broker.models.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.request.Message;
 import lombok.AllArgsConstructor;
@@ -51,4 +52,15 @@ public class MessageResponse extends SerializableBase {
 
   @JsonProperty("failure_count")
   private int failureCount;
+
+  public static MessageResponse fromRqueueMessage(RqueueMessage rqueueMessage, Message message) {
+    return new MessageResponse(
+        rqueueMessage.getId(),
+        message,
+        rqueueMessage.getRetryCount(),
+        rqueueMessage.getQueuedTime(),
+        rqueueMessage.getProcessAt(),
+        rqueueMessage.getReEnqueuedAt(),
+        rqueueMessage.getFailureCount());
+  }
 }
