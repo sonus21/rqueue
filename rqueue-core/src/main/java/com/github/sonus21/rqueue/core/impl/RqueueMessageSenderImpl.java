@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
 @Slf4j
@@ -52,8 +51,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
     super(messageTemplate);
     notNull(messageTemplate, "messageTemplate cannot be null");
     notEmpty(messageConverters, "messageConverters cannot be empty");
-    this.messageConverter =
-        new CompositeMessageConverter(getMessageConverters(addDefault, messageConverters));
+    init(messageConverters, addDefault);
   }
 
   public RqueueMessageSenderImpl(RqueueMessageTemplate messageTemplate) {

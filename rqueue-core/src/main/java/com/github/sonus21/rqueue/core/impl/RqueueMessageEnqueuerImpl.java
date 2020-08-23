@@ -23,7 +23,6 @@ import static com.github.sonus21.rqueue.utils.Validator.validatePriority;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
 import static org.springframework.util.Assert.notEmpty;
-import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
@@ -32,7 +31,6 @@ import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
 @Slf4j
@@ -43,11 +41,8 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
       List<MessageConverter> messageConverters,
       boolean addDefault) {
     super(messageTemplate);
-    notNull(messageTemplate, "messageTemplate cannot be null");
     notEmpty(messageConverters, "messageConverters cannot be empty");
-    this.messageTemplate = messageTemplate;
-    this.messageConverter =
-        new CompositeMessageConverter(getMessageConverters(addDefault, messageConverters));
+    init(messageConverters, addDefault);
   }
 
   public RqueueMessageEnqueuerImpl(RqueueMessageTemplate messageTemplate) {

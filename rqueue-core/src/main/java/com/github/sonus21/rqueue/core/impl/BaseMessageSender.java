@@ -50,7 +50,13 @@ abstract class BaseMessageSender {
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(RqueueMessageTemplate messageTemplate) {
+    notNull(messageTemplate, "messageTemplate cannot be null");
     this.messageTemplate = messageTemplate;
+  }
+
+  protected void init(List<MessageConverter> messageConverters, boolean addDefault) {
+    this.messageConverter =
+        new CompositeMessageConverter(getMessageConverters(addDefault, messageConverters));
   }
 
   private void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {

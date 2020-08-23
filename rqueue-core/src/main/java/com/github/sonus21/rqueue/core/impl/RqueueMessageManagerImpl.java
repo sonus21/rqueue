@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.core.impl;
 
+import static org.springframework.util.Assert.notEmpty;
+
+import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
@@ -25,21 +28,33 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
-  @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
+  private RqueueMessageManagerImpl(
+      RqueueMessageTemplate messageTemplate,
+      List<MessageConverter> messageConverters,
+      boolean addDefault) {
+    super(messageTemplate);
+    notEmpty(messageConverters, "messageConverters cannot be empty");
+    init(messageConverters, addDefault);
+  }
 
   public RqueueMessageManagerImpl(RqueueMessageTemplate messageTemplate) {
-    super(messageTemplate);
+    this(messageTemplate, Collections.singletonList(new GenericMessageConverter()), false);
+  }
+
+  public RqueueMessageManagerImpl(
+      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
+    this(messageTemplate, messageConverters, false);
   }
 
   @Override

@@ -83,6 +83,10 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
   @Bean
   public RqueueMessageManager rqueueMessageManager(RqueueMessageTemplate rqueueMessageTemplate) {
+    if (simpleRqueueListenerContainerFactory.getMessageConverters() != null) {
+      return new RqueueMessageManagerImpl(
+          rqueueMessageTemplate, simpleRqueueListenerContainerFactory.getMessageConverters());
+    }
     return new RqueueMessageManagerImpl(rqueueMessageTemplate);
   }
 
