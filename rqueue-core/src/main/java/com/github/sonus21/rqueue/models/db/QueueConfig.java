@@ -130,19 +130,23 @@ public class QueueConfig extends SerializableBase {
       return false;
     }
     boolean updated = false;
+    Map<String, Integer> updatedPriority = new HashMap<>(priority);
     for (Entry<String, Integer> entry : newPriority.entrySet()) {
       Integer val = priority.get(entry.getKey());
       if (val == null || !val.equals(entry.getValue())) {
         updated = true;
-        priority.put(entry.getKey(), entry.getValue());
+        updatedPriority.put(entry.getKey(), entry.getValue());
       }
     }
     for (String key : priority.keySet()) {
       Integer val = newPriority.get(key);
       if (val == null) {
         updated = true;
-        priority.remove(key);
+        updatedPriority.remove(key);
       }
+    }
+    if (updated) {
+      this.priority = updatedPriority;
     }
     return updated;
   }

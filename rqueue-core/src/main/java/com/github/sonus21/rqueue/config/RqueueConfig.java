@@ -85,7 +85,7 @@ public class RqueueConfig {
   @Value("${rqueue.net.proxy.host:}")
   private String proxyHost;
 
-  @Value("${rqueue.net.proxy.port:}")
+  @Value("${rqueue.net.proxy.port:8000}")
   private Integer proxyPort;
 
   @Value("${rqueue.net.proxy.type:HTTP}")

@@ -32,7 +32,7 @@ public class HttpUtils {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
     requestFactory.setReadTimeout(2 * Constants.ONE_MILLI_INT);
     requestFactory.setConnectTimeout(2 * Constants.ONE_MILLI_INT);
-    if (rqueueConfig.getProxyHost() == null) {
+    if (StringUtils.isEmpty(rqueueConfig.getProxyHost())) {
       return requestFactory;
     }
     Proxy proxy =
