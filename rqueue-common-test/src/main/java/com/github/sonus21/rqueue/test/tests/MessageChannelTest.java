@@ -45,7 +45,7 @@ public abstract class MessageChannelTest extends SpringTestBase {
     enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, messageCount);
     Email email = Email.newInstance();
     log.info("adding new message {}", email);
-    messageSender.enqueueIn(emailQueue, email, Duration.ofMillis(1000));
+    enqueueIn(emailQueue, email, Duration.ofMillis(1000));
     waitFor(
         () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
         "one or zero messages in zset");
@@ -53,7 +53,7 @@ public abstract class MessageChannelTest extends SpringTestBase {
         "Messages are correctly moved",
         stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
             >= messageCount);
-    assertEquals(messageCount + 1L, messageSender.getAllMessages(emailQueue).size());
+    assertEquals(messageCount + 1L, getAllMessages(emailQueue).size());
   }
 
   protected void verifyPublishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
@@ -73,7 +73,7 @@ public abstract class MessageChannelTest extends SpringTestBase {
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == messageSender.getAllMessages(jobQueue).size(),
+        () -> 0 == getAllMessages(jobQueue).size(),
         30 * Constants.ONE_MILLI,
         "messages to be consumed");
     waitFor(

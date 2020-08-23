@@ -35,7 +35,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
     cleanQueue(jobQueue);
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), 3, 10);
-    messageSender.put(jobQueue, job);
+    rqueueMessageSender.put(jobQueue, job);
     waitFor(
         () -> {
           Job jobInDb = consumedMessageService.getMessage(job.getId(), Job.class);
@@ -44,7 +44,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
         "job to be executed");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueue);
+          List<Object> messages = getAllMessages(jobQueue);
           return !messages.contains(job);
         },
         "message should be deleted from internal storage");
@@ -55,7 +55,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), -1, 0);
     log.debug("queue: {} msg: {}", emailQueue, email);
-    messageSender.put(emailQueue, email, 1000L);
+    rqueueMessageSender.put(emailQueue, email, 1000L);
     waitFor(
         () -> emailRetryCount == failureManager.getFailureCount(email.getId()),
         30000000,
@@ -71,13 +71,13 @@ public abstract class MessageRetryTest extends SpringTestBase {
     cleanQueue(notificationQueue);
     Notification notification = Notification.newInstance();
     failureManager.createFailureDetail(notification.getId(), -1, notificationRetryCount);
-    messageSender.enqueueAt(notificationQueue, notification, System.currentTimeMillis() + 1000L);
+    enqueueAt(notificationQueue, notification, System.currentTimeMillis() + 1000L);
     waitFor(
         () -> notificationRetryCount == failureManager.getFailureCount(notification.getId()),
         "all retry to be exhausted");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(notificationQueue);
+          List<Object> messages = getAllMessages(notificationQueue);
           return !messages.contains(notification);
         },
         "message to be discarded");
@@ -87,7 +87,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
   public void verifySimpleTaskExecution() throws TimedOutException {
     cleanQueue(notificationQueue);
     Notification notification = Notification.newInstance();
-    messageSender.enqueue(notificationQueue, notification);
+    enqueue(notificationQueue, notification);
     waitFor(
         () -> {
           Notification notificationInDb =
@@ -101,7 +101,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
     cleanQueue(emailQueue);
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), emailRetryCount - 1, emailRetryCount - 1);
-    messageSender.enqueue(emailQueue, email);
+    enqueue(emailQueue, email);
     waitFor(
         () -> failureManager.getFailureCount(email.getId()) == emailRetryCount - 1,
         "email task needs to be retried");
@@ -117,16 +117,16 @@ public abstract class MessageRetryTest extends SpringTestBase {
     cleanQueue(jobQueue);
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
-    messageSender.enqueue(jobQueue, job);
+    enqueue(jobQueue, job);
     waitFor(() -> failureManager.getFailureCount(job.getId()) >= 3, "Job to be retried");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueue);
+          List<Object> messages = getAllMessages(jobQueue);
           return messages.contains(job);
         },
         "message should be present in internal storage");
     // more then one copy should not be present
-    assertEquals(1, messageSender.getAllMessages(jobQueue).size());
+    assertEquals(1, getAllMessages(jobQueue).size());
   }
 
   public void verifyMessageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
@@ -135,7 +135,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
     ReservationRequest request = ReservationRequest.newInstance();
     failureManager.createFailureDetail(
         request.getId(), reservationRequestQueueRetryCount, reservationRequestQueueRetryCount);
-    messageSender.enqueue(reservationRequestQueue, request);
+    enqueue(reservationRequestQueue, request);
     waitFor(
         () -> failureManager.getFailureCount(request.getId()) >= reservationRequestQueueRetryCount,
         60000,

@@ -46,13 +46,13 @@ public abstract class MetricTest extends SpringTestBase {
       if (i < maxMessages / 2) {
         enqueueIn(notification, rqueueConfig.getDelayedQueueName(notificationQueue), -delay);
       } else {
-        messageSender.enqueueAt(notificationQueue, notification, Instant.now().plusMillis(delay));
+        enqueueAt(notificationQueue, notification, Instant.now().plusMillis(delay));
       }
     }
 
     if (maxDelay == 5000) {
       Notification notification = Notification.newInstance();
-      messageSender.enqueueWithRetry(notificationQueue, notification, 10000);
+      enqueueWithRetry(notificationQueue, notification, 10000);
     }
 
     assertTrue(
@@ -73,9 +73,9 @@ public abstract class MetricTest extends SpringTestBase {
                     .value()
                 > 0,
         "Message in original queue");
-    messageSender.deleteAllMessages(notificationQueue);
+    deleteAllMessages(notificationQueue);
     waitFor(
-        () -> messageSender.getAllMessages(notificationQueue).size() == 0,
+        () -> getAllMessages(notificationQueue).size() == 0,
         "notification queue to drain");
   }
 
@@ -84,7 +84,7 @@ public abstract class MetricTest extends SpringTestBase {
 
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
-    messageSender.enqueue(jobQueue, job);
+    enqueue(jobQueue, job);
 
     assertEquals(
         10,
@@ -109,10 +109,10 @@ public abstract class MetricTest extends SpringTestBase {
   }
 
   protected void verifyCountStatus() throws TimedOutException {
-    messageSender.enqueue(emailQueue, Email.newInstance());
+    enqueue(emailQueue, Email.newInstance());
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), 1, 1);
-    messageSender.enqueue(jobQueue, job);
+    enqueue(jobQueue, job);
     waitFor(
         () ->
             meterRegistry
