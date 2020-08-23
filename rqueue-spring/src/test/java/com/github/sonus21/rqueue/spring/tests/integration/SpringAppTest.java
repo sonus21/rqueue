@@ -98,7 +98,7 @@ public class SpringAppTest extends AllQueueMode {
   public void verifyDefaultDeadLetterQueueRetry() throws TimedOutException {
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), 3, 10);
-    rqueueMessageSender.enqueue(emailQueue, email);
+    enqueue(emailQueue, email);
     TimeoutUtils.waitFor(() -> getMessageCount(emailQueue) == 0, "email to be consumed");
     List<RqueueMessage> messages = rqueueMessageTemplate.readFromList(emailDeadLetterQueue, 0, -1);
     assertEquals(1, messages.size());
@@ -111,27 +111,24 @@ public class SpringAppTest extends AllQueueMode {
 
   @Test(expected = QueueDoesNotExist.class)
   public void testQueueDoesNotExist() {
-    assertTrue(rqueueMessageSender.enqueue("job-push", Email.newInstance()));
+    assertTrue(enqueue("job-push", Email.newInstance()));
   }
 
   @Test
   public void testOnlyPushMode() {
     Date date = Date.from(Instant.now().plusMillis(1000));
-    rqueueMessageSender.registerQueue("job-push");
-    rqueueMessageSender.registerQueue("sms-push", "critical", "high", "low");
+    registerQueue("job-push");
+    registerQueue("sms-push", "critical", "high", "low");
 
-    assertTrue(rqueueMessageSender.enqueue("job-push", Email.newInstance()));
-    assertTrue(rqueueMessageSender.enqueueAt("job-push", Email.newInstance(), date));
-    assertTrue(rqueueMessageSender.enqueue("sms-push", Sms.newInstance()));
-    assertTrue(rqueueMessageSender.enqueueAt("sms-push", Sms.newInstance(), date.toInstant()));
-    assertTrue(rqueueMessageSender.enqueueWithPriority("sms-push", "critical", Sms.newInstance()));
+    assertTrue(enqueue("job-push", Email.newInstance()));
+    assertTrue(enqueueAt("job-push", Email.newInstance(), date));
+    assertTrue(enqueue("sms-push", Sms.newInstance()));
+    assertTrue(enqueueAt("sms-push", Sms.newInstance(), date.toInstant()));
+    assertTrue(enqueueWithPriority("sms-push", "critical", Sms.newInstance()));
+    assertTrue(enqueueAtWithPriority("sms-push", "critical", Sms.newInstance(), date));
+    assertTrue(enqueueAtWithPriority("sms-push", "high", Sms.newInstance(), date.toInstant()));
     assertTrue(
-        rqueueMessageSender.enqueueAtWithPriority("sms-push", "critical", Sms.newInstance(), date));
-    assertTrue(
-        rqueueMessageSender.enqueueAtWithPriority(
-            "sms-push", "high", Sms.newInstance(), date.toInstant()));
-    assertTrue(
-        rqueueMessageSender.enqueueAtWithPriority(
+        enqueueAtWithPriority(
             "sms-push", "low", Sms.newInstance(), date.toInstant().toEpochMilli()));
     assertEquals(
         8,

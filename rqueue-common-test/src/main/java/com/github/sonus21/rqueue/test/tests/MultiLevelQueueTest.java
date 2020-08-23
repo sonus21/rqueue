@@ -26,11 +26,11 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class MultiLevelQueueTest extends SpringTestBase {
   protected void checkQueueLevelConsumer() throws TimedOutException {
-    rqueueMessageSender.enqueue(smsQueue, Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "critical", Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "high", Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "low", Sms.newInstance());
+    enqueue(smsQueue, Sms.newInstance());
+    enqueueWithPriority(smsQueue, "critical", Sms.newInstance());
+    enqueueWithPriority(smsQueue, "high", Sms.newInstance());
+    enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
+    enqueueWithPriority(smsQueue, "low", Sms.newInstance());
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(
@@ -45,13 +45,11 @@ public abstract class MultiLevelQueueTest extends SpringTestBase {
   }
 
   protected void checkQueueLevelConsumerWithDelay() throws TimedOutException {
-    rqueueMessageSender.enqueue(smsQueue, Sms.newInstance());
-    rqueueMessageSender.enqueueInWithPriority(smsQueue, "critical", Sms.newInstance(), 1000L);
-    rqueueMessageSender.enqueueInWithPriority(
-        smsQueue, "high", Sms.newInstance(), 1000L, TimeUnit.MILLISECONDS);
-    rqueueMessageSender.enqueueInWithPriority(
-        smsQueue, "medium", Sms.newInstance(), Duration.ofMillis(1000L));
-    rqueueMessageSender.enqueueInWithPriority(smsQueue, "low", Sms.newInstance(), 1000L);
+    enqueue(smsQueue, Sms.newInstance());
+    enqueueInWithPriority(smsQueue, "critical", Sms.newInstance(), 1000L);
+    enqueueInWithPriority(smsQueue, "high", Sms.newInstance(), 1000L, TimeUnit.MILLISECONDS);
+    enqueueInWithPriority(smsQueue, "medium", Sms.newInstance(), Duration.ofMillis(1000L));
+    enqueueInWithPriority(smsQueue, "low", Sms.newInstance(), 1000L);
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(

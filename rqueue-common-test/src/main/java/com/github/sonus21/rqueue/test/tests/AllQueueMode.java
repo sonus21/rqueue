@@ -31,9 +31,9 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AllQueueMode extends SpringTestBase {
   protected void checkGroupConsumer() throws TimedOutException {
-    rqueueMessageSender.enqueue(chatIndexingQueue, ChatIndexing.newInstance());
-    rqueueMessageSender.enqueue(feedGenerationQueue, FeedGeneration.newInstance());
-    rqueueMessageSender.enqueue(reservationQueue, Reservation.newInstance());
+    enqueue(chatIndexingQueue, ChatIndexing.newInstance());
+    enqueue(feedGenerationQueue, FeedGeneration.newInstance());
+    enqueue(reservationQueue, Reservation.newInstance());
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(Arrays.asList(chatIndexingQueue, feedGenerationQueue, reservationQueue))
@@ -43,11 +43,11 @@ public abstract class AllQueueMode extends SpringTestBase {
   }
 
   protected void checkQueueLevelConsumer() throws TimedOutException {
-    rqueueMessageSender.enqueue(smsQueue, Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "critical", Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "high", Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
-    rqueueMessageSender.enqueueWithPriority(smsQueue, "low", Sms.newInstance());
+    enqueue(smsQueue, Sms.newInstance());
+    enqueueWithPriority(smsQueue, "critical", Sms.newInstance());
+    enqueueWithPriority(smsQueue, "high", Sms.newInstance());
+    enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
+    enqueueWithPriority(smsQueue, "low", Sms.newInstance());
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(
@@ -63,11 +63,10 @@ public abstract class AllQueueMode extends SpringTestBase {
   }
 
   protected void testSimpleConsumer() throws TimedOutException {
-    rqueueMessageSender.enqueue(emailQueue, Email.newInstance());
-    rqueueMessageSender.enqueueIn(emailQueue, Email.newInstance(), 1000L);
-
-    rqueueMessageSender.enqueue(jobQueue, Job.newInstance());
-    rqueueMessageSender.enqueueIn(jobQueue, Job.newInstance(), 2000L, TimeUnit.MILLISECONDS);
+    enqueue(emailQueue, Email.newInstance());
+    enqueueIn(emailQueue, Email.newInstance(), 1000L);
+    enqueue(jobQueue, Job.newInstance());
+    enqueueIn(jobQueue, Job.newInstance(), 2000L, TimeUnit.MILLISECONDS);
 
     TimeoutUtils.waitFor(
         () -> getMessageCount(Arrays.asList(emailQueue, jobQueue)) == 0,

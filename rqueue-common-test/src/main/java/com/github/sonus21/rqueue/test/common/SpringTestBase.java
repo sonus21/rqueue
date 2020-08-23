@@ -20,7 +20,10 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageFactory;
@@ -29,11 +32,15 @@ import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,6 +56,9 @@ public abstract class SpringTestBase extends TestBase {
   @Autowired protected ConsumedMessageService consumedMessageService;
   @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
   @Autowired protected FailureManager failureManager;
+  @Autowired protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
+  @Autowired protected RqueueEndpointManager rqueueEndpointManager;
+  @Autowired protected RqueueMessageManager rqueueMessageManager;
 
   @Value("${email.queue.name}")
   protected String emailQueue;
@@ -167,6 +177,124 @@ public abstract class SpringTestBase extends TestBase {
     if (!StringUtils.isEmpty(queueDetail.getDeadLetterQueueName())) {
       stringRqueueRedisTemplate.delete(queueDetail.getDeadLetterQueueName());
     }
+  }
+
+  protected boolean enqueue(String queueName, Object message) {
+    if (random.nextBoolean()) {
+      return messageSender.enqueue(queueName, message);
+    } else {
+      return rqueueMessageEnqueuer.enqueue(queueName, message) != null;
+    }
+  }
+
+  protected boolean enqueueAt(String queueName, Object message, Date instant) {
+    if (random.nextBoolean()) {
+      return messageSender.enqueueAt(queueName, message, instant);
+    }
+    return rqueueMessageEnqueuer.enqueueAt(queueName, message, instant) != null;
+  }
+
+  protected boolean enqueueAt(String queueName, Object message, Instant instant) {
+    if (random.nextBoolean()) {
+      return messageSender.enqueueAt(queueName, message, instant);
+    }
+    return rqueueMessageEnqueuer.enqueueAt(queueName, message, instant) != null;
+  }
+
+  protected void enqueueIn(String queueName, Object message, long delay) {
+    if (random.nextBoolean()) {
+      messageSender.enqueueIn(queueName, message, delay);
+    } else {
+      rqueueMessageEnqueuer.enqueueIn(queueName, message, delay);
+    }
+  }
+
+  protected void enqueueIn(String queueName, Object message, long delay, TimeUnit timeUnit) {
+    if (random.nextBoolean()) {
+      messageSender.enqueueIn(queueName, message, delay, timeUnit);
+    } else {
+      rqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit);
+    }
+  }
+
+  protected boolean enqueueWithPriority(String queueName, String priority, Object message) {
+    if (random.nextBoolean()) {
+      return messageSender.enqueueWithPriority(queueName, priority, message);
+    } else {
+      return rqueueMessageEnqueuer.enqueueWithPriority(queueName, priority, message) != null;
+    }
+  }
+
+  protected void enqueueInWithPriority(
+      String queueName, String priority, Object message, long delay) {
+    if (random.nextBoolean()) {
+      messageSender.enqueueInWithPriority(queueName, priority, message, delay);
+    } else {
+      rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay);
+    }
+  }
+
+  protected void enqueueInWithPriority(
+      String queueName, String priority, Object message, long delay, TimeUnit unit) {
+    if (random.nextBoolean()) {
+      messageSender.enqueueInWithPriority(queueName, priority, message, delay, unit);
+    } else {
+      rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay, unit);
+    }
+  }
+
+  protected void enqueueInWithPriority(
+      String queueName, String priority, Object message, Duration duration) {
+    if (random.nextBoolean()) {
+      messageSender.enqueueInWithPriority(queueName, priority, message, duration);
+    } else {
+      rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, duration);
+    }
+  }
+
+  protected boolean enqueueAtWithPriority(
+      String queueName, String priority, Object message, Date date) {
+    if (random.nextBoolean()) {
+      return messageSender.enqueueAtWithPriority(queueName, priority, message, date);
+    } else {
+      return rqueueMessageEnqueuer.enqueueAtWithPriority(queueName, priority, message, date)
+          != null;
+    }
+  }
+
+  protected boolean enqueueAtWithPriority(
+      String queueName, String priority, Object message, Instant date) {
+    if (random.nextBoolean()) {
+      return messageSender.enqueueAtWithPriority(queueName, priority, message, date);
+    } else {
+      return rqueueMessageEnqueuer.enqueueAtWithPriority(queueName, priority, message, date)
+          != null;
+    }
+  }
+
+  protected boolean enqueueAtWithPriority(
+      String queueName, String priority, Object message, long instant) {
+    if (random.nextBoolean()) {
+      return messageSender.enqueueAtWithPriority(queueName, priority, message, instant);
+    } else {
+      return rqueueMessageEnqueuer.enqueueAtWithPriority(queueName, priority, message, instant)
+          != null;
+    }
+  }
+
+  protected void registerQueue(String queue, String... priorities) {
+    if (random.nextBoolean()) {
+      messageSender.registerQueue(queue, priorities);
+    } else {
+      rqueueEndpointManager.registerQueue(queue, priorities);
+    }
+  }
+
+  protected List<Object> getAllMessages(String queueName) {
+    if (random.nextBoolean()) {
+      return messageSender.getAllMessages(queueName);
+    }
+    return rqueueMessageManager.getAllMessages(queueName);
   }
 
   public interface Factory {

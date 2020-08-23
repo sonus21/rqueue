@@ -79,10 +79,10 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   public void testGetChartLatency() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
-      rqueueMessageSender.enqueue(jobQueue, job);
+      enqueue(jobQueue, job);
     }
     TimeoutUtils.waitFor(
-        () -> rqueueMessageSender.getAllMessages(jobQueue).size() == 0,
+        () -> getAllMessages(jobQueue).size() == 0,
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "Job to run");
     ChartDataRequest chartDataRequest =
@@ -105,10 +105,10 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   public void testGetChartStats() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
-      rqueueMessageSender.enqueue(jobQueue, job);
+      enqueue(jobQueue, job);
     }
     TimeoutUtils.waitFor(
-        () -> rqueueMessageSender.getAllMessages(jobQueue).size() == 0,
+        () -> getAllMessages(jobQueue).size() == 0,
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "Job to run");
     ChartDataRequest chartDataRequest =
@@ -151,7 +151,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   public void testExploreDataZset() throws Exception {
     for (int i = 0; i < 30; i++) {
-      rqueueMessageSender.enqueueIn(
+      enqueueIn(
           emailQueue, Email.newInstance(), Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
     }
     MvcResult result =
@@ -241,7 +241,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   public void deleteQueue() throws Exception {
     for (int i = 0; i < 30; i++) {
-      rqueueMessageSender.enqueue(jobQueue, Job.newInstance());
+      enqueue(jobQueue, Job.newInstance());
     }
     MvcResult result =
         this.mockMvc
@@ -258,7 +258,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   public void deleteMessage() throws Exception {
     Email email = Email.newInstance();
     deleteMessageListener.clear();
-    rqueueMessageSender.enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
+    enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
     RqueueMessage message =
         rqueueMessageTemplate
             .readFromZset(rqueueConfig.getDelayedQueueName(emailQueue), 0, -1)
