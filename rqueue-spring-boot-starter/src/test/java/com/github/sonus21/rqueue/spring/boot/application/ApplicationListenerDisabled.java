@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.spring.boot.application;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;

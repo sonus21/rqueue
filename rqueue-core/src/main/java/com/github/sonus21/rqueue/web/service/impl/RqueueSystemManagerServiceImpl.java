@@ -20,7 +20,7 @@ import static com.google.common.collect.Lists.newArrayList;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -160,7 +160,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
     if (event.isStart()) {
-      List<QueueDetail> queueDetails = QueueRegistry.getActiveQueueDetails();
+      List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
       if (queueDetails.isEmpty()) {
         return;
       }

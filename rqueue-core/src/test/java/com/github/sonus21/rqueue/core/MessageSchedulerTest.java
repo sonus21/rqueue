@@ -61,7 +61,7 @@ public class MessageSchedulerTest {
 
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
-    QueueRegistry.delete();
+    EndpointRegistry.delete();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertEquals(0, messageScheduler.scheduleList.size());
     messageScheduler.destroy();
@@ -69,9 +69,9 @@ public class MessageSchedulerTest {
 
   @Test
   public void startShouldNotSubmitsTask() throws Exception {
-    QueueRegistry.delete();
-    QueueRegistry.register(slowQueueDetail);
-    QueueRegistry.register(fastQueueDetail);
+    EndpointRegistry.delete();
+    EndpointRegistry.register(slowQueueDetail);
+    EndpointRegistry.register(fastQueueDetail);
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
     FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);

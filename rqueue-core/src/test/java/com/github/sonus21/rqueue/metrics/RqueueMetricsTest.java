@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -54,9 +54,9 @@ public class RqueueMetricsTest {
 
   @Before
   public void init() {
-    QueueRegistry.delete();
-    QueueRegistry.register(simpleQueueDetail);
-    QueueRegistry.register(delayedQueueDetail);
+    EndpointRegistry.delete();
+    EndpointRegistry.register(simpleQueueDetail);
+    EndpointRegistry.register(delayedQueueDetail);
     doAnswer(
             invocation -> {
               String zsetName = invocation.getArgument(0);

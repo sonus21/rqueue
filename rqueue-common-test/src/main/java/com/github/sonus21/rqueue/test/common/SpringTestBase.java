@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.test.common;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -119,7 +119,7 @@ public abstract class SpringTestBase extends TestBase {
   }
 
   protected Map<String, List<RqueueMessage>> getMessageMap(String queueName) {
-    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
     Map<String, List<RqueueMessage>> queueNameToMessage = new HashMap<>();
     List<RqueueMessage> messages =
         rqueueMessageTemplate.readFromList(queueDetail.getQueueName(), 0, -1);
@@ -160,7 +160,7 @@ public abstract class SpringTestBase extends TestBase {
   }
 
   protected void cleanQueue(String queue) {
-    QueueDetail queueDetail = QueueRegistry.get(queue);
+    QueueDetail queueDetail = EndpointRegistry.get(queue);
     stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
     stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
     stringRqueueRedisTemplate.delete(queueDetail.getProcessingQueueName());

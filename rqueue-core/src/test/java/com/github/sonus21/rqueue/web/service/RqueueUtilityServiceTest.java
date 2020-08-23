@@ -82,7 +82,7 @@ public class RqueueUtilityServiceTest {
     response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(0, response.getCode());
     assertNull(response.getMessage());
-    verify(messageMetadataService, times(1)).deleteMessage(id, Duration.ofDays(30));
+    verify(messageMetadataService, times(1)).deleteMessage("notification", id, Duration.ofDays(30));
   }
 
   @Test

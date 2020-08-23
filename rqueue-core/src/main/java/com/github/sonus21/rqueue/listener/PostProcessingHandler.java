@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_WEEK;
-
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -28,7 +26,6 @@ import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.BaseLogger;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
@@ -70,7 +67,7 @@ class PostProcessingHandler extends BaseLogger {
     this.rqueueConfig = rqueueConfig;
   }
 
-  void handlePostProcessing(
+  void handle(
       QueueDetail queueDetail,
       RqueueMessage rqueueMessage,
       Object userMessage,
@@ -133,40 +130,32 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       TaskStatus status,
       long jobExecutionStartTime) {
+    updateMetadata(messageMetadata, rqueueMessage, jobExecutionStartTime, false);
     if (rqueueWebConfig.isCollectListenerStats()) {
-      MessageMetadata newMessageMetaData =
-          addOrDeleteMetadata(rqueueMessage, messageMetadata, jobExecutionStartTime, false);
       RqueueExecutionEvent event =
-          new RqueueExecutionEvent(queueDetail, rqueueMessage, status, newMessageMetaData);
+          new RqueueExecutionEvent(queueDetail, rqueueMessage, status, messageMetadata);
       applicationEventPublisher.publishEvent(event);
     }
   }
 
-  private MessageMetadata addOrDeleteMetadata(
-      RqueueMessage rqueueMessage,
+  private void updateMetadata(
       MessageMetadata messageMetadata,
+      RqueueMessage rqueueMessage,
       long jobExecutionStartTime,
       boolean saveOrDelete) {
-    MessageMetadata newMessageMetaData = messageMetadata;
-    String messageMetadataId = MessageUtils.getMessageMetaId(rqueueMessage.getId());
-    if (newMessageMetaData == null) {
-      newMessageMetaData = rqueueMessageMetadataService.get(messageMetadataId);
-    }
-    if (newMessageMetaData == null) {
-      newMessageMetaData = new MessageMetadata(messageMetadataId, rqueueMessage.getId());
-      // do not call db delete method
-      if (!saveOrDelete) {
-        newMessageMetaData.addExecutionTime(jobExecutionStartTime);
-        return newMessageMetaData;
-      }
-    }
-    newMessageMetaData.addExecutionTime(jobExecutionStartTime);
-    if (saveOrDelete) {
-      rqueueMessageMetadataService.save(newMessageMetaData, Duration.ofSeconds(SECONDS_IN_A_WEEK));
+    if (!saveOrDelete) {
+      messageMetadata.setStatus(TaskStatus.SUCCESSFUL);
     } else {
-      rqueueMessageMetadataService.delete(messageMetadataId);
+      messageMetadata.setStatus(TaskStatus.FAILED);
     }
-    return newMessageMetaData;
+    messageMetadata.setRqueueMessage(rqueueMessage);
+    messageMetadata.addExecutionTime(jobExecutionStartTime);
+    if (saveOrDelete) {
+      rqueueMessageMetadataService.save(
+          messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
+    } else {
+      rqueueMessageMetadataService.save(messageMetadata, Duration.ofMinutes(30));
+    }
   }
 
   private void deleteMessage(
@@ -248,11 +237,7 @@ class PostProcessingHandler extends BaseLogger {
     newMessage.updateReEnqueuedAt();
     moveMessageForReprocessingOrDlq(queueDetail, rqueueMessage, newMessage, userMessage);
     publishEvent(
-        queueDetail,
-        rqueueMessage,
-        messageMetadata,
-        TaskStatus.MOVED_TO_DLQ,
-        jobExecutionStartTime);
+        queueDetail, newMessage, messageMetadata, TaskStatus.MOVED_TO_DLQ, jobExecutionStartTime);
   }
 
   private void parkMessageForRetry(
@@ -276,7 +261,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         newMessage,
         delay);
-    addOrDeleteMetadata(rqueueMessage, messageMetadata, jobExecutionStartTime, true);
+    updateMetadata(messageMetadata, newMessage, jobExecutionStartTime, true);
   }
 
   private void discardMessage(

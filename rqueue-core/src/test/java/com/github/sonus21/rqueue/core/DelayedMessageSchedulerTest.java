@@ -84,9 +84,9 @@ public class DelayedMessageSchedulerTest {
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
-    QueueRegistry.delete();
-    QueueRegistry.register(fastQueueDetail);
-    QueueRegistry.register(slowQueueDetail);
+    EndpointRegistry.delete();
+    EndpointRegistry.register(fastQueueDetail);
+    EndpointRegistry.register(slowQueueDetail);
   }
 
   @Test
@@ -114,7 +114,7 @@ public class DelayedMessageSchedulerTest {
 
   @Test
   public void afterPropertiesSetWithEmptyQueSet() throws Exception {
-    QueueRegistry.delete();
+    EndpointRegistry.delete();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertNull(FieldUtils.readField(messageScheduler, "scheduler", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));

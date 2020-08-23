@@ -58,7 +58,7 @@ public class MessageSchedulerRedisDisabled {
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
-    QueueRegistry.register(slowQueueDetail);
+    EndpointRegistry.register(slowQueueDetail);
   }
 
   @Test

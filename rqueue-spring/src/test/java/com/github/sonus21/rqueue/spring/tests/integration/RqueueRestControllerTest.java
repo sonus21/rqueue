@@ -41,9 +41,9 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.app.SpringApp.DeleteMessageListener;
+import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
@@ -272,7 +272,8 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
     BooleanResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
     assertEquals(0, response.getCode());
-    Object metadata = stringRqueueRedisTemplate.get(MessageUtils.getMessageMetaId(message.getId()));
+    Object metadata =
+        stringRqueueRedisTemplate.get(MessageUtils.getMessageMetaId(emailQueue, message.getId()));
     assertTrue(((MessageMetadata) metadata).isDeleted());
     TimeoutUtils.waitFor(
         () -> {

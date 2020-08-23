@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -25,13 +28,24 @@ public class HttpUtils {
 
   private HttpUtils() {}
 
-  public static <T> T readUrl(String url, Class<T> clazz) {
+  private static SimpleClientHttpRequestFactory getRequestFactory(RqueueConfig rqueueConfig) {
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    requestFactory.setReadTimeout(2 * Constants.ONE_MILLI_INT);
+    requestFactory.setConnectTimeout(2 * Constants.ONE_MILLI_INT);
+    if (rqueueConfig.getProxyHost() == null) {
+      return requestFactory;
+    }
+    Proxy proxy =
+        new Proxy(
+            rqueueConfig.getProxyType(),
+            new InetSocketAddress(rqueueConfig.getProxyHost(), rqueueConfig.getProxyPort()));
+    requestFactory.setProxy(proxy);
+    return requestFactory;
+  }
+
+  public static <T> T readUrl(RqueueConfig rqueueConfig, String url, Class<T> clazz) {
     try {
-      RestTemplate restTemplate = new RestTemplate();
-      SimpleClientHttpRequestFactory rf =
-          (SimpleClientHttpRequestFactory) restTemplate.getRequestFactory();
-      rf.setReadTimeout(2 * Constants.ONE_MILLI_INT);
-      rf.setConnectTimeout(2 * Constants.ONE_MILLI_INT);
+      RestTemplate restTemplate = new RestTemplate(getRequestFactory(rqueueConfig));
       return restTemplate.getForObject(url, clazz);
     } catch (Exception e) {
       log.error("GET call failed for {}", url, e);

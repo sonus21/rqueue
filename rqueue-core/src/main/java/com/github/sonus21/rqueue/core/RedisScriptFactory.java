@@ -25,8 +25,8 @@ import org.springframework.data.redis.core.script.RedisScript;
 
 @SuppressWarnings("unchecked")
 @ToString
-class RedisScriptFactory {
-  static RedisScript getScript(ScriptType type) {
+public class RedisScriptFactory {
+  public static RedisScript getScript(ScriptType type) {
     Resource resource = new ClassPathResource(type.getPath());
     DefaultRedisScript script = new DefaultRedisScript();
     script.setLocation(resource);
@@ -48,7 +48,7 @@ class RedisScriptFactory {
     }
   }
 
-  enum ScriptType {
+  public enum ScriptType {
     ADD_MESSAGE("scripts/add_message.lua"),
     POP_MESSAGE("scripts/pop_message.lua"),
     MOVE_MESSAGE("scripts/move_message.lua"),

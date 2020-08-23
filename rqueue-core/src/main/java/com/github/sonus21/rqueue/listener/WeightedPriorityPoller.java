@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
@@ -41,8 +42,8 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
       final List<QueueDetail> queueDetails,
       final Map<String, QueueThread> queueNameToThread,
       PostProcessingHandler postProcessingHandler,
-      int retryPerPoll) {
-    super("Weighted-" + groupName, container, postProcessingHandler, retryPerPoll);
+      RqueueConfig rqueueConfig) {
+    super("Weighted-" + groupName, container, postProcessingHandler, rqueueConfig);
     this.queueDetailList = queueDetails;
     this.queues = queueDetails.stream().map(QueueDetail::getName).collect(Collectors.toList());
     this.queueNameToDetail =

@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.messaging.MessageHeaders;
@@ -27,6 +28,12 @@ public class RqueueMessageHeaders {
   public static final String DESTINATION = "destination";
   public static final String ID = "messageId";
   public static final String MESSAGE = "message";
+  private static final MessageHeaders emptyMessageHeaders =
+      new MessageHeaders(Collections.emptyMap());
+
+  public static MessageHeaders emptyMessageHeaders() {
+    return emptyMessageHeaders;
+  }
 
   static MessageHeaders buildMessageHeaders(String destination, RqueueMessage rqueueMessage) {
     Map<String, Object> headers = new HashMap<>(3);

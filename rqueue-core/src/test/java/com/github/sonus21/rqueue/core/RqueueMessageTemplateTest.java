@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.List;

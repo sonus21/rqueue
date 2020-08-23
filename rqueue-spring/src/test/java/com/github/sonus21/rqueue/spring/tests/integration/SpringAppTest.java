@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.exception.TimedOutException;
@@ -69,7 +69,7 @@ public class SpringAppTest extends AllQueueMode {
 
   @Test
   public void numActiveQueues() {
-    Map<String, QueueDetail> registeredQueue = QueueRegistry.getActiveQueueMap();
+    Map<String, QueueDetail> registeredQueue = EndpointRegistry.getActiveQueueMap();
     assertEquals(10, registeredQueue.size());
     assertFalse(registeredQueue.containsKey(notificationQueue));
     assertTrue(registeredQueue.containsKey(emailQueue));

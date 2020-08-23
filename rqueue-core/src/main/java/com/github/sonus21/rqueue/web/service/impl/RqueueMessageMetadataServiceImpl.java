@@ -18,7 +18,9 @@ package com.github.sonus21.rqueue.web.service.impl;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
@@ -60,11 +62,17 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public void deleteMessage(String messageId, Duration duration) {
-    String id = MessageUtils.getMessageMetaId(messageId);
+  public MessageMetadata getByMessageId(String queueName, String messageId) {
+    String id = MessageUtils.getMessageMetaId(queueName, messageId);
+    return get(id);
+  }
+
+  @Override
+  public void deleteMessage(String queueName, String messageId, Duration duration) {
+    String id = MessageUtils.getMessageMetaId(queueName, messageId);
     MessageMetadata messageMetadata = get(id);
     if (messageMetadata == null) {
-      messageMetadata = new MessageMetadata(id, messageId);
+      messageMetadata = new MessageMetadata(id);
     }
     messageMetadata.setDeleted(true);
     messageMetadata.setDeletedOn(System.currentTimeMillis());
@@ -74,5 +82,18 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   @Override
   public void delete(String id) {
     template.delete(id);
+  }
+
+  @Override
+  public MessageMetadata getOrCreateMessageMetadata(
+      RqueueMessage rqueueMessage, TaskStatus status, Duration duration) {
+    MessageMetadata messageMetadata =
+        getByMessageId(rqueueMessage.getQueueName(), rqueueMessage.getId());
+    if (messageMetadata == null) {
+      messageMetadata = new MessageMetadata(rqueueMessage);
+    }
+    messageMetadata.setStatus(status);
+    save(messageMetadata, duration);
+    return messageMetadata;
   }
 }

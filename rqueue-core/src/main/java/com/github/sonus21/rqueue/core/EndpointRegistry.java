@@ -25,11 +25,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class QueueRegistry {
+public final class EndpointRegistry {
   private static final Object lock = new Object();
-  private static Map<String, QueueDetail> queueNameToDetail = new HashMap<>();
+  private static final Map<String, QueueDetail> queueNameToDetail = new HashMap<>();
 
-  QueueRegistry() {}
+  private EndpointRegistry() {}
 
   public static QueueDetail get(String queueName) {
     QueueDetail queueDetail = queueNameToDetail.get(queueName);

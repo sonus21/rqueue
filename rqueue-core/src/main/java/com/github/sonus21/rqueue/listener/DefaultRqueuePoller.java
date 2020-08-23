@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Collections;
@@ -30,8 +31,8 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
       QueueDetail queueDetail,
       RqueueMessageListenerContainer container,
       PostProcessingHandler postProcessingHandler,
-      int retryPerPoll) {
-    super(queueDetail.getName(), container, postProcessingHandler, retryPerPoll);
+      RqueueConfig rqueueConfig) {
+    super(queueDetail.getName(), container, postProcessingHandler, rqueueConfig);
     this.queueDetail = queueDetail;
     this.queueThread = queueThread;
     this.queues = Collections.singletonList(queueDetail.getName());

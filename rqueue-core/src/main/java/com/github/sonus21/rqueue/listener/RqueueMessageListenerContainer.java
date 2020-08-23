@@ -23,7 +23,7 @@ import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
@@ -240,16 +240,16 @@ public class RqueueMessageListenerContainer
   @Override
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
-      QueueRegistry.delete();
+      EndpointRegistry.delete();
       for (MappingInformation mappingInformation :
           rqueueMessageHandler.getHandlerMethods().keySet()) {
         for (String queue : mappingInformation.getQueueNames()) {
           for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
-            QueueRegistry.register(queueDetail);
+            EndpointRegistry.register(queueDetail);
           }
         }
       }
-      List<QueueDetail> queueDetails = QueueRegistry.getActiveQueueDetails();
+      List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
       if (queueDetails.isEmpty()) {
         return;
       }
@@ -278,7 +278,7 @@ public class RqueueMessageListenerContainer
   }
 
   private void initializeRunningQueueState() {
-    for (String queue : QueueRegistry.getActiveQueues()) {
+    for (String queue : EndpointRegistry.getActiveQueues()) {
       queueRunningState.put(queue, false);
     }
   }
@@ -409,7 +409,7 @@ public class RqueueMessageListenerContainer
 
   protected void doStart() {
     Map<String, List<QueueDetail>> queueGroupToDetails = new HashMap<>();
-    for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
+    for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       int prioritySize = queueDetail.getPriority().size();
       if (prioritySize == 0) {
         startQueue(queueDetail.getName(), queueDetail);
@@ -455,7 +455,7 @@ public class RqueueMessageListenerContainer
                   queueDetails,
                   queueThread,
                   postProcessingHandler,
-                  rqueueConfig.getRetryPerPoll()));
+                  rqueueConfig));
     } else {
       future =
           taskExecutor.submit(
@@ -465,7 +465,7 @@ public class RqueueMessageListenerContainer
                   queueDetails,
                   queueThread,
                   postProcessingHandler,
-                  rqueueConfig.getRetryPerPoll()));
+                  rqueueConfig));
     }
     scheduledFutureByQueue.put(groupName, future);
   }
@@ -478,7 +478,7 @@ public class RqueueMessageListenerContainer
     QueueThread queueThread = queueThreadMap.get(queueName);
     DefaultRqueuePoller messagePoller =
         new DefaultRqueuePoller(
-            queueThread, queueDetail, this, postProcessingHandler, rqueueConfig.getRetryPerPoll());
+            queueThread, queueDetail, this, postProcessingHandler, rqueueConfig);
     Future<?> future = getTaskExecutor().submit(messagePoller);
     scheduledFutureByQueue.put(queueName, future);
   }

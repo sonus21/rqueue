@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.Constants.BLANK;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
@@ -41,8 +42,8 @@ class StrictPriorityPoller extends RqueueMessagePoller {
       final List<QueueDetail> queueDetails,
       final Map<String, QueueThread> queueNameToThread,
       PostProcessingHandler postProcessingHandler,
-      int retryPerPoll) {
-    super("Strict-" + groupName, container, postProcessingHandler, retryPerPoll);
+      RqueueConfig rqueueConfig) {
+    super("Strict-" + groupName, container, postProcessingHandler, rqueueConfig);
     List<QueueDetail> queueDetailList = new ArrayList<>(queueDetails);
     queueDetailList.sort(
         (o1, o2) ->

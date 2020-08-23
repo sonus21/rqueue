@@ -41,7 +41,11 @@ import org.springframework.messaging.converter.MessageConverter;
  * example 3PM tomorrow.
  *
  * @author Sonu Kumar
+ * @see RqueueMessageManager
+ * @see RqueueEndpointManager
+ * @see RqueueMessageEnqueuer
  */
+@Deprecated
 public interface RqueueMessageSender {
   /**
    * Enqueue a message on given queue without any delay, consume as soon as possible.

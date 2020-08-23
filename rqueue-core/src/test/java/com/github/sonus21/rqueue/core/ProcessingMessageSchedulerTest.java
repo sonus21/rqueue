@@ -49,9 +49,9 @@ public class ProcessingMessageSchedulerTest {
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
-    QueueRegistry.delete();
-    QueueRegistry.register(slowQueueDetail);
-    QueueRegistry.register(fastQueueDetail);
+    EndpointRegistry.delete();
+    EndpointRegistry.register(slowQueueDetail);
+    EndpointRegistry.register(fastQueueDetail);
     doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
     messageScheduler.initialize();
   }

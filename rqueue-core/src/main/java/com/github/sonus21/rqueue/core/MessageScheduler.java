@@ -195,7 +195,7 @@ public abstract class MessageScheduler
     queueNameToLastMessageSeenTime.put(queueName, currentTime);
 
     ScheduledTaskDetail scheduledTaskDetail = queueNameToScheduledTask.get(queueName);
-    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
     String zsetName = getZsetName(queueName);
 
     if (scheduledTaskDetail == null || forceSchedule) {
@@ -241,7 +241,7 @@ public abstract class MessageScheduler
 
   @SuppressWarnings("unchecked")
   protected void initialize() {
-    List<String> queueNames = QueueRegistry.getActiveQueues();
+    List<String> queueNames = EndpointRegistry.getActiveQueues();
     defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
     redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.PUSH_MESSAGE);
     queueRunningState = new ConcurrentHashMap<>(queueNames.size());
@@ -262,7 +262,7 @@ public abstract class MessageScheduler
   public void onApplicationEvent(RqueueBootstrapEvent event) {
     doStop();
     if (event.isStart()) {
-      if (QueueRegistry.getActiveQueueCount() == 0) {
+      if (EndpointRegistry.getActiveQueueCount() == 0) {
         getLogger().warn("No queues are configured");
         return;
       }

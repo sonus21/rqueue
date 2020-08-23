@@ -20,7 +20,7 @@ import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -286,9 +286,9 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       return mapping;
     }
     try {
-      QueueDetail queueDetail = QueueRegistry.get(destination);
+      QueueDetail queueDetail = EndpointRegistry.get(destination);
       if (queueDetail.isSystemGenerated()) {
-        queueDetail = QueueRegistry.get(queueDetail.getPriorityGroup());
+        queueDetail = EndpointRegistry.get(queueDetail.getPriorityGroup());
         if (mapping.getQueueNames().contains(queueDetail.getName())) {
           return mapping;
         }

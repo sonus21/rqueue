@@ -83,7 +83,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       booleanResponse.setMessage("Queue config not found!");
       return booleanResponse;
     }
-    messageMetadataService.deleteMessage(id, Duration.ofDays(Constants.DAYS_IN_A_MONTH));
+    messageMetadataService.deleteMessage(queueName, id, Duration.ofDays(Constants.DAYS_IN_A_MONTH));
     booleanResponse.setValue(true);
     return booleanResponse;
   }
@@ -167,12 +167,19 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     return new BooleanResponse(false);
   }
 
+  private boolean shouldFetchVersionDetail() {
+    if (!rqueueConfig.isVersionEnabled()) {
+      return false;
+    }
+    return System.currentTimeMillis() - versionFetchTime > Constants.MILLIS_IN_A_DAY;
+  }
+
   @Override
   @SuppressWarnings("unchecked")
   public Pair<String, String> getLatestVersion() {
-    if (System.currentTimeMillis() - versionFetchTime > Constants.MILLIS_IN_A_DAY) {
+    if (shouldFetchVersionDetail()) {
       Map<String, Object> response =
-          readUrl(Constants.GITHUB_API_FOR_LATEST_RELEASE, LinkedHashMap.class);
+          readUrl(rqueueConfig, Constants.GITHUB_API_FOR_LATEST_RELEASE, LinkedHashMap.class);
       if (response != null) {
         String tagName = (String) response.get("tag_name");
         if (tagName != null && !tagName.isEmpty()) {

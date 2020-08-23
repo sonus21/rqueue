@@ -25,6 +25,13 @@ public class Validator {
     notNull(message, "message cannot be null");
   }
 
+  public static void validateMessageId(String messageId) {
+    notNull(messageId, "messageId cannot be null");
+    if (messageId.length() == 0) {
+      throw new IllegalArgumentException("messageId cannot be empty.");
+    }
+  }
+
   public static void validateRetryCount(int retryCount) {
     if (retryCount < 0) {
       throw new IllegalArgumentException("retryCount must be positive");

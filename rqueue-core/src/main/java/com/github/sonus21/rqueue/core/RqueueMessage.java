@@ -30,6 +30,9 @@ import lombok.ToString;
 public class RqueueMessage extends SerializableBase implements Cloneable {
 
   private static final long serialVersionUID = -3488860960637488519L;
+  /**
+   * The message id, each message has a unique id, generated using
+   */
   private String id;
   private String queueName;
   private String message;
@@ -39,16 +42,22 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
   private Long reEnqueuedAt;
   private int failureCount;
 
+  private void initTime(Long delay) {
+    // Monotonic increasing queued time
+    // This is used to check duplicate message in executor
+    this.queuedTime = System.nanoTime();
+    this.processAt = System.currentTimeMillis();
+    if (delay != null) {
+      this.processAt += delay;
+    }
+  }
+
   public RqueueMessage(String queueName, String message, Integer retryCount, Long delay) {
     this.queueName = queueName;
     this.message = message;
     this.retryCount = retryCount;
-    this.queuedTime = System.currentTimeMillis();
     this.id = UUID.randomUUID().toString();
-    this.processAt = this.queuedTime;
-    if (delay != null) {
-      this.processAt += delay;
-    }
+    initTime(delay);
   }
 
   public void updateReEnqueuedAt() {

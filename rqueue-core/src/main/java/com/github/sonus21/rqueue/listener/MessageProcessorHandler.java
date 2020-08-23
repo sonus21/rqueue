@@ -24,13 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 
 @Slf4j
-public class MessageProcessorHandler extends BaseLogger {
+class MessageProcessorHandler extends BaseLogger {
   private final MessageProcessor manualDeletionMessageProcessor;
   private final MessageProcessor deadLetterQueueMessageProcessor;
   private final MessageProcessor discardMessageProcessor;
   private final MessageProcessor postExecutionMessageProcessor;
 
-  public MessageProcessorHandler(
+  MessageProcessorHandler(
       MessageProcessor manualDeletionMessageProcessor,
       MessageProcessor deadLetterQueueMessageProcessor,
       MessageProcessor discardMessageProcessor,
@@ -42,7 +42,7 @@ public class MessageProcessorHandler extends BaseLogger {
     this.postExecutionMessageProcessor = postExecutionMessageProcessor;
   }
 
-  public void handleMessage(RqueueMessage rqueueMessage, Object userMessage, TaskStatus status) {
+  void handleMessage(RqueueMessage rqueueMessage, Object userMessage, TaskStatus status) {
     MessageProcessor messageProcessor = null;
     switch (status) {
       case DELETED:

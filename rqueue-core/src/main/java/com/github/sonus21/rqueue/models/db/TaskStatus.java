@@ -33,7 +33,9 @@ public enum TaskStatus {
   RETRIED("Retired at least once", true),
   FAILED("failed", false),
   IGNORED("Ignored task", false),
-  QUEUE_INACTIVE("Queue inactive", false);
+  QUEUE_INACTIVE("Queue inactive", false),
+  PROCESSING("Processing this task", false);
+
   private String description;
   private boolean chartEnabled;
 

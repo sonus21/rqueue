@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
+import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,9 +28,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,11 +52,17 @@ public class RqueueMessageSenderTest {
   private String slowQueue = "slow-queue";
   private String deadLetterQueueName = "dead-test-queue";
   private String message = "Test Message";
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private RqueueMessageMetadataService rqueueMessageMetadataService =
+      mock(RqueueMessageMetadataService.class);
 
   @Before
-  public void init() {
-    QueueRegistry.delete();
-    QueueRegistry.register(queueDetail);
+  public void init() throws IllegalAccessException {
+    EndpointRegistry.delete();
+    EndpointRegistry.register(queueDetail);
+    writeField(rqueueMessageSender, "rqueueConfig", rqueueConfig, true);
+    writeField(
+        rqueueMessageSender, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
   }
 
   @Test

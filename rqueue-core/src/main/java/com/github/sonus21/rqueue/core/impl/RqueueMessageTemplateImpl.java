@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.core.impl;
 
 import static com.github.sonus21.rqueue.core.RedisScriptFactory.getScript;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
@@ -208,6 +210,15 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       return new ArrayList<>();
     }
     return new ArrayList<>(messages);
+  }
+
+  @Override
+  public Long getScore(String delayedQueueName, RqueueMessage rqueueMessage) {
+    Double score = redisTemplate.opsForZSet().score(delayedQueueName, rqueueMessage);
+    if (score == null) {
+      return null;
+    }
+    return score.longValue();
   }
 
   @Override

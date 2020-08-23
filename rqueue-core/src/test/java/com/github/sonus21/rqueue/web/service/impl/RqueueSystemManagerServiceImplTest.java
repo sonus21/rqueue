@@ -33,7 +33,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
@@ -68,11 +68,11 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Before
   public void init() {
-    QueueRegistry.delete();
+    EndpointRegistry.delete();
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
     fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
-    QueueRegistry.register(slowQueueDetail);
-    QueueRegistry.register(fastQueueDetail);
+    EndpointRegistry.register(slowQueueDetail);
+    EndpointRegistry.register(fastQueueDetail);
   }
 
   @Test
@@ -85,7 +85,7 @@ public class RqueueSystemManagerServiceImplTest {
 
   @Test
   public void onApplicationEventStartEmpty() {
-    QueueRegistry.delete();
+    EndpointRegistry.delete();
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     rqueueSystemManagerService.onApplicationEvent(event);
     verifyNoInteractions(stringRqueueRedisTemplate);
@@ -151,7 +151,7 @@ public class RqueueSystemManagerServiceImplTest {
   @Test
   public void onApplicationEventStartCreateAndUpdateQueueConfigs() {
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
-    QueueRegistry.register(normalQueueDetail);
+    EndpointRegistry.register(normalQueueDetail);
     PowerMockito.doAnswer(
             invocation -> {
               String name = invocation.getArgument(0);

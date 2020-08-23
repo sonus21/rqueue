@@ -25,10 +25,11 @@ import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
-public class MessageUtils {
+public final class MessageUtils {
   private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
+  private static final String KEY_SEPARATOR = "::";
 
-  public MessageUtils() {}
+  private MessageUtils() {}
 
   public static Object convertMessageToObject(
       RqueueMessage message, MessageConverter messageConverter) {
@@ -65,7 +66,7 @@ public class MessageUtils {
     return null;
   }
 
-  public static String getMessageMetaId(String messageId) {
-    return META_DATA_KEY_PREFIX + messageId;
+  public static String getMessageMetaId(String queueName, String messageId) {
+    return META_DATA_KEY_PREFIX + queueName + KEY_SEPARATOR + messageId;
   }
 }
