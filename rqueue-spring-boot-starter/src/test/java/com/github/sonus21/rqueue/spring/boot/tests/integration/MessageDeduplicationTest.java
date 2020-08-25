@@ -16,11 +16,18 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
+import static org.junit.Assert.assertEquals;
+
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
+import com.github.sonus21.rqueue.test.dto.Email;
+import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -39,5 +46,27 @@ import org.springframework.test.context.TestPropertySource;
       "rqueue.metrics.count.failure=false",
       "rqueue.metrics.count.execution=false",
     })
-@Ignore
-public class MessageDeduplicationTest extends SpringTestBase {}
+public class MessageDeduplicationTest extends SpringTestBase {
+  @Test
+  public void testEnqueueUnique() throws TimedOutException {
+    Email email = Email.newInstance();
+    rqueueMessageEnqueuer.enqueueUnique(emailQueue, email.getId(), email);
+    waitFor(() -> getMessageCount(emailQueue) == 0, "email to be sent");
+  }
+
+  @Test
+  public void testEnqueueUniqueIn() throws TimedOutException {
+    Notification notification = Notification.newInstance();
+    rqueueMessageEnqueuer.enqueueUniqueIn(
+        notificationQueue, notification.getId(), notification, 1000L);
+    Notification newNotification = Notification.newInstance();
+    newNotification.setId(notification.getId());
+    sleep(100);
+    rqueueMessageEnqueuer.enqueueUniqueIn(
+        notificationQueue, newNotification.getId(), newNotification, 1000L);
+    waitFor(() -> getMessageCount(notificationQueue) == 0, "notification to be sent");
+    Notification notificationFromDb =
+        consumedMessageService.getMessage(newNotification.getId(), Notification.class);
+    assertEquals(newNotification, notificationFromDb);
+  }
+}

@@ -30,7 +30,10 @@ import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -44,6 +47,7 @@ public class Controller {
   private HealthAggregator healthAggregator;
   private HealthIndicatorRegistry healthIndicatorRegistry;
   private ReactiveHealthIndicator reactiveHealthIndicator;
+  private RedisTemplate<String, String> redisTemplate;
 
   @GetMapping("health")
   public Health health() {

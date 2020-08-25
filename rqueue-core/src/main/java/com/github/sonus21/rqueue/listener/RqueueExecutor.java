@@ -127,7 +127,12 @@ class RqueueExecutor extends MessageContainerBase {
     }
     if (messageMetadata.getRqueueMessage() != null
         && messageMetadata.getRqueueMessage().getQueuedTime() != rqueueMessage.getQueuedTime()) {
-      log(Level.DEBUG, "message ignored due to new message", null, message);
+      log(
+          Level.DEBUG,
+          "message ignored due to new message. old message: {} new message: {}",
+          null,
+          rqueueMessage,
+          messageMetadata.getRqueueMessage());
       return true;
     }
     return false;

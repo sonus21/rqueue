@@ -158,6 +158,10 @@ public abstract class SpringTestBase extends TestBase {
     return getMessageCount(Collections.singletonList(queueName));
   }
 
+  protected int getMessageCount(String queueName, String priority) {
+    return rqueueMessageManager.getAllMessages(queueName, priority).size();
+  }
+
   protected void printQueueStats(List<String> queueNames) {
     for (String queueName : queueNames) {
       for (Entry<String, List<RqueueMessage>> entry : getMessageMap(queueName).entrySet()) {

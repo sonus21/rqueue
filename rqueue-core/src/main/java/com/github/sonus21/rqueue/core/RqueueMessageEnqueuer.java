@@ -62,6 +62,78 @@ public interface RqueueMessageEnqueuer {
   boolean enqueue(String queueName, String messageId, Object message);
 
   /**
+   * Enqueue a message on the given queue with the given retry count. This message would not be
+   * consumed more than the specified time due to failure in underlying systems.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param retryCount how many times a message would be retried, before it can be discarded or send
+   *     to dead letter queue configured using {@link RqueueListener#numRetries()}
+   * @return message id on successful enqueue otherwise null.
+   */
+  String enqueueWithRetry(String queueName, Object message, int retryCount);
+
+  /**
+   * Enqueue a message on the given queue with the given retry count. This message would not be
+   * consumed more than the specified time due to failure in underlying systems.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId message id for this message.
+   * @param message message object it could be any arbitrary object.
+   * @param retryCount how many times a message would be retried, before it can be discarded or send
+   *     to dead letter queue configured using {@link RqueueListener#numRetries()}
+   * @return message was enqueue successfully or failed.
+   */
+  boolean enqueueWithRetry(String queueName, String messageId, Object message, int retryCount);
+
+  /**
+   * Enqueue a message on given queue, that will be consumed as soon as possible.
+   *
+   * @param queueName on which queue message has to be send
+   * @param priority the priority name for this message
+   * @param message message object it could be any arbitrary object.
+   * @return message id on successful enqueue otherwise null.
+   */
+  String enqueueWithPriority(String queueName, String priority, Object message);
+
+  /**
+   * Enqueue a message on given queue, that will be consumed as soon as possible.
+   *
+   * @param queueName on which queue message has to be send
+   * @param priority the priority name for this message
+   * @param messageId the message id for this message
+   * @param message message object it could be any arbitrary object.
+   * @return message was enqueue successfully or failed.
+   */
+  boolean enqueueWithPriority(String queueName, String priority, String messageId, Object message);
+
+  /**
+   * Enqueue a message on given queue without any delay, consume as soon as possible.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId the message id for uniqueness
+   * @param message message object it could be any arbitrary object.
+   * @return message id on successful enqueue otherwise null.
+   */
+  default boolean enqueueUnique(String queueName, String messageId, Object message) {
+    return enqueue(queueName, messageId, message);
+  }
+
+  /**
+   * Enqueue unique message on given queue, that will be consumed as soon as possible.
+   *
+   * @param queueName on which queue message has to be send
+   * @param priority the priority name for this message
+   * @param messageId the message id for this message
+   * @param message message object it could be any arbitrary object.
+   * @return message was enqueue successfully or failed.
+   */
+  default boolean enqueueUniqueWithPriority(
+      String queueName, String priority, String messageId, Object message) {
+    return enqueueWithPriority(queueName, priority, messageId, message);
+  }
+
+  /**
    * Schedule a message on the given queue with the provided delay. It will be available to consume
    * as soon as the delay elapse.
    *
@@ -142,114 +214,6 @@ public interface RqueueMessageEnqueuer {
   }
 
   /**
-   * Schedule a message on the given queue at the provided time. It will be available to consume as
-   * soon as the given time is reached.
-   *
-   * @param queueName on which queue message has to be send
-   * @param message message object it could be any arbitrary object.
-   * @param startTimeInMilliSeconds time at which this message has to be consumed.
-   * @return message id on successful enqueue otherwise null.
-   */
-  default String enqueueAt(String queueName, Object message, long startTimeInMilliSeconds) {
-    return enqueueIn(queueName, message, startTimeInMilliSeconds - System.currentTimeMillis());
-  }
-
-  /**
-   * Schedule a message on the given queue at the provided time. It will be available to consume as
-   * soon as the given time is reached.
-   *
-   * @param queueName on which queue message has to be send
-   * @param messageId message id
-   * @param message message object it could be any arbitrary object.
-   * @param startTimeInMilliSeconds time at which this message has to be consumed.
-   * @return success or failure.
-   */
-  default boolean enqueueAt(
-      String queueName, String messageId, Object message, long startTimeInMilliSeconds) {
-    return enqueueIn(
-        queueName, messageId, message, startTimeInMilliSeconds - System.currentTimeMillis());
-  }
-
-  /**
-   * Schedule a message on the given queue at the provided time. It will be available to consume as
-   * soon as the given time is reached.
-   *
-   * @param queueName on which queue message has to be send
-   * @param message message object it could be any arbitrary object.
-   * @param starTime time at which this message has to be consumed.
-   * @return message id on successful enqueue otherwise null.
-   */
-  default String enqueueAt(String queueName, Object message, Instant starTime) {
-    return enqueueAt(queueName, message, starTime.toEpochMilli());
-  }
-
-  /**
-   * Schedule a message on the given queue at the provided time. It will be available to consume as
-   * soon as the given time is reached.
-   *
-   * @param queueName on which queue message has to be send
-   * @param messageId the message id
-   * @param message message object it could be any arbitrary object.
-   * @param starTime time at which this message has to be consumed.
-   * @return success or failure.
-   */
-  default boolean enqueueAt(String queueName, String messageId, Object message, Instant starTime) {
-    return enqueueAt(queueName, messageId, message, starTime.toEpochMilli());
-  }
-
-  /**
-   * Schedule a message on the given queue at the provided time. It will be available to consume as
-   * soon as the given time is reached.
-   *
-   * @param queueName on which queue message has to be send
-   * @param message message object it could be any arbitrary object.
-   * @param starTime time at which this message has to be consumed.
-   * @return message id on successful enqueue otherwise null.
-   */
-  default String enqueueAt(String queueName, Object message, Date starTime) {
-    return enqueueAt(queueName, message, starTime.toInstant());
-  }
-
-  /**
-   * Schedule a message on the given queue at the provided time. It will be available to consume as
-   * soon as the given time is reached.
-   *
-   * @param queueName on which queue message has to be send
-   * @param messageId the message id
-   * @param message message object it could be any arbitrary object.
-   * @param starTime time at which this message has to be consumed.
-   * @return success or failure.
-   */
-  default boolean enqueueAt(String queueName, String messageId, Object message, Date starTime) {
-    return enqueueAt(queueName, messageId, message, starTime.toInstant());
-  }
-
-  /**
-   * Enqueue a message on the given queue with the given retry count. This message would not be
-   * consumed more than the specified time due to failure in underlying systems.
-   *
-   * @param queueName on which queue message has to be send
-   * @param message message object it could be any arbitrary object.
-   * @param retryCount how many times a message would be retried, before it can be discarded or send
-   *     to dead letter queue configured using {@link RqueueListener#numRetries()}
-   * @return message id on successful enqueue otherwise null.
-   */
-  String enqueueWithRetry(String queueName, Object message, int retryCount);
-
-  /**
-   * Enqueue a message on the given queue with the given retry count. This message would not be
-   * consumed more than the specified time due to failure in underlying systems.
-   *
-   * @param queueName on which queue message has to be send
-   * @param messageId message id for this message.
-   * @param message message object it could be any arbitrary object.
-   * @param retryCount how many times a message would be retried, before it can be discarded or send
-   *     to dead letter queue configured using {@link RqueueListener#numRetries()}
-   * @return message was enqueue successfully or failed.
-   */
-  boolean enqueueWithRetry(String queueName, String messageId, Object message, int retryCount);
-
-  /**
    * Enqueue a task that would be scheduled to run in the specified milli seconds.
    *
    * @param queueName on which queue message has to be send
@@ -277,27 +241,6 @@ public interface RqueueMessageEnqueuer {
    */
   boolean enqueueInWithRetry(
       String queueName, String messageId, Object message, int retryCount, long delayInMilliSecs);
-
-  /**
-   * Enqueue a message on given queue, that will be consumed as soon as possible.
-   *
-   * @param queueName on which queue message has to be send
-   * @param priority the priority name for this message
-   * @param message message object it could be any arbitrary object.
-   * @return message id on successful enqueue otherwise null.
-   */
-  String enqueueWithPriority(String queueName, String priority, Object message);
-
-  /**
-   * Enqueue a message on given queue, that will be consumed as soon as possible.
-   *
-   * @param queueName on which queue message has to be send
-   * @param priority the priority name for this message
-   * @param messageId the message id for this message
-   * @param message message object it could be any arbitrary object.
-   * @return message was enqueue successfully or failed.
-   */
-  boolean enqueueWithPriority(String queueName, String priority, String messageId, Object message);
 
   /**
    * Schedule a message on the given queue at the provided time. It will be executed as soon as the
@@ -393,6 +336,103 @@ public interface RqueueMessageEnqueuer {
       long delay,
       TimeUnit unit) {
     return enqueueInWithPriority(queueName, priority, messageId, message, unit.toMillis(delay));
+  }
+
+  /**
+   * Enqueue a message on given queue with delay, consume as soon as the delayed is expired.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId the message id for uniqueness
+   * @param message message object it could be any arbitrary object.
+   * @param delayInMillisecond total execution delay
+   * @return message id on successful enqueue otherwise null.
+   */
+  default boolean enqueueUniqueIn(
+      String queueName, String messageId, Object message, long delayInMillisecond) {
+    return enqueueIn(queueName, messageId, message, delayInMillisecond);
+  }
+
+  /**
+   * Schedule a message on the given queue at the provided time. It will be available to consume as
+   * soon as the given time is reached.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param startTimeInMilliSeconds time at which this message has to be consumed.
+   * @return message id on successful enqueue otherwise null.
+   */
+  default String enqueueAt(String queueName, Object message, long startTimeInMilliSeconds) {
+    return enqueueIn(queueName, message, startTimeInMilliSeconds - System.currentTimeMillis());
+  }
+
+  /**
+   * Schedule a message on the given queue at the provided time. It will be available to consume as
+   * soon as the given time is reached.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId message id
+   * @param message message object it could be any arbitrary object.
+   * @param startTimeInMilliSeconds time at which this message has to be consumed.
+   * @return success or failure.
+   */
+  default boolean enqueueAt(
+      String queueName, String messageId, Object message, long startTimeInMilliSeconds) {
+    return enqueueIn(
+        queueName, messageId, message, startTimeInMilliSeconds - System.currentTimeMillis());
+  }
+
+  /**
+   * Schedule a message on the given queue at the provided time. It will be available to consume as
+   * soon as the given time is reached.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param starTime time at which this message has to be consumed.
+   * @return message id on successful enqueue otherwise null.
+   */
+  default String enqueueAt(String queueName, Object message, Instant starTime) {
+    return enqueueAt(queueName, message, starTime.toEpochMilli());
+  }
+
+  /**
+   * Schedule a message on the given queue at the provided time. It will be available to consume as
+   * soon as the given time is reached.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId the message id
+   * @param message message object it could be any arbitrary object.
+   * @param starTime time at which this message has to be consumed.
+   * @return success or failure.
+   */
+  default boolean enqueueAt(String queueName, String messageId, Object message, Instant starTime) {
+    return enqueueAt(queueName, messageId, message, starTime.toEpochMilli());
+  }
+
+  /**
+   * Schedule a message on the given queue at the provided time. It will be available to consume as
+   * soon as the given time is reached.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param starTime time at which this message has to be consumed.
+   * @return message id on successful enqueue otherwise null.
+   */
+  default String enqueueAt(String queueName, Object message, Date starTime) {
+    return enqueueAt(queueName, message, starTime.toInstant());
+  }
+
+  /**
+   * Schedule a message on the given queue at the provided time. It will be available to consume as
+   * soon as the given time is reached.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId the message id
+   * @param message message object it could be any arbitrary object.
+   * @param starTime time at which this message has to be consumed.
+   * @return success or failure.
+   */
+  default boolean enqueueAt(String queueName, String messageId, Object message, Date starTime) {
+    return enqueueAt(queueName, messageId, message, starTime.toInstant());
   }
 
   /**
@@ -499,32 +539,6 @@ public interface RqueueMessageEnqueuer {
   }
 
   /**
-   * Enqueue a message on given queue without any delay, consume as soon as possible.
-   *
-   * @param queueName on which queue message has to be send
-   * @param messageId the message id for uniqueness
-   * @param message message object it could be any arbitrary object.
-   * @return message id on successful enqueue otherwise null.
-   */
-  default boolean enqueueUnique(String queueName, String messageId, Object message) {
-    return enqueue(queueName, messageId, message);
-  }
-
-  /**
-   * Enqueue a message on given queue with delay, consume as soon as the delayed is expired.
-   *
-   * @param queueName on which queue message has to be send
-   * @param messageId the message id for uniqueness
-   * @param message message object it could be any arbitrary object.
-   * @param delayInMillisecond total execution delay
-   * @return message id on successful enqueue otherwise null.
-   */
-  default boolean enqueueUniqueIn(
-      String queueName, String messageId, Object message, long delayInMillisecond) {
-    return enqueueIn(queueName, messageId, message, delayInMillisecond);
-  }
-
-  /**
    * Schedule unique messages on the given queue at the provided time. It will be available to
    * consume as soon as the given time is reached.
    *
@@ -537,19 +551,5 @@ public interface RqueueMessageEnqueuer {
       String queueName, String messageId, Object message, long startTimeInMilliSeconds) {
     return enqueueUniqueIn(
         queueName, messageId, message, startTimeInMilliSeconds - System.currentTimeMillis());
-  }
-
-  /**
-   * Enqueue unique message on given queue, that will be consumed as soon as possible.
-   *
-   * @param queueName on which queue message has to be send
-   * @param priority the priority name for this message
-   * @param messageId the message id for this message
-   * @param message message object it could be any arbitrary object.
-   * @return message was enqueue successfully or failed.
-   */
- default boolean enqueueUniqueWithPriority(
-      String queueName, String priority, String messageId, Object message) {
-    return enqueueWithPriority(queueName, priority, messageId, message);
   }
 }
