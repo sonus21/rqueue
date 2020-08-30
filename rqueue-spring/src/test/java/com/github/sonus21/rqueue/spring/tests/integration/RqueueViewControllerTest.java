@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
+import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
@@ -76,9 +76,9 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
         model.get("aggregatorTypes"));
     assertEquals(
         Arrays.asList(
-            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.SUCCESSFUL,
             TaskStatus.DISCARDED,
+            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.RETRIED),
         model.get("typeSelectors"));
   }
@@ -109,9 +109,9 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
         model.get("aggregatorTypes"));
     assertEquals(
         Arrays.asList(
-            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.SUCCESSFUL,
             TaskStatus.DISCARDED,
+            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.RETRIED),
         model.get("typeSelectors"));
     assertNotNull(model.get("config"));
