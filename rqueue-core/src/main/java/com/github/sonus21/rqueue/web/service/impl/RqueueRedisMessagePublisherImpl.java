@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.exception.ProcessingException;
@@ -47,13 +46,9 @@ public class RqueueRedisMessagePublisherImpl implements RqueueRedisMessagePublis
 
   @Override
   public void publish(String topic, PubSubMessage message) throws ProcessingException {
-    try {
-      this.stringRqueueRedisTemplate
-          .getRedisTemplate()
-          .convertAndSend(topic, rqueueMessageConverter.toMessage(message));
-    } catch (JsonProcessingException e) {
-      throw new ProcessingException(e);
-    }
+    this.stringRqueueRedisTemplate
+        .getRedisTemplate()
+        .convertAndSend(topic, rqueueMessageConverter.toMessage(message));
   }
 
   @Override
