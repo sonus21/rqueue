@@ -94,6 +94,9 @@ public class RqueueConfig {
   @Value("${rqueue.message.durability:10080}")
   private long messageDurabilityInMinute;
 
+  @Value("${rqueue.message.durability.in-terminal-state:1800}")
+  private long messageDurabilityInTerminalStateInSecond;
+
   public String getQueuesKey() {
     return prefix + queuesKeySuffix;
   }

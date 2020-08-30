@@ -31,6 +31,7 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import io.lettuce.core.RedisCommandExecutionException;
 import java.util.Map;
@@ -257,12 +258,13 @@ public class RqueueMessageListenerContainerTest {
     doAnswer(
             i -> {
               RqueueMessage rqueueMessage = i.getArgument(0);
-              MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage);
+              MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage,
+                  MessageStatus.ENQUEUED);
               messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
               return messageMetadata;
             })
         .when(messageMetadataService)
-        .getOrCreateMessageMetadata(any(), any(), any());
+        .getOrCreateMessageMetadata(any());
     doAnswer(
             i -> {
               String id = i.getArgument(0);
@@ -323,12 +325,13 @@ public class RqueueMessageListenerContainerTest {
     doAnswer(
             i -> {
               RqueueMessage rqueueMessage = i.getArgument(0);
-              MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage);
+              MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage,
+                  MessageStatus.ENQUEUED);
               messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
               return messageMetadata;
             })
         .when(messageMetadataService)
-        .getOrCreateMessageMetadata(any(), any(), any());
+        .getOrCreateMessageMetadata(any());
     doAnswer(
             i -> {
               String id = i.getArgument(0);

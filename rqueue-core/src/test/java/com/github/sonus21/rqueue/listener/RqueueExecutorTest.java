@@ -34,7 +34,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
@@ -42,7 +42,6 @@ import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
-import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -112,7 +111,7 @@ public class RqueueExecutorTest {
             messageConverter.toMessage("test message", RqueueMessageHeaders.emptyMessageHeaders());
     rqueueMessage.setMessage(message.getPayload());
     rqueueMessage.setQueueName(queueName);
-    defaultMessageMetadata = new MessageMetadata(rqueueMessage);
+    defaultMessageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
   }
 
   @Test
@@ -121,8 +120,7 @@ public class RqueueExecutorTest {
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
-        .getOrCreateMessageMetadata(
-            any(RqueueMessage.class), any(TaskStatus.class), any(Duration.class));
+        .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doAnswer(i -> defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     new RqueueExecutor(
             rqueueMessage,
@@ -140,8 +138,7 @@ public class RqueueExecutorTest {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName, "test-dlq");
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
-        .getOrCreateMessageMetadata(
-            any(RqueueMessage.class), any(TaskStatus.class), any(Duration.class));
+        .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     new RqueueExecutor(
@@ -160,8 +157,7 @@ public class RqueueExecutorTest {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
-        .getOrCreateMessageMetadata(
-            any(RqueueMessage.class), any(TaskStatus.class), any(Duration.class));
+        .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
@@ -184,11 +180,11 @@ public class RqueueExecutorTest {
   @Test
   public void messageIsNotExecutedWhenDeletedManually() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
-    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage);
+    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     messageMetadata.setDeleted(true);
     doReturn(messageMetadata)
         .when(rqueueMessageMetadataService)
-        .getOrCreateMessageMetadata(eq(rqueueMessage), any(), any());
+        .getOrCreateMessageMetadata(eq(rqueueMessage));
     new RqueueExecutor(
             rqueueMessage,
             queueDetail,
@@ -204,11 +200,10 @@ public class RqueueExecutorTest {
   public void messageIsDeletedWhileExecuting() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     AtomicInteger atomicInteger = new AtomicInteger(0);
-    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage);
+    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     doReturn(messageMetadata)
         .when(rqueueMessageMetadataService)
-        .getOrCreateMessageMetadata(
-            any(RqueueMessage.class), any(TaskStatus.class), any(Duration.class));
+        .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doAnswer(
             invocation -> {
               if (atomicInteger.get() == 0) {
@@ -245,7 +240,7 @@ public class RqueueExecutorTest {
     doReturn(messageProcessor).when(container).getPreExecutionMessageProcessor();
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
-        .getOrCreateMessageMetadata(any(), any(), any());
+        .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
             rqueueMessage,
             queueDetail,

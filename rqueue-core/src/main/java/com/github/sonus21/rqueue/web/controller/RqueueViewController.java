@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.web.controller;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;

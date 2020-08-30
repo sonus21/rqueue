@@ -22,8 +22,9 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.BaseLogger;
 import com.github.sonus21.rqueue.utils.RedisUtils;
@@ -72,23 +73,13 @@ class PostProcessingHandler extends BaseLogger {
       RqueueMessage rqueueMessage,
       Object userMessage,
       MessageMetadata messageMetadata,
-      TaskStatus status,
+      ExecutionStatus status,
       int failureCount,
       long jobExecutionStartTime) {
-    if (status == TaskStatus.QUEUE_INACTIVE) {
-      return;
-    }
     try {
       switch (status) {
-        case SUCCESSFUL:
-          handleSuccessFullExecution(
-              queueDetail,
-              rqueueMessage,
-              userMessage,
-              messageMetadata,
-              failureCount,
-              jobExecutionStartTime);
-          break;
+        case QUEUE_INACTIVE:
+          return;
         case DELETED:
           handleManualDeletion(
               queueDetail,
@@ -109,6 +100,15 @@ class PostProcessingHandler extends BaseLogger {
           break;
         case OLD_MESSAGE:
           handleOldMessage(queueDetail, rqueueMessage);
+          break;
+        case SUCCESSFUL:
+          handleSuccessFullExecution(
+              queueDetail,
+              rqueueMessage,
+              userMessage,
+              messageMetadata,
+              failureCount,
+              jobExecutionStartTime);
           break;
         case FAILED:
           handleFailure(
@@ -149,12 +149,13 @@ class PostProcessingHandler extends BaseLogger {
       QueueDetail queueDetail,
       RqueueMessage rqueueMessage,
       MessageMetadata messageMetadata,
-      TaskStatus status,
+      MessageStatus status,
       long jobExecutionStartTime) {
     updateMetadata(messageMetadata, rqueueMessage, jobExecutionStartTime, status);
     if (rqueueWebConfig.isCollectListenerStats()) {
       RqueueExecutionEvent event =
-          new RqueueExecutionEvent(queueDetail, rqueueMessage, status, messageMetadata);
+          new RqueueExecutionEvent(
+              queueDetail, rqueueMessage, status.getTaskStatus(), messageMetadata);
       applicationEventPublisher.publishEvent(event);
     }
   }
@@ -163,12 +164,14 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
       long jobExecutionStartTime,
-      TaskStatus taskStatus) {
-    messageMetadata.setStatus(taskStatus);
+      MessageStatus messageStatus) {
+    messageMetadata.setStatus(messageStatus);
     messageMetadata.setRqueueMessage(rqueueMessage);
     messageMetadata.addExecutionTime(jobExecutionStartTime);
-    if (TaskStatus.isTerminalState(taskStatus)) {
-      rqueueMessageMetadataService.save(messageMetadata, Duration.ofMinutes(30));
+    if (messageStatus.isTerminalState()) {
+      rqueueMessageMetadataService.save(
+          messageMetadata,
+          Duration.ofSeconds(rqueueConfig.getMessageDurabilityInTerminalStateInSecond()));
     } else {
       rqueueMessageMetadataService.save(
           messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
@@ -180,7 +183,7 @@ class PostProcessingHandler extends BaseLogger {
       RqueueMessage rqueueMessage,
       Object userMessage,
       MessageMetadata messageMetadata,
-      TaskStatus status,
+      MessageStatus status,
       int failureCount,
       long jobExecutionStartTime) {
     rqueueMessageTemplate.removeElementFromZset(
@@ -213,7 +216,7 @@ class PostProcessingHandler extends BaseLogger {
       RqueueMessage oldMessage,
       RqueueMessage newMessage,
       Object userMessage) {
-    messageProcessorHandler.handleMessage(newMessage, userMessage, TaskStatus.MOVED_TO_DLQ);
+    messageProcessorHandler.handleMessage(newMessage, userMessage, MessageStatus.MOVED_TO_DLQ);
     if (queueDetail.isDeadLetterConsumerEnabled()) {
       String configKey = rqueueConfig.getQueueConfigKey(queueDetail.getDeadLetterQueueName());
       QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(configKey, true);
@@ -254,7 +257,11 @@ class PostProcessingHandler extends BaseLogger {
     newMessage.updateReEnqueuedAt();
     moveMessageForReprocessingOrDlq(queueDetail, rqueueMessage, newMessage, userMessage);
     publishEvent(
-        queueDetail, newMessage, messageMetadata, TaskStatus.MOVED_TO_DLQ, jobExecutionStartTime);
+        queueDetail,
+        newMessage,
+        messageMetadata,
+        MessageStatus.MOVED_TO_DLQ,
+        jobExecutionStartTime);
   }
 
   private void parkMessageForRetry(
@@ -278,7 +285,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         newMessage,
         delay);
-    updateMetadata(messageMetadata, newMessage, jobExecutionStartTime, TaskStatus.FAILED);
+    updateMetadata(messageMetadata, newMessage, jobExecutionStartTime, MessageStatus.FAILED);
   }
 
   private void discardMessage(
@@ -296,7 +303,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         userMessage,
         messageMetadata,
-        TaskStatus.DISCARDED,
+        MessageStatus.DISCARDED,
         failureCount,
         jobExecutionStartTime);
   }
@@ -316,7 +323,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         userMessage,
         messageMetadata,
-        TaskStatus.DELETED,
+        MessageStatus.DELETED,
         failureCount,
         jobExecutionStartTime);
   }
@@ -336,7 +343,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         userMessage,
         messageMetadata,
-        TaskStatus.SUCCESSFUL,
+        MessageStatus.SUCCESSFUL,
         failureCount,
         jobExecutionStartTime);
   }
@@ -429,7 +436,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         userMessage,
         messageMetadata,
-        TaskStatus.IGNORED,
+        MessageStatus.IGNORED,
         failureCount,
         jobExecutionStartTime);
   }

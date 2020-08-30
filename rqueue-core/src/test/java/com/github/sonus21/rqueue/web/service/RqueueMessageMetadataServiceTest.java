@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.impl.RqueueMessageMetadataServiceImpl;
 import java.time.Duration;
@@ -51,7 +52,7 @@ public class RqueueMessageMetadataServiceTest {
   public void get() {
     String id = UUID.randomUUID().toString();
     String msgId = MessageUtils.getMessageMetaId(queueName, id);
-    MessageMetadata metadata = new MessageMetadata(id);
+    MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
     metadata.setDeleted(true);
     doReturn(null).when(rqueueRedisTemplate).get(msgId);
     assertNull(rqueueMessageMetadataService.get(msgId));
@@ -63,7 +64,7 @@ public class RqueueMessageMetadataServiceTest {
   public void findAll() {
     String id = UUID.randomUUID().toString();
     String msgId = MessageUtils.getMessageMetaId(queueName, id);
-    MessageMetadata metadata = new MessageMetadata(id);
+    MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
     metadata.setDeleted(true);
     List<String> ids = Arrays.asList(msgId, UUID.randomUUID().toString());
     doReturn(Arrays.asList(metadata, null)).when(rqueueRedisTemplate).mget(ids);
@@ -88,7 +89,8 @@ public class RqueueMessageMetadataServiceTest {
   @Test
   public void deleteMessageWhereMetaInfo() {
     String id = UUID.randomUUID().toString();
-    MessageMetadata metadata = new MessageMetadata(MessageUtils.getMessageMetaId(queueName, id));
+    MessageMetadata metadata =
+        new MessageMetadata(MessageUtils.getMessageMetaId(queueName, id), MessageStatus.ENQUEUED);
     metadata.setDeleted(false);
     doReturn(metadata).when(rqueueRedisTemplate).get(MessageUtils.getMessageMetaId(queueName, id));
     doAnswer(

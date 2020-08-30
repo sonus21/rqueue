@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.BaseLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
@@ -42,7 +42,7 @@ class MessageProcessorHandler extends BaseLogger {
     this.postExecutionMessageProcessor = postExecutionMessageProcessor;
   }
 
-  void handleMessage(RqueueMessage rqueueMessage, Object userMessage, TaskStatus status) {
+  void handleMessage(RqueueMessage rqueueMessage, Object userMessage, MessageStatus status) {
     MessageProcessor messageProcessor = null;
     switch (status) {
       case DELETED:

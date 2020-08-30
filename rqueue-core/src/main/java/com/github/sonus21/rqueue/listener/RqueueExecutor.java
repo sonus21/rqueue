@@ -22,7 +22,9 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
+import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
@@ -47,6 +49,7 @@ class RqueueExecutor extends MessageContainerBase {
   private final RqueueConfig rqueueConfig;
   private MessageMetadata messageMetadata;
   private Object userMessage;
+  private boolean updatedToProcessing;
 
   RqueueExecutor(
       RqueueMessage rqueueMessage,
@@ -79,11 +82,7 @@ class RqueueExecutor extends MessageContainerBase {
       log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
       throw e;
     }
-    this.messageMetadata =
-        rqueueMessageMetadataService.getOrCreateMessageMetadata(
-            rqueueMessage,
-            TaskStatus.PROCESSING,
-            Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
+    this.messageMetadata = rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
   }
 
   private int getMaxRetryCount() {
@@ -138,24 +137,34 @@ class RqueueExecutor extends MessageContainerBase {
     return Math.min(rqueueConfig.getRetryPerPoll(), maxRetry);
   }
 
-  private boolean queueActive() {
-    return isQueueActive(queueDetail.getName());
+  private boolean queueInActive() {
+    return !isQueueActive(queueDetail.getName());
   }
 
-  private TaskStatus getStatus() {
-    if (!queueActive()) {
-      return TaskStatus.QUEUE_INACTIVE;
+  private ExecutionStatus getStatus() {
+    if (queueInActive()) {
+      return ExecutionStatus.QUEUE_INACTIVE;
     }
     if (shouldIgnore()) {
-      return TaskStatus.IGNORED;
+      return ExecutionStatus.IGNORED;
     }
     if (isOldMessage()) {
-      return TaskStatus.OLD_MESSAGE;
+      return ExecutionStatus.OLD_MESSAGE;
     }
     if (isMessageDeleted()) {
-      return TaskStatus.DELETED;
+      return ExecutionStatus.DELETED;
     }
     return null;
+  }
+
+  private void updateToProcessing() {
+    if (updatedToProcessing) {
+      return;
+    }
+    this.updatedToProcessing = true;
+    messageMetadata.setStatus(MessageStatus.PROCESSING);
+    this.rqueueMessageMetadataService.save(
+        messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
   }
 
   @Override
@@ -164,7 +173,7 @@ class RqueueExecutor extends MessageContainerBase {
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
     int retryCount = getRetryCount();
-    TaskStatus status;
+    ExecutionStatus status;
     try {
       do {
         status = getStatus();
@@ -172,9 +181,10 @@ class RqueueExecutor extends MessageContainerBase {
           break;
         }
         try {
+          updateToProcessing();
           updateCounter(false);
           rqueueMessageHandler.handleMessage(message);
-          status = TaskStatus.SUCCESSFUL;
+          status = ExecutionStatus.SUCCESSFUL;
         } catch (MessagingException e) {
           updateCounter(true);
           failureCount += 1;
@@ -190,7 +200,7 @@ class RqueueExecutor extends MessageContainerBase {
           rqueueMessage,
           userMessage,
           messageMetadata,
-          (status == null ? TaskStatus.FAILED : status),
+          (status == null ? ExecutionStatus.FAILED : status),
           failureCount,
           startTime);
     } finally {

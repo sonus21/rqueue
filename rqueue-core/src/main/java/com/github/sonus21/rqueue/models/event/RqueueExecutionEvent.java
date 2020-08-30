@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.models.event;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 

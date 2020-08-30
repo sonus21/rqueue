@@ -30,6 +30,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageFactory;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.DataType;
@@ -220,7 +221,7 @@ public class RqueueQDetailServiceTest {
     List<MessageMetadata> messageMetadata = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       RqueueMessage message = rqueueMessages.get(i);
-      MessageMetadata metadata = new MessageMetadata(message.getId());
+      MessageMetadata metadata = new MessageMetadata(message.getId(), MessageStatus.DELETED);
       metadata.setDeleted(true);
       messageMetadata.add(metadata);
     }

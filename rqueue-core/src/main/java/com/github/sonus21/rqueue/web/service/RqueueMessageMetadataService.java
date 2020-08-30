@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +35,5 @@ public interface RqueueMessageMetadataService {
 
   void deleteMessage(String queueName, String messageId, Duration duration);
 
-  MessageMetadata getOrCreateMessageMetadata(
-      RqueueMessage rqueueMessage, TaskStatus processing, Duration duration);
+  MessageMetadata getOrCreateMessageMetadata(RqueueMessage rqueueMessage);
 }

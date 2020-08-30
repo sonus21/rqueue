@@ -20,7 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
@@ -72,7 +72,7 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
     String id = MessageUtils.getMessageMetaId(queueName, messageId);
     MessageMetadata messageMetadata = get(id);
     if (messageMetadata == null) {
-      messageMetadata = new MessageMetadata(id);
+      messageMetadata = new MessageMetadata(id, MessageStatus.DELETED);
     }
     messageMetadata.setDeleted(true);
     messageMetadata.setDeletedOn(System.currentTimeMillis());
@@ -85,15 +85,12 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public MessageMetadata getOrCreateMessageMetadata(
-      RqueueMessage rqueueMessage, TaskStatus status, Duration duration) {
+  public MessageMetadata getOrCreateMessageMetadata(RqueueMessage rqueueMessage) {
     MessageMetadata messageMetadata =
         getByMessageId(rqueueMessage.getQueueName(), rqueueMessage.getId());
     if (messageMetadata == null) {
-      messageMetadata = new MessageMetadata(rqueueMessage);
+      messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     }
-    messageMetadata.setStatus(status);
-    save(messageMetadata, duration);
     return messageMetadata;
   }
 }

@@ -37,15 +37,17 @@ public class MessageMetadata extends SerializableBase {
   private boolean deleted;
   private Long deletedOn;
   private RqueueMessage rqueueMessage;
-  private TaskStatus status;
+  private MessageStatus status;
 
-  public MessageMetadata(String id) {
+  public MessageMetadata(String id, MessageStatus messageStatus) {
     this.id = id;
+    this.status = messageStatus;
   }
 
-  public MessageMetadata(RqueueMessage rqueueMessage) {
+  public MessageMetadata(RqueueMessage rqueueMessage, MessageStatus messageStatus) {
     this.id = MessageUtils.getMessageMetaId(rqueueMessage.getQueueName(), rqueueMessage.getId());
     this.rqueueMessage = rqueueMessage;
+    this.status = messageStatus;
   }
 
   public void addExecutionTime(long jobStartTime) {

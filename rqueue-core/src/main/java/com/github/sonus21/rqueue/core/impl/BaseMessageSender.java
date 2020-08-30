@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
@@ -60,7 +61,7 @@ abstract class BaseMessageSender {
   }
 
   private void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
-    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage);
+    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration;
     if (delayInMillis != null) {
       duration = Duration.ofMillis(2 * delayInMillis);

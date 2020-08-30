@@ -18,27 +18,31 @@ package com.github.sonus21.rqueue.core.impl;
 
 import static org.springframework.util.Assert.notEmpty;
 
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.exception.LockCanNotBeAcquired;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
+  @Autowired private RqueueLockManager rqueueLockManager;
+
   private RqueueMessageManagerImpl(
       RqueueMessageTemplate messageTemplate,
       List<MessageConverter> messageConverters,
@@ -100,14 +104,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
   @Override
   public RqueueMessage getRqueueMessage(String queueName, String id) {
     MessageMetadata messageMetadata = rqueueMessageMetadataService.getByMessageId(queueName, id);
-    if (messageMetadata == null || messageMetadata.getRqueueMessage() == null) {
-      return null;
-    }
-    if (messageMetadata.getStatus() == null) {
-      return messageMetadata.getRqueueMessage();
-    }
-    if (messageMetadata.getStatus() == TaskStatus.PROCESSING
-        || messageMetadata.getStatus() == TaskStatus.SUCCESSFUL) {
+    if (messageMetadata == null) {
       return null;
     }
     return messageMetadata.getRqueueMessage();
@@ -115,7 +112,12 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
 
   @Override
   public boolean exist(String queueName, String id) {
-    return getMessage(queueName, id) != null;
+    if (rqueueLockManager.acquireLock(queueName, Duration.ofSeconds(1))) {
+      boolean exist = getMessage(queueName, id) != null;
+      rqueueLockManager.releaseLock(queueName);
+      return exist;
+    }
+    throw new LockCanNotBeAcquired(queueName);
   }
 
   @Override
@@ -127,5 +129,10 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
     rqueueMessageMetadataService.deleteMessage(
         queueName, id, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
     return true;
+  }
+
+  @Override
+  public MessageConverter getMessageConverter() {
+    return messageConverter;
   }
 }
