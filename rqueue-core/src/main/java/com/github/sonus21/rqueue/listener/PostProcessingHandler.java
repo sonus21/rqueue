@@ -107,6 +107,9 @@ class PostProcessingHandler extends BaseLogger {
               failureCount,
               jobExecutionStartTime);
           break;
+        case OLD_MESSAGE:
+          handleOldMessage(queueDetail, rqueueMessage);
+          break;
         case FAILED:
           handleFailure(
               queueDetail,
@@ -120,8 +123,26 @@ class PostProcessingHandler extends BaseLogger {
           throw new UnknownSwitchCase(String.valueOf(status));
       }
     } catch (Exception e) {
-      log(Level.ERROR, "Error occurred in post processing", e);
+      log(
+          Level.ERROR,
+          "Error occurred in post processing, RqueueMessage: {}, Status: {}",
+          e,
+          rqueueMessage,
+          status);
     }
+  }
+
+  private void handleOldMessage(QueueDetail queueDetail, RqueueMessage rqueueMessage) {
+    if (isDebugEnabled()) {
+      log(
+          Level.DEBUG,
+          "Message {} ignored due to new message, Queue: {}",
+          null,
+          rqueueMessage,
+          queueDetail.getName());
+    }
+    rqueueMessageTemplate.removeElementFromZset(
+        queueDetail.getProcessingQueueName(), rqueueMessage);
   }
 
   private void publishEvent(
@@ -130,7 +151,7 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       TaskStatus status,
       long jobExecutionStartTime) {
-    updateMetadata(messageMetadata, rqueueMessage, jobExecutionStartTime, false);
+    updateMetadata(messageMetadata, rqueueMessage, jobExecutionStartTime, status);
     if (rqueueWebConfig.isCollectListenerStats()) {
       RqueueExecutionEvent event =
           new RqueueExecutionEvent(queueDetail, rqueueMessage, status, messageMetadata);
@@ -142,19 +163,15 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
       long jobExecutionStartTime,
-      boolean saveOrDelete) {
-    if (!saveOrDelete) {
-      messageMetadata.setStatus(TaskStatus.SUCCESSFUL);
-    } else {
-      messageMetadata.setStatus(TaskStatus.FAILED);
-    }
+      TaskStatus taskStatus) {
+    messageMetadata.setStatus(taskStatus);
     messageMetadata.setRqueueMessage(rqueueMessage);
     messageMetadata.addExecutionTime(jobExecutionStartTime);
-    if (saveOrDelete) {
+    if (TaskStatus.isTerminalState(taskStatus)) {
+      rqueueMessageMetadataService.save(messageMetadata, Duration.ofMinutes(30));
+    } else {
       rqueueMessageMetadataService.save(
           messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
-    } else {
-      rqueueMessageMetadataService.save(messageMetadata, Duration.ofMinutes(30));
     }
   }
 
@@ -261,7 +278,7 @@ class PostProcessingHandler extends BaseLogger {
         rqueueMessage,
         newMessage,
         delay);
-    updateMetadata(messageMetadata, newMessage, jobExecutionStartTime, true);
+    updateMetadata(messageMetadata, newMessage, jobExecutionStartTime, TaskStatus.FAILED);
   }
 
   private void discardMessage(

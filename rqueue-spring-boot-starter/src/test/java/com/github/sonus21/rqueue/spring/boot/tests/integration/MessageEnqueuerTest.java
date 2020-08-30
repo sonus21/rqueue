@@ -20,9 +20,12 @@ import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
+import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.Email;
+import com.github.sonus21.rqueue.test.dto.FeedGeneration;
+import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.test.RqueueSpringTestRunner;
@@ -35,19 +38,17 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @RunWith(RqueueSpringTestRunner.class)
-@ContextConfiguration(classes = Application.class)
+@ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=20",
-      "rqueue.scheduler.auto.start=true",
       "spring.redis.port=8008",
       "mysql.db.name=MessageEnqueuerTest",
       "rqueue.metrics.count.failure=false",
       "rqueue.metrics.count.execution=false",
       "sms.queue.active=true",
       "sms.queue.group=sms-test",
-      "notification.queue.active=false",
+      "notification.queue.active=true",
       "email.queue.active=true",
       "job.queue.active=true",
       "priority.mode=STRICT",
@@ -73,11 +74,11 @@ public class MessageEnqueuerTest extends SpringTestBase {
 
   @Test
   public void testEnqueueWithRetryWithMessageId() throws TimedOutException {
-    Notification notification = Notification.newInstance();
+    ChatIndexing chatIndexing = ChatIndexing.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueWithRetry(
-            notificationQueue, notification.getId(), notification, 3));
-    waitFor(() -> getMessageCount(notificationQueue) == 0, "notification to be consumed");
+            chatIndexingQueue, chatIndexing.getId(), chatIndexing, 3));
+    waitFor(() -> getMessageCount(chatIndexingQueue) == 0, "ChatIndexing to be done");
   }
 
   @Test
@@ -89,9 +90,9 @@ public class MessageEnqueuerTest extends SpringTestBase {
 
   @Test
   public void testEnqueueInWithMessageId() throws TimedOutException {
-    Email email = Email.newInstance();
-    assertTrue(rqueueMessageEnqueuer.enqueueIn(emailQueue, email.getId(), email, 1000));
-    waitFor(() -> getMessageCount(emailQueue) == 0, "email to be consumed");
+    Job job = Job.newInstance();
+    assertTrue(rqueueMessageEnqueuer.enqueueIn(jobQueue, job.getId(), job, 1000));
+    waitFor(() -> getMessageCount(jobQueue) == 0, "job notification to be sent");
   }
 
   @Test
@@ -113,13 +114,13 @@ public class MessageEnqueuerTest extends SpringTestBase {
 
   @Test
   public void testEnqueueAtWithMessageId() throws TimedOutException {
-    Notification notification = Notification.newInstance();
+    FeedGeneration feedGeneration = FeedGeneration.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueAt(
-            notificationQueue,
-            notification.getId(),
-            notification,
+            feedGenerationQueue,
+            feedGeneration.getId(),
+            feedGeneration,
             System.currentTimeMillis() + 1000));
-    waitFor(() -> getMessageCount(notificationQueue) == 0, "notification to be consumed");
+    waitFor(() -> getMessageCount(feedGenerationQueue) == 0, "Feed to be generated");
   }
 }

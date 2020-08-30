@@ -120,22 +120,14 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean shouldIgnore() {
-    if (!Objects.requireNonNull(container.get())
+    return !Objects.requireNonNull(container.get())
         .getPreExecutionMessageProcessor()
-        .process(userMessage, rqueueMessage)) {
-      return true;
-    }
-    if (messageMetadata.getRqueueMessage() != null
-        && messageMetadata.getRqueueMessage().getQueuedTime() != rqueueMessage.getQueuedTime()) {
-      log(
-          Level.DEBUG,
-          "message ignored due to new message. old message: {} new message: {}",
-          null,
-          rqueueMessage,
-          messageMetadata.getRqueueMessage());
-      return true;
-    }
-    return false;
+        .process(userMessage, rqueueMessage);
+  }
+
+  private boolean isOldMessage() {
+    return messageMetadata.getRqueueMessage() != null
+        && messageMetadata.getRqueueMessage().getQueuedTime() != rqueueMessage.getQueuedTime();
   }
 
   private int getRetryCount() {
@@ -156,6 +148,9 @@ class RqueueExecutor extends MessageContainerBase {
     }
     if (shouldIgnore()) {
       return TaskStatus.IGNORED;
+    }
+    if (isOldMessage()) {
+      return TaskStatus.OLD_MESSAGE;
     }
     if (isMessageDeleted()) {
       return TaskStatus.DELETED;
@@ -186,7 +181,7 @@ class RqueueExecutor extends MessageContainerBase {
         } catch (Exception e) {
           updateCounter(true);
           failureCount += 1;
-          log(Level.ERROR, "Message execution failed", e);
+          log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, rqueueMessage);
         }
         retryCount--;
       } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
@@ -195,7 +190,7 @@ class RqueueExecutor extends MessageContainerBase {
           rqueueMessage,
           userMessage,
           messageMetadata,
-          status == null ? TaskStatus.FAILED : status,
+          (status == null ? TaskStatus.FAILED : status),
           failureCount,
           startTime);
     } finally {

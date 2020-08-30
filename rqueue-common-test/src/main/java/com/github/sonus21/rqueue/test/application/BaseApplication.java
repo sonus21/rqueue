@@ -78,13 +78,13 @@ public abstract class BaseApplication {
   }
 
   @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+  public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setGenerateDdl(true);
     LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
     factory.setJpaVendorAdapter(vendorAdapter);
     factory.setPackagesToScan("com.github.sonus21.rqueue.test.entity");
-    factory.setDataSource(dataSource());
+    factory.setDataSource(dataSource);
     return factory;
   }
 

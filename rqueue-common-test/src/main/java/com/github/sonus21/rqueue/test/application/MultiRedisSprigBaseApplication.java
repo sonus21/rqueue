@@ -60,9 +60,6 @@ public abstract class MultiRedisSprigBaseApplication {
   @Value("${spring.redis.host}")
   private String redisHost;
 
-  @Value("${use.system.redis:false}")
-  private boolean useSystemRedis;
-
   private RedisServer redisServer2;
 
   private ExecutorService executor;
