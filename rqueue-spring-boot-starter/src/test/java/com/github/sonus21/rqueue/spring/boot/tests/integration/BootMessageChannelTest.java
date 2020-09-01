@@ -41,7 +41,6 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=test2",
       "max.workers.count=120",
       "use.system.redis=false"
-
     })
 @SpringBootTest
 @Slf4j

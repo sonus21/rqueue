@@ -37,6 +37,9 @@ import org.springframework.test.context.TestPropertySource;
       "spring.redis.port=8001",
       "reservation.request.dead.letter.consumer.enabled=true",
       "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=BootApplicationTest",
+      "use.system.redis=false",
     })
 public class ApplicationTest extends MessageRetryTest {
 
@@ -73,5 +76,10 @@ public class ApplicationTest extends MessageRetryTest {
   @Test
   public void messageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
     verifyMessageIsConsumedByDeadLetterQueueListener();
+  }
+
+  @Test
+  public void testListMessage() throws TimedOutException {
+    verifyListMessageListener();
   }
 }

@@ -24,7 +24,6 @@ import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
-import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
@@ -173,9 +172,11 @@ class RqueueExecutor extends MessageContainerBase {
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
     int retryCount = getRetryCount();
+    int attempt = 0;
     ExecutionStatus status;
     try {
       do {
+        log(Level.DEBUG, "Attempt {} message: {}", null, attempt, userMessage);
         status = getStatus();
         if (status != null) {
           break;
@@ -193,7 +194,8 @@ class RqueueExecutor extends MessageContainerBase {
           failureCount += 1;
           log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, rqueueMessage);
         }
-        retryCount--;
+        retryCount -= 1;
+        attempt += 1;
       } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
       postProcessingHandler.handle(
           queueDetail,

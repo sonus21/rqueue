@@ -98,6 +98,9 @@ public abstract class SpringTestBase extends TestBase {
   @Value("${reservation.request.queue.retry.count}")
   protected int reservationRequestQueueRetryCount;
 
+  @Value("${list.email.queue.name}")
+  protected String listEmailQueue;
+
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, queueName, null, null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);

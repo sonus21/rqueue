@@ -26,7 +26,14 @@ import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -154,5 +161,39 @@ public abstract class MessageRetryTest extends SpringTestBase {
         new Long(0), stringRqueueRedisTemplate.getListSize(reservationRequestDeadLetterQueue));
     assertEquals(0, getMessageCount(reservationQueue));
     assertEquals(0, getMessageCount(reservationRequestDeadLetterQueue));
+  }
+
+  protected void verifyListMessageListener() throws TimedOutException {
+    int n = 1 + random.nextInt(10);
+    List<Email> emails = new ArrayList<>();
+    List<Email> delayedEmails = new ArrayList<>();
+    for (int i = 0; i < n; i++) {
+      emails.add(Email.newInstance());
+      delayedEmails.add(Email.newInstance());
+    }
+    enqueue(listEmailQueue, emails);
+    enqueueIn(listEmailQueue, delayedEmails, 1, TimeUnit.SECONDS);
+    TimeoutUtils.waitFor(
+        () -> getMessageCount(listEmailQueue) == 0, "waiting for email list queue to drain");
+    Collection<ConsumedMessage> messages =
+        consumedMessageService.getConsumedMessages(
+            emails.stream().map(Email::getId).collect(Collectors.toList()));
+    Collection<ConsumedMessage> delayedMessages =
+        consumedMessageService.getConsumedMessages(
+            delayedEmails.stream().map(Email::getId).collect(Collectors.toList()));
+    assertEquals(n, messages.size());
+    assertEquals(n, delayedEmails.size());
+    Set<String> delayedTags =
+        delayedMessages.stream()
+            .map(ConsumedMessage::getTag)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    Set<String> simpleTags =
+        messages.stream()
+            .map(ConsumedMessage::getTag)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    assertEquals(1, delayedTags.size());
+    assertEquals(1, simpleTags.size());
   }
 }
