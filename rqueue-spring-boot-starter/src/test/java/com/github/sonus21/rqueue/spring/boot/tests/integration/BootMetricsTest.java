@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,6 +44,7 @@ import org.springframework.test.context.TestPropertySource;
 public class BootMetricsTest extends MetricTest {
 
   @Test
+  @Ignore
   public void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }
