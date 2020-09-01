@@ -79,7 +79,7 @@ public class ApplicationTest extends MessageRetryTest {
   }
 
   @Test
-  public void testListMessage() throws TimedOutException {
+  public void testListMessageListener() throws TimedOutException {
     verifyListMessageListener();
   }
 }
