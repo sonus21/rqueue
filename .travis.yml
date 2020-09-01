@@ -30,6 +30,8 @@ before_script:
   - cd 9004 && redis-server ./redis.conf &
   - cd 9005 && redis-server ./redis.conf &
   - redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
+  - df -h
+  - lscpu
 
 jobs:
   include:
