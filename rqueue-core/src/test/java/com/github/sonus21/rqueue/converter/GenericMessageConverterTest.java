@@ -19,6 +19,8 @@ package com.github.sonus21.rqueue.converter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -66,6 +68,20 @@ public class GenericMessageConverterTest {
     Message<String> m = (Message<String>) genericMessageConverter.toMessage(testData, null);
     TestData t2 = (TestData) genericMessageConverter.fromMessage(m, null);
     assertEquals(testData, t2);
+  }
+
+  @Test
+  public void toMessageSet() {
+    assertNull(
+        genericMessageConverter.toMessage(
+            Collections.singleton("Foo"), RqueueMessageHeaders.emptyMessageHeaders()));
+  }
+
+  @Test
+  public void toMessageEmptyList() {
+    assertNull(
+        genericMessageConverter.toMessage(
+            Collections.emptyList(), RqueueMessageHeaders.emptyMessageHeaders()));
   }
 
   @Data

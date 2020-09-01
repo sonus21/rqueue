@@ -20,6 +20,13 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.List;
 
+/**
+ * Rqueue end point manager, manages the end point related to Rqueue.
+ *
+ * <p>if a queue does not exist then an exception of the {@link
+ * com.github.sonus21.rqueue.exception.QueueDoesNotExist} will be thrown. In such cases you can
+ * register a queue using {@link RqueueEndpointManager#registerQueue(String, String...)}
+ */
 public interface RqueueEndpointManager {
 
   /**
@@ -30,11 +37,30 @@ public interface RqueueEndpointManager {
    */
   void registerQueue(String name, String... priorities);
 
+  /**
+   * Check if a queue is registered.
+   *
+   * @param queueName queue that needs to be checked
+   * @return yes/no
+   */
+  boolean isQueueRegistered(String queueName);
+
+  /**
+   * Check if a queue is registered.
+   *
+   * @param queueName queue that needs to be checked
+   * @param priority priority of the queue
+   * @return yes/no
+   */
   default boolean isQueueRegistered(String queueName, String priority) {
     return isQueueRegistered(PriorityUtils.getQueueNameForPriority(queueName, priority));
   }
 
-  boolean isQueueRegistered(String queueName);
-
+  /**
+   * Get queue config for a queue
+   *
+   * @param queueName queue name for which configuration has to be fetched
+   * @return list of queue detail
+   */
   List<QueueDetail> getQueueConfig(String queueName);
 }
