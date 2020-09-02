@@ -17,9 +17,9 @@
 package com.github.sonus21.rqueue.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -67,19 +67,14 @@ public class GenericMessageConverter implements MessageConverter {
             Thread.currentThread().getContextClassLoader().loadClass(classNames[0]);
         Class<?> elementClass =
             Thread.currentThread().getContextClassLoader().loadClass(classNames[1]);
-        List objects = (List) objectMapper.readValue(msg.msg, envelopeClass);
-        List finalObjects = (List) envelopeClass.newInstance();
-        for (Object object : objects) {
-          finalObjects.add(objectMapper.convertValue(object, elementClass));
-        }
-        return finalObjects;
+        JavaType type =
+            objectMapper
+                .getTypeFactory()
+                .constructCollectionType((Class<? extends Collection>) envelopeClass, elementClass);
+        return objectMapper.readValue(msg.msg, type);
       }
-    } catch (IOException
-        | ClassCastException
-        | ClassNotFoundException
-        | InstantiationException
-        | IllegalAccessException e) {
-      log.error("Deserialization of message {} failed", message, e);
+    } catch (Exception e) {
+      log.warn("Deserialization of message {} failed", message, e);
     }
     return null;
   }
