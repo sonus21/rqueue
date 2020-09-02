@@ -73,8 +73,8 @@ public interface RqueueMessageManager {
 
   /**
    * Find the enqueued message. It will provide message upto {@link
-   * RqueueConfig#getMessageDurabilityInTerminalStateInSecond()} post consumption. Post that
-   * messages are deleted automatically.
+   * RqueueConfig#messageDurabilityInTerminalStateInSecond} post consumption. Post that messages are
+   * deleted automatically.
    *
    * @param queueName queue name on which message was enqueued
    * @param id message id
