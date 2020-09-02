@@ -172,7 +172,7 @@ class RqueueExecutor extends MessageContainerBase {
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
     int retryCount = getRetryCount();
-    int attempt = 0;
+    int attempt = 1;
     ExecutionStatus status;
     try {
       do {

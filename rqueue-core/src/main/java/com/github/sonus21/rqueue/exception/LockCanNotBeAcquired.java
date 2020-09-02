@@ -16,6 +16,10 @@
 
 package com.github.sonus21.rqueue.exception;
 
+/**
+ * Whenever a Redis lock can not be acuired due to some other is holding lock then this error would
+ * be thrown. The application should retry once this error occurs.
+ */
 public class LockCanNotBeAcquired extends RuntimeException {
 
   private static final long serialVersionUID = 598739372785907190L;
