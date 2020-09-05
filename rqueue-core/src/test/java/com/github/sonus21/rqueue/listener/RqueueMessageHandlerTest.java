@@ -16,8 +16,9 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
@@ -34,9 +35,9 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.StaticApplicationContext;
@@ -47,7 +48,7 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.support.MessageBuilder;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueMessageHandlerTest {
   private static final String testQueue = "test-queue";
   private static final String messagePayloadQueue = "message-queue";
@@ -220,7 +221,7 @@ public class RqueueMessageHandlerTest {
     assertEquals(slowQueue + "-dlq", messageHandler.mappingInformation.getDeadLetterQueueName());
   }
 
-  @Test(expected = BeanCreationException.class)
+  @Test
   public void concurrencyResolverInvalidValue() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
@@ -232,7 +233,7 @@ public class RqueueMessageHandlerTest {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    applicationContext.refresh();
+    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
   }
 
   @Test
@@ -269,7 +270,7 @@ public class RqueueMessageHandlerTest {
     assertEquals(new Concurrency(5, 10), messageHandler.mappingInformation.getConcurrency());
   }
 
-  @Test(expected = BeanCreationException.class)
+  @Test
   public void concurrencyResolverMinMaxMaxIsSmallerThanMin() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
@@ -281,10 +282,10 @@ public class RqueueMessageHandlerTest {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    applicationContext.refresh();
+    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
   }
 
-  @Test(expected = BeanCreationException.class)
+  @Test
   public void priorityResolverInvalidValue() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
@@ -296,10 +297,10 @@ public class RqueueMessageHandlerTest {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    applicationContext.refresh();
+    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
   }
 
-  @Test(expected = BeanCreationException.class)
+  @Test
   public void priorityResolverInvalidValue2() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
@@ -311,7 +312,7 @@ public class RqueueMessageHandlerTest {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    applicationContext.refresh();
+    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
   }
 
   @Test

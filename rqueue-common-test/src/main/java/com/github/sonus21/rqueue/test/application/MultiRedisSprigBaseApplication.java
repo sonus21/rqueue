@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.test.application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -26,7 +25,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -34,44 +32,24 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import redis.embedded.RedisServer;
 
 @Slf4j
-public abstract class MultiRedisSprigBaseApplication {
-
+public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicConfiguration {
   @Value("${spring.redis2.port}")
   private int redisPort2;
 
   @Value("${spring.redis2.host}")
   private String redisHost2;
 
-  private RedisServer redisServer;
-
-  @Value("${mysql.db.name}")
-  private String dbName;
-
-  @Value("${spring.redis.port}")
-  private int redisPort;
-
-  @Value("${spring.redis.host}")
-  private String redisHost;
-
   private RedisServer redisServer2;
-
   private ExecutorService executor;
   private List<String> lines = new ArrayList<>();
   Process process;
 
   @PostConstruct
   public void postConstruct() {
-    if (redisServer == null) {
-      redisServer = new RedisServer(redisPort);
-      redisServer.start();
-    }
+    init();
     if (redisServer2 == null) {
       redisServer2 = new RedisServer(redisPort2);
       redisServer2.start();
@@ -95,9 +73,7 @@ public abstract class MultiRedisSprigBaseApplication {
 
   @PreDestroy
   public void preDestroy() {
-    if (redisServer != null) {
-      redisServer.stop();
-    }
+    destroy();
     if (redisServer2 != null) {
       redisServer2.stop();
     }
@@ -111,24 +87,7 @@ public abstract class MultiRedisSprigBaseApplication {
 
   @Bean
   public LettuceConnectionFactory redisConnectionFactory() {
-    return new LettuceConnectionFactory(redisHost, redisPort2);
-  }
-
-  @Bean
-  public DataSource dataSource() {
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.H2).setName(dbName).build();
-  }
-
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.github.sonus21.rqueue.test.entity");
-    factory.setDataSource(dataSource());
-    return factory;
+    return new LettuceConnectionFactory(redisHost2, redisPort2);
   }
 
   @Bean
@@ -136,11 +95,6 @@ public abstract class MultiRedisSprigBaseApplication {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(redisConnectionFactory);
     return container;
-  }
-
-  @Bean
-  public ObjectMapper objectMapper() {
-    return new ObjectMapper();
   }
 
   @Bean

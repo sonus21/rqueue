@@ -16,11 +16,11 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -41,13 +41,12 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.powermock.api.mockito.PowerMockito;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueSystemManagerServiceImplTest {
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
@@ -66,7 +65,7 @@ public class RqueueSystemManagerServiceImplTest {
   private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
   private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
 
-  @Before
+  @BeforeEach
   public void init() {
     EndpointRegistry.delete();
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
@@ -107,7 +106,7 @@ public class RqueueSystemManagerServiceImplTest {
   @Test
   public void onApplicationEventStartCreateAllQueueConfigs() {
     doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
-    PowerMockito.doAnswer(
+    doAnswer(
             invocation -> {
               String name = invocation.getArgument(0);
               return "__rq::q-config::" + name;
@@ -152,7 +151,7 @@ public class RqueueSystemManagerServiceImplTest {
   public void onApplicationEventStartCreateAndUpdateQueueConfigs() {
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     EndpointRegistry.register(normalQueueDetail);
-    PowerMockito.doAnswer(
+    doAnswer(
             invocation -> {
               String name = invocation.getArgument(0);
               return "__rq::q-config::" + name;

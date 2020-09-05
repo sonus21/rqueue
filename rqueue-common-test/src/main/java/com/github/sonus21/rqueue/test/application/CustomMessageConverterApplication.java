@@ -16,17 +16,16 @@
 
 package com.github.sonus21.rqueue.test.application;
 
+import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import java.util.Collections;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.messaging.converter.ByteArrayMessageConverter;
 
-@Slf4j
-public abstract class BaseApplication extends ApplicationBasicConfiguration {
-
+public abstract class CustomMessageConverterApplication extends ApplicationBasicConfiguration {
   @PostConstruct
   public void postConstruct() {
     init();
@@ -43,9 +42,13 @@ public abstract class BaseApplication extends ApplicationBasicConfiguration {
   }
 
   @Bean
-  public RedisMessageListenerContainer container(RedisConnectionFactory redisConnectionFactory) {
-    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-    container.setConnectionFactory(redisConnectionFactory);
-    return container;
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
+      RedisConnectionFactory redisConnectionFactory) {
+    SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
+        new SimpleRqueueListenerContainerFactory();
+    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(redisConnectionFactory);
+    simpleRqueueListenerContainerFactory.setMessageConverters(
+        Collections.singletonList(new ByteArrayMessageConverter()));
+    return simpleRqueueListenerContainerFactory;
   }
 }

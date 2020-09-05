@@ -9,7 +9,7 @@ dependencies {
     // https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
     compile group: 'javax.annotation', name: 'javax.annotation-api', version: "${javaxAnnotationVersion}"
 
-    compile group: 'junit', name: 'junit', version: "${junitVersion}"
+    compile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
 
     compile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api

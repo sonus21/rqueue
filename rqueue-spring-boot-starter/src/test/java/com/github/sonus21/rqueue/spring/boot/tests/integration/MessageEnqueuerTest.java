@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
@@ -30,14 +30,14 @@ import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
 @Slf4j
 @TestPropertySource(

@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MessageRetryTest extends SpringTestBase {
+public abstract class BasicListenerTest extends SpringTestBase {
   protected void verifyAfterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
     cleanQueue(jobQueue);
     Job job = Job.newInstance();

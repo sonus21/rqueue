@@ -23,8 +23,8 @@ import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.core.MessageConverterFactory;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -33,13 +33,12 @@ import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.messaging.converter.StringMessageConverter;
 
 @Slf4j
 @SuppressWarnings("WeakerAccess")
@@ -51,13 +50,15 @@ abstract class BaseMessageSender {
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(RqueueMessageTemplate messageTemplate) {
-    notNull(messageTemplate, "messageTemplate cannot be null");
-    this.messageTemplate = messageTemplate;
+    this(messageTemplate, Collections.emptyList());
   }
 
-  protected void init(List<MessageConverter> messageConverters, boolean addDefault) {
-    this.messageConverter =
-        new CompositeMessageConverter(getMessageConverters(addDefault, messageConverters));
+  BaseMessageSender(
+      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
+    notNull(messageTemplate, "messageTemplate cannot be null");
+    notNull(messageConverters, "messageConverters cannot be null");
+    this.messageTemplate = messageTemplate;
+    this.messageConverter = MessageConverterFactory.getMessageConverter(messageConverters);
   }
 
   private void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
@@ -118,19 +119,6 @@ abstract class BaseMessageSender {
       return null;
     }
     return rqueueMessage.getId();
-  }
-
-  protected List<MessageConverter> getMessageConverters(
-      boolean addDefault, List<MessageConverter> messageConverters) {
-    List<MessageConverter> messageConverterList = new ArrayList<>();
-    StringMessageConverter stringMessageConverter = new StringMessageConverter();
-    stringMessageConverter.setSerializedPayloadClass(String.class);
-    messageConverterList.add(stringMessageConverter);
-    if (addDefault) {
-      messageConverterList.add(new GenericMessageConverter());
-    }
-    messageConverterList.addAll(messageConverters);
-    return messageConverterList;
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {

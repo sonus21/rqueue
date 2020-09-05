@@ -163,9 +163,10 @@ public abstract class MessageScheduler
     if (queueCount == 0) {
       return;
     }
-    scheduler =
-        ThreadUtils.createTaskScheduler(
-            min(getThreadPoolSize(), queueCount), getThreadNamePrefix(), 60);
+    int threadPoolSize = min(getThreadPoolSize(), queueCount);
+    String threadNamePrefix = getThreadNamePrefix();
+    int terminationTime = 60;
+    scheduler = ThreadUtils.createTaskScheduler(threadPoolSize, threadNamePrefix, terminationTime);
   }
 
   private boolean isQueueActive(String queueName) {

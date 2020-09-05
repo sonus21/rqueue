@@ -17,8 +17,9 @@
 package com.github.sonus21.rqueue.core;
 
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -34,16 +35,13 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueMessageSenderTest {
-  @Rule public ExpectedException expectedException = ExpectedException.none();
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageSender rqueueMessageSender =
       new RqueueMessageSenderImpl(rqueueMessageTemplate);
@@ -56,7 +54,7 @@ public class RqueueMessageSenderTest {
   private RqueueMessageMetadataService rqueueMessageMetadataService =
       mock(RqueueMessageMetadataService.class);
 
-  @Before
+  @BeforeEach
   public void init() throws IllegalAccessException {
     EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
@@ -67,16 +65,13 @@ public class RqueueMessageSenderTest {
 
   @Test
   public void putWithNullQueueName() {
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("queue cannot be empty");
-    rqueueMessageSender.enqueue(null, null);
+    assertThrows(IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(null, null));
   }
 
   @Test
   public void putWithNullMessage() {
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("message cannot be null");
-    rqueueMessageSender.enqueue(queueName, null);
+    assertThrows(
+        IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(queueName, null));
   }
 
   @Test

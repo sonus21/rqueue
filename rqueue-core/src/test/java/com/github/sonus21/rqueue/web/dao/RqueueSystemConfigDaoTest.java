@@ -16,8 +16,9 @@
 
 package com.github.sonus21.rqueue.web.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -32,11 +33,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueSystemConfigDaoTest {
   private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate = mock(RqueueRedisTemplate.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao =
@@ -80,14 +81,15 @@ public class RqueueSystemConfigDaoTest {
     rqueueSystemConfigDao.saveAllQConfig(Arrays.asList(queueConfig, queueConfig2));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void saveNullConfig() {
-    rqueueSystemConfigDao.saveQConfig(null);
+    assertThrows(IllegalArgumentException.class, () -> rqueueSystemConfigDao.saveQConfig(null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void saveIdNullConfig() {
     QueueConfig queueConfig = new QueueConfig();
-    rqueueSystemConfigDao.saveQConfig(queueConfig);
+    assertThrows(
+        IllegalArgumentException.class, () -> rqueueSystemConfigDao.saveQConfig(queueConfig));
   }
 }

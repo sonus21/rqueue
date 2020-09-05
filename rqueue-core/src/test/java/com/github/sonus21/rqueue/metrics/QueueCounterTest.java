@@ -19,8 +19,8 @@ package com.github.sonus21.rqueue.metrics;
 import static com.github.sonus21.rqueue.metrics.QueueCounter.EXECUTION_COUNT;
 import static com.github.sonus21.rqueue.metrics.QueueCounter.FAILURE_COUNT;
 import static com.github.sonus21.rqueue.metrics.RqueueMetrics.QUEUE_KEY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.metrics.MetricsPropertiesTest.MetricProperties;
@@ -29,11 +29,11 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class QueueCounterTest {
   private MetricProperties metricsProperties = new MetricProperties();
 

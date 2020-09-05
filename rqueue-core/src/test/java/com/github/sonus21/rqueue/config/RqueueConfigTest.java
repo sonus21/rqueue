@@ -16,10 +16,10 @@
 
 package com.github.sonus21.rqueue.config;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RqueueConfigTest {
   private RqueueConfig rqueueConfigVersion1 = new RqueueConfig(null, false, 1);
@@ -38,7 +38,7 @@ public class RqueueConfigTest {
     rqueueConfig.setQueueStatKeyPrefix("q-stat::");
   }
 
-  @Before
+  @BeforeEach
   public void init() {
     initialize(rqueueConfigVersion1);
     initialize(rqueueConfigVersion2);

@@ -16,37 +16,39 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 public class ValidatorTest {
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void validateMessage() {
-    Validator.validateMessage(null);
+    assertThrows(IllegalArgumentException.class, () -> Validator.validateMessage(null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void validateMessageId() {
-    Validator.validateMessageId(null);
+    assertThrows(IllegalArgumentException.class, () -> Validator.validateMessageId(null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void validateRetryCount() {
-    Validator.validateRetryCount(-1);
+    assertThrows(IllegalArgumentException.class, () -> Validator.validateRetryCount(-1));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void validateDelay() {
-    Validator.validateDelay(-100L);
+    assertThrows(IllegalArgumentException.class, () -> Validator.validateDelay(-100L));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void validateQueue() {
-    Validator.validateQueue(null);
+    assertThrows(IllegalArgumentException.class, () -> Validator.validateQueue(null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void validatePriority() {
-    Validator.validatePriority(null);
+    assertThrows(IllegalArgumentException.class, () -> Validator.validatePriority(null));
   }
 }

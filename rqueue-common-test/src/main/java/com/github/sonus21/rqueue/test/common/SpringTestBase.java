@@ -102,7 +102,9 @@ public abstract class SpringTestBase extends TestBase {
   protected String listEmailQueue;
 
   protected void enqueue(Object message, String queueName) {
-    RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, queueName, null, null);
+    RqueueMessage rqueueMessage =
+        RqueueMessageFactory.buildMessage(
+            rqueueMessageManager.getMessageConverter(), message, queueName, null, null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
   }
 
@@ -110,7 +112,8 @@ public abstract class SpringTestBase extends TestBase {
     for (int i = 0; i < n; i++) {
       Object object = factory.next(i);
       RqueueMessage rqueueMessage =
-          RqueueMessageFactory.buildMessage(object, queueName, null, null);
+          RqueueMessageFactory.buildMessage(
+              rqueueMessageManager.getMessageConverter(), object, queueName, null, null);
       rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
     }
   }
@@ -120,13 +123,16 @@ public abstract class SpringTestBase extends TestBase {
       Object object = factory.next(i);
       long score = delay.getDelay(i);
       RqueueMessage rqueueMessage =
-          RqueueMessageFactory.buildMessage(object, zsetName, null, score);
+          RqueueMessageFactory.buildMessage(
+              rqueueMessageManager.getMessageConverter(), object, zsetName, null, score);
       rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
     }
   }
 
   protected void enqueueIn(Object message, String zsetName, long delay) {
-    RqueueMessage rqueueMessage = RqueueMessageFactory.buildMessage(message, zsetName, null, delay);
+    RqueueMessage rqueueMessage =
+        RqueueMessageFactory.buildMessage(
+            rqueueMessageManager.getMessageConverter(), message, zsetName, null, delay);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
   }
 

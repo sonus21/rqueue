@@ -16,21 +16,21 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RqueueEndpointManagerTest {
   private final RqueueEndpointManager rqueueEndpointManager =
       new RqueueEndpointManagerImpl(mock(RqueueMessageTemplate.class));
   RqueueConfig rqueueConfig = mock(RqueueConfig.class);
 
-  @Before
+  @BeforeEach
   public void init() throws IllegalAccessException {
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
   }

@@ -14,51 +14,34 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring.tests.integration;
+package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.test.tests.AllQueueMode;
+import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.web.WebAppConfiguration;
 
-@ContextConfiguration(classes = SpringApp.class)
 @ExtendWith(RqueueSpringTestRunner.class)
+@ContextConfiguration(classes = Application.class)
+@SpringBootTest
 @Slf4j
-@WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=7011",
-      "mysql.db.name=StrictHeterogeneousQueueListener",
-      "sms.queue.active=true",
-      "notification.queue.active=false",
-      "email.queue.active=true",
-      "job.queue.active=true",
+      "rqueue.retry.per.poll=1000",
+      "spring.redis.port=8010",
+      "reservation.request.active=true",
+      "mysql.db.name=CustomMessageConverterTest",
       "use.system.redis=false",
-      "priority.mode=STRICT",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true"
     })
-public class StrictHeterogeneousQueueListener extends AllQueueMode {
-
+public class CustomMessageConverterTest extends BasicListenerTest {
   @Test
-  public void verifySimpleQueue() throws TimedOutException {
-    testSimpleConsumer();
-  }
-
-  @Test
-  public void verifyQueueLevelConsumer() throws TimedOutException {
-    checkQueueLevelConsumer();
-  }
-
-  @Test
-  public void verifyGroupConsumer() throws TimedOutException {
-    checkGroupConsumer();
+  public void verifyListenerIsWorking() throws TimedOutException {
+    verifySimpleTaskExecution();
   }
 }

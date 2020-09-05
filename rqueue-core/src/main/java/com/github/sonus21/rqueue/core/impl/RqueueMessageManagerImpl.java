@@ -16,10 +16,7 @@
 
 package com.github.sonus21.rqueue.core.impl;
 
-import static org.springframework.util.Assert.notEmpty;
-
 import com.github.sonus21.rqueue.common.RqueueLockManager;
-import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
@@ -43,22 +40,13 @@ import org.springframework.messaging.support.MessageBuilder;
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
   @Autowired private RqueueLockManager rqueueLockManager;
 
-  private RqueueMessageManagerImpl(
-      RqueueMessageTemplate messageTemplate,
-      List<MessageConverter> messageConverters,
-      boolean addDefault) {
-    super(messageTemplate);
-    notEmpty(messageConverters, "messageConverters cannot be empty");
-    init(messageConverters, addDefault);
-  }
-
   public RqueueMessageManagerImpl(RqueueMessageTemplate messageTemplate) {
-    this(messageTemplate, Collections.singletonList(new GenericMessageConverter()), false);
+    super(messageTemplate, Collections.emptyList());
   }
 
   public RqueueMessageManagerImpl(
       RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    this(messageTemplate, messageConverters, false);
+    super(messageTemplate, messageConverters);
   }
 
   @Override

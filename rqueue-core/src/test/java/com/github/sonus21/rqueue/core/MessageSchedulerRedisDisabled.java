@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
@@ -27,26 +27,19 @@ import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import org.mockito.quality.Strictness;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(fullyQualifiedNames = {"com.github.sonus21.rqueue.utils.ThreadUtils"})
+@ExtendWith(MockitoExtension.class)
 public class MessageSchedulerRedisDisabled {
-  @Rule public MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
-
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
   @Mock private RedisTemplate<String, Long> redisTemplate;
 
@@ -55,9 +48,10 @@ public class MessageSchedulerRedisDisabled {
   private String slowQueue = "slow-queue";
   private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
 
-  @Before
+  @BeforeEach
   public void init() {
-    MockitoAnnotations.initMocks(this);
+    MockitoAnnotations.openMocks(this);
+    EndpointRegistry.delete();
     EndpointRegistry.register(slowQueueDetail);
   }
 
@@ -65,13 +59,14 @@ public class MessageSchedulerRedisDisabled {
   public void startShouldSubmitsTaskWhenRedisIsDisabled() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
-    PowerMockito.stub(
-            PowerMockito.method(
-                ThreadUtils.class, "createTaskScheduler", Integer.TYPE, String.class, Integer.TYPE))
-        .toReturn(scheduler);
-    messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-    assertEquals(1, scheduler.tasks.size());
-    assertNull(FieldUtils.readField(messageScheduler, "messageSchedulerListener", true));
-    messageScheduler.destroy();
+    try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
+      threadUtils
+          .when(() -> ThreadUtils.createTaskScheduler(1, "delayedMessageScheduler-", 60))
+          .thenReturn(scheduler);
+      messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
+      assertEquals(1, scheduler.tasks.size());
+      assertNull(FieldUtils.readField(messageScheduler, "messageSchedulerListener", true));
+      messageScheduler.destroy();
+    }
   }
 }

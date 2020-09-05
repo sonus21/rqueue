@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -45,16 +45,16 @@ import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.converter.MessageConverter;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
 public class RqueueExecutorTest {
   private RqueueMessageListenerContainer container = mock(RqueueMessageListenerContainer.class);
@@ -79,7 +79,7 @@ public class RqueueExecutorTest {
   private String queueName = "test-queue";
   private MessageMetadata defaultMessageMetadata;
 
-  @Before
+  @BeforeEach
   public void init() throws IllegalAccessException {
     rqueueMessage.setMessage("test message");
     MessageProcessorHandler messageProcessorHandler =

@@ -16,21 +16,22 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(RqueueSpringTestRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
@@ -40,8 +41,8 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
   public void moveMessageFromDeadLetterQueueToOriginalQueue() {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10);
     rqueueMessageSender.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(emailQueue).intValue());
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue).intValue());
+    assertEquals(10, stringRqueueRedisTemplate.getListSize(emailQueue).intValue());
+    assertEquals(0, stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue).intValue());
   }
 
   @Test
@@ -50,11 +51,11 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
     String queue2 = emailQueue + "t";
     enqueue(queue1, i -> Email.newInstance(), 10);
     rqueueMessageTemplate.moveMessageListToList(queue1, queue2, 10);
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(queue2).intValue());
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(queue1).intValue());
+    assertEquals(10, stringRqueueRedisTemplate.getListSize(queue2).intValue());
+    assertEquals(0, stringRqueueRedisTemplate.getListSize(queue1).intValue());
     rqueueMessageTemplate.moveMessageListToList(queue2, queue1, 10);
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(queue1).intValue());
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(queue2).intValue());
+    assertEquals(10, stringRqueueRedisTemplate.getListSize(queue1).intValue());
+    assertEquals(0, stringRqueueRedisTemplate.getListSize(queue2).intValue());
   }
 
   @Test
@@ -64,8 +65,8 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
     enqueue(queue, i -> Email.newInstance(), 10);
     long score = System.currentTimeMillis() - 10000;
     rqueueMessageTemplate.moveMessageListToZset(queue, tgtZset, 10, score);
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getListSize(queue).intValue());
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
+    assertEquals(0, stringRqueueRedisTemplate.getListSize(queue).intValue());
+    assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
   }
 
   @Test
@@ -74,8 +75,8 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
     String list = notificationQueue + "list";
     enqueueIn(zset, i -> Notification.newInstance(), i -> 50000L, 10);
     rqueueMessageTemplate.moveMessageZsetToList(zset, list, 10);
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getListSize(list).intValue());
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(zset).intValue());
+    assertEquals(10, stringRqueueRedisTemplate.getListSize(list).intValue());
+    assertEquals(0, stringRqueueRedisTemplate.getZsetSize(zset).intValue());
   }
 
   @Test
@@ -84,11 +85,11 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
     String tgtZset = jobQueue + "tgt";
     enqueueIn(srcZset, i -> Job.newInstance(), i -> 5000L, 10);
     rqueueMessageTemplate.moveMessageZsetToZset(srcZset, tgtZset, 10, 0, false);
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(srcZset).intValue());
+    assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
+    assertEquals(0, stringRqueueRedisTemplate.getZsetSize(srcZset).intValue());
 
     rqueueMessageTemplate.moveMessageZsetToZset(tgtZset, "_rq::xx" + jobQueue, 10, 0, false);
-    Assert.assertEquals(0, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
-    Assert.assertEquals(10, stringRqueueRedisTemplate.getZsetSize("_rq::xx" + jobQueue).intValue());
+    assertEquals(0, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
+    assertEquals(10, stringRqueueRedisTemplate.getZsetSize("_rq::xx" + jobQueue).intValue());
   }
 }

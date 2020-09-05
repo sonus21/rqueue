@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
@@ -28,17 +28,17 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class MessageSchedulerTest {
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
   @Mock private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
@@ -52,9 +52,9 @@ public class MessageSchedulerTest {
   private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
   private Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
 
-  @Before
+  @BeforeEach
   public void init() {
-    MockitoAnnotations.initMocks(this);
+    MockitoAnnotations.openMocks(this);
     queueNameToQueueDetail.put(slowQueue, slowQueueDetail);
     queueNameToQueueDetail.put(fastQueue, fastQueueDetail);
   }

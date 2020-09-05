@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>{{ default(title, 'Rqueue Dashboard') }}</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self';font-src fonts.gstatic.com;style-src 'self' fonts.googleapis.com;script-src 'self' gstatic.com">
   <meta content='Rqueue' name="description">
   <meta content='Rqueue, task queue, delayed queue, delayed tasks, asynchronous processor' name="keywords">
+  <title>{{ default(title, 'Rqueue Dashboard') }}</title>
   <link rel="shortcut icon" href="{{urlPrefix}}rqueue/img/favicon.ico">
   <link href="{{urlPrefix}}rqueue/img/apple-touch-icon.png" rel="apple-touch-icon">
   <link rel="icon" type="image/png" sizes="16x16" href="{{urlPrefix}}rqueue/img/favicon-16x16.png">

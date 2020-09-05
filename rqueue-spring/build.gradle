@@ -9,3 +9,7 @@ dependencies {
     compile project(":rqueue-core")
     testCompile project(":rqueue-common-test")
 }
+
+test {
+    useJUnitPlatform()
+}

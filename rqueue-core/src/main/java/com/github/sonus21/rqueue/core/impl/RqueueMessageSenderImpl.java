@@ -22,10 +22,8 @@ import static com.github.sonus21.rqueue.utils.Validator.validatePriority;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
 import static org.springframework.util.Assert.isTrue;
-import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
@@ -44,23 +42,13 @@ import org.springframework.messaging.converter.MessageConverter;
 @Slf4j
 public class RqueueMessageSenderImpl extends BaseMessageSender implements RqueueMessageSender {
 
-  private RqueueMessageSenderImpl(
-      RqueueMessageTemplate messageTemplate,
-      List<MessageConverter> messageConverters,
-      boolean addDefault) {
-    super(messageTemplate);
-    notNull(messageTemplate, "messageTemplate cannot be null");
-    notEmpty(messageConverters, "messageConverters cannot be empty");
-    init(messageConverters, addDefault);
-  }
-
   public RqueueMessageSenderImpl(RqueueMessageTemplate messageTemplate) {
-    this(messageTemplate, Collections.singletonList(new GenericMessageConverter()), false);
+    this(messageTemplate, Collections.emptyList());
   }
 
   public RqueueMessageSenderImpl(
       RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    this(messageTemplate, messageConverters, false);
+    super(messageTemplate, messageConverters);
   }
 
   @Override

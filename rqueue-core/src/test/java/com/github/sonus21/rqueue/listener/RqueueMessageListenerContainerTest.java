@@ -17,10 +17,10 @@
 package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -41,15 +41,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueMessageListenerContainerTest {
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
@@ -63,7 +63,7 @@ public class RqueueMessageListenerContainerTest {
       new RqueueMessageListenerContainer(rqueueMessageHandler, mock(RqueueMessageTemplate.class));
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
 
-  @Before
+  @BeforeEach
   public void init() throws IllegalAccessException {
     FieldUtils.writeField(
         container, "rqueueMessageMetadataService", mock(RqueueMessageMetadataService.class), true);
@@ -258,8 +258,8 @@ public class RqueueMessageListenerContainerTest {
     doAnswer(
             i -> {
               RqueueMessage rqueueMessage = i.getArgument(0);
-              MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage,
-                  MessageStatus.ENQUEUED);
+              MessageMetadata messageMetadata =
+                  new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
               messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
               return messageMetadata;
             })
@@ -325,8 +325,8 @@ public class RqueueMessageListenerContainerTest {
     doAnswer(
             i -> {
               RqueueMessage rqueueMessage = i.getArgument(0);
-              MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage,
-                  MessageStatus.ENQUEUED);
+              MessageMetadata messageMetadata =
+                  new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
               messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
               return messageMetadata;
             })

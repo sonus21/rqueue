@@ -17,8 +17,8 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class MessageChannelTest extends SpringTestBase {
-  private int messageCount = 200;
+  private final int messageCount = 200;
   /**
    * This test verified whether any pending message in the delayed queue are moved or not Whenever a
    * delayed message is pushed then it's checked whether there're any pending messages on delay
@@ -50,9 +50,9 @@ public abstract class MessageChannelTest extends SpringTestBase {
         () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
         "one or zero messages in zset");
     assertTrue(
-        "Messages are correctly moved",
         stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
-            >= messageCount);
+            >= messageCount,
+        "Messages are correctly moved");
     assertEquals(messageCount + 1L, getAllMessages(emailQueue).size());
   }
 
@@ -78,9 +78,11 @@ public abstract class MessageChannelTest extends SpringTestBase {
         "messages to be consumed");
     waitFor(
         () -> messageCount == consumedMessageService.getMessages(ids, Job.class).size(),
+        30 * Constants.ONE_MILLI,
         "message count to be matched");
     waitFor(
         () -> jobs.containsAll(consumedMessageService.getMessages(ids, Job.class).values()),
+        30 * Constants.ONE_MILLI,
         "All jobs to be executed");
   }
 }

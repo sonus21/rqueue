@@ -16,9 +16,10 @@
 
 package com.github.sonus21.rqueue.spring.tests.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -38,14 +39,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = SpringApp.class)
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(RqueueSpringTestRunner.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -109,9 +110,9 @@ public class SpringAppTest extends AllQueueMode {
     assertEquals(email.getId(), email1.getId());
   }
 
-  @Test(expected = QueueDoesNotExist.class)
+  @Test
   public void testQueueDoesNotExist() {
-    assertTrue(enqueue("job-push", Email.newInstance()));
+    assertThrows(QueueDoesNotExist.class, () -> enqueue("job-push", Email.newInstance()));
   }
 
   @Test

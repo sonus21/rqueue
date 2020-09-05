@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.web.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -40,7 +40,6 @@ import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
-import com.github.sonus21.test.RunTestUntilFail;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -48,14 +47,12 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @Slf4j
 public class RqueueTaskAggregatorServiceTest {
-  @Rule public RunTestUntilFail retry = new RunTestUntilFail(log);
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
@@ -65,7 +62,7 @@ public class RqueueTaskAggregatorServiceTest {
           rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
   private String queueName = "test-queue";
 
-  @Before
+  @BeforeEach
   public void initService() throws IllegalAccessException {
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();
@@ -202,7 +199,7 @@ public class RqueueTaskAggregatorServiceTest {
     assertEquals(tasksStat.retried, statistics.tasksRetried(date));
   }
 
-  @After
+  @AfterEach
   public void clean() throws Exception {
     rqueueTaskAggregatorService.destroy();
   }

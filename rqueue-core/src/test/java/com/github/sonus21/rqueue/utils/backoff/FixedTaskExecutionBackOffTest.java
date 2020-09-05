@@ -16,9 +16,10 @@
 
 package com.github.sonus21.rqueue.utils.backoff;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FixedTaskExecutionBackOffTest {
 
@@ -48,13 +49,13 @@ public class FixedTaskExecutionBackOffTest {
     assertEquals(-1, backOff.nextBackOff(null, null, 3));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void constructNegativeInterval() {
-    new FixedTaskExecutionBackOff(-1, 100);
+    assertThrows(IllegalArgumentException.class, () -> new FixedTaskExecutionBackOff(-1, 100));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void constructNegativeRetries() {
-    new FixedTaskExecutionBackOff(100L, -1);
+    assertThrows(IllegalArgumentException.class, () -> new FixedTaskExecutionBackOff(100L, -1));
   }
 }

@@ -23,3 +23,11 @@ dependencies {
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
     testCompile project(":rqueue-test-util")
 }
+
+test {
+    useJUnitPlatform()
+    retry {
+        failOnPassedAfterRetry = true
+        maxFailures = 0
+    }
+}
