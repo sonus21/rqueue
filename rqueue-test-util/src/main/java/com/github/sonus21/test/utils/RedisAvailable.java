@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.test.utils;
+package com.github.sonus21.test.utils;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(RedisAvailableCondition.class)
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RedisAvailable {}
+public @interface RedisAvailable {
+  String[] nodes() default {};
+}

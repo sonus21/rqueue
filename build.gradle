@@ -2,8 +2,6 @@ plugins {
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'nebula.optional-base' version '5.0.2'
-    id 'org.gradle.test-retry' version '1.0.0'
-
 }
 allprojects {
     apply plugin: 'idea'
@@ -13,7 +11,6 @@ allprojects {
     apply plugin: 'signing'
     apply plugin: 'jacoco'
     apply plugin: 'nebula.optional-base'
-    apply plugin: 'test-retry'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8

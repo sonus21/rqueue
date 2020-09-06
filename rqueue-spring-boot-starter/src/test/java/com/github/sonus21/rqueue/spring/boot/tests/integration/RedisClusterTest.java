@@ -20,20 +20,20 @@ import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.utils.RedisAvailable;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(RqueueSpringTestRunner.class)
+@ExtendWith({RqueueSpringTestRunner.class})
 @ContextConfiguration(classes = RedisClusterApplication.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8007"})
-@Disabled
+@RedisAvailable(nodes = {":9000", ":9001", ":9002", ":9003", ":9004", ":9005"})
 public class RedisClusterTest extends BasicListenerTest {
 
   @Test

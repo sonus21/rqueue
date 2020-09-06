@@ -10,6 +10,7 @@ env:
     - ORG_GRADLE_PROJECT_sonatypeUsername=xxx
     - ORG_GRADLE_PROJECT_sonatypePassword=xxx
     - USER_NAME=rqueue
+    - REDIS_RUNNING=true
 
 cache:
   directories:
