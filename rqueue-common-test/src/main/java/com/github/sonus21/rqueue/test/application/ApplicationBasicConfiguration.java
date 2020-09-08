@@ -17,9 +17,20 @@
 package com.github.sonus21.rqueue.test.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.sql.DataSource;
+import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.RedisNode;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -28,6 +39,16 @@ import redis.embedded.RedisServer;
 
 public abstract class ApplicationBasicConfiguration {
   protected RedisServer redisServer;
+  protected ExecutorService executorService;
+  protected List<RProcess> processes;
+  private static final Logger monitorLogger = LoggerFactory.getLogger("monitor");
+
+  @AllArgsConstructor
+  public static class RProcess {
+    Process process;
+    RedisNode redisNode;
+    List<String> out;
+  }
 
   @Value("${mysql.db.name}")
   protected String dbName;
@@ -41,7 +62,14 @@ public abstract class ApplicationBasicConfiguration {
   @Value("${use.system.redis:false}")
   protected boolean useSystemRedis;
 
+  @Value("${monitor.thread.count:0}")
+  protected int monitorThreads;
+
   protected void init() {
+    if (monitorThreads > 0) {
+      executorService = Executors.newFixedThreadPool(monitorThreads);
+      processes = new ArrayList<>();
+    }
     if (useSystemRedis) {
       return;
     }
@@ -55,6 +83,41 @@ public abstract class ApplicationBasicConfiguration {
     if (redisServer != null) {
       redisServer.stop();
     }
+
+    if (processes != null) {
+      for (RProcess rProcess : processes) {
+        rProcess.process.destroy();
+        monitorLogger.info("RedisNode {} ", rProcess.redisNode);
+        for (String line : rProcess.out) {
+          monitorLogger.info("{}", line);
+        }
+      }
+    }
+    if (executorService != null) {
+      executorService.shutdown();
+    }
+  }
+
+  protected void monitor(String host, int port) {
+    executorService.submit(
+        () -> {
+          try {
+            Process process =
+                Runtime.getRuntime()
+                    .exec("redis-cli " + " -h " + host + " -p " + port + " monitor");
+            List<String> lines = new LinkedList<>();
+            RProcess rProcess = new RProcess(process, new RedisNode(host, port), lines);
+            processes.add(rProcess);
+            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String s;
+            while ((s = br.readLine()) != null) {
+              lines.add(s);
+            }
+            process.waitFor();
+          } catch (Exception e) {
+            monitorLogger.error("Process call failed", e);
+          }
+        });
   }
 
   @Bean

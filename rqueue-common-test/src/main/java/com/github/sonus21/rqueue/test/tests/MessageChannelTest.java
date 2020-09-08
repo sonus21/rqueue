@@ -36,9 +36,9 @@ public abstract class MessageChannelTest extends SpringTestBase {
   private final int messageCount = 200;
   /**
    * This test verified whether any pending message in the delayed queue are moved or not Whenever a
-   * delayed message is pushed then it's checked whether there're any pending messages on delay
-   * queue. if expired delayed messages are found on the head then a message is published on delayed
-   * channel.
+   * delayed message is pushed. During enqueue of delayed message we check whether there are any
+   * pending messages on the delay queue, if expired delayed messages are found on the head then a
+   * message is published on delayed channel.
    */
   protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
@@ -56,11 +56,17 @@ public abstract class MessageChannelTest extends SpringTestBase {
     assertEquals(messageCount + 1L, getAllMessages(emailQueue).size());
   }
 
+  /**
+   * This test verified whether any pending message in the processing queue are moved or not
+   * whenever a a message is pop. During pop of simple message we check whether there are any
+   * pending messages on the processing queue, if expired messages are found on the head then a
+   * message is published on processing channel.
+   */
   protected void verifyPublishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
-    String processingQueueName = jobQueue;
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();
     int maxDelay = 2000;
+    String processingQueue = rqueueConfig.getProcessingQueueName(jobQueue);
     for (int i = 0; i < messageCount; i++) {
       Job job = Job.newInstance();
       jobs.add(job);
@@ -69,7 +75,7 @@ public abstract class MessageChannelTest extends SpringTestBase {
       if (random.nextBoolean()) {
         delay = delay * -1;
       }
-      enqueueIn(job, processingQueueName, delay);
+      enqueueIn(job, processingQueue, delay);
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(

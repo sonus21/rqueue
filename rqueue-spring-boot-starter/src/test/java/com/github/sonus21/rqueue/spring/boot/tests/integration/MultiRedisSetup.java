@@ -36,7 +36,8 @@ import org.springframework.test.context.TestPropertySource;
       "rqueue.retry.per.poll=1000",
       "spring.redis.port=8005",
       "spring.redis2.port=8006",
-      "spring.redis2.host=localhost"
+      "spring.redis2.host=localhost",
+      "monitor.thread.count=1",
     })
 public class MultiRedisSetup extends BasicListenerTest {
 

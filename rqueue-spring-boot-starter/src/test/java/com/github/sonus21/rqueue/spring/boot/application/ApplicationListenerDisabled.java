@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.application.BaseApplication;
+import javax.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +30,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @PropertySource("classpath:application.properties")
@@ -39,6 +41,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class ApplicationListenerDisabled extends BaseApplication {
   public static void main(String[] args) {
     SpringApplication.run(ApplicationListenerDisabled.class, args);
+  }
+
+  @PostConstruct
+  @Override
+  public void postConstruct() {
+    init();
+    monitor(redisHost, redisPort);
   }
 
   @Bean

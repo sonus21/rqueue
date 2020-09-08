@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisa
 import com.github.sonus21.rqueue.test.tests.MessageChannelTest;
 import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,10 +36,12 @@ import org.springframework.test.context.TestPropertySource;
       "spring.redis.port=8002",
       "mysql.db.name=BootMessageChannelTest",
       "max.workers.count=120",
-      "use.system.redis=false"
+      "use.system.redis=false",
+      "monitor.thread.count=1",
     })
 @SpringBootTest
 @Slf4j
+@Disabled
 public class BootMessageChannelTest extends MessageChannelTest {
 
   @Test

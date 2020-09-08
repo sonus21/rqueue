@@ -17,12 +17,6 @@
 package com.github.sonus21.rqueue.test.application;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -43,9 +37,6 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
   private String redisHost2;
 
   private RedisServer redisServer2;
-  private ExecutorService executor;
-  private List<String> lines = new ArrayList<>();
-  Process process;
 
   @PostConstruct
   public void postConstruct() {
@@ -54,21 +45,7 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
       redisServer2 = new RedisServer(redisPort2);
       redisServer2.start();
     }
-    executor = Executors.newSingleThreadExecutor();
-    executor.submit(
-        () -> {
-          try {
-            process = Runtime.getRuntime().exec("redis-cli -p " + redisPort + " monitor");
-            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String s;
-            while ((s = br.readLine()) != null) {
-              lines.add(s);
-            }
-            process.waitFor();
-          } catch (Exception e) {
-            log.error("Process call failed", e);
-          }
-        });
+    monitor(redisHost, redisPort);
   }
 
   @PreDestroy
@@ -77,11 +54,10 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
     if (redisServer2 != null) {
       redisServer2.stop();
     }
-    if (process != null) {
-      process.destroy();
-    }
-    for (String line : lines) {
-      assert line.equals("OK");
+    for (RProcess rProcess : processes) {
+      for (String line : rProcess.out) {
+        assert line.equals("OK");
+      }
     }
   }
 
