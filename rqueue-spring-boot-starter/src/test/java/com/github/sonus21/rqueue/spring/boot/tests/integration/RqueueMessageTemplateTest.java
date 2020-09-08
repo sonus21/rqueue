@@ -23,7 +23,7 @@ import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.SpringTestRunnerTracer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +31,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestRunnerTracer.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j

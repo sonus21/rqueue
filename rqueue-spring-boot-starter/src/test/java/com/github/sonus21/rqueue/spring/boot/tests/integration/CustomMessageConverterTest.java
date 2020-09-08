@@ -17,9 +17,9 @@
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.application.MessageConverterApplication;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.SpringTestRunnerTracer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +27,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(RqueueSpringTestRunner.class)
-@ContextConfiguration(classes = Application.class)
+@ExtendWith(SpringTestRunnerTracer.class)
+@ContextConfiguration(classes = MessageConverterApplication.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(

@@ -14,40 +14,38 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.spring.tests.integration;
+package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.test.tests.GroupPriorityTest;
+import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
+import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
 import com.github.sonus21.test.SpringTestRunnerTracer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.web.WebAppConfiguration;
 
-@ContextConfiguration(classes = SpringApp.class)
 @ExtendWith(SpringTestRunnerTracer.class)
-@Slf4j
-@WebAppConfiguration
+@ContextConfiguration(classes = ApplicationListenerDisabled.class)
 @TestPropertySource(
     properties = {
-      "spring.redis.port=7010",
-      "mysql.db.name=WeightedPriorityQueueListener",
-      "sms.queue.active=false",
-      "notification.queue.active=false",
-      "email.queue.active=false",
-      "job.queue.active=false",
+      "rqueue.scheduler.auto.start=false",
+      "spring.redis.port=8002",
+      "mysql.db.name=BootMessageChannelTest",
+      "max.workers.count=120",
       "use.system.redis=false",
-      "priority.mode=WEIGHTED",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true"
+      "monitor.thread.count=1",
     })
-public class WeightedPriorityQueueListener extends GroupPriorityTest {
+@SpringBootTest
+@Slf4j
+public class BootDelayedChannelTest extends MessageChannelTests {
+
   @Test
-  public void simple() throws TimedOutException {
-    checkGroupConsumer();
+  public void publishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
+    verifyPublishMessageIsTriggeredOnMessageAddition();
   }
+
+
 }

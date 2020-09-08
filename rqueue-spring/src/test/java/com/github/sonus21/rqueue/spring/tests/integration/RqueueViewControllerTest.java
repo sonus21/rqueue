@@ -25,7 +25,7 @@ import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.SpringTestRunnerTracer;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.jtwig.spring.JtwigView;
@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.ui.ModelMap;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestRunnerTracer.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(

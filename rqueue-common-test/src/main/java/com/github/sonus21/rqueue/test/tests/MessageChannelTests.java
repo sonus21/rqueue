@@ -32,10 +32,10 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MessageChannelTest extends SpringTestBase {
+public abstract class MessageChannelTests extends SpringTestBase {
   private final int messageCount = 200;
   /**
-   * This test verified whether any pending message in the delayed queue are moved or not Whenever a
+   * This test verifies whether any pending message in the delayed queue are moved or not whenever a
    * delayed message is pushed. During enqueue of delayed message we check whether there are any
    * pending messages on the delay queue, if expired delayed messages are found on the head then a
    * message is published on delayed channel.
@@ -57,10 +57,10 @@ public abstract class MessageChannelTest extends SpringTestBase {
   }
 
   /**
-   * This test verified whether any pending message in the processing queue are moved or not
-   * whenever a a message is pop. During pop of simple message we check whether there are any
-   * pending messages on the processing queue, if expired messages are found on the head then a
-   * message is published on processing channel.
+   * This test verifies whether any pending message in the processing queue are moved or not
+   * whenever a message is pop. During pop of simple message we check whether there are any pending
+   * messages on the processing queue, if expired messages are found on the head then a message is
+   * published on processing channel.
    */
   protected void verifyPublishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
     List<Job> jobs = new ArrayList<>();

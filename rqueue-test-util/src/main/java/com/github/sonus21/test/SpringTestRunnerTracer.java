@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-public class RqueueSpringTestRunner extends SpringExtension {
+public class SpringTestRunnerTracer extends SpringExtension {
 
   @Override
   public void beforeAll(ExtensionContext context) throws Exception {

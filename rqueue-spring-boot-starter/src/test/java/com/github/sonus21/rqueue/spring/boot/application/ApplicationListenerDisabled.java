@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.application.BaseApplication;
 import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @PropertySource("classpath:application.properties")
@@ -42,6 +42,9 @@ public class ApplicationListenerDisabled extends BaseApplication {
   public static void main(String[] args) {
     SpringApplication.run(ApplicationListenerDisabled.class, args);
   }
+
+  @Value("${start.queue.enabled:false}")
+  private boolean startQueueEnabled;
 
   @PostConstruct
   @Override
@@ -59,6 +62,9 @@ public class ApplicationListenerDisabled extends BaseApplication {
   @Bean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
+    if (startQueueEnabled) {
+      return new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate);
+    }
     return new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate) {
       @Override
       protected void startQueue(String queueName, QueueDetail queueDetail) {}

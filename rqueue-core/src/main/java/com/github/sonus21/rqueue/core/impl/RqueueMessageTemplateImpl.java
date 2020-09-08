@@ -60,7 +60,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       long visibilityTimeout) {
     long currentTime = System.currentTimeMillis();
     RedisScript<RqueueMessage> script =
-        (RedisScript<RqueueMessage>) getScript(ScriptType.POP_MESSAGE);
+        (RedisScript<RqueueMessage>) getScript(ScriptType.DEQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(queueName, processingQueueName, processingChannelName),
@@ -72,7 +72,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   public Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage) {
     long queuedTime = rqueueMessage.getQueuedTime();
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ADD_MESSAGE);
+    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ENQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(delayQueueName, delayQueueChannelName),

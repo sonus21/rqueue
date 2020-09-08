@@ -47,7 +47,7 @@ import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.SpringTestRunnerTracer;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +61,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestRunnerTracer.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(

@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.test.SpringTestRunnerTracer;
 import com.github.sonus21.test.utils.RedisAvailable;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith({RqueueSpringTestRunner.class})
+@ExtendWith({SpringTestRunnerTracer.class})
 @ContextConfiguration(classes = RedisClusterApplication.class)
 @SpringBootTest
 @Slf4j

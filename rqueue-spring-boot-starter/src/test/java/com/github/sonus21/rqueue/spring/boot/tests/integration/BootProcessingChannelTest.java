@@ -18,8 +18,8 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
-import com.github.sonus21.rqueue.test.tests.MessageChannelTest;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
+import com.github.sonus21.test.SpringTestRunnerTracer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -27,28 +27,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.DisabledIf;
 
-@ExtendWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestRunnerTracer.class)
 @ContextConfiguration(classes = ApplicationListenerDisabled.class)
 @TestPropertySource(
     properties = {
       "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=8002",
+      "spring.redis.port=8011",
       "mysql.db.name=BootMessageChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
       "monitor.thread.count=1",
+      "start.queue.enabled=true",
     })
 @SpringBootTest
 @Slf4j
-@Disabled
-public class BootMessageChannelTest extends MessageChannelTest {
-
-  @Test
-  public void publishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
-    verifyPublishMessageIsTriggeredOnMessageAddition();
-  }
-
+@DisabledIf
+public class BootProcessingChannelTest extends MessageChannelTests {
   @Test
   public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
     verifyPublishMessageIsTriggeredOnMessageRemoval();
