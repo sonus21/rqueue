@@ -33,7 +33,7 @@ import org.springframework.test.context.TestPropertySource;
     properties = {
       "rqueue.scheduler.auto.start=false",
       "spring.redis.port=8002",
-      "mysql.db.name=BootMessageChannelTest",
+      "mysql.db.name=BootDelayedChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
       "monitor.thread.count=1",

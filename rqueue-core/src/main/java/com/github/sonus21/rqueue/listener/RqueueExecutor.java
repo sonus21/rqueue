@@ -113,7 +113,7 @@ class RqueueExecutor extends MessageContainerBase {
     if (this.messageMetadata.isDeleted()) {
       return true;
     }
-    this.messageMetadata = rqueueMessageMetadataService.get(messageMetadata.getId());
+    this.messageMetadata = rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
     return this.messageMetadata.isDeleted();
   }
 

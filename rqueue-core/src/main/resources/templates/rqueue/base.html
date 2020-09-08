@@ -3,15 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self';font-src fonts.gstatic.com;style-src 'self' fonts.googleapis.com;script-src 'self' gstatic.com">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' *.gstatic.com *.googleapis.com {% for nonce in nonces %} 'nonce-{{nonce}}' {% endfor %}">
   <meta content='Rqueue' name="description">
-  <meta content='Rqueue, task queue, delayed queue, delayed tasks, asynchronous processor' name="keywords">
+  <meta content='Rqueue, task queue, delayed queue, delayed tasks, asynchronous processor'
+        name="keywords">
   <title>{{ default(title, 'Rqueue Dashboard') }}</title>
   <link rel="shortcut icon" href="{{urlPrefix}}rqueue/img/favicon.ico">
   <link href="{{urlPrefix}}rqueue/img/apple-touch-icon.png" rel="apple-touch-icon">
   <link rel="icon" type="image/png" sizes="16x16" href="{{urlPrefix}}rqueue/img/favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="{{urlPrefix}}rqueue/img/favicon-32x32.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i">
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i">
   <link href="{{urlPrefix}}rqueue/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="{{urlPrefix}}rqueue/vendor/icofont/icofont.min.css" rel="stylesheet">
   <link href="{{urlPrefix}}rqueue/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
@@ -95,7 +98,8 @@
           </a>
         </li>
         <li>
-          <a href="#">Time:&nbsp;<p class="text-white float-right">{{time}} ({{timeInMilli}}Ms)</p></a>
+          <a href="#">Time:&nbsp;<p class="text-white float-right">{{time}} ({{timeInMilli}}Ms)</p>
+          </a>
         </li>
       </ul>
     </div>
@@ -140,11 +144,13 @@
     </div>
   </div>
 </div>
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script src="{{urlPrefix}}rqueue/vendor/jquery/jquery.min.js"></script>
-<script src="{{urlPrefix}}rqueue/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="{{urlPrefix}}rqueue/js/rqueue.js"></script>
-<script>
+<script type="application/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="application/javascript"
+        src="{{urlPrefix}}rqueue/vendor/jquery/jquery.min.js"></script>
+<script type="application/javascript"
+        src="{{urlPrefix}}rqueue/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script type="application/javascript" src="{{urlPrefix}}rqueue/js/rqueue.js"></script>
+<script type="application/javascript" nonce="{{urlNonce}}">
   urlPrefix = "{{urlPrefix}}";
 </script>
 {% block additional_script %}{% endblock %}

@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
@@ -265,13 +264,6 @@ public class RqueueMessageListenerContainerTest {
             })
         .when(messageMetadataService)
         .getOrCreateMessageMetadata(any());
-    doAnswer(
-            i -> {
-              String id = i.getArgument(0);
-              return messageMetadataMap.get(id);
-            })
-        .when(messageMetadataService)
-        .get(anyString());
     RqueueMessageListenerContainer container =
         createContainer(messageHandler, rqueueMessageTemplate, messageMetadataService);
 
@@ -332,13 +324,6 @@ public class RqueueMessageListenerContainerTest {
             })
         .when(messageMetadataService)
         .getOrCreateMessageMetadata(any());
-    doAnswer(
-            i -> {
-              String id = i.getArgument(0);
-              return messageMetadataMap.get(id);
-            })
-        .when(messageMetadataService)
-        .get(anyString());
     doAnswer(
             invocation -> {
               if (slowQueueCounter.get() == 0) {

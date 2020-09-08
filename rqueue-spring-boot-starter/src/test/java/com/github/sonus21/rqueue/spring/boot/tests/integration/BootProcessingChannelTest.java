@@ -35,7 +35,7 @@ import org.springframework.test.context.junit.jupiter.DisabledIf;
     properties = {
       "rqueue.scheduler.auto.start=false",
       "spring.redis.port=8011",
-      "mysql.db.name=BootMessageChannelTest",
+      "mysql.db.name=BootProcessingChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
       "monitor.thread.count=1",
@@ -43,7 +43,6 @@ import org.springframework.test.context.junit.jupiter.DisabledIf;
     })
 @SpringBootTest
 @Slf4j
-@DisabledIf
 public class BootProcessingChannelTest extends MessageChannelTests {
   @Test
   public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {

@@ -514,3 +514,8 @@ section {
 .delete-message-btn {
   padding: 0 10px;
 }
+
+#stats_chart, #latency_chart {
+  width: 100%;
+  height: 500px;
+}
