@@ -48,6 +48,14 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
   // Number of times this message has failed.
   private int failureCount;
 
+  public RqueueMessage(String queueName, String message, Integer retryCount, Long delay) {
+    this.queueName = queueName;
+    this.message = message;
+    this.retryCount = retryCount;
+    this.id = UUID.randomUUID().toString();
+    initTime(delay);
+  }
+
   private void initTime(Long delay) {
     // Monotonic increasing queued time
     // This is used to check duplicate message in executor
@@ -56,14 +64,6 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
     if (delay != null) {
       this.processAt += delay;
     }
-  }
-
-  public RqueueMessage(String queueName, String message, Integer retryCount, Long delay) {
-    this.queueName = queueName;
-    this.message = message;
-    this.retryCount = retryCount;
-    this.id = UUID.randomUUID().toString();
-    initTime(delay);
   }
 
   public void updateReEnqueuedAt() {

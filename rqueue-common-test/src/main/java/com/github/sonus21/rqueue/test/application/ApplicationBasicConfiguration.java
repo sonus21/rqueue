@@ -38,30 +38,18 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import redis.embedded.RedisServer;
 
 public abstract class ApplicationBasicConfiguration {
+  private static final Logger monitorLogger = LoggerFactory.getLogger("monitor");
   protected RedisServer redisServer;
   protected ExecutorService executorService;
   protected List<RProcess> processes;
-  private static final Logger monitorLogger = LoggerFactory.getLogger("monitor");
-
-  @AllArgsConstructor
-  public static class RProcess {
-    Process process;
-    RedisNode redisNode;
-    List<String> out;
-  }
-
   @Value("${mysql.db.name}")
   protected String dbName;
-
   @Value("${spring.redis.port}")
   protected int redisPort;
-
   @Value("${spring.redis.host}")
   protected String redisHost;
-
   @Value("${use.system.redis:false}")
   protected boolean useSystemRedis;
-
   @Value("${monitor.thread.count:0}")
   protected int monitorThreads;
 
@@ -140,5 +128,12 @@ public abstract class ApplicationBasicConfiguration {
   @Bean
   public ObjectMapper objectMapper() {
     return new ObjectMapper();
+  }
+
+  @AllArgsConstructor
+  public static class RProcess {
+    Process process;
+    RedisNode redisNode;
+    List<String> out;
   }
 }

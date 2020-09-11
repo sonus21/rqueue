@@ -46,6 +46,4 @@ public class BootDelayedChannelTest extends MessageChannelTests {
   public void publishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     verifyPublishMessageIsTriggeredOnMessageAddition();
   }
-
-
 }

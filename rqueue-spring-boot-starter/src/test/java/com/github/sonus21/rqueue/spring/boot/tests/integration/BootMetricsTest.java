@@ -49,6 +49,7 @@ public class BootMetricsTest extends MetricTest {
   }
 
   @Test
+  @RetryingTest(3)
   public void metricStatus() throws TimedOutException {
     this.verifyMetricStatus();
   }

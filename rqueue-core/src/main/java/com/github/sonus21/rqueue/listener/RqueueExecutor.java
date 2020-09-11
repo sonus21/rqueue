@@ -39,13 +39,13 @@ import org.springframework.messaging.support.MessageBuilder;
 @Slf4j
 class RqueueExecutor extends MessageContainerBase {
   private final QueueDetail queueDetail;
-  private Message<String> message;
   private final RqueueMessage rqueueMessage;
   private final RqueueMessageHandler rqueueMessageHandler;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final PostProcessingHandler postProcessingHandler;
   private final Semaphore semaphore;
   private final RqueueConfig rqueueConfig;
+  private Message<String> message;
   private MessageMetadata messageMetadata;
   private Object userMessage;
   private boolean updatedToProcessing;

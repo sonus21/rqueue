@@ -21,13 +21,11 @@ import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisa
 import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
 import com.github.sonus21.test.SpringTestRunnerTracer;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.DisabledIf;
 
 @ExtendWith(SpringTestRunnerTracer.class)
 @ContextConfiguration(classes = ApplicationListenerDisabled.class)

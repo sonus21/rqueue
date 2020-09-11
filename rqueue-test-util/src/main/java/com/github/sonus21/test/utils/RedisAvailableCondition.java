@@ -30,9 +30,9 @@ import org.springframework.data.redis.connection.RedisNode;
 
 public class RedisAvailableCondition implements ExecutionCondition {
 
+  public static final String REDIS_RUNNING_BEAN = "redisRunning";
   private static final ConditionEvaluationResult ENABLED =
       ConditionEvaluationResult.enabled("@RedisAvailable is not present");
-  public static final String REDIS_RUNNING_BEAN = "redisRunning";
 
   private RedisRunning createRedisRunning(RedisAvailable redisAvailable) {
     List<RedisNode> redisNodes = new LinkedList<>();

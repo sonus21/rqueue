@@ -77,8 +77,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   @Override
   public Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
       List<QueueConfig> queueConfig) {
-    return queueConfig
-        .parallelStream()
+    return queueConfig.parallelStream()
         .collect(Collectors.toMap(QueueConfig::getName, this::getQueueDataStructureDetail));
   }
 
