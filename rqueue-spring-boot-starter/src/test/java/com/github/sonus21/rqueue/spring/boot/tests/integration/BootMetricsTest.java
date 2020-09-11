@@ -48,7 +48,6 @@ public class BootMetricsTest extends MetricTest {
     this.verifyDelayedQueueStatus();
   }
 
-  @Test
   @RetryingTest(3)
   public void metricStatus() throws TimedOutException {
     this.verifyMetricStatus();
