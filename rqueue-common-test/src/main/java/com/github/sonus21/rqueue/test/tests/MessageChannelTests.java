@@ -53,7 +53,7 @@ public abstract class MessageChannelTests extends SpringTestBase {
         stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
             >= messageCount,
         "Messages are correctly moved");
-    assertEquals(messageCount + 1L, getAllMessages(emailQueue).size());
+    assertEquals(messageCount + 1L, getMessageCount(emailQueue));
   }
 
   /**
@@ -79,7 +79,7 @@ public abstract class MessageChannelTests extends SpringTestBase {
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == getAllMessages(jobQueue).size(),
+        () -> 0 == getMessageCount(jobQueue),
         30 * Constants.ONE_MILLI,
         "messages to be consumed");
     waitFor(

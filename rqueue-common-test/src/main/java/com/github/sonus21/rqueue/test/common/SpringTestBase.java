@@ -143,9 +143,9 @@ public abstract class SpringTestBase extends TestBase {
         rqueueMessageTemplate.readFromList(queueDetail.getQueueName(), 0, -1);
     queueNameToMessage.put(queueDetail.getQueueName(), messages);
 
-    List<RqueueMessage> messagesFromZset =
+    List<RqueueMessage> messagesInDelayedQueue =
         rqueueMessageTemplate.readFromZset(queueDetail.getDelayedQueueName(), 0, -1);
-    queueNameToMessage.put(queueDetail.getDelayedQueueName(), messagesFromZset);
+    queueNameToMessage.put(queueDetail.getDelayedQueueName(), messagesInDelayedQueue);
 
     List<RqueueMessage> messagesInProcessingQueue =
         rqueueMessageTemplate.readFromZset(queueDetail.getProcessingQueueName(), 0, -1);

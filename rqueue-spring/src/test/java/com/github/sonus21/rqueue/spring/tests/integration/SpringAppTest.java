@@ -32,7 +32,7 @@ import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.tests.AllQueueMode;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.test.SpringTestRunnerTracer;
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
@@ -46,7 +46,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestRunnerTracer.class)
+@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(

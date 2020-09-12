@@ -133,7 +133,7 @@ public abstract class BasicListenerTest extends SpringTestBase {
         },
         "message should be present in internal storage");
     // more then one copy should not be present
-    assertEquals(1, getAllMessages(jobQueue).size());
+    assertEquals(1, getMessageCount(jobQueue));
   }
 
   public void verifyMessageIsConsumedByDeadLetterQueueListener() throws TimedOutException {

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.test;
+package com.github.sonus21.junit;
 
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-public class SpringTestRunnerTracer extends SpringExtension {
+public class SpringTestTracerExtension extends SpringExtension {
 
   @Override
   public void beforeAll(ExtensionContext context) throws Exception {

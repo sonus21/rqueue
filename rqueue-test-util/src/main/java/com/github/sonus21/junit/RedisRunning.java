@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.test.utils;
+package com.github.sonus21.junit;
 
 import io.lettuce.core.ReadFrom;
 import java.util.List;

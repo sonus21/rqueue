@@ -75,8 +75,7 @@ public abstract class MetricTest extends SpringTestBase {
         30000,
         "Message in original queue");
     deleteAllMessages(notificationQueue);
-    waitFor(
-        () -> getAllMessages(notificationQueue).size() == 0, 30000, "notification queue to drain");
+    waitFor(() -> getMessageCount(notificationQueue) == 0, 30000, "notification queue to drain");
   }
 
   protected void verifyMetricStatus() throws TimedOutException {
