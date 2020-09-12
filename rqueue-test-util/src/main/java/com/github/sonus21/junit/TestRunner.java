@@ -27,10 +27,15 @@ public final class TestRunner {
   }
 
   public static void run(Test test, Test failureCallback) throws Exception {
-    run(test, failureCallback, 0);
+    run(test, null, failureCallback, 0);
   }
 
-  public static void run(Test test, Test failureCallback, int retryCount) throws Exception {
+  public static void run(Test test, Test cleanupCallback, Test failureCallback) throws Exception {
+    run(test, cleanupCallback, failureCallback, 0);
+  }
+
+  public static void run(Test test, Test cleanupCallback, Test failureCallback, int retryCount)
+      throws Exception {
     int iteration = 1;
     while (true) {
       log.info("Running test, Iteration: {}", iteration);
@@ -45,6 +50,9 @@ public final class TestRunner {
         if (retryCount == iteration - 1) {
           throw e;
         }
+      }
+      if (cleanupCallback != null) {
+        cleanupCallback.run();
       }
       iteration += 1;
     }

@@ -47,6 +47,8 @@ public class BootDelayedChannelTest extends MessageChannelTests {
   public void publishMessageIsTriggeredOnMessageAddition() throws Exception {
     TestRunner.run(
         this::verifyPublishMessageIsTriggeredOnMessageAddition,
-        () -> printQueueStats(Collections.singletonList(emailQueue)));
+        () -> deleteAllMessages(emailQueue),
+        () -> printQueueStats(Collections.singletonList(emailQueue)),
+        3);
   }
 }
