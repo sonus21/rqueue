@@ -32,17 +32,21 @@ public final class TestRunner {
 
   public static void run(Test test, Test failureCallback, int retryCount) throws Exception {
     int iteration = 1;
-    do {
+    while (true) {
       log.info("Running test, Iteration: {}", iteration);
       try {
         test.run();
+        return;
       } catch (Exception e) {
         log.error("Test failed", e);
         if (failureCallback != null) {
           failureCallback.run();
         }
+        if (retryCount == iteration - 1) {
+          throw e;
+        }
       }
       iteration += 1;
-    } while (retryCount >= iteration - 1);
+    }
   }
 }
