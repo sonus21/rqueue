@@ -16,8 +16,10 @@
 
 package com.github.sonus21.rqueue.test.service;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import javax.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -25,11 +27,15 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 public class QueueRegistryUpdater {
-  private RqueueMessageSender rqueueMessageSender;
-  private RqueueEndpointManager rqueueEndpointManager;
+  private final RqueueMessageSender rqueueMessageSender;
+  private final RqueueEndpointManager rqueueEndpointManager;
+  private final RqueueConfig rqueueConfig;
 
   @PostConstruct
   public void registerQueues() {
+    if (!RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
+      return;
+    }
     for (int i = 0; i < 10; i++) {
       String queueName = "new_queue_" + i;
       String[] priorities = null;
