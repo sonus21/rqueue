@@ -17,10 +17,11 @@
 package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
@@ -28,22 +29,26 @@ import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import io.lettuce.core.RedisCommandExecutionException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueMessageListenerContainerTest {
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
@@ -55,8 +60,9 @@ public class RqueueMessageListenerContainerTest {
   private RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
   private RqueueMessageListenerContainer container =
       new RqueueMessageListenerContainer(rqueueMessageHandler, mock(RqueueMessageTemplate.class));
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
 
-  @Before
+  @BeforeEach
   public void init() throws IllegalAccessException {
     FieldUtils.writeField(
         container, "rqueueMessageMetadataService", mock(RqueueMessageMetadataService.class), true);
@@ -123,6 +129,7 @@ public class RqueueMessageListenerContainerTest {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     assertTrue(container.isRunning());
@@ -136,6 +143,7 @@ public class RqueueMessageListenerContainerTest {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -147,6 +155,7 @@ public class RqueueMessageListenerContainerTest {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -160,6 +169,7 @@ public class RqueueMessageListenerContainerTest {
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     CountDownLatch count = new CountDownLatch(1);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     container.stop(count::countDown);
@@ -182,7 +192,8 @@ public class RqueueMessageListenerContainerTest {
     messageHandler.afterPropertiesSet();
 
     RqueueMessageListenerContainer container =
-        createContainer(messageHandler, rqueueMessageTemplate);
+        createContainer(
+            messageHandler, rqueueMessageTemplate, mock(RqueueMessageMetadataService.class));
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     AtomicInteger slowQueueCounter = new AtomicInteger(0);
     doAnswer(
@@ -209,14 +220,16 @@ public class RqueueMessageListenerContainerTest {
   }
 
   private RqueueMessageListenerContainer createContainer(
-      RqueueMessageHandler messageHandler, RqueueMessageTemplate rqueueMessageTemplate)
+      RqueueMessageHandler messageHandler,
+      RqueueMessageTemplate rqueueMessageTemplate,
+      RqueueMessageMetadataService rqueueMessageMetadataService)
       throws IllegalAccessException {
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     FieldUtils.writeField(
-        container, "rqueueMessageMetadataService", mock(RqueueMessageMetadataService.class), true);
+        container, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
     RqueueConfig rqueueConfig = new RqueueConfig(null, true, 1);
     FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     return container;
@@ -243,9 +256,20 @@ public class RqueueMessageListenerContainerTest {
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
-
+    Map<String, MessageMetadata> messageMetadataMap = new ConcurrentHashMap<>();
+    RqueueMessageMetadataService messageMetadataService = mock(RqueueMessageMetadataService.class);
+    doAnswer(
+            i -> {
+              RqueueMessage rqueueMessage = i.getArgument(0);
+              MessageMetadata messageMetadata =
+                  new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
+              messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
+              return messageMetadata;
+            })
+        .when(messageMetadataService)
+        .getOrCreateMessageMetadata(any());
     RqueueMessageListenerContainer container =
-        createContainer(messageHandler, rqueueMessageTemplate);
+        createContainer(messageHandler, rqueueMessageTemplate, messageMetadataService);
 
     doAnswer(
             invocation -> {
@@ -280,11 +304,11 @@ public class RqueueMessageListenerContainerTest {
     applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
+    RqueueMessageMetadataService messageMetadataService = mock(RqueueMessageMetadataService.class);
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
-
     RqueueMessageListenerContainer container =
-        createContainer(messageHandler, rqueueMessageTemplate);
+        createContainer(messageHandler, rqueueMessageTemplate, messageMetadataService);
     FastMessageListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageListener.class);
     SlowMessageListener slowMessageListener =
@@ -293,6 +317,17 @@ public class RqueueMessageListenerContainerTest {
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     String fastQueueMessage = "This is fast queue";
     String slowQueueMessage = "This is slow queue";
+    Map<String, MessageMetadata> messageMetadataMap = new ConcurrentHashMap<>();
+    doAnswer(
+            i -> {
+              RqueueMessage rqueueMessage = i.getArgument(0);
+              MessageMetadata messageMetadata =
+                  new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
+              messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
+              return messageMetadata;
+            })
+        .when(messageMetadataService)
+        .getOrCreateMessageMetadata(any());
     doAnswer(
             invocation -> {
               if (slowQueueCounter.get() == 0) {
@@ -352,7 +387,10 @@ public class RqueueMessageListenerContainerTest {
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
     RqueueMessageListenerContainer container =
-        createContainer(messageHandler, mock(RqueueMessageTemplate.class));
+        createContainer(
+            messageHandler,
+            mock(RqueueMessageTemplate.class),
+            mock(RqueueMessageMetadataService.class));
     TestTaskExecutor taskExecutor = new TestTaskExecutor();
     taskExecutor.afterPropertiesSet();
 

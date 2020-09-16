@@ -11,6 +11,7 @@ allprojects {
     apply plugin: 'signing'
     apply plugin: 'jacoco'
     apply plugin: 'nebula.optional-base'
+
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -36,10 +37,9 @@ ext {
     sl4jVersion = '1.7.28'
 
     // testing
-    junitVersion = '4.12'
-    mockitoVersion = '3.1.0'
+    jupiterVersion = '5.5.0'
+    mockitoVersion = '3.5.0'
     hamcrestVersion = '2.2'
-    powerMockVersion = '2.0.5'
     jacocoVersion = '0.8.4'
     embeddedRedisVersion = '0.7.2'
     h2Version = '1.4.194'
@@ -67,7 +67,7 @@ ext {
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '2.0.4-RELEASE'
+    version = '2.1.0-RELEASE'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
@@ -84,22 +84,21 @@ subprojects {
         testCompile group: 'ch.qos.logback', name: 'logback-core', version: "${logbackVersion}"
         // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
         testCompile group: 'ch.qos.logback', name: 'logback-classic', version: "${logbackVersion}"
-        testCompile group: 'junit', name: 'junit', version: "${junitVersion}"
-        // https://mvnrepository.com/artifact/org.mockito/mockito-core
-        testCompile group: 'org.mockito', name: 'mockito-core', version: "${mockitoVersion}"
-        // https://mvnrepository.com/artifact/org.hamcrest/hamcrest-library
-        testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: "${hamcrestVersion}"
+        testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: "${jupiterVersion}"
+        testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
+        // https://mvnrepository.com/artifact/org.mockito/mockito-inline
+        testCompile group: 'org.mockito', name: 'mockito-inline', version: "${mockitoVersion}"
+        testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: "${mockitoVersion}"
+        // https://mvnrepository.com/artifact/org.hamcrest/hamcrest
+        testCompile group: 'org.hamcrest', name: 'hamcrest', version: "${hamcrestVersion}"
         // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
         testCompile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
         testCompile("org.springframework.boot:spring-boot-test:${springBootVersion}")
-        // https://mvnrepository.com/artifact/org.powermock/powermock-module-junit4
-        testCompile group: 'org.powermock', name: 'powermock-module-junit4', version: "${powerMockVersion}"
-
-        // https://mvnrepository.com/artifact/org.powermock/powermock-api-mockito2
-        testCompile group: 'org.powermock', name: 'powermock-api-mockito2', version: "${powerMockVersion}"
+        testCompile group: 'org.junit-pioneer', name: 'junit-pioneer', version: '0.9.0'
 
         configurations {
             all*.exclude module: 'spring-boot-starter-logging'
+            all*.exclude module: 'junit'
         }
     }
 }

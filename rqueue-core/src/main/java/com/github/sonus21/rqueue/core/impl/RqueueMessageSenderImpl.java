@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.core.impl;
 
-import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
-import static com.github.sonus21.rqueue.utils.MessageUtils.buildMessage;
 import static com.github.sonus21.rqueue.utils.Validator.validateDelay;
 import static com.github.sonus21.rqueue.utils.Validator.validateMessage;
 import static com.github.sonus21.rqueue.utils.Validator.validatePriority;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
 import static org.springframework.util.Assert.isTrue;
-import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -39,43 +37,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.messaging.converter.StringMessageConverter;
 
 @Slf4j
-public class RqueueMessageSenderImpl implements RqueueMessageSender {
-  private final CompositeMessageConverter messageConverter;
-  private RqueueMessageTemplate messageTemplate;
-  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  @Autowired private RqueueConfig rqueueConfig;
-
-  private RqueueMessageSenderImpl(
-      RqueueMessageTemplate messageTemplate,
-      List<MessageConverter> messageConverters,
-      boolean addDefault) {
-    notNull(messageTemplate, "messageTemplate cannot be null");
-    notEmpty(messageConverters, "messageConverters cannot be empty");
-    this.messageTemplate = messageTemplate;
-    this.messageConverter =
-        new CompositeMessageConverter(getMessageConverters(addDefault, messageConverters));
-  }
+public class RqueueMessageSenderImpl extends BaseMessageSender implements RqueueMessageSender {
 
   public RqueueMessageSenderImpl(RqueueMessageTemplate messageTemplate) {
-    this(messageTemplate, Collections.singletonList(new GenericMessageConverter()), false);
+    this(messageTemplate, Collections.emptyList());
   }
 
   public RqueueMessageSenderImpl(
       RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    this(messageTemplate, messageConverters, false);
+    super(messageTemplate, messageConverters);
   }
 
   @Override
   public boolean enqueue(String queueName, Object message) {
     validateQueue(queueName);
     validateMessage(message);
-    return pushMessage(queueName, message, null, null);
+    return pushMessage(queueName, null, message, null, null) != null;
   }
 
   @Override
@@ -83,7 +63,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     validateQueue(queueName);
     validateMessage(message);
     validateRetryCount(retryCount);
-    return pushMessage(queueName, message, retryCount, null);
+    return pushMessage(queueName, null, message, retryCount, null) != null;
   }
 
   @Override
@@ -92,7 +72,8 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     validatePriority(priority);
     validateMessage(message);
     return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority), message, null, null);
+            PriorityUtils.getQueueNameForPriority(queueName, priority), null, message, null, null)
+        != null;
   }
 
   @Override
@@ -100,7 +81,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     validateQueue(queueName);
     validateMessage(message);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, message, null, delayInMilliSecs);
+    return pushMessage(queueName, null, message, null, delayInMilliSecs) != null;
   }
 
   @Override
@@ -110,7 +91,7 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     validateMessage(message);
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, message, retryCount, delayInMilliSecs);
+    return pushMessage(queueName, null, message, retryCount, delayInMilliSecs) != null;
   }
 
   @Override
@@ -121,16 +102,18 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
     validateMessage(message);
     validateDelay(delayInMilliSecs);
     return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority),
-        message,
-        null,
-        delayInMilliSecs);
+            PriorityUtils.getQueueNameForPriority(queueName, priority),
+            null,
+            message,
+            null,
+            delayInMilliSecs)
+        != null;
   }
 
   @Override
   public List<Object> getAllMessages(String queueName) {
     List<Object> messages = new ArrayList<>();
-    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
     for (RqueueMessage message :
         messageTemplate.getAllMessages(
             queueDetail.getQueueName(),
@@ -179,77 +162,15 @@ public class RqueueMessageSenderImpl implements RqueueMessageSender {
 
   @Override
   public boolean deleteAllMessages(String queueName) {
-    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
     stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
     stringRqueueRedisTemplate.delete(queueDetail.getProcessingQueueName());
     stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
     return true;
   }
 
-  private boolean pushMessage(
-      String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
-    QueueDetail queueDetail = QueueRegistry.get(queueName);
-    RqueueMessage rqueueMessage =
-        buildMessage(
-            messageConverter, queueDetail.getQueueName(), message, retryCount, delayInMilliSecs);
-    try {
-      if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
-        messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
-      } else {
-        messageTemplate.addMessageWithDelay(
-            queueDetail.getDelayedQueueName(),
-            queueDetail.getDelayedQueueChannelName(),
-            rqueueMessage);
-      }
-    } catch (Exception e) {
-      log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
-      return false;
-    }
-    return true;
-  }
-
-  private List<MessageConverter> getMessageConverters(
-      boolean addDefault, List<MessageConverter> messageConverters) {
-    List<MessageConverter> messageConverterList = new ArrayList<>();
-    StringMessageConverter stringMessageConverter = new StringMessageConverter();
-    stringMessageConverter.setSerializedPayloadClass(String.class);
-    messageConverterList.add(stringMessageConverter);
-    if (addDefault) {
-      messageConverterList.add(new GenericMessageConverter());
-    }
-    messageConverterList.addAll(messageConverters);
-    return messageConverterList;
-  }
-
   @Override
   public void registerQueue(String queueName, String... priorities) {
-    validateQueue(queueName);
-    notNull(priorities, "priorities cannot be null");
-    QueueDetail queueDetail =
-        QueueDetail.builder()
-            .name(queueName)
-            .active(false)
-            .queueName(rqueueConfig.getQueueName(queueName))
-            .delayedQueueName(rqueueConfig.getDelayedQueueName(queueName))
-            .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queueName))
-            .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
-            .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
-            .build();
-    QueueRegistry.register(queueDetail);
-    for (String priority : priorities) {
-      String suffix = PriorityUtils.getSuffix(priority);
-      queueDetail =
-          QueueDetail.builder()
-              .name(queueName + suffix)
-              .active(false)
-              .queueName(rqueueConfig.getQueueName(queueName) + suffix)
-              .delayedQueueName(rqueueConfig.getDelayedQueueName(queueName) + suffix)
-              .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queueName) + suffix)
-              .processingQueueName(rqueueConfig.getProcessingQueueName(queueName) + suffix)
-              .processingQueueChannelName(
-                  rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)
-              .build();
-      QueueRegistry.register(queueDetail);
-    }
+    registerQueueInternal(queueName, priorities);
   }
 }

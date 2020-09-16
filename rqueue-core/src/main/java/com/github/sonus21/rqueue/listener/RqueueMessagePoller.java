@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import java.util.List;
@@ -28,17 +29,17 @@ import org.slf4j.event.Level;
 @Slf4j
 abstract class RqueueMessagePoller extends MessageContainerBase {
   private final PostProcessingHandler postProcessingHandler;
-  private final int retryPerPoll;
+  private final RqueueConfig rqueueConfig;
   List<String> queues;
 
   RqueueMessagePoller(
       String groupName,
       RqueueMessageListenerContainer container,
       PostProcessingHandler postProcessingHandler,
-      int retryPerPoll) {
+      RqueueConfig rqueueConfig) {
     super(log, groupName, container);
     this.postProcessingHandler = postProcessingHandler;
-    this.retryPerPoll = retryPerPoll;
+    this.rqueueConfig = rqueueConfig;
   }
 
   private RqueueMessage getMessage(QueueDetail queueDetail) {
@@ -58,7 +59,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     return Objects.requireNonNull(container.get()).getBackOffTime();
   }
 
-  private void enqueue(QueueThread queueThread, QueueDetail queueDetail, RqueueMessage message) {
+  private void execute(QueueThread queueThread, QueueDetail queueDetail, RqueueMessage message) {
     queueThread
         .getTaskExecutor()
         .execute(
@@ -67,7 +68,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
                 queueDetail,
                 queueThread.getSemaphore(),
                 container,
-                retryPerPoll,
+                rqueueConfig,
                 postProcessingHandler));
   }
 
@@ -99,7 +100,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
         RqueueMessage message = getMessage(queueDetail);
         log(Level.DEBUG, "Queue: {} Fetched Msg {}", null, queue, message);
         if (message != null) {
-          enqueue(queueThread, queueDetail, message);
+          execute(queueThread, queueDetail, message);
         } else {
           semaphore.release();
           deactivate(index, queue, DeactivateType.NO_MESSAGE);

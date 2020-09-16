@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.web.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -45,12 +45,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 @Slf4j
 public class RqueueDashboardChartServiceTest {
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
@@ -63,7 +63,7 @@ public class RqueueDashboardChartServiceTest {
           rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
   private List<String> queues = new ArrayList<>();
 
-  @Before
+  @BeforeEach
   public void init() {
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
     doAnswer(

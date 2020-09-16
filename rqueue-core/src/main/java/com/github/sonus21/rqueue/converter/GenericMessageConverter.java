@@ -17,9 +17,11 @@
 package com.github.sonus21.rqueue.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
-import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,8 +37,9 @@ import org.springframework.messaging.support.GenericMessage;
  * vice versa.
  */
 @Slf4j
+@SuppressWarnings("unchecked")
 public class GenericMessageConverter implements MessageConverter {
-  private static ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   /**
    * Convert the payload of a {@link Message} from a serialized form to a typed Object of type
@@ -55,13 +58,33 @@ public class GenericMessageConverter implements MessageConverter {
       String payload = (String) message.getPayload();
       if (SerializationUtils.isJson(payload)) {
         Msg msg = objectMapper.readValue(payload, Msg.class);
-        Class<?> c = Thread.currentThread().getContextClassLoader().loadClass(msg.getName());
-        return objectMapper.readValue(msg.msg, c);
+        String[] classNames = splitClassNames(msg.getName());
+        if (classNames.length == 1) {
+          Class<?> c = Thread.currentThread().getContextClassLoader().loadClass(msg.getName());
+          return objectMapper.readValue(msg.msg, c);
+        }
+        Class<?> envelopeClass =
+            Thread.currentThread().getContextClassLoader().loadClass(classNames[0]);
+        Class<?> elementClass =
+            Thread.currentThread().getContextClassLoader().loadClass(classNames[1]);
+        JavaType type =
+            objectMapper
+                .getTypeFactory()
+                .constructCollectionType((Class<? extends Collection>) envelopeClass, elementClass);
+        return objectMapper.readValue(msg.msg, type);
       }
-    } catch (IOException | ClassCastException | ClassNotFoundException e) {
-      log.warn("Exception", e);
+    } catch (Exception e) {
+      log.warn("Deserialization of message {} failed", message, e);
     }
     return null;
+  }
+
+  private String[] splitClassNames(String name) {
+    return name.split("#");
+  }
+
+  private String getClassName(String name, List<?> payload) {
+    return name + '#' + payload.get(0).getClass().getName();
   }
 
   /**
@@ -77,6 +100,16 @@ public class GenericMessageConverter implements MessageConverter {
   @Override
   public Message<?> toMessage(Object payload, MessageHeaders headers) {
     String name = payload.getClass().getName();
+    if (payload instanceof Collection) {
+      if (payload instanceof List) {
+        if (((List<?>) payload).isEmpty()) {
+          return null;
+        }
+        name = getClassName(name, (List<?>) payload);
+      } else {
+        return null;
+      }
+    }
     try {
       String msg = objectMapper.writeValueAsString(payload);
       Msg message = new Msg(msg, name);

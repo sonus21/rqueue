@@ -41,12 +41,12 @@ public class DelayedMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueRegistry.get(queueName).getDelayedQueueChannelName();
+    return EndpointRegistry.get(queueName).getDelayedQueueChannelName();
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueRegistry.get(queueName).getDelayedQueueName();
+    return EndpointRegistry.get(queueName).getDelayedQueueName();
   }
 
   @Override

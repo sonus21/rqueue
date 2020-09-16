@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.core.impl;
 
 import static com.github.sonus21.rqueue.core.RedisScriptFactory.getScript;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
@@ -58,7 +60,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       long visibilityTimeout) {
     long currentTime = System.currentTimeMillis();
     RedisScript<RqueueMessage> script =
-        (RedisScript<RqueueMessage>) getScript(ScriptType.POP_MESSAGE);
+        (RedisScript<RqueueMessage>) getScript(ScriptType.DEQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(queueName, processingQueueName, processingChannelName),
@@ -70,7 +72,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   public Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage) {
     long queuedTime = rqueueMessage.getQueuedTime();
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ADD_MESSAGE);
+    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ENQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(delayQueueName, delayQueueChannelName),
@@ -208,6 +210,15 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       return new ArrayList<>();
     }
     return new ArrayList<>(messages);
+  }
+
+  @Override
+  public Long getScore(String delayedQueueName, RqueueMessage rqueueMessage) {
+    Double score = redisTemplate.opsForZSet().score(delayedQueueName, rqueueMessage);
+    if (score == null) {
+      return null;
+    }
+    return score.longValue();
   }
 
   @Override

@@ -16,4 +16,7 @@ dependencies {
     testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: "${springBootVersion}"
 }
 
+test {
+    useJUnitPlatform()
+}
 

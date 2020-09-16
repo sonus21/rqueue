@@ -18,22 +18,23 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication;
-import com.github.sonus21.rqueue.test.tests.MessageRetryTest;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
+import com.github.sonus21.junit.SpringTestTracerExtension;
+import com.github.sonus21.junit.RedisAvailable;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith({SpringTestTracerExtension.class})
 @ContextConfiguration(classes = RedisClusterApplication.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8007"})
-public class RedisClusterTest extends MessageRetryTest {
+@RedisAvailable(nodes = {":9000", ":9001", ":9002", ":9003", ":9004", ":9005"})
+public class RedisClusterTest extends BasicListenerTest {
 
   @Test
   public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {

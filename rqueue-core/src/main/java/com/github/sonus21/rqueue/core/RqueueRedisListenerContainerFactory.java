@@ -40,21 +40,21 @@ public class RqueueRedisListenerContainerFactory
 
   @Override
   public void destroy() throws Exception {
-    if (isMyContainer()) {
+    if (notSharedContainer()) {
       container.destroy();
     }
   }
 
   @Override
   public void start() {
-    if (isMyContainer()) {
+    if (notSharedContainer()) {
       container.start();
     }
   }
 
   @Override
   public void stop() {
-    if (isMyContainer()) {
+    if (notSharedContainer()) {
       container.stop();
     }
   }
@@ -71,13 +71,23 @@ public class RqueueRedisListenerContainerFactory
     return this.container;
   }
 
-  private boolean isMyContainer() {
+  private boolean notSharedContainer() {
     return container != null && !sharedContainer;
+  }
+
+  private void createContainer() {
+    container = new RedisMessageListenerContainer();
+    container.setConnectionFactory(rqueueConfig.getConnectionFactory());
+    container.afterPropertiesSet();
   }
 
   @Override
   public void afterPropertiesSet() throws Exception {
     if (!rqueueSchedulerConfig.isRedisEnabled()) {
+      return;
+    }
+    if (!rqueueConfig.isSharedConnection()) {
+      createContainer();
       return;
     }
     if (rqueueConfig.isSharedConnection() || rqueueSchedulerConfig.isListenerShared()) {
@@ -87,8 +97,6 @@ public class RqueueRedisListenerContainerFactory
         return;
       }
     }
-    container = new RedisMessageListenerContainer();
-    container.setConnectionFactory(rqueueConfig.getConnectionFactory());
-    container.afterPropertiesSet();
+    createContainer();
   }
 }

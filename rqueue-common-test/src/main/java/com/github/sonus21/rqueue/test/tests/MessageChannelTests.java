@@ -17,8 +17,8 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -32,35 +32,41 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MessageChannelTest extends SpringTestBase {
-  private int messageCount = 200;
+public abstract class MessageChannelTests extends SpringTestBase {
+  private final int messageCount = 200;
   /**
-   * This test verified whether any pending message in the delayed queue are moved or not Whenever a
-   * delayed message is pushed then it's checked whether there're any pending messages on delay
-   * queue. if expired delayed messages are found on the head then a message is published on delayed
-   * channel.
+   * This test verifies whether any pending message in the delayed queue are moved or not whenever a
+   * delayed message is pushed. During enqueue of delayed message we check whether there are any
+   * pending messages on the delay queue, if expired delayed messages are found on the head then a
+   * message is published on delayed channel.
    */
   protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
     enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, messageCount);
     Email email = Email.newInstance();
     log.info("adding new message {}", email);
-    messageSender.enqueueIn(emailQueue, email, Duration.ofMillis(1000));
+    enqueueIn(emailQueue, email, Duration.ofMillis(1000));
     waitFor(
         () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
         "one or zero messages in zset");
     assertTrue(
-        "Messages are correctly moved",
         stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
-            >= messageCount);
-    assertEquals(messageCount + 1L, messageSender.getAllMessages(emailQueue).size());
+            >= messageCount,
+        "Messages are correctly moved");
+    assertEquals(messageCount + 1L, getMessageCount(emailQueue));
   }
 
+  /**
+   * This test verifies whether any pending message in the processing queue are moved or not
+   * whenever a message is pop. During pop of simple message we check whether there are any pending
+   * messages on the processing queue, if expired messages are found on the head then a message is
+   * published on processing channel.
+   */
   protected void verifyPublishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
-    String processingQueueName = jobQueue;
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();
     int maxDelay = 2000;
+    String processingQueue = rqueueConfig.getProcessingQueueName(jobQueue);
     for (int i = 0; i < messageCount; i++) {
       Job job = Job.newInstance();
       jobs.add(job);
@@ -69,18 +75,20 @@ public abstract class MessageChannelTest extends SpringTestBase {
       if (random.nextBoolean()) {
         delay = delay * -1;
       }
-      enqueueIn(job, processingQueueName, delay);
+      enqueueIn(job, processingQueue, delay);
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == messageSender.getAllMessages(jobQueue).size(),
+        () -> 0 == getMessageCount(jobQueue),
         30 * Constants.ONE_MILLI,
         "messages to be consumed");
     waitFor(
         () -> messageCount == consumedMessageService.getMessages(ids, Job.class).size(),
+        30 * Constants.ONE_MILLI,
         "message count to be matched");
     waitFor(
         () -> jobs.containsAll(consumedMessageService.getMessages(ids, Job.class).values()),
+        30 * Constants.ONE_MILLI,
         "All jobs to be executed");
   }
 }

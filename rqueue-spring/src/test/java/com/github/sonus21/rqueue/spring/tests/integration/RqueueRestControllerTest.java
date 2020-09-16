@@ -16,15 +16,16 @@
 
 package com.github.sonus21.rqueue.spring.tests.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ActionType;
@@ -41,18 +42,17 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.app.SpringApp.DeleteMessageListener;
+import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -61,7 +61,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 
 @ContextConfiguration(classes = SpringApp.class)
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -79,10 +79,10 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   public void testGetChartLatency() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
-      rqueueMessageSender.enqueue(jobQueue, job);
+      enqueue(jobQueue, job);
     }
     TimeoutUtils.waitFor(
-        () -> rqueueMessageSender.getAllMessages(jobQueue).size() == 0,
+        () -> getMessageCount(jobQueue) == 0,
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "Job to run");
     ChartDataRequest chartDataRequest =
@@ -105,10 +105,10 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   public void testGetChartStats() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
-      rqueueMessageSender.enqueue(jobQueue, job);
+      enqueue(jobQueue, job);
     }
     TimeoutUtils.waitFor(
-        () -> rqueueMessageSender.getAllMessages(jobQueue).size() == 0,
+        () -> getMessageCount(jobQueue) == 0,
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "Job to run");
     ChartDataRequest chartDataRequest =
@@ -151,7 +151,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   public void testExploreDataZset() throws Exception {
     for (int i = 0; i < 30; i++) {
-      rqueueMessageSender.enqueueIn(
+      enqueueIn(
           emailQueue, Email.newInstance(), Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
     }
     MvcResult result =
@@ -241,7 +241,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   public void deleteQueue() throws Exception {
     for (int i = 0; i < 30; i++) {
-      rqueueMessageSender.enqueue(jobQueue, Job.newInstance());
+      enqueue(jobQueue, Job.newInstance());
     }
     MvcResult result =
         this.mockMvc
@@ -258,7 +258,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   public void deleteMessage() throws Exception {
     Email email = Email.newInstance();
     deleteMessageListener.clear();
-    rqueueMessageSender.enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
+    enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
     RqueueMessage message =
         rqueueMessageTemplate
             .readFromZset(rqueueConfig.getDelayedQueueName(emailQueue), 0, -1)
@@ -272,7 +272,8 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
     BooleanResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
     assertEquals(0, response.getCode());
-    Object metadata = stringRqueueRedisTemplate.get(MessageUtils.getMessageMetaId(message.getId()));
+    Object metadata =
+        stringRqueueRedisTemplate.get(MessageUtils.getMessageMetaId(emailQueue, message.getId()));
     assertTrue(((MessageMetadata) metadata).isDeleted());
     TimeoutUtils.waitFor(
         () -> {

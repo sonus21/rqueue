@@ -16,19 +16,17 @@
 
 package com.github.sonus21.rqueue.core.support;
 
-import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.converter.MessageConverter;
 
-public class RqueueMessageFactory {
-  private static final GenericMessageConverter converter = new GenericMessageConverter();
-
-  RqueueMessageFactory() {}
+public final class RqueueMessageFactory {
+  private RqueueMessageFactory() {}
 
   public static RqueueMessage buildMessage(
-      Object object, String queueName, Integer retryCount, Long delay) {
+      MessageConverter converter, Object object, String queueName, Integer retryCount, Long delay) {
     Object payload = object;
     if (object == null) {
       payload = "Test message";
@@ -38,19 +36,26 @@ public class RqueueMessageFactory {
     return new RqueueMessage(queueName, (String) msg.getPayload(), retryCount, delay);
   }
 
-  public static List<RqueueMessage> generateMessages(String queueName, int count) {
-    return generateMessages(null, queueName, null, null, count);
-  }
-
-  public static List<RqueueMessage> generateMessages(String queueName, long delay, int count) {
-    return generateMessages(null, queueName, null, delay, count);
+  public static List<RqueueMessage> generateMessages(
+      MessageConverter converter, String queueName, int count) {
+    return generateMessages(converter, null, queueName, null, null, count);
   }
 
   public static List<RqueueMessage> generateMessages(
-      Object object, String queueName, Integer retryCount, Long delay, int count) {
+      MessageConverter converter, String queueName, long delay, int count) {
+    return generateMessages(converter, null, queueName, null, delay, count);
+  }
+
+  public static List<RqueueMessage> generateMessages(
+      MessageConverter converter,
+      Object object,
+      String queueName,
+      Integer retryCount,
+      Long delay,
+      int count) {
     List<RqueueMessage> messages = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      messages.add(buildMessage(object, queueName, retryCount, delay));
+      messages.add(buildMessage(converter, object, queueName, retryCount, delay));
     }
     return messages;
   }

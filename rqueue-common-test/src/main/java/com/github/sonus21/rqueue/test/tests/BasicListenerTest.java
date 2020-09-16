@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -26,16 +26,23 @@ import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MessageRetryTest extends SpringTestBase {
+public abstract class BasicListenerTest extends SpringTestBase {
   protected void verifyAfterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
     cleanQueue(jobQueue);
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), 3, 10);
-    messageSender.put(jobQueue, job);
+    rqueueMessageSender.put(jobQueue, job);
     waitFor(
         () -> {
           Job jobInDb = consumedMessageService.getMessage(job.getId(), Job.class);
@@ -44,7 +51,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
         "job to be executed");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueue);
+          List<Object> messages = getAllMessages(jobQueue);
           return !messages.contains(job);
         },
         "message should be deleted from internal storage");
@@ -55,7 +62,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), -1, 0);
     log.debug("queue: {} msg: {}", emailQueue, email);
-    messageSender.put(emailQueue, email, 1000L);
+    rqueueMessageSender.put(emailQueue, email, 1000L);
     waitFor(
         () -> emailRetryCount == failureManager.getFailureCount(email.getId()),
         30000000,
@@ -71,13 +78,13 @@ public abstract class MessageRetryTest extends SpringTestBase {
     cleanQueue(notificationQueue);
     Notification notification = Notification.newInstance();
     failureManager.createFailureDetail(notification.getId(), -1, notificationRetryCount);
-    messageSender.enqueueAt(notificationQueue, notification, System.currentTimeMillis() + 1000L);
+    enqueueAt(notificationQueue, notification, System.currentTimeMillis() + 1000L);
     waitFor(
         () -> notificationRetryCount == failureManager.getFailureCount(notification.getId()),
         "all retry to be exhausted");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(notificationQueue);
+          List<Object> messages = getAllMessages(notificationQueue);
           return !messages.contains(notification);
         },
         "message to be discarded");
@@ -87,7 +94,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
   public void verifySimpleTaskExecution() throws TimedOutException {
     cleanQueue(notificationQueue);
     Notification notification = Notification.newInstance();
-    messageSender.enqueue(notificationQueue, notification);
+    enqueue(notificationQueue, notification);
     waitFor(
         () -> {
           Notification notificationInDb =
@@ -101,7 +108,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
     cleanQueue(emailQueue);
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), emailRetryCount - 1, emailRetryCount - 1);
-    messageSender.enqueue(emailQueue, email);
+    enqueue(emailQueue, email);
     waitFor(
         () -> failureManager.getFailureCount(email.getId()) == emailRetryCount - 1,
         "email task needs to be retried");
@@ -117,16 +124,16 @@ public abstract class MessageRetryTest extends SpringTestBase {
     cleanQueue(jobQueue);
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
-    messageSender.enqueue(jobQueue, job);
+    enqueue(jobQueue, job);
     waitFor(() -> failureManager.getFailureCount(job.getId()) >= 3, "Job to be retried");
     waitFor(
         () -> {
-          List<Object> messages = messageSender.getAllMessages(jobQueue);
+          List<Object> messages = getAllMessages(jobQueue);
           return messages.contains(job);
         },
         "message should be present in internal storage");
     // more then one copy should not be present
-    assertEquals(1, messageSender.getAllMessages(jobQueue).size());
+    assertEquals(1, getMessageCount(jobQueue));
   }
 
   public void verifyMessageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
@@ -135,7 +142,7 @@ public abstract class MessageRetryTest extends SpringTestBase {
     ReservationRequest request = ReservationRequest.newInstance();
     failureManager.createFailureDetail(
         request.getId(), reservationRequestQueueRetryCount, reservationRequestQueueRetryCount);
-    messageSender.enqueue(reservationRequestQueue, request);
+    enqueue(reservationRequestQueue, request);
     waitFor(
         () -> failureManager.getFailureCount(request.getId()) >= reservationRequestQueueRetryCount,
         60000,
@@ -154,5 +161,39 @@ public abstract class MessageRetryTest extends SpringTestBase {
         new Long(0), stringRqueueRedisTemplate.getListSize(reservationRequestDeadLetterQueue));
     assertEquals(0, getMessageCount(reservationQueue));
     assertEquals(0, getMessageCount(reservationRequestDeadLetterQueue));
+  }
+
+  protected void verifyListMessageListener() throws TimedOutException {
+    int n = 1 + random.nextInt(10);
+    List<Email> emails = new ArrayList<>();
+    List<Email> delayedEmails = new ArrayList<>();
+    for (int i = 0; i < n; i++) {
+      emails.add(Email.newInstance());
+      delayedEmails.add(Email.newInstance());
+    }
+    enqueue(listEmailQueue, emails);
+    enqueueIn(listEmailQueue, delayedEmails, 1, TimeUnit.SECONDS);
+    TimeoutUtils.waitFor(
+        () -> getMessageCount(listEmailQueue) == 0, "waiting for email list queue to drain");
+    Collection<ConsumedMessage> messages =
+        consumedMessageService.getConsumedMessages(
+            emails.stream().map(Email::getId).collect(Collectors.toList()));
+    Collection<ConsumedMessage> delayedMessages =
+        consumedMessageService.getConsumedMessages(
+            delayedEmails.stream().map(Email::getId).collect(Collectors.toList()));
+    assertEquals(n, messages.size());
+    assertEquals(n, delayedEmails.size());
+    Set<String> delayedTags =
+        delayedMessages.stream()
+            .map(ConsumedMessage::getTag)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    Set<String> simpleTags =
+        messages.stream()
+            .map(ConsumedMessage::getTag)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    assertEquals(1, delayedTags.size());
+    assertEquals(1, simpleTags.size());
   }
 }

@@ -2,6 +2,17 @@
 
 **NOTE**: The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 16-Sep-2020
+### Added
+* Allow application to provide message id while enqueuing messages
+* Unique message enqueue
+* Api to check if message was enqueued or not
+* Api to delete single message
+* Proxy for outbound http connection
+* Enqueue list of objects and process them, like batch-processing
+
+Fixes:
+* Registered queues should not be deleted when used in producer mode
 
 ## [2.0.4] - 2-Aug-2020
 
@@ -92,3 +103,4 @@
 [2.0.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.1-RELEASE
 [2.0.2]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.2-RELEASE
 [2.0.4]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.4-RELEASE
+[2.1.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.1.0-RELEASE

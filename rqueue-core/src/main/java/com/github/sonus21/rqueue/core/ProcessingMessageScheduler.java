@@ -32,7 +32,7 @@ public class ProcessingMessageScheduler extends MessageScheduler {
   @Override
   protected void initialize() {
     super.initialize();
-    List<QueueDetail> queueDetails = QueueRegistry.getActiveQueueDetails();
+    List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
     this.queueNameToDelay = new ConcurrentHashMap<>(queueDetails.size());
     for (QueueDetail queueDetail : queueDetails) {
       this.queueNameToDelay.put(queueDetail.getName(), queueDetail.getVisibilityTimeout());
@@ -46,12 +46,12 @@ public class ProcessingMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getChannelName(String queueName) {
-    return QueueRegistry.get(queueName).getProcessingQueueChannelName();
+    return EndpointRegistry.get(queueName).getProcessingQueueChannelName();
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return QueueRegistry.get(queueName).getProcessingQueueName();
+    return EndpointRegistry.get(queueName).getProcessingQueueName();
   }
 
   @Override

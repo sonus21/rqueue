@@ -36,12 +36,15 @@ public class ConsumedMessageService {
   @NonNull private ConsumedMessageRepository consumedMessageRepository;
   @NonNull private ObjectMapper objectMapper;
 
-  public <T extends BaseQueueMessage> ConsumedMessage save(BaseQueueMessage message, String tag)
-      throws JsonProcessingException {
+  public ConsumedMessage save(BaseQueueMessage message, String tag) throws JsonProcessingException {
     String textMessage = objectMapper.writeValueAsString(message);
     ConsumedMessage consumedMessage = new ConsumedMessage(message.getId(), textMessage, tag);
     consumedMessageRepository.save(consumedMessage);
     return consumedMessage;
+  }
+
+  public Collection<ConsumedMessage> getConsumedMessages(Collection<String> ids) {
+    return getMessages(ids).values();
   }
 
   public <T> T getMessage(String id, Class<T> tClass) {
@@ -49,17 +52,26 @@ public class ConsumedMessageService {
   }
 
   public <T> Map<String, T> getMessages(Collection<String> ids, Class<T> tClass) {
-    Iterable<ConsumedMessage> consumedMessages = consumedMessageRepository.findAllById(ids);
     Map<String, T> idToMessage = new HashMap<>();
+    getMessages(ids)
+        .values()
+        .forEach(
+            consumedMessage -> {
+              try {
+                T value = objectMapper.readValue(consumedMessage.getMessage(), tClass);
+                idToMessage.put(consumedMessage.getId(), value);
+              } catch (JsonProcessingException e) {
+                e.printStackTrace();
+              }
+            });
+    return idToMessage;
+  }
+
+  public Map<String, ConsumedMessage> getMessages(Collection<String> ids) {
+    Iterable<ConsumedMessage> consumedMessages = consumedMessageRepository.findAllById(ids);
+    Map<String, ConsumedMessage> idToMessage = new HashMap<>();
     consumedMessages.forEach(
-        consumedMessage -> {
-          try {
-            T value = objectMapper.readValue(consumedMessage.getMessage(), tClass);
-            idToMessage.put(consumedMessage.getId(), value);
-          } catch (JsonProcessingException e) {
-            e.printStackTrace();
-          }
-        });
+        consumedMessage -> idToMessage.put(consumedMessage.getId(), consumedMessage));
     return idToMessage;
   }
 

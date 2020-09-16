@@ -16,8 +16,10 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -27,19 +29,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueMessageSenderTest {
-  @Rule public ExpectedException expectedException = ExpectedException.none();
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageSender rqueueMessageSender =
       new RqueueMessageSenderImpl(rqueueMessageTemplate);
@@ -48,25 +50,28 @@ public class RqueueMessageSenderTest {
   private String slowQueue = "slow-queue";
   private String deadLetterQueueName = "dead-test-queue";
   private String message = "Test Message";
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private RqueueMessageMetadataService rqueueMessageMetadataService =
+      mock(RqueueMessageMetadataService.class);
 
-  @Before
-  public void init() {
-    QueueRegistry.delete();
-    QueueRegistry.register(queueDetail);
+  @BeforeEach
+  public void init() throws IllegalAccessException {
+    EndpointRegistry.delete();
+    EndpointRegistry.register(queueDetail);
+    writeField(rqueueMessageSender, "rqueueConfig", rqueueConfig, true);
+    writeField(
+        rqueueMessageSender, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
   }
 
   @Test
   public void putWithNullQueueName() {
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("queue cannot be empty");
-    rqueueMessageSender.enqueue(null, null);
+    assertThrows(IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(null, null));
   }
 
   @Test
   public void putWithNullMessage() {
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("message cannot be null");
-    rqueueMessageSender.enqueue(queueName, null);
+    assertThrows(
+        IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(queueName, null));
   }
 
   @Test

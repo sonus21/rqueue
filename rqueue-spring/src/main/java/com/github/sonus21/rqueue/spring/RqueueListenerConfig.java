@@ -19,9 +19,15 @@ package com.github.sonus21.rqueue.spring;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueListenerBaseConfig;
+import com.github.sonus21.rqueue.core.RqueueEndpointManager;
+import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
-import com.github.sonus21.rqueue.core.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.QueueCounter;
@@ -73,6 +79,29 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
           rqueueMessageTemplate, simpleRqueueListenerContainerFactory.getMessageConverters());
     }
     return new RqueueMessageSenderImpl(rqueueMessageTemplate);
+  }
+
+  @Bean
+  public RqueueMessageManager rqueueMessageManager(RqueueMessageTemplate rqueueMessageTemplate) {
+    if (simpleRqueueListenerContainerFactory.getMessageConverters() != null) {
+      return new RqueueMessageManagerImpl(
+          rqueueMessageTemplate, simpleRqueueListenerContainerFactory.getMessageConverters());
+    }
+    return new RqueueMessageManagerImpl(rqueueMessageTemplate);
+  }
+
+  @Bean
+  public RqueueEndpointManager rqueueEndpointManager(RqueueMessageTemplate rqueueMessageTemplate) {
+    return new RqueueEndpointManagerImpl(rqueueMessageTemplate);
+  }
+
+  @Bean
+  public RqueueMessageEnqueuer rqueueMessageEnqueuer(RqueueMessageTemplate rqueueMessageTemplate) {
+    if (simpleRqueueListenerContainerFactory.getMessageConverters() != null) {
+      return new RqueueMessageEnqueuerImpl(
+          rqueueMessageTemplate, simpleRqueueListenerContainerFactory.getMessageConverters());
+    }
+    return new RqueueMessageEnqueuerImpl(rqueueMessageTemplate);
   }
 
   @Bean

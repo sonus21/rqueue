@@ -17,9 +17,10 @@
 package com.github.sonus21.rqueue.spring.boot.application;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.test.application.BaseApplication;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -40,6 +41,9 @@ public class ApplicationWithCustomConfiguration extends BaseApplication {
   @Value("${max.workers.count:6}")
   private int maxWorkers;
 
+  @Value("${priority.mode:}")
+  private PriorityMode priorityMode;
+
   public static void main(String[] args) {
     SpringApplication.run(ApplicationWithCustomConfiguration.class, args);
   }
@@ -56,6 +60,9 @@ public class ApplicationWithCustomConfiguration extends BaseApplication {
     RqueueMessageListenerContainer rqueueMessageListenerContainer =
         new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate);
     rqueueMessageListenerContainer.setMaxNumWorkers(maxWorkers);
+    if (priorityMode != null) {
+      rqueueMessageListenerContainer.setPriorityMode(priorityMode);
+    }
     return rqueueMessageListenerContainer;
   }
 }

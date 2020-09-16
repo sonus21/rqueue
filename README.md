@@ -13,20 +13,22 @@
 
 ## Features
 
-* A message can be delayed for an arbitrary period or delivered immediately.
-* Multiple messages can be consumed in parallel by different workers.
-* Message delivery: It's guaranteed that a message is consumed **at least once**.  (Message would be consumed by a worker more than once due to the failure in the underlying worker/restart-process etc, otherwise exactly one delivery)
-* Support Redis cluster
-* Queue metrics
-* Different Redis connection for application and worker
-* Web interface for queue management and queue statistics
-* Automatic message serialization and deserialization
-* Queue concurrency
-* Group level queue priority(weighted and strict)
-* Sub queue priority(weighted and strict)
-* Task execution back off, exponential and fixed back off (default fixed back off)
-* Callbacks for different actions
-* Events 1. Bootstrap event 2. Task execution event.
+* **Message Scheduling** : A message can be scheduled for any arbitrary period
+* **Competing Consumers** multiple messages can be consumed in parallel by different workers.
+* **Message delivery**: It's guaranteed that a message is consumed **at least once**.  (Message would be consumed by a worker more than once due to the failure in the underlying worker/restart-process etc, otherwise exactly one delivery)
+* **Redis cluster** : Redis cluster can be used with driver.
+* **Metrics** : In flight messages, waiting for consumption and delayed messages
+* **Web interface**:  a web interface to manage a queue and queue insights including latency
+* **Automatic message serialization and deserialization**
+* **Concurrency**: Concurrency of any queue can be configured
+* **Queue Priority** :
+    * Group level queue priority(weighted and strict)
+    * Sub queue priority(weighted and strict)
+* **Execution Backoff** : Exponential and fixed back off (default fixed back off)
+* **Callbacks** : Callbacks for dead letter queue, discard etc
+* **Events** 1. Bootstrap event 2. Task execution event.
+* **Unique message** : Unique message processing for a queue based on the message id
+* **Redis connection**: A different redis setup can be used for Rqueue
 
 ## Getting Started
 
@@ -37,14 +39,14 @@
 * Add dependency
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.0.4-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.1.0-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.0.4-RELEASE</version>
+        <version>2.1.0-RELEASE</version>
     </dependency>
     ```
     
@@ -53,14 +55,14 @@
 * Add Dependency
     * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.0.4-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.1.0-RELEASE'
     ```
     * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.0.4-RELEASE</version>
+       <version>2.1.0-RELEASE</version>
      </dependency>
     ```
     

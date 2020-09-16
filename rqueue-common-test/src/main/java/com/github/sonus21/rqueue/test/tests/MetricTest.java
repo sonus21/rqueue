@@ -18,8 +18,6 @@ package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -46,23 +44,26 @@ public abstract class MetricTest extends SpringTestBase {
       if (i < maxMessages / 2) {
         enqueueIn(notification, rqueueConfig.getDelayedQueueName(notificationQueue), -delay);
       } else {
-        messageSender.enqueueAt(notificationQueue, notification, Instant.now().plusMillis(delay));
+        enqueueAt(notificationQueue, notification, Instant.now().plusMillis(delay));
       }
     }
 
     if (maxDelay == 5000) {
       Notification notification = Notification.newInstance();
-      messageSender.enqueueWithRetry(notificationQueue, notification, 10000);
+      enqueueWithRetry(notificationQueue, notification, 10000);
     }
 
-    assertTrue(
-        meterRegistry
-                .get("delayed.queue.size")
-                .tag("rqueue", "test")
-                .tag("queue", notificationQueue)
-                .gauge()
-                .value()
-            > 0);
+    waitFor(
+        () ->
+            meterRegistry
+                    .get("delayed.queue.size")
+                    .tag("rqueue", "test")
+                    .tag("queue", notificationQueue)
+                    .gauge()
+                    .value()
+                > 0,
+        60000,
+        "stats collection");
     waitFor(
         () ->
             meterRegistry
@@ -72,11 +73,10 @@ public abstract class MetricTest extends SpringTestBase {
                     .gauge()
                     .value()
                 > 0,
+        60000,
         "Message in original queue");
-    messageSender.deleteAllMessages(notificationQueue);
-    waitFor(
-        () -> messageSender.getAllMessages(notificationQueue).size() == 0,
-        "notification queue to drain");
+    deleteAllMessages(notificationQueue);
+    waitFor(() -> getMessageCount(notificationQueue) == 0, 60000, "notification queue to drain");
   }
 
   protected void verifyMetricStatus() throws TimedOutException {
@@ -84,17 +84,18 @@ public abstract class MetricTest extends SpringTestBase {
 
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
-    messageSender.enqueue(jobQueue, job);
+    enqueue(jobQueue, job);
 
-    assertEquals(
-        10,
-        meterRegistry
-            .get("dead.letter.queue.size")
-            .tags("rqueue", "test")
-            .tags("queue", emailQueue)
-            .gauge()
-            .value(),
-        0);
+    waitFor(
+        () ->
+            meterRegistry
+                    .get("dead.letter.queue.size")
+                    .tags("rqueue", "test")
+                    .tags("queue", emailQueue)
+                    .gauge()
+                    .value()
+                == 10,
+        "stats collection");
     waitFor(
         () ->
             meterRegistry
@@ -109,10 +110,10 @@ public abstract class MetricTest extends SpringTestBase {
   }
 
   protected void verifyCountStatus() throws TimedOutException {
-    messageSender.enqueue(emailQueue, Email.newInstance());
+    enqueue(emailQueue, Email.newInstance());
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), 1, 1);
-    messageSender.enqueue(jobQueue, job);
+    enqueue(jobQueue, job);
     waitFor(
         () ->
             meterRegistry
@@ -137,14 +138,15 @@ public abstract class MetricTest extends SpringTestBase {
         "message process",
         () -> printQueueStats(newArrayList(jobQueue, emailQueue, notificationQueue)));
 
-    assertEquals(
-        0,
-        meterRegistry
-            .get("failure.count")
-            .tags("rqueue", "test")
-            .tags("queue", emailQueue)
-            .counter()
-            .count(),
-        0);
+    waitFor(
+        () ->
+            meterRegistry
+                    .get("failure.count")
+                    .tags("rqueue", "test")
+                    .tags("queue", emailQueue)
+                    .counter()
+                    .count()
+                == 0,
+        "stats collection");
   }
 }

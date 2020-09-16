@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -78,8 +77,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   @Override
   public Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
       List<QueueConfig> queueConfig) {
-    return queueConfig
-        .parallelStream()
+    return queueConfig.parallelStream()
         .collect(Collectors.toMap(QueueConfig::getName, this::getQueueDataStructureDetail));
   }
 
@@ -172,15 +170,21 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (CollectionUtils.isEmpty(rqueueMessages)) {
       return Collections.emptyList();
     }
-    List<String> ids =
-        rqueueMessages.stream()
-            .map(e -> Objects.requireNonNull(e.getValue()).getId())
-            .map(MessageUtils::getMessageMetaId)
-            .collect(Collectors.toList());
-
-    List<MessageMetadata> vals = rqueueMessageMetadataService.findAll(ids);
-    Map<String, Boolean> msgIdToDeleted =
-        vals.stream().collect(Collectors.toMap(MessageMetadata::getMessageId, e -> true));
+    Map<String, String> messageMetaIdToId = new HashMap<>();
+    for (TypedTuple<RqueueMessage> tuple : rqueueMessages) {
+      RqueueMessage rqueueMessage = tuple.getValue();
+      assert rqueueMessage != null;
+      String messageMetaId =
+          MessageUtils.getMessageMetaId(rqueueMessage.getQueueName(), rqueueMessage.getId());
+      messageMetaIdToId.put(messageMetaId, rqueueMessage.getId());
+    }
+    List<MessageMetadata> vals = rqueueMessageMetadataService.findAll(messageMetaIdToId.keySet());
+    Map<String, Boolean> msgIdToDeleted = new HashMap<>();
+    for (MessageMetadata messageMetadata : vals) {
+      String messageMetaId = messageMetadata.getId();
+      String id = messageMetaIdToId.get(messageMetaId);
+      msgIdToDeleted.put(id, messageMetadata.isDeleted());
+    }
     return rqueueMessages.stream()
         .map(
             e ->

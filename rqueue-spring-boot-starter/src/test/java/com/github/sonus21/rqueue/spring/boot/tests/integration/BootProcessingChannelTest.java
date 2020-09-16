@@ -16,55 +16,34 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
-import com.github.sonus21.rqueue.test.tests.MessageChannelTest;
-import com.github.sonus21.test.RqueueSpringTestRunner;
-import com.github.sonus21.test.RunTestUntilFail;
-import java.util.List;
-import java.util.Map.Entry;
+import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = ApplicationListenerDisabled.class)
 @TestPropertySource(
     properties = {
       "rqueue.scheduler.auto.start=false",
-      "spring.redis.port=8002",
-      "mysql.db.name=test2",
+      "spring.redis.port=8011",
+      "mysql.db.name=BootProcessingChannelTest",
       "max.workers.count=120",
-      "use.system.redis=false"
-
+      "use.system.redis=false",
+      "monitor.thread.count=1",
+      "start.queue.enabled=true",
     })
 @SpringBootTest
 @Slf4j
-public class BootMessageChannelTest extends MessageChannelTest {
-
-  @Rule
-  public RunTestUntilFail retry =
-      new RunTestUntilFail(
-          log,
-          () -> {
-            for (Entry<String, List<RqueueMessage>> entry : getMessageMap(jobQueue).entrySet()) {
-              log.error("FAILING Queue {}", entry.getKey());
-              for (RqueueMessage message : entry.getValue()) {
-                log.error("FAILING Queue {} Msg {}", entry.getKey(), message);
-              }
-            }
-          });
-
-  @Test
-  public void publishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
-    verifyPublishMessageIsTriggeredOnMessageAddition();
-  }
-
+@DisabledIfEnvironmentVariable(named = "CI_ENV", matches = "true")
+public class BootProcessingChannelTest extends MessageChannelTests {
   @Test
   public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
     verifyPublishMessageIsTriggeredOnMessageRemoval();

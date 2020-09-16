@@ -163,9 +163,10 @@ public abstract class MessageScheduler
     if (queueCount == 0) {
       return;
     }
-    scheduler =
-        ThreadUtils.createTaskScheduler(
-            min(getThreadPoolSize(), queueCount), getThreadNamePrefix(), 60);
+    int threadPoolSize = min(getThreadPoolSize(), queueCount);
+    String threadNamePrefix = getThreadNamePrefix();
+    int terminationTime = 60;
+    scheduler = ThreadUtils.createTaskScheduler(threadPoolSize, threadNamePrefix, terminationTime);
   }
 
   private boolean isQueueActive(String queueName) {
@@ -195,7 +196,7 @@ public abstract class MessageScheduler
     queueNameToLastMessageSeenTime.put(queueName, currentTime);
 
     ScheduledTaskDetail scheduledTaskDetail = queueNameToScheduledTask.get(queueName);
-    QueueDetail queueDetail = QueueRegistry.get(queueName);
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
     String zsetName = getZsetName(queueName);
 
     if (scheduledTaskDetail == null || forceSchedule) {
@@ -241,9 +242,9 @@ public abstract class MessageScheduler
 
   @SuppressWarnings("unchecked")
   protected void initialize() {
-    List<String> queueNames = QueueRegistry.getActiveQueues();
+    List<String> queueNames = EndpointRegistry.getActiveQueues();
     defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
-    redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.PUSH_MESSAGE);
+    redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.MOVE_EXPIRED_MESSAGE);
     queueRunningState = new ConcurrentHashMap<>(queueNames.size());
     queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
     channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
@@ -262,7 +263,7 @@ public abstract class MessageScheduler
   public void onApplicationEvent(RqueueBootstrapEvent event) {
     doStop();
     if (event.isStart()) {
-      if (QueueRegistry.getActiveQueueCount() == 0) {
+      if (EndpointRegistry.getActiveQueueCount() == 0) {
         getLogger().warn("No queues are configured");
         return;
       }

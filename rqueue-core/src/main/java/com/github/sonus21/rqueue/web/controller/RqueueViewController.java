@@ -19,15 +19,17 @@ package com.github.sonus21.rqueue.web.controller;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
+import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
+import io.seruco.encoding.base62.Base62;
+import java.nio.ByteBuffer;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -59,6 +61,7 @@ public class RqueueViewController {
   private final RqueueQDetailService rqueueQDetailService;
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueSystemManagerService;
+  private final Base62 base62 = Base62.createInstance();
 
   @Autowired
   public RqueueViewController(
@@ -100,6 +103,21 @@ public class RqueueViewController {
       prefix = xForwardedPrefix + prefix;
     }
     model.addAttribute("urlPrefix", prefix);
+    addNonce(model, "urlNonce");
+  }
+
+  @SuppressWarnings("unchecked")
+  private void addNonce(Model model, String name) {
+    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+    buffer.putLong(System.nanoTime());
+    String nonce = new String(base62.encode(buffer.array()));
+    List<String> nonces = (List<String>) model.asMap().get("nonces");
+    if (nonces == null) {
+      nonces = new ArrayList<>();
+    }
+    nonces.add(nonce);
+    model.addAttribute("nonces", nonces);
+    model.addAttribute(name, nonce);
   }
 
   @GetMapping
@@ -111,6 +129,7 @@ public class RqueueViewController {
     }
     addBasicDetails(model, request);
     addNavData(model, null);
+    addNonce(model, "indexNonce");
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
     model.addAttribute("typeSelectors", TaskStatus.getActiveChartStatus());
@@ -153,6 +172,7 @@ public class RqueueViewController {
         rqueueQDetailService.getQueueDataStructureDetail(queueConfig);
     addBasicDetails(model, request);
     addNavData(model, NavTab.QUEUES);
+    addNonce(model, "queueDetailNonce");
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
@@ -237,6 +257,7 @@ public class RqueueViewController {
     }
     addBasicDetails(model, request);
     addNavData(model, NavTab.UTILITY);
+    addNonce(model, "utilityNonce");
     model.addAttribute("title", "Utility");
     model.addAttribute("supportedDataType", DataType.getEnabledDataTypes());
     return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);

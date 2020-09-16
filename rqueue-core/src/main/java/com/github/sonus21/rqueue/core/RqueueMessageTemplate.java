@@ -62,4 +62,6 @@ public interface RqueueMessageTemplate {
   Long removeElementFromZset(String zsetName, RqueueMessage rqueueMessage);
 
   List<TypedTuple<RqueueMessage>> readFromZsetWithScore(String name, long start, long end);
+
+  Long getScore(String delayedQueueName, RqueueMessage rqueueMessage);
 }

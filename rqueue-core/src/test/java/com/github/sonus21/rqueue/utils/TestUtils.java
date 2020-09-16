@@ -22,8 +22,8 @@ import com.github.sonus21.rqueue.models.db.QueueConfig;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestUtils {
-  TestUtils() {}
+public final class TestUtils {
+  private TestUtils() {}
 
   public static QueueConfig createQueueConfig(
       String name, int numRetry, long visibilityTimeout, String dlq) {

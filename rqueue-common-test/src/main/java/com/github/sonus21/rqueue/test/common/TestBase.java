@@ -25,13 +25,18 @@ public abstract class TestBase {
 
   static {
     String seed = System.getenv("TEST_SEED");
-    long randomSeed;
-    if (seed == null) {
+    long randomSeed = 0;
+    if (seed != null) {
+      try {
+        randomSeed = Long.parseLong(seed);
+      } catch (NumberFormatException e) {
+        log.error("Invalid number format for log seed {}", seed);
+      }
+    }
+    if (randomSeed == 0) {
       randomSeed = System.currentTimeMillis();
-    } else {
-      randomSeed = Long.parseLong(seed);
     }
     random = new Random(randomSeed);
-    log.info("Test random seed is {}", randomSeed);
+    log.error("Test random seed is {}", randomSeed);
   }
 }

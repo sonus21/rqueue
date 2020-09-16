@@ -18,23 +18,23 @@ package com.github.sonus21.rqueue.core;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class ProcessingMessageSchedulerTest {
   @Mock private RedisTemplate<String, Long> redisTemplate;
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
@@ -46,12 +46,12 @@ public class ProcessingMessageSchedulerTest {
   private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
 
-  @Before
+  @BeforeEach
   public void init() {
-    MockitoAnnotations.initMocks(this);
-    QueueRegistry.delete();
-    QueueRegistry.register(slowQueueDetail);
-    QueueRegistry.register(fastQueueDetail);
+    MockitoAnnotations.openMocks(this);
+    EndpointRegistry.delete();
+    EndpointRegistry.register(slowQueueDetail);
+    EndpointRegistry.register(fastQueueDetail);
     doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
     messageScheduler.initialize();
   }

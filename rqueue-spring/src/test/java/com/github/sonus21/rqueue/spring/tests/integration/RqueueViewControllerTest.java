@@ -16,21 +16,21 @@
 
 package com.github.sonus21.rqueue.spring.tests.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-import com.github.sonus21.rqueue.models.db.TaskStatus;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
+import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.jtwig.spring.JtwigView;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.ui.ModelMap;
 
 @ContextConfiguration(classes = SpringApp.class)
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -50,17 +50,14 @@ import org.springframework.ui.ModelMap;
       "rqueue.web.statistic.history.day=180",
     })
 public class RqueueViewControllerTest extends SpringWebTestBase {
-  public void verifyBasicData(ModelMap model, NavTab navTab) {
+  private void verifyBasicData(ModelMap model, NavTab navTab) {
     assertNotNull(model.get("latestVersion"));
     assertNotNull(model.get("version"));
     assertNotNull(model.get("releaseLink"));
     assertNotNull(model.get("time"));
     assertNotNull(model.get("timeInMilli"));
     for (NavTab tab : NavTab.values()) {
-      assertEquals(
-          tab.name().toLowerCase() + "Active",
-          tab == navTab,
-          model.get(tab.name().toLowerCase() + "Active"));
+      assertEquals(tab == navTab, model.get(tab.name().toLowerCase() + "Active"));
     }
   }
 
@@ -76,9 +73,9 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
         model.get("aggregatorTypes"));
     assertEquals(
         Arrays.asList(
-            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.SUCCESSFUL,
             TaskStatus.DISCARDED,
+            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.RETRIED),
         model.get("typeSelectors"));
   }
@@ -109,9 +106,9 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
         model.get("aggregatorTypes"));
     assertEquals(
         Arrays.asList(
-            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.SUCCESSFUL,
             TaskStatus.DISCARDED,
+            TaskStatus.MOVED_TO_DLQ,
             TaskStatus.RETRIED),
         model.get("typeSelectors"));
     assertNotNull(model.get("config"));

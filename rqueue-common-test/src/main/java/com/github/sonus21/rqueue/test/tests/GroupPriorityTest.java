@@ -27,9 +27,9 @@ import java.util.Arrays;
 public abstract class GroupPriorityTest extends SpringTestBase {
 
   protected void checkGroupConsumer() throws TimedOutException {
-    rqueueMessageSender.enqueue(chatIndexingQueue, ChatIndexing.newInstance());
-    rqueueMessageSender.enqueue(feedGenerationQueue, FeedGeneration.newInstance());
-    rqueueMessageSender.enqueue(reservationQueue, Reservation.newInstance());
+    enqueue(chatIndexingQueue, ChatIndexing.newInstance());
+    enqueue(feedGenerationQueue, FeedGeneration.newInstance());
+    enqueue(reservationQueue, Reservation.newInstance());
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(Arrays.asList(chatIndexingQueue, feedGenerationQueue, reservationQueue))

@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.test.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -28,7 +28,7 @@ public abstract class SpringWebTestBase extends SpringTestBase {
   protected MockMvc mockMvc;
   protected ObjectMapper mapper = new ObjectMapper();
 
-  @Before
+  @BeforeEach
   public void init() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
   }
