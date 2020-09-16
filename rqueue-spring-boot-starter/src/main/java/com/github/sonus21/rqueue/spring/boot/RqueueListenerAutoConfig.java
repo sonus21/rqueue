@@ -94,6 +94,10 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @Bean
   @ConditionalOnMissingBean
   public RqueueEndpointManager rqueueEndpointManager(RqueueMessageTemplate rqueueMessageTemplate) {
+    if (simpleRqueueListenerContainerFactory.getMessageConverters() != null) {
+      return new RqueueEndpointManagerImpl(
+          rqueueMessageTemplate, simpleRqueueListenerContainerFactory.getMessageConverters());
+    }
     return new RqueueEndpointManagerImpl(rqueueMessageTemplate);
   }
 
