@@ -16,14 +16,13 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -43,12 +42,12 @@ import org.springframework.test.context.TestPropertySource;
     })
 public class BootMetricsTest extends MetricTest {
 
-  @RetryingTest(3)
+  @Test
   public void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }
 
-  @RetryingTest(3)
+  @Test
   public void metricStatus() throws TimedOutException {
     this.verifyMetricStatus();
   }

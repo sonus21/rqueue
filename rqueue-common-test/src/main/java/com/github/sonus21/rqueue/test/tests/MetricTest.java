@@ -18,8 +18,6 @@ package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -55,14 +53,16 @@ public abstract class MetricTest extends SpringTestBase {
       enqueueWithRetry(notificationQueue, notification, 10000);
     }
 
-    assertTrue(
-        meterRegistry
-                .get("delayed.queue.size")
-                .tag("rqueue", "test")
-                .tag("queue", notificationQueue)
-                .gauge()
-                .value()
-            > 0);
+    waitFor(
+        () ->
+            meterRegistry
+                    .get("delayed.queue.size")
+                    .tag("rqueue", "test")
+                    .tag("queue", notificationQueue)
+                    .gauge()
+                    .value()
+                > 0,
+        "stats collection");
     waitFor(
         () ->
             meterRegistry
@@ -85,15 +85,16 @@ public abstract class MetricTest extends SpringTestBase {
     failureManager.createFailureDetail(job.getId(), -1, 0);
     enqueue(jobQueue, job);
 
-    assertEquals(
-        10,
-        meterRegistry
-            .get("dead.letter.queue.size")
-            .tags("rqueue", "test")
-            .tags("queue", emailQueue)
-            .gauge()
-            .value(),
-        0);
+    waitFor(
+        () ->
+            meterRegistry
+                    .get("dead.letter.queue.size")
+                    .tags("rqueue", "test")
+                    .tags("queue", emailQueue)
+                    .gauge()
+                    .value()
+                == 10,
+        "stats collection");
     waitFor(
         () ->
             meterRegistry
@@ -136,14 +137,15 @@ public abstract class MetricTest extends SpringTestBase {
         "message process",
         () -> printQueueStats(newArrayList(jobQueue, emailQueue, notificationQueue)));
 
-    assertEquals(
-        0,
-        meterRegistry
-            .get("failure.count")
-            .tags("rqueue", "test")
-            .tags("queue", emailQueue)
-            .counter()
-            .count(),
-        0);
+    waitFor(
+        () ->
+            meterRegistry
+                    .get("failure.count")
+                    .tags("rqueue", "test")
+                    .tags("queue", emailQueue)
+                    .counter()
+                    .count()
+                == 0,
+        "stats collection");
   }
 }
