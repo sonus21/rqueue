@@ -44,7 +44,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class RqueueMessageSenderTest {
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageSender rqueueMessageSender =
-      new RqueueMessageSenderImpl(rqueueMessageTemplate);
+      new RqueueMessageSenderImpl(rqueueMessageTemplate, new DefaultRqueueMessageConverter());
   private String queueName = "test-queue";
   private QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
   private String slowQueue = "slow-queue";

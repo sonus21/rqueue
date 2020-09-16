@@ -36,19 +36,16 @@ import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.google.common.collect.ImmutableList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.converter.MessageConverter;
 
 @Slf4j
 public class RqueueMessageSenderImpl extends BaseMessageSender implements RqueueMessageSender {
 
-  public RqueueMessageSenderImpl(RqueueMessageTemplate messageTemplate) {
-    this(messageTemplate, Collections.emptyList());
-  }
-
   public RqueueMessageSenderImpl(
-      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    super(messageTemplate, messageConverters);
+      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
+    super(messageTemplate, messageConverter);
   }
 
   @Override
@@ -131,7 +128,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
 
   @Override
   public List<MessageConverter> getMessageConverters() {
-    return messageConverter.getConverters();
+    return ImmutableList.of(messageConverter);
   }
 
   @Override

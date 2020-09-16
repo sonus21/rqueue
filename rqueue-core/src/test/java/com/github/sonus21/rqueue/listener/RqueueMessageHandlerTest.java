@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.lang.reflect.Method;
@@ -45,6 +46,7 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.support.MessageBuilder;
 
@@ -468,6 +470,10 @@ public class RqueueMessageHandlerTest {
 
   private static class DummyMessageHandler extends RqueueMessageHandler {
     private MappingInformation mappingInformation;
+
+    public DummyMessageHandler() {
+      super(new DefaultRqueueMessageConverter());
+    }
 
     @Override
     protected MappingInformation getMappingForMethod(Method method, Class<?> handlerType) {

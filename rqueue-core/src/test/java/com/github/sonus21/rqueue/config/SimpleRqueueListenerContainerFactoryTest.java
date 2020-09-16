@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
@@ -85,7 +86,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void getRqueueMessageHandler() {
-    assertNull(simpleRqueueListenerContainerFactory.getRqueueMessageHandler());
+    assertNotNull(simpleRqueueListenerContainerFactory.getRqueueMessageHandler());
   }
 
   @Test
@@ -122,15 +123,8 @@ public class SimpleRqueueListenerContainerFactoryTest {
   }
 
   @Test
-  public void getMessageConverters() {
-    assertNull(simpleRqueueListenerContainerFactory.getMessageConverters());
-  }
-
-  @Test
-  public void getMessageConverters2() {
-    simpleRqueueListenerContainerFactory.setMessageConverters(
-        Collections.singletonList(new GenericMessageConverter()));
-    assertEquals(1, simpleRqueueListenerContainerFactory.getMessageConverters().size());
+  public void getMessageConverter() {
+    assertNotNull(simpleRqueueListenerContainerFactory.getMessageConverter());
   }
 
   @Test
@@ -166,15 +160,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
 
   @Test
   public void createMessageListenerContainer1() {
-    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> simpleRqueueListenerContainerFactory.createMessageListenerContainer());
-  }
-
-  @Test
-  public void createMessageListenerContainer2() {
-    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
     assertThrows(
         IllegalArgumentException.class,
         () -> simpleRqueueListenerContainerFactory.createMessageListenerContainer());
@@ -183,7 +169,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
   @Test
   public void createMessageListenerContainer3() {
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
-    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
@@ -200,7 +186,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
         messageProcessor,
         simpleRqueueListenerContainerFactory.getDeadLetterQueueMessageProcessor());
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
-    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
@@ -221,7 +207,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
     assertEquals(
         messageProcessor, simpleRqueueListenerContainerFactory.getDiscardMessageProcessor());
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
-    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
@@ -311,7 +297,7 @@ public class SimpleRqueueListenerContainerFactoryTest {
     simpleRqueueListenerContainerFactory.setManualDeletionMessageProcessor(deletion);
     simpleRqueueListenerContainerFactory.setDiscardMessageProcessor(discardMessageProcessor);
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
-    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler());
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
     simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(backOff);
     simpleRqueueListenerContainerFactory.setTaskExecutor(executor);
     simpleRqueueListenerContainerFactory.setPriorityMode(PriorityMode.WEIGHTED);

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
@@ -97,7 +98,7 @@ public class RqueueMessageConfigTest {
   @Test
   public void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    MessageConverter messageConverter = new GenericMessageConverter();
+    MessageConverter messageConverter = new DefaultRqueueMessageConverter();
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     factory.setMessageConverters(Collections.singletonList(messageConverter));
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);

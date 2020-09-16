@@ -33,13 +33,9 @@ import org.springframework.util.CollectionUtils;
 
 public class RqueueEndpointManagerImpl extends BaseMessageSender implements RqueueEndpointManager {
 
-  public RqueueEndpointManagerImpl(RqueueMessageTemplate messageTemplate) {
-    super(messageTemplate);
-  }
-
   public RqueueEndpointManagerImpl(RqueueMessageTemplate messageTemplate,
-      List<MessageConverter> messageConverters) {
-    super(messageTemplate, messageConverters);
+      MessageConverter messageConverter) {
+    super(messageTemplate, messageConverter);
   }
 
   @Override
