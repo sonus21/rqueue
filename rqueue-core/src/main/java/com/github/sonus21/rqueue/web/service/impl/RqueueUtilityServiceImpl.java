@@ -168,7 +168,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   }
 
   private boolean shouldFetchVersionDetail() {
-    if (!rqueueConfig.isVersionEnabled()) {
+    if (!rqueueConfig.isLatestVersionCheckEnabled()) {
       return false;
     }
     return System.currentTimeMillis() - versionFetchTime > Constants.MILLIS_IN_A_DAY;

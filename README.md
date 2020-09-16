@@ -28,7 +28,7 @@
 * **Callbacks** : Callbacks for dead letter queue, discard etc
 * **Events** 1. Bootstrap event 2. Task execution event.
 * **Unique message** : Unique message processing for a queue based on the message id
-* Separate Redis connection for Rqueue
+* **Redis connection**: A different redis setup can be used for Rqueue
 
 ## Getting Started
 

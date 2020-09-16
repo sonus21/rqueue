@@ -93,4 +93,8 @@ public final class EndpointRegistry {
   public static int getActiveQueueCount() {
     return getActiveQueues().size();
   }
+
+  public static int getRegisteredQueueCount() {
+    return queueNameToDetail.size();
+  }
 }

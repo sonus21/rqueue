@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.config;
 
+import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.net.Proxy;
 import lombok.Getter;
@@ -37,8 +38,8 @@ public class RqueueConfig {
   @Value("${rqueue.version:2.1.0}")
   private String version;
 
-  @Value("${rqueue.version.enabled:true}")
-  private boolean versionEnabled;
+  @Value("${rqueue.latest.version.check.enabled:true}")
+  private boolean latestVersionCheckEnabled;
 
   @Value("${rqueue.key.prefix:__rq::}")
   private String prefix;
@@ -96,6 +97,9 @@ public class RqueueConfig {
 
   @Value("${rqueue.message.durability.in-terminal-state:1800}")
   private long messageDurabilityInTerminalStateInSecond;
+
+  @Value("${rqueue.system.mode:BOTH}")
+  private RqueueMode mode;
 
   public String getQueuesKey() {
     return prefix + queuesKeySuffix;

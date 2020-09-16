@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
+import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
@@ -240,6 +241,10 @@ public class RqueueMessageListenerContainer
   @Override
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
+      if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
+        log.info("Producer only mode running.");
+        return;
+      }
       EndpointRegistry.delete();
       for (MappingInformation mappingInformation :
           rqueueMessageHandler.getHandlerMethods().keySet()) {

@@ -24,7 +24,7 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
     try {
       return jackson2JsonRedisSerializer.deserialize(bytes);
     } catch (Exception e) {
-      log.warn("Jackson deserialization has failed {}", bytes, e);
+      log.warn("Jackson deserialization has failed {}", new String(bytes), e);
       return new String(bytes);
     }
   }

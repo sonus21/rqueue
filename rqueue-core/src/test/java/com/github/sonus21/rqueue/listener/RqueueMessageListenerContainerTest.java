@@ -129,6 +129,7 @@ public class RqueueMessageListenerContainerTest {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     assertTrue(container.isRunning());
@@ -142,6 +143,7 @@ public class RqueueMessageListenerContainerTest {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -153,6 +155,7 @@ public class RqueueMessageListenerContainerTest {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     container.stop();
@@ -166,6 +169,7 @@ public class RqueueMessageListenerContainerTest {
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     CountDownLatch count = new CountDownLatch(1);
+    FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     container.afterPropertiesSet();
     container.start();
     container.stop(count::countDown);
