@@ -63,7 +63,7 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
 
   @Bean
   public LettuceConnectionFactory redisConnectionFactory() {
-    return new LettuceConnectionFactory(redisHost2, redisPort2);
+    return new LettuceConnectionFactory(redisHost, redisPort);
   }
 
   @Bean
