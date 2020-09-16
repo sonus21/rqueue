@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
-import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.application.ProducerOnlyApplication;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @ExtendWith(SpringTestTracerExtension.class)
-@ContextConfiguration(classes = Application.class)
+@ContextConfiguration(classes = ProducerOnlyApplication.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(properties = {"spring.redis.port=8012", "rqueue.system.mode=PRODUCER"})
