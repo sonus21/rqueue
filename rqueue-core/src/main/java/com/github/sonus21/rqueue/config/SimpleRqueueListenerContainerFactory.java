@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -204,6 +205,14 @@ public class SimpleRqueueListenerContainerFactory {
     this.maxNumWorkers = maxNumWorkers;
   }
 
+  /** @return the message converters
+   * @deprecated use {@link #getMessageConverter()}
+   */
+  @Deprecated
+  public List<MessageConverter> getMessageConverters() {
+    return Collections.singletonList(getMessageConverter());
+  }
+
   /** @return the message converter */
   public MessageConverter getMessageConverter() {
     if (messageConverter == null) {
@@ -217,7 +226,9 @@ public class SimpleRqueueListenerContainerFactory {
    * message converters
    *
    * @param messageConverters list of message converters
+   * @deprecated use {@link #setMessageConverter(MessageConverter)}
    */
+  @Deprecated
   public void setMessageConverters(List<MessageConverter> messageConverters) {
     notEmpty(messageConverters, "messageConverters must not be empty");
     if (messageConverters.size() == 1) {
@@ -227,6 +238,9 @@ public class SimpleRqueueListenerContainerFactory {
     }
   }
 
+  /**
+   * @param messageConverter the message converter
+   */
   public void setMessageConverter(MessageConverter messageConverter) {
     notNull(messageConverter, "message converter must not be null");
     this.messageConverter = messageConverter;
