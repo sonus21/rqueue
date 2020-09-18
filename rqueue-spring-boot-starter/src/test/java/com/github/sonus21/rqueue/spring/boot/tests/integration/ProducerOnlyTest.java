@@ -28,13 +28,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 
 @ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = ProducerOnlyApplication.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"spring.redis.port=8012", "rqueue.system.mode=PRODUCER"})
 public class ProducerOnlyTest extends BasicListenerTest {
   @Test
   public void testQueueCount() {

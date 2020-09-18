@@ -22,6 +22,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -33,7 +34,6 @@ import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -175,7 +175,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       RqueueMessage rqueueMessage = tuple.getValue();
       assert rqueueMessage != null;
       String messageMetaId =
-          MessageUtils.getMessageMetaId(rqueueMessage.getQueueName(), rqueueMessage.getId());
+          RqueueMessageUtils.getMessageMetaId(rqueueMessage.getQueueName(), rqueueMessage.getId());
       messageMetaIdToId.put(messageMetaId, rqueueMessage.getId());
     }
     List<MessageMetadata> vals = rqueueMessageMetadataService.findAll(messageMetaIdToId.keySet());

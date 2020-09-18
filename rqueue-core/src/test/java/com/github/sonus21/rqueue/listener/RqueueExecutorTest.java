@@ -33,9 +33,9 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
@@ -214,7 +214,7 @@ public class RqueueExecutorTest {
               return messageMetadata;
             })
         .when(rqueueMessageMetadataService)
-        .get(MessageUtils.getMessageMetaId(queueName, rqueueMessage.getId()));
+        .get(RqueueMessageUtils.getMessageMetaId(queueName, rqueueMessage.getId()));
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
             rqueueMessage,

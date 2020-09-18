@@ -18,12 +18,12 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

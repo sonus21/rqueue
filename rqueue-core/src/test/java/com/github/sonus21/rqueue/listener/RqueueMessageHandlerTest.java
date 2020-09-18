@@ -46,7 +46,6 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.support.MessageBuilder;
 

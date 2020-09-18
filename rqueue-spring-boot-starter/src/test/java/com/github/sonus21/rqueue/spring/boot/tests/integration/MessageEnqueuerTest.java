@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -28,7 +29,6 @@ import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.Sms;
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

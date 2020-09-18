@@ -62,6 +62,12 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   private final ConversionService conversionService;
   private final MessageConverter messageConverter;
 
+  // Only used in test
+  @Deprecated
+  public RqueueMessageHandler() {
+    this(new DefaultRqueueMessageConverter());
+  }
+
   public RqueueMessageHandler(final MessageConverter messageConverter) {
     notNull(messageConverter, "messageConverter cannot be null");
     this.messageConverter = messageConverter;

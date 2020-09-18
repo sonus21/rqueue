@@ -27,7 +27,8 @@ import org.junit.jupiter.api.Test;
 
 public class RqueueEndpointManagerTest {
   private final RqueueEndpointManager rqueueEndpointManager =
-      new RqueueEndpointManagerImpl(mock(RqueueMessageTemplate.class), new DefaultRqueueMessageConverter());
+      new RqueueEndpointManagerImpl(
+          mock(RqueueMessageTemplate.class), new DefaultRqueueMessageConverter(), null);
   RqueueConfig rqueueConfig = mock(RqueueConfig.class);
 
   @BeforeEach

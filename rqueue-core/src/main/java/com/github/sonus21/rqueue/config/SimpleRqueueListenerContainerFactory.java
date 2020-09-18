@@ -34,6 +34,7 @@ import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
@@ -55,7 +56,7 @@ public class SimpleRqueueListenerContainerFactory {
   // Custom requeue message handler
   private RqueueMessageHandler rqueueMessageHandler;
   // The message converter to convert messages to/from
-  private MessageConverter messageConverter;
+  private MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   // Send message poll time when no messages are available
   private long pollingInterval = 200L;
   // In case of failure how much time, we should wait for next job
@@ -78,6 +79,9 @@ public class SimpleRqueueListenerContainerFactory {
   private MessageProcessor postExecutionMessageProcessor;
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
+
+  // Any message headers that should be set
+  private MessageHeaders messageHeaders;
 
   // Set priority mode for the pollers
   private PriorityMode priorityMode;
@@ -205,7 +209,8 @@ public class SimpleRqueueListenerContainerFactory {
     this.maxNumWorkers = maxNumWorkers;
   }
 
-  /** @return the message converters
+  /**
+   * @return the message converters
    * @deprecated use {@link #getMessageConverter()}
    */
   @Deprecated
@@ -215,9 +220,6 @@ public class SimpleRqueueListenerContainerFactory {
 
   /** @return the message converter */
   public MessageConverter getMessageConverter() {
-    if (messageConverter == null) {
-      messageConverter = new DefaultRqueueMessageConverter();
-    }
     return messageConverter;
   }
 
@@ -239,6 +241,10 @@ public class SimpleRqueueListenerContainerFactory {
   }
 
   /**
+   * A default message converter {@link DefaultRqueueMessageConverter} is added that can handle all
+   * type of data serialization/deserialization and all data is serialized to and from JSON. You can
+   * use other mechanism to serialize/deserialize class object like MessagePack or any other format.
+   *
    * @param messageConverter the message converter
    */
   public void setMessageConverter(MessageConverter messageConverter) {
@@ -451,5 +457,14 @@ public class SimpleRqueueListenerContainerFactory {
    */
   public void setPriorityMode(PriorityMode priorityMode) {
     this.priorityMode = priorityMode;
+  }
+
+  public MessageHeaders getMessageHeaders() {
+    return messageHeaders;
+  }
+
+  public void setMessageHeaders(MessageHeaders messageHeaders) {
+    notEmpty(messageHeaders, "messageHeaders can not be empty");
+    this.messageHeaders = messageHeaders;
   }
 }

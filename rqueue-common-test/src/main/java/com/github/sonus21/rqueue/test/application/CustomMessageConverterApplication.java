@@ -23,7 +23,9 @@ import javax.annotation.PreDestroy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.messaging.converter.ByteArrayMessageConverter;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.util.MimeType;
 
 public abstract class CustomMessageConverterApplication extends ApplicationBasicConfiguration {
   @PostConstruct
@@ -48,7 +50,12 @@ public abstract class CustomMessageConverterApplication extends ApplicationBasic
         new SimpleRqueueListenerContainerFactory();
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(redisConnectionFactory);
     simpleRqueueListenerContainerFactory.setMessageConverters(
-        Collections.singletonList(new ByteArrayMessageConverter()));
+        Collections.singletonList(new MappingJackson2MessageConverter()));
+    MessageHeaders messageHeaders =
+        new MessageHeaders(
+            Collections.singletonMap(
+                MessageHeaders.CONTENT_TYPE, new MimeType("application", "json")));
+    simpleRqueueListenerContainerFactory.setMessageHeaders(messageHeaders);
     return simpleRqueueListenerContainerFactory;
   }
 }
