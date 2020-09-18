@@ -48,20 +48,6 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
 
   @Bean
   @ConditionalOnMissingBean
-  public MessageConverter messageConverter() {
-    return new DefaultRqueueMessageConverter();
-  }
-
-  @Bean
-  @ConditionalOnMissingBean
-  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(final MessageConverter messageConverter) {
-    final SimpleRqueueListenerContainerFactory rqueueListenerContainerFactory = new SimpleRqueueListenerContainerFactory();
-    rqueueListenerContainerFactory.setMessageConverter(messageConverter);
-    return rqueueListenerContainerFactory;
-  }
-
-  @Bean
-  @ConditionalOnMissingBean
   public RqueueMessageHandler rqueueMessageHandler() {
     return simpleRqueueListenerContainerFactory.getRqueueMessageHandler();
   }
