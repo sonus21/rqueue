@@ -24,7 +24,6 @@ import static org.springframework.util.Assert.notNull;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
-import com.github.sonus21.rqueue.core.MessageConverterFactory;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -33,32 +32,25 @@ import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
 @Slf4j
 @SuppressWarnings("WeakerAccess")
 abstract class BaseMessageSender {
-  protected CompositeMessageConverter messageConverter;
+  protected MessageConverter messageConverter;
   protected RqueueMessageTemplate messageTemplate;
   @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
-  BaseMessageSender(RqueueMessageTemplate messageTemplate) {
-    this(messageTemplate, Collections.emptyList());
-  }
-
   BaseMessageSender(
-      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
+      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
     notNull(messageTemplate, "messageTemplate cannot be null");
-    notNull(messageConverters, "messageConverters cannot be null");
+    notNull(messageConverter, "messageConverter cannot be null");
     this.messageTemplate = messageTemplate;
-    this.messageConverter = MessageConverterFactory.getMessageConverter(messageConverters);
+    this.messageConverter = messageConverter;
   }
 
   private void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {

@@ -91,7 +91,7 @@ public class RqueueListenerAutoConfigTest {
     factory.setRqueueMessageTemplate(messageTemplate);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));
+    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate, factory.getMessageConverter()));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
   }
 
@@ -104,8 +104,8 @@ public class RqueueListenerAutoConfigTest {
     RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));
-    RqueueMessageSender messageSender = messageAutoConfig.rqueueMessageSender(messageTemplate);
+    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate, factory.getMessageConverter()));
+    RqueueMessageSender messageSender = messageAutoConfig.rqueueMessageSender(messageTemplate, factory.getMessageConverter());
     boolean messageConverterIsConfigured = false;
     for (MessageConverter converter : messageSender.getMessageConverters()) {
       messageConverterIsConfigured =

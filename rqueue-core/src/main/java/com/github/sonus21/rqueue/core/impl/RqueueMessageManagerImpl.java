@@ -40,13 +40,9 @@ import org.springframework.messaging.support.MessageBuilder;
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
   @Autowired private RqueueLockManager rqueueLockManager;
 
-  public RqueueMessageManagerImpl(RqueueMessageTemplate messageTemplate) {
-    super(messageTemplate, Collections.emptyList());
-  }
-
   public RqueueMessageManagerImpl(
-      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    super(messageTemplate, messageConverters);
+      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
+    super(messageTemplate, messageConverter);
   }
 
   @Override

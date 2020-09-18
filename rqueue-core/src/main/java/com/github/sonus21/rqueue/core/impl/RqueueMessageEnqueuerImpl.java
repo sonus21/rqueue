@@ -34,13 +34,9 @@ import org.springframework.messaging.converter.MessageConverter;
 @Slf4j
 public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements RqueueMessageEnqueuer {
 
-  public RqueueMessageEnqueuerImpl(RqueueMessageTemplate messageTemplate) {
-    super(messageTemplate, Collections.emptyList());
-  }
-
   public RqueueMessageEnqueuerImpl(
-      RqueueMessageTemplate messageTemplate, List<MessageConverter> messageConverters) {
-    super(messageTemplate, messageConverters);
+      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
+    super(messageTemplate, messageConverter);
   }
 
   @Override

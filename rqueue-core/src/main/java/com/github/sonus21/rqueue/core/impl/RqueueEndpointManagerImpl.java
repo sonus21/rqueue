@@ -28,12 +28,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.util.CollectionUtils;
 
 public class RqueueEndpointManagerImpl extends BaseMessageSender implements RqueueEndpointManager {
 
-  public RqueueEndpointManagerImpl(RqueueMessageTemplate messageTemplate) {
-    super(messageTemplate);
+  public RqueueEndpointManagerImpl(RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter) {
+    super(messageTemplate, messageConverter);
   }
 
   @Override

@@ -18,27 +18,18 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import com.google.common.collect.ImmutableList;
+import lombok.EqualsAndHashCode;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 
-public final class MessageConverterFactory {
-  private MessageConverterFactory() {}
+@EqualsAndHashCode(callSuper = true)
+public final class DefaultRqueueMessageConverter extends CompositeMessageConverter implements MessageConverter{
 
-  public static CompositeMessageConverter getMessageConverter(
-      List<MessageConverter> messageConverterList) {
-    List<MessageConverter> messageConverters = messageConverterList;
-    if (messageConverterList == null) {
-      messageConverters = new ArrayList<>();
-    }
-    messageConverters = new ArrayList<>(messageConverters);
-    // String message converter
-    StringMessageConverter stringMessageConverter = new StringMessageConverter();
-    stringMessageConverter.setSerializedPayloadClass(String.class);
-    messageConverters.add(stringMessageConverter);
-    // add generic message converter
-    messageConverters.add(new GenericMessageConverter());
-    return new CompositeMessageConverter(messageConverters);
+  public DefaultRqueueMessageConverter() {
+    super(ImmutableList.of(new GenericMessageConverter(), new StringMessageConverter()));
   }
 }
