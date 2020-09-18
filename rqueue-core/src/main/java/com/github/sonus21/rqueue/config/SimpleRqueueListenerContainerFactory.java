@@ -80,7 +80,7 @@ public class SimpleRqueueListenerContainerFactory {
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
 
-  // Any message headers that should be set
+  // Any message headers that should be set, only used for message serialization
   private MessageHeaders messageHeaders;
 
   // Set priority mode for the pollers
