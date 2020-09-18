@@ -42,7 +42,7 @@ public final class TestRunner {
       try {
         test.run();
         return;
-      } catch (Exception e) {
+      } catch (Throwable e) {
         log.error("Test failed", e);
         if (failureCallback != null) {
           failureCallback.run();

@@ -181,6 +181,10 @@ public abstract class SpringTestBase extends TestBase {
     }
   }
 
+  protected void printQueueStats(String queueName) {
+    printQueueStats(Collections.singletonList(queueName));
+  }
+
   protected void cleanQueue(String queue) {
     QueueDetail queueDetail = EndpointRegistry.get(queue);
     stringRqueueRedisTemplate.delete(queueDetail.getQueueName());

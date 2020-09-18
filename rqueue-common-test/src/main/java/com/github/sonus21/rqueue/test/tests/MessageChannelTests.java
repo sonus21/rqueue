@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class MessageChannelTests extends SpringTestBase {
-  private final int messageCount = 200;
   /**
    * This test verifies whether any pending message in the delayed queue are moved or not whenever a
    * delayed message is pushed. During enqueue of delayed message we check whether there are any
@@ -42,7 +41,7 @@ public abstract class MessageChannelTests extends SpringTestBase {
    */
   protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
-    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, messageCount);
+    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, 200);
     Email email = Email.newInstance();
     log.info("adding new message {}", email);
     enqueueIn(emailQueue, email, Duration.ofMillis(1000));
@@ -50,10 +49,15 @@ public abstract class MessageChannelTests extends SpringTestBase {
         () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
         "one or zero messages in zset");
     assertTrue(
-        stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
-            >= messageCount,
+        stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue)) >= 200,
         "Messages are correctly moved");
-    assertEquals(messageCount + 1L, getMessageCount(emailQueue));
+    assertEquals(
+        200 + 1L,
+        getMessageCount(emailQueue),
+        () -> {
+          printQueueStats(emailQueue);
+          return "message count is not correct";
+        });
   }
 
   /**
@@ -67,7 +71,7 @@ public abstract class MessageChannelTests extends SpringTestBase {
     List<String> ids = new ArrayList<>();
     int maxDelay = 2000;
     String processingQueue = rqueueConfig.getProcessingQueueName(jobQueue);
-    for (int i = 0; i < messageCount; i++) {
+    for (int i = 0; i < 200; i++) {
       Job job = Job.newInstance();
       jobs.add(job);
       ids.add(job.getId());
@@ -79,11 +83,9 @@ public abstract class MessageChannelTests extends SpringTestBase {
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == getMessageCount(jobQueue),
-        30 * Constants.ONE_MILLI,
-        "messages to be consumed");
+        () -> 0 == getMessageCount(jobQueue), 30 * Constants.ONE_MILLI, "messages to be consumed");
     waitFor(
-        () -> messageCount == consumedMessageService.getMessages(ids, Job.class).size(),
+        () -> 200 == consumedMessageService.getMessages(ids, Job.class).size(),
         30 * Constants.ONE_MILLI,
         "message count to be matched");
     waitFor(
