@@ -27,9 +27,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.impl.RqueueMessageMetadataServiceImpl;
 import java.time.Duration;
 import java.util.Arrays;
@@ -51,7 +51,7 @@ public class RqueueMessageMetadataServiceTest {
   @Test
   public void get() {
     String id = UUID.randomUUID().toString();
-    String msgId = MessageUtils.getMessageMetaId(queueName, id);
+    String msgId = RqueueMessageUtils.getMessageMetaId(queueName, id);
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
     metadata.setDeleted(true);
     doReturn(null).when(rqueueRedisTemplate).get(msgId);
@@ -63,7 +63,7 @@ public class RqueueMessageMetadataServiceTest {
   @Test
   public void findAll() {
     String id = UUID.randomUUID().toString();
-    String msgId = MessageUtils.getMessageMetaId(queueName, id);
+    String msgId = RqueueMessageUtils.getMessageMetaId(queueName, id);
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
     metadata.setDeleted(true);
     List<String> ids = Arrays.asList(msgId, UUID.randomUUID().toString());
@@ -82,7 +82,7 @@ public class RqueueMessageMetadataServiceTest {
               return null;
             })
         .when(rqueueRedisTemplate)
-        .set(eq(MessageUtils.getMessageMetaId(queueName, id)), any(), eq(Duration.ofDays(7)));
+        .set(eq(RqueueMessageUtils.getMessageMetaId(queueName, id)), any(), eq(Duration.ofDays(7)));
     rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7));
   }
 
@@ -90,9 +90,12 @@ public class RqueueMessageMetadataServiceTest {
   public void deleteMessageWhereMetaInfo() {
     String id = UUID.randomUUID().toString();
     MessageMetadata metadata =
-        new MessageMetadata(MessageUtils.getMessageMetaId(queueName, id), MessageStatus.ENQUEUED);
+        new MessageMetadata(
+            RqueueMessageUtils.getMessageMetaId(queueName, id), MessageStatus.ENQUEUED);
     metadata.setDeleted(false);
-    doReturn(metadata).when(rqueueRedisTemplate).get(MessageUtils.getMessageMetaId(queueName, id));
+    doReturn(metadata)
+        .when(rqueueRedisTemplate)
+        .get(RqueueMessageUtils.getMessageMetaId(queueName, id));
     doAnswer(
             invocation -> {
               MessageMetadata metadataBeingSaved = invocation.getArgument(1);
@@ -101,7 +104,7 @@ public class RqueueMessageMetadataServiceTest {
               return null;
             })
         .when(rqueueRedisTemplate)
-        .set(eq(MessageUtils.getMessageMetaId(queueName, id)), any(), eq(Duration.ofDays(7)));
+        .set(eq(RqueueMessageUtils.getMessageMetaId(queueName, id)), any(), eq(Duration.ofDays(7)));
     rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7));
   }
 }

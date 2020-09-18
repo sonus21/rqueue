@@ -17,17 +17,13 @@
 package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import com.google.common.collect.ImmutableList;
 import lombok.EqualsAndHashCode;
 import org.springframework.messaging.converter.CompositeMessageConverter;
-import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 
 @EqualsAndHashCode(callSuper = true)
-public final class DefaultRqueueMessageConverter extends CompositeMessageConverter implements MessageConverter{
+public final class DefaultRqueueMessageConverter extends CompositeMessageConverter {
 
   public DefaultRqueueMessageConverter() {
     super(ImmutableList.of(new GenericMessageConverter(), new StringMessageConverter()));

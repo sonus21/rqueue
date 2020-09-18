@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.core.impl;
 
+import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildMessage;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
-import static com.github.sonus21.rqueue.utils.MessageUtils.buildMessage;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static org.springframework.util.Assert.notNull;
 
@@ -34,6 +34,7 @@ import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
 @Slf4j
@@ -44,13 +45,17 @@ abstract class BaseMessageSender {
   @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
+  protected final MessageHeaders messageHeaders;
 
   BaseMessageSender(
-      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders) {
     notNull(messageTemplate, "messageTemplate cannot be null");
     notNull(messageConverter, "messageConverter cannot be null");
     this.messageTemplate = messageTemplate;
     this.messageConverter = messageConverter;
+    this.messageHeaders = messageHeaders;
   }
 
   private void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
@@ -75,7 +80,8 @@ abstract class BaseMessageSender {
       Integer retryCount,
       Long delayInMilliSecs) {
     RqueueMessage rqueueMessage =
-        buildMessage(messageConverter, queueName, message, retryCount, delayInMilliSecs);
+        buildMessage(
+            messageConverter, message, queueName, retryCount, delayInMilliSecs, messageHeaders);
     if (messageId != null) {
       rqueueMessage.setId(messageId);
     }

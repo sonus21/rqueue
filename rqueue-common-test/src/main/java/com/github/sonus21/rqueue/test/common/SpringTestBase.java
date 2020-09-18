@@ -26,7 +26,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.support.RqueueMessageFactory;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
@@ -103,8 +103,8 @@ public abstract class SpringTestBase extends TestBase {
 
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage =
-        RqueueMessageFactory.buildMessage(
-            rqueueMessageManager.getMessageConverter(), message, queueName, null, null);
+        RqueueMessageUtils.buildMessage(
+            rqueueMessageManager.getMessageConverter(), message, queueName, null, null, null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
   }
 
@@ -112,8 +112,8 @@ public abstract class SpringTestBase extends TestBase {
     for (int i = 0; i < n; i++) {
       Object object = factory.next(i);
       RqueueMessage rqueueMessage =
-          RqueueMessageFactory.buildMessage(
-              rqueueMessageManager.getMessageConverter(), object, queueName, null, null);
+          RqueueMessageUtils.buildMessage(
+              rqueueMessageManager.getMessageConverter(), object, queueName, null, null, null);
       rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
     }
   }
@@ -123,16 +123,16 @@ public abstract class SpringTestBase extends TestBase {
       Object object = factory.next(i);
       long score = delay.getDelay(i);
       RqueueMessage rqueueMessage =
-          RqueueMessageFactory.buildMessage(
-              rqueueMessageManager.getMessageConverter(), object, zsetName, null, score);
+          RqueueMessageUtils.buildMessage(
+              rqueueMessageManager.getMessageConverter(), object, zsetName, null, score, null);
       rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
     }
   }
 
   protected void enqueueIn(Object message, String zsetName, long delay) {
     RqueueMessage rqueueMessage =
-        RqueueMessageFactory.buildMessage(
-            rqueueMessageManager.getMessageConverter(), message, zsetName, null, delay);
+        RqueueMessageUtils.buildMessage(
+            rqueueMessageManager.getMessageConverter(), message, zsetName, null, delay, null);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
   }
 
@@ -179,6 +179,10 @@ public abstract class SpringTestBase extends TestBase {
         }
       }
     }
+  }
+
+  protected void printQueueStats(String queueName) {
+    printQueueStats(Collections.singletonList(queueName));
   }
 
   protected void cleanQueue(String queue) {

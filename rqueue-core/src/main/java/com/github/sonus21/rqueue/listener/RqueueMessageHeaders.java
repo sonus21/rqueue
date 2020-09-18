@@ -22,12 +22,13 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.messaging.MessageHeaders;
 
-public class RqueueMessageHeaders {
+public final class RqueueMessageHeaders {
   public static final String DESTINATION = "destination";
   public static final String ID = "messageId";
   public static final String MESSAGE = "message";
   private static final MessageHeaders emptyMessageHeaders =
       new MessageHeaders(Collections.emptyMap());
+
   private RqueueMessageHeaders() {}
 
   public static MessageHeaders emptyMessageHeaders() {

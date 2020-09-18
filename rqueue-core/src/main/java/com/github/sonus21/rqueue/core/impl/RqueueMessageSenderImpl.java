@@ -28,24 +28,26 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
 @Slf4j
 public class RqueueMessageSenderImpl extends BaseMessageSender implements RqueueMessageSender {
 
   public RqueueMessageSenderImpl(
-      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
-    super(messageTemplate, messageConverter);
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders) {
+    super(messageTemplate, messageConverter, messageHeaders);
   }
 
   @Override
@@ -116,7 +118,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
             queueDetail.getQueueName(),
             queueDetail.getProcessingQueueName(),
             queueDetail.getDelayedQueueName())) {
-      messages.add(MessageUtils.convertMessageToObject(message, messageConverter));
+      messages.add(RqueueMessageUtils.convertMessageToObject(message, messageConverter));
     }
     return messages;
   }

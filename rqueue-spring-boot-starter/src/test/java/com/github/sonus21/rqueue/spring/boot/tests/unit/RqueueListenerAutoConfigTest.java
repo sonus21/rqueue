@@ -19,17 +19,17 @@ package com.github.sonus21.rqueue.spring.boot.tests.unit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,13 +48,10 @@ public class RqueueListenerAutoConfigTest {
   @Mock private BeanFactory beanFactory;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @InjectMocks private RqueueListenerAutoConfig rqueueMessageAutoConfig;
-  private List<MessageConverter> messageConverterList = new ArrayList<>();
 
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    messageConverterList.clear();
-    messageConverterList.add(new GenericMessageConverter());
   }
 
   @Test
@@ -91,7 +88,7 @@ public class RqueueListenerAutoConfigTest {
     factory.setRqueueMessageTemplate(messageTemplate);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate, factory.getMessageConverter()));
+    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
   }
 
@@ -104,8 +101,8 @@ public class RqueueListenerAutoConfigTest {
     RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate, factory.getMessageConverter()));
-    RqueueMessageSender messageSender = messageAutoConfig.rqueueMessageSender(messageTemplate, factory.getMessageConverter());
+    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));
+    RqueueMessageSender messageSender = messageAutoConfig.rqueueMessageSender(messageTemplate);
     boolean messageConverterIsConfigured = false;
     for (MessageConverter converter : messageSender.getMessageConverters()) {
       messageConverterIsConfigured =

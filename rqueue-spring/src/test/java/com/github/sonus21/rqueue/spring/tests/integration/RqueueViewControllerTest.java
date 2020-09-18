@@ -20,12 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.jtwig.spring.JtwigView;

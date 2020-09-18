@@ -21,18 +21,18 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.LockCanNotBeAcquired;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.MessageBuilder;
 
@@ -41,8 +41,10 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
   @Autowired private RqueueLockManager rqueueLockManager;
 
   public RqueueMessageManagerImpl(
-      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
-    super(messageTemplate, messageConverter);
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders) {
+    super(messageTemplate, messageConverter, messageHeaders);
   }
 
   @Override
@@ -68,7 +70,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
             queueDetail.getQueueName(),
             queueDetail.getProcessingQueueName(),
             queueDetail.getDelayedQueueName())) {
-      messages.add(MessageUtils.convertMessageToObject(message, messageConverter));
+      messages.add(RqueueMessageUtils.convertMessageToObject(message, messageConverter));
     }
     return messages;
   }

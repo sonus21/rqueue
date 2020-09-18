@@ -21,8 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -30,9 +32,7 @@ import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.tests.AllQueueMode;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
@@ -105,7 +105,7 @@ public class SpringAppTest extends AllQueueMode {
     assertEquals(1, messages.size());
     Email email1 =
         (Email)
-            MessageUtils.convertMessageToObject(
+            RqueueMessageUtils.convertMessageToObject(
                 messages.get(0), rqueueMessageSender.getMessageConverter());
     assertEquals(email.getId(), email1.getId());
   }

@@ -26,17 +26,18 @@ import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
-import java.util.Collections;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
 @Slf4j
 public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements RqueueMessageEnqueuer {
 
   public RqueueMessageEnqueuerImpl(
-      RqueueMessageTemplate messageTemplate, MessageConverter messageConverter) {
-    super(messageTemplate, messageConverter);
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders) {
+    super(messageTemplate, messageConverter, messageHeaders);
   }
 
   @Override

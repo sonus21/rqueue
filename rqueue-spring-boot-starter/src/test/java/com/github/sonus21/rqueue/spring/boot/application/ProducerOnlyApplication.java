@@ -24,7 +24,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-@PropertySource("classpath:application.properties")
+@PropertySource("classpath:producer-only-application.properties")
 @SpringBootApplication(scanBasePackages = {"com.github.sonus21.rqueue.test"})
 @EnableRedisRepositories
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})

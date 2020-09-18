@@ -20,11 +20,11 @@ import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
@@ -76,7 +76,8 @@ class RqueueExecutor extends MessageContainerBase {
             RqueueMessageHeaders.buildMessageHeaders(queueDetail.getName(), rqueueMessage));
     try {
       this.userMessage =
-          MessageUtils.convertMessageToObject(message, rqueueMessageHandler.getMessageConverter());
+          RqueueMessageUtils.convertMessageToObject(
+              message, rqueueMessageHandler.getMessageConverter());
     } catch (Exception e) {
       log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
       throw e;

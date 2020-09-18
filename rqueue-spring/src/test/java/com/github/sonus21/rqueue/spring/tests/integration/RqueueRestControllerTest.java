@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
@@ -46,7 +47,6 @@ import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Collections;
 import java.util.List;
@@ -273,7 +273,8 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
     assertEquals(0, response.getCode());
     Object metadata =
-        stringRqueueRedisTemplate.get(MessageUtils.getMessageMetaId(emailQueue, message.getId()));
+        stringRqueueRedisTemplate.get(
+            RqueueMessageUtils.getMessageMetaId(emailQueue, message.getId()));
     assertTrue(((MessageMetadata) metadata).isDeleted());
     TimeoutUtils.waitFor(
         () -> {
