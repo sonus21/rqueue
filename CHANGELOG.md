@@ -2,6 +2,10 @@
 
 **NOTE**: The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 24-Sep-2020
+### Added
+* More apis to enqueue unique message
+
 ## [2.1.0] - 16-Sep-2020
 ### Added
 * Allow application to provide message id while enqueuing messages
@@ -102,5 +106,6 @@ Fixes:
 [2.0.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.0-RELEASE
 [2.0.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.1-RELEASE
 [2.0.2]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.2-RELEASE
-[2.0.4]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.4-RELEASE
-[2.1.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.1.0-RELEASE
+[2.0.4]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.0.4-RELEASE
+[2.1.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.1.0-RELEASE
+[2.1.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.1.1-RELEASE

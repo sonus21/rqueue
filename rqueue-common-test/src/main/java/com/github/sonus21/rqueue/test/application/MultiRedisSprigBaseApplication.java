@@ -54,8 +54,8 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
     if (redisServer2 != null) {
       redisServer2.stop();
     }
-    for (RProcess rProcess : processes) {
-      for (String line : rProcess.out) {
+    for (MonitorProcess monitorProcess : processes) {
+      for (String line : monitorProcess.out) {
         assert line.equals("OK");
       }
     }

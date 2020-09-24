@@ -41,15 +41,20 @@ public abstract class ApplicationBasicConfiguration {
   private static final Logger monitorLogger = LoggerFactory.getLogger("monitor");
   protected RedisServer redisServer;
   protected ExecutorService executorService;
-  protected List<RProcess> processes;
+  protected List<MonitorProcess> processes;
+
   @Value("${mysql.db.name}")
   protected String dbName;
+
   @Value("${spring.redis.port}")
   protected int redisPort;
+
   @Value("${spring.redis.host}")
   protected String redisHost;
+
   @Value("${use.system.redis:false}")
   protected boolean useSystemRedis;
+
   @Value("${monitor.thread.count:0}")
   protected int monitorThreads;
 
@@ -73,10 +78,10 @@ public abstract class ApplicationBasicConfiguration {
     }
 
     if (processes != null) {
-      for (RProcess rProcess : processes) {
-        rProcess.process.destroy();
-        monitorLogger.info("RedisNode {} ", rProcess.redisNode);
-        for (String line : rProcess.out) {
+      for (MonitorProcess monitorProcess : processes) {
+        monitorProcess.process.destroy();
+        monitorLogger.info("RedisNode {} ", monitorProcess.redisNode);
+        for (String line : monitorProcess.out) {
           monitorLogger.info("{}", line);
         }
       }
@@ -94,8 +99,9 @@ public abstract class ApplicationBasicConfiguration {
                 Runtime.getRuntime()
                     .exec("redis-cli " + " -h " + host + " -p " + port + " monitor");
             List<String> lines = new LinkedList<>();
-            RProcess rProcess = new RProcess(process, new RedisNode(host, port), lines);
-            processes.add(rProcess);
+            MonitorProcess monitorProcess =
+                new MonitorProcess(process, new RedisNode(host, port), lines);
+            processes.add(monitorProcess);
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String s;
             while ((s = br.readLine()) != null) {
@@ -131,7 +137,7 @@ public abstract class ApplicationBasicConfiguration {
   }
 
   @AllArgsConstructor
-  public static class RProcess {
+  public static class MonitorProcess {
     Process process;
     RedisNode redisNode;
     List<String> out;
