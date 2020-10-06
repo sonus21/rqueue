@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
@@ -29,6 +30,8 @@ import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -162,5 +165,14 @@ public class MessageListener {
       throws Exception {
     log.info("ReservationRequest Dead Letter Queue{}", request);
     consumedMessageService.save(request, "reservation-request-dlq");
+  }
+
+  @RqueueListener(value = "${list.email.queue.name}", active = "${list.email.queue.enabled}")
+  public void onMessageEmailList(List<Email> emailList) throws JsonProcessingException {
+    log.info("onMessageEmailList {}", emailList);
+    String consumedId = UUID.randomUUID().toString();
+    for (Email email : emailList) {
+      consumedMessageService.save(email, consumedId);
+    }
   }
 }

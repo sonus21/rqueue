@@ -19,8 +19,8 @@ package com.github.sonus21.rqueue.listener;
 import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
-import com.github.sonus21.rqueue.converter.GenericMessageConverter;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -44,7 +44,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
-import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.annotation.support.AnnotationExceptionHandlerMethodResolver;
@@ -60,18 +59,19 @@ import org.springframework.messaging.simp.annotation.support.PrincipalMethodArgu
 import org.springframework.util.comparator.ComparableComparator;
 
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
-  private ConversionService conversionService = new DefaultFormattingConversionService();
+  private final ConversionService conversionService;
   private final MessageConverter messageConverter;
 
+  // Only used in test
+  @Deprecated
   public RqueueMessageHandler() {
-    this(Collections.emptyList());
+    this(new DefaultRqueueMessageConverter());
   }
 
-  public RqueueMessageHandler(List<MessageConverter> messageConverters) {
-    notNull(messageConverters, "messageConverters cannot be null");
-    List<MessageConverter> messageConverterList = new ArrayList<>(messageConverters);
-    messageConverterList.add(new GenericMessageConverter());
-    this.messageConverter = new CompositeMessageConverter(messageConverterList);
+  public RqueueMessageHandler(final MessageConverter messageConverter) {
+    notNull(messageConverter, "messageConverter cannot be null");
+    this.messageConverter = messageConverter;
+    this.conversionService = new DefaultFormattingConversionService();
   }
 
   private ConfigurableBeanFactory getBeanFactory() {
@@ -286,9 +286,9 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       return mapping;
     }
     try {
-      QueueDetail queueDetail = QueueRegistry.get(destination);
+      QueueDetail queueDetail = EndpointRegistry.get(destination);
       if (queueDetail.isSystemGenerated()) {
-        queueDetail = QueueRegistry.get(queueDetail.getPriorityGroup());
+        queueDetail = EndpointRegistry.get(queueDetail.getPriorityGroup());
         if (mapping.getQueueNames().contains(queueDetail.getName())) {
           return mapping;
         }

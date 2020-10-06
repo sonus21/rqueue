@@ -16,12 +16,15 @@
 
 package com.github.sonus21.rqueue.spring.tests.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.junit.SpringTestTracerExtension;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -29,23 +32,21 @@ import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.tests.AllQueueMode;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.test.RqueueSpringTestRunner;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = SpringApp.class)
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -69,7 +70,7 @@ public class SpringAppTest extends AllQueueMode {
 
   @Test
   public void numActiveQueues() {
-    Map<String, QueueDetail> registeredQueue = QueueRegistry.getActiveQueueMap();
+    Map<String, QueueDetail> registeredQueue = EndpointRegistry.getActiveQueueMap();
     assertEquals(10, registeredQueue.size());
     assertFalse(registeredQueue.containsKey(notificationQueue));
     assertTrue(registeredQueue.containsKey(emailQueue));
@@ -98,40 +99,37 @@ public class SpringAppTest extends AllQueueMode {
   public void verifyDefaultDeadLetterQueueRetry() throws TimedOutException {
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), 3, 10);
-    rqueueMessageSender.enqueue(emailQueue, email);
+    enqueue(emailQueue, email);
     TimeoutUtils.waitFor(() -> getMessageCount(emailQueue) == 0, "email to be consumed");
     List<RqueueMessage> messages = rqueueMessageTemplate.readFromList(emailDeadLetterQueue, 0, -1);
     assertEquals(1, messages.size());
     Email email1 =
         (Email)
-            MessageUtils.convertMessageToObject(
+            RqueueMessageUtils.convertMessageToObject(
                 messages.get(0), rqueueMessageSender.getMessageConverter());
     assertEquals(email.getId(), email1.getId());
   }
 
-  @Test(expected = QueueDoesNotExist.class)
+  @Test
   public void testQueueDoesNotExist() {
-    assertTrue(rqueueMessageSender.enqueue("job-push", Email.newInstance()));
+    assertThrows(QueueDoesNotExist.class, () -> enqueue("job-push", Email.newInstance()));
   }
 
   @Test
   public void testOnlyPushMode() {
     Date date = Date.from(Instant.now().plusMillis(1000));
-    rqueueMessageSender.registerQueue("job-push");
-    rqueueMessageSender.registerQueue("sms-push", "critical", "high", "low");
+    registerQueue("job-push");
+    registerQueue("sms-push", "critical", "high", "low");
 
-    assertTrue(rqueueMessageSender.enqueue("job-push", Email.newInstance()));
-    assertTrue(rqueueMessageSender.enqueueAt("job-push", Email.newInstance(), date));
-    assertTrue(rqueueMessageSender.enqueue("sms-push", Sms.newInstance()));
-    assertTrue(rqueueMessageSender.enqueueAt("sms-push", Sms.newInstance(), date.toInstant()));
-    assertTrue(rqueueMessageSender.enqueueWithPriority("sms-push", "critical", Sms.newInstance()));
+    assertTrue(enqueue("job-push", Email.newInstance()));
+    assertTrue(enqueueAt("job-push", Email.newInstance(), date));
+    assertTrue(enqueue("sms-push", Sms.newInstance()));
+    assertTrue(enqueueAt("sms-push", Sms.newInstance(), date.toInstant()));
+    assertTrue(enqueueWithPriority("sms-push", "critical", Sms.newInstance()));
+    assertTrue(enqueueAtWithPriority("sms-push", "critical", Sms.newInstance(), date));
+    assertTrue(enqueueAtWithPriority("sms-push", "high", Sms.newInstance(), date.toInstant()));
     assertTrue(
-        rqueueMessageSender.enqueueAtWithPriority("sms-push", "critical", Sms.newInstance(), date));
-    assertTrue(
-        rqueueMessageSender.enqueueAtWithPriority(
-            "sms-push", "high", Sms.newInstance(), date.toInstant()));
-    assertTrue(
-        rqueueMessageSender.enqueueAtWithPriority(
+        enqueueAtWithPriority(
             "sms-push", "low", Sms.newInstance(), date.toInstant().toEpochMilli()));
     assertEquals(
         8,

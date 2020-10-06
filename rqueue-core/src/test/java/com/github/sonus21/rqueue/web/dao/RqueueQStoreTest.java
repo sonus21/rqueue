@@ -16,8 +16,9 @@
 
 package com.github.sonus21.rqueue.web.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -32,15 +33,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueQStoreTest {
   private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate = mock(RqueueRedisTemplate.class);
-  private RqueueQStore rqueueQStore =
-      new RqueueQStoreImpl(rqueueRedisTemplate);
+  private RqueueQStore rqueueQStore = new RqueueQStoreImpl(rqueueRedisTemplate);
 
   @Test
   public void getQConfig() {
@@ -58,8 +58,7 @@ public class RqueueQStoreTest {
         Arrays.asList(
             TestUtils.getQueueConfigKey("job"), TestUtils.getQueueConfigKey("notification"));
     doReturn(Arrays.asList(queueConfig, null)).when(rqueueRedisTemplate).mget(keys);
-    assertEquals(
-        Collections.singletonList(queueConfig), rqueueQStore.findAllQConfig(keys));
+    assertEquals(Collections.singletonList(queueConfig), rqueueQStore.findAllQConfig(keys));
   }
 
   @Test
@@ -68,26 +67,26 @@ public class RqueueQStoreTest {
     QueueConfig queueConfig = TestUtils.createQueueConfig("job");
     QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification");
     doAnswer(
-        invocation -> {
-          Map<String, QueueConfig> configMap = new HashMap<>();
-          configMap.put(queueConfig.getId(), queueConfig);
-          configMap.put(queueConfig2.getId(), queueConfig2);
-          assertEquals(configMap, invocation.getArgument(0));
-          return null;
-        })
+            invocation -> {
+              Map<String, QueueConfig> configMap = new HashMap<>();
+              configMap.put(queueConfig.getId(), queueConfig);
+              configMap.put(queueConfig2.getId(), queueConfig2);
+              assertEquals(configMap, invocation.getArgument(0));
+              return null;
+            })
         .when(rqueueRedisTemplate)
         .mset(anyMap());
     rqueueQStore.saveAllQConfig(Arrays.asList(queueConfig, queueConfig2));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void saveNullConfig() {
-    rqueueQStore.saveQConfig(null);
+    assertThrows(IllegalArgumentException.class, () -> rqueueQStore.saveQConfig(null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void saveIdNullConfig() {
     QueueConfig queueConfig = new QueueConfig();
-    rqueueQStore.saveQConfig(queueConfig);
+    assertThrows(IllegalArgumentException.class, () -> rqueueQStore.saveQConfig(queueConfig));
   }
 }

@@ -16,13 +16,17 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.TaskStatus;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
@@ -34,44 +38,50 @@ import org.springframework.messaging.support.MessageBuilder;
 @Slf4j
 class RqueueExecutor extends MessageContainerBase {
   private final QueueDetail queueDetail;
-  private final Message<String> message;
   private final RqueueMessage rqueueMessage;
   private final RqueueMessageHandler rqueueMessageHandler;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final PostProcessingHandler postProcessingHandler;
-  private final String messageMetadataId;
   private final Semaphore semaphore;
-  private final int retryPerPoll;
+  private final RqueueConfig rqueueConfig;
+  private Message<String> message;
   private MessageMetadata messageMetadata;
   private Object userMessage;
+  private boolean updatedToProcessing;
 
   RqueueExecutor(
       RqueueMessage rqueueMessage,
       QueueDetail queueDetail,
       Semaphore semaphore,
       WeakReference<RqueueMessageListenerContainer> container,
-      int retryPerPoll,
+      RqueueConfig rqueueConfig,
       PostProcessingHandler postProcessingHandler) {
     super(log, queueDetail.getName(), container);
     this.rqueueMessage = rqueueMessage;
     this.queueDetail = queueDetail;
     this.semaphore = semaphore;
     this.rqueueMessageHandler = Objects.requireNonNull(container.get()).getRqueueMessageHandler();
-    this.messageMetadataId = MessageUtils.getMessageMetaId(rqueueMessage.getId());
-    this.retryPerPoll = retryPerPoll;
+    this.rqueueConfig = rqueueConfig;
     this.postProcessingHandler = postProcessingHandler;
+    this.rqueueMessageMetadataService =
+        Objects.requireNonNull(container.get()).getRqueueMessageMetadataService();
+    init();
+  }
+
+  private void init() {
     this.message =
         MessageBuilder.createMessage(
             rqueueMessage.getMessage(),
             RqueueMessageHeaders.buildMessageHeaders(queueDetail.getName(), rqueueMessage));
     try {
       this.userMessage =
-          MessageUtils.convertMessageToObject(message, rqueueMessageHandler.getMessageConverter());
+          RqueueMessageUtils.convertMessageToObject(
+              message, rqueueMessageHandler.getMessageConverter());
     } catch (Exception e) {
       log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
+      throw e;
     }
-    this.rqueueMessageMetadataService =
-        Objects.requireNonNull(container.get()).getRqueueMessageMetadataService();
+    this.messageMetadata = rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
   }
 
   private int getMaxRetryCount() {
@@ -98,11 +108,11 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean isMessageDeleted() {
-    messageMetadata = rqueueMessageMetadataService.get(messageMetadataId);
-    if (messageMetadata == null) {
-      return false;
+    if (this.messageMetadata.isDeleted()) {
+      return true;
     }
-    return messageMetadata.isDeleted();
+    this.messageMetadata = rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
+    return this.messageMetadata.isDeleted();
   }
 
   private boolean shouldIgnore() {
@@ -111,29 +121,47 @@ class RqueueExecutor extends MessageContainerBase {
         .process(userMessage, rqueueMessage);
   }
 
+  private boolean isOldMessage() {
+    return messageMetadata.getRqueueMessage() != null
+        && messageMetadata.getRqueueMessage().getQueuedTime() != rqueueMessage.getQueuedTime();
+  }
+
   private int getRetryCount() {
     int maxRetry = getMaxRetryCount();
-    if (retryPerPoll == -1) {
+    if (rqueueConfig.getRetryPerPoll() == -1) {
       return maxRetry;
     }
-    return Math.min(retryPerPoll, maxRetry);
+    return Math.min(rqueueConfig.getRetryPerPoll(), maxRetry);
   }
 
-  private boolean queueActive() {
-    return isQueueActive(queueDetail.getName());
+  private boolean queueInActive() {
+    return !isQueueActive(queueDetail.getName());
   }
 
-  private TaskStatus getStatus() {
-    if (!queueActive()) {
-      return TaskStatus.QUEUE_INACTIVE;
+  private ExecutionStatus getStatus() {
+    if (queueInActive()) {
+      return ExecutionStatus.QUEUE_INACTIVE;
     }
     if (shouldIgnore()) {
-      return TaskStatus.IGNORED;
+      return ExecutionStatus.IGNORED;
+    }
+    if (isOldMessage()) {
+      return ExecutionStatus.OLD_MESSAGE;
     }
     if (isMessageDeleted()) {
-      return TaskStatus.DELETED;
+      return ExecutionStatus.DELETED;
     }
     return null;
+  }
+
+  private void updateToProcessing() {
+    if (updatedToProcessing) {
+      return;
+    }
+    this.updatedToProcessing = true;
+    messageMetadata.setStatus(MessageStatus.PROCESSING);
+    this.rqueueMessageMetadataService.save(
+        messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
   }
 
   @Override
@@ -142,33 +170,37 @@ class RqueueExecutor extends MessageContainerBase {
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
     int retryCount = getRetryCount();
-    TaskStatus status;
+    int attempt = 1;
+    ExecutionStatus status;
     try {
       do {
+        log(Level.DEBUG, "Attempt {} message: {}", null, attempt, userMessage);
         status = getStatus();
         if (status != null) {
           break;
         }
         try {
+          updateToProcessing();
           updateCounter(false);
           rqueueMessageHandler.handleMessage(message);
-          status = TaskStatus.SUCCESSFUL;
+          status = ExecutionStatus.SUCCESSFUL;
         } catch (MessagingException e) {
           updateCounter(true);
           failureCount += 1;
         } catch (Exception e) {
           updateCounter(true);
           failureCount += 1;
-          log(Level.ERROR, "Message execution failed", e);
+          log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, rqueueMessage);
         }
-        retryCount--;
+        retryCount -= 1;
+        attempt += 1;
       } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
-      postProcessingHandler.handlePostProcessing(
+      postProcessingHandler.handle(
           queueDetail,
           rqueueMessage,
           userMessage,
           messageMetadata,
-          status == null ? TaskStatus.FAILED : status,
+          (status == null ? ExecutionStatus.FAILED : status),
           failureCount,
           startTime);
     } finally {

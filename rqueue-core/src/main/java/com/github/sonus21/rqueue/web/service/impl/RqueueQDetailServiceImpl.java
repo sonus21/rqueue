@@ -22,6 +22,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -33,7 +34,6 @@ import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -78,8 +77,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   @Override
   public Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
       List<QueueConfig> queueConfig) {
-    return queueConfig
-        .parallelStream()
+    return queueConfig.parallelStream()
         .collect(Collectors.toMap(QueueConfig::getName, this::getQueueDataStructureDetail));
   }
 
@@ -172,15 +170,21 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (CollectionUtils.isEmpty(rqueueMessages)) {
       return Collections.emptyList();
     }
-    List<String> ids =
-        rqueueMessages.stream()
-            .map(e -> Objects.requireNonNull(e.getValue()).getId())
-            .map(MessageUtils::getMessageMetaId)
-            .collect(Collectors.toList());
-
-    List<MessageMetadata> vals = rqueueMessageMetadataService.findAll(ids);
-    Map<String, Boolean> msgIdToDeleted =
-        vals.stream().collect(Collectors.toMap(MessageMetadata::getMessageId, e -> true));
+    Map<String, String> messageMetaIdToId = new HashMap<>();
+    for (TypedTuple<RqueueMessage> tuple : rqueueMessages) {
+      RqueueMessage rqueueMessage = tuple.getValue();
+      assert rqueueMessage != null;
+      String messageMetaId =
+          RqueueMessageUtils.getMessageMetaId(rqueueMessage.getQueueName(), rqueueMessage.getId());
+      messageMetaIdToId.put(messageMetaId, rqueueMessage.getId());
+    }
+    List<MessageMetadata> vals = rqueueMessageMetadataService.findAll(messageMetaIdToId.keySet());
+    Map<String, Boolean> msgIdToDeleted = new HashMap<>();
+    for (MessageMetadata messageMetadata : vals) {
+      String messageMetaId = messageMetadata.getId();
+      String id = messageMetaIdToId.get(messageMetaId);
+      msgIdToDeleted.put(id, messageMetadata.isDeleted());
+    }
     return rqueueMessages.stream()
         .map(
             e ->

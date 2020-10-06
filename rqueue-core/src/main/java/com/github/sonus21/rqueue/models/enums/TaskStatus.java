@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.models.db;
+package com.github.sonus21.rqueue.models.enums;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,16 +26,15 @@ import lombok.Getter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public enum TaskStatus {
-  MOVED_TO_DLQ("Moved to dead letter queue messages", true),
-  SUCCESSFUL("Successful execution", true),
-  DELETED("Message deleted", false),
-  DISCARDED("Message discarded", true),
-  RETRIED("Retired at least once", true),
-  FAILED("failed", false),
   IGNORED("Ignored task", false),
-  QUEUE_INACTIVE("Queue inactive", false);
-  private String description;
-  private boolean chartEnabled;
+  DELETED("Message deleted", false),
+  SUCCESSFUL("Successful execution", true),
+  DISCARDED("Message discarded", true),
+  MOVED_TO_DLQ("Moved to dead letter queue messages", true),
+  RETRIED("Retired at least once", true);
+
+  private final String description;
+  private final boolean chartEnabled;
 
   public static List<TaskStatus> getActiveChartStatus() {
     return Arrays.stream(values()).filter(TaskStatus::isChartEnabled).collect(Collectors.toList());

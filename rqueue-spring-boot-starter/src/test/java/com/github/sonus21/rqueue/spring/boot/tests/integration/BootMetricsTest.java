@@ -16,19 +16,20 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
-import com.github.sonus21.test.RqueueSpringTestRunner;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = Application.class)
 @Slf4j
 @TestPropertySource(
@@ -43,6 +44,7 @@ import org.springframework.test.context.TestPropertySource;
 public class BootMetricsTest extends MetricTest {
 
   @Test
+  @DisabledIfEnvironmentVariable(named = "CI_ENV", matches = "true")
   public void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }

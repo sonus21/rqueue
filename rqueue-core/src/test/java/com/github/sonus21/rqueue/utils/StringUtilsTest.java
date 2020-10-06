@@ -16,11 +16,12 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class StringUtilsTest {
 
@@ -39,14 +40,14 @@ public class StringUtilsTest {
     assertEquals("test queue", StringUtils.clean("    test queue   "));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void convertToCamelCaseEmpty() {
-    StringUtils.convertToCamelCase("   ");
+    assertThrows(IllegalArgumentException.class, () -> StringUtils.convertToCamelCase("   "));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void convertToCamelCaseNull() {
-    StringUtils.convertToCamelCase(null);
+    assertThrows(IllegalArgumentException.class, () -> StringUtils.convertToCamelCase(null));
   }
 
   @Test

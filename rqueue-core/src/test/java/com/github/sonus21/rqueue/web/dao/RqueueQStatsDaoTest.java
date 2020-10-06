@@ -16,8 +16,9 @@
 
 package com.github.sonus21.rqueue.web.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -33,12 +34,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 @Slf4j
 public class RqueueQStatsDaoTest {
   private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate =
@@ -46,7 +47,7 @@ public class RqueueQStatsDaoTest {
   private RqueueQStatsDao rqueueQStatsDao = new RqueueQStatsDaoImpl(rqueueRedisTemplate);
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
 
-  @Before
+  @BeforeEach
   public void init() {
     doAnswer(
             invocation -> {
@@ -78,15 +79,15 @@ public class RqueueQStatsDaoTest {
     assertEquals(Collections.singletonList(queueStatistics), rqueueQStatsDao.findAll(keys));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void saveWithoutError() {
     QueueStatistics queueStatistics = new QueueStatistics();
-    rqueueQStatsDao.save(queueStatistics);
+    assertThrows(IllegalArgumentException.class, () -> rqueueQStatsDao.save(queueStatistics));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void saveNull() {
-    rqueueQStatsDao.save(null);
+    assertThrows(IllegalArgumentException.class, () -> rqueueQStatsDao.save(null));
   }
 
   @Test

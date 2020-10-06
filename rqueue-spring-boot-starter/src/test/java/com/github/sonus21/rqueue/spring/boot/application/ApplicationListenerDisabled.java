@@ -17,11 +17,13 @@
 package com.github.sonus21.rqueue.spring.boot.application;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplateImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.application.BaseApplication;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -37,8 +39,18 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class ApplicationListenerDisabled extends BaseApplication {
+  @Value("${start.queue.enabled:false}")
+  private boolean startQueueEnabled;
+
   public static void main(String[] args) {
     SpringApplication.run(ApplicationListenerDisabled.class, args);
+  }
+
+  @PostConstruct
+  @Override
+  public void postConstruct() {
+    init();
+    monitor(redisHost, redisPort);
   }
 
   @Bean
@@ -50,6 +62,9 @@ public class ApplicationListenerDisabled extends BaseApplication {
   @Bean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
+    if (startQueueEnabled) {
+      return new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate);
+    }
     return new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate) {
       @Override
       protected void startQueue(String queueName, QueueDetail queueDetail) {}

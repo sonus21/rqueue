@@ -16,30 +16,39 @@
 
 package com.github.sonus21.rqueue.utils.backoff;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ExponentialTaskExecutionBackOffTest {
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void negativeInitialValue() {
-    new ExponentialTaskExecutionBackOff(-1, 100, 1.5, 100);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExponentialTaskExecutionBackOff(-1, 100, 1.5, 100));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void smallerMaxInterval() {
-    new ExponentialTaskExecutionBackOff(100, 99, 1.5, 100);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExponentialTaskExecutionBackOff(100, 99, 1.5, 100));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void smallerMultiplier() {
-    new ExponentialTaskExecutionBackOff(1000L, 3000000L, 0.5, 100);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExponentialTaskExecutionBackOff(1000L, 3000000L, 0.5, 100));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void negativeMaxRetries() {
-    new ExponentialTaskExecutionBackOff(1000L, 3000000L, 1.5, -1);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExponentialTaskExecutionBackOff(1000L, 3000000L, 1.5, -1));
   }
 
   @Test

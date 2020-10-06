@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.metrics;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -35,12 +35,12 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueMetricsTest {
   private RqueueRedisTemplate<String> template = mock(RqueueRedisTemplate.class);
   private MetricsProperties metricsProperties = new MetricsProperties() {};
@@ -52,11 +52,11 @@ public class RqueueMetricsTest {
   private QueueDetail simpleQueueDetail = TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
   private QueueDetail delayedQueueDetail = TestUtils.createQueueDetail(delayedQueue);
 
-  @Before
+  @BeforeEach
   public void init() {
-    QueueRegistry.delete();
-    QueueRegistry.register(simpleQueueDetail);
-    QueueRegistry.register(delayedQueueDetail);
+    EndpointRegistry.delete();
+    EndpointRegistry.register(simpleQueueDetail);
+    EndpointRegistry.register(delayedQueueDetail);
     doAnswer(
             invocation -> {
               String zsetName = invocation.getArgument(0);

@@ -16,18 +16,18 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
-import com.github.sonus21.rqueue.test.tests.MessageRetryTest;
-import com.github.sonus21.test.RqueueSpringTestRunner;
+import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@RunWith(RqueueSpringTestRunner.class)
+@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
@@ -37,8 +37,11 @@ import org.springframework.test.context.TestPropertySource;
       "spring.redis.port=8001",
       "reservation.request.dead.letter.consumer.enabled=true",
       "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=BootApplicationTest",
+      "use.system.redis=false",
     })
-public class ApplicationTest extends MessageRetryTest {
+public class ApplicationTest extends BasicListenerTest {
 
   @Test
   public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
@@ -73,5 +76,10 @@ public class ApplicationTest extends MessageRetryTest {
   @Test
   public void messageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
     verifyMessageIsConsumedByDeadLetterQueueListener();
+  }
+
+  @Test
+  public void testListMessageListener() throws TimedOutException {
+    verifyListMessageListener();
   }
 }

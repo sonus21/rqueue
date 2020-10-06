@@ -45,6 +45,8 @@ public final class PriorityUtils {
   }
 
   public static String getQueueNameForPriority(String queueName, String priority) {
+    Validator.validateQueue(queueName);
+    Validator.validatePriority(priority);
     return queueName + getSuffix(priority);
   }
 

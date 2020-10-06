@@ -16,6 +16,11 @@
 
 package com.github.sonus21.rqueue.exception;
 
+/**
+ * This exception is raised, when a queue is not registered in {@link
+ * com.github.sonus21.rqueue.core.EndpointRegistry}, to register a queue use {@link
+ * com.github.sonus21.rqueue.core.RqueueEndpointManager#registerQueue(String, String...)}
+ */
 public class QueueDoesNotExist extends RuntimeException {
 
   private static final long serialVersionUID = 598739372785907190L;

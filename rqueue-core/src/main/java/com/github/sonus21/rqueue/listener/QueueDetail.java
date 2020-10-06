@@ -80,7 +80,7 @@ public class QueueDetail extends SerializableBase {
             .updatedOn(System.currentTimeMillis())
             .deadLetterQueues(new LinkedList<>())
             .concurrency(concurrency.toMinMax())
-            .priority(priority)
+            .priority(Collections.unmodifiableMap(priority))
             .priorityGroup(priorityGroup)
             .systemGenerated(systemGenerated)
             .build();

@@ -18,9 +18,15 @@ package com.github.sonus21.rqueue.spring.boot;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueListenerBaseConfig;
+import com.github.sonus21.rqueue.core.RqueueEndpointManager;
+import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
-import com.github.sonus21.rqueue.core.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -39,13 +45,7 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @Bean
   @ConditionalOnMissingBean
   public RqueueMessageHandler rqueueMessageHandler() {
-    if (simpleRqueueListenerContainerFactory.getRqueueMessageHandler() != null) {
-      return simpleRqueueListenerContainerFactory.getRqueueMessageHandler();
-    }
-    if (simpleRqueueListenerContainerFactory.getMessageConverters() != null) {
-      return new RqueueMessageHandler(simpleRqueueListenerContainerFactory.getMessageConverters());
-    }
-    return new RqueueMessageHandler();
+    return simpleRqueueListenerContainerFactory.getRqueueMessageHandler();
   }
 
   @Bean
@@ -53,9 +53,7 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @ConditionalOnMissingBean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler) {
-    if (simpleRqueueListenerContainerFactory.getRqueueMessageHandler() == null) {
-      simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
-    }
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
     return simpleRqueueListenerContainerFactory.createMessageListenerContainer();
   }
 
@@ -68,10 +66,36 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @Bean
   @ConditionalOnMissingBean
   public RqueueMessageSender rqueueMessageSender(RqueueMessageTemplate rqueueMessageTemplate) {
-    if (simpleRqueueListenerContainerFactory.getMessageConverters() != null) {
-      return new RqueueMessageSenderImpl(
-          rqueueMessageTemplate, simpleRqueueListenerContainerFactory.getMessageConverters());
-    }
-    return new RqueueMessageSenderImpl(rqueueMessageTemplate);
+    return new RqueueMessageSenderImpl(
+        rqueueMessageTemplate,
+        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        simpleRqueueListenerContainerFactory.getMessageHeaders());
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public RqueueMessageManager rqueueMessageManager(RqueueMessageTemplate rqueueMessageTemplate) {
+    return new RqueueMessageManagerImpl(
+        rqueueMessageTemplate,
+        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        simpleRqueueListenerContainerFactory.getMessageHeaders());
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public RqueueEndpointManager rqueueEndpointManager(RqueueMessageTemplate rqueueMessageTemplate) {
+    return new RqueueEndpointManagerImpl(
+        rqueueMessageTemplate,
+        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        simpleRqueueListenerContainerFactory.getMessageHeaders());
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public RqueueMessageEnqueuer rqueueMessageEnqueuer(RqueueMessageTemplate rqueueMessageTemplate) {
+    return new RqueueMessageEnqueuerImpl(
+        rqueueMessageTemplate,
+        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        simpleRqueueListenerContainerFactory.getMessageHeaders());
   }
 }

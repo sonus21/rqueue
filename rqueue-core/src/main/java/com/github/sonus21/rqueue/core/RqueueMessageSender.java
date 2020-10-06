@@ -40,8 +40,12 @@ import org.springframework.messaging.converter.MessageConverter;
  * <p>Messages send using enqueueAtXYZ shall be consumed as soon as the given time is reached for
  * example 3PM tomorrow.
  *
+ * @see RqueueMessageEnqueuer
+ * @see RqueueMessageManager
+ * @see RqueueEndpointManager
  * @author Sonu Kumar
  */
+@Deprecated
 public interface RqueueMessageSender {
   /**
    * Enqueue a message on given queue without any delay, consume as soon as possible.

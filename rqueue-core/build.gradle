@@ -17,10 +17,15 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
     // https://mvnrepository.com/artifact/org.jtwig/jtwig-spring
     compile group: 'org.jtwig', name: 'jtwig-spring', version: "${twigVersion}"
+    compile group: 'io.seruco.encoding', name: 'base62', version: "0.1.3"
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
     compile "io.micrometer:micrometer-core:${microMeterVersion}", optional
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
     testCompile project(":rqueue-test-util")
+}
+
+test {
+    useJUnitPlatform()
 }

@@ -17,8 +17,8 @@
 package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -32,36 +32,46 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class MessageChannelTest extends SpringTestBase {
-  private int messageCount = 200;
+public abstract class MessageChannelTests extends SpringTestBase {
   /**
-   * This test verified whether any pending message in the delayed queue are moved or not Whenever a
-   * delayed message is pushed then it's checked whether there're any pending messages on delay
-   * queue. if expired delayed messages are found on the head then a message is published on delayed
-   * channel.
+   * This test verifies whether any pending message in the delayed queue are moved or not whenever a
+   * delayed message is pushed. During enqueue of delayed message we check whether there are any
+   * pending messages on the delay queue, if expired delayed messages are found on the head then a
+   * message is published on delayed channel.
    */
   protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
-    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, messageCount);
+    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, 200);
     Email email = Email.newInstance();
     log.info("adding new message {}", email);
-    messageSender.enqueueIn(emailQueue, email, Duration.ofMillis(1000));
+    enqueueIn(emailQueue, email, Duration.ofMillis(1000));
     waitFor(
         () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
         "one or zero messages in zset");
     assertTrue(
-        "Messages are correctly moved",
-        stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue))
-            >= messageCount);
-    assertEquals(messageCount + 1L, messageSender.getAllMessages(emailQueue).size());
+        stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue)) >= 200,
+        "Messages are correctly moved");
+    assertEquals(
+        200 + 1L,
+        getMessageCount(emailQueue),
+        () -> {
+          printQueueStats(emailQueue);
+          return "message count is not correct";
+        });
   }
 
+  /**
+   * This test verifies whether any pending message in the processing queue are moved or not
+   * whenever a message is pop. During pop of simple message we check whether there are any pending
+   * messages on the processing queue, if expired messages are found on the head then a message is
+   * published on processing channel.
+   */
   protected void verifyPublishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
-    String processingQueueName = jobQueue;
     List<Job> jobs = new ArrayList<>();
     List<String> ids = new ArrayList<>();
     int maxDelay = 2000;
-    for (int i = 0; i < messageCount; i++) {
+    String processingQueue = rqueueConfig.getProcessingQueueName(jobQueue);
+    for (int i = 0; i < 200; i++) {
       Job job = Job.newInstance();
       jobs.add(job);
       ids.add(job.getId());
@@ -69,18 +79,18 @@ public abstract class MessageChannelTest extends SpringTestBase {
       if (random.nextBoolean()) {
         delay = delay * -1;
       }
-      enqueueIn(job, processingQueueName, delay);
+      enqueueIn(job, processingQueue, delay);
     }
     TimeoutUtils.sleep(maxDelay);
     waitFor(
-        () -> 0 == messageSender.getAllMessages(jobQueue).size(),
-        30 * Constants.ONE_MILLI,
-        "messages to be consumed");
+        () -> 0 == getMessageCount(jobQueue), 30 * Constants.ONE_MILLI, "messages to be consumed");
     waitFor(
-        () -> messageCount == consumedMessageService.getMessages(ids, Job.class).size(),
+        () -> 200 == consumedMessageService.getMessages(ids, Job.class).size(),
+        30 * Constants.ONE_MILLI,
         "message count to be matched");
     waitFor(
         () -> jobs.containsAll(consumedMessageService.getMessages(ids, Job.class).values()),
+        30 * Constants.ONE_MILLI,
         "All jobs to be executed");
   }
 }

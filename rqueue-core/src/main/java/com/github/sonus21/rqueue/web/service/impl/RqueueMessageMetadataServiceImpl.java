@@ -18,21 +18,23 @@ package com.github.sonus21.rqueue.web.service.impl;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.utils.MessageUtils;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 @Service
+@Slf4j
 public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataService {
   private final RqueueRedisTemplate<MessageMetadata> template;
 
@@ -62,21 +64,17 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public void save(Collection<MessageMetadata> messageMetadata, Duration duration) {
-    if (CollectionUtils.isEmpty(messageMetadata)) {
-      return;
-    }
-    template.getRedisTemplate().multi();
-    messageMetadata.forEach(e -> template.set(e.getId(), e, duration));
-    template.getRedisTemplate().exec();
+  public MessageMetadata getByMessageId(String queueName, String messageId) {
+    String id = RqueueMessageUtils.getMessageMetaId(queueName, messageId);
+    return get(id);
   }
 
   @Override
-  public void deleteMessage(String messageId, Duration duration) {
-    String id = MessageUtils.getMessageMetaId(messageId);
+  public void deleteMessage(String queueName, String messageId, Duration duration) {
+    String id = RqueueMessageUtils.getMessageMetaId(queueName, messageId);
     MessageMetadata messageMetadata = get(id);
     if (messageMetadata == null) {
-      messageMetadata = new MessageMetadata(id, messageId);
+      messageMetadata = new MessageMetadata(id, MessageStatus.DELETED);
     }
     messageMetadata.setDeleted(true);
     messageMetadata.setDeletedOn(System.currentTimeMillis());
@@ -89,7 +87,12 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public Map<String, MessageMetadata> getMessageMetaMap(Collection<String> ids) {
-    return null;
+  public MessageMetadata getOrCreateMessageMetadata(RqueueMessage rqueueMessage) {
+    MessageMetadata messageMetadata =
+        getByMessageId(rqueueMessage.getQueueName(), rqueueMessage.getId());
+    if (messageMetadata == null) {
+      messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
+    }
+    return messageMetadata;
   }
 }

@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.metrics;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
-import com.github.sonus21.rqueue.core.QueueRegistry;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import io.micrometer.core.instrument.Gauge;
@@ -65,7 +65,7 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   }
 
   private void monitor() {
-    for (QueueDetail queueDetail : QueueRegistry.getActiveQueueDetails()) {
+    for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       Tags queueTags =
           Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getName());
       Gauge.builder(QUEUE_SIZE, queueDetail, c -> size(queueDetail.getQueueName(), false))

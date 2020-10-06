@@ -84,7 +84,7 @@
 {% endblock %}
 
 {% block additional_script %}
-<script type="application/javascript">
+<script type="application/javascript" nonce="{{utilityNonce}}">
   dataPageUrl = "rqueue/api/v1/data";
   var dataKeyEl = $('#data-key');
   var dataNameEl = $('#data-name');

@@ -17,8 +17,8 @@
 package com.github.sonus21.rqueue.models.db;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.SerializableBase;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,28 +33,24 @@ import lombok.ToString;
 public class MessageMetadata extends SerializableBase {
   private static final long serialVersionUID = 4200184682879443328L;
   private String id;
-  private String messageId;
   private long totalExecutionTime;
   private boolean deleted;
   private Long deletedOn;
   private RqueueMessage rqueueMessage;
   private long expireAt;
   private int failureCount;
+  private MessageStatus status;
 
-  public MessageMetadata(String id, String messageId) {
+  public MessageMetadata(String id, MessageStatus messageStatus) {
     this.id = id;
-    this.messageId = messageId;
+    this.status = messageStatus;
   }
 
-  public MessageMetadata(String messageId) {
-    this.id = MessageUtils.getMessageMetaId(messageId);
-    this.messageId = messageId;
-  }
-
-  public MessageMetadata(RqueueMessage message) {
-    this.id = MessageUtils.getMessageMetaId(message.getId());
-    this.rqueueMessage = message;
-    this.messageId = rqueueMessage.getId();
+  public MessageMetadata(RqueueMessage rqueueMessage, MessageStatus messageStatus) {
+    this.id =
+        RqueueMessageUtils.getMessageMetaId(rqueueMessage.getQueueName(), rqueueMessage.getId());
+    this.rqueueMessage = rqueueMessage;
+    this.status = messageStatus;
   }
 
   public void addExecutionTime(long jobStartTime) {

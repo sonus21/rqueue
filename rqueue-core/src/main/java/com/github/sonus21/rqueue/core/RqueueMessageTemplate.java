@@ -67,9 +67,9 @@ public interface RqueueMessageTemplate {
 
   RedisTemplate<String, RqueueMessage> getTemplate();
 
-  Long removeFromZset(String zsetName, RqueueMessage rqueueMessage);
-
   List<TypedTuple<RqueueMessage>> readFromZsetWithScore(String name, long start, long end);
 
   void removeFromZset(String zsetName, Collection<RqueueMessage> messages);
+
+  Long getScore(String delayedQueueName, RqueueMessage rqueueMessage);
 }

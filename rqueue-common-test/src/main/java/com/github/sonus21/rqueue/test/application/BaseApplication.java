@@ -16,54 +16,25 @@
 
 package com.github.sonus21.rqueue.test.application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import redis.embedded.RedisServer;
 
 @Slf4j
-public abstract class BaseApplication {
-  private RedisServer redisServer;
-
-  @Value("${mysql.db.name}")
-  private String dbName;
-
-  @Value("${spring.redis.port}")
-  private int redisPort;
-
-  @Value("${spring.redis.host}")
-  private String redisHost;
-
-  @Value("${use.system.redis:false}")
-  private boolean useSystemRedis;
+public abstract class BaseApplication extends ApplicationBasicConfiguration {
 
   @PostConstruct
   public void postConstruct() {
-    if (useSystemRedis) {
-      return;
-    }
-    if (redisServer == null) {
-      redisServer = new RedisServer(redisPort);
-      redisServer.start();
-    }
+    init();
   }
 
   @PreDestroy
   public void preDestroy() {
-    if (redisServer != null) {
-      redisServer.stop();
-    }
+    destroy();
   }
 
   @Bean
@@ -72,31 +43,9 @@ public abstract class BaseApplication {
   }
 
   @Bean
-  public DataSource dataSource() {
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.H2).setName(dbName).build();
-  }
-
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.github.sonus21.rqueue.test.entity");
-    factory.setDataSource(dataSource());
-    return factory;
-  }
-
-  @Bean
   public RedisMessageListenerContainer container(RedisConnectionFactory redisConnectionFactory) {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(redisConnectionFactory);
     return container;
-  }
-
-  @Bean
-  public ObjectMapper objectMapper() {
-    return new ObjectMapper();
   }
 }

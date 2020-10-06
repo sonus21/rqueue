@@ -23,20 +23,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class RqueueMessageTemplateTest {
   private RedisConnectionFactory redisConnectionFactory = mock(RedisConnectionFactory.class);
   private RedisTemplate<String, RqueueMessage> redisTemplate = mock(RedisTemplate.class);
@@ -49,7 +50,7 @@ public class RqueueMessageTemplateTest {
   private String key = "test-queue";
   private RqueueMessage message = new RqueueMessage(key, "This is a message", null, 100L);
 
-  @Before
+  @BeforeEach
   public void init() throws Exception {
     FieldUtils.writeField(rqueueMessageTemplate, "redisTemplate", redisTemplate, true);
     FieldUtils.writeField(rqueueMessageTemplate, "scriptExecutor", scriptExecutor, true);

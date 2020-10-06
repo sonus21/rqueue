@@ -26,22 +26,22 @@ import org.springframework.data.redis.core.script.RedisScript;
 
 @SuppressWarnings("unchecked")
 @ToString
-class RedisScriptFactory {
-  static RedisScript getScript(ScriptType type) {
+public class RedisScriptFactory {
+  public static RedisScript getScript(ScriptType type) {
     Resource resource = new ClassPathResource(type.getPath());
     DefaultRedisScript script = new DefaultRedisScript();
     script.setLocation(resource);
     switch (type) {
-      case ADD_MESSAGE:
+      case ENQUEUE_MESSAGE:
       case MOVE_MESSAGE:
-      case PUSH_MESSAGE:
+      case MOVE_EXPIRED_MESSAGE:
       case MOVE_MESSAGE_LIST_TO_LIST:
       case MOVE_MESSAGE_LIST_TO_ZSET:
       case MOVE_MESSAGE_ZSET_TO_ZSET:
       case MOVE_MESSAGE_ZSET_TO_LIST:
         script.setResultType(Long.class);
         return script;
-      case POP_MESSAGE:
+      case DEQUEUE_MESSAGE:
         script.setResultType(List.class);
         return script;
       default:
@@ -49,16 +49,16 @@ class RedisScriptFactory {
     }
   }
 
-  enum ScriptType {
-    ADD_MESSAGE("scripts/add_message.lua"),
-    POP_MESSAGE("scripts/pop_message.lua"),
+  public enum ScriptType {
+    ENQUEUE_MESSAGE("scripts/enqueue_message.lua"),
+    DEQUEUE_MESSAGE("scripts/dequeue_message.lua"),
     MOVE_MESSAGE("scripts/move_message.lua"),
-    PUSH_MESSAGE("scripts/push_message.lua"),
+    MOVE_EXPIRED_MESSAGE("scripts/move_expired_message.lua"),
     MOVE_MESSAGE_LIST_TO_LIST("scripts/move_message_list_to_list.lua"),
     MOVE_MESSAGE_LIST_TO_ZSET("scripts/move_message_list_to_zset.lua"),
     MOVE_MESSAGE_ZSET_TO_ZSET("scripts/move_message_zset_to_zset.lua"),
     MOVE_MESSAGE_ZSET_TO_LIST("scripts/move_message_zset_to_list.lua");
-    private String path;
+    private final String path;
 
     ScriptType(String path) {
       this.path = path;
