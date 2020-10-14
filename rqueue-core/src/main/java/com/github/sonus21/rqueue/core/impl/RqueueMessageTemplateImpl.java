@@ -251,6 +251,11 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
+  public void removeElementFromZset(String zsetName, RqueueMessage message) {
+    removeFromZset(zsetName, Collections.singleton(message));
+  }
+
+  @Override
   public Long getScore(String delayedQueueName, RqueueMessage rqueueMessage) {
     Double score = redisTemplate.opsForZSet().score(delayedQueueName, rqueueMessage);
     if (score == null) {

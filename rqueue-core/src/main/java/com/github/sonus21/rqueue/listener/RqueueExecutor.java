@@ -23,7 +23,6 @@ import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
@@ -104,7 +103,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private long getMaxProcessingTime() {
-    return MessageUtils.getExpiryTime(queueDetail.getVisibilityTimeout());
+    return RqueueMessageUtils.getExpiryTime(queueDetail.getVisibilityTimeout());
   }
 
   private boolean isMessageDeleted() {

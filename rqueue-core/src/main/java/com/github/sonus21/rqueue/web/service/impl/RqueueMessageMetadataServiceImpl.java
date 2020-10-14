@@ -18,18 +18,26 @@ package com.github.sonus21.rqueue.web.service.impl;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisStringCommands.SetOption;
+import org.springframework.data.redis.core.types.Expiration;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -59,8 +67,25 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
 
   @Override
   public void save(MessageMetadata messageMetadata, Duration duration) {
-    Assert.notNull(messageMetadata.getId(), "messageMetadata id cannot be null");
-    template.set(messageMetadata.getId(), messageMetadata, duration);
+    save(Collections.singletonList(messageMetadata), duration);
+  }
+
+  @Override
+  public void save(List<MessageMetadata> messageMetadata, Duration duration) {
+    for (MessageMetadata metadata : messageMetadata) {
+      Assert.notNull(metadata.getId(), "messageMetadata id cannot be null");
+    }
+    RedisUtils.executePipeLine(
+        template.getRedisTemplate(),
+        (RedisConnection connection,
+            StringRedisSerializer keySerializer,
+            RqueueRedisSerializer valueSerializer) -> {
+          for (MessageMetadata metadata : messageMetadata) {
+            byte[] key = keySerializer.serialize(metadata.getId());
+            byte[] value = valueSerializer.serialize(metadata);
+            connection.set(key, value, Expiration.from(duration), SetOption.UPSERT);
+          }
+        });
   }
 
   @Override
@@ -94,5 +119,10 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
       messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     }
     return messageMetadata;
+  }
+
+  @Override
+  public Map<String, MessageMetadata> getMessageMetaMap(Collection<String> ids) {
+    return findAll(ids).stream().collect(Collectors.toMap(MessageMetadata::getId, e -> e));
   }
 }

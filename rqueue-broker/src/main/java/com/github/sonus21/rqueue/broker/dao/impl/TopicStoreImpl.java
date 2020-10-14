@@ -51,7 +51,6 @@ public class TopicStoreImpl implements TopicStore {
   private static final String CONFIGS_CACHE_KEY = "__configs__";
   private static final String TOPICS_CACHE_KEY = "__topics__";
 
-  private final SystemConfig systemConfig;
   private final RqueueConfig rqueueConfig;
   private final RqueueRedisTemplate<String> redisTemplate;
   private final RqueueRedisTemplate<TopicConfig> topicConfigRqueueRedisTemplate;
@@ -65,11 +64,10 @@ public class TopicStoreImpl implements TopicStore {
       @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> redisTemplate,
       CacheManager cacheManager) {
     this.rqueueConfig = rqueueConfig;
-    RedisConnectionFactory connectionFactory =
-        redisTemplate.getRedisTemplate().getConnectionFactory();
-    this.systemConfig = systemConfig;
     this.redisTemplate = redisTemplate;
     this.topicCache = cacheManager.getCache(CacheConfig.TOPIC_CACHE);
+    RedisConnectionFactory connectionFactory =
+        redisTemplate.getRedisTemplate().getConnectionFactory();
     this.topicConfigRqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
     this.subscriptionConfigRqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
   }
@@ -80,7 +78,7 @@ public class TopicStoreImpl implements TopicStore {
     if (topics != null) {
       return topics;
     }
-    String key = systemConfig.getTopicsKey();
+    String key = rqueueConfig.getTopicsKey();
     Set<String> topicsFromDb = redisTemplate.getMembers(key);
     if (CollectionUtils.isEmpty(topicsFromDb)) {
       return Collections.emptySet();
@@ -102,7 +100,7 @@ public class TopicStoreImpl implements TopicStore {
     }
     List<String> keys =
         topics.stream()
-            .map(e -> systemConfig.getTopicConfigurationKey(e.getName()))
+            .map(e -> rqueueConfig.getTopicConfigurationKey(e.getName()))
             .collect(Collectors.toList());
     List<TopicConfig> topicConfigs = topicConfigRqueueRedisTemplate.mget(keys);
     configs = topicConfigs.stream().filter(Objects::nonNull).collect(Collectors.toList());
@@ -129,7 +127,7 @@ public class TopicStoreImpl implements TopicStore {
     if (topicConfig != null) {
       return topicConfig;
     }
-    String key = systemConfig.getTopicConfigurationKey(topic.getName());
+    String key = rqueueConfig.getTopicConfigurationKey(topic.getName());
     topicConfig = topicConfigRqueueRedisTemplate.get(key);
     if (topicConfig != null) {
       topicCache.put(cacheKey, topicConfig);
@@ -144,7 +142,7 @@ public class TopicStoreImpl implements TopicStore {
     if (configs != null) {
       return configs;
     }
-    String key = systemConfig.getTopicSubscriptionKey(topic.getName());
+    String key = rqueueConfig.getTopicSubscriptionKey(topic.getName());
     Set<SubscriptionConfig> configSet = subscriptionConfigRqueueRedisTemplate.getMembers(key);
     if (CollectionUtils.isEmpty(configSet)) {
       configs = Collections.emptyList();
@@ -160,7 +158,7 @@ public class TopicStoreImpl implements TopicStore {
     String cacheKey = topicKey(topic);
     Object object = topicCache.get(cacheKey);
     if (object == null) {
-      String key = systemConfig.getTopicsKey();
+      String key = rqueueConfig.getTopicsKey();
       return redisTemplate.isSetMember(key, topic.getName());
     }
     return true;
@@ -179,13 +177,13 @@ public class TopicStoreImpl implements TopicStore {
     topicCache.evict(CONFIGS_CACHE_KEY);
     Map<String, TopicConfig> topicConfigs = new HashMap<>();
     for (Topic topic : topics) {
-      String id = systemConfig.getTopicConfigurationKey(topic.getName());
+      String id = rqueueConfig.getTopicConfigurationKey(topic.getName());
       TopicConfig topicConfig = new TopicConfig(id, topic.getName());
-      topicConfig.setSystemName(systemConfig.getTopicName(topic.getName()));
+      topicConfig.setSystemName(rqueueConfig.getTopicName(topic.getName()));
       topicConfigs.put(id, topicConfig);
     }
     redisTemplate.addToSet(
-        systemConfig.getTopicsKey(),
+        rqueueConfig.getTopicsKey(),
         topics.stream().map(Topic::getName).collect(Collectors.toList()));
     topicConfigRqueueRedisTemplate.mset(topicConfigs);
     topics.forEach(e -> topicCache.put(topicKey(e), e));
@@ -225,7 +223,7 @@ public class TopicStoreImpl implements TopicStore {
       newSubscriptionConfigs.add(subscriptionConfig);
     }
     String subscriptionCacheKey = subscriptionKey(topic);
-    String dbKey = systemConfig.getTopicSubscriptionKey(topic.getName());
+    String dbKey = rqueueConfig.getTopicSubscriptionKey(topic.getName());
     subscriptionConfigRqueueRedisTemplate.addToSet(dbKey, newSubscriptionConfigs);
     topicCache.put(subscriptionCacheKey, subscriptionConfigs);
   }
@@ -235,9 +233,9 @@ public class TopicStoreImpl implements TopicStore {
     log.info("Removing topic {}", topic.getName());
     topicCache.evict(TOPICS_CACHE_KEY);
     topicCache.evict(CONFIGS_CACHE_KEY);
-    redisTemplate.removeFromSet(systemConfig.getTopicsKey(), topic.getName());
-    redisTemplate.delete(systemConfig.getTopicConfigurationKey(topic.getName()));
-    redisTemplate.delete(systemConfig.getTopicSubscriptionKey(topic.getName()));
+    redisTemplate.removeFromSet(rqueueConfig.getTopicsKey(), topic.getName());
+    redisTemplate.delete(rqueueConfig.getTopicConfigurationKey(topic.getName()));
+    redisTemplate.delete(rqueueConfig.getTopicSubscriptionKey(topic.getName()));
     topicCache.evict(topicKey(topic));
     topicCache.evict(subscriptionKey(topic));
     topicCache.evict(configKey(topic));
@@ -250,7 +248,7 @@ public class TopicStoreImpl implements TopicStore {
     log.info(
         "Removing subscription, topic: {}, subscription: {}", topic.getName(), subscriptionConfig);
     String subscriptionCacheKey = subscriptionKey(topic);
-    String subscriptionDbKey = systemConfig.getTopicSubscriptionKey(topic.getName());
+    String subscriptionDbKey = rqueueConfig.getTopicSubscriptionKey(topic.getName());
     topicCache.evict(subscriptionCacheKey);
     subscriptionConfigRqueueRedisTemplate.removeFromSet(subscriptionDbKey, subscriptionConfig);
     topicCache.evict(subscriptionCacheKey);
@@ -266,7 +264,7 @@ public class TopicStoreImpl implements TopicStore {
         subscriptionConfig,
         subscription);
     String subscriptionCacheKey = subscriptionKey(topic);
-    String subscriptionDbKey = systemConfig.getTopicSubscriptionKey(topic.getName());
+    String subscriptionDbKey = rqueueConfig.getTopicSubscriptionKey(topic.getName());
     subscriptionConfigRqueueRedisTemplate.removeFromSet(subscriptionDbKey, subscriptionConfig);
     SubscriptionConfig subscriptionConfigNew;
     try {

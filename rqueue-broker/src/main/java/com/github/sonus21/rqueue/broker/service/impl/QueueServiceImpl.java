@@ -38,14 +38,15 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.exception.LockException;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.exception.ValidationException;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.EventType;
 import com.github.sonus21.rqueue.models.request.Message;
-import com.github.sonus21.rqueue.utils.MessageUtils;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageConverter;
@@ -245,21 +246,22 @@ public class QueueServiceImpl implements QueueService {
         && !queueConfig.isValidPriority(queue.getPriority())) {
       throw new ValidationException(ErrorCode.INVALID_QUEUE_PRIORITY);
     }
-    long expireAt = MessageUtils.getExpiryTime(queueConfig.getVisibilityTimeout());
+    long expireAt = RqueueMessageUtils.getExpiryTime(queueConfig.getVisibilityTimeout());
     List<RqueueMessage> rqueueMessages =
         rqueueMessageTemplate.popN(
             queueConfig.getSimpleQueue(),
             queueConfig.getProcessingQueue(),
-            // TODO
-            queueConfig.getProcessingQueue(),
+            queueConfig.getProcessingChannelName(),
             queueConfig.getVisibilityTimeout(),
             messageRequest.getCount());
     Map<String, MessageMetadata> messageMetadataMap =
         rqueueMessageMetadataService.getMessageMetaMap(
             rqueueMessages.stream()
-                .map(e -> MessageUtils.getMessageMetaId(e.getId()))
+                .map(
+                    e ->
+                        RqueueMessageUtils.getMessageMetaId(
+                            messageRequest.getQueue().getName(), e.getId()))
                 .collect(Collectors.toList()));
-
     return getMessageResponse(queueConfig, expireAt, rqueueMessages, messageMetadataMap);
   }
 
@@ -285,7 +287,7 @@ public class QueueServiceImpl implements QueueService {
                 rqueueMessage -> {
                   MessageMetadata messageMetadata = messageMetadataMap.get(rqueueMessage.getId());
                   if (messageMetadata == null) {
-                    messageMetadata = new MessageMetadata(rqueueMessage);
+                    messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
                   } else {
                     if (isRetryExceeded(
                         queueConfig, rqueueMessage, messageMetadata.getFailureCount())) {

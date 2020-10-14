@@ -51,7 +51,7 @@ public class TopicController {
 
   @PostMapping
   public CreateTopicResponse newTopic(@RequestBody @Valid CreateTopicRequest request)
-      throws LockException, ValidationException {
+      throws LockException, ValidationException, ProcessingException {
     return topicService.create(request);
   }
 

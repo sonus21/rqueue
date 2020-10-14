@@ -186,7 +186,7 @@ class PostProcessingHandler extends BaseLogger {
       MessageStatus status,
       int failureCount,
       long jobExecutionStartTime) {
-    rqueueMessageTemplate.removeFromZset(
+    rqueueMessageTemplate.removeElementFromZset(
         queueDetail.getProcessingQueueName(), rqueueMessage);
     rqueueMessage.setFailureCount(failureCount);
     messageProcessorHandler.handleMessage(rqueueMessage, userMessage, status);

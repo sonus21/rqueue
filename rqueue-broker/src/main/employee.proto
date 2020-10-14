@@ -1,0 +1,21 @@
+syntax = "proto3";
+package com.github.sonus21.message;
+option java_package = "com.github.sonus21.rqueue.dto";
+option java_multiple_files = true;
+
+enum PhoneType {
+  MOBILE = 0;
+  HOME = 1;
+  WORK = 2;
+}
+
+message PhoneNumber {
+  string number = 1;
+  PhoneType type = 2;
+}
+
+message Employee {
+  int32 id = 1;
+  string name = 2;
+  repeated PhoneNumber phoneNumbers = 3;
+}

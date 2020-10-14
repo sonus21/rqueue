@@ -17,7 +17,58 @@
 package com.github.sonus21.rqueue.broker.dao.impl;
 
 import com.github.sonus21.rqueue.broker.dao.QueueStore;
+import com.github.sonus21.rqueue.broker.models.db.QueueConfig;
+import com.github.sonus21.rqueue.broker.models.request.BasicQueue;
+import com.github.sonus21.rqueue.broker.models.request.Queue;
+import com.github.sonus21.rqueue.broker.models.request.QueueWithPriority;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class QueueStoreImpl implements QueueStore {}
+public class QueueStoreImpl implements QueueStore {
+
+  @Override
+  public List<Queue> getAllQueue() {
+    return null;
+  }
+
+  @Override
+  public void addQueue(List<Queue> queues) {
+
+  }
+
+  @Override
+  public void addConfig(
+      List<QueueConfig> queueConfigs) {
+
+  }
+
+  @Override
+  public boolean isQueueExist(BasicQueue queue) {
+    return false;
+  }
+
+  @Override
+  public QueueConfig getConfig(
+      QueueWithPriority queue) {
+    return null;
+  }
+
+  @Override
+  public QueueConfig getConfig(BasicQueue queue) {
+    return null;
+  }
+
+  @Override
+  public void update(BasicQueue queue,
+      QueueConfig queueConfig, Long visibilityTimeout,
+      Map<String, Integer> userPriority) {
+
+  }
+
+  @Override
+  public void delete(BasicQueue request) {
+
+  }
+}

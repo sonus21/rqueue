@@ -71,5 +71,7 @@ public interface RqueueMessageTemplate {
 
   void removeFromZset(String zsetName, Collection<RqueueMessage> messages);
 
+  void removeElementFromZset(String zsetName, RqueueMessage message);
+
   Long getScore(String delayedQueueName, RqueueMessage rqueueMessage);
 }

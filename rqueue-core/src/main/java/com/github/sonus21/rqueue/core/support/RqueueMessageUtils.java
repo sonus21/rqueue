@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.core.support;
 
+import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,5 +90,9 @@ public final class RqueueMessageUtils {
       messages.add(buildMessage(converter, object, queueName, retryCount, delay, null));
     }
     return messages;
+  }
+
+  public static long getExpiryTime(long visibilityTimeout) {
+    return System.currentTimeMillis() + visibilityTimeout - DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 }

@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
@@ -58,4 +59,10 @@ public class DelayedMessageScheduler extends AbstractMessageScheduler {
   protected int getThreadPoolSize() {
     return rqueueSchedulerConfig.getDelayedMessageThreadPoolSize();
   }
+
+  @Override
+  public void destroy() throws Exception {}
+
+  @Override
+  public void onApplicationEvent(RqueueBootstrapEvent event) {}
 }

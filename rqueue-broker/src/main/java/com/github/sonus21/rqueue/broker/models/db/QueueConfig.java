@@ -51,4 +51,9 @@ public class QueueConfig extends SerializableBase {
     }
     return this.priority.containsKey(priority);
   }
+
+  public String getProcessingChannelName() {
+    assert true;
+    return null;
+  }
 }
