@@ -16,11 +16,16 @@
 
 package com.github.sonus21.rqueue.converter;
 
+import static org.springframework.util.Assert.notNull;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.sonus21.rqueue.annotation.MessageGenericField;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
+import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,9 +42,17 @@ import org.springframework.messaging.support.GenericMessage;
  * vice versa.
  */
 @Slf4j
-@SuppressWarnings("unchecked")
 public class GenericMessageConverter implements MessageConverter {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
+
+  public GenericMessageConverter() {
+    this.objectMapper = new ObjectMapper();
+  }
+
+  public GenericMessageConverter(ObjectMapper objectMapper) {
+    notNull(objectMapper, "objectMapper cannot be null");
+    this.objectMapper = objectMapper;
+  }
 
   /**
    * Convert the payload of a {@link Message} from a serialized form to a typed Object of type
@@ -65,12 +78,12 @@ public class GenericMessageConverter implements MessageConverter {
         }
         Class<?> envelopeClass =
             Thread.currentThread().getContextClassLoader().loadClass(classNames[0]);
-        Class<?> elementClass =
-            Thread.currentThread().getContextClassLoader().loadClass(classNames[1]);
+        Class<?>[] classes = new Class<?>[classNames.length - 1];
+        for (int i = 1; i < classNames.length; i++) {
+          classes[i - 1] = Thread.currentThread().getContextClassLoader().loadClass(classNames[i]);
+        }
         JavaType type =
-            objectMapper
-                .getTypeFactory()
-                .constructCollectionType((Class<? extends Collection>) envelopeClass, elementClass);
+            objectMapper.getTypeFactory().constructParametricType(envelopeClass, classes);
         return objectMapper.readValue(msg.msg, type);
       }
     } catch (Exception e) {
@@ -83,8 +96,41 @@ public class GenericMessageConverter implements MessageConverter {
     return name.split("#");
   }
 
-  private String getClassName(String name, List<?> payload) {
-    return name + '#' + payload.get(0).getClass().getName();
+  private String getClassNameForCollection(String name, Collection<?> payload) {
+    if (payload instanceof List) {
+      if (payload.isEmpty()) {
+        return null;
+      }
+      return name + '#' + ((List<?>) payload).get(0).getClass().getName();
+    }
+    return null;
+  }
+
+  private String getGenericFieldBasedClassName(String name, Object payload) {
+    List<String> genericFieldClassNames = new LinkedList<>();
+    for (Field field : payload.getClass().getDeclaredFields()) {
+      if (field.isAnnotationPresent(MessageGenericField.class)) {
+        try {
+          Object fieldVal = field.get(payload);
+          genericFieldClassNames.add(fieldVal.getClass().getName());
+        } catch (IllegalAccessException e) {
+          log.error("Field can not be read", e);
+          return null;
+        }
+      }
+    }
+    if (genericFieldClassNames.isEmpty()) {
+      return name;
+    }
+    return name + '#' + String.join("#", genericFieldClassNames);
+  }
+
+  private String getClassName(Object payload) {
+    String name = payload.getClass().getName();
+    if (payload instanceof Collection) {
+      return getClassNameForCollection(name, (Collection<?>) payload);
+    }
+    return getGenericFieldBasedClassName(name, payload);
   }
 
   /**
@@ -99,16 +145,9 @@ public class GenericMessageConverter implements MessageConverter {
    */
   @Override
   public Message<?> toMessage(Object payload, MessageHeaders headers) {
-    String name = payload.getClass().getName();
-    if (payload instanceof Collection) {
-      if (payload instanceof List) {
-        if (((List<?>) payload).isEmpty()) {
-          return null;
-        }
-        name = getClassName(name, (List<?>) payload);
-      } else {
-        return null;
-      }
+    String name = getClassName(payload);
+    if (name == null) {
+      return null;
     }
     try {
       String msg = objectMapper.writeValueAsString(payload);
