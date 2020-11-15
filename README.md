@@ -81,29 +81,29 @@ public class Application{
 ```
 
 ### Message publishing/Task submission
-All messages need to be sent using `RqueueMessageSender` bean's `enqueueXXX`, `enqueueInXXX` and `enqueueAtXXX` methods.
+All messages need to be sent using `RqueueMessageEnqueuer` bean's `enqueueXXX`, `enqueueInXXX` and `enqueueAtXXX` methods.
 It has handful number of `enqueue`, `enqueueIn`, `enqueueAt` methods, we can use one of them based on the use case.
 
 ```java
 public class MessageService {
-  @AutoWired private RqueueMessageSender rqueueMessageSender;
+  @AutoWired private RqueueMessageEnqueuer rqueueMessageEnqueuer;
   
   public void doSomething(){
-    rqueueMessageSender.enqueue("simple-queue", "Rqueue is configured");
+    rqueueMessageEnqueuer.enqueue("simple-queue", "Rqueue is configured");
   }
   
   public void createJOB(Job job){
-    rqueueMessageSender.enqueue("job-queue", job);
+    rqueueMessageEnqueuer.enqueue("job-queue", job);
   }
   
   // send notification in 30 seconds
    public void sendNotification(Notification notification){
-    rqueueMessageSender.enqueueIn("notification-queue", notification, 30*1000L);
+    rqueueMessageEnqueuer.enqueueIn("notification-queue", notification, 30*1000L);
   }
   
   // enqueue At example
   public void createInvoice(Invoice invoice, Instant instant){
-    rqueueMessageSender.enqueueAt("invoice-queue", invoice, instant);
+    rqueueMessageEnqueuer.enqueueAt("invoice-queue", invoice, instant);
   }
   
   // enqueue with priority, when sub queues are used as explained in the queue priority section.
@@ -115,7 +115,7 @@ public class MessageService {
       private String value;
   } 
   public void sendSms(Sms sms, SmsPriority priority){
-    rqueueMessageSender.enqueueWithPriority("sms-queue", priority.value(), sms);
+    rqueueMessageEnqueuer.enqueueWithPriority("sms-queue", priority.value(), sms);
   }
 }
 ```
@@ -180,10 +180,10 @@ Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 [![Explore Queue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
 
 ## In Production
-If you're one of the Rqueue users, please raise a PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users) to get your organization listed here.
+We would love to add organization name here, if you're one of the Rqueue users, please raise a PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users).
 
 <a href="https://tuneyou.com/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>&nbsp;&nbsp;
-<a href="https://www.pokerstarssports.eu"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/pokerstars.png" width="50" align="middle"/></a>&nbsp;&nbsp;
+<a href="https://www.pokerstarssports.eu"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/pokerstars.png" width="250" align="middle"/></a>&nbsp;&nbsp;
 
 
 ## Support
