@@ -106,19 +106,22 @@ public class GenericMessageConverter implements MessageConverter {
     return null;
   }
 
-  private void genericFieldClassNames(List<String> genericFieldClassNames, Object payload)
+  private void genericFieldClassNames(List<String> classNames, Object payload)
       throws IllegalAccessException {
     for (Field field : payload.getClass().getDeclaredFields()) {
       if (field.getGenericType().equals(field.getType())) {
         continue;
       }
       Object fieldVal = FieldUtils.readField(field, payload, true);
+      if (fieldVal == null) {
+        continue;
+      }
       String genericFieldType = field.getGenericType().getTypeName();
       Class<?> fieldClass = fieldVal.getClass();
       if (genericFieldType.endsWith(">")) {
-        genericFieldClassNames(genericFieldClassNames, fieldVal);
+        genericFieldClassNames(classNames, fieldVal);
       } else {
-        genericFieldClassNames.add(fieldClass.getName());
+        classNames.add(fieldClass.getName());
       }
     }
   }
