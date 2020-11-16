@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.converter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.github.sonus21.rqueue.annotation.MessageGenericField;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import java.util.Arrays;
 import java.util.Collections;
@@ -158,8 +157,8 @@ public class GenericMessageConverterTest {
   @NoArgsConstructor
   public static class MultiLevelGenericTestDataNoArgs<T, V> {
     private String data;
-    @MessageGenericField private GenericTestData<T> tGenericTestData;
-    @MessageGenericField private GenericTestData<V> vGenericTestData;
+    private GenericTestData<T> tGenericTestData;
+    private GenericTestData<V> vGenericTestData;
   }
 
   @Data
@@ -167,16 +166,16 @@ public class GenericMessageConverterTest {
   @NoArgsConstructor
   public static class MultiLevelGenericTestData<T, V> {
     private String data;
-    @MessageGenericField private GenericTestData<T> tGenericTestData;
-    @MessageGenericField private GenericTestData<V> vGenericTestData;
+    private GenericTestData<T> tGenericTestData;
+    private GenericTestData<V> vGenericTestData;
   }
 
   @Data
   @AllArgsConstructor
   @NoArgsConstructor
   public static class MultiGenericTestData<K, V> {
-    @MessageGenericField private K key;
-    @MessageGenericField private V value;
+    private K key;
+    private V value;
     private TestData testData;
   }
 
@@ -185,7 +184,7 @@ public class GenericMessageConverterTest {
   @NoArgsConstructor
   public static class GenericTestData<T> {
     private Integer index;
-    @MessageGenericField private T data;
+    private T data;
   }
 
   @Data
