@@ -21,7 +21,6 @@ import static org.springframework.util.Assert.notNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.sonus21.rqueue.annotation.MessageGenericField;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -32,6 +31,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
@@ -106,18 +106,30 @@ public class GenericMessageConverter implements MessageConverter {
     return null;
   }
 
+  private void genericFieldClassNames(List<String> genericFieldClassNames, Object payload)
+      throws IllegalAccessException {
+    for (Field field : payload.getClass().getDeclaredFields()) {
+      if (field.getGenericType().equals(field.getType())) {
+        continue;
+      }
+      Object fieldVal = FieldUtils.readField(field, payload, true);
+      String genericFieldType = field.getGenericType().getTypeName();
+      Class<?> fieldClass = fieldVal.getClass();
+      if (genericFieldType.endsWith(">")) {
+        genericFieldClassNames(genericFieldClassNames, fieldVal);
+      } else {
+        genericFieldClassNames.add(fieldClass.getName());
+      }
+    }
+  }
+
   private String getGenericFieldBasedClassName(String name, Object payload) {
     List<String> genericFieldClassNames = new LinkedList<>();
-    for (Field field : payload.getClass().getDeclaredFields()) {
-      if (field.isAnnotationPresent(MessageGenericField.class)) {
-        try {
-          Object fieldVal = field.get(payload);
-          genericFieldClassNames.add(fieldVal.getClass().getName());
-        } catch (IllegalAccessException e) {
-          log.error("Field can not be read", e);
-          return null;
-        }
-      }
+    try {
+      genericFieldClassNames(genericFieldClassNames, payload);
+    } catch (IllegalAccessException e) {
+      log.error("Field can not be read", e);
+      return null;
     }
     if (genericFieldClassNames.isEmpty()) {
       return name;
