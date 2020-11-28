@@ -22,16 +22,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
-import java.lang.reflect.Field;
+import java.lang.reflect.TypeVariable;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
@@ -44,14 +42,24 @@ import org.springframework.messaging.support.GenericMessage;
 @Slf4j
 public class GenericMessageConverter implements MessageConverter {
   private final ObjectMapper objectMapper;
+  private final boolean genericFieldEnabled;
 
   public GenericMessageConverter() {
-    this.objectMapper = new ObjectMapper();
+    this(new ObjectMapper());
   }
 
   public GenericMessageConverter(ObjectMapper objectMapper) {
+    this(objectMapper, true);
+  }
+
+  public GenericMessageConverter(boolean genericFieldEnabled) {
+    this(new ObjectMapper(), genericFieldEnabled);
+  }
+
+  public GenericMessageConverter(ObjectMapper objectMapper, boolean genericFieldEnabled) {
     notNull(objectMapper, "objectMapper cannot be null");
     this.objectMapper = objectMapper;
+    this.genericFieldEnabled = genericFieldEnabled;
   }
 
   /**
@@ -106,46 +114,24 @@ public class GenericMessageConverter implements MessageConverter {
     return null;
   }
 
-  private void genericFieldClassNames(List<String> classNames, Object payload)
-      throws IllegalAccessException {
-    for (Field field : payload.getClass().getDeclaredFields()) {
-      if (field.getGenericType().equals(field.getType())) {
-        continue;
-      }
-      Object fieldVal = FieldUtils.readField(field, payload, true);
-      if (fieldVal == null) {
-        continue;
-      }
-      String genericFieldType = field.getGenericType().getTypeName();
-      Class<?> fieldClass = fieldVal.getClass();
-      if (genericFieldType.endsWith(">")) {
-        genericFieldClassNames(classNames, fieldVal);
-      } else {
-        classNames.add(fieldClass.getName());
-      }
+  private String getGenericFieldBasedClassName(Class<?> clazz, Object payload) {
+    if (!genericFieldEnabled) {
+      return clazz.getName();
     }
-  }
-
-  private String getGenericFieldBasedClassName(String name, Object payload) {
-    List<String> genericFieldClassNames = new LinkedList<>();
-    try {
-      genericFieldClassNames(genericFieldClassNames, payload);
-    } catch (IllegalAccessException e) {
-      log.error("Field can not be read", e);
-      return null;
+    TypeVariable<?>[] typeVariables = clazz.getTypeParameters();
+    if (typeVariables.length == 0) {
+      return clazz.getName();
     }
-    if (genericFieldClassNames.isEmpty()) {
-      return name;
-    }
-    return name + '#' + String.join("#", genericFieldClassNames);
+    return null;
   }
 
   private String getClassName(Object payload) {
-    String name = payload.getClass().getName();
+    Class<?> payloadClass = payload.getClass();
+    String name = payloadClass.getName();
     if (payload instanceof Collection) {
       return getClassNameForCollection(name, (Collection<?>) payload);
     }
-    return getGenericFieldBasedClassName(name, payload);
+    return getGenericFieldBasedClassName(payloadClass, payload);
   }
 
   /**

@@ -29,17 +29,31 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisUtils {
   private RedisUtils() {}
 
+  public interface RedisTemplateProvider {
+    <V> RedisTemplate<String, V> getRedisTemplate(RedisConnectionFactory redisConnectionFactory);
+  }
+
+  @SuppressWarnings({"java:S1104","java:S1444"})
+  public static RedisTemplateProvider redisTemplateProvider =
+      new RedisTemplateProvider() {
+        @Override
+        public <V> RedisTemplate<String, V> getRedisTemplate(
+            RedisConnectionFactory redisConnectionFactory) {
+          RedisTemplate<String, V> redisTemplate = new RedisTemplate<>();
+          StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+          RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
+          redisTemplate.setConnectionFactory(redisConnectionFactory);
+          redisTemplate.setKeySerializer(stringRedisSerializer);
+          redisTemplate.setValueSerializer(rqueueRedisSerializer);
+          redisTemplate.setHashKeySerializer(stringRedisSerializer);
+          redisTemplate.setHashValueSerializer(rqueueRedisSerializer);
+          return redisTemplate;
+        }
+      };
+
   public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
-    RedisTemplate<String, V> redisTemplate = new RedisTemplate<>();
-    StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-    RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
-    redisTemplate.setConnectionFactory(redisConnectionFactory);
-    redisTemplate.setKeySerializer(stringRedisSerializer);
-    redisTemplate.setValueSerializer(rqueueRedisSerializer);
-    redisTemplate.setHashKeySerializer(stringRedisSerializer);
-    redisTemplate.setHashValueSerializer(rqueueRedisSerializer);
-    return redisTemplate;
+    return redisTemplateProvider.getRedisTemplate(redisConnectionFactory);
   }
 
   public static <V> List<Object> executePipeLine(

@@ -8,12 +8,19 @@ import org.springframework.data.redis.serializer.SerializationException;
 
 @Slf4j
 public class RqueueRedisSerializer implements RedisSerializer<Object> {
-  private GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer =
-      new GenericJackson2JsonRedisSerializer();
+  private final RedisSerializer<Object> serializer;
+
+  public RqueueRedisSerializer(RedisSerializer<Object> redisSerializer) {
+    this.serializer = redisSerializer;
+  }
+
+  public RqueueRedisSerializer() {
+    this(new GenericJackson2JsonRedisSerializer());
+  }
 
   @Override
   public byte[] serialize(Object t) throws SerializationException {
-    return jackson2JsonRedisSerializer.serialize(t);
+    return serializer.serialize(t);
   }
 
   @Override
@@ -22,7 +29,7 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
       return null;
     }
     try {
-      return jackson2JsonRedisSerializer.deserialize(bytes);
+      return serializer.deserialize(bytes);
     } catch (Exception e) {
       log.warn("Jackson deserialization has failed {}", new String(bytes), e);
       return new String(bytes);
