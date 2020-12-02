@@ -37,7 +37,9 @@ public class RqueueMessageTest {
 
   @Test
   public void checkIdIsSetAndProcessAtIsSameAsQueuedTime() {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, null);
+    RqueueMessage message =
+        new RqueueMessage(
+            queueName, queueMessage, retryCount, System.nanoTime(), System.currentTimeMillis());
     assertNotNull(message.getId());
     assertEquals(message.getProcessAt(), message.getProcessAt());
   }
@@ -68,7 +70,9 @@ public class RqueueMessageTest {
 
   @Test
   public void testObjectEqualityWithoutDelay() throws JsonProcessingException {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, null);
+    RqueueMessage message =
+        new RqueueMessage(
+            queueName, queueMessage, retryCount, System.nanoTime(), System.currentTimeMillis());
     String stringMessage = objectMapper.writeValueAsString(message);
     assertEquals(message, objectMapper.readValue(stringMessage, RqueueMessage.class));
   }

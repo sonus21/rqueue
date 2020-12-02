@@ -239,7 +239,9 @@ public class RqueueMessageListenerContainerTest {
   public void testMessageFetcherRetryWorking() throws Exception {
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     String fastQueueMessage = "This is fast queue";
-    RqueueMessage message = new RqueueMessage(fastQueue, fastQueueMessage, null, null);
+    RqueueMessage message =
+        new RqueueMessage(
+            fastQueue, fastQueueMessage, null, System.nanoTime(), System.currentTimeMillis());
 
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
 
@@ -332,7 +334,12 @@ public class RqueueMessageListenerContainerTest {
             invocation -> {
               if (slowQueueCounter.get() == 0) {
                 slowQueueCounter.incrementAndGet();
-                return new RqueueMessage(slowQueue, slowQueueMessage, null, null);
+                return new RqueueMessage(
+                    slowQueue,
+                    slowQueueMessage,
+                    null,
+                    System.nanoTime(),
+                    System.currentTimeMillis());
               }
               return null;
             })
@@ -343,7 +350,12 @@ public class RqueueMessageListenerContainerTest {
             invocation -> {
               if (fastQueueCounter.get() == 0) {
                 fastQueueCounter.incrementAndGet();
-                return new RqueueMessage(fastQueue, fastQueueMessage, null, null);
+                return new RqueueMessage(
+                    fastQueue,
+                    fastQueueMessage,
+                    null,
+                    System.nanoTime(),
+                    System.currentTimeMillis());
               }
               return null;
             })

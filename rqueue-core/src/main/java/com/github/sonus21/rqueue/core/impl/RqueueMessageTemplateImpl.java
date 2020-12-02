@@ -71,14 +71,13 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage) {
-    long queuedTime = rqueueMessage.getQueuedTime();
     RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ENQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(delayQueueName, delayQueueChannelName),
         rqueueMessage,
         rqueueMessage.getProcessAt(),
-        queuedTime);
+        System.currentTimeMillis());
   }
 
   @Override

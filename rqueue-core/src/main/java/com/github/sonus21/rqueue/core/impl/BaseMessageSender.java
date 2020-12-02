@@ -17,7 +17,10 @@
 package com.github.sonus21.rqueue.core.impl;
 
 import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildMessage;
+import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildPeriodicMessage;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
+import static com.github.sonus21.rqueue.utils.Validator.validateMessage;
+import static com.github.sonus21.rqueue.utils.Validator.validatePeriod;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static org.springframework.util.Assert.notNull;
 
@@ -58,7 +61,7 @@ abstract class BaseMessageSender {
     this.messageHeaders = messageHeaders;
   }
 
-  private void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
+  protected void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration;
     if (delayInMillis != null) {
@@ -88,7 +91,7 @@ abstract class BaseMessageSender {
     return rqueueMessage;
   }
 
-  private void enqueue(
+  protected void enqueue(
       QueueDetail queueDetail, RqueueMessage rqueueMessage, Long delayInMilliSecs) {
     if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
       messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
@@ -112,6 +115,25 @@ abstract class BaseMessageSender {
     try {
       enqueue(queueDetail, rqueueMessage, delayInMilliSecs);
       storeMessageMetadata(rqueueMessage, delayInMilliSecs);
+    } catch (Exception e) {
+      log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
+      return null;
+    }
+    return rqueueMessage.getId();
+  }
+
+  protected String pushPeriodicMessage(
+      String queueName, String messageId, Object message, long periodInMilliSeconds) {
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
+    RqueueMessage rqueueMessage =
+        buildPeriodicMessage(
+            messageConverter, queueName, message, periodInMilliSeconds, messageHeaders);
+    if (messageId != null) {
+      rqueueMessage.setId(messageId);
+    }
+    try {
+      enqueue(queueDetail, rqueueMessage, periodInMilliSeconds);
+      storeMessageMetadata(rqueueMessage, periodInMilliSeconds);
     } catch (Exception e) {
       log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
       return null;

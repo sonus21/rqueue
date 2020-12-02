@@ -48,7 +48,9 @@ public class RqueueMessageTemplateTest {
       new RqueueMessageTemplateImpl(redisConnectionFactory);
 
   private String key = "test-queue";
-  private RqueueMessage message = new RqueueMessage(key, "This is a message", null, 100L);
+  private RqueueMessage message =
+      new RqueueMessage(
+          key, "This is a message", null, System.nanoTime(), System.currentTimeMillis());
 
   @BeforeEach
   public void init() throws Exception {

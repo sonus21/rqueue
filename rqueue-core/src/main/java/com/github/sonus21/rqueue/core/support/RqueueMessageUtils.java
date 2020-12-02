@@ -45,6 +45,31 @@ public final class RqueueMessageUtils {
     return messageConverter.fromMessage(message, null);
   }
 
+  public static RqueueMessage buildPeriodicMessage(
+      MessageConverter converter,
+      String queueName,
+      Object message,
+      long period,
+      MessageHeaders messageHeaders) {
+    Message<?> msg = converter.toMessage(message, messageHeaders);
+    if (msg == null) {
+      throw new MessageConversionException("Message could not be build (null)");
+    }
+    Object payload = msg.getPayload();
+    if (payload instanceof String) {
+      return new RqueueMessage(
+          queueName, (String) payload, System.currentTimeMillis() + period, period);
+    }
+    if (payload instanceof byte[]) {
+      return new RqueueMessage(
+          queueName,
+          new String((byte[]) msg.getPayload()),
+          System.currentTimeMillis() + period,
+          period);
+    }
+    throw new MessageConversionException("Message payload is neither String nor byte[]");
+  }
+
   public static RqueueMessage buildMessage(
       MessageConverter converter,
       Object object,
@@ -56,12 +81,18 @@ public final class RqueueMessageUtils {
     if (msg == null) {
       throw new MessageConversionException("Message could not be build (null)");
     }
+    long queuedTime = System.nanoTime();
+    long processAt = System.currentTimeMillis();
+    if (delay != null) {
+      processAt += delay;
+    }
     Object payload = msg.getPayload();
     if (payload instanceof String) {
-      return new RqueueMessage(queueName, (String) payload, retryCount, delay);
+      return new RqueueMessage(queueName, (String) payload, retryCount, queuedTime, processAt);
     }
     if (payload instanceof byte[]) {
-      return new RqueueMessage(queueName, new String((byte[]) msg.getPayload()), retryCount, delay);
+      return new RqueueMessage(
+          queueName, new String((byte[]) msg.getPayload()), retryCount, queuedTime, processAt);
     }
     throw new MessageConversionException("Message payload is neither String nor byte[]");
   }

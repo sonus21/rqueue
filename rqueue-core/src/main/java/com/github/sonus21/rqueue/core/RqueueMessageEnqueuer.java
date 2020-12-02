@@ -600,4 +600,28 @@ public interface RqueueMessageEnqueuer {
     return enqueueAtWithPriority(
         queueName, priority, messageId, message, timeInMilliSeconds - System.currentTimeMillis());
   }
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param periodInMilliSeconds period of this job in milliseconds.
+   * @return message id on successful enqueue otherwise null.
+   */
+  String enqueuePeriodic(String queueName, Object message, long periodInMilliSeconds);
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId message id corresponding to this message
+   * @param message message object it could be any arbitrary object.
+   * @param periodInMilliSeconds period of this job in milliseconds.
+   * @return message id on successful enqueue otherwise null.
+   */
+  boolean enqueuePeriodic(
+      String queueName, String messageId, Object message, long periodInMilliSeconds);
 }
