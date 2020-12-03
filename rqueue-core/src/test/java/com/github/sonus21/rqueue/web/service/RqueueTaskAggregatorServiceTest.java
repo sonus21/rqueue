@@ -80,8 +80,12 @@ public class RqueueTaskAggregatorServiceTest {
   private RqueueExecutionEvent generateTaskEventWithStatus(TaskStatus status) {
     double r = Math.random();
     RqueueMessage rqueueMessage =
-        new RqueueMessage(
-            "test-queue", "test", null, System.nanoTime(), System.currentTimeMillis());
+        RqueueMessage.builder()
+            .queueName("test-queue")
+            .message("test")
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
     MessageMetadata messageMetadata =
         new MessageMetadata(rqueueMessage.getId(), MessageStatus.FAILED);
     messageMetadata.setTotalExecutionTime(10 + (long) r * 10000);

@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -340,6 +341,7 @@ public class GenericMessageConverterTest {
     }
   }
 
+  @EqualsAndHashCode(callSuper = true)
   @Data
   @AllArgsConstructor
   @NoArgsConstructor

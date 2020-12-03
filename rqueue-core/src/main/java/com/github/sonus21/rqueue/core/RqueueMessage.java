@@ -19,7 +19,8 @@ package com.github.sonus21.rqueue.core;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.sonus21.rqueue.models.SerializableBase;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,7 +30,9 @@ import lombok.ToString;
 @Setter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonPropertyOrder({"failureCount"})
+@Builder
 public class RqueueMessage extends SerializableBase implements Cloneable {
 
   private static final long serialVersionUID = -3488860960637488519L;
@@ -52,24 +55,6 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
   private int failureCount;
   // period of this task, if this is a periodic task.
   private long period;
-
-  public RqueueMessage(
-      String queueName, String message, Integer retryCount, long queuedTime, long processAt) {
-    this.id = UUID.randomUUID().toString();
-    this.queueName = queueName;
-    this.message = message;
-    this.retryCount = retryCount;
-    this.queuedTime = queuedTime;
-    this.processAt = processAt;
-  }
-
-  public RqueueMessage(String queueName, String message, long processAt, long period) {
-    this.id = UUID.randomUUID().toString();
-    this.queueName = queueName;
-    this.message = message;
-    this.processAt = processAt;
-    this.period = period;
-  }
 
   public void updateReEnqueuedAt() {
     reEnqueuedAt = System.currentTimeMillis();

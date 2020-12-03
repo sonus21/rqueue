@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.core.support;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConversionException;
@@ -57,15 +58,22 @@ public final class RqueueMessageUtils {
     }
     Object payload = msg.getPayload();
     if (payload instanceof String) {
-      return new RqueueMessage(
-          queueName, (String) payload, System.currentTimeMillis() + period, period);
+      return RqueueMessage.builder()
+          .period(period)
+          .id(UUID.randomUUID().toString())
+          .queueName(queueName)
+          .message((String) payload)
+          .processAt(System.currentTimeMillis() + period)
+          .build();
     }
     if (payload instanceof byte[]) {
-      return new RqueueMessage(
-          queueName,
-          new String((byte[]) msg.getPayload()),
-          System.currentTimeMillis() + period,
-          period);
+      return RqueueMessage.builder()
+          .period(period)
+          .id(UUID.randomUUID().toString())
+          .queueName(queueName)
+          .message(new String((byte[]) msg.getPayload()))
+          .processAt(System.currentTimeMillis() + period)
+          .build();
     }
     throw new MessageConversionException("Message payload is neither String nor byte[]");
   }
@@ -88,11 +96,24 @@ public final class RqueueMessageUtils {
     }
     Object payload = msg.getPayload();
     if (payload instanceof String) {
-      return new RqueueMessage(queueName, (String) payload, retryCount, queuedTime, processAt);
+      return RqueueMessage.builder()
+          .retryCount(retryCount)
+          .queuedTime(queuedTime)
+          .id(UUID.randomUUID().toString())
+          .queueName(queueName)
+          .message((String) payload)
+          .processAt(processAt)
+          .build();
     }
     if (payload instanceof byte[]) {
-      return new RqueueMessage(
-          queueName, new String((byte[]) msg.getPayload()), retryCount, queuedTime, processAt);
+      return RqueueMessage.builder()
+          .retryCount(retryCount)
+          .queuedTime(queuedTime)
+          .id(UUID.randomUUID().toString())
+          .queueName(queueName)
+          .message(new String((byte[]) msg.getPayload()))
+          .processAt(processAt)
+          .build();
     }
     throw new MessageConversionException("Message payload is neither String nor byte[]");
   }

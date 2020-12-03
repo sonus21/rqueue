@@ -17,12 +17,13 @@
 package com.github.sonus21.rqueue.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,26 +37,15 @@ public class RqueueMessageTest {
   private long delay = 100L;
 
   @Test
-  public void checkIdIsSetAndProcessAtIsSameAsQueuedTime() {
-    RqueueMessage message =
-        new RqueueMessage(
-            queueName, queueMessage, retryCount, System.nanoTime(), System.currentTimeMillis());
-    assertNotNull(message.getId());
-    assertEquals(message.getProcessAt(), message.getProcessAt());
-  }
-
-  @Test
-  public void checkIdAndProcessAtAreSet() {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
-    assertNotNull(message.getId());
-    assertTrue(
-        message.getProcessAt() <= System.currentTimeMillis() + 100
-            && message.getProcessAt() > System.currentTimeMillis());
-  }
-
-  @Test
   public void testSetReEnqueuedAt() {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
+    RqueueMessage message =
+        RqueueMessage.builder()
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis() + delay)
+            .queuedTime(System.nanoTime())
+            .build();
     Long time = System.currentTimeMillis() - delay;
     message.setReEnqueuedAt(time);
     assertEquals(message.getReEnqueuedAt(), time);
@@ -63,7 +53,15 @@ public class RqueueMessageTest {
 
   @Test
   public void testObjectEquality() throws JsonProcessingException {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
+    RqueueMessage message =
+        RqueueMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis() + delay)
+            .queuedTime(System.nanoTime())
+            .build();
     String stringMessage = objectMapper.writeValueAsString(message);
     assertEquals(message, objectMapper.readValue(stringMessage, RqueueMessage.class));
   }
@@ -71,35 +69,66 @@ public class RqueueMessageTest {
   @Test
   public void testObjectEqualityWithoutDelay() throws JsonProcessingException {
     RqueueMessage message =
-        new RqueueMessage(
-            queueName, queueMessage, retryCount, System.nanoTime(), System.currentTimeMillis());
+        RqueueMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
     String stringMessage = objectMapper.writeValueAsString(message);
     assertEquals(message, objectMapper.readValue(stringMessage, RqueueMessage.class));
   }
 
   @Test
   public void testObjectEqualityWithDifferentObject() {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
+    RqueueMessage message =
+        RqueueMessage.builder()
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
     assertNotEquals(message, new Object());
   }
 
   @Test
   public void testObjectEqualityWithDifferentId() {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
-    RqueueMessage message2 = new RqueueMessage(queueName + "2", queueMessage, retryCount, delay);
-    assertNotEquals(message, message2);
-  }
+    RqueueMessage message =
+        RqueueMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
 
-  @Test
-  public void testObjectEqualityWithDifferentMessageContent() {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage + 1, retryCount, delay);
-    RqueueMessage message2 = new RqueueMessage(queueName, queueMessage + 2, retryCount, delay);
+    RqueueMessage message2 =
+        RqueueMessage.builder()
+            .id("x" + UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
     assertNotEquals(message, message2);
   }
 
   @Test
   public void testToString() {
-    RqueueMessage message = new RqueueMessage(queueName, queueMessage, retryCount, delay);
+    RqueueMessage message =
+        RqueueMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
     String toString =
         "RqueueMessage(id="
             + message.getId()
@@ -109,7 +138,24 @@ public class RqueueMessageTest {
             + message.getQueuedTime()
             + ", processAt="
             + message.getProcessAt()
-            + ", reEnqueuedAt=null, failureCount=0)";
+            + ", reEnqueuedAt=null, failureCount=0, period=0)";
     assertEquals(toString, message.toString());
+  }
+
+  @Test
+  public void testIsPeriodic() {
+    RqueueMessage message =
+        RqueueMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(queueMessage)
+            .retryCount(retryCount)
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .period(10000)
+            .build();
+    assertTrue(message.isPeriodicTask());
+    message.setPeriod(0);
+    assertFalse(message.isPeriodicTask());
   }
 }
