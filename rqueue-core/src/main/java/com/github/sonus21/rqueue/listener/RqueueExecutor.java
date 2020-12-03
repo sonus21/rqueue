@@ -104,10 +104,12 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
+  private long maxExecutionTime() {
+    return queueDetail.getVisibilityTimeout() - DELTA_BETWEEN_RE_ENQUEUE_TIME;
+  }
+
   private long getMaxProcessingTime() {
-    return System.currentTimeMillis()
-        + queueDetail.getVisibilityTimeout()
-        - DELTA_BETWEEN_RE_ENQUEUE_TIME;
+    return System.currentTimeMillis() + maxExecutionTime();
   }
 
   private boolean isMessageDeleted() {
@@ -167,6 +169,22 @@ class RqueueExecutor extends MessageContainerBase {
         messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
   }
 
+  private void logExecutionTimeWarning(
+      long maxProcessingTime, long startTime, ExecutionStatus status) {
+    if (System.currentTimeMillis() > maxProcessingTime) {
+      long maxAllowedTime = maxExecutionTime();
+      long executionTime = System.currentTimeMillis() - startTime;
+      log(
+          Level.WARN,
+          "Message listener is taking longer time [Queue: {}, TaskStatus: {}] MaxAllowedTime: {}, ExecutionTime: {}",
+          null,
+          queueDetail.getQueueName(),
+          status,
+          maxAllowedTime,
+          executionTime);
+    }
+  }
+
   @Override
   void start() {
     int failureCount = rqueueMessage.getFailureCount();
@@ -206,6 +224,7 @@ class RqueueExecutor extends MessageContainerBase {
           (status == null ? ExecutionStatus.FAILED : status),
           failureCount,
           startTime);
+      logExecutionTimeWarning(maxProcessingTime, startTime, status);
     } finally {
       semaphore.release();
     }
