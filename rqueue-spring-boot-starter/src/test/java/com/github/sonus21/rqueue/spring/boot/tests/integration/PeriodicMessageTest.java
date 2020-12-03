@@ -41,7 +41,9 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=PeriodicMessageTest",
       "rqueue.metrics.count.failure=false",
       "rqueue.metrics.count.execution=false",
-      "periodic.job.queue.active=true"
+      "periodic.job.queue.active=true",
+      "use.system.redis=true",
+      "spring.redis.port=6379",
     })
 public class PeriodicMessageTest extends SpringTestBase {
   @Test
@@ -55,6 +57,7 @@ public class PeriodicMessageTest extends SpringTestBase {
           printConsumedMessage(periodicJobQueue);
           return consumedMessageService.getConsumedMessages(job.getId()).size() > 1;
         },
+        30_000,
         "at least two execution");
     rqueueMessageManager.deleteMessage(periodicJobQueue, messageId);
   }

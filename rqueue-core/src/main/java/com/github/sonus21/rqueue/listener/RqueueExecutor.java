@@ -230,18 +230,25 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-  private void processScheduledMessage() {
+  private void processPeriodicMessage() {
     RqueueMessage newMessage =
         rqueueMessage.toBuilder().processAt(rqueueMessage.nextProcessAt()).build();
-    getRqueueMessageTemplate()
-        .scheduleMessage(queueDetail.getDelayedQueueName(), newMessage, SECONDS_IN_A_DAY);
+    // avoid duplicate message enqueue due to retry by checking the message key
+    String messageId =
+        rqueueConfig.getPrefix() + rqueueMessage.getId() + "::sch::" + newMessage.getProcessAt();
+    log.info(
+        "Schedule periodic message: {} Status: {}",
+        rqueueMessage,
+        getRqueueMessageTemplate()
+            .scheduleMessage(
+                queueDetail.getDelayedQueueName(), messageId, newMessage, SECONDS_IN_A_DAY));
     processSimpleMessage();
   }
 
   @Override
   void start() {
     if (rqueueMessage.isPeriodicTask()) {
-      processScheduledMessage();
+      processPeriodicMessage();
     } else {
       processSimpleMessage();
     }

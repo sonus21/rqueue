@@ -55,11 +55,15 @@ public class TimeoutUtils {
       Runnable postmortem)
       throws TimedOutException {
     long endTime = System.currentTimeMillis() + waitTimeInMilliSeconds;
+    long sleepTime = 100L;
+    if (waitTimeInMilliSeconds > 2000) {
+      sleepTime = 200;
+    }
     do {
       if (Boolean.TRUE.equals(callback.getAsBoolean())) {
         return;
       }
-      sleep(100L);
+      sleep(sleepTime);
     } while (System.currentTimeMillis() < endTime);
     try {
       postmortem.run();

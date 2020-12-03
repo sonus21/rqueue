@@ -65,5 +65,6 @@ public interface RqueueMessageTemplate {
 
   Long getScore(String delayedQueueName, RqueueMessage rqueueMessage);
 
-  void scheduleMessage(String queueName, RqueueMessage rqueueMessage, long expiryInMilliSeconds);
+  Long scheduleMessage(
+      String queueName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds);
 }

@@ -16,10 +16,11 @@
 
 package com.github.sonus21.rqueue.test.entity;
 
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -42,11 +42,7 @@ import org.hibernate.annotations.GenericGenerator;
     uniqueConstraints = {@UniqueConstraint(columnNames = {"message_id", "tag"})})
 public class ConsumedMessage {
 
-  @Id
-  @GeneratedValue(generator = "UUID")
-  @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-  @Column
-  private String id;
+  @Id @Column private String id;
 
   @Column(name = "message_id")
   private String messageId;
@@ -54,7 +50,7 @@ public class ConsumedMessage {
   @Column(name = "tag")
   private String tag;
 
-  private String queueName;
+  @Column private String queueName;
 
   // Around 1 MB of data
   @Column(length = 1000000)
@@ -62,7 +58,28 @@ public class ConsumedMessage {
 
   @Column private Long createdAt;
 
+  @Column private Long updatedAt;
+
+  @Column private int count;
+
+  @PreUpdate
+  public void update() {
+    this.updatedAt = System.currentTimeMillis();
+  }
+
   public ConsumedMessage(String messageId, String tag, String queueName, String message) {
-    this(null, messageId, tag, queueName, message, System.currentTimeMillis());
+    this(
+        UUID.randomUUID().toString(),
+        messageId,
+        tag,
+        queueName,
+        message,
+        System.currentTimeMillis(),
+        System.currentTimeMillis(),
+        1);
+  }
+
+  public void incrementCount() {
+    this.count += 1;
   }
 }

@@ -72,14 +72,6 @@ public class RqueueMessage extends SerializableBase {
   }
 
   @JsonIgnore
-  public String getPseudoId() {
-    if (!isPeriodicTask()) {
-      return id;
-    }
-    return id + "::sch::" + processAt;
-  }
-
-  @JsonIgnore
   public long nextProcessAt() {
     return processAt + period;
   }

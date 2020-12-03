@@ -40,9 +40,15 @@ public class ConsumedMessageService {
 
   public ConsumedMessage save(BaseQueueMessage message, String tag, String queueName)
       throws JsonProcessingException {
-    String textMessage = objectMapper.writeValueAsString(message);
     ConsumedMessage consumedMessage =
-        new ConsumedMessage(message.getId(), tag, queueName, textMessage);
+        consumedMessageRepository.findByMessageIdAndTag(message.getId(), tag);
+    String textMessage = objectMapper.writeValueAsString(message);
+    if (consumedMessage == null) {
+      consumedMessage = new ConsumedMessage(message.getId(), tag, queueName, textMessage);
+    } else {
+      consumedMessage.incrementCount();
+      consumedMessage.setMessage(textMessage);
+    }
     consumedMessageRepository.save(consumedMessage);
     return consumedMessage;
   }
@@ -63,7 +69,7 @@ public class ConsumedMessageService {
             consumedMessage -> {
               try {
                 T value = objectMapper.readValue(consumedMessage.getMessage(), tClass);
-                idToMessage.put(consumedMessage.getId(), value);
+                idToMessage.put(consumedMessage.getMessageId(), value);
               } catch (JsonProcessingException e) {
                 e.printStackTrace();
               }
@@ -76,7 +82,7 @@ public class ConsumedMessageService {
         consumedMessageRepository.findByMessageIdIn(messageIds);
     Map<String, ConsumedMessage> idToMessage = new HashMap<>();
     consumedMessages.forEach(
-        consumedMessage -> idToMessage.put(consumedMessage.getId(), consumedMessage));
+        consumedMessage -> idToMessage.put(consumedMessage.getMessageId(), consumedMessage));
     return idToMessage;
   }
 
