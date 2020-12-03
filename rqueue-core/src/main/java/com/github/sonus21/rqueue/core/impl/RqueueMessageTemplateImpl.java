@@ -221,6 +221,18 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
+  public void scheduleMessage(
+      String zsetName, RqueueMessage rqueueMessage, long expiryInMilliSeconds) {
+    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.SCHEDULE_MESSAGE);
+    scriptExecutor.execute(
+        script,
+        Arrays.asList(rqueueMessage.getPseudoId(), zsetName),
+        expiryInMilliSeconds,
+        rqueueMessage,
+        rqueueMessage.getProcessAt());
+  }
+
+  @Override
   public List<RqueueMessage> readFromList(String name, long start, long end) {
     List<RqueueMessage> messages = lrange(name, start, end);
     if (messages == null) {

@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.test.dto.PeriodicJob;
 import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.dto.Sms;
@@ -36,6 +37,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -49,13 +51,46 @@ public class MessageListener {
   @NonNull private ConsumedMessageService consumedMessageService;
   @NonNull private FailureManager failureManager;
 
+  @Value("${job.queue.name}")
+  private String jobQueue;
+
+  @Value("${notification.queue.name}")
+  private String notificationQueueName;
+
+  @Value("${email.queue.name}")
+  private String emailQueue;
+
+  @Value("${sms.queue}")
+  private String smsQueue;
+
+  @Value("${chat.indexing.queue}")
+  private String chatIndexingQueue;
+
+  @Value("${feed.generation.queue}")
+  private String feedGenerationQueue;
+
+  @Value("${reservation.queue}")
+  private String reservationQueue;
+
+  @Value("${reservation.request.queue.name}")
+  private String reservationRequestQueue;
+
+  @Value("${reservation.request.dead.letter.queue.name}")
+  private String reservationRequestDeadLetterQueue;
+
+  @Value("${list.email.queue.name}")
+  private String listEmailQueue;
+
+  @Value("${periodic.job.queue.name}")
+  private String periodicJobQueue;
+
   @RqueueListener(value = "${job.queue.name}", active = "${job.queue.active}")
   public void onMessage(Job job) throws Exception {
     log.info("Job: {}", job);
     if (failureManager.shouldFail(job.getId())) {
       throw new Exception("Failing job task to be retried" + job);
     }
-    consumedMessageService.save(job, null);
+    consumedMessageService.save(job, null, jobQueue);
   }
 
   @RqueueListener(
@@ -69,7 +104,7 @@ public class MessageListener {
     if (failureManager.shouldFail(notification.getId())) {
       throw new Exception("Failing notification task to be retried" + notification);
     }
-    consumedMessageService.save(notification, null);
+    consumedMessageService.save(notification, null, notificationQueueName);
   }
 
   @RqueueListener(
@@ -84,7 +119,7 @@ public class MessageListener {
     if (failureManager.shouldFail(email.getId())) {
       throw new Exception("Failing email task to be retried" + email);
     }
-    consumedMessageService.save(email, null);
+    consumedMessageService.save(email, null, emailQueue);
   }
 
   @RqueueListener(
@@ -98,7 +133,7 @@ public class MessageListener {
     if (failureManager.shouldFail(sms.getId())) {
       throw new Exception("Failing sms task to be retried" + sms);
     }
-    consumedMessageService.save(sms, null);
+    consumedMessageService.save(sms, null, smsQueue);
   }
 
   @RqueueListener(
@@ -112,7 +147,7 @@ public class MessageListener {
     if (failureManager.shouldFail(chatIndexing.getId())) {
       throw new Exception("Failing chat indexing task to be retried" + chatIndexing);
     }
-    consumedMessageService.save(chatIndexing, null);
+    consumedMessageService.save(chatIndexing, null, chatIndexingQueue);
   }
 
   @RqueueListener(
@@ -126,7 +161,7 @@ public class MessageListener {
     if (failureManager.shouldFail(feedGeneration.getId())) {
       throw new Exception("Failing feedGeneration task to be retried" + feedGeneration);
     }
-    consumedMessageService.save(feedGeneration, null);
+    consumedMessageService.save(feedGeneration, null, feedGenerationQueue);
   }
 
   @RqueueListener(
@@ -140,7 +175,7 @@ public class MessageListener {
     if (failureManager.shouldFail(reservation.getId())) {
       throw new Exception("Failing reservation task to be retried" + reservation);
     }
-    consumedMessageService.save(reservation, null);
+    consumedMessageService.save(reservation, null, reservationQueue);
   }
 
   @RqueueListener(
@@ -154,7 +189,7 @@ public class MessageListener {
     if (failureManager.shouldFail(request.getId())) {
       throw new Exception("Failing reservation request task to be retried" + request);
     }
-    consumedMessageService.save(request, null);
+    consumedMessageService.save(request, null, reservationRequestQueue);
   }
 
   @RqueueListener(
@@ -164,7 +199,8 @@ public class MessageListener {
   public void onMessageReservationRequestDeadLetterQueue(ReservationRequest request)
       throws Exception {
     log.info("ReservationRequest Dead Letter Queue{}", request);
-    consumedMessageService.save(request, "reservation-request-dlq");
+    consumedMessageService.save(
+        request, "reservation-request-dlq", reservationRequestDeadLetterQueue);
   }
 
   @RqueueListener(value = "${list.email.queue.name}", active = "${list.email.queue.enabled}")
@@ -172,7 +208,20 @@ public class MessageListener {
     log.info("onMessageEmailList {}", emailList);
     String consumedId = UUID.randomUUID().toString();
     for (Email email : emailList) {
-      consumedMessageService.save(email, consumedId);
+      consumedMessageService.save(email, consumedId, listEmailQueue);
     }
+  }
+
+  @RqueueListener(
+      value = "${periodic.job.queue.name}",
+      active = "${periodic.job.queue.active}",
+      deadLetterQueue = "${periodic.job.dead.letter.queue.name}",
+      numRetries = "${periodic.job.queue.retry.count}")
+  public void onPeriodicJob(PeriodicJob periodicJob) throws Exception {
+    log.info("onPeriodicJob: {}", periodicJob);
+    if (failureManager.shouldFail(periodicJob.getId())) {
+      throw new Exception("Failing PeriodicJob task to be retried" + periodicJob);
+    }
+    consumedMessageService.save(periodicJob, UUID.randomUUID().toString(), periodicJobQueue);
   }
 }

@@ -21,9 +21,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.test.dto.BaseQueueMessage;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.repository.ConsumedMessageRepository;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -33,27 +35,29 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ConsumedMessageService {
-  @NonNull private ConsumedMessageRepository consumedMessageRepository;
-  @NonNull private ObjectMapper objectMapper;
+  @NonNull private final ConsumedMessageRepository consumedMessageRepository;
+  @NonNull private final ObjectMapper objectMapper;
 
-  public ConsumedMessage save(BaseQueueMessage message, String tag) throws JsonProcessingException {
+  public ConsumedMessage save(BaseQueueMessage message, String tag, String queueName)
+      throws JsonProcessingException {
     String textMessage = objectMapper.writeValueAsString(message);
-    ConsumedMessage consumedMessage = new ConsumedMessage(message.getId(), textMessage, tag);
+    ConsumedMessage consumedMessage =
+        new ConsumedMessage(message.getId(), tag, queueName, textMessage);
     consumedMessageRepository.save(consumedMessage);
     return consumedMessage;
   }
 
-  public Collection<ConsumedMessage> getConsumedMessages(Collection<String> ids) {
-    return getMessages(ids).values();
+  public Collection<ConsumedMessage> getConsumedMessages(Collection<String> messageIds) {
+    return getMessages(messageIds).values();
   }
 
-  public <T> T getMessage(String id, Class<T> tClass) {
-    return getMessages(Collections.singletonList(id), tClass).get(id);
+  public <T> T getMessage(String messageId, Class<T> tClass) {
+    return getMessages(Collections.singletonList(messageId), tClass).get(messageId);
   }
 
-  public <T> Map<String, T> getMessages(Collection<String> ids, Class<T> tClass) {
+  public <T> Map<String, T> getMessages(Collection<String> messageIds, Class<T> tClass) {
     Map<String, T> idToMessage = new HashMap<>();
-    getMessages(ids)
+    getMessages(messageIds)
         .values()
         .forEach(
             consumedMessage -> {
@@ -67,15 +71,31 @@ public class ConsumedMessageService {
     return idToMessage;
   }
 
-  public Map<String, ConsumedMessage> getMessages(Collection<String> ids) {
-    Iterable<ConsumedMessage> consumedMessages = consumedMessageRepository.findAllById(ids);
+  public Map<String, ConsumedMessage> getMessages(Collection<String> messageIds) {
+    Iterable<ConsumedMessage> consumedMessages =
+        consumedMessageRepository.findByMessageIdIn(messageIds);
     Map<String, ConsumedMessage> idToMessage = new HashMap<>();
     consumedMessages.forEach(
         consumedMessage -> idToMessage.put(consumedMessage.getId(), consumedMessage));
     return idToMessage;
   }
 
-  public ConsumedMessage getConsumedMessage(String id) {
-    return consumedMessageRepository.findById(id).orElse(null);
+  public ConsumedMessage getConsumedMessage(String messageId) {
+    List<ConsumedMessage> messages = getConsumedMessages(messageId);
+    if (messages.size() == 0) {
+      return null;
+    }
+    if (messages.size() == 1) {
+      return messages.get(0);
+    }
+    throw new IllegalStateException("more than one record found");
+  }
+
+  public List<ConsumedMessage> getConsumedMessages(String messageId) {
+    return new ArrayList<>(consumedMessageRepository.findByMessageId(messageId));
+  }
+
+  public List<ConsumedMessage> getConsumedMessagesForQueue(String queueName) {
+    return new ArrayList<>(consumedMessageRepository.findByQueueName(queueName));
   }
 }

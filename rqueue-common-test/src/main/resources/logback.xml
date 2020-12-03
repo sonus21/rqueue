@@ -28,7 +28,7 @@
     </rollingPolicy>
   </appender>
 
-  <logger level="DEBUG" name="com.github.sonus21">
+  <logger level="INFO" name="com.github.sonus21">
     <appender-ref ref="FILE"/>
   </logger>
 

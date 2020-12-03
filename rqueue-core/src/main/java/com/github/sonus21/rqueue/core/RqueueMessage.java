@@ -32,8 +32,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({"failureCount"})
-@Builder
-public class RqueueMessage extends SerializableBase implements Cloneable {
+@Builder(toBuilder = true)
+public class RqueueMessage extends SerializableBase {
 
   private static final long serialVersionUID = -3488860960637488519L;
   // The message id, each message has a unique id
@@ -61,12 +61,6 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
   }
 
   @Override
-  @SuppressWarnings("squid:S2975")
-  public RqueueMessage clone() throws CloneNotSupportedException {
-    return (RqueueMessage) super.clone();
-  }
-
-  @Override
   public boolean equals(Object other) {
     if (other instanceof RqueueMessage) {
       RqueueMessage otherMessage = (RqueueMessage) other;
@@ -75,6 +69,19 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
       }
     }
     return false;
+  }
+
+  @JsonIgnore
+  public String getPseudoId() {
+    if (!isPeriodicTask()) {
+      return id;
+    }
+    return id + "::sch::" + processAt;
+  }
+
+  @JsonIgnore
+  public long nextProcessAt() {
+    return processAt + period;
   }
 
   @JsonIgnore

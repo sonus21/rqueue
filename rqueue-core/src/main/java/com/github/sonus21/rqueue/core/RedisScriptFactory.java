@@ -38,6 +38,7 @@ public class RedisScriptFactory {
       case MOVE_MESSAGE_LIST_TO_ZSET:
       case MOVE_MESSAGE_ZSET_TO_ZSET:
       case MOVE_MESSAGE_ZSET_TO_LIST:
+      case SCHEDULE_MESSAGE:
         script.setResultType(Long.class);
         return script;
       case DEQUEUE_MESSAGE:
@@ -56,7 +57,8 @@ public class RedisScriptFactory {
     MOVE_MESSAGE_LIST_TO_LIST("scripts/move_message_list_to_list.lua"),
     MOVE_MESSAGE_LIST_TO_ZSET("scripts/move_message_list_to_zset.lua"),
     MOVE_MESSAGE_ZSET_TO_ZSET("scripts/move_message_zset_to_zset.lua"),
-    MOVE_MESSAGE_ZSET_TO_LIST("scripts/move_message_zset_to_list.lua");
+    MOVE_MESSAGE_ZSET_TO_LIST("scripts/move_message_zset_to_list.lua"),
+    SCHEDULE_MESSAGE("scripts/schedule_message.lua");
     private final String path;
 
     ScriptType(String path) {

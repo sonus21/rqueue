@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.StringUtils;
@@ -100,6 +101,9 @@ public abstract class SpringTestBase extends TestBase {
 
   @Value("${list.email.queue.name}")
   protected String listEmailQueue;
+
+  @Value("${periodic.job.queue.name}")
+  protected String periodicJobQueue;
 
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage =
@@ -183,6 +187,13 @@ public abstract class SpringTestBase extends TestBase {
 
   protected void printQueueStats(String queueName) {
     printQueueStats(Collections.singletonList(queueName));
+  }
+
+  protected void printConsumedMessage(String queueName) {
+    for (ConsumedMessage consumedMessage :
+        consumedMessageService.getConsumedMessagesForQueue(queueName)) {
+      log.info("Queue {} Msg: {}", queueName, consumedMessage);
+    }
   }
 
   protected void cleanQueue(String queue) {

@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_DAY;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -185,8 +186,7 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-  @Override
-  void start() {
+  private void processSimpleMessage() {
     int failureCount = rqueueMessage.getFailureCount();
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
@@ -227,6 +227,23 @@ class RqueueExecutor extends MessageContainerBase {
       logExecutionTimeWarning(maxProcessingTime, startTime, status);
     } finally {
       semaphore.release();
+    }
+  }
+
+  private void processScheduledMessage() {
+    RqueueMessage newMessage =
+        rqueueMessage.toBuilder().processAt(rqueueMessage.nextProcessAt()).build();
+    getRqueueMessageTemplate()
+        .scheduleMessage(queueDetail.getDelayedQueueName(), newMessage, SECONDS_IN_A_DAY);
+    processSimpleMessage();
+  }
+
+  @Override
+  void start() {
+    if (rqueueMessage.isPeriodicTask()) {
+      processScheduledMessage();
+    } else {
+      processSimpleMessage();
     }
   }
 }

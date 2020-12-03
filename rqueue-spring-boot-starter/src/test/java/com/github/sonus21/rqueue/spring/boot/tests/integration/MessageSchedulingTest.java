@@ -14,19 +14,8 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.test.repository;
+package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
-import java.util.Collection;
-import java.util.List;
-import org.springframework.data.repository.CrudRepository;
+public class MessageSchedulingTest {
 
-public interface ConsumedMessageRepository extends CrudRepository<ConsumedMessage, String> {
-  List<ConsumedMessage> findByQueueName(String queueName);
-
-  List<ConsumedMessage> findByMessageId(String messageId);
-
-  List<ConsumedMessage> findByMessageIdIn(Collection<String> messageIds);
-
-  ConsumedMessage findByMessageIdAndTag(String messageId, String tag);
 }

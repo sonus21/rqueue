@@ -62,7 +62,9 @@ public class ValueResolver {
 
   public static boolean convertToBoolean(String s) {
     String tmpString = clean(s);
-    if (tmpString.equalsIgnoreCase("true")) {
+    if (tmpString.equalsIgnoreCase("true")
+        || tmpString.equals("1")
+        || tmpString.equalsIgnoreCase("yes")) {
       return true;
     }
     if (tmpString.equalsIgnoreCase("false")) {
