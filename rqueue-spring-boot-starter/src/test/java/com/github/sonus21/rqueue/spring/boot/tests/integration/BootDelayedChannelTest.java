@@ -42,7 +42,7 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootTest
 @Slf4j
-@DisabledIfEnvironmentVariable(named = "CI_ENV", matches = "true")
+@DisabledIfEnvironmentVariable(named = "CI", matches = "true")
 public class BootDelayedChannelTest extends MessageChannelTests {
 
   @Test
