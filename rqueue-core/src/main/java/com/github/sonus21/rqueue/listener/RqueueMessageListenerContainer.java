@@ -243,28 +243,28 @@ public class RqueueMessageListenerContainer
     synchronized (lifecycleMgr) {
       if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
         log.info("Producer mode nothing to do...");
-        return;
-      }
-      EndpointRegistry.delete();
-      for (MappingInformation mappingInformation :
-          rqueueMessageHandler.getHandlerMethods().keySet()) {
-        for (String queue : mappingInformation.getQueueNames()) {
-          for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
-            EndpointRegistry.register(queueDetail);
+      } else {
+        EndpointRegistry.delete();
+        for (MappingInformation mappingInformation :
+            rqueueMessageHandler.getHandlerMethods().keySet()) {
+          for (String queue : mappingInformation.getQueueNames()) {
+            for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
+              EndpointRegistry.register(queueDetail);
+            }
           }
         }
+        List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
+        if (queueDetails.isEmpty()) {
+          return;
+        }
+        if (taskExecutor == null) {
+          defaultTaskExecutor = true;
+          taskExecutor = createDefaultTaskExecutor(queueDetails);
+        } else {
+          initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
+        }
+        initializeRunningQueueState();
       }
-      List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
-      if (queueDetails.isEmpty()) {
-        return;
-      }
-      if (taskExecutor == null) {
-        defaultTaskExecutor = true;
-        taskExecutor = createDefaultTaskExecutor(queueDetails);
-      } else {
-        initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
-      }
-      initializeRunningQueueState();
       lifecycleMgr.notifyAll();
     }
   }
