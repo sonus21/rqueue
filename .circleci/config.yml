@@ -47,22 +47,24 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-      - run: |
+      - run:
+         name: Install Dependencies
+         command: |
           sudo add-apt-repository ppa:chris-lea/redis-server
           sudo apt-get update
           sudo apt-get -y install redis-server
           redis-cli --version
-      - run:
-        name: Setup Redis Cluster
-        background: true
-        command: |
-          mkdir 9000 9001 9002 9003 9004 9005
-          printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
-          printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
-          printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
-          printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
-          printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
-          printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+          
+      - run: 
+          name: Setup Redis Cluster
+          command: |
+            mkdir 9000 9001 9002 9003 9004 9005
+            printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
+            printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
+            printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
+            printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
+            printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
+            printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
       - run:
           command: cd 9000 && redis-server ./redis.conf
           background: true
@@ -70,14 +72,14 @@ jobs:
           command: cd 9001 && redis-server ./redis.conf
           background: true
       - run:
-        command: cd 9002 && redis-server ./redis.conf
-        background: true
+         command: cd 9002 && redis-server ./redis.conf
+         background: true
       - run:
           command: cd 9003 && redis-server ./redis.conf
           background: true
       - run:
-        command: cd 9004 && redis-server ./redis.conf
-        background: true
+         command: cd 9004 && redis-server ./redis.conf
+         background: true
       - run:
           command: cd 9005 && redis-server ./redis.conf
           background: true
