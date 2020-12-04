@@ -18,6 +18,7 @@ executors:
       ORG_GRADLE_PROJECT_sonatypePassword: xxx
       USER_NAME: rqueue
       REDIS_RUNNING: "true"
+      CI_ENV: "true"
     run:
 
 
