@@ -48,7 +48,7 @@ jobs:
       - run: sudo add-apt-repository ppa:chris-lea/redis-server
       - run: sudo apt-get update
       - run: sudo apt-get -y install redis-server
-      - run:  redis-cli --version
+      - run: redis-cli --version
       - run: mkdir 9000 9001 9002 9003 9004 9005
       - run: printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
       - run: printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
@@ -56,6 +56,7 @@ jobs:
       - run: printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
       - run: printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
       - run: printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+      - run: cat 9005/redis.conf
       - run: cd 9000 && redis-server ./redis.conf &
       - run: cd 9001 && redis-server ./redis.conf &
       - run: cd 9002 && redis-server ./redis.conf &
