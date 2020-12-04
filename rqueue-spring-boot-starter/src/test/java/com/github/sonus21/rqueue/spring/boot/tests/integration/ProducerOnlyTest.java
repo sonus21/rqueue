@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -33,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = ProducerOnlyApplication.class)
 @SpringBootTest
 @Slf4j
+@DisabledIfEnvironmentVariable(named = "CI", matches = "true")
 public class ProducerOnlyTest extends BasicListenerTest {
   @Test
   public void testQueueCount() {
