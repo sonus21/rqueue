@@ -242,7 +242,7 @@ public class RqueueMessageListenerContainer
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
       if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
-        log.info("Producer only mode running.");
+        log.info("Producer mode nothing to do...");
         return;
       }
       EndpointRegistry.delete();
@@ -413,6 +413,10 @@ public class RqueueMessageListenerContainer
   }
 
   protected void doStart() {
+    if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
+      log.info("Producer mode nothing to do...");
+      return;
+    }
     Map<String, List<QueueDetail>> queueGroupToDetails = new HashMap<>();
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       int prioritySize = queueDetail.getPriority().size();
@@ -512,6 +516,10 @@ public class RqueueMessageListenerContainer
   }
 
   protected void doStop() {
+    if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
+      log.info("Producer mode nothing to do...");
+      return;
+    }
     for (Map.Entry<String, Boolean> runningStateByQueue : queueRunningState.entrySet()) {
       if (Boolean.TRUE.equals(runningStateByQueue.getValue())) {
         stopQueue(runningStateByQueue.getKey());
