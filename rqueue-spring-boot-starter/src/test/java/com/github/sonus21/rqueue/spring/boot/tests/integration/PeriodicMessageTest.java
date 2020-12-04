@@ -68,6 +68,7 @@ public class PeriodicMessageTest extends SpringTestBase {
         rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, 2000, TimeUnit.MILLISECONDS);
     TimeoutUtils.waitFor(
         () -> consumedMessageService.getConsumedMessages(job.getId()).size() > 1,
+        30_000,
         "at least two execution");
     rqueueMessageManager.deleteMessage(periodicJobQueue, messageId);
   }
@@ -78,6 +79,7 @@ public class PeriodicMessageTest extends SpringTestBase {
     String messageId = rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, 2000);
     TimeoutUtils.waitFor(
         () -> consumedMessageService.getConsumedMessages(job.getId()).size() > 1,
+        30_000,
         "at least two execution");
     rqueueMessageManager.deleteMessage(periodicJobQueue, messageId);
   }
