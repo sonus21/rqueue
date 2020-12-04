@@ -19,6 +19,8 @@ executors:
       USER_NAME: rqueue
       REDIS_RUNNING: "true"
       CI_ENV: "true"
+    run:
+      
 
 jobs:
   boot_2_1:
@@ -45,16 +47,12 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-      - run:
-        - name: Install Dependencies
-        - command: |
+      - run: |
           sudo add-apt-repository ppa:chris-lea/redis-server
           sudo apt-get update
           sudo apt-get -y install redis-server
           redis-cli --version
-      - run:
-          - name: Setup Redis Cluster
-          -  command: |
+      - run: |
                mkdir 9000 9001 9002 9003 9004 9005
                printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
                printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
@@ -70,14 +68,8 @@ jobs:
                cd 9004 && redis-server ./redis.conf &
                cd 9005 && redis-server ./redis.conf &
                redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
-      - run:
-          - name:  System Stats
-          - command:|
-              df -h
-              lscpu
-      - run:
-        - name: Code Coverage
-        - command: ./gradlew codeCoverageReport
+      
+      - run: ./gradlew codeCoverageReport
       - run:
           name: Build Success
           when: on_success
