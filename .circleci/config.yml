@@ -8,28 +8,27 @@ executors:
     machine:
       image: ubuntu-1604:202007-01
 
-      working_directory: ~/repo
+    working_directory: ~/repo
 
-      environment:
-        # Customize the JVM maximum heap limit
-        JVM_OPTS: -Xmx3200m
-        TERM: dumb
-        ORG_GRADLE_PROJECT_sonatypeUsername: xxx
-        ORG_GRADLE_PROJECT_sonatypePassword: xxx
-        USER_NAME: rqueue
-        REDIS_RUNNING: false
-        CI_ENV: true
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+      ORG_GRADLE_PROJECT_sonatypeUsername: xxx
+      ORG_GRADLE_PROJECT_sonatypePassword: xxx
+      USER_NAME: rqueue
+      REDIS_RUNNING: "true"
+      CI_ENV: "true"
 
 jobs:
-  boot-2.1:
+  boot_2_1:
     executor: rqueue-executor
     environment:
       SPRING_BOOT_VERSION: 2.1.0.RELEASE
       SPRING_VERSION: 5.1.2.RELEASE
       SPRING_DATA_VERSION: 2.1.2.RELEASE
       MICROMETER_VERSION: 1.1.0
-      ORG_GRADLE_PROJECT_sonatypeUsername: xxx
-      ORG_GRADLE_PROJECT_sonatypePassword: xxx
+
     steps:
       - checkout
 
@@ -69,15 +68,13 @@ jobs:
           when: on_success
           command: ./gradlew coveralls
 
-  boot-2.2:
+  boot_2_2:
     executor: rqueue-executor
     environment:
       SPRING_BOOT_VERSION: 2.2.0.RELEASE
       SPRING_VERSION: 5.2.0.RELEASE
       SPRING_DATA_VERSION: 2.2.0.RELEASE
       MICROMETER_VERSION: 1.3.2
-      ORG_GRADLE_PROJECT_sonatypeUsername: xxx
-      ORG_GRADLE_PROJECT_sonatypePassword: xxx
     steps:
       - checkout
 
@@ -101,3 +98,10 @@ jobs:
           name: Build Success
           when: on_success
           command: ./gradlew coveralls
+
+
+workflows:
+  main:
+    jobs:
+      - boot_2_2
+      - boot_2_1
