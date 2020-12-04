@@ -242,29 +242,29 @@ public class RqueueMessageListenerContainer
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
       if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
-        log.info("Producer only mode running.");
-        return;
-      }
-      EndpointRegistry.delete();
-      for (MappingInformation mappingInformation :
-          rqueueMessageHandler.getHandlerMethods().keySet()) {
-        for (String queue : mappingInformation.getQueueNames()) {
-          for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
-            EndpointRegistry.register(queueDetail);
+        log.info("Producer mode nothing to do...");
+      } else {
+        EndpointRegistry.delete();
+        for (MappingInformation mappingInformation :
+            rqueueMessageHandler.getHandlerMethods().keySet()) {
+          for (String queue : mappingInformation.getQueueNames()) {
+            for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
+              EndpointRegistry.register(queueDetail);
+            }
           }
         }
+        List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
+        if (queueDetails.isEmpty()) {
+          return;
+        }
+        if (taskExecutor == null) {
+          defaultTaskExecutor = true;
+          taskExecutor = createDefaultTaskExecutor(queueDetails);
+        } else {
+          initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
+        }
+        initializeRunningQueueState();
       }
-      List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
-      if (queueDetails.isEmpty()) {
-        return;
-      }
-      if (taskExecutor == null) {
-        defaultTaskExecutor = true;
-        taskExecutor = createDefaultTaskExecutor(queueDetails);
-      } else {
-        initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
-      }
-      initializeRunningQueueState();
       lifecycleMgr.notifyAll();
     }
   }
@@ -413,6 +413,10 @@ public class RqueueMessageListenerContainer
   }
 
   protected void doStart() {
+    if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
+      log.info("Producer mode nothing to do...");
+      return;
+    }
     Map<String, List<QueueDetail>> queueGroupToDetails = new HashMap<>();
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       int prioritySize = queueDetail.getPriority().size();
@@ -512,6 +516,10 @@ public class RqueueMessageListenerContainer
   }
 
   protected void doStop() {
+    if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
+      log.info("Producer mode nothing to do...");
+      return;
+    }
     for (Map.Entry<String, Boolean> runningStateByQueue : queueRunningState.entrySet()) {
       if (Boolean.TRUE.equals(runningStateByQueue.getValue())) {
         stopQueue(runningStateByQueue.getKey());
