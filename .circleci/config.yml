@@ -3,29 +3,30 @@
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
 version: 2
+executors:
+  rqueue-executor:
+    machine:
+      image: ubuntu-1604:202007-01
+
+      working_directory: ~/repo
+
+      environment:
+        # Customize the JVM maximum heap limit
+        JVM_OPTS: -Xmx3200m
+        TERM: dumb
+        ORG_GRADLE_PROJECT_sonatypeUsername: xxx
+        ORG_GRADLE_PROJECT_sonatypePassword: xxx
+        USER_NAME: rqueue
+        REDIS_RUNNING: false
+        CI_ENV: true
 jobs:
-  build:
-    docker:
-      # specify the version you desire here
-      - image: circleci/openjdk:8-jdk
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    working_directory: ~/repo
-
+  boot-2.1:
+    executor: rqueue-executor
     environment:
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-      ORG_GRADLE_PROJECT_sonatypeUsername: xxx
-      ORG_GRADLE_PROJECT_sonatypePassword: xxx
-      USER_NAME: rqueue
-      REDIS_RUNNING: false
-      CI_ENV: true
-
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
     steps:
       - checkout
 
@@ -44,4 +45,39 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
       # run tests!
-      - run: gradle test
+      - run: ./gradlew codeCoverageReport
+      - run:
+          name: Build Success
+          when: on_success
+          command: ./gradlew coveralls
+
+  boot-2.2:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.2.0.RELEASE
+      SPRING_VERSION: 5.2.0.RELEASE
+      SPRING_DATA_VERSION: 2.2.0.RELEASE
+      MICROMETER_VERSION: 1.3.2
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v2-dependencies-{{ checksum "build.gradle" }}
+            # fallback to using the latest cache if no exact match is found
+            - v2-dependencies-
+
+      - run: gradle dependencies
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v2-dependencies-{{ checksum "build.gradle" }}
+
+      # run tests!
+      - run: ./gradlew codeCoverageReport
+      - run:
+          name: Build Success
+          when: on_success
+          command: ./gradlew coveralls
