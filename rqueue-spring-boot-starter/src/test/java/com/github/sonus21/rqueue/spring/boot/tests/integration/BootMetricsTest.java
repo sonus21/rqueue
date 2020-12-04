@@ -22,7 +22,6 @@ import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -44,7 +43,6 @@ import org.springframework.test.context.TestPropertySource;
 public class BootMetricsTest extends MetricTest {
 
   @Test
-  @DisabledIfEnvironmentVariable(named = "CI_ENV", matches = "true")
   public void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }
