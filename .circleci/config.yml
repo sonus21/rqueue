@@ -45,28 +45,39 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-      - run: sudo add-apt-repository ppa:chris-lea/redis-server
-      - run: sudo apt-get update
-      - run: sudo apt-get -y install redis-server
-      - run: redis-cli --version
-      - run: mkdir 9000 9001 9002 9003 9004 9005
-      - run: printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
-      - run: printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
-      - run: printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
-      - run: printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
-      - run: printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
-      - run: printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
-      - run: cat 9005/redis.conf
-      - run: cd 9000 && redis-server ./redis.conf &
-      - run: cd 9001 && redis-server ./redis.conf &
-      - run: cd 9002 && redis-server ./redis.conf &
-      - run: cd 9003 && redis-server ./redis.conf &
-      - run: cd 9004 && redis-server ./redis.conf &
-      - run: cd 9005 && redis-server ./redis.conf &
-      - run: redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
-      - run: df -h
-      - run: lscpu
-      - run: ./gradlew codeCoverageReport
+      - run:
+        - name: Install Dependencies
+        - command: |
+          sudo add-apt-repository ppa:chris-lea/redis-server
+          sudo apt-get update
+          sudo apt-get -y install redis-server
+          redis-cli --version
+      - run:
+          - name: Setup Redis Cluster
+          -  command: |
+               mkdir 9000 9001 9002 9003 9004 9005
+               printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
+               printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
+               printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
+               printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
+               printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
+               printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+               cat 9005/redis.conf
+               cd 9000 && redis-server ./redis.conf &
+               cd 9001 && redis-server ./redis.conf &
+               cd 9002 && redis-server ./redis.conf &
+               cd 9003 && redis-server ./redis.conf &
+               cd 9004 && redis-server ./redis.conf &
+               cd 9005 && redis-server ./redis.conf &
+               redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
+      - run:
+          - name:  System Stats
+          - command:|
+              df -h
+              lscpu
+      - run:
+        - name: Code Coverage
+        - command: ./gradlew codeCoverageReport
       - run:
           name: Build Success
           when: on_success
@@ -108,4 +119,4 @@ workflows:
   main:
     jobs:
       - boot_2_1
-      - boot_2_2
+      #- boot_2_2
