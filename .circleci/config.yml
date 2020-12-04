@@ -45,6 +45,7 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
+      - run: redis-cli ping
       - run: sudo apt-get install redis
       - run: mkdir 9000 9001 9002 9003 9004 9005
       - run: printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
@@ -103,5 +104,5 @@ jobs:
 workflows:
   main:
     jobs:
-      - boot_2_2
       - boot_2_1
+      - boot_2_2
