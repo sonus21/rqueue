@@ -43,6 +43,7 @@ import org.springframework.test.context.TestPropertySource;
       "rqueue.metrics.count.execution=false",
       "periodic.job.queue.active=true",
       "use.system.redis=false",
+      "monitor.enabled=false"
     })
 public class PeriodicMessageTest extends SpringTestBase {
   @Test
