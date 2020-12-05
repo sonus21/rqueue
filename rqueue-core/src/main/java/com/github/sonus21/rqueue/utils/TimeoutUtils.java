@@ -48,22 +48,6 @@ public class TimeoutUtils {
     waitFor(callback, 10000L, description, postmortem);
   }
 
-  private static long getSleepTime(long waitTime) {
-    if (waitTime < 1000L) {
-      return 25L;
-    }
-    if (waitTime < 5_000L) {
-      return 50L;
-    }
-    if (waitTime < 10_000L) {
-      return 100L;
-    }
-    if (waitTime < 20_000) {
-      return 200L;
-    }
-    return waitTime / 60;
-  }
-
   public static void waitFor(
       BooleanSupplier callback,
       long waitTimeInMilliSeconds,
@@ -71,7 +55,7 @@ public class TimeoutUtils {
       Runnable postmortem)
       throws TimedOutException {
     long endTime = System.currentTimeMillis() + waitTimeInMilliSeconds;
-    long sleepTime = getSleepTime(waitTimeInMilliSeconds);
+    long sleepTime = 100;
     do {
       if (Boolean.TRUE.equals(callback.getAsBoolean())) {
         return;
