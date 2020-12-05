@@ -45,7 +45,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage>
     implements RqueueMessageTemplate {
-  private DefaultScriptExecutor<String> scriptExecutor;
+  private final DefaultScriptExecutor<String> scriptExecutor;
 
   public RqueueMessageTemplateImpl(RedisConnectionFactory redisConnectionFactory) {
     super(redisConnectionFactory);

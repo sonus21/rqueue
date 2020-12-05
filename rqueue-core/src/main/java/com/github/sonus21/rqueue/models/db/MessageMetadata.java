@@ -52,6 +52,12 @@ public class MessageMetadata extends SerializableBase {
   }
 
   public void addExecutionTime(long jobStartTime) {
-    this.totalExecutionTime += (System.currentTimeMillis() - jobStartTime);
+    long executionTime = (System.currentTimeMillis() - jobStartTime);
+    if (totalExecutionTime > 0 && !rqueueMessage.isPeriodicTask()) {
+      this.totalExecutionTime += executionTime;
+    } else {
+      // for non periodic job don't add execution time as the same job id would be running
+      this.totalExecutionTime = executionTime;
+    }
   }
 }
