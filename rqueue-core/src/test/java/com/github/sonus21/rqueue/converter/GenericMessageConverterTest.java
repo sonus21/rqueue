@@ -47,6 +47,66 @@ import org.springframework.messaging.support.GenericMessage;
 public class GenericMessageConverterTest {
   private static final GenericMessageConverter genericMessageConverter =
       new GenericMessageConverter();
+
+  @Data
+  @NoArgsConstructor
+  public static class MultiLevelGenericTestDataNoArgs<T, V> {
+    private String data;
+    private GenericTestData<T> tGenericTestData;
+    private GenericTestData<V> vGenericTestData;
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class MultiLevelGenericTestData<T, V> {
+    private String data;
+    private GenericTestData<T> tGenericTestData;
+    private GenericTestData<V> vGenericTestData;
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class MultiLevelGenericTestDataFixedType<T, V> {
+    private String data;
+    private GenericTestData<T> tGenericTestData;
+    private MultiGenericTestData<V, String> vGenericTestData;
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class MultiGenericTestData<K, V> {
+    private Integer index;
+    private K key;
+    private V value;
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class GenericTestData<T> {
+    private Integer index;
+    private T data;
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class Comment {
+    private String id;
+    private String message;
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class Email {
+    private String id;
+    private String subject;
+  }
+
   private static Comment comment = new Comment(UUID.randomUUID().toString(), "This is test");
   private static Email email = new Email(UUID.randomUUID().toString(), "This is test");
 
@@ -98,10 +158,11 @@ public class GenericMessageConverterTest {
   }
 
   @Test
-  public void testMessageNonEmptyList() {
+  public void testMessageNonEmptyListWithGenericItem() {
+    List<GenericTestData<String>> items =
+        Collections.singletonList(new GenericTestData<>(10, "10"));
     assertNull(
-        genericMessageConverter.toMessage(
-            Collections.emptyList(), RqueueMessageHeaders.emptyMessageHeaders()));
+        genericMessageConverter.toMessage(items, RqueueMessageHeaders.emptyMessageHeaders()));
   }
 
   @Test
@@ -218,65 +279,6 @@ public class GenericMessageConverterTest {
         (MultiLevelGenericTestDataFixedType<Comment, Email>)
             genericMessageConverter.fromMessage(message, null);
     assertEquals(data, fromMessage);
-  }
-
-  @Data
-  @NoArgsConstructor
-  public static class MultiLevelGenericTestDataNoArgs<T, V> {
-    private String data;
-    private GenericTestData<T> tGenericTestData;
-    private GenericTestData<V> vGenericTestData;
-  }
-
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class MultiLevelGenericTestData<T, V> {
-    private String data;
-    private GenericTestData<T> tGenericTestData;
-    private GenericTestData<V> vGenericTestData;
-  }
-
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class MultiLevelGenericTestDataFixedType<T, V> {
-    private String data;
-    private GenericTestData<T> tGenericTestData;
-    private MultiGenericTestData<V, String> vGenericTestData;
-  }
-
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class MultiGenericTestData<K, V> {
-    private Integer index;
-    private K key;
-    private V value;
-  }
-
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class GenericTestData<T> {
-    private Integer index;
-    private T data;
-  }
-
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class Comment {
-    private String id;
-    private String message;
-  }
-
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class Email {
-    private String id;
-    private String subject;
   }
 
   // https://stackoverflow.com/questions/64873444/generic-class-type-parameter-detail-at-runtime

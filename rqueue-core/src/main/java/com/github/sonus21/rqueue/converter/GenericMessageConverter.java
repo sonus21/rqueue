@@ -37,29 +37,20 @@ import org.springframework.messaging.support.GenericMessage;
 
 /**
  * A converter to turn the payload of a {@link Message} from serialized form to a typed String and
- * vice versa.
+ * vice versa. This class does not support generic class except {@link List},even for list the
+ * entries should be non generic.
  */
 @Slf4j
 public class GenericMessageConverter implements MessageConverter {
   private final ObjectMapper objectMapper;
-  private final boolean genericFieldEnabled;
 
   public GenericMessageConverter() {
     this(new ObjectMapper());
   }
 
   public GenericMessageConverter(ObjectMapper objectMapper) {
-    this(objectMapper, true);
-  }
-
-  public GenericMessageConverter(boolean genericFieldEnabled) {
-    this(new ObjectMapper(), genericFieldEnabled);
-  }
-
-  public GenericMessageConverter(ObjectMapper objectMapper, boolean genericFieldEnabled) {
     notNull(objectMapper, "objectMapper cannot be null");
     this.objectMapper = objectMapper;
-    this.genericFieldEnabled = genericFieldEnabled;
   }
 
   /**
@@ -109,15 +100,16 @@ public class GenericMessageConverter implements MessageConverter {
       if (payload.isEmpty()) {
         return null;
       }
-      return name + '#' + ((List<?>) payload).get(0).getClass().getName();
+      String itemClassName = getClassName(((List<?>) payload).get(0));
+      if (itemClassName == null) {
+        return null;
+      }
+      return name + '#' + itemClassName;
     }
     return null;
   }
 
-  private String getGenericFieldBasedClassName(Class<?> clazz, Object payload) {
-    if (!genericFieldEnabled) {
-      return clazz.getName();
-    }
+  private String getGenericFieldBasedClassName(Class<?> clazz) {
     TypeVariable<?>[] typeVariables = clazz.getTypeParameters();
     if (typeVariables.length == 0) {
       return clazz.getName();
@@ -131,7 +123,7 @@ public class GenericMessageConverter implements MessageConverter {
     if (payload instanceof Collection) {
       return getClassNameForCollection(name, (Collection<?>) payload);
     }
-    return getGenericFieldBasedClassName(payloadClass, payload);
+    return getGenericFieldBasedClassName(payloadClass);
   }
 
   /**
