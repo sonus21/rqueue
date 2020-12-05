@@ -234,9 +234,10 @@ class RqueueExecutor extends MessageContainerBase {
     RqueueMessage newMessage =
         rqueueMessage.toBuilder().processAt(rqueueMessage.nextProcessAt()).build();
     // avoid duplicate message enqueue due to retry by checking the message key
+    // avoid cross slot error by using tagged queue name in the key
     String messageId =
-        rqueueConfig.getPrefix() + rqueueMessage.getId() + "::sch::" + newMessage.getProcessAt();
-    log.info(
+        queueDetail.getQueueName() + rqueueMessage.getId() + "::sch::" + newMessage.getProcessAt();
+    log.debug(
         "Schedule periodic message: {} Status: {}",
         rqueueMessage,
         getRqueueMessageTemplate()

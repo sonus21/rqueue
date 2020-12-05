@@ -19,8 +19,6 @@ package com.github.sonus21.rqueue.core.impl;
 import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildMessage;
 import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildPeriodicMessage;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
-import static com.github.sonus21.rqueue.utils.Validator.validateMessage;
-import static com.github.sonus21.rqueue.utils.Validator.validatePeriod;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static org.springframework.util.Assert.notNull;
 
@@ -84,7 +82,7 @@ abstract class BaseMessageSender {
       Long delayInMilliSecs) {
     RqueueMessage rqueueMessage =
         buildMessage(
-            messageConverter, message, queueName, retryCount, delayInMilliSecs, messageHeaders);
+            messageConverter, queueName, message, retryCount, delayInMilliSecs, messageHeaders);
     if (messageId != null) {
       rqueueMessage.setId(messageId);
     }
