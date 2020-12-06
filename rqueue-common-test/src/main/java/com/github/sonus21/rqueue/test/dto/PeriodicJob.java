@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.test.repository;
+package com.github.sonus21.rqueue.test.dto;
 
-import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
-import java.util.Collection;
-import java.util.List;
-import org.springframework.data.repository.CrudRepository;
+import java.util.UUID;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 
-public interface ConsumedMessageRepository extends CrudRepository<ConsumedMessage, String> {
-  List<ConsumedMessage> findByQueueName(String queueName);
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class PeriodicJob extends BaseQueueMessage {
+  private String jobName;
 
-  List<ConsumedMessage> findByMessageId(String messageId);
-
-  List<ConsumedMessage> findByMessageIdIn(Collection<String> messageIds);
-
-  ConsumedMessage findByMessageIdAndTag(String messageId, String tag);
+  public static PeriodicJob newInstance() {
+    PeriodicJob job = new PeriodicJob();
+    job.setId(UUID.randomUUID().toString());
+    job.setJobName(RandomStringUtils.randomAlphabetic(10));
+    return job;
+  }
 }

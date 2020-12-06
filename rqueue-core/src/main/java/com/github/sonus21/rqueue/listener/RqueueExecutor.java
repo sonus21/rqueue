@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_DAY;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -104,10 +105,12 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
+  private long maxExecutionTime() {
+    return queueDetail.getVisibilityTimeout() - DELTA_BETWEEN_RE_ENQUEUE_TIME;
+  }
+
   private long getMaxProcessingTime() {
-    return System.currentTimeMillis()
-        + queueDetail.getVisibilityTimeout()
-        - DELTA_BETWEEN_RE_ENQUEUE_TIME;
+    return System.currentTimeMillis() + maxExecutionTime();
   }
 
   private boolean isMessageDeleted() {
@@ -167,8 +170,23 @@ class RqueueExecutor extends MessageContainerBase {
         messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
   }
 
-  @Override
-  void start() {
+  private void logExecutionTimeWarning(
+      long maxProcessingTime, long startTime, ExecutionStatus status) {
+    if (System.currentTimeMillis() > maxProcessingTime) {
+      long maxAllowedTime = maxExecutionTime();
+      long executionTime = System.currentTimeMillis() - startTime;
+      log(
+          Level.WARN,
+          "Message listener is taking longer time [Queue: {}, TaskStatus: {}] MaxAllowedTime: {}, ExecutionTime: {}",
+          null,
+          queueDetail.getQueueName(),
+          status,
+          maxAllowedTime,
+          executionTime);
+    }
+  }
+
+  private void processSimpleMessage() {
     int failureCount = rqueueMessage.getFailureCount();
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
@@ -206,8 +224,38 @@ class RqueueExecutor extends MessageContainerBase {
           (status == null ? ExecutionStatus.FAILED : status),
           failureCount,
           startTime);
+      logExecutionTimeWarning(maxProcessingTime, startTime, status);
     } finally {
       semaphore.release();
+    }
+  }
+
+  private void processPeriodicMessage() {
+    RqueueMessage newMessage =
+        rqueueMessage.toBuilder().processAt(rqueueMessage.nextProcessAt()).build();
+    // avoid duplicate message enqueue due to retry by checking the message key
+    // avoid cross slot error by using tagged queue name in the key
+    String messageId =
+        queueDetail.getQueueName()
+            + "::"
+            + rqueueMessage.getId()
+            + "::sch::"
+            + newMessage.getProcessAt();
+    log.debug(
+        "Schedule periodic message: {} Status: {}",
+        rqueueMessage,
+        getRqueueMessageTemplate()
+            .scheduleMessage(
+                queueDetail.getDelayedQueueName(), messageId, newMessage, SECONDS_IN_A_DAY));
+    processSimpleMessage();
+  }
+
+  @Override
+  void start() {
+    if (rqueueMessage.isPeriodicTask()) {
+      processPeriodicMessage();
+    } else {
+      processSimpleMessage();
     }
   }
 }

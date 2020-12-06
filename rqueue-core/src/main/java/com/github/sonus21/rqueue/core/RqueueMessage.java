@@ -16,8 +16,11 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.sonus21.rqueue.models.SerializableBase;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,10 +30,13 @@ import lombok.ToString;
 @Setter
 @ToString
 @NoArgsConstructor
-public class RqueueMessage extends SerializableBase implements Cloneable {
+@AllArgsConstructor
+@JsonPropertyOrder({"failureCount"})
+@Builder(toBuilder = true)
+public class RqueueMessage extends SerializableBase {
 
   private static final long serialVersionUID = -3488860960637488519L;
-  /** The message id, each message has a unique id, generated using */
+  // The message id, each message has a unique id
   private String id;
   // Queue name on which message was enqueued
   private String queueName;
@@ -47,33 +53,11 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
   private Long reEnqueuedAt;
   // Number of times this message has failed.
   private int failureCount;
-
-  public RqueueMessage(String queueName, String message, Integer retryCount, Long delay) {
-    this.queueName = queueName;
-    this.message = message;
-    this.retryCount = retryCount;
-    this.id = UUID.randomUUID().toString();
-    initTime(delay);
-  }
-
-  private void initTime(Long delay) {
-    // Monotonic increasing queued time
-    // This is used to check duplicate message in executor
-    this.queuedTime = System.nanoTime();
-    this.processAt = System.currentTimeMillis();
-    if (delay != null) {
-      this.processAt += delay;
-    }
-  }
+  // period of this task, if this is a periodic task.
+  private long period;
 
   public void updateReEnqueuedAt() {
     reEnqueuedAt = System.currentTimeMillis();
-  }
-
-  @Override
-  @SuppressWarnings("squid:S2975")
-  public RqueueMessage clone() throws CloneNotSupportedException {
-    return (RqueueMessage) super.clone();
   }
 
   @Override
@@ -85,5 +69,15 @@ public class RqueueMessage extends SerializableBase implements Cloneable {
       }
     }
     return false;
+  }
+
+  @JsonIgnore
+  public long nextProcessAt() {
+    return processAt + period;
+  }
+
+  @JsonIgnore
+  public boolean isPeriodicTask() {
+    return period > 0;
   }
 }

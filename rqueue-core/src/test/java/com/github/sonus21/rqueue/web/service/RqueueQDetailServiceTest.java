@@ -328,7 +328,7 @@ public class RqueueQDetailServiceTest {
     objects.add("Test");
     objects.add(
         RqueueMessageUtils.buildMessage(
-            messageConverter, "buildMessage", "jobs", null, null, null));
+            messageConverter, "jobs", "buildMessage", null, null, null));
     objects.add(null);
     doReturn(objects).when(stringRqueueRedisTemplate).lrange("jobs", 0, 9);
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.LIST, null, 0, 10);
@@ -349,7 +349,7 @@ public class RqueueQDetailServiceTest {
     objects.add(
         new DefaultTypedTuple<>(
             RqueueMessageUtils.buildMessage(
-                messageConverter, "buildMessage", "jobs", null, null, null),
+                messageConverter, "jobs", "buildMessage", null, null, null),
             200.0));
 
     List<List<Serializable>> rows = new ArrayList<>();
@@ -378,7 +378,7 @@ public class RqueueQDetailServiceTest {
     Set<Object> objects = new HashSet<>();
     objects.add("Test");
     objects.add(
-        RqueueMessageUtils.buildMessage(messageConverter, "Test object", "jobs", null, null, null));
+        RqueueMessageUtils.buildMessage(messageConverter, "jobs", "Test object", null, null, null));
     List<List<Serializable>> rows = new ArrayList<>();
     for (Object object : objects) {
       rows.add(Collections.singletonList(String.valueOf(object)));

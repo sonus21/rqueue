@@ -133,14 +133,12 @@ class PostProcessingHandler extends BaseLogger {
   }
 
   private void handleOldMessage(QueueDetail queueDetail, RqueueMessage rqueueMessage) {
-    if (isDebugEnabled()) {
-      log(
-          Level.DEBUG,
-          "Message {} ignored due to new message, Queue: {}",
-          null,
-          rqueueMessage,
-          queueDetail.getName());
-    }
+    log(
+        Level.DEBUG,
+        "Message {} ignored due to new message, Queue: {}",
+        null,
+        rqueueMessage,
+        queueDetail.getName());
     rqueueMessageTemplate.removeElementFromZset(
         queueDetail.getProcessingQueueName(), rqueueMessage);
   }
@@ -206,7 +204,9 @@ class PostProcessingHandler extends BaseLogger {
           byte[] processingQueueNameBytes =
               keySerializer.serialize(queueDetail.getProcessingQueueName());
           byte[] queueNameBytes = keySerializer.serialize(queueName);
+          assert queueNameBytes != null;
           connection.rPush(queueNameBytes, newMessageBytes);
+          assert processingQueueNameBytes != null;
           connection.zRem(processingQueueNameBytes, oldMessageBytes);
         });
   }
@@ -242,18 +242,14 @@ class PostProcessingHandler extends BaseLogger {
       Object userMessage,
       MessageMetadata messageMetadata,
       int failureCount,
-      long jobExecutionStartTime)
-      throws CloneNotSupportedException {
-    if (isWarningEnabled()) {
-      log(
-          Level.WARN,
-          "Message {} Moved to dead letter queue: {}",
-          null,
-          userMessage,
-          queueDetail.getDeadLetterQueueName());
-    }
-    RqueueMessage newMessage = rqueueMessage.clone();
-    newMessage.setFailureCount(failureCount);
+      long jobExecutionStartTime) {
+    log(
+        Level.WARN,
+        "Message {} Moved to dead letter queue: {}",
+        null,
+        userMessage,
+        queueDetail.getDeadLetterQueueName());
+    RqueueMessage newMessage = rqueueMessage.toBuilder().failureCount(failureCount).build();
     newMessage.updateReEnqueuedAt();
     moveMessageForReprocessingOrDlq(queueDetail, rqueueMessage, newMessage, userMessage);
     publishEvent(
@@ -271,13 +267,9 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       int failureCount,
       long jobExecutionStartTime,
-      long delay)
-      throws CloneNotSupportedException {
-    if (isDebugEnabled()) {
-      log(Level.DEBUG, "Message {} will be retried in {}Ms", null, userMessage, delay);
-    }
-    RqueueMessage newMessage = rqueueMessage.clone();
-    newMessage.setFailureCount(failureCount);
+      long delay) {
+    log(Level.DEBUG, "Message {} will be retried in {}Ms", null, userMessage, delay);
+    RqueueMessage newMessage = rqueueMessage.toBuilder().failureCount(failureCount).build();
     newMessage.updateReEnqueuedAt();
     rqueueMessageTemplate.moveMessage(
         queueDetail.getProcessingQueueName(),
@@ -295,9 +287,7 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       int failureCount,
       long jobExecutionStartTime) {
-    if (isDebugEnabled()) {
-      log(Level.DEBUG, "Message {} discarded due to retry limit exhaust", null, userMessage);
-    }
+    log(Level.DEBUG, "Message {} discarded due to retry limit exhaust", null, userMessage);
     deleteMessage(
         queueDetail,
         rqueueMessage,
@@ -315,9 +305,7 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       int failureCount,
       long jobExecutionStartTime) {
-    if (isDebugEnabled()) {
-      log(Level.DEBUG, "Message Deleted {} successfully", null, rqueueMessage);
-    }
+    log(Level.DEBUG, "Message Deleted {} successfully", null, rqueueMessage);
     deleteMessage(
         queueDetail,
         rqueueMessage,
@@ -335,9 +323,7 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       int failureCount,
       long jobExecutionStartTime) {
-    if (isDebugEnabled()) {
-      log(Level.DEBUG, "Message consumed {} successfully", null, rqueueMessage);
-    }
+    log(Level.DEBUG, "Message consumed {} successfully", null, rqueueMessage);
     deleteMessage(
         queueDetail,
         rqueueMessage,
@@ -354,8 +340,7 @@ class PostProcessingHandler extends BaseLogger {
       Object userMessage,
       MessageMetadata messageMetadata,
       int failureCount,
-      long jobExecutionStartTime)
-      throws CloneNotSupportedException {
+      long jobExecutionStartTime) {
     if (queueDetail.isDlqSet()) {
       moveMessageToDlq(
           queueDetail,
@@ -387,8 +372,7 @@ class PostProcessingHandler extends BaseLogger {
       Object userMessage,
       MessageMetadata messageMetadata,
       int failureCount,
-      long jobExecutionStartTime)
-      throws CloneNotSupportedException {
+      long jobExecutionStartTime) {
     int maxRetryCount = getMaxRetryCount(rqueueMessage, queueDetail);
     if (failureCount < maxRetryCount) {
       long delay = taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, failureCount);
@@ -428,9 +412,7 @@ class PostProcessingHandler extends BaseLogger {
       MessageMetadata messageMetadata,
       int failureCount,
       long jobExecutionStartTime) {
-    if (isDebugEnabled()) {
-      log(Level.DEBUG, "Message {} ignored, Queue: {}", null, rqueueMessage, queueDetail.getName());
-    }
+    log(Level.DEBUG, "Message {} ignored, Queue: {}", null, rqueueMessage, queueDetail.getName());
     deleteMessage(
         queueDetail,
         rqueueMessage,

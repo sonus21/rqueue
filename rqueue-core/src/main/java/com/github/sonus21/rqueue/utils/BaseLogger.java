@@ -21,14 +21,18 @@ import org.slf4j.event.Level;
 
 public class BaseLogger {
   private final Logger log;
-  private final String groupName;
+  private final String prefix;
 
   public BaseLogger(Logger log, String groupName) {
     this.log = log;
-    this.groupName = groupName;
+    if (StringUtils.isEmpty(groupName)) {
+      this.prefix = "";
+    } else {
+      this.prefix = "[" + groupName + "] ";
+    }
   }
 
-  public void log(Level level, String msg, Throwable t, Object... objects) {
+  public void log(Level level, String msg, Throwable t, Object... arguments) {
     if (level == Level.DEBUG && !log.isDebugEnabled()) {
       return;
     }
@@ -41,37 +45,32 @@ public class BaseLogger {
     if (level == Level.WARN && !log.isWarnEnabled()) {
       return;
     }
-    if (StringUtils.isEmpty(groupName)) {
-      logMessage(level, msg, objects);
+    if (t == null) {
+      logMessage(level, prefix + msg, arguments);
     } else {
-      int size = objects.length + 1 + (t == null ? 0 : 1);
-      Object[] objects1 = new Object[size];
-      System.arraycopy(objects, 0, objects1, 1, objects.length);
-      objects1[0] = groupName;
-      if (t != null) {
-        objects1[objects1.length - 1] = t;
-      }
-      String txt = "[{}] " + msg;
-      logMessage(level, txt, objects1);
+      Object[] objects1 = new Object[arguments.length + 1];
+      System.arraycopy(arguments, 0, objects1, 0, arguments.length);
+      objects1[objects1.length - 1] = t;
+      logMessage(level, prefix + msg, objects1);
     }
   }
 
-  private void logMessage(Level level, String txt, Object[] objects) {
+  private void logMessage(Level level, String txt, Object... arguments) {
     switch (level) {
       case INFO:
-        log.info(txt, objects);
+        log.info(txt, arguments);
         break;
       case WARN:
-        log.warn(txt, objects);
+        log.warn(txt, arguments);
         break;
       case DEBUG:
-        log.debug(txt, objects);
+        log.debug(txt, arguments);
         break;
       case ERROR:
-        log.error(txt, objects);
+        log.error(txt, arguments);
         break;
       default:
-        log.trace(txt, objects);
+        log.trace(txt, arguments);
     }
   }
 

@@ -16,9 +16,13 @@
 
 package com.github.sonus21.rqueue.test.entity;
 
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,12 +37,49 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 @Entity
+@Table(
+    name = "consumed_messages",
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"message_id", "tag"})})
 public class ConsumedMessage {
-  @Id private String id;
+
+  @Id @Column private String id;
+
+  @Column(name = "message_id")
+  private String messageId;
+
+  @Column(name = "tag")
+  private String tag;
+
+  @Column private String queueName;
 
   // Around 1 MB of data
   @Column(length = 1000000)
   private String message;
 
-  @Column private String tag;
+  @Column private Long createdAt;
+
+  @Column private Long updatedAt;
+
+  @Column private int count;
+
+  @PreUpdate
+  public void update() {
+    this.updatedAt = System.currentTimeMillis();
+  }
+
+  public ConsumedMessage(String messageId, String tag, String queueName, String message) {
+    this(
+        UUID.randomUUID().toString(),
+        messageId,
+        tag,
+        queueName,
+        message,
+        System.currentTimeMillis(),
+        System.currentTimeMillis(),
+        1);
+  }
+
+  public void incrementCount() {
+    this.count += 1;
+  }
 }

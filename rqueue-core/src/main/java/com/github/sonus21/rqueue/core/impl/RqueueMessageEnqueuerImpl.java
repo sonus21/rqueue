@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.core.impl;
 import static com.github.sonus21.rqueue.utils.Validator.validateDelay;
 import static com.github.sonus21.rqueue.utils.Validator.validateMessage;
 import static com.github.sonus21.rqueue.utils.Validator.validateMessageId;
+import static com.github.sonus21.rqueue.utils.Validator.validatePeriod;
 import static com.github.sonus21.rqueue.utils.Validator.validatePriority;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
@@ -166,5 +167,22 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
             null,
             delayInMilliSecs)
         != null;
+  }
+
+  @Override
+  public String enqueuePeriodic(String queueName, Object message, long period) {
+    validateQueue(queueName);
+    validateMessage(message);
+    validatePeriod(period);
+    return pushPeriodicMessage(queueName, null, message, period);
+  }
+
+  @Override
+  public boolean enqueuePeriodic(String queueName, String messageId, Object message, long period) {
+    validateMessageId(messageId);
+    validateQueue(queueName);
+    validateMessage(message);
+    validatePeriod(period);
+    return pushPeriodicMessage(queueName, messageId, message, period) != null;
   }
 }

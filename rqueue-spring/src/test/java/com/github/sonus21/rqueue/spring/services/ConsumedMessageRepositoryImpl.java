@@ -18,6 +18,8 @@ package com.github.sonus21.rqueue.spring.services;
 
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.repository.ConsumedMessageRepository;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -82,4 +84,24 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
 
   @Override
   public void deleteAll() {}
+
+  @Override
+  public List<ConsumedMessage> findByQueueName(String queueName) {
+    return null;
+  }
+
+  @Override
+  public List<ConsumedMessage> findByMessageId(String messageId) {
+    return null;
+  }
+
+  @Override
+  public List<ConsumedMessage> findByMessageIdIn(Collection<String> messageIds) {
+    return null;
+  }
+
+  @Override
+  public ConsumedMessage findByMessageIdAndTag(String messageId, String tag) {
+    return null;
+  }
 }

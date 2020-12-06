@@ -45,7 +45,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage>
     implements RqueueMessageTemplate {
-  private DefaultScriptExecutor<String> scriptExecutor;
+  private final DefaultScriptExecutor<String> scriptExecutor;
 
   public RqueueMessageTemplateImpl(RedisConnectionFactory redisConnectionFactory) {
     super(redisConnectionFactory);
@@ -71,14 +71,13 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage) {
-    long queuedTime = rqueueMessage.getQueuedTime();
     RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ENQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(delayQueueName, delayQueueChannelName),
         rqueueMessage,
         rqueueMessage.getProcessAt(),
-        queuedTime);
+        System.currentTimeMillis());
   }
 
   @Override
@@ -219,6 +218,18 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       return null;
     }
     return score.longValue();
+  }
+
+  @Override
+  public Long scheduleMessage(
+      String zsetName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds) {
+    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.SCHEDULE_MESSAGE);
+    return scriptExecutor.execute(
+        script,
+        Arrays.asList(messageId, zsetName),
+        expiryInMilliSeconds,
+        rqueueMessage,
+        rqueueMessage.getProcessAt());
   }
 
   @Override

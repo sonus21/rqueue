@@ -34,6 +34,7 @@ import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import io.lettuce.core.RedisCommandExecutionException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -239,8 +240,14 @@ public class RqueueMessageListenerContainerTest {
   public void testMessageFetcherRetryWorking() throws Exception {
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     String fastQueueMessage = "This is fast queue";
-    RqueueMessage message = new RqueueMessage(fastQueue, fastQueueMessage, null, null);
-
+    RqueueMessage message =
+        RqueueMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .queueName(fastQueue)
+            .message(fastQueueMessage)
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
 
     StaticApplicationContext applicationContext = new StaticApplicationContext();
@@ -332,7 +339,12 @@ public class RqueueMessageListenerContainerTest {
             invocation -> {
               if (slowQueueCounter.get() == 0) {
                 slowQueueCounter.incrementAndGet();
-                return new RqueueMessage(slowQueue, slowQueueMessage, null, null);
+                return RqueueMessage.builder()
+                    .queueName(slowQueue)
+                    .message(slowQueueMessage)
+                    .processAt(System.currentTimeMillis())
+                    .queuedTime(System.nanoTime())
+                    .build();
               }
               return null;
             })
@@ -343,7 +355,12 @@ public class RqueueMessageListenerContainerTest {
             invocation -> {
               if (fastQueueCounter.get() == 0) {
                 fastQueueCounter.incrementAndGet();
-                return new RqueueMessage(fastQueue, fastQueueMessage, null, null);
+                return RqueueMessage.builder()
+                    .queueName(fastQueue)
+                    .message(fastQueueMessage)
+                    .processAt(System.currentTimeMillis())
+                    .queuedTime(System.nanoTime())
+                    .build();
               }
               return null;
             })

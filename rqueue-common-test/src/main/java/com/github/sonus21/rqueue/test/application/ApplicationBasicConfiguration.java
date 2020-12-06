@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.sql.DataSource;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +38,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import redis.embedded.RedisServer;
 
+@Slf4j
 public abstract class ApplicationBasicConfiguration {
   private static final Logger monitorLogger = LoggerFactory.getLogger("monitor");
   protected RedisServer redisServer;
@@ -58,10 +60,19 @@ public abstract class ApplicationBasicConfiguration {
   @Value("${monitor.thread.count:0}")
   protected int monitorThreads;
 
+  @Value("${monitor.enabled:false}")
+  protected boolean monitoringEnabled;
+
   protected void init() {
+    if (monitoringEnabled && monitorThreads == 0) {
+      monitorThreads = 1;
+    }
     if (monitorThreads > 0) {
       executorService = Executors.newFixedThreadPool(monitorThreads);
       processes = new ArrayList<>();
+    }
+    if (monitoringEnabled) {
+      monitor(redisHost, redisPort);
     }
     if (useSystemRedis) {
       return;
@@ -92,6 +103,7 @@ public abstract class ApplicationBasicConfiguration {
   }
 
   protected void monitor(String host, int port) {
+    log.info("Monitor {}:{}", host, port);
     executorService.submit(
         () -> {
           try {
