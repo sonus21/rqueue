@@ -10,5 +10,5 @@ assignees: sonus21
 # Organisation Name
 # Organisation link
 # How are you using Rqueue?
-# How many messages do you process daily?
+# How many messages do Rqueue process daily?
 # Any Icon (optional)
