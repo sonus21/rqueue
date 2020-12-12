@@ -16,11 +16,11 @@
 
 package com.github.sonus21.rqueue.core.impl;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -43,7 +43,7 @@ public class JobImpl implements Job {
   public JobImpl(
       RqueueConfig rqueueConfig,
       RqueueMessageMetadataService messageMetadataService,
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate,
+      RqueueStringDao rqueueStringDao,
       RqueueJobDao rqueueJobDao,
       QueueDetail queueDetail,
       MessageMetadata messageMetadata,
@@ -58,10 +58,8 @@ public class JobImpl implements Job {
     this.rqueueJob =
         new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
     if (rqueueConfig.isJobEnabled()) {
-      stringRqueueRedisTemplate
-          .getRedisTemplate()
-          .opsForList()
-          .rightPush(rqueueConfig.getJobsKey(rqueueMessage.getId()), rqueueJob.getId());
+      rqueueStringDao.appendToList(
+          rqueueConfig.getJobsKey(rqueueMessage.getId()), rqueueJob.getId());
       this.save();
     }
   }

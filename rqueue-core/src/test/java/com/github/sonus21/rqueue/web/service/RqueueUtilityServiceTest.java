@@ -27,10 +27,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
@@ -39,7 +40,6 @@ import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueUtilityServiceImpl;
 import java.io.Serializable;
 import java.time.Duration;
@@ -53,18 +53,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class RqueueUtilityServiceTest {
-  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageMetadataService messageMetadataService =
       mock(RqueueMessageMetadataService.class);
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private RqueueUtilityService rqueueUtilityService =
       new RqueueUtilityServiceImpl(
           rqueueConfig,
           rqueueWebConfig,
-          stringRqueueRedisTemplate,
+          rqueueStringDao,
           rqueueSystemConfigDao,
           rqueueMessageTemplate,
           messageMetadataService);
@@ -183,7 +183,7 @@ public class RqueueUtilityServiceTest {
   @Test
   public void deleteQueueMessages() {
     doReturn(org.springframework.data.redis.connection.DataType.LIST)
-        .when(stringRqueueRedisTemplate)
+        .when(rqueueStringDao)
         .type("job");
     BooleanResponse response = rqueueUtilityService.deleteQueueMessages("job", 0);
     assertTrue(response.isValue());
@@ -191,18 +191,18 @@ public class RqueueUtilityServiceTest {
     assertTrue(response.isValue());
 
     doReturn(org.springframework.data.redis.connection.DataType.ZSET)
-        .when(stringRqueueRedisTemplate)
+        .when(rqueueStringDao)
         .type("job");
     response = rqueueUtilityService.deleteQueueMessages("job", 100);
     assertFalse(response.isValue());
-    verify(stringRqueueRedisTemplate, times(1)).ltrim("job", 2, 1);
-    verify(stringRqueueRedisTemplate, times(1)).ltrim("job", -100, -1);
+    verify(rqueueStringDao, times(1)).ltrim("job", 2, 1);
+    verify(rqueueStringDao, times(1)).ltrim("job", -100, -1);
   }
 
   @Test
   public void getDataType() {
     doReturn(org.springframework.data.redis.connection.DataType.STRING)
-        .when(stringRqueueRedisTemplate)
+        .when(rqueueStringDao)
         .type("job");
     StringResponse stringResponse = new StringResponse("KEY");
     assertEquals(stringResponse, rqueueUtilityService.getDataType("job"));

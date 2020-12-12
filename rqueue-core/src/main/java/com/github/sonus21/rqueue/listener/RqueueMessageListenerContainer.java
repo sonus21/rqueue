@@ -21,13 +21,13 @@ import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForTermination;
 import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForWorkerTermination;
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.Concurrency;
@@ -97,7 +97,7 @@ public class RqueueMessageListenerContainer
   @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Autowired private RqueueJobDao rqueueJobDao;
-  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Autowired private RqueueStringDao rqueueStringDao;
   private AsyncTaskExecutor taskExecutor;
   private Map<String, QueueThread> queueThreadMap = new ConcurrentHashMap<>();
   private Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
@@ -591,10 +591,6 @@ public class RqueueMessageListenerContainer
     this.deadLetterQueueMessageProcessor = deadLetterQueueMessageProcessor;
   }
 
-  RqueueMessageMetadataService getRqueueMessageMetadataService() {
-    return rqueueMessageMetadataService;
-  }
-
   public MessageProcessor getManualDeletionMessageProcessor() {
     return this.manualDeletionMessageProcessor;
   }
@@ -639,6 +635,10 @@ public class RqueueMessageListenerContainer
     this.priorityMode = priorityMode;
   }
 
+  RqueueMessageMetadataService rqueueMessageMetadataService() {
+    return rqueueMessageMetadataService;
+  }
+
   RqueueMetricsCounter getRqueueMetricsCounter() {
     return rqueueMetricsCounter;
   }
@@ -647,7 +647,7 @@ public class RqueueMessageListenerContainer
     return rqueueJobDao;
   }
 
-  RqueueRedisTemplate<String> stringRqueueRedisTemplate() {
-    return stringRqueueRedisTemplate;
+  RqueueStringDao rqueueStringDao() {
+    return rqueueStringDao;
   }
 }

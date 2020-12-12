@@ -18,10 +18,11 @@ package com.github.sonus21.rqueue.web.service.impl;
 
 import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -32,7 +33,6 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import java.time.Duration;
@@ -40,7 +40,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +47,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueWebConfig rqueueWebConfig;
-  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  private final RqueueStringDao rqueueStringDao;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageMetadataService messageMetadataService;
@@ -61,11 +60,11 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   public RqueueUtilityServiceImpl(
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate,
+      RqueueStringDao rqueueStringDao,
       RqueueSystemConfigDao rqueueSystemConfigDao,
       RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMessageMetadataService messageMetadataService) {
-    this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
+    this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueConfig = rqueueConfig;
@@ -159,9 +158,9 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       start = 2;
       end = 1;
     }
-    if (stringRqueueRedisTemplate.type(queueName)
+    if (rqueueStringDao.type(queueName)
         == org.springframework.data.redis.connection.DataType.LIST) {
-      stringRqueueRedisTemplate.ltrim(queueName, start, end);
+      rqueueStringDao.ltrim(queueName, start, end);
       return new BooleanResponse(true);
     }
     return new BooleanResponse(false);
@@ -196,7 +195,6 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public StringResponse getDataType(String name) {
-    return new StringResponse(
-        DataType.convertDataType(stringRqueueRedisTemplate.type(name)).name());
+    return new StringResponse(DataType.convertDataType(rqueueStringDao.type(name)).name());
   }
 }

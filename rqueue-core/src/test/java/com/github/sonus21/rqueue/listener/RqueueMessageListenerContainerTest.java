@@ -26,11 +26,11 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -241,8 +241,7 @@ public class RqueueMessageListenerContainerTest {
         container, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
     FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(container, "rqueueJobDao", mock(RqueueJobDao.class), true);
-    FieldUtils.writeField(
-        container, "stringRqueueRedisTemplate", mock(RqueueRedisTemplate.class), true);
+    FieldUtils.writeField(container, "rqueueStringDao", mock(RqueueStringDao.class), true);
     return container;
   }
 

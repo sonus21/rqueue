@@ -26,6 +26,8 @@ import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.view.DateTimeFunction;
 import com.github.sonus21.rqueue.web.view.DeadLetterQueuesFunction;
@@ -34,7 +36,6 @@ import org.jtwig.environment.EnvironmentConfigurationBuilder;
 import org.jtwig.spring.JtwigViewResolver;
 import org.jtwig.web.servlet.JtwigRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
@@ -159,9 +160,13 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
-  public RqueueLockManager rqueueLockManager(
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> rqueueRedisTemplate) {
-    return new RqueueLockManagerImpl(rqueueRedisTemplate);
+  public RqueueStringDao rqueueStringDao(RqueueConfig rqueueConfig) {
+    return new RqueueStringDaoImpl(rqueueConfig);
+  }
+
+  @Bean
+  public RqueueLockManager rqueueLockManager(RqueueStringDao rqueueStringDao) {
+    return new RqueueLockManagerImpl(rqueueStringDao);
   }
 
   @Bean

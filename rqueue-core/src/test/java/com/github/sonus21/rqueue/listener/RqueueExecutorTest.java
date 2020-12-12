@@ -36,6 +36,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
@@ -68,6 +69,7 @@ public class RqueueExecutorTest {
       mock(RqueueMessageMetadataService.class);
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
   private RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);
+  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
   private TestMessageProcessor discardProcessor = new TestMessageProcessor();
   private TestMessageProcessor preProcessMessageProcessor = new TestMessageProcessor();
@@ -99,13 +101,13 @@ public class RqueueExecutorTest {
             rqueueSystemConfigDao);
     MessageConverter messageConverter = new GenericMessageConverter();
     rqueueMessage.setId(UUID.randomUUID().toString());
-    doReturn(rqueueMessageMetadataService).when(container).getRqueueMessageMetadataService();
+    doReturn(rqueueMessageMetadataService).when(container).rqueueMessageMetadataService();
     doReturn(true).when(container).isQueueActive(anyString());
     doReturn(preProcessMessageProcessor).when(container).getPreExecutionMessageProcessor();
     doReturn(messageHandler).when(container).getRqueueMessageHandler();
     doReturn(messageConverter).when(messageHandler).getMessageConverter();
     doReturn(rqueueJobDao).when(container).rqueueJobDao();
-    doReturn(stringRqueueRedisTemplate).when(container).stringRqueueRedisTemplate();
+    doReturn(rqueueStringDao).when(container).rqueueStringDao();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
         .handleMessage(any());

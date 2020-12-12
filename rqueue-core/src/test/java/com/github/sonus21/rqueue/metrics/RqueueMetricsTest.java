@@ -24,9 +24,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -42,7 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class RqueueMetricsTest {
-  private RqueueRedisTemplate<String> template = mock(RqueueRedisTemplate.class);
+  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private MetricsProperties metricsProperties = new MetricsProperties() {};
   private QueueCounter queueCounter = mock(QueueCounter.class);
   private String simpleQueue = "simple-queue";
@@ -71,8 +71,8 @@ public class RqueueMetricsTest {
               }
               return null;
             })
-        .when(template)
-        .getZsetSize(anyString());
+        .when(rqueueStringDao)
+        .getSortedSetSize(anyString());
 
     doAnswer(
             invocation -> {
@@ -88,7 +88,7 @@ public class RqueueMetricsTest {
               }
               return null;
             })
-        .when(template)
+        .when(rqueueStringDao)
         .getListSize(anyString());
   }
 
@@ -140,7 +140,7 @@ public class RqueueMetricsTest {
   private RqueueMetrics rqueueMetrics(
       MeterRegistry meterRegistry, MetricsProperties metricsProperties)
       throws IllegalAccessException {
-    RqueueMetrics metrics = new RqueueMetrics(template, queueCounter);
+    RqueueMetrics metrics = new RqueueMetrics(queueCounter);
     FieldUtils.writeField(metrics, "meterRegistry", meterRegistry, true);
     FieldUtils.writeField(metrics, "metricsProperties", metricsProperties, true);
     return metrics;
@@ -150,6 +150,7 @@ public class RqueueMetricsTest {
   public void queueStatistics() throws IllegalAccessException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
+    FieldUtils.writeField(metrics, "rqueueStringDao", rqueueStringDao, true);
     metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
     verifyQueueStatistics(meterRegistry, delayedQueue, 200, 15, 0, 5);

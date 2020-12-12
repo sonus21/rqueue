@@ -31,14 +31,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,12 +48,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class RqueueSystemManagerServiceImplTest {
-  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueSystemManagerServiceImpl rqueueSystemManagerService =
-      new RqueueSystemManagerServiceImpl(
-          rqueueConfig, stringRqueueRedisTemplate, rqueueSystemConfigDao);
+      new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
   private String normalQueue = "normal-queue";
@@ -78,7 +77,7 @@ public class RqueueSystemManagerServiceImplTest {
   public void onApplicationEventStop() {
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", false);
     rqueueSystemManagerService.onApplicationEvent(event);
-    verifyNoInteractions(stringRqueueRedisTemplate);
+    verifyNoInteractions(rqueueStringDao);
     verifyNoInteractions(rqueueSystemConfigDao);
   }
 
@@ -87,7 +86,7 @@ public class RqueueSystemManagerServiceImplTest {
     EndpointRegistry.delete();
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     rqueueSystemManagerService.onApplicationEvent(event);
-    verifyNoInteractions(stringRqueueRedisTemplate);
+    verifyNoInteractions(rqueueStringDao);
     verifyNoInteractions(rqueueSystemConfigDao);
   }
 
@@ -125,8 +124,8 @@ public class RqueueSystemManagerServiceImplTest {
               }
               return 2L;
             })
-        .when(stringRqueueRedisTemplate)
-        .addToSet(eq(TestUtils.getQueuesKey()), any());
+        .when(rqueueStringDao)
+        .appendToSet(eq(TestUtils.getQueuesKey()), any());
     doAnswer(
             invocation -> {
               List<QueueConfig> queueConfigs = invocation.getArgument(0);

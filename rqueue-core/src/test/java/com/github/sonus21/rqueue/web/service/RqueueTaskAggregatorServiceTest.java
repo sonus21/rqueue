@@ -24,7 +24,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.Job;
@@ -32,6 +31,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.impl.JobImpl;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
@@ -98,7 +98,7 @@ public class RqueueTaskAggregatorServiceTest {
         new JobImpl(
             rqueueConfig,
             mock(RqueueMessageMetadataService.class),
-            mock(RqueueRedisTemplate.class),
+            mock(RqueueStringDao.class),
             mock(RqueueJobDao.class),
             queueDetail,
             messageMetadata,

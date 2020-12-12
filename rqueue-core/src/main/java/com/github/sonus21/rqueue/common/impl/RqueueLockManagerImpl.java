@@ -19,28 +19,28 @@ package com.github.sonus21.rqueue.common.impl;
 import static org.springframework.util.Assert.isTrue;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import java.time.Duration;
 import org.springframework.util.StringUtils;
 
 public class RqueueLockManagerImpl implements RqueueLockManager {
-  private final RqueueRedisTemplate<String> redisTemplate;
+  private final RqueueStringDao rqueueStringDao;
 
-  public RqueueLockManagerImpl(RqueueRedisTemplate<String> redisTemplate) {
-    this.redisTemplate = redisTemplate;
+  public RqueueLockManagerImpl(RqueueStringDao rqueueStringDao) {
+    this.rqueueStringDao = rqueueStringDao;
   }
 
   @Override
   public boolean acquireLock(String lockKey, Duration duration) {
     isTrue(!StringUtils.isEmpty(lockKey), "key cannot be null.");
-    Boolean result = redisTemplate.setIfAbsent(lockKey, lockKey, duration);
+    Boolean result = rqueueStringDao.setIfAbsent(lockKey, lockKey, duration);
     return Boolean.TRUE.equals(result);
   }
 
   @Override
   public boolean releaseLock(String lockKey) {
     isTrue(!StringUtils.isEmpty(lockKey), "key cannot be null.");
-    Boolean result = redisTemplate.delete(lockKey);
+    Boolean result = rqueueStringDao.delete(lockKey);
     return Boolean.TRUE.equals(result);
   }
 }

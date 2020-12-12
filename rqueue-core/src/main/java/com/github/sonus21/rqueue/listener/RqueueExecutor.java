@@ -59,7 +59,7 @@ class RqueueExecutor extends MessageContainerBase {
     this.rqueueConfig = rqueueConfig;
     this.postProcessingHandler = postProcessingHandler;
     this.rqueueMessageMetadataService =
-        Objects.requireNonNull(container.get()).getRqueueMessageMetadataService();
+        Objects.requireNonNull(container.get()).rqueueMessageMetadataService();
     this.rqueueMessageHandler = Objects.requireNonNull(container.get()).getRqueueMessageHandler();
     this.semaphore = semaphore;
     init(rqueueMessage, queueDetail);
@@ -86,8 +86,8 @@ class RqueueExecutor extends MessageContainerBase {
       this.job =
           new JobImpl(
               rqueueConfig,
-              Objects.requireNonNull(container.get()).getRqueueMessageMetadataService(),
-              Objects.requireNonNull(container.get()).stringRqueueRedisTemplate(),
+              Objects.requireNonNull(container.get()).rqueueMessageMetadataService(),
+              Objects.requireNonNull(container.get()).rqueueStringDao(),
               Objects.requireNonNull(container.get()).rqueueJobDao(),
               queueDetail,
               messageMetadata,

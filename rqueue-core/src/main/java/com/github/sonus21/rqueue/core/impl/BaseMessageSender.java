@@ -22,22 +22,20 @@ import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
@@ -46,7 +44,7 @@ import org.springframework.messaging.converter.MessageConverter;
 abstract class BaseMessageSender {
   protected MessageConverter messageConverter;
   protected RqueueMessageTemplate messageTemplate;
-  @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Autowired protected RqueueStringDao rqueueStringDao;
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
   protected final MessageHeaders messageHeaders;
@@ -143,22 +141,11 @@ abstract class BaseMessageSender {
   }
 
   protected Object deleteAllMessages(QueueDetail queueDetail) {
-    return stringRqueueRedisTemplate
-        .getRedisTemplate()
-        .execute(
-            new SessionCallback<Object>() {
-              @Override
-              public <K, V> Object execute(RedisOperations<K, V> redisOperations)
-                  throws DataAccessException {
-                RedisOperations<String, String> operations =
-                    (RedisOperations<String, String>) redisOperations;
-                operations.multi();
-                operations.delete(queueDetail.getQueueName());
-                operations.delete(queueDetail.getProcessingQueueName());
-                operations.delete(queueDetail.getDelayedQueueName());
-                return operations.exec();
-              }
-            });
+    return rqueueStringDao.delete(
+        Arrays.asList(
+            queueDetail.getQueueName(),
+            queueDetail.getProcessingQueueName(),
+            queueDetail.getDelayedQueueName()));
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {

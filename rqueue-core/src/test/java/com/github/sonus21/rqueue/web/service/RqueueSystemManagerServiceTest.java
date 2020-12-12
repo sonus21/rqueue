@@ -25,14 +25,15 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,17 +43,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
 
 @ExtendWith(MockitoExtension.class)
 public class RqueueSystemManagerServiceTest {
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private RedisTemplate<String, String> redisTemplate = mock(RedisTemplate.class);
-  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
   private RqueueSystemManagerService rqueueSystemManagerService =
-      new RqueueSystemManagerServiceImpl(
-          rqueueConfig, stringRqueueRedisTemplate, rqueueSystemConfigDao);
+      new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
   private String slowQueue = "slow-queue";
   private String fastQueue = "fast-queue";
   private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue, 900000L);
@@ -86,7 +84,6 @@ public class RqueueSystemManagerServiceTest {
     doReturn(queueConfig)
         .when(rqueueSystemConfigDao)
         .getQConfig(TestUtils.getQueueConfigKey("test"));
-    doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     baseResponse = rqueueSystemManagerService.deleteQueue("test");
     assertEquals(0, baseResponse.getCode());
     assertEquals("Queue deleted", baseResponse.getMessage());
@@ -96,17 +93,17 @@ public class RqueueSystemManagerServiceTest {
 
   @Test
   public void getQueues() {
-    doReturn(null).when(stringRqueueRedisTemplate).getMembers(TestUtils.getQueuesKey());
+    doReturn(Collections.emptyList()).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
     assertEquals(Collections.emptyList(), rqueueSystemManagerService.getQueues());
-    doReturn(Collections.singleton("job"))
-        .when(stringRqueueRedisTemplate)
-        .getMembers(TestUtils.getQueuesKey());
+    doReturn(Collections.singletonList("job"))
+        .when(rqueueStringDao)
+        .readFromSet(TestUtils.getQueuesKey());
     assertEquals(Collections.singletonList("job"), rqueueSystemManagerService.getQueues());
   }
 
   @Test
   public void getQueueConfigs() {
-    doReturn(queues).when(stringRqueueRedisTemplate).getMembers(TestUtils.getQueuesKey());
+    doReturn(new ArrayList<>(queues)).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(
@@ -118,7 +115,7 @@ public class RqueueSystemManagerServiceTest {
 
   @Test
   public void getSortedQueueConfigs() {
-    doReturn(queues).when(stringRqueueRedisTemplate).getMembers(TestUtils.getQueuesKey());
+    doReturn(new ArrayList<>(queues)).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(
