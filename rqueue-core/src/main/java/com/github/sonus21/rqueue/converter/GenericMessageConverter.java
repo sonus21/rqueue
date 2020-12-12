@@ -54,7 +54,8 @@ public class GenericMessageConverter implements SmartMessageConverter {
   }
 
   private JavaType getTargetType(Msg msg, Class<?> targetClass) throws ClassNotFoundException {
-    // do not use target class information due to super class hierarchy
+    // do not use target class information due to class hierarchy
+    // use case a listener consumes messages of multiple subclass type
     String[] classNames = splitClassNames(msg.getName());
     if (classNames.length == 1) {
       Class<?> c = Thread.currentThread().getContextClassLoader().loadClass(msg.getName());
@@ -143,6 +144,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
    */
   @Override
   public Message<?> toMessage(Object payload, MessageHeaders headers) {
+    log.debug("Payload: {} headers: {}", payload, headers);
     String name = getClassName(payload);
     if (name == null) {
       return null;
@@ -165,6 +167,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
 
   @Override
   public Message<?> toMessage(Object payload, MessageHeaders headers, Object conversionHint) {
+    log.debug("Payload: {} headers: {} hint: {}", payload, headers, conversionHint);
     return toMessage(payload, headers);
   }
 

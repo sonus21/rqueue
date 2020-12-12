@@ -18,12 +18,14 @@ package com.github.sonus21.rqueue.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
+import com.github.sonus21.rqueue.test.dto.LongRunningJob;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.PeriodicJob;
 import com.github.sonus21.rqueue.test.dto.Reservation;
@@ -33,6 +35,9 @@ import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import javax.annotation.PostConstruct;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,16 +45,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
+@com.github.sonus21.rqueue.annotation.MessageListener
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Transactional
 @Slf4j
 public class MessageListener {
   @NonNull private ConsumedMessageService consumedMessageService;
   @NonNull private FailureManager failureManager;
+  @NonNull private RqueueConfig rqueueConfig;
+  private ScheduledExecutorService scheduledExecutorService;
 
   @Value("${job.queue.name}")
   private String jobQueue;
@@ -84,6 +90,12 @@ public class MessageListener {
   @Value("${periodic.job.queue.name}")
   private String periodicJobQueue;
 
+  @Value("${scheduled.job.executors.thead.count:1}")
+  private int threadCount;
+
+  @Value("${long.running.job.queue.name:}")
+  private String longRunningJobQueue;
+
   @RqueueListener(value = "${job.queue.name}", active = "${job.queue.active}")
   public void onMessage(Job job) throws Exception {
     log.info("Job: {}", job);
@@ -91,6 +103,13 @@ public class MessageListener {
       throw new Exception("Failing job task to be retried" + job);
     }
     consumedMessageService.save(job, null, jobQueue);
+  }
+
+  @PostConstruct
+  public void init() {
+    if (rqueueConfig.isJobEnabled()) {
+      scheduledExecutorService = new ScheduledThreadPoolExecutor(threadCount);
+    }
   }
 
   @RqueueListener(
@@ -223,5 +242,19 @@ public class MessageListener {
       throw new Exception("Failing PeriodicJob task to be retried" + periodicJob);
     }
     consumedMessageService.save(periodicJob, UUID.randomUUID().toString(), periodicJobQueue);
+  }
+
+  @RqueueListener(
+      value = "${long.running.job.queue.name:}",
+      active = "${long.running.job.queue.active:false}",
+      deadLetterQueue = "${long.running.job.dead.letter.queue.name:}",
+      numRetries = "${long.running.job.queue.retry.count:-1}")
+  public void onLongRunningJob(
+      LongRunningJob longRunningJob, @Header(RqueueMessageHeaders.JOB) Job job) throws Exception {
+    log.info("onLongRunningJob: {}", longRunningJob);
+    if (failureManager.shouldFail(longRunningJob.getId())) {
+      throw new Exception("Failing LongRunningJob task to be retried" + longRunningJob);
+    }
+    consumedMessageService.save(longRunningJob, null, longRunningJobQueue);
   }
 }
