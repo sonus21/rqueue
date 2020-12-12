@@ -30,6 +30,8 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.impl.JobImpl;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
@@ -42,7 +44,6 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -96,8 +97,9 @@ public class RqueueTaskAggregatorServiceTest {
     Job job =
         new JobImpl(
             rqueueConfig,
-            mock(RqueueRedisTemplate.class),
             mock(RqueueMessageMetadataService.class),
+            mock(RqueueRedisTemplate.class),
+            mock(RqueueJobDao.class),
             queueDetail,
             messageMetadata,
             rqueueMessage,

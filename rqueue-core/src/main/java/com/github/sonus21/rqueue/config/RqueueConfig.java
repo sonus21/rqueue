@@ -45,8 +45,14 @@ public class RqueueConfig {
   @Value("${rqueue.key.prefix:__rq::}")
   private String prefix;
 
+  @Value("${rqueue.job.enabled:true}")
+  private boolean jobEnabled;
+
   @Value("${rqueue.job.key.prefix:job::}")
   private String jobKeyPrefix;
+
+  @Value("${rqueue.jobs.key.prefix:jobs::}")
+  private String jobsKeyPrefix;
 
   @Value("${rqueue.cluster.mode:true}")
   private boolean clusterMode;
@@ -217,5 +223,9 @@ public class RqueueConfig {
 
   public String getJobId() {
     return prefix + jobKeyPrefix + UUID.randomUUID().toString();
+  }
+
+  public String getJobsKey(String messageId) {
+    return prefix + jobsKeyPrefix + messageId;
   }
 }

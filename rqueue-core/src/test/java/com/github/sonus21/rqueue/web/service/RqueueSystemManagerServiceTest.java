@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
 import java.util.Arrays;
 import java.util.Collections;

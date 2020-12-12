@@ -39,7 +39,7 @@ import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueUtilityServiceImpl;
 import java.io.Serializable;
 import java.time.Duration;

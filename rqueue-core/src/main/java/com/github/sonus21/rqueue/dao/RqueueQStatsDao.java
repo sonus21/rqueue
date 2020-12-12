@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.web.dao;
+package com.github.sonus21.rqueue.dao;
 
-import com.github.sonus21.rqueue.models.db.QueueConfig;
+import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import java.util.Collection;
 import java.util.List;
 
-public interface RqueueSystemConfigDao {
-  QueueConfig getQConfig(String key);
+public interface RqueueQStatsDao {
+  QueueStatistics findById(String id);
 
-  QueueConfig getQConfig(String key, boolean cache);
+  List<QueueStatistics> findAll(Collection<String> ids);
 
-  List<QueueConfig> findAllQConfig(Collection<String> ids);
-
-  void saveQConfig(QueueConfig queueConfig);
-
-  void saveAllQConfig(List<QueueConfig> newConfigs);
+  void save(QueueStatistics queueStatistics);
 }

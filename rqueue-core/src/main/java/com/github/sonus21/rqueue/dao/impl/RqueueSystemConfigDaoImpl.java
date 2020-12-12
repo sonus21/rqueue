@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.web.dao.impl;
+package com.github.sonus21.rqueue.dao.impl;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;

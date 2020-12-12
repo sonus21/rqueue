@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.web.dao;
+package com.github.sonus21.rqueue.dao;
 
-import com.github.sonus21.rqueue.models.db.QueueStatistics;
+import com.github.sonus21.rqueue.models.db.RqueueJob;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 
-public interface RqueueQStatsDao {
-  QueueStatistics findById(String id);
+public interface RqueueJobDao {
+  void save(RqueueJob rqueueJob, Duration expiry);
 
-  List<QueueStatistics> findAll(Collection<String> ids);
+  RqueueJob getJob(String jobId);
 
-  void save(QueueStatistics queueStatistics);
+  List<RqueueJob> getJobs(Collection<String> jobIds);
 }

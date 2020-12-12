@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;

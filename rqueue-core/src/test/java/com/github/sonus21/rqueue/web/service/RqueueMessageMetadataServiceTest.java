@@ -26,8 +26,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.web.service.impl.RqueueMessageMetadataServiceImpl;
@@ -42,10 +42,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class RqueueMessageMetadataServiceTest {
-  private RqueueRedisTemplate<MessageMetadata> rqueueRedisTemplate =
-      mock(RqueueRedisTemplate.class);
+  private RqueueMessageMetadataDao rqueueMessageMetadataDao = mock(RqueueMessageMetadataDao.class);
   private RqueueMessageMetadataService rqueueMessageMetadataService =
-      new RqueueMessageMetadataServiceImpl(rqueueRedisTemplate);
+      new RqueueMessageMetadataServiceImpl(rqueueMessageMetadataDao);
   private String queueName = "test-queue";
 
   @Test
@@ -54,9 +53,9 @@ public class RqueueMessageMetadataServiceTest {
     String msgId = RqueueMessageUtils.getMessageMetaId(queueName, id);
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
     metadata.setDeleted(true);
-    doReturn(null).when(rqueueRedisTemplate).get(msgId);
+    doReturn(null).when(rqueueMessageMetadataDao).get(msgId);
     assertNull(rqueueMessageMetadataService.get(msgId));
-    doReturn(metadata).when(rqueueRedisTemplate).get(msgId);
+    doReturn(metadata).when(rqueueMessageMetadataDao).get(msgId);
     assertEquals(metadata, rqueueMessageMetadataService.get(msgId));
   }
 
@@ -67,7 +66,7 @@ public class RqueueMessageMetadataServiceTest {
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
     metadata.setDeleted(true);
     List<String> ids = Arrays.asList(msgId, UUID.randomUUID().toString());
-    doReturn(Arrays.asList(metadata, null)).when(rqueueRedisTemplate).mget(ids);
+    doReturn(Arrays.asList(metadata, null)).when(rqueueMessageMetadataDao).findAll(ids);
     assertEquals(Collections.singletonList(metadata), rqueueMessageMetadataService.findAll(ids));
   }
 
@@ -76,13 +75,13 @@ public class RqueueMessageMetadataServiceTest {
     String id = UUID.randomUUID().toString();
     doAnswer(
             invocation -> {
-              MessageMetadata metadata = invocation.getArgument(1);
+              MessageMetadata metadata = invocation.getArgument(0);
               assertTrue(metadata.isDeleted());
               assertNotNull(metadata.getDeletedOn());
               return null;
             })
-        .when(rqueueRedisTemplate)
-        .set(eq(RqueueMessageUtils.getMessageMetaId(queueName, id)), any(), eq(Duration.ofDays(7)));
+        .when(rqueueMessageMetadataDao)
+        .save(any(), eq(Duration.ofDays(7)));
     rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7));
   }
 
@@ -94,17 +93,17 @@ public class RqueueMessageMetadataServiceTest {
             RqueueMessageUtils.getMessageMetaId(queueName, id), MessageStatus.ENQUEUED);
     metadata.setDeleted(false);
     doReturn(metadata)
-        .when(rqueueRedisTemplate)
+        .when(rqueueMessageMetadataDao)
         .get(RqueueMessageUtils.getMessageMetaId(queueName, id));
     doAnswer(
             invocation -> {
-              MessageMetadata metadataBeingSaved = invocation.getArgument(1);
+              MessageMetadata metadataBeingSaved = invocation.getArgument(0);
               assertTrue(metadataBeingSaved.isDeleted());
               assertNotNull(metadataBeingSaved.getDeletedOn());
               return null;
             })
-        .when(rqueueRedisTemplate)
-        .set(eq(RqueueMessageUtils.getMessageMetaId(queueName, id)), any(), eq(Duration.ofDays(7)));
+        .when(rqueueMessageMetadataDao)
+        .save(any(), eq(Duration.ofDays(7)));
     rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7));
   }
 }

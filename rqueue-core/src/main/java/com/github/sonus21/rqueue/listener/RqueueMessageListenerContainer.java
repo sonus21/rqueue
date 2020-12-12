@@ -27,9 +27,10 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.Concurrency;
-import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
@@ -39,7 +40,6 @@ import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -96,6 +96,8 @@ public class RqueueMessageListenerContainer
 
   @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Autowired private RqueueJobDao rqueueJobDao;
+  @Autowired private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   private AsyncTaskExecutor taskExecutor;
   private Map<String, QueueThread> queueThreadMap = new ConcurrentHashMap<>();
   private Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
@@ -110,7 +112,6 @@ public class RqueueMessageListenerContainer
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
-  private RqueueRedisTemplate<RqueueJob> jobRqueueMessageTemplate;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -279,7 +280,6 @@ public class RqueueMessageListenerContainer
                 discardMessageProcessor,
                 postExecutionMessageProcessor),
             rqueueSystemConfigDao);
-    this.jobRqueueMessageTemplate = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
   }
 
   @Override
@@ -595,15 +595,6 @@ public class RqueueMessageListenerContainer
     return rqueueMessageMetadataService;
   }
 
-  RqueueRedisTemplate<RqueueJob> getJobRqueueMessageTemplate() {
-    return this.jobRqueueMessageTemplate;
-  }
-
-  // Test only
-  void setJobRqueueMessageTemplate(RqueueRedisTemplate<RqueueJob> template) {
-    this.jobRqueueMessageTemplate = template;
-  }
-
   public MessageProcessor getManualDeletionMessageProcessor() {
     return this.manualDeletionMessageProcessor;
   }
@@ -650,5 +641,13 @@ public class RqueueMessageListenerContainer
 
   RqueueMetricsCounter getRqueueMetricsCounter() {
     return rqueueMetricsCounter;
+  }
+
+  RqueueJobDao rqueueJobDao() {
+    return rqueueJobDao;
+  }
+
+  RqueueRedisTemplate<String> stringRqueueRedisTemplate() {
+    return stringRqueueRedisTemplate;
   }
 }

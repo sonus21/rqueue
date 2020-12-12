@@ -30,6 +30,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -239,6 +240,9 @@ public class RqueueMessageListenerContainerTest {
     FieldUtils.writeField(
         container, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
     FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
+    FieldUtils.writeField(container, "rqueueJobDao", mock(RqueueJobDao.class), true);
+    FieldUtils.writeField(
+        container, "stringRqueueRedisTemplate", mock(RqueueRedisTemplate.class), true);
     return container;
   }
 
@@ -300,7 +304,6 @@ public class RqueueMessageListenerContainerTest {
     FastMessageListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageListener.class);
     container.afterPropertiesSet();
-    container.setJobRqueueMessageTemplate(mock(RqueueRedisTemplate.class));
     container.start();
     waitFor(() -> fastQueueCounter.get() == 2, "fastQueue message fetch");
     waitFor(
@@ -377,7 +380,6 @@ public class RqueueMessageListenerContainerTest {
         .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, 900000L);
     container.afterPropertiesSet();
     container.start();
-    container.setJobRqueueMessageTemplate(mock(RqueueRedisTemplate.class));
     waitFor(() -> slowQueueCounter.get() == 1, "slowQueue message fetch");
     waitFor(() -> fastQueueCounter.get() == 1, "fastQueue message fetch");
     waitFor(

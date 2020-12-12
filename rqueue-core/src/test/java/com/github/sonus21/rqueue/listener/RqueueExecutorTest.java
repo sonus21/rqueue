@@ -35,13 +35,13 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
-import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
@@ -66,8 +66,8 @@ public class RqueueExecutorTest {
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueMessageMetadataService rqueueMessageMetadataService =
       mock(RqueueMessageMetadataService.class);
-  private RqueueRedisTemplate<RqueueJob> rqueueJobRqueueRedisTemplate =
-      mock(RqueueRedisTemplate.class);
+  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);
   private TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
   private TestMessageProcessor discardProcessor = new TestMessageProcessor();
   private TestMessageProcessor preProcessMessageProcessor = new TestMessageProcessor();
@@ -104,7 +104,8 @@ public class RqueueExecutorTest {
     doReturn(preProcessMessageProcessor).when(container).getPreExecutionMessageProcessor();
     doReturn(messageHandler).when(container).getRqueueMessageHandler();
     doReturn(messageConverter).when(messageHandler).getMessageConverter();
-    doReturn(rqueueJobRqueueRedisTemplate).when(container).getJobRqueueMessageTemplate();
+    doReturn(rqueueJobDao).when(container).rqueueJobDao();
+    doReturn(stringRqueueRedisTemplate).when(container).stringRqueueRedisTemplate();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
         .handleMessage(any());

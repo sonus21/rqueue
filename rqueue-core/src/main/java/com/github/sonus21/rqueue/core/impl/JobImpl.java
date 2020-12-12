@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -32,39 +33,47 @@ import java.time.Duration;
 import org.springframework.data.redis.RedisSystemException;
 
 public class JobImpl implements Job {
-  private final QueueDetail queueDetail;
-  private final RqueueRedisTemplate<RqueueJob> redisTemplate;
+  private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
-  private final RqueueJob rqueueJob;
   private final RqueueConfig rqueueConfig;
+  private final QueueDetail queueDetail;
+  private final RqueueJob rqueueJob;
   private final Object userMessage;
 
   public JobImpl(
       RqueueConfig rqueueConfig,
-      RqueueRedisTemplate<RqueueJob> redisTemplate,
       RqueueMessageMetadataService messageMetadataService,
+      RqueueRedisTemplate<String> stringRqueueRedisTemplate,
+      RqueueJobDao rqueueJobDao,
       QueueDetail queueDetail,
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
       Object userMessage,
       Throwable exception) {
-    this.redisTemplate = redisTemplate;
+    this.rqueueJobDao = rqueueJobDao;
     this.messageMetadataService = messageMetadataService;
     this.rqueueConfig = rqueueConfig;
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
     this.rqueueJob =
         new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
-    this.save();
+    if (rqueueConfig.isJobEnabled()) {
+      stringRqueueRedisTemplate
+          .getRedisTemplate()
+          .opsForList()
+          .rightPush(rqueueConfig.getJobsKey(rqueueMessage.getId()), rqueueJob.getId());
+      this.save();
+    }
   }
 
   private void save() {
-    try {
-      rqueueJob.setUpdatedAt(System.currentTimeMillis());
-      redisTemplate.set(
-          rqueueJob.getId(), rqueueJob, Duration.ofMillis(2 * queueDetail.getVisibilityTimeout()));
-    } catch (RedisSystemException e) {
-      // No op
+    if (rqueueConfig.isJobEnabled()) {
+      try {
+        rqueueJob.setUpdatedAt(System.currentTimeMillis());
+        rqueueJobDao.save(rqueueJob, Duration.ofMillis(2 * queueDetail.getVisibilityTimeout()));
+      } catch (RedisSystemException e) {
+        // No op
+      }
     }
   }
 
@@ -116,11 +125,6 @@ public class JobImpl implements Job {
   @Override
   public QueueDetail getQueueDetail() {
     return queueDetail;
-  }
-
-  public void setException(Throwable e) {
-    this.rqueueJob.setError(e);
-    save();
   }
 
   public void setMessageMetadata(MessageMetadata m) {

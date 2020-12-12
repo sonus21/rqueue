@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.web.dao;
+package com.github.sonus21.rqueue.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
-import com.github.sonus21.rqueue.web.dao.impl.RqueueQStatsDaoImpl;
+import com.github.sonus21.rqueue.dao.impl.RqueueQStatsDaoImpl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

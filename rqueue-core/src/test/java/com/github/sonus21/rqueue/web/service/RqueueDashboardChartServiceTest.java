@@ -36,7 +36,7 @@ import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueDashboardChartServiceImpl;
 import java.io.Serializable;
 import java.time.LocalDate;
