@@ -53,6 +53,22 @@ public class GenericMessageConverter implements SmartMessageConverter {
     this.objectMapper = objectMapper;
   }
 
+  private JavaType getTargetType(Msg msg, Class<?> targetClass) throws ClassNotFoundException {
+    // do not use target class information due to super class hierarchy
+    String[] classNames = splitClassNames(msg.getName());
+    if (classNames.length == 1) {
+      Class<?> c = Thread.currentThread().getContextClassLoader().loadClass(msg.getName());
+      return objectMapper.getTypeFactory().constructType(c);
+    }
+    Class<?> envelopeClass =
+        Thread.currentThread().getContextClassLoader().loadClass(classNames[0]);
+    Class<?>[] classes = new Class<?>[classNames.length - 1];
+    for (int i = 1; i < classNames.length; i++) {
+      classes[i - 1] = Thread.currentThread().getContextClassLoader().loadClass(classNames[i]);
+    }
+    return objectMapper.getTypeFactory().constructParametricType(envelopeClass, classes);
+  }
+
   /**
    * Convert the payload of a {@link Message} from a serialized form to a typed Object of type
    * stored in message it self.
@@ -66,23 +82,12 @@ public class GenericMessageConverter implements SmartMessageConverter {
    */
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass) {
+    log.debug("Message: {} class: {}", message, targetClass);
     try {
       String payload = (String) message.getPayload();
       if (SerializationUtils.isJson(payload)) {
         Msg msg = objectMapper.readValue(payload, Msg.class);
-        String[] classNames = splitClassNames(msg.getName());
-        if (classNames.length == 1) {
-          Class<?> c = Thread.currentThread().getContextClassLoader().loadClass(msg.getName());
-          return objectMapper.readValue(msg.msg, c);
-        }
-        Class<?> envelopeClass =
-            Thread.currentThread().getContextClassLoader().loadClass(classNames[0]);
-        Class<?>[] classes = new Class<?>[classNames.length - 1];
-        for (int i = 1; i < classNames.length; i++) {
-          classes[i - 1] = Thread.currentThread().getContextClassLoader().loadClass(classNames[i]);
-        }
-        JavaType type =
-            objectMapper.getTypeFactory().constructParametricType(envelopeClass, classes);
+        JavaType type = getTargetType(msg, targetClass);
         return objectMapper.readValue(msg.msg, type);
       }
     } catch (Exception e) {
@@ -154,6 +159,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
 
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass, Object conversionHint) {
+    log.debug("Message: {} class: {} hint: {}", message, targetClass, conversionHint);
     return fromMessage(message, targetClass);
   }
 
