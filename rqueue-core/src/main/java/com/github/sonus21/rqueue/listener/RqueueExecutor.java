@@ -88,8 +88,9 @@ class RqueueExecutor extends MessageContainerBase {
               rqueueConfig,
               Objects.requireNonNull(container.get()).getJobRqueueMessageTemplate(),
               Objects.requireNonNull(container.get()).getRqueueMessageMetadataService(),
-              messageMetadata,
               queueDetail,
+              messageMetadata,
+              rqueueMessage,
               userMessage,
               t);
     }

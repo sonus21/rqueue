@@ -38,6 +38,7 @@ public class MessageMetadata extends SerializableBase {
   private long totalExecutionTime;
   private boolean deleted;
   private Long deletedOn;
+  // latest RqueueMessage
   private RqueueMessage rqueueMessage;
   private MessageStatus status;
 

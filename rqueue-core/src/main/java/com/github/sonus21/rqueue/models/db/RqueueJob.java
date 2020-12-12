@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models.db;
 
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
@@ -35,24 +36,33 @@ import lombok.Setter;
 public class RqueueJob extends SerializableBase {
   private static final long serialVersionUID = 6219118148061766036L;
   private String id;
+  // currently being consumed message
+  private RqueueMessage rqueueMessage;
+  // Message metadata for this message, metadata can have different RqueueMessage than currently
+  // being consumed
   private MessageMetadata messageMetadata;
+  // Status of this job
   private JobStatus status;
-  private long executionTime;
-  private long startedAt;
+  // when this job was last checkin
   private long lastCheckinAt;
+  // all checkins
   private List<CheckinMessage> checkins;
+  // all executions for this job
   private List<Execution> executions;
+  // any error occurred during execution
   private Throwable error;
+  // when this job was created
   private long createdAt;
+  // whe this job was updated last time
   private long updatedAt;
 
-  public RqueueJob(String id, MessageMetadata messageMetadata, Throwable error) {
+  public RqueueJob(
+      String id, RqueueMessage rqueueMessage, MessageMetadata messageMetadata, Throwable error) {
     this(
         id,
+        rqueueMessage,
         messageMetadata,
         JobStatus.CREATED,
-        0,
-        0,
         0,
         new LinkedList<>(),
         new LinkedList<>(),
@@ -70,6 +80,7 @@ public class RqueueJob extends SerializableBase {
       this.checkins.add(new CheckinMessage(message, checkInTime));
       this.lastCheckinAt = Math.max(checkInTime, lastCheckinAt);
       this.updatedAt = Math.max(checkInTime, updatedAt);
+      this.notifyAll();
     }
   }
 

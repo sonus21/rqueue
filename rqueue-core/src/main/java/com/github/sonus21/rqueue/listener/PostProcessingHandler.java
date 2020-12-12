@@ -30,7 +30,6 @@ import com.github.sonus21.rqueue.utils.BaseLogger;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,7 +39,6 @@ import org.springframework.context.ApplicationEventPublisher;
 class PostProcessingHandler extends BaseLogger {
   private final ApplicationEventPublisher applicationEventPublisher;
   private final RqueueWebConfig rqueueWebConfig;
-  private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final TaskExecutionBackOff taskExecutionBackoff;
   private final MessageProcessorHandler messageProcessorHandler;
@@ -51,7 +49,6 @@ class PostProcessingHandler extends BaseLogger {
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       ApplicationEventPublisher applicationEventPublisher,
-      RqueueMessageMetadataService rqueueMessageMetadataService,
       RqueueMessageTemplate rqueueMessageTemplate,
       TaskExecutionBackOff taskExecutionBackoff,
       MessageProcessorHandler messageProcessorHandler,
@@ -59,7 +56,6 @@ class PostProcessingHandler extends BaseLogger {
     super(log, null);
     this.applicationEventPublisher = applicationEventPublisher;
     this.rqueueWebConfig = rqueueWebConfig;
-    this.rqueueMessageMetadataService = rqueueMessageMetadataService;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.taskExecutionBackoff = taskExecutionBackoff;
     this.messageProcessorHandler = messageProcessorHandler;
@@ -103,7 +99,7 @@ class PostProcessingHandler extends BaseLogger {
   private void handleOldMessage(JobImpl job, RqueueMessage rqueueMessage) {
     log(
         Level.DEBUG,
-        "Message {} ignored due to new message, Queue: {}",
+        "Message {} ignored due to old message, Queue: {}",
         null,
         rqueueMessage,
         job.getQueueDetail().getName());

@@ -98,8 +98,9 @@ public class RqueueTaskAggregatorServiceTest {
             rqueueConfig,
             mock(RqueueRedisTemplate.class),
             mock(RqueueMessageMetadataService.class),
-            messageMetadata,
             queueDetail,
+            messageMetadata,
+            rqueueMessage,
             null,
             null);
     return new RqueueExecutionEvent(job);

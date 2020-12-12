@@ -93,7 +93,6 @@ public class RqueueExecutorTest {
             rqueueConfig,
             rqueueWebConfig,
             applicationEventPublisher,
-            rqueueMessageMetadataService,
             messageTemplate,
             taskBackOff,
             messageProcessorHandler,

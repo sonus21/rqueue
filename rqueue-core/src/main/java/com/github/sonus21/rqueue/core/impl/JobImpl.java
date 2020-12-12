@@ -43,8 +43,9 @@ public class JobImpl implements Job {
       RqueueConfig rqueueConfig,
       RqueueRedisTemplate<RqueueJob> redisTemplate,
       RqueueMessageMetadataService messageMetadataService,
-      MessageMetadata messageMetadata,
       QueueDetail queueDetail,
+      MessageMetadata messageMetadata,
+      RqueueMessage rqueueMessage,
       Object userMessage,
       Throwable exception) {
     this.redisTemplate = redisTemplate;
@@ -52,7 +53,8 @@ public class JobImpl implements Job {
     this.rqueueConfig = rqueueConfig;
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
-    this.rqueueJob = new RqueueJob(rqueueConfig.getJobId(), messageMetadata, exception);
+    this.rqueueJob =
+        new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
     this.save();
   }
 
@@ -73,7 +75,7 @@ public class JobImpl implements Job {
 
   @Override
   public RqueueMessage getRqueueMessage() {
-    return rqueueJob.getMessageMetadata().getRqueueMessage();
+    return rqueueJob.getRqueueMessage();
   }
 
   @Override

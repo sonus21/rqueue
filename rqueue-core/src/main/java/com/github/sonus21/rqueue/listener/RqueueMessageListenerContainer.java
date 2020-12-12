@@ -271,7 +271,6 @@ public class RqueueMessageListenerContainer
             rqueueConfig,
             rqueueWebConfig,
             applicationEventPublisher,
-            rqueueMessageMetadataService,
             rqueueMessageTemplate,
             taskExecutionBackOff,
             new MessageProcessorHandler(
