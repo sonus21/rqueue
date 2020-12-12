@@ -22,10 +22,12 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@EqualsAndHashCode
-public class Concurrency {
-  private int min;
-  private int max;
+@EqualsAndHashCode(callSuper = true)
+public class Concurrency extends SerializableBase {
+
+  private static final long serialVersionUID = 3165194419314698068L;
+  private final int min;
+  private final int max;
 
   public MinMax<Integer> toMinMax() {
     return new MinMax<>(min, max);

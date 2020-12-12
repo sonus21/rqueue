@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FailureManager {
-  @NonNull private FailureDetailRepository failureDetailRepository;
+  @NonNull private final FailureDetailRepository failureDetailRepository;
 
   public boolean shouldFail(String id) {
     // no entry so no fail

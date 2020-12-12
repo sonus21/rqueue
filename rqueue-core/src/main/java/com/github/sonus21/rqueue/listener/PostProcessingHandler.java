@@ -20,8 +20,8 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.JobImpl;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
-import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
@@ -31,7 +31,6 @@ import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.context.ApplicationEventPublisher;
@@ -68,56 +67,25 @@ class PostProcessingHandler extends BaseLogger {
     this.rqueueConfig = rqueueConfig;
   }
 
-  void handle(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      ExecutionStatus status,
-      int failureCount,
-      long jobExecutionStartTime) {
+  void handle(JobImpl job, ExecutionStatus status, int failureCount) {
     try {
       switch (status) {
         case QUEUE_INACTIVE:
           return;
         case DELETED:
-          handleManualDeletion(
-              queueDetail,
-              rqueueMessage,
-              userMessage,
-              messageMetadata,
-              failureCount,
-              jobExecutionStartTime);
+          handleManualDeletion(job, failureCount);
           break;
         case IGNORED:
-          handleIgnoredMessage(
-              queueDetail,
-              rqueueMessage,
-              userMessage,
-              messageMetadata,
-              failureCount,
-              jobExecutionStartTime);
+          handleIgnoredMessage(job, failureCount);
           break;
         case OLD_MESSAGE:
-          handleOldMessage(queueDetail, rqueueMessage);
+          handleOldMessage(job, job.getRqueueMessage());
           break;
         case SUCCESSFUL:
-          handleSuccessFullExecution(
-              queueDetail,
-              rqueueMessage,
-              userMessage,
-              messageMetadata,
-              failureCount,
-              jobExecutionStartTime);
+          handleSuccessFullExecution(job, failureCount);
           break;
         case FAILED:
-          handleFailure(
-              queueDetail,
-              rqueueMessage,
-              userMessage,
-              messageMetadata,
-              failureCount,
-              jobExecutionStartTime);
+          handleFailure(job, failureCount);
           break;
         default:
           throw new UnknownSwitchCase(String.valueOf(status));
@@ -127,68 +95,42 @@ class PostProcessingHandler extends BaseLogger {
           Level.ERROR,
           "Error occurred in post processing, RqueueMessage: {}, Status: {}",
           e,
-          rqueueMessage,
+          job.getRqueueMessage(),
           status);
     }
   }
 
-  private void handleOldMessage(QueueDetail queueDetail, RqueueMessage rqueueMessage) {
+  private void handleOldMessage(JobImpl job, RqueueMessage rqueueMessage) {
     log(
         Level.DEBUG,
         "Message {} ignored due to new message, Queue: {}",
         null,
         rqueueMessage,
-        queueDetail.getName());
+        job.getQueueDetail().getName());
     rqueueMessageTemplate.removeElementFromZset(
-        queueDetail.getProcessingQueueName(), rqueueMessage);
+        job.getQueueDetail().getProcessingQueueName(), rqueueMessage);
   }
 
-  private void publishEvent(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      MessageMetadata messageMetadata,
-      MessageStatus status,
-      long jobExecutionStartTime) {
-    updateMetadata(messageMetadata, rqueueMessage, jobExecutionStartTime, status);
+  private void publishEvent(JobImpl job, RqueueMessage rqueueMessage, MessageStatus messageStatus) {
+    updateMetadata(job, rqueueMessage, messageStatus);
     if (rqueueWebConfig.isCollectListenerStats()) {
-      RqueueExecutionEvent event =
-          new RqueueExecutionEvent(
-              queueDetail, rqueueMessage, status.getTaskStatus(), messageMetadata);
+      RqueueExecutionEvent event = new RqueueExecutionEvent(job);
       applicationEventPublisher.publishEvent(event);
     }
   }
 
   private void updateMetadata(
-      MessageMetadata messageMetadata,
-      RqueueMessage rqueueMessage,
-      long jobExecutionStartTime,
-      MessageStatus messageStatus) {
-    messageMetadata.setStatus(messageStatus);
-    messageMetadata.setRqueueMessage(rqueueMessage);
-    messageMetadata.addExecutionTime(jobExecutionStartTime);
-    if (messageStatus.isTerminalState()) {
-      rqueueMessageMetadataService.save(
-          messageMetadata,
-          Duration.ofSeconds(rqueueConfig.getMessageDurabilityInTerminalStateInSecond()));
-    } else {
-      rqueueMessageMetadataService.save(
-          messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
-    }
+      JobImpl job, RqueueMessage rqueueMessage, MessageStatus messageStatus) {
+    job.updateExecutionTime(rqueueMessage, messageStatus);
   }
 
-  private void deleteMessage(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      MessageStatus status,
-      int failureCount,
-      long jobExecutionStartTime) {
+  private void deleteMessage(JobImpl job, MessageStatus status, int failureCount) {
+    RqueueMessage rqueueMessage = job.getRqueueMessage();
     rqueueMessageTemplate.removeElementFromZset(
-        queueDetail.getProcessingQueueName(), rqueueMessage);
+        job.getQueueDetail().getProcessingQueueName(), rqueueMessage);
     rqueueMessage.setFailureCount(failureCount);
-    messageProcessorHandler.handleMessage(rqueueMessage, userMessage, status);
-    publishEvent(queueDetail, rqueueMessage, messageMetadata, status, jobExecutionStartTime);
+    messageProcessorHandler.handleMessage(rqueueMessage, job.getMessage(), status);
+    publishEvent(job, job.getRqueueMessage(), status);
   }
 
   private void moveMessageToQueue(
@@ -236,127 +178,59 @@ class PostProcessingHandler extends BaseLogger {
     }
   }
 
-  private void moveMessageToDlq(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime) {
+  private void moveMessageToDlq(JobImpl job, int failureCount) {
     log(
         Level.WARN,
         "Message {} Moved to dead letter queue: {}",
         null,
-        userMessage,
-        queueDetail.getDeadLetterQueueName());
+        job.getRqueueMessage(),
+        job.getQueueDetail().getDeadLetterQueueName());
+    RqueueMessage rqueueMessage = job.getRqueueMessage();
     RqueueMessage newMessage = rqueueMessage.toBuilder().failureCount(failureCount).build();
     newMessage.updateReEnqueuedAt();
-    moveMessageForReprocessingOrDlq(queueDetail, rqueueMessage, newMessage, userMessage);
-    publishEvent(
-        queueDetail,
-        newMessage,
-        messageMetadata,
-        MessageStatus.MOVED_TO_DLQ,
-        jobExecutionStartTime);
+    moveMessageForReprocessingOrDlq(
+        job.getQueueDetail(), rqueueMessage, newMessage, job.getMessage());
+    publishEvent(job, newMessage, MessageStatus.MOVED_TO_DLQ);
   }
 
-  private void parkMessageForRetry(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime,
-      long delay) {
-    log(Level.DEBUG, "Message {} will be retried in {}Ms", null, userMessage, delay);
+  private void parkMessageForRetry(JobImpl job, int failureCount, long delay) {
+    log(Level.DEBUG, "Message {} will be retried in {}Ms", null, job.getRqueueMessage(), delay);
+    RqueueMessage rqueueMessage = job.getRqueueMessage();
     RqueueMessage newMessage = rqueueMessage.toBuilder().failureCount(failureCount).build();
     newMessage.updateReEnqueuedAt();
     rqueueMessageTemplate.moveMessage(
-        queueDetail.getProcessingQueueName(),
-        queueDetail.getDelayedQueueName(),
+        job.getQueueDetail().getProcessingQueueName(),
+        job.getQueueDetail().getDelayedQueueName(),
         rqueueMessage,
         newMessage,
         delay);
-    updateMetadata(messageMetadata, newMessage, jobExecutionStartTime, MessageStatus.FAILED);
+    updateMetadata(job, newMessage, MessageStatus.FAILED);
   }
 
-  private void discardMessage(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime) {
-    log(Level.DEBUG, "Message {} discarded due to retry limit exhaust", null, userMessage);
-    deleteMessage(
-        queueDetail,
-        rqueueMessage,
-        userMessage,
-        messageMetadata,
-        MessageStatus.DISCARDED,
-        failureCount,
-        jobExecutionStartTime);
+  private void discardMessage(JobImpl job, int failureCount) {
+    log(
+        Level.DEBUG,
+        "Message {} discarded due to retry limit exhaust",
+        null,
+        job.getRqueueMessage());
+    deleteMessage(job, MessageStatus.DISCARDED, failureCount);
   }
 
-  private void handleManualDeletion(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime) {
-    log(Level.DEBUG, "Message Deleted {} successfully", null, rqueueMessage);
-    deleteMessage(
-        queueDetail,
-        rqueueMessage,
-        userMessage,
-        messageMetadata,
-        MessageStatus.DELETED,
-        failureCount,
-        jobExecutionStartTime);
+  private void handleManualDeletion(JobImpl job, int failureCount) {
+    log(Level.DEBUG, "Message Deleted {} successfully", null, job.getRqueueMessage());
+    deleteMessage(job, MessageStatus.DELETED, failureCount);
   }
 
-  private void handleSuccessFullExecution(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime) {
-    log(Level.DEBUG, "Message consumed {} successfully", null, rqueueMessage);
-    deleteMessage(
-        queueDetail,
-        rqueueMessage,
-        userMessage,
-        messageMetadata,
-        MessageStatus.SUCCESSFUL,
-        failureCount,
-        jobExecutionStartTime);
+  private void handleSuccessFullExecution(JobImpl job, int failureCount) {
+    log(Level.DEBUG, "Message consumed {} successfully", null, job.getRqueueMessage());
+    deleteMessage(job, MessageStatus.SUCCESSFUL, failureCount);
   }
 
-  private void handleRetryExceededMessage(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime) {
-    if (queueDetail.isDlqSet()) {
-      moveMessageToDlq(
-          queueDetail,
-          rqueueMessage,
-          userMessage,
-          messageMetadata,
-          failureCount,
-          jobExecutionStartTime);
+  private void handleRetryExceededMessage(JobImpl job, int failureCount) {
+    if (job.getQueueDetail().isDlqSet()) {
+      moveMessageToDlq(job, failureCount);
     } else {
-      discardMessage(
-          queueDetail,
-          rqueueMessage,
-          userMessage,
-          messageMetadata,
-          failureCount,
-          jobExecutionStartTime);
+      discardMessage(job, failureCount);
     }
   }
 
@@ -366,60 +240,28 @@ class PostProcessingHandler extends BaseLogger {
         : rqueueMessage.getRetryCount();
   }
 
-  private void handleFailure(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime) {
-    int maxRetryCount = getMaxRetryCount(rqueueMessage, queueDetail);
+  private void handleFailure(JobImpl job, int failureCount) {
+    int maxRetryCount = getMaxRetryCount(job.getRqueueMessage(), job.getQueueDetail());
     if (failureCount < maxRetryCount) {
-      long delay = taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, failureCount);
+      long delay =
+          taskExecutionBackoff.nextBackOff(job.getMessage(), job.getRqueueMessage(), failureCount);
       if (delay == TaskExecutionBackOff.STOP) {
-        handleRetryExceededMessage(
-            queueDetail,
-            rqueueMessage,
-            userMessage,
-            messageMetadata,
-            failureCount,
-            jobExecutionStartTime);
+        handleRetryExceededMessage(job, failureCount);
       } else {
-        parkMessageForRetry(
-            queueDetail,
-            rqueueMessage,
-            userMessage,
-            messageMetadata,
-            failureCount,
-            jobExecutionStartTime,
-            delay);
+        parkMessageForRetry(job, failureCount, delay);
       }
     } else {
-      handleRetryExceededMessage(
-          queueDetail,
-          rqueueMessage,
-          userMessage,
-          messageMetadata,
-          failureCount,
-          jobExecutionStartTime);
+      handleRetryExceededMessage(job, failureCount);
     }
   }
 
-  private void handleIgnoredMessage(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      Object userMessage,
-      MessageMetadata messageMetadata,
-      int failureCount,
-      long jobExecutionStartTime) {
-    log(Level.DEBUG, "Message {} ignored, Queue: {}", null, rqueueMessage, queueDetail.getName());
-    deleteMessage(
-        queueDetail,
-        rqueueMessage,
-        userMessage,
-        messageMetadata,
-        MessageStatus.IGNORED,
-        failureCount,
-        jobExecutionStartTime);
+  private void handleIgnoredMessage(JobImpl job, int failureCount) {
+    log(
+        Level.DEBUG,
+        "Message {} ignored, Queue: {}",
+        null,
+        job.getRqueueMessage(),
+        job.getQueueDetail().getName());
+    deleteMessage(job, MessageStatus.IGNORED, failureCount);
   }
 }

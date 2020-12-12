@@ -16,38 +16,36 @@
 
 package com.github.sonus21.rqueue.models.event;
 
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.context.ApplicationEvent;
 
 @Getter
 public class RqueueExecutionEvent extends ApplicationEvent {
   private static final long serialVersionUID = -7762050873209497221L;
-  private final TaskStatus status;
-  private final RqueueMessage rqueueMessage;
-  private final QueueDetail queueDetail;
-  private final MessageMetadata messageMetadata;
+  @Nullable @Deprecated private final TaskStatus status;
+  @NotNull @Deprecated private final RqueueMessage rqueueMessage;
+  @NotNull @Deprecated private final MessageMetadata messageMetadata;
+  @NotNull private final QueueDetail queueDetail;
+  @NotNull private final transient Job job;
 
   /**
    * Create a new QueueTaskEvent.
    *
-   * @param queueDetail queue detail on which this event occur
-   * @param rqueueMessage rqueue message object
-   * @param status task status
-   * @param messageMetadata message metadata.
+   * @param job a job object
    */
-  public RqueueExecutionEvent(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      TaskStatus status,
-      MessageMetadata messageMetadata) {
-    super(queueDetail);
-    this.queueDetail = queueDetail;
-    this.status = status;
-    this.rqueueMessage = rqueueMessage;
-    this.messageMetadata = messageMetadata;
+  public RqueueExecutionEvent(Job job) {
+    super(job.getQueueDetail());
+    this.queueDetail = job.getQueueDetail();
+    this.status = job.getMessageMetadata().getStatus().getTaskStatus();
+    this.rqueueMessage = job.getRqueueMessage();
+    this.messageMetadata = job.getMessageMetadata();
+    this.job = job;
   }
 }

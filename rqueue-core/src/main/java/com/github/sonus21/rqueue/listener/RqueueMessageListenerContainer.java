@@ -21,6 +21,7 @@ import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForTermination;
 import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForWorkerTermination;
 import static org.springframework.util.Assert.notNull;
 
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
@@ -28,6 +29,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.Concurrency;
+import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
@@ -108,6 +110,7 @@ public class RqueueMessageListenerContainer
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
+  private RqueueRedisTemplate<RqueueJob> jobRqueueMessageTemplate;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -238,32 +241,55 @@ public class RqueueMessageListenerContainer
     }
   }
 
+  private void initializeQueue() {
+    EndpointRegistry.delete();
+    for (MappingInformation mappingInformation :
+        rqueueMessageHandler.getHandlerMethods().keySet()) {
+      for (String queue : mappingInformation.getQueueNames()) {
+        for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
+          EndpointRegistry.register(queueDetail);
+        }
+      }
+    }
+    List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
+    if (queueDetails.isEmpty()) {
+      return;
+    }
+    if (taskExecutor == null) {
+      defaultTaskExecutor = true;
+      taskExecutor = createDefaultTaskExecutor(queueDetails);
+    } else {
+      initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
+    }
+    initializeRunningQueueState();
+  }
+
+  private void initialize() {
+    initializeQueue();
+    this.postProcessingHandler =
+        new PostProcessingHandler(
+            rqueueConfig,
+            rqueueWebConfig,
+            applicationEventPublisher,
+            rqueueMessageMetadataService,
+            rqueueMessageTemplate,
+            taskExecutionBackOff,
+            new MessageProcessorHandler(
+                manualDeletionMessageProcessor,
+                deadLetterQueueMessageProcessor,
+                discardMessageProcessor,
+                postExecutionMessageProcessor),
+            rqueueSystemConfigDao);
+    this.jobRqueueMessageTemplate = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
+  }
+
   @Override
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
       if (RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
         log.info("Producer mode nothing to do...");
       } else {
-        EndpointRegistry.delete();
-        for (MappingInformation mappingInformation :
-            rqueueMessageHandler.getHandlerMethods().keySet()) {
-          for (String queue : mappingInformation.getQueueNames()) {
-            for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
-              EndpointRegistry.register(queueDetail);
-            }
-          }
-        }
-        List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
-        if (queueDetails.isEmpty()) {
-          return;
-        }
-        if (taskExecutor == null) {
-          defaultTaskExecutor = true;
-          taskExecutor = createDefaultTaskExecutor(queueDetails);
-        } else {
-          initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
-        }
-        initializeRunningQueueState();
+        initialize();
       }
       lifecycleMgr.notifyAll();
     }
@@ -388,28 +414,10 @@ public class RqueueMessageListenerContainer
     log.info("Starting Rqueue Message container");
     synchronized (lifecycleMgr) {
       running = true;
-      createPostProcessingHandler();
       doStart();
       applicationEventPublisher.publishEvent(new RqueueBootstrapEvent("Container", true));
       lifecycleMgr.notifyAll();
     }
-  }
-
-  private void createPostProcessingHandler() {
-    this.postProcessingHandler =
-        new PostProcessingHandler(
-            rqueueConfig,
-            rqueueWebConfig,
-            applicationEventPublisher,
-            rqueueMessageMetadataService,
-            rqueueMessageTemplate,
-            taskExecutionBackOff,
-            new MessageProcessorHandler(
-                manualDeletionMessageProcessor,
-                deadLetterQueueMessageProcessor,
-                discardMessageProcessor,
-                postExecutionMessageProcessor),
-            rqueueSystemConfigDao);
   }
 
   protected void doStart() {
@@ -586,6 +594,15 @@ public class RqueueMessageListenerContainer
 
   RqueueMessageMetadataService getRqueueMessageMetadataService() {
     return rqueueMessageMetadataService;
+  }
+
+  RqueueRedisTemplate<RqueueJob> getJobRqueueMessageTemplate() {
+    return this.jobRqueueMessageTemplate;
+  }
+
+  // Test only
+  void setJobRqueueMessageTemplate(RqueueRedisTemplate<RqueueJob> template) {
+    this.jobRqueueMessageTemplate = template;
   }
 
   public MessageProcessor getManualDeletionMessageProcessor() {

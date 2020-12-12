@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.models;
+package com.github.sonus21.rqueue.models.enums;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.io.Serializable;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@NoArgsConstructor
-@EqualsAndHashCode
-public abstract class SerializableBase implements Serializable {
-
-  private static final long serialVersionUID = -824188858192360018L;
+public enum JobStatus {
+  UNKNOWN,
+  CREATED,
+  PROCESSING,
+  FAILED,
+  SUCCESS,
+  TERMINATED
 }

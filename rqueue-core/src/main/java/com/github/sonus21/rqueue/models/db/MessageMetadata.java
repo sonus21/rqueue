@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,6 +31,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode(callSuper = true)
 public class MessageMetadata extends SerializableBase {
   private static final long serialVersionUID = 4200184682879443328L;
   private String id;
@@ -49,15 +51,5 @@ public class MessageMetadata extends SerializableBase {
         RqueueMessageUtils.getMessageMetaId(rqueueMessage.getQueueName(), rqueueMessage.getId());
     this.rqueueMessage = rqueueMessage;
     this.status = messageStatus;
-  }
-
-  public void addExecutionTime(long jobStartTime) {
-    long executionTime = (System.currentTimeMillis() - jobStartTime);
-    if (rqueueMessage != null && totalExecutionTime > 0 && !rqueueMessage.isPeriodicTask()) {
-      this.totalExecutionTime += executionTime;
-    } else {
-      // for non periodic job don't add execution time as the same job id would be running
-      this.totalExecutionTime = executionTime;
-    }
   }
 }

@@ -24,16 +24,19 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.impl.JobImpl;
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.models.db.QueueStatisticsTest;
-import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
@@ -77,7 +80,7 @@ public class RqueueTaskAggregatorServiceTest {
     assertNotNull(FieldUtils.readField(this.rqueueTaskAggregatorService, "taskExecutor", true));
   }
 
-  private RqueueExecutionEvent generateTaskEventWithStatus(TaskStatus status) {
+  private RqueueExecutionEvent generateTaskEventWithStatus(MessageStatus status) {
     double r = Math.random();
     RqueueMessage rqueueMessage =
         RqueueMessage.builder()
@@ -86,25 +89,33 @@ public class RqueueTaskAggregatorServiceTest {
             .processAt(System.currentTimeMillis())
             .queuedTime(System.nanoTime())
             .build();
-    MessageMetadata messageMetadata =
-        new MessageMetadata(rqueueMessage.getId(), MessageStatus.FAILED);
+    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, status);
     messageMetadata.setTotalExecutionTime(10 + (long) r * 10000);
     rqueueMessage.setFailureCount((int) r * 10);
-    return new RqueueExecutionEvent(
-        TestUtils.createQueueDetail(queueName), rqueueMessage, status, messageMetadata);
+    QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
+    Job job =
+        new JobImpl(
+            rqueueConfig,
+            mock(RqueueRedisTemplate.class),
+            mock(RqueueMessageMetadataService.class),
+            messageMetadata,
+            queueDetail,
+            null,
+            null);
+    return new RqueueExecutionEvent(job);
   }
 
   private RqueueExecutionEvent generateTaskEvent() {
     double r = Math.random();
-    TaskStatus taskStatus;
+    MessageStatus messageStatus;
     if (r < 0.3) {
-      taskStatus = TaskStatus.SUCCESSFUL;
+      messageStatus = MessageStatus.SUCCESSFUL;
     } else if (r < 0.6) {
-      taskStatus = TaskStatus.DISCARDED;
+      messageStatus = MessageStatus.DISCARDED;
     } else {
-      taskStatus = TaskStatus.MOVED_TO_DLQ;
+      messageStatus = MessageStatus.MOVED_TO_DLQ;
     }
-    return generateTaskEventWithStatus(taskStatus);
+    return generateTaskEventWithStatus(messageStatus);
   }
 
   private void addEvent(RqueueExecutionEvent event, TasksStat stats, boolean updateTaskStat) {
@@ -112,7 +123,7 @@ public class RqueueTaskAggregatorServiceTest {
     if (!updateTaskStat) {
       return;
     }
-    switch (event.getStatus()) {
+    switch (event.getJob().getMessageMetadata().getStatus().getTaskStatus()) {
       case DISCARDED:
         stats.discarded += 1;
         break;
@@ -167,22 +178,22 @@ public class RqueueTaskAggregatorServiceTest {
     }
     if (tasksStat.movedToDlq == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.MOVED_TO_DLQ);
+      event = generateTaskEventWithStatus(MessageStatus.MOVED_TO_DLQ);
       addEvent(event, tasksStat, true);
     }
     if (tasksStat.success == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.SUCCESSFUL);
+      event = generateTaskEventWithStatus(MessageStatus.SUCCESSFUL);
       addEvent(event, tasksStat, true);
     }
     if (tasksStat.discarded == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.DISCARDED);
+      event = generateTaskEventWithStatus(MessageStatus.DISCARDED);
       addEvent(event, tasksStat, totalEvents < 500);
     }
     if (tasksStat.retried == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.DISCARDED);
+      event = generateTaskEventWithStatus(MessageStatus.DISCARDED);
       event.getRqueueMessage().setFailureCount(10);
       addEvent(event, tasksStat, totalEvents < 500);
     }

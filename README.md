@@ -30,6 +30,7 @@
 * **Unique message** : Unique message processing for a queue based on the message id
 * **Periodic message** : Process same message at certain interval
 * **Redis connection**: A different redis setup can be used for Rqueue
+* **Long execution job**: Allows these jobs to checkin
 
 ## Getting Started
 
@@ -187,7 +188,7 @@ Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 [![Explore Queue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
 
 ## In Production
-We would love to add organization name here, if you're one of the Rqueue users, please raise a PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users).
+**We would love to add your organization name here, if you're one of the Rqueue users, please raise a PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users).**
 
 <a href="https://tuneyou.com/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>&nbsp;&nbsp;
 <a href="https://www.pokerstarssports.eu"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/pokerstars.png" width="250" align="middle"/></a>&nbsp;&nbsp;

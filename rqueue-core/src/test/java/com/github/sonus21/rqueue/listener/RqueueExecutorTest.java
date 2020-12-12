@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
@@ -36,6 +37,7 @@ import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
@@ -64,6 +66,8 @@ public class RqueueExecutorTest {
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueMessageMetadataService rqueueMessageMetadataService =
       mock(RqueueMessageMetadataService.class);
+  private RqueueRedisTemplate<RqueueJob> rqueueJobRqueueRedisTemplate =
+      mock(RqueueRedisTemplate.class);
   private TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
   private TestMessageProcessor discardProcessor = new TestMessageProcessor();
   private TestMessageProcessor preProcessMessageProcessor = new TestMessageProcessor();
@@ -101,6 +105,7 @@ public class RqueueExecutorTest {
     doReturn(preProcessMessageProcessor).when(container).getPreExecutionMessageProcessor();
     doReturn(messageHandler).when(container).getRqueueMessageHandler();
     doReturn(messageConverter).when(messageHandler).getMessageConverter();
+    doReturn(rqueueJobRqueueRedisTemplate).when(container).getJobRqueueMessageTemplate();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
         .handleMessage(any());
@@ -123,12 +128,12 @@ public class RqueueExecutorTest {
         .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doAnswer(i -> defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     assertEquals(1, discardProcessor.getCount());
   }
@@ -142,12 +147,12 @@ public class RqueueExecutorTest {
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     assertEquals(1, deadLetterProcessor.getCount());
   }
@@ -161,12 +166,12 @@ public class RqueueExecutorTest {
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageTemplate, times(1))
         .moveMessage(
@@ -186,12 +191,12 @@ public class RqueueExecutorTest {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(eq(rqueueMessage));
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
   }
@@ -217,12 +222,12 @@ public class RqueueExecutorTest {
         .get(RqueueMessageUtils.getMessageMetaId(queueName, rqueueMessage.getId()));
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
   }
@@ -242,12 +247,12 @@ public class RqueueExecutorTest {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
     verify(messageTemplate, times(1))

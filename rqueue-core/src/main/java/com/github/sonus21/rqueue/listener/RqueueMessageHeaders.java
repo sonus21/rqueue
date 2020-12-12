@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ public final class RqueueMessageHeaders {
   public static final String DESTINATION = "destination";
   public static final String ID = "messageId";
   public static final String MESSAGE = "message";
+  public static final String JOB = "job";
   private static final MessageHeaders emptyMessageHeaders =
       new MessageHeaders(Collections.emptyMap());
 
@@ -35,11 +37,13 @@ public final class RqueueMessageHeaders {
     return emptyMessageHeaders;
   }
 
-  static MessageHeaders buildMessageHeaders(String destination, RqueueMessage rqueueMessage) {
+  static MessageHeaders buildMessageHeaders(
+      String destination, RqueueMessage rqueueMessage, Job job) {
     Map<String, Object> headers = new HashMap<>(3);
     headers.put(DESTINATION, destination);
     headers.put(ID, rqueueMessage.getId());
     headers.put(MESSAGE, rqueueMessage);
+    headers.put(JOB, job);
     return new MessageHeaders(headers);
   }
 }

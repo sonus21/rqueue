@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.models.enums;
 
 public enum ExecutionStatus {
+  IN_PROGRESS,
   SUCCESSFUL,
   DELETED,
   FAILED,

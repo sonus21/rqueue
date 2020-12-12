@@ -35,6 +35,9 @@ import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
@@ -137,6 +140,25 @@ abstract class BaseMessageSender {
       return null;
     }
     return rqueueMessage.getId();
+  }
+
+  protected Object deleteAllMessages(QueueDetail queueDetail) {
+    return stringRqueueRedisTemplate
+        .getRedisTemplate()
+        .execute(
+            new SessionCallback<Object>() {
+              @Override
+              public <K, V> Object execute(RedisOperations<K, V> redisOperations)
+                  throws DataAccessException {
+                RedisOperations<String, String> operations =
+                    (RedisOperations<String, String>) redisOperations;
+                operations.multi();
+                operations.delete(queueDetail.getQueueName());
+                operations.delete(queueDetail.getProcessingQueueName());
+                operations.delete(queueDetail.getDelayedQueueName());
+                return operations.exec();
+              }
+            });
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {

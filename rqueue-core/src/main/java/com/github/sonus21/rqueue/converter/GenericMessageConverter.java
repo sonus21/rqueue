@@ -32,7 +32,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.converter.SmartMessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
 /**
@@ -41,7 +41,7 @@ import org.springframework.messaging.support.GenericMessage;
  * entries should be non generic.
  */
 @Slf4j
-public class GenericMessageConverter implements MessageConverter {
+public class GenericMessageConverter implements SmartMessageConverter {
   private final ObjectMapper objectMapper;
 
   public GenericMessageConverter() {
@@ -147,9 +147,19 @@ public class GenericMessageConverter implements MessageConverter {
       Msg message = new Msg(msg, name);
       return new GenericMessage<>(objectMapper.writeValueAsString(message));
     } catch (JsonProcessingException e) {
-      log.error("Serialisation failed", e);
+      log.warn("Serialisation failed", e);
       return null;
     }
+  }
+
+  @Override
+  public Object fromMessage(Message<?> message, Class<?> targetClass, Object conversionHint) {
+    return fromMessage(message, targetClass);
+  }
+
+  @Override
+  public Message<?> toMessage(Object payload, MessageHeaders headers, Object conversionHint) {
+    return toMessage(payload, headers);
   }
 
   @Getter

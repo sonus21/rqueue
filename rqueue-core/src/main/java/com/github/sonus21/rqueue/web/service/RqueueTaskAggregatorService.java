@@ -209,15 +209,16 @@ public class RqueueTaskAggregatorService
 
   private class EventAggregator implements Runnable {
     private void aggregate(RqueueExecutionEvent event, TasksStat stat) {
-      if (event.getStatus() == TaskStatus.DISCARDED) {
+      TaskStatus taskStatus = event.getJob().getMessageMetadata().getStatus().getTaskStatus();
+      if (TaskStatus.DISCARDED.equals(taskStatus)) {
         stat.discarded += 1;
-      } else if (event.getStatus() == TaskStatus.SUCCESSFUL) {
+      } else if (TaskStatus.SUCCESSFUL.equals(taskStatus)) {
         stat.success += 1;
-      } else if (event.getStatus() == TaskStatus.MOVED_TO_DLQ) {
+      } else if (TaskStatus.MOVED_TO_DLQ.equals(taskStatus)) {
         stat.movedToDlq += 1;
       }
-      RqueueMessage rqueueMessage = event.getRqueueMessage();
-      MessageMetadata messageMetadata = event.getMessageMetadata();
+      RqueueMessage rqueueMessage = event.getJob().getRqueueMessage();
+      MessageMetadata messageMetadata = event.getJob().getMessageMetadata();
       if (rqueueMessage.getFailureCount() != 0) {
         stat.retried += 1;
       }
