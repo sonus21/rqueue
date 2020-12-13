@@ -45,6 +45,7 @@ public class QueueDetail extends SerializableBase {
   private static final long serialVersionUID = 9153752084449974622L;
   private final String name;
   private final int numRetry;
+  // visibility timeout in miliseconds
   private final long visibilityTimeout;
   private final String queueName;
   private final String deadLetterQueueName;

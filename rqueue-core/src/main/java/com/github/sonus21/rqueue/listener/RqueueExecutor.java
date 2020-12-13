@@ -16,14 +16,16 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
-import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_DAY;
+import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.impl.JobImpl;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
+import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
@@ -47,6 +49,9 @@ class RqueueExecutor extends MessageContainerBase {
   private Message<String> message;
   private boolean updatedToProcessing;
   private JobImpl job;
+  private ExecutionStatus status;
+  private Throwable error;
+  private int failureCount;
 
   RqueueExecutor(
       WeakReference<RqueueMessageListenerContainer> container,
@@ -69,7 +74,7 @@ class RqueueExecutor extends MessageContainerBase {
     Message<String> tmpMessage =
         MessageBuilder.createMessage(
             rqueueMessage.getMessage(),
-            RqueueMessageHeaders.buildMessageHeaders(queueDetail.getName(), rqueueMessage, null));
+            buildMessageHeaders(queueDetail.getName(), rqueueMessage, null, null));
     MessageMetadata messageMetadata =
         rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
     Throwable t = null;
@@ -95,10 +100,7 @@ class RqueueExecutor extends MessageContainerBase {
               userMessage,
               t);
     }
-    this.message =
-        MessageBuilder.createMessage(
-            rqueueMessage.getMessage(),
-            RqueueMessageHeaders.buildMessageHeaders(queueDetail.getName(), rqueueMessage, job));
+    this.failureCount = job.getRqueueMessage().getFailureCount();
   }
 
   private int getMaxRetryCount() {
@@ -204,47 +206,58 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-  private void processSimpleMessage() {
-    int failureCount = job.getRqueueMessage().getFailureCount();
+  private void begin() {
+    Execution execution = job.execute();
+    RqueueMessage rqueueMessage = job.getRqueueMessage();
+    this.message =
+        MessageBuilder.createMessage(
+            rqueueMessage.getMessage(),
+            buildMessageHeaders(job.getQueueDetail().getName(), rqueueMessage, job, execution));
+    this.error = null;
+    this.status = getStatus();
+  }
+
+  private void end() {
+    if (status == null) {
+      job.updateExecutionStatus(ExecutionStatus.FAILED, error);
+    } else {
+      job.updateExecutionStatus(status, error);
+    }
+  }
+
+  private void execute() {
+    try {
+      updateToProcessing();
+      updateCounter(false);
+      rqueueMessageHandler.handleMessage(message);
+      status = ExecutionStatus.SUCCESSFUL;
+    } catch (MessagingException e) {
+      updateCounter(true);
+      failureCount += 1;
+      error = e;
+    } catch (Exception e) {
+      updateCounter(true);
+      failureCount += 1;
+      error = e;
+      log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, job.getRqueueMessage());
+    }
+  }
+
+  private void handleMessage() {
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
     int retryCount = getRetryCount();
     int attempt = 1;
-    ExecutionStatus status;
-    Exception error = null;
     try {
       do {
         log(Level.DEBUG, "Attempt {} message: {}", null, attempt, job.getMessage());
-        job.execute();
-        status = getStatus();
+        begin();
         if (status == null) {
-          try {
-            updateToProcessing();
-            updateCounter(false);
-            rqueueMessageHandler.handleMessage(message);
-            status = ExecutionStatus.SUCCESSFUL;
-          } catch (MessagingException e) {
-            updateCounter(true);
-            failureCount += 1;
-            error = e;
-          } catch (Exception e) {
-            updateCounter(true);
-            failureCount += 1;
-            error = e;
-            log(
-                Level.ERROR,
-                "Message execution failed, RqueueMessage: {}",
-                e,
-                job.getRqueueMessage());
-          }
+          execute();
         }
         retryCount -= 1;
         attempt += 1;
-        if (status == null) {
-          job.updateExecutionStatus(ExecutionStatus.FAILED, error);
-        } else {
-          job.updateExecutionStatus(status, error);
-        }
+        end();
       } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
       postProcessingHandler.handle(
           job, (status == null ? ExecutionStatus.FAILED : status), failureCount);
@@ -267,6 +280,13 @@ class RqueueExecutor extends MessageContainerBase {
             + job.getRqueueMessage().getId()
             + "::sch::"
             + newMessage.getProcessAt();
+    // let's assume a message can be executing for at most 2x of their visibility timeout
+    long expiryInSeconds = 2 * job.getQueueDetail().getVisibilityTimeout() / ONE_MILLI;
+    // how many more seconds are left to process this message
+    long remainingTime = (newMessage.getProcessAt() - System.currentTimeMillis()) / ONE_MILLI;
+    if (remainingTime > 0) {
+      expiryInSeconds += remainingTime;
+    }
     log.debug(
         "Schedule periodic message: {} Status: {}",
         job.getRqueueMessage(),
@@ -275,8 +295,8 @@ class RqueueExecutor extends MessageContainerBase {
                 job.getQueueDetail().getDelayedQueueName(),
                 messageId,
                 newMessage,
-                SECONDS_IN_A_DAY));
-    processSimpleMessage();
+                expiryInSeconds));
+    handleMessage();
   }
 
   @Override
@@ -284,7 +304,7 @@ class RqueueExecutor extends MessageContainerBase {
     if (job.getRqueueMessage().isPeriodicTask()) {
       processPeriodicMessage();
     } else {
-      processSimpleMessage();
+      handleMessage();
     }
   }
 }

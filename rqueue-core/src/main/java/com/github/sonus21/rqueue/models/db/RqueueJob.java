@@ -84,10 +84,11 @@ public class RqueueJob extends SerializableBase {
     }
   }
 
-  public void startNewExecution() {
+  public Execution startNewExecution() {
     Execution execution =
         new Execution(System.currentTimeMillis(), 0, null, ExecutionStatus.IN_PROGRESS);
     this.executions.add(execution);
+    return execution;
   }
 
   public void updateExecutionStatus(ExecutionStatus status, Throwable e) {

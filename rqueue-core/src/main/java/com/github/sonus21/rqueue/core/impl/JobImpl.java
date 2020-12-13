@@ -147,9 +147,10 @@ public class JobImpl implements Job {
     save();
   }
 
-  public void execute() {
-    rqueueJob.startNewExecution();
+  public Execution execute() {
+    Execution execution = rqueueJob.startNewExecution();
     save();
+    return execution;
   }
 
   public void updateExecutionStatus(ExecutionStatus status, Throwable e) {
