@@ -116,6 +116,10 @@ public final class RqueueMessageUtils {
     return generateMessages(converter, "Test Object", queueName, null, null, count);
   }
 
+  public static RqueueMessage generateMessage(MessageConverter converter, String queueName) {
+    return generateMessages(converter, "Test Object", queueName, null, null, 1).get(0);
+  }
+
   public static List<RqueueMessage> generateMessages(
       MessageConverter converter, String queueName, long delay, int count) {
     return generateMessages(converter, "Test object", queueName, null, delay, count);

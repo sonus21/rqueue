@@ -27,11 +27,13 @@ import org.apache.commons.lang3.RandomStringUtils;
 @EqualsAndHashCode(callSuper = true)
 public class PeriodicJob extends BaseQueueMessage {
   private String jobName;
+  private int executionTime;
 
   public static PeriodicJob newInstance() {
     PeriodicJob job = new PeriodicJob();
     job.setId(UUID.randomUUID().toString());
     job.setJobName(RandomStringUtils.randomAlphabetic(10));
+    job.setExecutionTime(1 + (int) (Math.random() * 5));
     return job;
   }
 }

@@ -30,8 +30,10 @@ import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.LongRunningJob;
+import com.github.sonus21.rqueue.test.dto.PeriodicJob;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -52,9 +54,11 @@ import org.springframework.test.context.TestPropertySource;
       "long.running.job.queue.name=long-running-job-queue",
       "use.system.redis=false",
       "monitor.enabled=false",
-      "rqueue.retry.per.poll=4"
+      "rqueue.retry.per.poll=4",
+      "periodic.job.queue.active=true",
+      "checkin.enabled=true",
     })
-public class JobCheckinTest extends SpringTestBase {
+ class JobCheckinTest extends SpringTestBase {
   @Test
   void testJobCheckin() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(2000);
@@ -102,5 +106,24 @@ public class JobCheckinTest extends SpringTestBase {
     assertNotNull(rqueueJobs.get(0).getRqueueMessage());
     assertEquals(JobStatus.SUCCESS, rqueueJobs.get(0).getStatus());
     assertNotNull(rqueueJobs.get(0).getError());
+  }
+
+  @Test
+  void testSimplePeriodicMessage() throws TimedOutException {
+    PeriodicJob job = PeriodicJob.newInstance();
+    String messageId =
+        rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, Duration.ofSeconds(2));
+    TimeoutUtils.waitFor(
+        () -> {
+          printQueueStats(periodicJobQueue);
+          printConsumedMessage(periodicJobQueue);
+          return consumedMessageService.getConsumedMessages(job.getId()).size() > 1;
+        },
+        30_000,
+        "at least two execution");
+    String jobsKey = rqueueConfig.getJobsKey(messageId);
+    List<String> jobIds = stringRqueueRedisTemplate.lrange(jobsKey, 0, -1);
+    List<RqueueJob> rqueueJobs = rqueueJobDao.getJobs(jobIds);
+    assertTrue(rqueueJobs.isEmpty());
   }
 }

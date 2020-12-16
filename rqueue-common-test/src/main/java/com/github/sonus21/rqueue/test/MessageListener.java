@@ -99,6 +99,9 @@ public class MessageListener {
   @Value("${long.running.job.queue.name:}")
   private String longRunningJobQueue;
 
+  @Value("${checkin.enabled:false}")
+  private boolean checkinEnabled;
+
   @RqueueListener(value = "${job.queue.name}", active = "${job.queue.active}")
   public void onMessage(Job job) throws Exception {
     log.info("Job: {}", job);
@@ -267,12 +270,23 @@ public class MessageListener {
       active = "${periodic.job.queue.active}",
       deadLetterQueue = "${periodic.job.dead.letter.queue.name}",
       numRetries = "${periodic.job.queue.retry.count}")
-  public void onPeriodicJob(PeriodicJob periodicJob) throws Exception {
+  public void onPeriodicJob(
+      PeriodicJob periodicJob,
+      @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job)
+      throws Exception {
     log.info("onPeriodicJob: {}", periodicJob);
     if (failureManager.shouldFail(periodicJob.getId())) {
       throw new Exception("Failing PeriodicJob task to be retried" + periodicJob);
     }
     consumedMessageService.save(periodicJob, UUID.randomUUID().toString(), periodicJobQueue);
+    if(checkinEnabled){
+      long endTime = System.currentTimeMillis() + 1000L *periodicJob.getExecutionTime();
+      scheduledExecutorService.schedule(
+          new CheckinClerk(scheduledExecutorService, job, endTime, 500L), 10L, TimeUnit.MILLISECONDS);
+      do {
+        TimeoutUtils.sleep(200L);
+      } while (System.currentTimeMillis() < endTime);
+    }
   }
 
   @RqueueListener(
@@ -291,9 +305,7 @@ public class MessageListener {
     }
     long endTime = System.currentTimeMillis() + longRunningJob.getRunTime();
     scheduledExecutorService.schedule(
-        new CheckinClerk(scheduledExecutorService, job, endTime, 500L),
-        10L,
-        TimeUnit.MILLISECONDS);
+        new CheckinClerk(scheduledExecutorService, job, endTime, 500L), 10L, TimeUnit.MILLISECONDS);
     consumedMessageService.save(longRunningJob, rqueueMessage.getId(), longRunningJobQueue);
     do {
       TimeoutUtils.sleep(200L);

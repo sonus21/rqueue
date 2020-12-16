@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisSystemException;
 
 @Slf4j
-@SuppressWarnings("Java:S107")
+@SuppressWarnings("java:S107")
 public class JobImpl implements Job {
   private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
@@ -43,6 +43,7 @@ public class JobImpl implements Job {
   private final RqueueJob rqueueJob;
   private final Object userMessage;
   public final Duration expiry;
+  private final boolean isPeriodicJob;
 
   public JobImpl(
       RqueueConfig rqueueConfig,
@@ -62,28 +63,25 @@ public class JobImpl implements Job {
     this.rqueueJob =
         new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
     this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
+    this.isPeriodicJob = rqueueMessage.isPeriodicTask();
     if (rqueueConfig.isJobEnabled()) {
-      if (!rqueueMessage.isPeriodicTask()) {
+      if (!isPeriodicJob) {
         rqueueStringDao.appendToListWithListExpiry(
             rqueueConfig.getJobsKey(rqueueMessage.getId()), rqueueJob.getId(), expiry);
         this.save();
-      } else {
-        // TODO
       }
     }
   }
 
   private void save() {
     if (rqueueConfig.isJobEnabled()) {
-      if (!getRqueueMessage().isPeriodicTask()) {
+      if (!isPeriodicJob) {
         try {
           rqueueJob.setUpdatedAt(System.currentTimeMillis());
           rqueueJobDao.save(rqueueJob, expiry);
         } catch (RedisSystemException e) {
           // No op
         }
-      } else {
-        // TODO
       }
     }
   }
@@ -100,6 +98,9 @@ public class JobImpl implements Job {
 
   @Override
   public void checkIn(Object message) {
+    if(isPeriodicJob){
+      throw new UnsupportedOperationException("CheckIn is not supported for periodic job");
+    }
     log.debug("Checkin {} Message: {}", rqueueJob.getId(), message);
     this.rqueueJob.checkIn(message);
     this.save();
