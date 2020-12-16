@@ -30,7 +30,6 @@ import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisSystemException;
 
@@ -43,6 +42,7 @@ public class JobImpl implements Job {
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
   private final Object userMessage;
+  public final Duration expiry;
 
   public JobImpl(
       RqueueConfig rqueueConfig,
@@ -61,20 +61,29 @@ public class JobImpl implements Job {
     this.userMessage = userMessage;
     this.rqueueJob =
         new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
+    this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
     if (rqueueConfig.isJobEnabled()) {
-      rqueueStringDao.appendToList(
-          rqueueConfig.getJobsKey(rqueueMessage.getId()), rqueueJob.getId());
-      this.save();
+      if (!rqueueMessage.isPeriodicTask()) {
+        rqueueStringDao.appendToListWithListExpiry(
+            rqueueConfig.getJobsKey(rqueueMessage.getId()), rqueueJob.getId(), expiry);
+        this.save();
+      } else {
+        // TODO
+      }
     }
   }
 
   private void save() {
-    if (rqueueConfig.isJobEnabled()) {
-      try {
-        rqueueJob.setUpdatedAt(System.currentTimeMillis());
-        rqueueJobDao.save(rqueueJob, Duration.ofMillis(2 * queueDetail.getVisibilityTimeout()));
-      } catch (RedisSystemException e) {
-        // No op
+    if (rqueueConfig.isJobEnabled() ) {
+      if(getRqueueMessage().isPeriodicTask()){
+        try {
+          rqueueJob.setUpdatedAt(System.currentTimeMillis());
+          rqueueJobDao.save(rqueueJob, expiry);
+        } catch (RedisSystemException e) {
+          // No op
+        }
+      }else{
+        //TODO
       }
     }
   }
@@ -141,14 +150,15 @@ public class JobImpl implements Job {
   }
 
   public void updateMessageStatus(MessageStatus messageStatus) {
-    Duration expiry;
+    Duration messageMetaExpiry;
     if (messageStatus.isTerminalState()) {
-      expiry = Duration.ofSeconds(rqueueConfig.getMessageDurabilityInTerminalStateInSecond());
+      messageMetaExpiry =
+          Duration.ofSeconds(rqueueConfig.getMessageDurabilityInTerminalStateInSecond());
     } else {
-      expiry = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
+      messageMetaExpiry = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
     }
     setMessageStatus(messageStatus);
-    this.messageMetadataService.save(rqueueJob.getMessageMetadata(), expiry);
+    this.messageMetadataService.save(rqueueJob.getMessageMetadata(), messageMetaExpiry);
     save();
   }
 

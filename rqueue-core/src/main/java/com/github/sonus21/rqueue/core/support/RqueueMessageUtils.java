@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.core.support;
 
+import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
+
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +32,9 @@ public final class RqueueMessageUtils {
   private RqueueMessageUtils() {}
 
   private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
-  private static final String KEY_SEPARATOR = "::";
 
   public static String getMessageMetaId(String queueName, String messageId) {
-    return META_DATA_KEY_PREFIX + queueName + KEY_SEPARATOR + messageId;
+    return META_DATA_KEY_PREFIX + queueName + REDIS_KEY_SEPARATOR + messageId;
   }
 
   public static Object convertMessageToObject(

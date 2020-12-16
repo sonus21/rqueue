@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
@@ -276,7 +277,7 @@ class RqueueExecutor extends MessageContainerBase {
     // avoid cross slot error by using tagged queue name in the key
     String messageId =
         job.getQueueDetail().getQueueName()
-            + "::"
+            + Constants.REDIS_KEY_SEPARATOR
             + job.getRqueueMessage().getId()
             + "::sch::"
             + newMessage.getProcessAt();

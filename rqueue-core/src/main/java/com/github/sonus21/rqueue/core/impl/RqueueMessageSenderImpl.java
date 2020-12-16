@@ -47,7 +47,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    super(messageTemplate, messageConverter, messageHeaders);
+    super(messageTemplate, messageConverter, messageHeaders, true);
   }
 
   @Override

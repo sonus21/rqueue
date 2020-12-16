@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.utils.RedisUtils;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,6 +43,17 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @Override
   public void appendToList(String listName, String data) {
     redisTemplate.rpush(listName, data);
+  }
+
+  @Override
+  public void appendToListWithListExpiry(String listName, String data, Duration duration) {
+    RedisUtils.executePipeLine(
+        redisTemplate.getRedisTemplate(),
+        (connection, keySerializer, valueSerializer) -> {
+          connection.rPush(
+              listName.getBytes(StandardCharsets.UTF_8), data.getBytes(StandardCharsets.UTF_8));
+          connection.expire(listName.getBytes(StandardCharsets.UTF_8), duration.getSeconds());
+        });
   }
 
   @Override
@@ -75,6 +87,7 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
 
   @Override
   public Object delete(Collection<String> keys) {
+    //potential cross slot error
     return deleteAndSet(keys, null);
   }
 
@@ -84,6 +97,7 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
     return RedisUtils.executePipeLine(
         redisTemplate.getRedisTemplate(),
         ((connection, keySerializer, valueSerializer) -> {
+          //potential cross slot error
           for (String key : keysToBeRemoved) {
             connection.del(key.getBytes());
           }

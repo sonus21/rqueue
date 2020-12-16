@@ -34,6 +34,7 @@ import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -61,6 +62,7 @@ public abstract class SpringTestBase extends TestBase {
   @Autowired protected RqueueEndpointManager rqueueEndpointManager;
   @Autowired protected RqueueMessageManager rqueueMessageManager;
   @Autowired protected RqueueJobDao rqueueJobDao;
+  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   @Value("${email.queue.name}")
   protected String emailQueue;

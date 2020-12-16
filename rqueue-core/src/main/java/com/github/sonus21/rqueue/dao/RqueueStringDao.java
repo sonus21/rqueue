@@ -25,6 +25,8 @@ import org.springframework.data.redis.connection.DataType;
 public interface RqueueStringDao {
   void appendToList(String listName, String data);
 
+  void appendToListWithListExpiry(String listName, String data, Duration duration);
+
   void appendToSet(String setName, String... data);
 
   List<String> readFromSet(String setName);
