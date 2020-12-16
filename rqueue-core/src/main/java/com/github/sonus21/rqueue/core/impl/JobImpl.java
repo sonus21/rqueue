@@ -74,16 +74,16 @@ public class JobImpl implements Job {
   }
 
   private void save() {
-    if (rqueueConfig.isJobEnabled() ) {
-      if(getRqueueMessage().isPeriodicTask()){
+    if (rqueueConfig.isJobEnabled()) {
+      if (!getRqueueMessage().isPeriodicTask()) {
         try {
           rqueueJob.setUpdatedAt(System.currentTimeMillis());
           rqueueJobDao.save(rqueueJob, expiry);
         } catch (RedisSystemException e) {
           // No op
         }
-      }else{
-        //TODO
+      } else {
+        // TODO
       }
     }
   }
