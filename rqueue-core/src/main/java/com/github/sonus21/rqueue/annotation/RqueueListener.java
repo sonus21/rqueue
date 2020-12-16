@@ -58,8 +58,15 @@ public @interface RqueueListener {
    */
   String[] value() default {};
 
+  /**
+   * All queues are considered delayed for fast recovery, it can not be disabled even by setting
+   * this to false.
+   *
+   * @deprecated since 2.0
+   * @return whether it's delayed queue or not.
+   */
   @Deprecated
-  String delayedQueue() default "false";
+  String delayedQueue() default "true";
 
   /**
    * Number of times a message should be retried before it can be discarded or send it to dead
@@ -96,11 +103,12 @@ public @interface RqueueListener {
    * job goes to running state then if it's not executed within N secs then it has to be
    * re-processed, that re-process time can be controller using this.
    *
-   * <p>For example a message was consumer at 10:30AM and message was not consumed for any reason
-   * like executor was shutdown, task took longer time to execute. In such cases consumed message
-   * would become visible to other consumers as soon as this time elapse. By default, message would
-   * become visible to other consumers after 15 minutes. In some cases 15 minutes could be too large
-   * or small, in such cases We can control the visibility timeout using this field.
+   * <p>For example a message was consumed at 10:30AM and message was not consumed for any reason
+   * like executor was shutdown while it's in-process, task took longer time to execute. In such
+   * cases consumed message would become visible to other consumers as soon as this time elapse. By
+   * default, message would become visible to other consumers after 15 minutes. In some cases 15
+   * minutes could be too large or small, in such cases we can control the visibility timeout using
+   * this field.
    *
    * <p>Minimum time is based on the two factors <br>
    * 1. Actual Task execution time <br>

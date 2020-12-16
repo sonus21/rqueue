@@ -62,12 +62,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
   @Override
   public List<Object> getAllMessages(String queueName) {
     List<Object> messages = new ArrayList<>();
-    QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    for (RqueueMessage message :
-        messageTemplate.getAllMessages(
-            queueDetail.getQueueName(),
-            queueDetail.getProcessingQueueName(),
-            queueDetail.getDelayedQueueName())) {
+    for (RqueueMessage message : getAllRqueueMessage(queueName)) {
       messages.add(RqueueMessageUtils.convertMessageToObject(message, messageConverter));
     }
     return messages;
@@ -92,6 +87,15 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
       return null;
     }
     return messageMetadata.getRqueueMessage();
+  }
+
+  @Override
+  public List<RqueueMessage> getAllRqueueMessage(String queueName) {
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
+    return messageTemplate.getAllMessages(
+        queueDetail.getQueueName(),
+        queueDetail.getProcessingQueueName(),
+        queueDetail.getDelayedQueueName());
   }
 
   @Override

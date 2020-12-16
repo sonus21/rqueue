@@ -17,6 +17,9 @@
 package com.github.sonus21.rqueue.utils;
 
 public final class SerializationUtils {
+
+  public static final byte[] EMPTY_ARRAY = new byte[0];
+
   private SerializationUtils() {}
 
   public static boolean isEmpty(byte[] bytes) {

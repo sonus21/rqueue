@@ -93,7 +93,7 @@ public class RqueueJob extends SerializableBase {
 
   public void updateExecutionStatus(ExecutionStatus status, Throwable e) {
     Execution execution = this.executions.get(this.executions.size() - 1);
-    execution.setExecutionStatus(status);
+    execution.setStatus(status);
     execution.setError(e);
     execution.setEndTime(System.currentTimeMillis());
     if (e != null && error == null) {

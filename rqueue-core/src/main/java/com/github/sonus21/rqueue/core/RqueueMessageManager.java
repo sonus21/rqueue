@@ -138,11 +138,50 @@ public interface RqueueMessageManager {
     return getRqueueMessage(PriorityUtils.getQueueNameForPriority(queueName, priority), id);
   }
 
-  boolean deleteMessage(String queueName, String id);
+  /**
+   * Extension to the method {@link #getAllMessages(String)} this returns internal message.
+   *
+   * @param queueName queue name on which message was enqueued
+   * @return the enqueued message
+   */
+  List<RqueueMessage> getAllRqueueMessage(String queueName);
 
-  default boolean deleteMessage(String queueName, String priority, String id) {
-    return deleteMessage(PriorityUtils.getQueueNameForPriority(queueName, priority), id);
+  /**
+   * Extension to the method {@link #getAllRqueueMessage(String)}
+   *
+   * @param queueName queue name on which message was enqueued
+   * @param priority the priority of the queue
+   * @return the enqueued message
+   */
+  default List<RqueueMessage> getAllRqueueMessage(String queueName, String priority) {
+    return getAllRqueueMessage(PriorityUtils.getQueueNameForPriority(queueName, priority));
   }
 
+  /**
+   * Delete a message that's enqueued to the given queue
+   *
+   * @param queueName queue on which message was enqueued
+   * @param messageId message id
+   * @return success/failure
+   */
+  boolean deleteMessage(String queueName, String messageId);
+
+  /**
+   * Delete a message that's enqueued to a queue with some priority
+   *
+   * @param queueName queue on which message was enqueued
+   * @param priority priority of the message like high/low/medium
+   * @param messageId messageId corresponding to this message
+   * @return success/failure
+   */
+  default boolean deleteMessage(String queueName, String priority, String messageId) {
+    return deleteMessage(PriorityUtils.getQueueNameForPriority(queueName, priority), messageId);
+  }
+
+  /**
+   * Get currently used message converter
+   *
+   * @return message converter that's used for message (de)serialization
+   */
   MessageConverter getMessageConverter();
 }

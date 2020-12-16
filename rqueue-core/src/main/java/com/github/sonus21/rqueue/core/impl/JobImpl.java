@@ -30,8 +30,12 @@ import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisSystemException;
 
+@Slf4j
+@SuppressWarnings("Java:S107")
 public class JobImpl implements Job {
   private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
@@ -87,6 +91,7 @@ public class JobImpl implements Job {
 
   @Override
   public void checkIn(Object message) {
+    log.debug("Checkin {} Message: {}", rqueueJob.getId(), message);
     this.rqueueJob.checkIn(message);
     this.save();
   }

@@ -35,5 +35,5 @@ public class Execution extends SerializableBase {
   private long startTime;
   private long endTime;
   private Throwable error;
-  private ExecutionStatus executionStatus;
+  private ExecutionStatus status;
 }

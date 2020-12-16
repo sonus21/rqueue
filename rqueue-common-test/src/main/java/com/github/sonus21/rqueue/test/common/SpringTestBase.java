@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
@@ -59,6 +60,7 @@ public abstract class SpringTestBase extends TestBase {
   @Autowired protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
   @Autowired protected RqueueEndpointManager rqueueEndpointManager;
   @Autowired protected RqueueMessageManager rqueueMessageManager;
+  @Autowired protected RqueueJobDao rqueueJobDao;
 
   @Value("${email.queue.name}")
   protected String emailQueue;
@@ -104,6 +106,9 @@ public abstract class SpringTestBase extends TestBase {
 
   @Value("${periodic.job.queue.name}")
   protected String periodicJobQueue;
+
+  @Value("${long.running.job.queue.name:}")
+  protected String longRunningJobQueue;
 
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage =

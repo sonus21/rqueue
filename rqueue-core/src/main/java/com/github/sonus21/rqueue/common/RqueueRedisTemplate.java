@@ -129,4 +129,21 @@ public class RqueueRedisTemplate<V extends Serializable> {
   public Boolean zadd(String key, V val, long score) {
     return redisTemplate.opsForZSet().add(key, val, score);
   }
+
+  public void rename(String oldKey, String newKey) {
+    rename(Collections.singletonList(oldKey), Collections.singletonList(newKey));
+  }
+
+  public void rename(List<String> oldKeys, List<String> newKeys) {
+    if (oldKeys.size() != newKeys.size()) {
+      throw new IllegalArgumentException("Old key and new key space set is different");
+    }
+    RedisUtils.executePipeLine(
+        redisTemplate,
+        (connection, keySerializer, valueSerializer) -> {
+          for (int i = 0; i < oldKeys.size(); i++) {
+            connection.rename(oldKeys.get(i).getBytes(), newKeys.get(i).getBytes());
+          }
+        });
+  }
 }

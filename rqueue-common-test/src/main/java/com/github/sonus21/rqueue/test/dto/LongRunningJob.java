@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.test.dto;
 
+import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -23,6 +25,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
 public class LongRunningJob extends BaseQueueMessage {
   private long runTime;
+
+  public static LongRunningJob newInstance(long runTime) {
+    LongRunningJob longRunningJob = new LongRunningJob(runTime);
+    longRunningJob.setId(UUID.randomUUID().toString());
+    return longRunningJob;
+  }
 }

@@ -24,12 +24,31 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.messaging.MessageHeaders;
 
+/**
+ * 
+ */
 public final class RqueueMessageHeaders {
+
+  /**
+   * This field is mapped to queue name, in the case of the Priority based queueing destination is
+   * defined as
+   *
+   * <p>&lt;queue_name&gt;_&lt;priority&gt;
+   */
   public static final String DESTINATION = "destination";
+
+  /** Id corresponding to this message */
   public static final String ID = "messageId";
+  /** this field will provide a {@link RqueueMessage} object */
   public static final String MESSAGE = "message";
+
+  /**
+   * A reference to {@link Job} object, that can be used in listener to perform different operation
+   */
   public static final String JOB = "job";
+  /** A reference to {@link Execution} object, that can provide current execution detail */
   public static final String EXECUTION = "execution";
+
   private static final MessageHeaders emptyMessageHeaders =
       new MessageHeaders(Collections.emptyMap());
 

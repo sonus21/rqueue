@@ -33,10 +33,13 @@ import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
 import com.github.sonus21.rqueue.test.service.FailureManager;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -109,6 +112,34 @@ public class MessageListener {
   public void init() {
     if (rqueueConfig.isJobEnabled()) {
       scheduledExecutorService = new ScheduledThreadPoolExecutor(threadCount);
+    }
+  }
+
+  static class CheckinClerk implements Runnable {
+    private final WeakReference<ScheduledExecutorService> serviceWeakReference;
+    private final com.github.sonus21.rqueue.core.Job job;
+    private final long endCheckInTime;
+    private final long checkinInterval;
+    private int checkInId = 1;
+
+    CheckinClerk(
+        ScheduledExecutorService scheduledExecutorService,
+        com.github.sonus21.rqueue.core.Job job,
+        long endCheckInTime,
+        long checkinInterval) {
+      this.endCheckInTime = endCheckInTime;
+      this.job = job;
+      this.checkinInterval = checkinInterval;
+      this.serviceWeakReference = new WeakReference<>(scheduledExecutorService);
+    }
+
+    @Override
+    public void run() {
+      this.job.checkIn("Running ..." + checkInId);
+      checkInId += 1;
+      if (endCheckInTime > System.currentTimeMillis() + this.checkinInterval) {
+        this.serviceWeakReference.get().schedule(this, this.checkinInterval, TimeUnit.MILLISECONDS);
+      }
     }
   }
 
@@ -250,11 +281,22 @@ public class MessageListener {
       deadLetterQueue = "${long.running.job.dead.letter.queue.name:}",
       numRetries = "${long.running.job.queue.retry.count:-1}")
   public void onLongRunningJob(
-      LongRunningJob longRunningJob, @Header(RqueueMessageHeaders.JOB) Job job) throws Exception {
+      LongRunningJob longRunningJob,
+      @Header(RqueueMessageHeaders.MESSAGE) RqueueMessage rqueueMessage,
+      @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job)
+      throws Exception {
     log.info("onLongRunningJob: {}", longRunningJob);
     if (failureManager.shouldFail(longRunningJob.getId())) {
       throw new Exception("Failing LongRunningJob task to be retried" + longRunningJob);
     }
-    consumedMessageService.save(longRunningJob, null, longRunningJobQueue);
+    long endTime = System.currentTimeMillis() + longRunningJob.getRunTime();
+    scheduledExecutorService.schedule(
+        new CheckinClerk(scheduledExecutorService, job, endTime, 500L),
+        10L,
+        TimeUnit.MILLISECONDS);
+    consumedMessageService.save(longRunningJob, rqueueMessage.getId(), longRunningJobQueue);
+    do {
+      TimeoutUtils.sleep(200L);
+    } while (System.currentTimeMillis() < endTime);
   }
 }
