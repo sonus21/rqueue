@@ -99,7 +99,7 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   @Override
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
-    if (event.isStart()) {
+    if (event.isStartup()) {
       monitor();
     }
   }

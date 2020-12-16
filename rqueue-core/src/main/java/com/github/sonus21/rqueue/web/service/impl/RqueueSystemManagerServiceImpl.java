@@ -151,7 +151,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   @Override
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
-    if (event.isStart()) {
+    if (event.isStartup()) {
       List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
       if (queueDetails.isEmpty()) {
         return;

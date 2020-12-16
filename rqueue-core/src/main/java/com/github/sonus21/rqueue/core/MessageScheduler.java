@@ -262,7 +262,7 @@ public abstract class MessageScheduler
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
     doStop();
-    if (event.isStart()) {
+    if (event.isStartup()) {
       if (EndpointRegistry.getActiveQueueCount() == 0) {
         getLogger().warn("No queues are configured");
         return;

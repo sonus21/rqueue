@@ -26,20 +26,24 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * This event is generated once a message is consumed. It's generated in all cases whether execution
+ * was success or fail.
+ */
 @Getter
 public class RqueueExecutionEvent extends ApplicationEvent {
   private static final long serialVersionUID = -7762050873209497221L;
+  /** Task status for this job, it could be null when execution was failed. */
   @Nullable @Deprecated private final TaskStatus status;
+  // Rqueue message that was consumed
   @NotNull @Deprecated private final RqueueMessage rqueueMessage;
+  // MessageMetadata corresponding to this
   @NotNull @Deprecated private final MessageMetadata messageMetadata;
-  @NotNull private final QueueDetail queueDetail;
+  // Queue Detail object
+  @NotNull private final transient QueueDetail queueDetail;
+  // Job corresponding to this execution
   @NotNull private final transient Job job;
 
-  /**
-   * Create a new QueueTaskEvent.
-   *
-   * @param job a job object
-   */
   public RqueueExecutionEvent(Job job) {
     super(job.getQueueDetail());
     this.queueDetail = job.getQueueDetail();
