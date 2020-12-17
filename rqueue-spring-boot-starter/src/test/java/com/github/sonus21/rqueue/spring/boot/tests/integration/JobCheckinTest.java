@@ -80,7 +80,7 @@ import org.springframework.test.context.TestPropertySource;
   }
 
   @Test
-  void testJobExecution() throws TimedOutException {
+  void testJobMultipleExecution() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(2000);
     failureManager.createFailureDetail(longRunningJob.getId(), 3, 3);
     enqueue(longRunningJobQueue, longRunningJob);
