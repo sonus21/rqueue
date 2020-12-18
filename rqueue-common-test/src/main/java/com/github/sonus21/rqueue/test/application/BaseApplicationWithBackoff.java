@@ -20,6 +20,8 @@ import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.utils.backoff.ExponentialTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
@@ -32,6 +34,16 @@ public abstract class BaseApplicationWithBackoff extends ApplicationBasicConfigu
 
   @Value("${exponential.backoff.initial.interval:-1}")
   private int exponentialBackoffInitialInterval;
+
+  @PostConstruct
+  public void postConstruct() {
+    init();
+  }
+
+  @PreDestroy
+  public void preDestroy() {
+    destroy();
+  }
 
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
