@@ -24,9 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.messaging.MessageHeaders;
 
-/**
- * 
- */
+/** */
 public final class RqueueMessageHeaders {
 
   /**
@@ -46,7 +44,10 @@ public final class RqueueMessageHeaders {
    * A reference to {@link Job} object, that can be used in listener to perform different operation
    */
   public static final String JOB = "job";
-  /** A reference to {@link Execution} object, that can provide current execution detail */
+  /**
+   * A reference to {@link Execution} object, that can provide current execution detail A single job
+   * can have more than one executions due to retry
+   */
   public static final String EXECUTION = "execution";
 
   private static final MessageHeaders emptyMessageHeaders =

@@ -112,6 +112,9 @@ public abstract class SpringTestBase extends TestBase {
   @Value("${long.running.job.queue.name:}")
   protected String longRunningJobQueue;
 
+  @Value("${rqueue.retry.per.poll:-1}")
+  protected int retryPerPoll;
+
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage =
         RqueueMessageUtils.buildMessage(

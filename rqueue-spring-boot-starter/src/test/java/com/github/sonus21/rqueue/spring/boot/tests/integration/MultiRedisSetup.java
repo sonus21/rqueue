@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.MultiRedisSetupApplication;
-import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
+import com.github.sonus21.rqueue.test.tests.RetryTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ import org.springframework.test.context.TestPropertySource;
       "spring.redis2.host=localhost",
       "monitor.thread.count=1",
     })
-public class MultiRedisSetup extends BasicListenerTest {
+public class MultiRedisSetup extends RetryTests {
 
   @Test
   public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {

@@ -229,7 +229,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       if (mappingInformation.isValid()) {
         return mappingInformation;
       }
-      logger.warn("Queue '" + mappingInformation + "' not configured");
+      logger.warn("Invalid Queue '" + mappingInformation + "' configuration");
     }
     return null;
   }

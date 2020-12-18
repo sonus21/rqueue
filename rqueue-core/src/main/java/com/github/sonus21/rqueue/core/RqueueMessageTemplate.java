@@ -21,6 +21,12 @@ import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
+/**
+ * Rqueue message template is used to send messages
+ *
+ * <p>Methods from this class should not be used in the application code, these methods are bound to
+ * change as new and new features are added to Rqueue.
+ */
 public interface RqueueMessageTemplate {
   RqueueMessage pop(
       String queueName,

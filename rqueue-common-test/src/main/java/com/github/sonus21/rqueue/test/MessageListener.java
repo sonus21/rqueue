@@ -166,13 +166,16 @@ public class MessageListener {
       numRetries = "${email.queue.retry.count}",
       visibilityTimeout = "${email.execution.time}",
       active = "${email.queue.active}")
-  public void onMessage(Email email, @Header(RqueueMessageHeaders.MESSAGE) RqueueMessage message)
+  public void onMessage(
+      Email email,
+      @Header(RqueueMessageHeaders.MESSAGE) RqueueMessage message,
+      @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job)
       throws Exception {
     log.info("Email: {} Message: {}", email, message);
+    consumedMessageService.save(email, job.getId(), emailQueue);
     if (failureManager.shouldFail(email.getId())) {
       throw new Exception("Failing email task to be retried" + email);
     }
-    consumedMessageService.save(email, null, emailQueue);
   }
 
   @RqueueListener(
@@ -279,10 +282,12 @@ public class MessageListener {
       throw new Exception("Failing PeriodicJob task to be retried" + periodicJob);
     }
     consumedMessageService.save(periodicJob, UUID.randomUUID().toString(), periodicJobQueue);
-    if(checkinEnabled){
-      long endTime = System.currentTimeMillis() + 1000L *periodicJob.getExecutionTime();
+    if (checkinEnabled) {
+      long endTime = System.currentTimeMillis() + 1000L * periodicJob.getExecutionTime();
       scheduledExecutorService.schedule(
-          new CheckinClerk(scheduledExecutorService, job, endTime, 500L), 10L, TimeUnit.MILLISECONDS);
+          new CheckinClerk(scheduledExecutorService, job, endTime, 500L),
+          10L,
+          TimeUnit.MILLISECONDS);
       do {
         TimeoutUtils.sleep(200L);
       } while (System.currentTimeMillis() < endTime);

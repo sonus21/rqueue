@@ -26,6 +26,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/** Internal message for Rqueue */
 @Getter
 @Setter
 @ToString
@@ -55,7 +56,6 @@ public class RqueueMessage extends SerializableBase {
   private int failureCount;
   // period of this task, if this is a periodic task.
   private long period;
-
 
   public void updateReEnqueuedAt() {
     reEnqueuedAt = System.currentTimeMillis();

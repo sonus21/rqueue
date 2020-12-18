@@ -24,6 +24,7 @@ import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 
+/** Default Message Converter for Rqueue messages. */
 @EqualsAndHashCode(callSuper = true)
 public final class DefaultRqueueMessageConverter extends CompositeMessageConverter {
 

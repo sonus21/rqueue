@@ -44,39 +44,15 @@ import org.springframework.test.context.TestPropertySource;
 public class ApplicationTest extends BasicListenerTest {
 
   @Test
-  public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
-    verifyAfterNRetryTaskIsDeletedFromProcessingQueue();
-  }
-
-  @Test
-  public void messageMovedToDeadLetterQueue() throws TimedOutException {
-    verifyMessageMovedToDeadLetterQueue();
-  }
-
-  @Test
-  public void messageIsDiscardedAfterRetries() throws TimedOutException {
-    verifyMessageIsDiscardedAfterRetries();
-  }
-
-  @Test
-  public void notificationOnMessageIsTriggered() throws TimedOutException {
+  public void onMessageNotification() throws TimedOutException {
     verifySimpleTaskExecution();
   }
 
   @Test
-  public void emailIsRetried() throws TimedOutException {
-    verifyRetry();
+  public void testDelayedEnqueu() throws TimedOutException {
+    verifyDelayedTaskExecution();
   }
 
-  @Test
-  public void jobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
-    verifyMessageIsInProcessingQueue();
-  }
-
-  @Test
-  public void messageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
-    verifyMessageIsConsumedByDeadLetterQueueListener();
-  }
 
   @Test
   public void testListMessageListener() throws TimedOutException {

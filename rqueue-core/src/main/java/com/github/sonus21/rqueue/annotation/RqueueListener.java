@@ -32,9 +32,9 @@ import java.lang.annotation.Target;
  * <p>All fields support SpEL(Spring Expression Language) as well property placeholder.
  *
  * <pre>
- * &amp;Component
+ * &#64;Component
  * public class MessageListener {
- * &amp;RqueueListener(
+ * &#64;RqueueListener(
  *       value="${job.queue}",
  *      delayedQueue="true",
  *      numRetries="3",
@@ -99,14 +99,15 @@ public @interface RqueueListener {
 
   /**
    * Control visibility timeout for this/these queue(s). When a message is consumed from a queue
-   * then it's hidden for other consumers for this period. This can be used to fast-recovery when a
-   * job goes to running state then if it's not executed within N secs then it has to be
+   * then it's hidden for other consumer(s) for this period. This can be used for fast-recovery when
+   * a job goes to running state then if it's not executed within N secs then it will be
    * re-processed, that re-process time can be controller using this.
    *
-   * <p>For example a message was consumed at 10:30AM and message was not consumed for any reason
-   * like executor was shutdown while it's in-process, task took longer time to execute. In such
-   * cases consumed message would become visible to other consumers as soon as this time elapse. By
-   * default, message would become visible to other consumers after 15 minutes. In some cases 15
+   * <p>For example a message was consumed at 10:30AM and message was not processed successfully for
+   * any reason like executor was shutdown while it's processing, task took longer time to execute
+   * or application was shutdown. In such cases consumed message would become visible to other
+   * consumers as soon as this time elapse. By default, message would become visible to other
+   * consumers after 15 minutes, in this case it would be visible post 10:45AM. In some cases 15
    * minutes could be too large or small, in such cases we can control the visibility timeout using
    * this field.
    *
@@ -115,8 +116,8 @@ public @interface RqueueListener {
    * 2. Redis call time and thread busyness.
    *
    * <p><b>NOTE:</b>If provided time is too small then same messages would be consumed by multiple
-   * listeners, that can cause problem in the application. On the other-side if provided time is too
-   * high then the message would be hidden from other consumers for a long time.
+   * listeners, that will violate exactly once processing. On the other hand if provided time is too
+   * high then the message would be hidden from other consumers for a longer period.
    *
    * <p><b>NOTE:</b> This time is in milli seconds
    *
@@ -139,9 +140,9 @@ public @interface RqueueListener {
    * Specify concurrency limits via a "lower-upper" String, e.g. "5-10", or a simple upper limit
    * String, e.g. "10" (the lower limit will be 1 in this case).
    *
-   * <p>Concurrency of this consumer, number of workers used to process the message from each queue
-   * If more than one queue are provided using {@link #value()} then each queue will have this
-   * concurrency.
+   * <p>Concurrency of this consumer, number of workers/threads used to process the message from
+   * each queue. If more than one queue are provided using {@link #value()} then each queue will
+   * have the same concurrency.
    *
    * @return concurrency for this worker.
    */
@@ -150,13 +151,13 @@ public @interface RqueueListener {
   /**
    * Use this to set priority of this listener. A listener can have two types of priorities.
    *
-   * <p>1. Group level priority, for group level priority specify group name, if no group is
-   * provided then a default group is used.
+   * <p>1. Group level priority, for group level priority specify group name using {@link
+   * #priorityGroup()}, if no group is provided then a default group is used.
    *
    * <p>2. Queue level priority. In the case of queue level priority, values should be provided as
    * "critical:10,high:5,medium:3,low:1", these same name must be used to enqueue message.
    *
-   * <p>Priorities can be any number. There're two priority control modes. 1. Strict 2. Weighted, in
+   * <p>Priority can be any number. There are two priority control modes. 1. Strict 2. Weighted, in
    * strict priority mode queue with higher priority is preferred over other queues. In case of
    * weighted a round robin approach is used, and weight is followed.
    *
@@ -165,9 +166,9 @@ public @interface RqueueListener {
   String priority() default "";
 
   /**
-   * Priority group for this listener. You can configure more than one priority group. Priority
-   * groups are useful when inside a group some queue has to have higher priority then another
-   * queue.
+   * Priority group for this listener. More than one priority group can be configured in an
+   * application. Priority groups are useful when inside a group some queue(s) have higher priority
+   * then the queue(s).
    *
    * @return priority group name.
    */

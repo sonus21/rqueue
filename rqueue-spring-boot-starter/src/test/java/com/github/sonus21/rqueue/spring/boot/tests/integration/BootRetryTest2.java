@@ -16,10 +16,9 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.RedisAvailable;
 import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication;
+import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithTaskExecutionBackoff;
 import com.github.sonus21.rqueue.test.tests.RetryTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -28,26 +27,24 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith({SpringTestTracerExtension.class})
-@ContextConfiguration(classes = RedisClusterApplication.class)
+@ExtendWith(SpringTestTracerExtension.class)
+@ContextConfiguration(classes = ApplicationWithTaskExecutionBackoff.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8007"})
-@RedisAvailable(nodes = {":9000", ":9001", ":9002", ":9003", ":9004", ":9005"})
-public class RedisClusterTest extends RetryTests {
-
+@TestPropertySource(
+    properties = {
+      "rqueue.retry.per.poll=1",
+      "email.queue.retry.count=3",
+      "spring.redis.port=8017",
+      "mysql.db.name=BootRetryTest2",
+      // 1500 ms
+      "email.execution.time=1500",
+      "use.system.redis=false",
+      "fixed.backoff.interval=100",
+    })
+public class BootRetryTest2 extends RetryTests {
   @Test
-  public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
-    verifyAfterNRetryTaskIsDeletedFromProcessingQueue();
-  }
-
-  @Test
-  public void messageMovedToDeadLetterQueue() throws TimedOutException {
-    verifyMessageMovedToDeadLetterQueue();
-  }
-
-  @Test
-  public void messageIsDiscardedAfterRetries() throws TimedOutException {
-    verifyMessageIsDiscardedAfterRetries();
+  public void verifyMessageIsConsumedOnNextPoll() throws TimedOutException {
+    verifyMultipleJobExecution();
   }
 }

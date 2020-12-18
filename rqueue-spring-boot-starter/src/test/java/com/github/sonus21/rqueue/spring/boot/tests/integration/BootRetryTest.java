@@ -16,10 +16,9 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.RedisAvailable;
 import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication;
+import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.test.tests.RetryTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -28,13 +27,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith({SpringTestTracerExtension.class})
-@ContextConfiguration(classes = RedisClusterApplication.class)
+@ExtendWith(SpringTestTracerExtension.class)
+@ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"rqueue.retry.per.poll=1000", "spring.redis.port=8007"})
-@RedisAvailable(nodes = {":9000", ":9001", ":9002", ":9003", ":9004", ":9005"})
-public class RedisClusterTest extends RetryTests {
+@TestPropertySource(
+    properties = {
+      "rqueue.retry.per.poll=1000",
+      "spring.redis.port=8016",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=BootRetryTest",
+      "use.system.redis=false",
+    })
+public class BootRetryTest extends RetryTests {
 
   @Test
   public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
@@ -49,5 +56,20 @@ public class RedisClusterTest extends RetryTests {
   @Test
   public void messageIsDiscardedAfterRetries() throws TimedOutException {
     verifyMessageIsDiscardedAfterRetries();
+  }
+
+  @Test
+  public void emailIsRetried() throws TimedOutException {
+    verifyRetry();
+  }
+
+  @Test
+  public void jobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
+    verifyMessageIsInProcessingQueue();
+  }
+
+  @Test
+  public void messageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
+    verifyMessageIsConsumedByDeadLetterQueueListener();
   }
 }
