@@ -127,7 +127,7 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
         html.enabled = System.getenv("CIRCLECI") != "true"
         xml.enabled true
         if (System.getenv("CIRCLECI") == "true") {
-            xml.destination file("${buildDir}/reports/jacoco/test/${System.env.CIRCLE_WORKFLOW_JOB_ID}/jacocoTestReport.xml")
+            xml.destination file("${buildDir}/reports/jacoco/test/${System.env.CIRCLE_WORKFLOW_JOB_ID}_jacocoTestReport.xml")
         } else {
             xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
         }
