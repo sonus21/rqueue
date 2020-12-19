@@ -109,14 +109,8 @@ def publishedProjects = subprojects.findAll({ subproject ->
     subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example") && !subproject.name.contains("test")
 })
 
-task jacocoMerge(type: JacocoMerge) {
-    destinationFile file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-    executionData fileTree("${buildDir}/reports/jacoco/test").include("**/build/reports/jacoco/test/*.xml")
-}
-
-
 task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
-    executionData.setFrom fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
     publishedProjects.each {
         sourceSets it.sourceSets.main

@@ -168,7 +168,7 @@ jobs:
       - run: ./gradlew coveralls
 
 workflows:
-  main:
+  build-n-test:
     jobs:
       - build
       - unit_test:
