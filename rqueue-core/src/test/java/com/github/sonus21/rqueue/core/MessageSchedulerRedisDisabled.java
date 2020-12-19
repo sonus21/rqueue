@@ -56,7 +56,7 @@ class MessageSchedulerRedisDisabled extends TestBase {
   }
 
   @Test
-   void startShouldSubmitsTaskWhenRedisIsDisabled() throws Exception {
+  void startShouldSubmitsTaskWhenRedisIsDisabled() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {

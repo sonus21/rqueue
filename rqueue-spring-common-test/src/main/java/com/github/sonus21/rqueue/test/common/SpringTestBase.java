@@ -349,8 +349,9 @@ public abstract class SpringTestBase extends TestBase {
     return rqueueMessageEnqueuer.enqueueWithRetry(queueName, message, retry) != null;
   }
 
-  protected List<RqueueMessage> getProcessingMessages(String queueName){
-    return rqueueMessageTemplate.readFromZset(EndpointRegistry.get(queueName).getProcessingQueueName(),0,-1);
+  protected List<RqueueMessage> getProcessingMessages(String queueName) {
+    return rqueueMessageTemplate.readFromZset(
+        EndpointRegistry.get(queueName).getProcessingQueueName(), 0, -1);
   }
 
   protected List<Object> getAllMessages(String queueName) {

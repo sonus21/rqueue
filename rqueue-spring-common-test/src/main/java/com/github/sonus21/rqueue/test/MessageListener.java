@@ -118,34 +118,6 @@ public class MessageListener {
     }
   }
 
-  static class CheckinClerk implements Runnable {
-    private final WeakReference<ScheduledExecutorService> serviceWeakReference;
-    private final com.github.sonus21.rqueue.core.Job job;
-    private final long endCheckInTime;
-    private final long checkinInterval;
-    private int checkInId = 1;
-
-    CheckinClerk(
-        ScheduledExecutorService scheduledExecutorService,
-        com.github.sonus21.rqueue.core.Job job,
-        long endCheckInTime,
-        long checkinInterval) {
-      this.endCheckInTime = endCheckInTime;
-      this.job = job;
-      this.checkinInterval = checkinInterval;
-      this.serviceWeakReference = new WeakReference<>(scheduledExecutorService);
-    }
-
-    @Override
-    public void run() {
-      this.job.checkIn("Running ..." + checkInId);
-      checkInId += 1;
-      if (endCheckInTime > System.currentTimeMillis() + this.checkinInterval) {
-        this.serviceWeakReference.get().schedule(this, this.checkinInterval, TimeUnit.MILLISECONDS);
-      }
-    }
-  }
-
   @RqueueListener(
       value = "${notification.queue.name}",
       numRetries = "${notification.queue.retry.count}",
@@ -316,5 +288,33 @@ public class MessageListener {
     do {
       TimeoutUtils.sleep(200L);
     } while (System.currentTimeMillis() < endTime);
+  }
+
+  static class CheckinClerk implements Runnable {
+    private final WeakReference<ScheduledExecutorService> serviceWeakReference;
+    private final com.github.sonus21.rqueue.core.Job job;
+    private final long endCheckInTime;
+    private final long checkinInterval;
+    private int checkInId = 1;
+
+    CheckinClerk(
+        ScheduledExecutorService scheduledExecutorService,
+        com.github.sonus21.rqueue.core.Job job,
+        long endCheckInTime,
+        long checkinInterval) {
+      this.endCheckInTime = endCheckInTime;
+      this.job = job;
+      this.checkinInterval = checkinInterval;
+      this.serviceWeakReference = new WeakReference<>(scheduledExecutorService);
+    }
+
+    @Override
+    public void run() {
+      this.job.checkIn("Running ..." + checkInId);
+      checkInId += 1;
+      if (endCheckInTime > System.currentTimeMillis() + this.checkinInterval) {
+        this.serviceWeakReference.get().schedule(this, this.checkinInterval, TimeUnit.MILLISECONDS);
+      }
+    }
   }
 }

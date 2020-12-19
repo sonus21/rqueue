@@ -122,7 +122,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   @Test
-   void callDiscardProcessor() {
+  void callDiscardProcessor() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     doReturn(defaultMessageMetadata)
@@ -141,7 +141,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   @Test
-   void callDeadLetterProcessor() {
+  void callDeadLetterProcessor() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName, "test-dlq");
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
@@ -160,7 +160,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   @Test
-   void messageIsParkedForRetry() {
+  void messageIsParkedForRetry() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
@@ -185,7 +185,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   @Test
-   void messageIsNotExecutedWhenDeletedManually() {
+  void messageIsNotExecutedWhenDeletedManually() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     messageMetadata.setDeleted(true);
@@ -204,7 +204,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   @Test
-   void messageIsDeletedWhileExecuting() {
+  void messageIsDeletedWhileExecuting() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     AtomicInteger atomicInteger = new AtomicInteger(0);
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
@@ -235,7 +235,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   @Test
-   void handleIgnoredMessage() {
+  void handleIgnoredMessage() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     MessageProcessor messageProcessor =
         new MessageProcessor() {

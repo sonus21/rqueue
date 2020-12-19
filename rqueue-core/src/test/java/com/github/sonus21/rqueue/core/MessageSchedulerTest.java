@@ -60,7 +60,7 @@ class MessageSchedulerTest extends TestBase {
   }
 
   @Test
-   void afterPropertiesSetWithEmptyQueSet() throws Exception {
+  void afterPropertiesSetWithEmptyQueSet() throws Exception {
     EndpointRegistry.delete();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertEquals(0, messageScheduler.scheduleList.size());
@@ -68,7 +68,7 @@ class MessageSchedulerTest extends TestBase {
   }
 
   @Test
-   void startShouldNotSubmitsTask() throws Exception {
+  void startShouldNotSubmitsTask() throws Exception {
     EndpointRegistry.delete();
     EndpointRegistry.register(slowQueueDetail);
     EndpointRegistry.register(fastQueueDetail);

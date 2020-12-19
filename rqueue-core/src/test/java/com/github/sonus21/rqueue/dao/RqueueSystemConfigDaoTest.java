@@ -39,7 +39,8 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class RqueueSystemConfigDaoTest extends TestBase {
-  private final RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private final RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate =
+      mock(RqueueRedisTemplate.class);
   private final RqueueSystemConfigDao rqueueSystemConfigDao =
       new RqueueSystemConfigDaoImpl(rqueueRedisTemplate);
 

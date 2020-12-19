@@ -80,12 +80,12 @@ class QueueCounterTest extends TestBase {
   }
 
   @Test
-   void updateFailureCount() {
+  void updateFailureCount() {
     validateCountStatistics(TestUtils.createQueueDetail("simple-queue", 10000L), "failure");
   }
 
   @Test
-   void updateExecutionCount() {
+  void updateExecutionCount() {
     validateCountStatistics(TestUtils.createQueueDetail("delayed-queue", 900000L), "success");
   }
 }

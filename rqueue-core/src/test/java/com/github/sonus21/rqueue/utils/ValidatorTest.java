@@ -26,32 +26,32 @@ import org.junit.jupiter.api.Test;
 class ValidatorTest extends TestBase {
 
   @Test
-   void validateMessage() {
+  void validateMessage() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateMessage(null));
   }
 
   @Test
-   void validateMessageId() {
+  void validateMessageId() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateMessageId(null));
   }
 
   @Test
-   void validateRetryCount() {
+  void validateRetryCount() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateRetryCount(-1));
   }
 
   @Test
-   void validateDelay() {
+  void validateDelay() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateDelay(-100L));
   }
 
   @Test
-   void validateQueue() {
+  void validateQueue() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateQueue(null));
   }
 
   @Test
-   void validatePriority() {
+  void validatePriority() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validatePriority(null));
   }
 }

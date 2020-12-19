@@ -102,7 +102,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
   }
 
   @Test
-   void latencyChartHeaders() {
+  void latencyChartHeaders() {
     doReturn(queues).when(rqueueSystemManagerService).getQueues();
     ChartDataRequest chartDataRequest = new ChartDataRequest();
     chartDataRequest.setType(ChartType.LATENCY);
@@ -174,7 +174,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
   }
 
   @Test
-   void statsChartHeaders() {
+  void statsChartHeaders() {
     doReturn(queues).when(rqueueSystemManagerService).getQueues();
     ChartDataRequest chartDataRequest = new ChartDataRequest();
     chartDataRequest.setType(ChartType.STATS);
@@ -204,7 +204,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
   }
 
   @Test
-   void getDashboardChartDataLatencyDaily() {
+  void getDashboardChartDataLatencyDaily() {
     LocalDateTime localDateTime = LocalDateTime.now();
     if (localDateTime.getHour() > 22) {
       log.info("test cannot be run at this time");
@@ -242,7 +242,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
   }
 
   @Test
-   void getDashboardChartDataStatsDaily() {
+  void getDashboardChartDataStatsDaily() {
     LocalDateTime localDateTime = LocalDateTime.now();
     if (localDateTime.getHour() > 22) {
       log.info("test cannot be run at this time");
@@ -280,7 +280,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
   }
 
   @Test
-   void getDashboardChartDataStatsDailyMissingDays() {
+  void getDashboardChartDataStatsDailyMissingDays() {
     LocalDateTime localDateTime = LocalDateTime.now();
     if (localDateTime.getHour() > 22) {
       log.info("test cannot be run at this time");

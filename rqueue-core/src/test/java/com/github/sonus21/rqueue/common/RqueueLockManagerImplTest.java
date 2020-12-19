@@ -36,7 +36,7 @@ class RqueueLockManagerImplTest extends TestBase {
   private final String lockValue = "test-value";
 
   @Test
-   void acquireLock() {
+  void acquireLock() {
     assertFalse(rqueueLockManager.acquireLock(lockKey, lockValue, Duration.ofSeconds(5)));
     doReturn(Boolean.FALSE)
         .when(rqueueStringDao)
@@ -49,7 +49,7 @@ class RqueueLockManagerImplTest extends TestBase {
   }
 
   @Test
-   void releaseLock() {
+  void releaseLock() {
     assertFalse(rqueueLockManager.releaseLock(lockKey, lockValue));
     doReturn(Boolean.FALSE).when(rqueueStringDao).deleteIfSame(lockKey, lockValue);
     assertFalse(rqueueLockManager.releaseLock(lockKey, lockValue));

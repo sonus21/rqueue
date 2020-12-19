@@ -23,7 +23,6 @@ import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -42,7 +41,6 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @Slf4j
 @Tag("redisCluster")
-//@DisabledIfEnvironmentVariable(named = "CI", matches = "true")
 @SpringBootIntegrationTest
 class BootProcessingChannelTest extends MessageChannelTests {
   @Test

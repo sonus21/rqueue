@@ -31,13 +31,6 @@ import org.junit.jupiter.api.extension.TestWatcher;
 public class TestStatLoggerExtension implements TestWatcher, AfterAllCallback {
   private List<TestResultStatus> testResultsStatus = new ArrayList<>();
 
-  private enum TestResultStatus {
-    SUCCESSFUL,
-    ABORTED,
-    FAILED,
-    DISABLED;
-  }
-
   @Override
   public void testDisabled(ExtensionContext context, Optional<String> reason) {
     log.info(
@@ -73,5 +66,12 @@ public class TestStatLoggerExtension implements TestWatcher, AfterAllCallback {
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
     log.info("Test result summary for {} {}", context.getDisplayName(), summary.toString());
+  }
+
+  private enum TestResultStatus {
+    SUCCESSFUL,
+    ABORTED,
+    FAILED,
+    DISABLED;
   }
 }

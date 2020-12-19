@@ -64,7 +64,8 @@ import org.springframework.messaging.converter.MessageConverter;
 @CoreUnitTest
 class RqueueQDetailServiceTest extends TestBase {
   private final RedisTemplate<?, ?> redisTemplate = mock(RedisTemplate.class);
-  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate =
+      mock(RqueueRedisTemplate.class);
   private final RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private final RqueueSystemManagerService rqueueSystemManagerService =
       mock(RqueueSystemManagerService.class);

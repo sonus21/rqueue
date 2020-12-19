@@ -30,23 +30,19 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @CoreUnitTest
 class QueueConfigTest extends TestBase {
 
   @Test
-   void testBuilderToString() {
+  void testBuilderToString() {
     QueueConfig.QueueConfigBuilder builder = QueueConfig.builder().concurrency(new MinMax<>(1, 5));
     System.out.println(builder.toString());
   }
 
   @Test
-   void addDeadLetterQueue() {
+  void addDeadLetterQueue() {
     QueueConfig queueConfig = new QueueConfig();
     List<DeadLetterQueue> queues = new LinkedList<>();
     queues.add(new DeadLetterQueue("test-dlq", false));
@@ -60,7 +56,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void testVisibilityTimeout() {
+  void testVisibilityTimeout() {
     QueueConfig queueConfig = new QueueConfig();
     assertTrue(queueConfig.updateVisibilityTimeout(100L));
     assertEquals(100L, queueConfig.getVisibilityTimeout());
@@ -69,7 +65,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void testBuilder() {
+  void testBuilder() {
     QueueConfig queueConfig =
         QueueConfig.builder().id("__rq::q").name("q").visibilityTimeout(100L).numRetry(100).build();
     assertEquals("__rq::q", queueConfig.getId());
@@ -82,12 +78,12 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void updateTime() {
+  void updateTime() {
     TestUtils.createQueueConfig("test");
   }
 
   @Test
-   void updateRetryCount() {
+  void updateRetryCount() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test");
     assertTrue(queueConfig.updateRetryCount(100));
     assertEquals(100, queueConfig.getNumRetry());
@@ -95,7 +91,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void updateVisibilityTimeout() {
+  void updateVisibilityTimeout() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test");
     assertTrue(queueConfig.updateVisibilityTimeout(1000L));
     assertEquals(1000L, queueConfig.getVisibilityTimeout());
@@ -103,7 +99,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void updateConcurrency() {
+  void updateConcurrency() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test");
     MinMax<Integer> concurrency = new MinMax<>(1, 10);
     assertTrue(queueConfig.updateConcurrency(concurrency));
@@ -112,7 +108,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void updatePriority() {
+  void updatePriority() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test");
     Map<String, Integer> priorityMap = new HashMap<>();
     priorityMap.put(Constants.DEFAULT_PRIORITY_KEY, 100);
@@ -134,14 +130,14 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void isDeadLetterQueue() {
+  void isDeadLetterQueue() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test", "test-dlq");
     assertTrue(queueConfig.isDeadLetterQueue("test-dlq"));
     assertFalse(queueConfig.isDeadLetterQueue("test"));
   }
 
   @Test
-   void hasDeadLetterQueue() {
+  void hasDeadLetterQueue() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test");
     assertFalse(queueConfig.hasDeadLetterQueue());
     queueConfig = TestUtils.createQueueConfig("test", "test-dlq");
@@ -149,7 +145,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void updatePriorityGroup() {
+  void updatePriorityGroup() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test");
     assertTrue(queueConfig.updatePriorityGroup("new-group"));
     assertEquals("new-group", queueConfig.getPriorityGroup());
@@ -157,7 +153,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-   void equals() {
+  void equals() {
     QueueConfig queueConfig = TestUtils.createQueueConfig("test");
     QueueConfig queueConfig2 = TestUtils.createQueueConfig("test");
     assertEquals(queueConfig, queueConfig2);

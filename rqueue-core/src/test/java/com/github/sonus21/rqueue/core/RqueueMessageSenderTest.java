@@ -38,13 +38,10 @@ import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@CoreUnitTest class RqueueMessageSenderTest extends TestBase {
+@CoreUnitTest
+class RqueueMessageSenderTest extends TestBase {
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageSender rqueueMessageSender =
       new RqueueMessageSenderImpl(rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
@@ -67,18 +64,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void putWithNullQueueName() {
+  void putWithNullQueueName() {
     assertThrows(IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(null, null));
   }
 
   @Test
-   void putWithNullMessage() {
+  void putWithNullMessage() {
     assertThrows(
         IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(queueName, null));
   }
 
   @Test
-   void put() {
+  void put() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class));
@@ -86,7 +83,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void putWithRetry() {
+  void putWithRetry() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class));
@@ -94,7 +91,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void putWithDelay() {
+  void putWithDelay() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
@@ -105,7 +102,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void putWithDelayAndRetry() {
+  void putWithDelayAndRetry() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
@@ -116,7 +113,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void moveMessageFromQueueExceptions() {
+  void moveMessageFromQueueExceptions() {
     // source is not provided
     try {
       rqueueMessageSender.moveMessageFromDeadLetterToQueue(null, queueName, null);
@@ -137,7 +134,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void moveMessageFromDeadLetterToQueueDefaultSize() {
+  void moveMessageFromDeadLetterToQueueDefaultSize() {
     doReturn(new MessageMoveResult(100, true))
         .when(rqueueMessageTemplate)
         .moveMessageListToList(anyString(), anyString(), anyInt());
@@ -149,7 +146,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void moveMessageFromDeadLetterToQueueFixedSize() {
+  void moveMessageFromDeadLetterToQueueFixedSize() {
     doReturn(new MessageMoveResult(10, true))
         .when(rqueueMessageTemplate)
         .moveMessageListToList(anyString(), anyString(), anyInt());

@@ -31,13 +31,13 @@ class RqueueCounterTest extends TestBase {
   private String queueName = "test";
 
   @Test
-   void updateFailureCount() {
+  void updateFailureCount() {
     rqueueCounter.updateFailureCount(queueName);
     verify(queueCounter, times(1)).updateFailureCount(queueName);
   }
 
   @Test
-   void updateExecutionCount() {
+  void updateExecutionCount() {
     rqueueCounter.updateExecutionCount(queueName);
     verify(queueCounter, times(1)).updateExecutionCount(queueName);
   }

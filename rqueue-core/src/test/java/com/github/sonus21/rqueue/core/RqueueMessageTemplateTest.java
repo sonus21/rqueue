@@ -32,11 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -68,27 +64,27 @@ class RqueueMessageTemplateTest extends TestBase {
   }
 
   @Test
-   void add() {
+  void add() {
     doReturn(listOperations).when(redisTemplate).opsForList();
     doReturn(1L).when(listOperations).rightPush(queueName, message);
     rqueueMessageTemplate.addMessage(queueName, message);
   }
 
   @Test
-   void pop() {
+  void pop() {
     rqueueMessageTemplate.pop(
         queueName, queueName + "rq", queueName + "dq", Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 
   @Test
-   void addWithDelay() {
+  void addWithDelay() {
     rqueueMessageTemplate.addMessageWithDelay(queueName, queueName + "rq", message);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 
   @Test
-   void moveMessage() {
+  void moveMessage() {
     List<String> args = new ArrayList<>();
     args.add("dlq" + queueName);
     args.add(queueName);
@@ -100,7 +96,7 @@ class RqueueMessageTemplateTest extends TestBase {
   }
 
   @Test
-   void moveMessage2() {
+  void moveMessage2() {
     List<String> args = new ArrayList<>();
     args.add("dlq" + queueName);
     args.add(queueName);
@@ -110,7 +106,7 @@ class RqueueMessageTemplateTest extends TestBase {
   }
 
   @Test
-   void moveMessageAcrossZset() {
+  void moveMessageAcrossZset() {
     List<String> args = new ArrayList<>();
     args.add("zset1-" + queueName);
     args.add("zset2-" + queueName);
@@ -119,7 +115,7 @@ class RqueueMessageTemplateTest extends TestBase {
   }
 
   @Test
-   void moveMessageAcrossZset2() {
+  void moveMessageAcrossZset2() {
     List<String> args = new ArrayList<>();
     args.add("zset1-" + queueName);
     args.add("zset2-" + queueName);

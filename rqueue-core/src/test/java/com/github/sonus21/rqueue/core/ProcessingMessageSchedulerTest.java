@@ -57,19 +57,19 @@ class ProcessingMessageSchedulerTest extends TestBase {
   }
 
   @Test
-   void getChannelName() {
+  void getChannelName() {
     assertEquals(
         slowQueueDetail.getProcessingQueueChannelName(),
         messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
-   void getZsetName() {
+  void getZsetName() {
     assertEquals(slowQueueDetail.getProcessingQueueName(), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
-   void getNextScheduleTimeSlowQueue() {
+  void getNextScheduleTimeSlowQueue() {
     long currentTime = System.currentTimeMillis();
     assertThat(
         messageScheduler.getNextScheduleTime(slowQueue, null),
@@ -79,7 +79,7 @@ class ProcessingMessageSchedulerTest extends TestBase {
   }
 
   @Test
-   void getNextScheduleTimeFastQueue() {
+  void getNextScheduleTimeFastQueue() {
     long currentTime = System.currentTimeMillis();
     assertThat(
         messageScheduler.getNextScheduleTime(fastQueue, null),

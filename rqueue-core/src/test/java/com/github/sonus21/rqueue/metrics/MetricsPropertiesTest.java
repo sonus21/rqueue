@@ -34,18 +34,18 @@ class MetricsPropertiesTest extends TestBase {
   private MetricProperties metricProperties = new MetricProperties();
 
   @Test
-   void getTags() {
+  void getTags() {
     assertEquals(0, metricProperties.getTags().size());
   }
 
   @Test
-   void setMetricTags() {
+  void setMetricTags() {
     metricProperties.setMetricTags(Tags.of("test", "test"));
     assertEquals(Tags.of("test", "test"), metricProperties.getMetricTags());
   }
 
   @Test
-   void getMetricTags() throws IllegalAccessException {
+  void getMetricTags() throws IllegalAccessException {
     MetricProperties metricProperties = new MetricProperties();
     Map<String, String> tags = Collections.singletonMap("test", "test");
     FieldUtils.writeField(metricProperties, "tags", tags, true);
@@ -53,14 +53,14 @@ class MetricsPropertiesTest extends TestBase {
   }
 
   @Test
-   void countExecution() {
+  void countExecution() {
     assertFalse(metricProperties.countExecution());
     metricProperties.getCount().setExecution(true);
     assertTrue(metricProperties.countExecution());
   }
 
   @Test
-   void countFailure() {
+  void countFailure() {
     assertFalse(metricProperties.countFailure());
     metricProperties.getCount().setFailure(true);
     assertTrue(metricProperties.countFailure());

@@ -33,15 +33,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class QueueDetailTest extends TestBase {
 
   @Test
-   void isDlqSet() {
+  void isDlqSet() {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     assertFalse(queueDetail.isDlqSet());
     QueueDetail queueDetail2 = TestUtils.createQueueDetail("test", "test-dlq");
@@ -49,7 +47,7 @@ class QueueDetailTest extends TestBase {
   }
 
   @Test
-   void toConfig() {
+  void toConfig() {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     QueueConfig expectedConfig =
         QueueConfig.builder()
@@ -83,7 +81,7 @@ class QueueDetailTest extends TestBase {
   }
 
   @Test
-   void expandQueueDetail() {
+  void expandQueueDetail() {
     Map<String, Integer> priority = new HashMap<>();
     priority.put("critical", 10);
     priority.put("high", 5);

@@ -38,11 +38,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.StaticApplicationContext;
@@ -73,7 +69,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodWithStringParameterIsInvoked() {
+  void testMethodWithStringParameterIsInvoked() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -86,7 +82,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodWithMessagePayloadParameterIsInvoked() {
+  void testMethodWithMessagePayloadParameterIsInvoked() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -99,7 +95,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodWithStringParameterCallExceptionHandler() {
+  void testMethodWithStringParameterCallExceptionHandler() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -120,7 +116,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodHavingMultipleQueueNames() {
+  void testMethodHavingMultipleQueueNames() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -139,7 +135,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodHavingSpelGettingEvaluated() {
+  void testMethodHavingSpelGettingEvaluated() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("spelMessageHandler", SpelMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -154,7 +150,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodHavingNameFromPropertyFile() {
+  void testMethodHavingNameFromPropertyFile() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlersWithProperty.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -179,7 +175,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodHavingNameFromPropertyFileWithExpression() {
+  void testMethodHavingNameFromPropertyFileWithExpression() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton(
         "messageHandler", MessageHandlerWithExpressionProperty.class);
@@ -200,7 +196,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void testMethodHavingAllPropertiesSet() {
+  void testMethodHavingAllPropertiesSet() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPlaceHolders.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -227,7 +223,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void concurrencyResolverInvalidValue() {
+  void concurrencyResolverInvalidValue() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -242,7 +238,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void concurrencyResolverSingleValue() {
+  void concurrencyResolverSingleValue() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -259,7 +255,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void concurrencyResolverMinMax() {
+  void concurrencyResolverMinMax() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -276,7 +272,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void concurrencyResolverMinMaxMaxIsSmallerThanMin() {
+  void concurrencyResolverMinMaxMaxIsSmallerThanMin() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithConcurrency.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -291,7 +287,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void priorityResolverInvalidValue() {
+  void priorityResolverInvalidValue() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -306,7 +302,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void priorityResolverInvalidValue2() {
+  void priorityResolverInvalidValue2() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -321,7 +317,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void priorityResolverMultiLevelQueue() {
+  void priorityResolverMultiLevelQueue() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
@@ -342,7 +338,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-   void priorityResolverSingleValue() {
+  void priorityResolverSingleValue() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);

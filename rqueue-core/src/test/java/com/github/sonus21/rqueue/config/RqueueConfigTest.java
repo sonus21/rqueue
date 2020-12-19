@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
@@ -52,14 +50,14 @@ class RqueueConfigTest extends TestBase {
   }
 
   @Test
-   void getQueueName() {
+  void getQueueName() {
     assertEquals("test", rqueueConfigVersion1.getQueueName("test"));
     assertEquals("__rq::queue::test", rqueueConfigVersion2.getQueueName("test"));
     assertEquals("__rq::queue::{test}", rqueueConfigVersion2ClusterMode.getQueueName("test"));
   }
 
   @Test
-   void getDelayedQueueName() {
+  void getDelayedQueueName() {
     assertEquals("rqueue-delay::test", rqueueConfigVersion1.getDelayedQueueName("test"));
     assertEquals("__rq::d-queue::test", rqueueConfigVersion2.getDelayedQueueName("test"));
     assertEquals(
@@ -67,7 +65,7 @@ class RqueueConfigTest extends TestBase {
   }
 
   @Test
-   void getDelayedQueueChannelName() {
+  void getDelayedQueueChannelName() {
     assertEquals("rqueue-channel::test", rqueueConfigVersion1.getDelayedQueueChannelName("test"));
     assertEquals("__rq::d-channel::test", rqueueConfigVersion2.getDelayedQueueChannelName("test"));
     assertEquals(
@@ -76,7 +74,7 @@ class RqueueConfigTest extends TestBase {
   }
 
   @Test
-   void getProcessingQueueName() {
+  void getProcessingQueueName() {
     assertEquals("rqueue-processing::test", rqueueConfigVersion1.getProcessingQueueName("test"));
     assertEquals("__rq::p-queue::test", rqueueConfigVersion2.getProcessingQueueName("test"));
     assertEquals(
@@ -84,7 +82,7 @@ class RqueueConfigTest extends TestBase {
   }
 
   @Test
-   void getProcessingQueueChannelName() {
+  void getProcessingQueueChannelName() {
     assertEquals(
         "rqueue-processing-channel::test",
         rqueueConfigVersion1.getProcessingQueueChannelName("test"));
@@ -96,14 +94,14 @@ class RqueueConfigTest extends TestBase {
   }
 
   @Test
-   void getLockKey() {
+  void getLockKey() {
     assertEquals("__rq::lock::test", rqueueConfigVersion1.getLockKey("test"));
     assertEquals("__rq::lock::test", rqueueConfigVersion2.getLockKey("test"));
     assertEquals("__rq::lock::test", rqueueConfigVersion2ClusterMode.getLockKey("test"));
   }
 
   @Test
-   void getQueueStatisticsKey() {
+  void getQueueStatisticsKey() {
     assertEquals("__rq::q-stat::test", rqueueConfigVersion1.getQueueStatisticsKey("test"));
     assertEquals("__rq::q-stat::test", rqueueConfigVersion2.getQueueStatisticsKey("test"));
     assertEquals(
@@ -111,7 +109,7 @@ class RqueueConfigTest extends TestBase {
   }
 
   @Test
-   void getQueueConfigKey() {
+  void getQueueConfigKey() {
     assertEquals("__rq::q-config::test", rqueueConfigVersion1.getQueueConfigKey("test"));
     assertEquals("__rq::q-config::test", rqueueConfigVersion2.getQueueConfigKey("test"));
     assertEquals("__rq::q-config::test", rqueueConfigVersion2ClusterMode.getQueueConfigKey("test"));

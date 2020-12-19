@@ -62,11 +62,6 @@ public class ConsumedMessage {
 
   @Column private int count;
 
-  @PreUpdate
-  public void update() {
-    this.updatedAt = System.currentTimeMillis();
-  }
-
   public ConsumedMessage(String messageId, String tag, String queueName, String message) {
     this(
         UUID.randomUUID().toString(),
@@ -77,6 +72,11 @@ public class ConsumedMessage {
         System.currentTimeMillis(),
         System.currentTimeMillis(),
         1);
+  }
+
+  @PreUpdate
+  public void update() {
+    this.updatedAt = System.currentTimeMillis();
   }
 
   public void incrementCount() {

@@ -26,17 +26,13 @@ import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import java.util.Collections;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @CoreUnitTest
 class ChartDataRequestTest extends TestBase {
 
   @Test
-   void validate() {
+  void validate() {
     ChartDataRequest chartDataRequest = new ChartDataRequest();
     ChartDataResponse response = chartDataRequest.validate();
     assertEquals(1, response.getCode());

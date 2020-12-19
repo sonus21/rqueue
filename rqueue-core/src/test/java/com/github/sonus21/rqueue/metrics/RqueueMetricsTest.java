@@ -147,7 +147,7 @@ class RqueueMetricsTest extends TestBase {
   }
 
   @Test
-   void queueStatistics() throws IllegalAccessException {
+  void queueStatistics() throws IllegalAccessException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
     FieldUtils.writeField(metrics, "rqueueStringDao", rqueueStringDao, true);
@@ -157,12 +157,12 @@ class RqueueMetricsTest extends TestBase {
   }
 
   @Test
-   void counterRegisterMethodIsCalled() throws IllegalAccessException {
+  void counterRegisterMethodIsCalled() throws IllegalAccessException {
     verifyCounterRegisterMethodIsCalled(Tags.empty());
   }
 
   @Test
-   void counterRegisterMethodIsCalledWithCorrectTag() throws IllegalAccessException {
+  void counterRegisterMethodIsCalledWithCorrectTag() throws IllegalAccessException {
     verifyCounterRegisterMethodIsCalled(tags);
   }
 }

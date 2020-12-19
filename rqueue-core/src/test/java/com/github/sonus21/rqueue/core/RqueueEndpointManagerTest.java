@@ -25,8 +25,6 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
@@ -42,7 +40,7 @@ class RqueueEndpointManagerTest extends TestBase {
   }
 
   @Test
-   void registerQueue() {
+  void registerQueue() {
 
     rqueueEndpointManager.registerQueue("test", "high");
     rqueueEndpointManager.isQueueRegistered("test");
@@ -50,7 +48,7 @@ class RqueueEndpointManagerTest extends TestBase {
   }
 
   @Test
-   void getQueueConfig() {
+  void getQueueConfig() {
     rqueueEndpointManager.registerQueue("test2", "high");
     assertEquals(1, rqueueEndpointManager.getQueueConfig("test2").size());
   }

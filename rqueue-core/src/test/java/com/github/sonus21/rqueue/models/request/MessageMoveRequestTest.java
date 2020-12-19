@@ -26,17 +26,13 @@ import com.github.sonus21.rqueue.models.enums.DataType;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @CoreUnitTest
 class MessageMoveRequestTest extends TestBase {
 
   @Test
-   void validationMessage() {
+  void validationMessage() {
     MessageMoveRequest request = new MessageMoveRequest();
     assertEquals("Source cannot be empty.", request.validationMessage());
     request.setSrc("    ");
@@ -65,7 +61,7 @@ class MessageMoveRequestTest extends TestBase {
   }
 
   @Test
-   void getMessageCount() {
+  void getMessageCount() {
     RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
     rqueueWebConfig.setMaxMessageMoveCount(100);
     MessageMoveRequest request = new MessageMoveRequest();

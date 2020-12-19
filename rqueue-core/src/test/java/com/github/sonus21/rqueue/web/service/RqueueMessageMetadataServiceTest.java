@@ -38,21 +38,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @CoreUnitTest
- class RqueueMessageMetadataServiceTest extends TestBase {
+class RqueueMessageMetadataServiceTest extends TestBase {
   private RqueueMessageMetadataDao rqueueMessageMetadataDao = mock(RqueueMessageMetadataDao.class);
   private RqueueMessageMetadataService rqueueMessageMetadataService =
       new RqueueMessageMetadataServiceImpl(rqueueMessageMetadataDao);
   private String queueName = "test-queue";
 
   @Test
-   void get() {
+  void get() {
     String id = UUID.randomUUID().toString();
     String msgId = RqueueMessageUtils.getMessageMetaId(queueName, id);
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
@@ -64,7 +60,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void findAll() {
+  void findAll() {
     String id = UUID.randomUUID().toString();
     String msgId = RqueueMessageUtils.getMessageMetaId(queueName, id);
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
@@ -75,7 +71,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void deleteMessageWhereMetaInfoNotFound() {
+  void deleteMessageWhereMetaInfoNotFound() {
     String id = UUID.randomUUID().toString();
     doAnswer(
             invocation -> {
@@ -90,7 +86,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   }
 
   @Test
-   void deleteMessageWhereMetaInfo() {
+  void deleteMessageWhereMetaInfo() {
     String id = UUID.randomUUID().toString();
     MessageMetadata metadata =
         new MessageMetadata(

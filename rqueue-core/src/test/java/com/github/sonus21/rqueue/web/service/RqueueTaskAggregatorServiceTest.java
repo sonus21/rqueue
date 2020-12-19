@@ -55,13 +55,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
 @CoreUnitTest
- class RqueueTaskAggregatorServiceTest extends TestBase {
+class RqueueTaskAggregatorServiceTest extends TestBase {
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
@@ -154,7 +152,7 @@ import org.junit.jupiter.api.Test;
   }
 
   @Test
-   void onApplicationEvent() throws TimedOutException {
+  void onApplicationEvent() throws TimedOutException {
     if (LocalDateTime.now(ZoneOffset.UTC).getHour() == 23) {
       log.info("This test cannot be run at this time");
       return;

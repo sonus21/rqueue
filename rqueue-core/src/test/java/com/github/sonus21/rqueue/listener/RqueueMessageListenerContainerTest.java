@@ -46,11 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -78,37 +74,37 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void testPollingInterval() {
+  void testPollingInterval() {
     container.setPollingInterval(100L);
     assertEquals(100L, container.getPollingInterval());
   }
 
   @Test
-   void setMaxWorkerWaitTime() {
+  void setMaxWorkerWaitTime() {
     container.setMaxWorkerWaitTime(20000L);
     assertEquals(20000L, container.getMaxWorkerWaitTime());
   }
 
   @Test
-   void setBeanName() {
+  void setBeanName() {
     container.setBeanName("TestBean");
     assertEquals("TestBean", container.getBeanName());
   }
 
   @Test
-   void setMaxNumWorkers() {
+  void setMaxNumWorkers() {
     container.setMaxNumWorkers(1000);
     assertEquals(Integer.valueOf(1000), container.getMaxNumWorkers());
   }
 
   @Test
-   void setBackOffTime() {
+  void setBackOffTime() {
     container.setBackOffTime(1000L);
     assertEquals(1000L, container.getBackOffTime());
   }
 
   @Test
-   void setAutoStartup() {
+  void setAutoStartup() {
     container.setAutoStartup(false);
     assertFalse(container.isAutoStartup());
     container.setAutoStartup(true);
@@ -116,7 +112,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void setTaskExecutor() {
+  void setTaskExecutor() {
     assertNull(container.getTaskExecutor());
     ThreadPoolTaskExecutor asyncTaskExecutor = new ThreadPoolTaskExecutor();
     asyncTaskExecutor.setThreadNamePrefix("testExecutor");
@@ -127,14 +123,14 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void testPhaseSetting() {
+  void testPhaseSetting() {
     assertEquals(Integer.MAX_VALUE, container.getPhase());
     container.setPhase(100);
     assertEquals(100, container.getPhase());
   }
 
   @Test
-   void checkDoStartMethodIsCalledAndIsRunningSet() throws Exception {
+  void checkDoStartMethodIsCalledAndIsRunningSet() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
@@ -148,7 +144,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void checkDoStopMethodIsCalled() throws Exception {
+  void checkDoStopMethodIsCalled() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
@@ -160,7 +156,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void checkDoDestroyMethodIsCalled() throws Exception {
+  void checkDoDestroyMethodIsCalled() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
@@ -173,7 +169,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void checkDoStopMethodIsCalledWithRunnable() throws Exception {
+  void checkDoStopMethodIsCalledWithRunnable() throws Exception {
     StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
@@ -189,7 +185,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void testMessagesAreGettingFetchedFromRedis() throws Exception {
+  void testMessagesAreGettingFetchedFromRedis() throws Exception {
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
@@ -250,7 +246,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void testMessageFetcherRetryWorking() throws Exception {
+  void testMessageFetcherRetryWorking() throws Exception {
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     String fastQueueMessage = "This is fast queue";
     RqueueMessage message =
@@ -317,7 +313,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void testMessageHandlersAreInvoked() throws Exception {
+  void testMessageHandlersAreInvoked() throws Exception {
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
@@ -396,7 +392,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-   void internalTasksAreSubmittedToTaskExecutor() throws Exception {
+  void internalTasksAreSubmittedToTaskExecutor() throws Exception {
     @Getter
     class TestTaskExecutor extends ThreadPoolTaskExecutor {
 

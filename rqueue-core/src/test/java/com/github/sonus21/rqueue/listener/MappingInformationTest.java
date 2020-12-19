@@ -23,27 +23,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import java.util.Collections;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
-@CoreUnitTest class MappingInformationTest extends TestBase {
+@CoreUnitTest
+class MappingInformationTest extends TestBase {
   @Test
-   void builderToString() {
+  void builderToString() {
     MappingInformation.MappingInformationBuilder builder =
         MappingInformation.builder().active(true);
     System.out.println(builder.toString());
   }
 
   @Test
-   void isValidNoQueue() {
+  void isValidNoQueue() {
     MappingInformation mappingInformation =
         MappingInformation.builder().active(true).queueNames(Collections.emptySet()).build();
     assertFalse(mappingInformation.isValid());
   }
 
   @Test
-   void isValidInvalidVisibilityTimeout() {
+  void isValidInvalidVisibilityTimeout() {
     MappingInformation mappingInformation =
         MappingInformation.builder()
             .active(true)
@@ -54,7 +53,7 @@ import org.junit.jupiter.api.Test;
   }
 
   @Test
-   void isValid() {
+  void isValid() {
     MappingInformation mappingInformation =
         MappingInformation.builder()
             .active(true)
@@ -65,7 +64,7 @@ import org.junit.jupiter.api.Test;
   }
 
   @Test
-   void equality() {
+  void equality() {
     MappingInformation mappingInformation =
         MappingInformation.builder()
             .active(true)
@@ -83,7 +82,7 @@ import org.junit.jupiter.api.Test;
   }
 
   @Test
-   void compare() {
+  void compare() {
     MappingInformation mappingInformation =
         MappingInformation.builder()
             .active(true)
