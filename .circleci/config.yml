@@ -77,7 +77,7 @@ jobs:
       # Reuse the workspace from the build job
       - attach_workspace:
           at: .
-      - run: ./gradlew codeCoverageReport -DincludeTags="integration" -DexcludeTags="unit&redisCluster"
+      - run: ./gradlew codeCoverageReport -DincludeTags="integration" -DexcludeTags="redisCluster"
       - persist_to_workspace:
           root: .
           paths:
@@ -121,7 +121,7 @@ jobs:
                   sleep 30
                   redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
 
-      - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster -DexcludeTags="unit&integration"
+      - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster -DexcludeTags="unit"
       - persist_to_workspace:
           root: .
           paths:
@@ -148,12 +148,10 @@ workflows:
             - build
       - integration_test:
           requires:
-            - build
+            - unit_test
       - redis_custer_tests:
           requires:
-            - build
+            - integration_test
       - report_code_coverage:
           requires:
-            - unit_test
-            - integration_test
             - redis_custer_tests
