@@ -27,11 +27,11 @@ ext {
     springVersion = System.getenv("SPRING_VERSION")
     springDataVersion = System.getenv("SPRING_DATA_VERSION")
     microMeterVersion = System.getenv("MICROMETER_VERSION")
-//
-//    springBootVersion = '2.1.0.RELEASE'
-//    springVersion = '5.1.2.RELEASE'
-//    springDataVersion = '2.1.2.RELEASE'
-//    microMeterVersion = '1.1.0'
+
+    springBootVersion = '2.1.0.RELEASE'
+    springVersion = '5.1.2.RELEASE'
+    springDataVersion = '2.1.2.RELEASE'
+    microMeterVersion = '1.1.0'
 
     // logging dependencies
     lombokVersion = '1.18.10'
@@ -127,7 +127,6 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
         html.enabled = System.getenv("CIRCLECI") != "true"
         xml.enabled true
         if (System.getenv("CIRCLECI") == "true") {
-            jobId = System.getenv("CIRCLE_WORKFLOW_JOB_ID")
             xml.destination file("${buildDir}/reports/jacoco/test/${CIRCLE_WORKFLOW_JOB_ID}_jacocoTestReport.xml")
         } else {
             xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
