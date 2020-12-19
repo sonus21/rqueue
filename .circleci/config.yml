@@ -40,13 +40,12 @@ jobs:
             - v1-dependencies-
 
       - run: gradle dependencies
-
+      - run: ./gradlew compileJava
+      - run: ./gradlew compileTestJava
       - save_cache:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-      - run: ./gradlew compileJava
-      - run: ./gradlew compileTestJava
       - persist_to_workspace:
           root: .
           paths:
