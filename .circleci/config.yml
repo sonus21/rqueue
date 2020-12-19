@@ -75,7 +75,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - run:
           name: Install Dependencies
           command: |
@@ -99,7 +98,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - run:
           name: Install Dependencies
           command: |
@@ -166,7 +164,6 @@ jobs:
       - attach_workspace:
           at: .
       - run: ls -r .
-      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - run: pwd
       - run: ./gradlew coveralls
 
