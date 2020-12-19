@@ -110,12 +110,8 @@ def publishedProjects = subprojects.findAll({ subproject ->
 })
 
 task jacocoMerge(type: JacocoMerge) {
-    publishedProjects.each { subproject ->
-        executionData subproject.tasks.withType(Test)
-    }
-    doFirst {
-        executionData = files(executionData.findAll { it.exists() })
-    }
+    destinationFile file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+    executionData fileTree("${buildDir}/reports/jacoco/test").include("**/build/reports/jacoco/test/*.xml")
 }
 
 
@@ -127,10 +123,15 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
     }
 
     reports {
-        xml.enabled true
-        xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
         csv.enabled false
-        html.enabled true
+        html.enabled = System.getenv("CIRCLECI") != "true"
+        xml.enabled true
+        if (System.getenv("CIRCLECI") == "true") {
+            jobId = System.getenv("CIRCLE_WORKFLOW_JOB_ID")
+            xml.destination file("${buildDir}/reports/jacoco/test/${CIRCLE_WORKFLOW_JOB_ID}_jacocoTestReport.xml")
+        } else {
+            xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+        }
     }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
@@ -141,6 +142,12 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
                     ]
             )
         }))
+    }
+    dependsOn(subprojects*.test)
+    doLast {
+        if (System.getenv("CIRCLECI") == "true") {
+            jacocoMerge
+        }
     }
     test.useTestNG()
 }
@@ -157,10 +164,6 @@ clean.doLast {
             delete _files
         }
     })
-}
-
-codeCoverageReport.dependsOn {
-    subprojects*.test
 }
 
 coveralls {

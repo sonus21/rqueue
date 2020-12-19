@@ -15,13 +15,14 @@
  */
 
 test {
-    String itags = System.getProperty("includeTags") ?
-            System.getProperty("includeTags") : 'unit';
-    String etags = System.getProperty("excludeTags") ?
-            System.getProperty("excludeTags") : 'integration';
-
+    String itags = System.getProperty("includeTags") ? System.getProperty("includeTags") : ''
+    String etags = System.getProperty("excludeTags") ? System.getProperty("excludeTags") : ''
     useJUnitPlatform {
-        includeTags itags.split(",")
-        excludeTags etags.split(",")
+        if (itags != "") {
+            includeTags itags.split(",")
+        }
+        if (etags != "") {
+            excludeTags etags.split(",")
+        }
     }
 }
