@@ -61,6 +61,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: ./gradlew codeCoverageReport -DincludeTags=unit -DexcludeTags=integration
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - persist_to_workspace:
           root: .
           paths:
@@ -75,6 +76,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - run:
           name: Install Dependencies
           command: |
@@ -83,6 +85,7 @@ jobs:
             sudo apt-get -y install redis-server
             redis-cli --version
       - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly -DexcludeTags=unit
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - persist_to_workspace:
           root: .
           paths:
@@ -98,6 +101,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - run:
           name: Install Dependencies
           command: |
@@ -106,6 +110,7 @@ jobs:
             sudo apt-get -y install redis-server
             redis-cli --version
       - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags="redisCluster,producerOnly"
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - persist_to_workspace:
           root: .
           paths:
@@ -148,8 +153,9 @@ jobs:
             cd 9005 && redis-server ./redis.conf &
             sleep 30
             redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
-
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster -DexcludeTags=unit
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - persist_to_workspace:
           root: .
           paths:
@@ -165,6 +171,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: ls -r .
+      - run:  ls -l build/reports/jacoco/test/jacocoTestReport.xml
       - run: pwd
       - run: ./gradlew coveralls
 
