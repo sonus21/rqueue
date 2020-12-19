@@ -77,7 +77,7 @@ jobs:
       # Reuse the workspace from the build job
       - attach_workspace:
           at: .
-      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster
+      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags="redisCluster&producerOnly"
       - persist_to_workspace:
           root: .
           paths:
