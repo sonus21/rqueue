@@ -25,4 +25,9 @@ test {
             excludeTags etags.split(",")
         }
     }
+    jacoco {
+        if (System.getenv("CIRCLECI") == "true") {
+            destinationFile = file("$buildDir/jacoco/${System.env.CIRCLE_WORKFLOW_JOB_ID}_test.exec")
+        }
+    }
 }

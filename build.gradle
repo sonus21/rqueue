@@ -126,11 +126,7 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
         csv.enabled false
         html.enabled = System.getenv("CIRCLECI") != "true"
         xml.enabled true
-        if (System.getenv("CIRCLECI") == "true") {
-            xml.destination file("${buildDir}/reports/jacoco/test/${System.env.CIRCLE_WORKFLOW_JOB_ID}_jacocoTestReport.xml")
-        } else {
-            xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-        }
+        xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
     }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
@@ -143,11 +139,7 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
         }))
     }
     dependsOn(subprojects*.test)
-    doLast {
-        if (System.getenv("CIRCLECI") == "true") {
-            jacocoMerge
-        }
-    }
+    doLast {}
     test.useTestNG()
 }
 
