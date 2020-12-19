@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,7 +44,8 @@ import org.springframework.test.context.TestPropertySource;
 class BootMetricsTest extends MetricTest {
 
   @Test
-  @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
+      @Tag("redisCluster")
+//  @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
   void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }
