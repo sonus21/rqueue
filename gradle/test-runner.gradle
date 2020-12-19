@@ -21,7 +21,7 @@ test {
             System.getProperty("excludeTags") : 'integration';
 
     useJUnitPlatform {
-        includeTags itags
-        excludeTags etags
+        includeTags itags.split(",")
+        excludeTags etags.split(",")
     }
 }

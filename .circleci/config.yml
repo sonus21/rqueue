@@ -77,29 +77,12 @@ jobs:
       # Reuse the workspace from the build job
       - attach_workspace:
           at: .
-      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags="redisCluster&producerOnly"
+      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags="redisCluster,producerOnly"
       - persist_to_workspace:
           root: .
           paths:
             - .
   producer_only_test:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
-    steps:
-      # Reuse the workspace from the build job
-      - attach_workspace:
-          at: .
-      - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly -DexcludeTags=unit
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-
-  redis_custer_test:
     executor: rqueue-executor
     environment:
       SPRING_BOOT_VERSION: 2.1.0.RELEASE
@@ -117,6 +100,23 @@ jobs:
             sudo apt-get update
             sudo apt-get -y install redis-server
             redis-cli --version
+      - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly -DexcludeTags=unit
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  redis_custer_test:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+    steps:
+      # Reuse the workspace from the build job
+      - attach_workspace:
+          at: .
       - run:
           name: Setup Redis Cluster
           background: true
