@@ -45,7 +45,7 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-      - run: ./gradlew compile
+      - run: ./gradlew compileJava
       - run: ./gradlew compileTest
       - persist_to_workspace:
           root: .
