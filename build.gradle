@@ -120,7 +120,7 @@ task jacocoMerge(type: JacocoMerge) {
 
 
 task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
-    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    executionData.setFrom fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
     publishedProjects.each {
         sourceSets it.sourceSets.main
