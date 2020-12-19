@@ -33,8 +33,6 @@ jobs:
 
     steps:
       - checkout
-
-      # Download and cache dependencies
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "build.gradle" }}
@@ -42,12 +40,12 @@ jobs:
             - v1-dependencies-
 
       - run: gradle dependencies
-      - run: ./gradlew compileJava
-      - run: ./gradlew compileTestJava
       - save_cache:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
+      - run: ./gradlew compileJava
+      - run: ./gradlew compileTestJava
       - persist_to_workspace:
           root: .
           paths:
@@ -60,33 +58,9 @@ jobs:
       SPRING_DATA_VERSION: 2.1.2.RELEASE
       MICROMETER_VERSION: 1.1.0
     steps:
-      # Reuse the workspace from the build job
       - attach_workspace:
           at: .
       - run: ./gradlew codeCoverageReport -DincludeTags=unit -DexcludeTags=integration
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-  integration_test:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
-    steps:
-      # Reuse the workspace from the build job
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install Dependencies
-          command: |
-            sudo add-apt-repository ppa:chris-lea/redis-server
-            sudo apt-get update
-            sudo apt-get -y install redis-server
-            redis-cli --version
-      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags="redisCluster,producerOnly"
       - persist_to_workspace:
           root: .
           paths:
@@ -99,7 +73,6 @@ jobs:
       SPRING_DATA_VERSION: 2.1.2.RELEASE
       MICROMETER_VERSION: 1.1.0
     steps:
-      # Reuse the workspace from the build job
       - attach_workspace:
           at: .
       - run:
@@ -110,6 +83,29 @@ jobs:
             sudo apt-get -y install redis-server
             redis-cli --version
       - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly -DexcludeTags=unit
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  integration_test:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo add-apt-repository ppa:chris-lea/redis-server
+            sudo apt-get update
+            sudo apt-get -y install redis-server
+            redis-cli --version
+      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags="redisCluster,producerOnly"
       - persist_to_workspace:
           root: .
           paths:
@@ -169,8 +165,8 @@ jobs:
       - attach_workspace:
           at: .
       - run: ls -r .
+      - run: pwd
       - run: ./gradlew coveralls
-
 
 workflows:
   main:
