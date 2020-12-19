@@ -16,13 +16,17 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 
-public final class TestUtils {
+public final class TestUtils extends TestBase {
   private TestUtils() {}
 
   public static QueueConfig createQueueConfig(

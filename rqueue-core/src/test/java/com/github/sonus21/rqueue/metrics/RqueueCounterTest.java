@@ -20,24 +20,24 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueCounterTest {
+@CoreUnitTest
+class RqueueCounterTest extends TestBase {
   private QueueCounter queueCounter = mock(QueueCounter.class);
   private RqueueCounter rqueueCounter = new RqueueCounter(queueCounter);
   private String queueName = "test";
 
   @Test
-  public void updateFailureCount() {
+   void updateFailureCount() {
     rqueueCounter.updateFailureCount(queueName);
     verify(queueCounter, times(1)).updateFailureCount(queueName);
   }
 
   @Test
-  public void updateExecutionCount() {
+   void updateExecutionCount() {
     rqueueCounter.updateExecutionCount(queueName);
     verify(queueCounter, times(1)).updateExecutionCount(queueName);
   }

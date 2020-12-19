@@ -16,18 +16,16 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.MultiRedisSetupApplication;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.RetryTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = MultiRedisSetupApplication.class)
 @SpringBootTest
 @Slf4j
@@ -39,20 +37,21 @@ import org.springframework.test.context.TestPropertySource;
       "spring.redis2.host=localhost",
       "monitor.thread.count=1",
     })
-public class MultiRedisSetup extends RetryTests {
+@SpringBootIntegrationTest
+class MultiRedisSetup extends RetryTests {
 
   @Test
-  public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
+  void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
     verifyAfterNRetryTaskIsDeletedFromProcessingQueue();
   }
 
   @Test
-  public void messageMovedToDeadLetterQueue() throws TimedOutException {
+  void messageMovedToDeadLetterQueue() throws TimedOutException {
     verifyMessageMovedToDeadLetterQueue();
   }
 
   @Test
-  public void messageIsDiscardedAfterRetries() throws TimedOutException {
+  void messageIsDiscardedAfterRetries() throws TimedOutException {
     verifyMessageIsDiscardedAfterRetries();
   }
 }

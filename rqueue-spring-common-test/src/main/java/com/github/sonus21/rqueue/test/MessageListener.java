@@ -295,10 +295,11 @@ public class MessageListener {
   }
 
   @RqueueListener(
-      value = "${long.running.job.queue.name:}",
+      value = "${long.running.job.queue.name:long-running-job-queue}",
       active = "${long.running.job.queue.active:false}",
       deadLetterQueue = "${long.running.job.dead.letter.queue.name:}",
-      numRetries = "${long.running.job.queue.retry.count:-1}")
+      numRetries = "${long.running.job.queue.retry.count:-1}",
+      visibilityTimeout = "${long.running.job.queue.visibility.timeout:90000}")
   public void onLongRunningJob(
       LongRunningJob longRunningJob,
       @Header(RqueueMessageHeaders.MESSAGE) RqueueMessage rqueueMessage,

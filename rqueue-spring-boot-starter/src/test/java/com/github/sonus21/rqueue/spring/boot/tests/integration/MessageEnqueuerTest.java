@@ -19,9 +19,9 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.ChatIndexing;
 import com.github.sonus21.rqueue.test.dto.Email;
@@ -31,13 +31,11 @@ import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
 @Slf4j
 @TestPropertySource(
@@ -63,17 +61,18 @@ import org.springframework.test.context.TestPropertySource;
       "feed.generation.queue.concurrency=1-5",
       "chat.indexing.queue.concurrency=3-5"
     })
-public class MessageEnqueuerTest extends SpringTestBase {
+@SpringBootIntegrationTest
+class MessageEnqueuerTest extends SpringTestBase {
 
   @Test
-  public void testEnqueueWithMessageId() throws TimedOutException {
+  void testEnqueueWithMessageId() throws TimedOutException {
     Email email = Email.newInstance();
     assertTrue(rqueueMessageEnqueuer.enqueue(emailQueue, email.getId(), email));
     waitFor(() -> getMessageCount(emailQueue) == 0, "email to be consumed");
   }
 
   @Test
-  public void testEnqueueWithRetryWithMessageId() throws TimedOutException {
+  void testEnqueueWithRetryWithMessageId() throws TimedOutException {
     ChatIndexing chatIndexing = ChatIndexing.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueWithRetry(
@@ -82,21 +81,21 @@ public class MessageEnqueuerTest extends SpringTestBase {
   }
 
   @Test
-  public void testEnqueueWithPriorityWithMessageId() throws TimedOutException {
+  void testEnqueueWithPriorityWithMessageId() throws TimedOutException {
     Sms chat = Sms.newInstance();
     assertTrue(rqueueMessageEnqueuer.enqueueWithPriority(smsQueue, "medium", chat.getId(), chat));
     waitFor(() -> getMessageCount(smsQueue, "medium") == 0, "notification to be consumed");
   }
 
   @Test
-  public void testEnqueueInWithMessageId() throws TimedOutException {
+  void testEnqueueInWithMessageId() throws TimedOutException {
     Job job = Job.newInstance();
     assertTrue(rqueueMessageEnqueuer.enqueueIn(jobQueue, job.getId(), job, 1000));
     waitFor(() -> getMessageCount(jobQueue) == 0, "job notification to be sent");
   }
 
   @Test
-  public void testEnqueueInWithRetryWithMessageId() throws TimedOutException {
+  void testEnqueueInWithRetryWithMessageId() throws TimedOutException {
     Notification notification = Notification.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueInWithRetry(
@@ -105,7 +104,7 @@ public class MessageEnqueuerTest extends SpringTestBase {
   }
 
   @Test
-  public void testEnqueueInWithPriorityWithMessageId() throws TimedOutException {
+  void testEnqueueInWithPriorityWithMessageId() throws TimedOutException {
     Sms sms = Sms.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueInWithPriority(smsQueue, "high", sms.getId(), sms, 1000L));
@@ -113,7 +112,7 @@ public class MessageEnqueuerTest extends SpringTestBase {
   }
 
   @Test
-  public void testEnqueueAtWithMessageId() throws TimedOutException {
+  void testEnqueueAtWithMessageId() throws TimedOutException {
     FeedGeneration feedGeneration = FeedGeneration.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueAt(

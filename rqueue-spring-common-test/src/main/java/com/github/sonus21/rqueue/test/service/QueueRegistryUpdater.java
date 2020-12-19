@@ -20,20 +20,24 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
-import javax.annotation.PostConstruct;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
-public class QueueRegistryUpdater {
+@Slf4j
+public class QueueRegistryUpdater implements ApplicationListener<RqueueBootstrapEvent> {
   private final RqueueMessageSender rqueueMessageSender;
   private final RqueueEndpointManager rqueueEndpointManager;
   private final RqueueConfig rqueueConfig;
 
-  @PostConstruct
-  public void registerQueues() {
-    if (!RqueueMode.PRODUCER.equals(rqueueConfig.getMode())) {
+  @Override
+  public void onApplicationEvent(RqueueBootstrapEvent event) {
+    log.info("Mode {} Event {}", rqueueConfig.getMode(), event);
+    if (!RqueueMode.PRODUCER.equals(rqueueConfig.getMode()) || !event.isStartup()) {
       return;
     }
     for (int i = 0; i < 10; i++) {

@@ -26,26 +26,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.dao.impl.RqueueQStatsDaoImpl;
+import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
+@CoreUnitTest
 @Slf4j
-public class RqueueQStatsDaoTest {
-  private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate =
+class RqueueQStatsDaoTest extends TestBase {
+  private final RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate =
       mock(RqueueRedisTemplate.class);
-  private RqueueQStatsDao rqueueQStatsDao = new RqueueQStatsDaoImpl(rqueueRedisTemplate);
-  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private final RqueueQStatsDao rqueueQStatsDao = new RqueueQStatsDaoImpl(rqueueRedisTemplate);
+  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
 
   @BeforeEach
   public void init() {
@@ -59,7 +59,7 @@ public class RqueueQStatsDaoTest {
   }
 
   @Test
-  public void findById() {
+  void findById() {
     String id = rqueueConfig.getQueueStatisticsKey("job");
     assertNull(rqueueQStatsDao.findById(id));
     QueueStatistics queueStatistics = new QueueStatistics();
@@ -69,7 +69,7 @@ public class RqueueQStatsDaoTest {
   }
 
   @Test
-  public void findAll() {
+  void findAll() {
     List<String> keys =
         Arrays.asList(
             rqueueConfig.getQueueStatisticsKey("job"),
@@ -80,18 +80,18 @@ public class RqueueQStatsDaoTest {
   }
 
   @Test
-  public void saveWithoutError() {
+  void saveWithoutError() {
     QueueStatistics queueStatistics = new QueueStatistics();
     assertThrows(IllegalArgumentException.class, () -> rqueueQStatsDao.save(queueStatistics));
   }
 
   @Test
-  public void saveNull() {
+  void saveNull() {
     assertThrows(IllegalArgumentException.class, () -> rqueueQStatsDao.save(null));
   }
 
   @Test
-  public void save() {
+  void save() {
     QueueStatistics queueStatistics =
         new QueueStatistics(rqueueConfig.getQueueStatisticsKey("job"));
     rqueueQStatsDao.save(queueStatistics);

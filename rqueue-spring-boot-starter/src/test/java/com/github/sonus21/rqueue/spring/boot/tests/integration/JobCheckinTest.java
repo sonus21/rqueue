@@ -22,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.LongRunningJob;
 import com.github.sonus21.rqueue.test.dto.PeriodicJob;
@@ -37,13 +37,11 @@ import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = Application.class)
 @Slf4j
 @TestPropertySource(
@@ -51,14 +49,14 @@ import org.springframework.test.context.TestPropertySource;
       "spring.redis.port=8015",
       "mysql.db.name=JobCheckinTest",
       "long.running.job.queue.active=true",
-      "long.running.job.queue.name=long-running-job-queue",
       "use.system.redis=false",
       "monitor.enabled=false",
       "rqueue.retry.per.poll=4",
       "periodic.job.queue.active=true",
       "checkin.enabled=true",
     })
- class JobCheckinTest extends SpringTestBase {
+@SpringBootIntegrationTest
+class JobCheckinTest extends SpringTestBase {
   @Test
   void testJobCheckin() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(2000);

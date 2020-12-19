@@ -25,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -43,6 +42,7 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.app.SpringApp.DeleteMessageListener;
+import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
@@ -52,7 +52,6 @@ import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -61,7 +60,6 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -72,11 +70,12 @@ import org.springframework.test.web.servlet.MvcResult;
       "notification.queue.active=false",
       "rqueue.web.statistic.history.day=180"
     })
-public class RqueueRestControllerTest extends SpringWebTestBase {
+@SpringIntegrationTest
+class RqueueRestControllerTest extends SpringWebTestBase {
   @Autowired private DeleteMessageListener deleteMessageListener;
 
   @Test
-  public void testGetChartLatency() throws Exception {
+  void testGetChartLatency() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -102,7 +101,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void testGetChartStats() throws Exception {
+  void testGetChartStats() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -128,7 +127,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void testExploreDataList() throws Exception {
+  void testExploreDataList() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
         this.mockMvc
@@ -149,7 +148,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void testExploreDataZset() throws Exception {
+  void testExploreDataZset() throws Exception {
     for (int i = 0; i < 30; i++) {
       enqueueIn(
           emailQueue, Email.newInstance(), Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
@@ -173,7 +172,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void deleteDataSet() throws Exception {
+  void deleteDataSet() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
         this.mockMvc.perform(delete("/rqueue/api/v1/data-set/" + emailDeadLetterQueue)).andReturn();
@@ -187,7 +186,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void dataType() throws Exception {
+  void dataType() throws Exception {
     enqueue(Email.newInstance(), emailDeadLetterQueue);
     MvcResult result =
         this.mockMvc
@@ -201,7 +200,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void moveMessage() throws Exception {
+  void moveMessage() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MessageMoveRequest request =
         new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
@@ -221,7 +220,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void viewData() throws Exception {
+  void viewData() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
         this.mockMvc
@@ -239,7 +238,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void deleteQueue() throws Exception {
+  void deleteQueue() throws Exception {
     for (int i = 0; i < 30; i++) {
       enqueue(jobQueue, Job.newInstance());
     }
@@ -255,7 +254,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void deleteMessage() throws Exception {
+  void deleteMessage() throws Exception {
     Email email = Email.newInstance();
     deleteMessageListener.clear();
     enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);

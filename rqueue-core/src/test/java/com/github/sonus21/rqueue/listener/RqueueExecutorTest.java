@@ -27,6 +27,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
@@ -50,16 +52,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.converter.MessageConverter;
 
-@ExtendWith(MockitoExtension.class)
+@CoreUnitTest
 @SuppressWarnings("unchecked")
-public class RqueueExecutorTest {
+class RqueueExecutorTest extends TestBase {
   private RqueueMessageListenerContainer container = mock(RqueueMessageListenerContainer.class);
   private WeakReference<RqueueMessageListenerContainer> containerWeakReference =
       new WeakReference<>(container);
@@ -122,7 +122,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void callDiscardProcessor() {
+   void callDiscardProcessor() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     doReturn(defaultMessageMetadata)
@@ -141,7 +141,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void callDeadLetterProcessor() {
+   void callDeadLetterProcessor() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName, "test-dlq");
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
@@ -160,7 +160,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void messageIsParkedForRetry() {
+   void messageIsParkedForRetry() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
@@ -185,7 +185,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void messageIsNotExecutedWhenDeletedManually() {
+   void messageIsNotExecutedWhenDeletedManually() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     messageMetadata.setDeleted(true);
@@ -204,7 +204,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void messageIsDeletedWhileExecuting() {
+   void messageIsDeletedWhileExecuting() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     AtomicInteger atomicInteger = new AtomicInteger(0);
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
@@ -235,7 +235,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void handleIgnoredMessage() {
+   void handleIgnoredMessage() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     MessageProcessor messageProcessor =
         new MessageProcessor() {

@@ -50,36 +50,13 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 @SuppressWarnings("WeakerAccess")
 abstract class BaseMessageSender {
+  protected final MessageHeaders messageHeaders;
   protected MessageConverter messageConverter;
   protected RqueueMessageTemplate messageTemplate;
   @Autowired protected RqueueStringDao rqueueStringDao;
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
-  protected final MessageHeaders messageHeaders;
   private ExecutorService executorService;
-
-  private class MessageDeleteJob implements Runnable {
-    private final QueueDetail queueDetail;
-    private final List<String> ids;
-    private static final int batchSize = 1000;
-
-    MessageDeleteJob(List<String> ids, QueueDetail queueDetail) {
-      this.ids = ids;
-      this.queueDetail = queueDetail;
-    }
-
-    @Override
-    public void run() {
-      for (List<String> subIds : ListUtils.partition(ids, batchSize)) {
-        List<String> messageMetaIds =
-            subIds.stream()
-                .map(e -> RqueueMessageUtils.getMessageMetaId(queueDetail.getName(), e))
-                .collect(Collectors.toList());
-        rqueueStringDao.delete(messageMetaIds);
-        log.info("Deleted {} messages meta", messageMetaIds.size());
-      }
-    }
-  }
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
@@ -254,6 +231,29 @@ abstract class BaseMessageSender {
                   rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)
               .build();
       EndpointRegistry.register(queueDetail);
+    }
+  }
+
+  private class MessageDeleteJob implements Runnable {
+    private static final int batchSize = 1000;
+    private final QueueDetail queueDetail;
+    private final List<String> ids;
+
+    MessageDeleteJob(List<String> ids, QueueDetail queueDetail) {
+      this.ids = ids;
+      this.queueDetail = queueDetail;
+    }
+
+    @Override
+    public void run() {
+      for (List<String> subIds : ListUtils.partition(ids, batchSize)) {
+        List<String> messageMetaIds =
+            subIds.stream()
+                .map(e -> RqueueMessageUtils.getMessageMetaId(queueDetail.getName(), e))
+                .collect(Collectors.toList());
+        rqueueStringDao.delete(messageMetaIds);
+        log.info("Deleted {} messages meta", messageMetaIds.size());
+      }
     }
   }
 }

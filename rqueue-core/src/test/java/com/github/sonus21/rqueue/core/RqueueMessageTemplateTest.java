@@ -23,6 +23,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
@@ -30,6 +32,8 @@ import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,9 +42,9 @@ import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 
-@ExtendWith(MockitoExtension.class)
+@CoreUnitTest
 @SuppressWarnings("unchecked")
-public class RqueueMessageTemplateTest {
+class RqueueMessageTemplateTest extends TestBase {
   private final RedisConnectionFactory redisConnectionFactory = mock(RedisConnectionFactory.class);
   private final RedisTemplate<String, RqueueMessage> redisTemplate = mock(RedisTemplate.class);
   private final ListOperations<String, RqueueMessage> listOperations = mock(ListOperations.class);
@@ -64,27 +68,27 @@ public class RqueueMessageTemplateTest {
   }
 
   @Test
-  public void add() {
+   void add() {
     doReturn(listOperations).when(redisTemplate).opsForList();
     doReturn(1L).when(listOperations).rightPush(queueName, message);
     rqueueMessageTemplate.addMessage(queueName, message);
   }
 
   @Test
-  public void pop() {
+   void pop() {
     rqueueMessageTemplate.pop(
         queueName, queueName + "rq", queueName + "dq", Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 
   @Test
-  public void addWithDelay() {
+   void addWithDelay() {
     rqueueMessageTemplate.addMessageWithDelay(queueName, queueName + "rq", message);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 
   @Test
-  public void moveMessage() {
+   void moveMessage() {
     List<String> args = new ArrayList<>();
     args.add("dlq" + queueName);
     args.add(queueName);
@@ -96,7 +100,7 @@ public class RqueueMessageTemplateTest {
   }
 
   @Test
-  public void moveMessage2() {
+   void moveMessage2() {
     List<String> args = new ArrayList<>();
     args.add("dlq" + queueName);
     args.add(queueName);
@@ -106,7 +110,7 @@ public class RqueueMessageTemplateTest {
   }
 
   @Test
-  public void moveMessageAcrossZset() {
+   void moveMessageAcrossZset() {
     List<String> args = new ArrayList<>();
     args.add("zset1-" + queueName);
     args.add("zset2-" + queueName);
@@ -115,7 +119,7 @@ public class RqueueMessageTemplateTest {
   }
 
   @Test
-  public void moveMessageAcrossZset2() {
+   void moveMessageAcrossZset2() {
     List<String> args = new ArrayList<>();
     args.add("zset1-" + queueName);
     args.add("zset2-" + queueName);

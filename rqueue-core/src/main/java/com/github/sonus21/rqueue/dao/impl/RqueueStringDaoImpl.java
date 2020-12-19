@@ -18,6 +18,8 @@ package com.github.sonus21.rqueue.dao.impl;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.RedisScriptFactory;
+import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import java.nio.charset.StandardCharsets;
@@ -31,13 +33,19 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import org.springframework.data.redis.connection.DataType;
+import org.springframework.data.redis.core.script.DefaultScriptExecutor;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.util.CollectionUtils;
 
 public class RqueueStringDaoImpl implements RqueueStringDao {
-  private RqueueRedisTemplate<String> redisTemplate;
+  private final RqueueRedisTemplate<String> redisTemplate;
+  private final RedisScript<Boolean> delIfSameScript;
+  private final DefaultScriptExecutor<String> scriptExecutor;
 
   public RqueueStringDaoImpl(RqueueConfig rqueueConfig) {
-    redisTemplate = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
+    this.redisTemplate = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
+    this.delIfSameScript = RedisScriptFactory.getScript(ScriptType.DELETE_IF_SAME);
+    this.scriptExecutor = new DefaultScriptExecutor<>(this.redisTemplate.getRedisTemplate());
   }
 
   @Override
@@ -87,7 +95,7 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
 
   @Override
   public Object delete(Collection<String> keys) {
-    //potential cross slot error
+    // potential cross slot error
     return deleteAndSet(keys, null);
   }
 
@@ -97,7 +105,7 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
     return RedisUtils.executePipeLine(
         redisTemplate.getRedisTemplate(),
         ((connection, keySerializer, valueSerializer) -> {
-          //potential cross slot error
+          // potential cross slot error
           for (String key : keysToBeRemoved) {
             connection.del(key.getBytes());
           }
@@ -134,5 +142,10 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @Override
   public void ltrim(String listName, int start, int end) {
     redisTemplate.ltrim(listName, start, end);
+  }
+
+  @Override
+  public Boolean deleteIfSame(String key, String value) {
+    return scriptExecutor.execute(delIfSameScript, Collections.singletonList(key), value);
   }
 }

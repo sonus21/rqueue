@@ -20,21 +20,19 @@ import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = Application.class)
 @Slf4j
 @TestPropertySource(
@@ -46,16 +44,17 @@ import org.springframework.test.context.TestPropertySource;
       "rqueue.metrics.count.failure=false",
       "rqueue.metrics.count.execution=false",
     })
-public class MessageDeduplicationTest extends SpringTestBase {
+@SpringBootIntegrationTest
+class MessageDeduplicationTest extends SpringTestBase {
   @Test
-  public void testEnqueueUnique() throws TimedOutException {
+  void testEnqueueUnique() throws TimedOutException {
     Email email = Email.newInstance();
     rqueueMessageEnqueuer.enqueueUnique(emailQueue, email.getId(), email);
     waitFor(() -> getMessageCount(emailQueue) == 0, "email to be sent");
   }
 
   @Test
-  public void testEnqueueUniqueIn() throws TimedOutException {
+  void testEnqueueUniqueIn() throws TimedOutException {
     Notification notification = Notification.newInstance();
     rqueueMessageEnqueuer.enqueueUniqueIn(
         notificationQueue, notification.getId(), notification, 1000L);

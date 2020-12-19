@@ -3,6 +3,7 @@ ext.name = 'Rqueue Core Java'
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"
     apply from: "${rootDir}/gradle/packaging.gradle"
+    apply from: "${rootDir}/gradle/test-runner.gradle"
 }
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
@@ -25,8 +26,4 @@ dependencies {
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
     testCompile project(":rqueue-test-util")
-}
-
-test {
-    useJUnitPlatform()
 }

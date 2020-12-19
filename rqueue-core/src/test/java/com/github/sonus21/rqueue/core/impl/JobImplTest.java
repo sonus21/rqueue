@@ -27,6 +27,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -45,13 +47,11 @@ import java.time.Duration;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.converter.MessageConverter;
 
-@ExtendWith(MockitoExtension.class)
-class JobImplTest {
+@CoreUnitTest
+class JobImplTest extends TestBase {
   private final RqueueConfig rqueueConfig =
       new RqueueConfig(mock(RedisConnectionFactory.class), true, 2);
   private final RqueueMessageMetadataService messageMetadataService =
@@ -62,9 +62,9 @@ class JobImplTest {
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   RqueueMessage rqueueMessage =
       RqueueMessageUtils.generateMessage(messageConverter, queueDetail.getName());
-  Object userMessage = "Test Object";
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
+  Object userMessage = "Test Object";
 
   @BeforeEach
   public void init() throws IllegalAccessException {

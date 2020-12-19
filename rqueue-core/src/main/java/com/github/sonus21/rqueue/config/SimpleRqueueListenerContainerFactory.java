@@ -226,11 +226,6 @@ public class SimpleRqueueListenerContainerFactory {
     return Collections.singletonList(getMessageConverter());
   }
 
-  /** @return the message converter */
-  public MessageConverter getMessageConverter() {
-    return messageConverter;
-  }
-
   /**
    * For message (de)serialization we might need one or more message converters, configure those
    * message converters
@@ -246,6 +241,11 @@ public class SimpleRqueueListenerContainerFactory {
     } else {
       setMessageConverter(new CompositeMessageConverter(messageConverters));
     }
+  }
+
+  /** @return the message converter */
+  public MessageConverter getMessageConverter() {
+    return messageConverter;
   }
 
   /**

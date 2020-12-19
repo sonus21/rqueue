@@ -27,13 +27,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 public class RedisUtils {
-  private RedisUtils() {}
-
-  public interface RedisTemplateProvider {
-    <V> RedisTemplate<String, V> getRedisTemplate(RedisConnectionFactory redisConnectionFactory);
-  }
-
-  @SuppressWarnings({"java:S1104","java:S1444"})
+  @SuppressWarnings({"java:S1104", "java:S1444"})
   public static RedisTemplateProvider redisTemplateProvider =
       new RedisTemplateProvider() {
         @Override
@@ -50,6 +44,8 @@ public class RedisUtils {
           return redisTemplate;
         }
       };
+
+  private RedisUtils() {}
 
   public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
@@ -95,6 +91,10 @@ public class RedisUtils {
       return defaultVersion;
     }
     return Integer.parseInt(new String(versionFromDb));
+  }
+
+  public interface RedisTemplateProvider {
+    <V> RedisTemplate<String, V> getRedisTemplate(RedisConnectionFactory redisConnectionFactory);
   }
 
   public interface RedisPipelineCallback {

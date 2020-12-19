@@ -19,6 +19,8 @@ package com.github.sonus21.rqueue.converter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -37,16 +39,196 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 
-@ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
-public class GenericMessageConverterTest {
+@CoreUnitTest
+class GenericMessageConverterTest extends TestBase {
   private static final GenericMessageConverter genericMessageConverter =
       new GenericMessageConverter();
+  private static Comment comment = new Comment(UUID.randomUUID().toString(), "This is test");
+  private static Email email = new Email(UUID.randomUUID().toString(), "This is test");
+
+  @Test
+   void fromMessageIoException() {
+    Message<String> message = new GenericMessage<>("dasasd");
+    assertNull(genericMessageConverter.fromMessage(message, null));
+  }
+
+  @Test
+   void fromMessageClassCastException() {
+    Message<Comment> commentMessage = new GenericMessage<>(comment);
+    assertNull(genericMessageConverter.fromMessage(commentMessage, null));
+  }
+
+  @Test
+   void fromMessageClassNotFoundException() {
+    Message<String> message = (Message<String>) genericMessageConverter.toMessage(comment, null);
+    String payload = Objects.requireNonNull(message).getPayload().replace("Comment", "SomeData");
+    Message<String> updatedMessage = new GenericMessage<>(payload);
+    assertNull(genericMessageConverter.fromMessage(updatedMessage, null));
+  }
+
+  @Test
+   void toMessageEmptyObject() {
+    Message<String> m = (Message<String>) genericMessageConverter.toMessage(new Object(), null);
+    assertNull(m);
+  }
+
+  @Test
+   void toMessage() {
+    Message<String> m = (Message<String>) genericMessageConverter.toMessage(comment, null);
+    Comment comment1 = (Comment) genericMessageConverter.fromMessage(m, null);
+    assertEquals(comment1, comment);
+  }
+
+  @Test
+   void toMessageSet() {
+    assertNull(
+        genericMessageConverter.toMessage(
+            Collections.singleton("Foo"), RqueueMessageHeaders.emptyMessageHeaders()));
+  }
+
+  @Test
+   void toMessageEmptyList() {
+    assertNull(
+        genericMessageConverter.toMessage(
+            Collections.emptyList(), RqueueMessageHeaders.emptyMessageHeaders()));
+  }
+
+  @Test
+   void testMessageNonEmptyListWithGenericItem() {
+    List<GenericTestData<String>> items =
+        Collections.singletonList(new GenericTestData<>(10, "10"));
+    assertNull(
+        genericMessageConverter.toMessage(items, RqueueMessageHeaders.emptyMessageHeaders()));
+  }
+
+  @Test
+   void testToAndFromMessageList() {
+    List<Comment> dataList = Collections.singletonList(comment);
+    Message message =
+        genericMessageConverter.toMessage(dataList, RqueueMessageHeaders.emptyMessageHeaders());
+    List<Comment> fromMessage = (List<Comment>) genericMessageConverter.fromMessage(message, null);
+    assertEquals(dataList, fromMessage);
+  }
+
+  @Test
+   void testGenericMessageToReturnNull() {
+    GenericTestData<Comment> data = new GenericTestData<>(10, comment);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    assertNull(message);
+  }
+
+  @Test
+  @Disabled
+   void testMultipleGenericFieldMessageToAndFrom() {
+    MultiGenericTestData<Comment, Email> data = new MultiGenericTestData<>(10, comment, email);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    MultiGenericTestData<Comment, Email> fromMessage =
+        (MultiGenericTestData<Comment, Email>) genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  @Disabled
+   void testMultipleGenericSameTypeMessageToAndFrom() {
+    MultiGenericTestData<Comment, Comment> data = new MultiGenericTestData<>(10, comment, comment);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    MultiGenericTestData<Comment, Comment> fromMessage =
+        (MultiGenericTestData<Comment, Comment>) genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  @Disabled
+   void testMultiLevelGenericMessageToAndFrom() {
+    GenericTestData<Comment> testData = new GenericTestData<>(10, comment);
+    GenericTestData<Email> testData2 = new GenericTestData<>(100, email);
+    MultiLevelGenericTestData<Comment, Email> data =
+        new MultiLevelGenericTestData<>("test", testData, testData2);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    MultiLevelGenericTestData<Comment, Email> fromMessage =
+        (MultiLevelGenericTestData<Comment, Email>)
+            genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  @Disabled
+   void testMultiLevelGenericMessageToAndFromWithoutAllArgsConstructor() {
+    GenericTestData<Comment> testData = new GenericTestData<>(10, comment);
+    GenericTestData<Email> testData2 = new GenericTestData<>(100, email);
+    MultiLevelGenericTestDataNoArgs<Comment, Email> data = new MultiLevelGenericTestDataNoArgs<>();
+    data.setData("Test");
+    data.setTGenericTestData(testData);
+    data.setVGenericTestData(testData2);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    MultiLevelGenericTestDataNoArgs<Comment, Email> fromMessage =
+        (MultiLevelGenericTestDataNoArgs<Comment, Email>)
+            genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  @Disabled
+   void testPredefinedGenericTypeToFromMessage() {
+    MultiGenericTestData<Comment, Email> multiGenericTestData =
+        new MultiGenericTestData<>(10, comment, email);
+    GenericTestDataWithPredefinedType data =
+        new GenericTestDataWithPredefinedType(200, multiGenericTestData);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    GenericTestDataWithPredefinedType fromMessage =
+        (GenericTestDataWithPredefinedType) genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  @Disabled
+   void testMultiGenericSameTypeToFromMessage() {
+    GenericTestData<Comment> genericTestData = new GenericTestData<>(100, comment);
+    MultiGenericTestData<Comment, Comment> multiGenericTestData =
+        new MultiGenericTestData<>(200, comment, comment);
+    MultiGenericTestDataSameType<Comment> data =
+        new MultiGenericTestDataSameType<>(10, genericTestData, multiGenericTestData);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    MultiGenericTestDataSameType<Comment> fromMessage =
+        (MultiGenericTestDataSameType<Comment>) genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  @Disabled
+   void testMultiLevelGenericTestDataFixedTypeToFromMessage() {
+    GenericTestData<Comment> genericTestData = new GenericTestData<>(100, comment);
+    MultiGenericTestData<Email, String> multiGenericTestData =
+        new MultiGenericTestData<>(200, email, "comment");
+    MultiLevelGenericTestDataFixedType<Comment, Email> data =
+        new MultiLevelGenericTestDataFixedType<>("10", genericTestData, multiGenericTestData);
+    Message message =
+        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    MultiLevelGenericTestDataFixedType<Comment, Email> fromMessage =
+        (MultiLevelGenericTestDataFixedType<Comment, Email>)
+            genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  @Disabled
+   void foo() {
+    MappingRegistrar<?> m = new MappingRegistrar<MultiGenericTestDataSameType<String>>() {};
+    m.seeIt();
+    MultiGenericTestDataSameType<String> m2 = new MultiGenericTestDataSameType<>();
+    m2.seeIt();
+  }
 
   @Data
   @NoArgsConstructor
@@ -105,180 +287,6 @@ public class GenericMessageConverterTest {
   public static class Email {
     private String id;
     private String subject;
-  }
-
-  private static Comment comment = new Comment(UUID.randomUUID().toString(), "This is test");
-  private static Email email = new Email(UUID.randomUUID().toString(), "This is test");
-
-  @Test
-  public void fromMessageIoException() {
-    Message<String> message = new GenericMessage<>("dasasd");
-    assertNull(genericMessageConverter.fromMessage(message, null));
-  }
-
-  @Test
-  public void fromMessageClassCastException() {
-    Message<Comment> commentMessage = new GenericMessage<>(comment);
-    assertNull(genericMessageConverter.fromMessage(commentMessage, null));
-  }
-
-  @Test
-  public void fromMessageClassNotFoundException() {
-    Message<String> message = (Message<String>) genericMessageConverter.toMessage(comment, null);
-    String payload = Objects.requireNonNull(message).getPayload().replace("Comment", "SomeData");
-    Message<String> updatedMessage = new GenericMessage<>(payload);
-    assertNull(genericMessageConverter.fromMessage(updatedMessage, null));
-  }
-
-  @Test
-  public void toMessageEmptyObject() {
-    Message<String> m = (Message<String>) genericMessageConverter.toMessage(new Object(), null);
-    assertNull(m);
-  }
-
-  @Test
-  public void toMessage() {
-    Message<String> m = (Message<String>) genericMessageConverter.toMessage(comment, null);
-    Comment comment1 = (Comment) genericMessageConverter.fromMessage(m, null);
-    assertEquals(comment1, comment);
-  }
-
-  @Test
-  public void toMessageSet() {
-    assertNull(
-        genericMessageConverter.toMessage(
-            Collections.singleton("Foo"), RqueueMessageHeaders.emptyMessageHeaders()));
-  }
-
-  @Test
-  public void toMessageEmptyList() {
-    assertNull(
-        genericMessageConverter.toMessage(
-            Collections.emptyList(), RqueueMessageHeaders.emptyMessageHeaders()));
-  }
-
-  @Test
-  public void testMessageNonEmptyListWithGenericItem() {
-    List<GenericTestData<String>> items =
-        Collections.singletonList(new GenericTestData<>(10, "10"));
-    assertNull(
-        genericMessageConverter.toMessage(items, RqueueMessageHeaders.emptyMessageHeaders()));
-  }
-
-  @Test
-  public void testToAndFromMessageList() {
-    List<Comment> dataList = Collections.singletonList(comment);
-    Message message =
-        genericMessageConverter.toMessage(dataList, RqueueMessageHeaders.emptyMessageHeaders());
-    List<Comment> fromMessage = (List<Comment>) genericMessageConverter.fromMessage(message, null);
-    assertEquals(dataList, fromMessage);
-  }
-
-  @Test
-  public void testGenericMessageToReturnNull() {
-    GenericTestData<Comment> data = new GenericTestData<>(10, comment);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    assertNull(message);
-  }
-
-  @Test
-  @Disabled
-  public void testMultipleGenericFieldMessageToAndFrom() {
-    MultiGenericTestData<Comment, Email> data = new MultiGenericTestData<>(10, comment, email);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    MultiGenericTestData<Comment, Email> fromMessage =
-        (MultiGenericTestData<Comment, Email>) genericMessageConverter.fromMessage(message, null);
-    assertEquals(data, fromMessage);
-  }
-
-  @Test
-  @Disabled
-  public void testMultipleGenericSameTypeMessageToAndFrom() {
-    MultiGenericTestData<Comment, Comment> data = new MultiGenericTestData<>(10, comment, comment);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    MultiGenericTestData<Comment, Comment> fromMessage =
-        (MultiGenericTestData<Comment, Comment>) genericMessageConverter.fromMessage(message, null);
-    assertEquals(data, fromMessage);
-  }
-
-  @Test
-  @Disabled
-  public void testMultiLevelGenericMessageToAndFrom() {
-    GenericTestData<Comment> testData = new GenericTestData<>(10, comment);
-    GenericTestData<Email> testData2 = new GenericTestData<>(100, email);
-    MultiLevelGenericTestData<Comment, Email> data =
-        new MultiLevelGenericTestData<>("test", testData, testData2);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    MultiLevelGenericTestData<Comment, Email> fromMessage =
-        (MultiLevelGenericTestData<Comment, Email>)
-            genericMessageConverter.fromMessage(message, null);
-    assertEquals(data, fromMessage);
-  }
-
-  @Test
-  @Disabled
-  public void testMultiLevelGenericMessageToAndFromWithoutAllArgsConstructor() {
-    GenericTestData<Comment> testData = new GenericTestData<>(10, comment);
-    GenericTestData<Email> testData2 = new GenericTestData<>(100, email);
-    MultiLevelGenericTestDataNoArgs<Comment, Email> data = new MultiLevelGenericTestDataNoArgs<>();
-    data.setData("Test");
-    data.setTGenericTestData(testData);
-    data.setVGenericTestData(testData2);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    MultiLevelGenericTestDataNoArgs<Comment, Email> fromMessage =
-        (MultiLevelGenericTestDataNoArgs<Comment, Email>)
-            genericMessageConverter.fromMessage(message, null);
-    assertEquals(data, fromMessage);
-  }
-
-  @Test
-  @Disabled
-  public void testPredefinedGenericTypeToFromMessage() {
-    MultiGenericTestData<Comment, Email> multiGenericTestData =
-        new MultiGenericTestData<>(10, comment, email);
-    GenericTestDataWithPredefinedType data =
-        new GenericTestDataWithPredefinedType(200, multiGenericTestData);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    GenericTestDataWithPredefinedType fromMessage =
-        (GenericTestDataWithPredefinedType) genericMessageConverter.fromMessage(message, null);
-    assertEquals(data, fromMessage);
-  }
-
-  @Test
-  @Disabled
-  public void testMultiGenericSameTypeToFromMessage() {
-    GenericTestData<Comment> genericTestData = new GenericTestData<>(100, comment);
-    MultiGenericTestData<Comment, Comment> multiGenericTestData =
-        new MultiGenericTestData<>(200, comment, comment);
-    MultiGenericTestDataSameType<Comment> data =
-        new MultiGenericTestDataSameType<>(10, genericTestData, multiGenericTestData);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    MultiGenericTestDataSameType<Comment> fromMessage =
-        (MultiGenericTestDataSameType<Comment>) genericMessageConverter.fromMessage(message, null);
-    assertEquals(data, fromMessage);
-  }
-
-  @Test
-  @Disabled
-  public void testMultiLevelGenericTestDataFixedTypeToFromMessage() {
-    GenericTestData<Comment> genericTestData = new GenericTestData<>(100, comment);
-    MultiGenericTestData<Email, String> multiGenericTestData =
-        new MultiGenericTestData<>(200, email, "comment");
-    MultiLevelGenericTestDataFixedType<Comment, Email> data =
-        new MultiLevelGenericTestDataFixedType<>("10", genericTestData, multiGenericTestData);
-    Message message =
-        genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
-    MultiLevelGenericTestDataFixedType<Comment, Email> fromMessage =
-        (MultiLevelGenericTestDataFixedType<Comment, Email>)
-            genericMessageConverter.fromMessage(message, null);
-    assertEquals(data, fromMessage);
   }
 
   // https://stackoverflow.com/questions/64873444/generic-class-type-parameter-detail-at-runtime
@@ -359,14 +367,5 @@ public class GenericMessageConverterTest {
   public static class GenericTestDataWithPredefinedType {
     private Integer index;
     private MultiGenericTestData<Comment, Email> data;
-  }
-
-  @Test
-  @Disabled
-  public void foo() {
-    MappingRegistrar<?> m = new MappingRegistrar<MultiGenericTestDataSameType<String>>() {};
-    m.seeIt();
-    MultiGenericTestDataSameType<String> m2 = new MultiGenericTestDataSameType<>();
-    m2.seeIt();
   }
 }

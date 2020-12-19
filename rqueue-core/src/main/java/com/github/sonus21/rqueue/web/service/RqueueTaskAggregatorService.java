@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.QueueEvents;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
@@ -31,7 +32,6 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -263,7 +263,9 @@ public class RqueueTaskAggregatorService
         boolean locked = false;
         try {
           if (rqueueLockManager.acquireLock(
-              lockKey, Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
+              lockKey,
+              rqueueConfig.getBrokerId(),
+              Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
             locked = true;
             aggregate(events);
           } else {
@@ -273,7 +275,7 @@ public class RqueueTaskAggregatorService
           }
         } finally {
           if (locked) {
-            rqueueLockManager.releaseLock(lockKey);
+            rqueueLockManager.releaseLock(lockKey, rqueueConfig.getBrokerId());
           }
         }
       }

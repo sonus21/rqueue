@@ -29,9 +29,9 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
 public final class RqueueMessageUtils {
-  private RqueueMessageUtils() {}
-
   private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
+
+  private RqueueMessageUtils() {}
 
   public static String getMessageMetaId(String queueName, String messageId) {
     return META_DATA_KEY_PREFIX + queueName + REDIS_KEY_SEPARATOR + messageId;

@@ -14,29 +14,22 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.test.common;
+package com.github.sonus21.rqueue;
 
-import java.util.Random;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@Slf4j
-public abstract class TestBase {
-  protected static Random random;
-
-  static {
-    String seed = System.getenv("TEST_SEED");
-    long randomSeed = 0;
-    if (seed != null) {
-      try {
-        randomSeed = Long.parseLong(seed);
-      } catch (NumberFormatException e) {
-        log.error("Invalid number format for log seed {}", seed);
-      }
-    }
-    if (randomSeed == 0) {
-      randomSeed = System.currentTimeMillis();
-    }
-    random = new Random(randomSeed);
-    log.error("Test random seed is {}", randomSeed);
-  }
-}
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Tag("unit")
+@Tag("core")
+@Test
+@ExtendWith(MockitoExtension.class)
+public @interface CoreUnitTest {}

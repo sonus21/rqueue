@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.doReturn;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestThreadPoolScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -29,17 +31,15 @@ import com.github.sonus21.rqueue.utils.ThreadUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 
-@ExtendWith(MockitoExtension.class)
-public class MessageSchedulerRedisDisabled {
+@CoreUnitTest
+class MessageSchedulerRedisDisabled extends TestBase {
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
   @Mock private RedisTemplate<String, Long> redisTemplate;
 
@@ -56,7 +56,7 @@ public class MessageSchedulerRedisDisabled {
   }
 
   @Test
-  public void startShouldSubmitsTaskWhenRedisIsDisabled() throws Exception {
+   void startShouldSubmitsTaskWhenRedisIsDisabled() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {

@@ -19,13 +19,18 @@ package com.github.sonus21.rqueue.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
-public class RqueueEndpointManagerTest {
+@CoreUnitTest
+class RqueueEndpointManagerTest extends TestBase {
   private final RqueueEndpointManager rqueueEndpointManager =
       new RqueueEndpointManagerImpl(
           mock(RqueueMessageTemplate.class), new DefaultRqueueMessageConverter(), null);
@@ -37,7 +42,7 @@ public class RqueueEndpointManagerTest {
   }
 
   @Test
-  public void registerQueue() {
+   void registerQueue() {
 
     rqueueEndpointManager.registerQueue("test", "high");
     rqueueEndpointManager.isQueueRegistered("test");
@@ -45,7 +50,7 @@ public class RqueueEndpointManagerTest {
   }
 
   @Test
-  public void getQueueConfig() {
+   void getQueueConfig() {
     rqueueEndpointManager.registerQueue("test2", "high");
     assertEquals(1, rqueueEndpointManager.getQueueConfig("test2").size());
   }

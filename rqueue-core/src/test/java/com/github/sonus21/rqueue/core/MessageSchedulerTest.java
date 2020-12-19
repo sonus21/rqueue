@@ -19,6 +19,8 @@ package com.github.sonus21.rqueue.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestMessageScheduler;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestThreadPoolScheduler;
@@ -30,16 +32,14 @@ import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
-@ExtendWith(MockitoExtension.class)
-public class MessageSchedulerTest {
+@CoreUnitTest
+class MessageSchedulerTest extends TestBase {
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
   @Mock private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
   @Mock private RedisTemplate<String, Long> redisTemplate;
@@ -60,7 +60,7 @@ public class MessageSchedulerTest {
   }
 
   @Test
-  public void afterPropertiesSetWithEmptyQueSet() throws Exception {
+   void afterPropertiesSetWithEmptyQueSet() throws Exception {
     EndpointRegistry.delete();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertEquals(0, messageScheduler.scheduleList.size());
@@ -68,7 +68,7 @@ public class MessageSchedulerTest {
   }
 
   @Test
-  public void startShouldNotSubmitsTask() throws Exception {
+   void startShouldNotSubmitsTask() throws Exception {
     EndpointRegistry.delete();
     EndpointRegistry.register(slowQueueDetail);
     EndpointRegistry.register(fastQueueDetail);

@@ -56,9 +56,9 @@ public class QueueDetail extends SerializableBase {
   private final String delayedQueueChannelName;
   private final boolean active;
   private final Concurrency concurrency;
+  private final boolean systemGenerated;
   private Map<String, Integer> priority;
   private String priorityGroup;
-  private final boolean systemGenerated;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);

@@ -78,6 +78,7 @@ public abstract class ApplicationBasicConfiguration {
       return;
     }
     if (redisServer == null) {
+      log.info("Starting Redis at port {}", redisPort);
       redisServer = new RedisServer(redisPort);
       redisServer.start();
     }

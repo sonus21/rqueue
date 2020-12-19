@@ -27,6 +27,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -48,19 +50,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueUtilityServiceTest {
-  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
-  private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
-  private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  private RqueueMessageMetadataService messageMetadataService =
+@CoreUnitTest
+class RqueueUtilityServiceTest extends TestBase {
+  private final RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private final RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
+  private final RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
+  private final RqueueMessageMetadataService messageMetadataService =
       mock(RqueueMessageMetadataService.class);
-  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private RqueueUtilityService rqueueUtilityService =
+  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
+  private final RqueueUtilityService rqueueUtilityService =
       new RqueueUtilityServiceImpl(
           rqueueConfig,
           rqueueWebConfig,
@@ -70,7 +70,7 @@ public class RqueueUtilityServiceTest {
           messageMetadataService);
 
   @Test
-  public void deleteMessage() {
+  void deleteMessage() {
     doReturn("__rq::q-config::notification").when(rqueueConfig).getQueueConfigKey("notification");
     String id = UUID.randomUUID().toString();
     BaseResponse response = rqueueUtilityService.deleteMessage("notification", id);
@@ -86,7 +86,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void moveMessageInvalidRequest() {
+  void moveMessageInvalidRequest() {
     MessageMoveRequest request = new MessageMoveRequest();
     request.setSrc("job");
     request.setDst("__rq::d-queue::job");
@@ -97,7 +97,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void moveMessageToZset() {
+  void moveMessageToZset() {
     doReturn(100).when(rqueueWebConfig).getMaxMessageMoveCount();
     MessageMoveRequest request = new MessageMoveRequest();
     request.setSrc("job");
@@ -150,7 +150,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void moveMessageToList() {
+  void moveMessageToList() {
     doReturn(100).when(rqueueWebConfig).getMaxMessageMoveCount();
     MessageMoveRequest request = new MessageMoveRequest();
     request.setSrc("__rq::d-queue:job");
@@ -181,7 +181,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void deleteQueueMessages() {
+  void deleteQueueMessages() {
     doReturn(org.springframework.data.redis.connection.DataType.LIST)
         .when(rqueueStringDao)
         .type("job");
@@ -200,7 +200,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void getDataType() {
+  void getDataType() {
     doReturn(org.springframework.data.redis.connection.DataType.STRING)
         .when(rqueueStringDao)
         .type("job");

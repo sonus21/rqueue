@@ -21,21 +21,21 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
-@ExtendWith(MockitoExtension.class)
-public class ProcessingMessageSchedulerTest {
+@CoreUnitTest
+class ProcessingMessageSchedulerTest extends TestBase {
   @Mock private RedisTemplate<String, Long> redisTemplate;
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
   @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
@@ -57,19 +57,19 @@ public class ProcessingMessageSchedulerTest {
   }
 
   @Test
-  public void getChannelName() {
+   void getChannelName() {
     assertEquals(
         slowQueueDetail.getProcessingQueueChannelName(),
         messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
-  public void getZsetName() {
+   void getZsetName() {
     assertEquals(slowQueueDetail.getProcessingQueueName(), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
-  public void getNextScheduleTimeSlowQueue() {
+   void getNextScheduleTimeSlowQueue() {
     long currentTime = System.currentTimeMillis();
     assertThat(
         messageScheduler.getNextScheduleTime(slowQueue, null),
@@ -79,7 +79,7 @@ public class ProcessingMessageSchedulerTest {
   }
 
   @Test
-  public void getNextScheduleTimeFastQueue() {
+   void getNextScheduleTimeFastQueue() {
     long currentTime = System.currentTimeMillis();
     assertThat(
         messageScheduler.getNextScheduleTime(fastQueue, null),

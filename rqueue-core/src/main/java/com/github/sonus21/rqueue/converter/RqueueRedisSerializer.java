@@ -34,65 +34,6 @@ import org.springframework.data.redis.serializer.SerializationException;
 
 @Slf4j
 public class RqueueRedisSerializer implements RedisSerializer<Object> {
-  private static class RqueueRedisSerDes implements RedisSerializer<Object> {
-    private ObjectMapper mapper;
-
-    RqueueRedisSerDes() {
-      this.mapper = new ObjectMapper();
-      this.mapper =
-          mapper.registerModule(new SimpleModule().addSerializer(new NullValueSerializer()));
-      this.mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-      this.mapper =
-          mapper.activateDefaultTyping(
-              mapper.getPolymorphicTypeValidator(), DefaultTyping.NON_FINAL, As.PROPERTY);
-      this.mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
-
-    private static class NullValueSerializer extends StdSerializer<NullValue> {
-
-      private static final long serialVersionUID = 211020517180777825L;
-      private final String classIdentifier;
-
-      NullValueSerializer() {
-        super(NullValue.class);
-        this.classIdentifier = "@class";
-      }
-
-      @Override
-      public void serialize(
-          NullValue value, JsonGenerator jsonGenerator, SerializerProvider provider)
-          throws IOException {
-        jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField(classIdentifier, NullValue.class.getName());
-        jsonGenerator.writeEndObject();
-      }
-    }
-
-    @Override
-    public byte[] serialize(Object source) throws SerializationException {
-      if (source == null) {
-        return SerializationUtils.EMPTY_ARRAY;
-      }
-      try {
-        return mapper.writeValueAsBytes(source);
-      } catch (JsonProcessingException e) {
-        throw new SerializationException("Could not write JSON: " + e.getMessage(), e);
-      }
-    }
-
-    @Override
-    public Object deserialize(byte[] source) throws SerializationException {
-      if (SerializationUtils.isEmpty(source)) {
-        return null;
-      }
-      try {
-        return mapper.readValue(source, Object.class);
-      } catch (Exception ex) {
-        throw new SerializationException("Could not read JSON: " + ex.getMessage(), ex);
-      }
-    }
-  }
-
   private final RedisSerializer<Object> serializer;
 
   public RqueueRedisSerializer(RedisSerializer<Object> redisSerializer) {
@@ -118,6 +59,65 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
     } catch (Exception e) {
       log.warn("Deserialization has failed {}", new String(bytes), e);
       return new String(bytes);
+    }
+  }
+
+  private static class RqueueRedisSerDes implements RedisSerializer<Object> {
+    private ObjectMapper mapper;
+
+    RqueueRedisSerDes() {
+      this.mapper = new ObjectMapper();
+      this.mapper =
+          mapper.registerModule(new SimpleModule().addSerializer(new NullValueSerializer()));
+      this.mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      this.mapper =
+          mapper.activateDefaultTyping(
+              mapper.getPolymorphicTypeValidator(), DefaultTyping.NON_FINAL, As.PROPERTY);
+      this.mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    @Override
+    public byte[] serialize(Object source) throws SerializationException {
+      if (source == null) {
+        return SerializationUtils.EMPTY_ARRAY;
+      }
+      try {
+        return mapper.writeValueAsBytes(source);
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("Could not write JSON: " + e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public Object deserialize(byte[] source) throws SerializationException {
+      if (SerializationUtils.isEmpty(source)) {
+        return null;
+      }
+      try {
+        return mapper.readValue(source, Object.class);
+      } catch (Exception ex) {
+        throw new SerializationException("Could not read JSON: " + ex.getMessage(), ex);
+      }
+    }
+
+    private static class NullValueSerializer extends StdSerializer<NullValue> {
+
+      private static final long serialVersionUID = 211020517180777825L;
+      private final String classIdentifier;
+
+      NullValueSerializer() {
+        super(NullValue.class);
+        this.classIdentifier = "@class";
+      }
+
+      @Override
+      public void serialize(
+          NullValue value, JsonGenerator jsonGenerator, SerializerProvider provider)
+          throws IOException {
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField(classIdentifier, NullValue.class.getName());
+        jsonGenerator.writeEndObject();
+      }
     }
   }
 }

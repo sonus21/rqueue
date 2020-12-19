@@ -138,7 +138,7 @@ class RqueueExecutor extends MessageContainerBase {
     MessageMetadata newMessageMetadata =
         rqueueMessageMetadataService.getOrCreateMessageMetadata(job.getRqueueMessage());
     if (!newMessageMetadata.equals(job.getMessageMetadata())) {
-      //TODO what happens to the current execution data
+      // TODO what happens to the current execution data
       job.setMessageMetadata(newMessageMetadata);
     }
     return job.getMessageMetadata().isDeleted();

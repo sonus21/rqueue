@@ -16,9 +16,9 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.PeriodicJob;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
@@ -26,13 +26,11 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
 @Slf4j
 @TestPropertySource(
@@ -45,9 +43,10 @@ import org.springframework.test.context.TestPropertySource;
       "use.system.redis=false",
       "monitor.enabled=false"
     })
-public class PeriodicMessageTest extends SpringTestBase {
+@SpringBootIntegrationTest
+class PeriodicMessageTest extends SpringTestBase {
   @Test
-  public void testSimplePeriodicMessage() throws TimedOutException {
+  void testSimplePeriodicMessage() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();
     String messageId =
         rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, Duration.ofSeconds(2));
@@ -63,7 +62,7 @@ public class PeriodicMessageTest extends SpringTestBase {
   }
 
   @Test
-  public void testPeriodicMessageWithTimeUnit() throws TimedOutException {
+  void testPeriodicMessageWithTimeUnit() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();
     String messageId =
         rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, 2000, TimeUnit.MILLISECONDS);
@@ -75,7 +74,7 @@ public class PeriodicMessageTest extends SpringTestBase {
   }
 
   @Test
-  public void testPeriodicMessageMilliseconds() throws TimedOutException {
+  void testPeriodicMessageMilliseconds() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();
     String messageId = rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, 2000);
     TimeoutUtils.waitFor(

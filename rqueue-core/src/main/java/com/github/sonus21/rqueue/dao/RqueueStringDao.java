@@ -50,4 +50,6 @@ public interface RqueueStringDao {
   DataType type(String key);
 
   void ltrim(String listName, int start, int end);
+
+  Boolean deleteIfSame(String key, String value);
 }

@@ -18,8 +18,8 @@ package com.github.sonus21.rqueue.dao.impl;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.models.db.RqueueJob;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;

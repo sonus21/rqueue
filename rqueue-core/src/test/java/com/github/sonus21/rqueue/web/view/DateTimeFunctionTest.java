@@ -20,23 +20,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import java.util.Collections;
 import org.jtwig.functions.FunctionRequest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class DateTimeFunctionTest {
-  private DateTimeFunction function = new DateTimeFunction();
+@CoreUnitTest
+class DateTimeFunctionTest extends TestBase {
+  private final DateTimeFunction function = new DateTimeFunction();
 
   @Test
-  public void name() {
+  void name() {
     assertEquals("time", function.name());
   }
 
   @Test
-  public void execute() {
+  void execute() {
     FunctionRequest request = mock(FunctionRequest.class);
     doReturn(Collections.singletonList(1588335692988L)).when(request).getArguments();
     assertEquals("01 May 2020 12:21", function.execute(request));

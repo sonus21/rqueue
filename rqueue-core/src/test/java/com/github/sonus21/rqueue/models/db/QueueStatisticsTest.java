@@ -21,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class QueueStatisticsTest {
+@CoreUnitTest
+public class QueueStatisticsTest extends TestBase {
   private String id = "__rq::q-stat::slow-queue";
 
   public static void validate(QueueStatistics queueStatistics, int count) {
@@ -59,7 +59,7 @@ public class QueueStatisticsTest {
   }
 
   @Test
-  public void incrementDeadLetter() {
+  void incrementDeadLetter() {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     assertNotNull(queueStatistics.getTasksMovedToDeadLetter());
 
@@ -76,7 +76,7 @@ public class QueueStatisticsTest {
   }
 
   @Test
-  public void incrementDiscard() {
+  void incrementDiscard() {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     assertNotNull(queueStatistics.getTasksDiscarded());
 
@@ -93,7 +93,7 @@ public class QueueStatisticsTest {
   }
 
   @Test
-  public void incrementRetry() {
+  void incrementRetry() {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     assertNotNull(queueStatistics.getTasksRetried());
 
@@ -110,7 +110,7 @@ public class QueueStatisticsTest {
   }
 
   @Test
-  public void incrementSuccessful() {
+  void incrementSuccessful() {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     assertNotNull(queueStatistics.getTasksSuccessful());
 
@@ -127,7 +127,7 @@ public class QueueStatisticsTest {
   }
 
   @Test
-  public void updateJobExecutionTime() {
+  void updateJobExecutionTime() {
     JobRunTime jobRunTime = new JobRunTime(100L, 300L, 1100, 10);
     JobRunTime jobRunTime2 = new JobRunTime(50L, 250L, 100, 100);
     JobRunTime jobRunTime3 = new JobRunTime(100L, 400L, 1000, 4);
@@ -158,7 +158,7 @@ public class QueueStatisticsTest {
   }
 
   @Test
-  public void pruneStats() {
+  void pruneStats() {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     LocalDate localDate = LocalDate.parse("2020-04-11");
     queueStatistics.pruneStats(localDate, 7);
@@ -184,7 +184,7 @@ public class QueueStatisticsTest {
   }
 
   @Test
-  public void testConstruct() {
+  void testConstruct() {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     assertEquals(id, queueStatistics.getId());
     assertNotNull(queueStatistics.getCreatedOn());

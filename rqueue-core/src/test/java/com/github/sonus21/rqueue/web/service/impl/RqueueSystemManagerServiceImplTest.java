@@ -31,6 +31,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -43,26 +45,24 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueSystemManagerServiceImplTest {
-  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
-  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private RqueueSystemManagerServiceImpl rqueueSystemManagerService =
+@CoreUnitTest
+class RqueueSystemManagerServiceImplTest extends TestBase {
+  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
+  private final RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private final RqueueSystemManagerServiceImpl rqueueSystemManagerService =
       new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
-  private String slowQueue = "slow-queue";
-  private String fastQueue = "fast-queue";
-  private String normalQueue = "normal-queue";
-  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
-  private QueueDetail fastQueueDetail =
+  private final String slowQueue = "slow-queue";
+  private final String fastQueue = "fast-queue";
+  private final String normalQueue = "normal-queue";
+  private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  private final QueueDetail fastQueueDetail =
       TestUtils.createQueueDetail(fastQueue, 3, 200000L, "fast-dlq");
-  private QueueDetail normalQueueDetail =
+  private final QueueDetail normalQueueDetail =
       TestUtils.createQueueDetail(normalQueue, 3, 100000L, "normal-dlq");
-  private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
-  private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
+  private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
+  private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
 
   @BeforeEach
   public void init() {
@@ -74,7 +74,7 @@ public class RqueueSystemManagerServiceImplTest {
   }
 
   @Test
-  public void onApplicationEventStop() {
+  void onApplicationEventStop() {
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", false);
     rqueueSystemManagerService.onApplicationEvent(event);
     verifyNoInteractions(rqueueStringDao);
@@ -82,7 +82,7 @@ public class RqueueSystemManagerServiceImplTest {
   }
 
   @Test
-  public void onApplicationEventStartEmpty() {
+  void onApplicationEventStartEmpty() {
     EndpointRegistry.delete();
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     rqueueSystemManagerService.onApplicationEvent(event);
@@ -103,7 +103,7 @@ public class RqueueSystemManagerServiceImplTest {
   }
 
   @Test
-  public void onApplicationEventStartCreateAllQueueConfigs() {
+  void onApplicationEventStartCreateAllQueueConfigs() {
     doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
     doAnswer(
             invocation -> {
@@ -147,7 +147,7 @@ public class RqueueSystemManagerServiceImplTest {
   }
 
   @Test
-  public void onApplicationEventStartCreateAndUpdateQueueConfigs() {
+  void onApplicationEventStartCreateAndUpdateQueueConfigs() {
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     EndpointRegistry.register(normalQueueDetail);
     doAnswer(

@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.net.Proxy;
 import java.util.UUID;
+import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -35,6 +36,7 @@ public class RqueueConfig {
   private final RedisConnectionFactory connectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
+  private String brokerId;
 
   @Value("${rqueue.version:2.1.0}")
   private String version;
@@ -112,6 +114,11 @@ public class RqueueConfig {
 
   @Value("${rqueue.system.mode:BOTH}")
   private RqueueMode mode;
+
+  @PostConstruct
+  public void init() {
+    this.brokerId = UUID.randomUUID().toString();
+  }
 
   public String getQueuesKey() {
     return prefix + queuesKeySuffix;

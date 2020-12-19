@@ -24,27 +24,27 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.dao.impl.RqueueSystemConfigDaoImpl;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.dao.impl.RqueueSystemConfigDaoImpl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueSystemConfigDaoTest {
-  private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate = mock(RqueueRedisTemplate.class);
-  private RqueueSystemConfigDao rqueueSystemConfigDao =
+@CoreUnitTest
+class RqueueSystemConfigDaoTest extends TestBase {
+  private final RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private final RqueueSystemConfigDao rqueueSystemConfigDao =
       new RqueueSystemConfigDaoImpl(rqueueRedisTemplate);
 
   @Test
-  public void getQConfig() {
+  void getQConfig() {
     assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
     QueueConfig queueConfig = TestUtils.createQueueConfig("job");
     doReturn(queueConfig).when(rqueueRedisTemplate).get(TestUtils.getQueueConfigKey("job"));
@@ -52,7 +52,7 @@ public class RqueueSystemConfigDaoTest {
   }
 
   @Test
-  public void findAllQConfig() {
+  void findAllQConfig() {
     assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
     QueueConfig queueConfig = TestUtils.createQueueConfig("job");
     List<String> keys =
@@ -64,7 +64,7 @@ public class RqueueSystemConfigDaoTest {
   }
 
   @Test
-  public void saveAllQConfig() {
+  void saveAllQConfig() {
     assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey("job")));
     QueueConfig queueConfig = TestUtils.createQueueConfig("job");
     QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification");
@@ -82,12 +82,12 @@ public class RqueueSystemConfigDaoTest {
   }
 
   @Test
-  public void saveNullConfig() {
+  void saveNullConfig() {
     assertThrows(IllegalArgumentException.class, () -> rqueueSystemConfigDao.saveQConfig(null));
   }
 
   @Test
-  public void saveIdNullConfig() {
+  void saveIdNullConfig() {
     QueueConfig queueConfig = new QueueConfig();
     assertThrows(
         IllegalArgumentException.class, () -> rqueueSystemConfigDao.saveQConfig(queueConfig));

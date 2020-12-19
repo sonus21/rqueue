@@ -18,26 +18,27 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.spring.boot.application.ProducerOnlyApplication;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = ProducerOnlyApplication.class)
 @SpringBootTest
 @Slf4j
 @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
-public class ProducerOnlyTest extends BasicListenerTest {
+@SpringBootIntegrationTest
+class ProducerOnlyTest extends BasicListenerTest {
+
   @Test
-  public void testQueueCount() {
+  void testQueueCount() {
+    log.info("Rqueue System Mode {}", rqueueConfig.getMode());
     assertEquals(18, EndpointRegistry.getRegisteredQueueCount(), rqueueConfig.getMode().toString());
     for (int i = 0; i < 10; i++) {
       String queueName = "new_queue_" + i;

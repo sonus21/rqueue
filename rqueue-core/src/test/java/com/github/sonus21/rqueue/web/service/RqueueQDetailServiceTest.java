@@ -24,6 +24,8 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -53,30 +55,28 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.messaging.converter.MessageConverter;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueQDetailServiceTest {
-  private RedisTemplate<?, ?> redisTemplate = mock(RedisTemplate.class);
-  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
-  private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  private RqueueSystemManagerService rqueueSystemManagerService =
+@CoreUnitTest
+class RqueueQDetailServiceTest extends TestBase {
+  private final RedisTemplate<?, ?> redisTemplate = mock(RedisTemplate.class);
+  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private final RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
+  private final RqueueSystemManagerService rqueueSystemManagerService =
       mock(RqueueSystemManagerService.class);
-  private RqueueMessageMetadataService rqueueMessageMetadataService =
+  private final RqueueMessageMetadataService rqueueMessageMetadataService =
       mock(RqueueMessageMetadataService.class);
-  private RqueueQDetailService rqueueQDetailService =
+  private final RqueueQDetailService rqueueQDetailService =
       new RqueueQDetailServiceImpl(
           stringRqueueRedisTemplate,
           rqueueMessageTemplate,
           rqueueSystemManagerService,
           rqueueMessageMetadataService);
-  private MessageConverter messageConverter = new GenericMessageConverter();
+  private final MessageConverter messageConverter = new GenericMessageConverter();
 
   private QueueConfig queueConfig;
   private QueueConfig queueConfig2;
@@ -92,7 +92,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getQueueDataStructureDetail() {
+  void getQueueDataStructureDetail() {
     assertEquals(Collections.emptyList(), rqueueQDetailService.getQueueDataStructureDetail(null));
     doReturn(10L).when(stringRqueueRedisTemplate).getListSize("__rq::queue::test");
     doReturn(11L).when(stringRqueueRedisTemplate).getListSize("test-dlq");
@@ -120,7 +120,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getQueueDataStructureDetails() {
+  void getQueueDataStructureDetails() {
     doReturn(10L).when(stringRqueueRedisTemplate).getListSize("__rq::queue::test");
     doReturn(11L).when(stringRqueueRedisTemplate).getListSize("test-dlq");
     doReturn(12L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test");
@@ -165,7 +165,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getNavTabs() {
+  void getNavTabs() {
     assertEquals(Collections.emptyList(), rqueueQDetailService.getNavTabs(null));
     List<NavTab> navTabs = new ArrayList<>();
     navTabs.add(NavTab.PENDING);
@@ -176,7 +176,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getExplorePageDataTypeList() {
+  void getExplorePageDataTypeList() {
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     List<RqueueMessage> rqueueMessages =
         RqueueMessageUtils.generateMessages(messageConverter, "test", 10);
@@ -216,7 +216,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getExplorePageDataTypeListDeleteFewItems() {
+  void getExplorePageDataTypeListDeleteFewItems() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
@@ -257,7 +257,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getExplorePageDataTypeZset() {
+  void getExplorePageDataTypeZset() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
@@ -308,7 +308,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void viewDataKey() {
+  void viewDataKey() {
     doReturn("test").when(stringRqueueRedisTemplate).get("key");
     DataViewResponse response = rqueueQDetailService.viewData("key", DataType.KEY, null, 0, 10);
     DataViewResponse expectedResponse = new DataViewResponse();
@@ -323,7 +323,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void viewDataList() {
+  void viewDataList() {
     List<Object> objects = new ArrayList<>();
     objects.add("Test");
     objects.add(
@@ -343,7 +343,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void viewDataZset() {
+  void viewDataZset() {
     Set<TypedTuple<Object>> objects = new HashSet<>();
     objects.add(new DefaultTypedTuple<>("Test", 100.0));
     objects.add(
@@ -374,7 +374,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void viewDataSet() {
+  void viewDataSet() {
     Set<Object> objects = new HashSet<>();
     objects.add("Test");
     objects.add(
@@ -392,7 +392,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void viewData() {
+  void viewData() {
     DataViewResponse dataViewResponse = rqueueQDetailService.viewData(null, null, null, 0, 10);
     assertEquals("Data name cannot be empty.", dataViewResponse.getMessage());
     assertEquals(1, dataViewResponse.getCode());
@@ -403,7 +403,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getScheduledTasks() {
+  void getScheduledTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
@@ -430,7 +430,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getWaitingTasks() {
+  void getWaitingTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
@@ -445,7 +445,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getRunningTasks() {
+  void getRunningTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
@@ -462,7 +462,7 @@ public class RqueueQDetailServiceTest {
   }
 
   @Test
-  public void getDeadLetterTasks() {
+  void getDeadLetterTasks() {
     doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))

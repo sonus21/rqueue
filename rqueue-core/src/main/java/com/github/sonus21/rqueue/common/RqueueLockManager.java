@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.common;
 import java.time.Duration;
 
 public interface RqueueLockManager {
-  boolean acquireLock(String lockKey, Duration duration);
+  boolean acquireLock(String lockKey, String lockValue, Duration duration);
 
-  boolean releaseLock(String lockKey);
+  boolean releaseLock(String lockKey, String lockValue);
 }

@@ -20,32 +20,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import io.micrometer.core.instrument.Tags;
 import java.util.Collections;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class MetricsPropertiesTest {
+@CoreUnitTest
+class MetricsPropertiesTest extends TestBase {
   private MetricProperties metricProperties = new MetricProperties();
 
   @Test
-  public void getTags() {
+   void getTags() {
     assertEquals(0, metricProperties.getTags().size());
   }
 
   @Test
-  public void setMetricTags() {
+   void setMetricTags() {
     metricProperties.setMetricTags(Tags.of("test", "test"));
     assertEquals(Tags.of("test", "test"), metricProperties.getMetricTags());
   }
 
   @Test
-  public void getMetricTags() throws IllegalAccessException {
+   void getMetricTags() throws IllegalAccessException {
     MetricProperties metricProperties = new MetricProperties();
     Map<String, String> tags = Collections.singletonMap("test", "test");
     FieldUtils.writeField(metricProperties, "tags", tags, true);
@@ -53,14 +53,14 @@ public class MetricsPropertiesTest {
   }
 
   @Test
-  public void countExecution() {
+   void countExecution() {
     assertFalse(metricProperties.countExecution());
     metricProperties.getCount().setExecution(true);
     assertTrue(metricProperties.countExecution());
   }
 
   @Test
-  public void countFailure() {
+   void countFailure() {
     assertFalse(metricProperties.countFailure());
     metricProperties.getCount().setFailure(true);
     assertTrue(metricProperties.countFailure());

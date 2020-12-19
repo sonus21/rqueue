@@ -26,6 +26,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -36,19 +38,21 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueMessageMetadataServiceTest {
+@CoreUnitTest
+ class RqueueMessageMetadataServiceTest extends TestBase {
   private RqueueMessageMetadataDao rqueueMessageMetadataDao = mock(RqueueMessageMetadataDao.class);
   private RqueueMessageMetadataService rqueueMessageMetadataService =
       new RqueueMessageMetadataServiceImpl(rqueueMessageMetadataDao);
   private String queueName = "test-queue";
 
   @Test
-  public void get() {
+   void get() {
     String id = UUID.randomUUID().toString();
     String msgId = RqueueMessageUtils.getMessageMetaId(queueName, id);
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
@@ -60,7 +64,7 @@ public class RqueueMessageMetadataServiceTest {
   }
 
   @Test
-  public void findAll() {
+   void findAll() {
     String id = UUID.randomUUID().toString();
     String msgId = RqueueMessageUtils.getMessageMetaId(queueName, id);
     MessageMetadata metadata = new MessageMetadata(id, MessageStatus.ENQUEUED);
@@ -71,7 +75,7 @@ public class RqueueMessageMetadataServiceTest {
   }
 
   @Test
-  public void deleteMessageWhereMetaInfoNotFound() {
+   void deleteMessageWhereMetaInfoNotFound() {
     String id = UUID.randomUUID().toString();
     doAnswer(
             invocation -> {
@@ -86,7 +90,7 @@ public class RqueueMessageMetadataServiceTest {
   }
 
   @Test
-  public void deleteMessageWhereMetaInfo() {
+   void deleteMessageWhereMetaInfo() {
     String id = UUID.randomUUID().toString();
     MessageMetadata metadata =
         new MessageMetadata(

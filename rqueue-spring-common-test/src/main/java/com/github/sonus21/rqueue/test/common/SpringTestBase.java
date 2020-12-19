@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.test.common;
 
+import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
@@ -346,6 +347,10 @@ public abstract class SpringTestBase extends TestBase {
       return rqueueMessageSender.enqueueWithRetry(queueName, message, retry);
     }
     return rqueueMessageEnqueuer.enqueueWithRetry(queueName, message, retry) != null;
+  }
+
+  protected List<RqueueMessage> getProcessingMessages(String queueName){
+    return rqueueMessageTemplate.readFromZset(EndpointRegistry.get(queueName).getProcessingQueueName(),0,-1);
   }
 
   protected List<Object> getAllMessages(String queueName) {

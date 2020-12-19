@@ -2,7 +2,7 @@ local expiredValues = redis.call('ZRANGEBYSCORE', KEYS[2], 0, ARGV[1], 'LIMIT', 
 if #expiredValues > 0 then
     for _, v in ipairs(expiredValues) do
         redis.call('RPUSH', KEYS[1], v)
-    end;
+    end ;
     redis.call('ZREM', KEYS[2], unpack(expiredValues))
 end
 -- check head of the queue

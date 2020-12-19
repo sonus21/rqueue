@@ -240,11 +240,10 @@ public abstract class MessageScheduler
     addTask(timerTask, new ScheduledTaskDetail(startTime, future));
   }
 
-  @SuppressWarnings("unchecked")
   protected void initialize() {
     List<String> queueNames = EndpointRegistry.getActiveQueues();
     defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
-    redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.MOVE_EXPIRED_MESSAGE);
+    redisScript = RedisScriptFactory.getScript(ScriptType.MOVE_EXPIRED_MESSAGE);
     queueRunningState = new ConcurrentHashMap<>(queueNames.size());
     queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
     channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());

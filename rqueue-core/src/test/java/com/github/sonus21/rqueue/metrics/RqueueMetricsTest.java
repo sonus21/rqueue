@@ -24,6 +24,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -37,11 +39,9 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueMetricsTest {
+@CoreUnitTest
+class RqueueMetricsTest extends TestBase {
   private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private MetricsProperties metricsProperties = new MetricsProperties() {};
   private QueueCounter queueCounter = mock(QueueCounter.class);
@@ -147,7 +147,7 @@ public class RqueueMetricsTest {
   }
 
   @Test
-  public void queueStatistics() throws IllegalAccessException {
+   void queueStatistics() throws IllegalAccessException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
     FieldUtils.writeField(metrics, "rqueueStringDao", rqueueStringDao, true);
@@ -157,12 +157,12 @@ public class RqueueMetricsTest {
   }
 
   @Test
-  public void counterRegisterMethodIsCalled() throws IllegalAccessException {
+   void counterRegisterMethodIsCalled() throws IllegalAccessException {
     verifyCounterRegisterMethodIsCalled(Tags.empty());
   }
 
   @Test
-  public void counterRegisterMethodIsCalledWithCorrectTag() throws IllegalAccessException {
+   void counterRegisterMethodIsCalledWithCorrectTag() throws IllegalAccessException {
     verifyCounterRegisterMethodIsCalled(tags);
   }
 }

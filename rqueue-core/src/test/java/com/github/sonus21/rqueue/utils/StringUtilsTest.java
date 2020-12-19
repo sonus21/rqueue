@@ -21,19 +21,24 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
-public class StringUtilsTest {
+@CoreUnitTest
+class StringUtilsTest extends TestBase {
 
   @Test
-  public void isEmpty() {
+   void isEmpty() {
     assertTrue(StringUtils.isEmpty(null));
     assertTrue(StringUtils.isEmpty(""));
     assertFalse(StringUtils.isEmpty("hello"));
   }
 
   @Test
-  public void clean() {
+   void clean() {
     assertEquals("", StringUtils.clean("   "));
     assertEquals("test", StringUtils.clean("test"));
     assertEquals("test", StringUtils.clean("    test    "));
@@ -41,17 +46,17 @@ public class StringUtilsTest {
   }
 
   @Test
-  public void convertToCamelCaseEmpty() {
+   void convertToCamelCaseEmpty() {
     assertThrows(IllegalArgumentException.class, () -> StringUtils.convertToCamelCase("   "));
   }
 
   @Test
-  public void convertToCamelCaseNull() {
+   void convertToCamelCaseNull() {
     assertThrows(IllegalArgumentException.class, () -> StringUtils.convertToCamelCase(null));
   }
 
   @Test
-  public void convertToCamelCase() {
+   void convertToCamelCase() {
     assertEquals("url", StringUtils.convertToCamelCase("URL"));
     assertEquals("jobQueue", StringUtils.convertToCamelCase("job-Queue"));
     assertEquals("jobQueue", StringUtils.convertToCamelCase("Job-Queue"));
@@ -66,7 +71,7 @@ public class StringUtilsTest {
   }
 
   @Test
-  public void groupName() {
+   void groupName() {
     assertEquals("Url", StringUtils.groupName("URL"));
     assertEquals("JobQueue", StringUtils.groupName("job-Queue"));
     assertEquals("JobQueue", StringUtils.groupName("Job-Queue"));

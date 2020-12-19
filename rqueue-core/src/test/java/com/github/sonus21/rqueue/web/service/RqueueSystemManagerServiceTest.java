@@ -25,6 +25,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
@@ -40,12 +42,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueSystemManagerServiceTest {
+@CoreUnitTest
+class RqueueSystemManagerServiceTest extends TestBase {
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
@@ -75,7 +79,7 @@ public class RqueueSystemManagerServiceTest {
   }
 
   @Test
-  public void deleteQueue() {
+  void deleteQueue() {
     BaseResponse baseResponse = rqueueSystemManagerService.deleteQueue("test");
     assertEquals(1, baseResponse.getCode());
     assertEquals("Queue not found", baseResponse.getMessage());
@@ -92,7 +96,7 @@ public class RqueueSystemManagerServiceTest {
   }
 
   @Test
-  public void getQueues() {
+  void getQueues() {
     doReturn(Collections.emptyList()).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
     assertEquals(Collections.emptyList(), rqueueSystemManagerService.getQueues());
     doReturn(Collections.singletonList("job"))
@@ -102,7 +106,7 @@ public class RqueueSystemManagerServiceTest {
   }
 
   @Test
-  public void getQueueConfigs() {
+  void getQueueConfigs() {
     doReturn(new ArrayList<>(queues)).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
@@ -114,7 +118,7 @@ public class RqueueSystemManagerServiceTest {
   }
 
   @Test
-  public void getSortedQueueConfigs() {
+  void getSortedQueueConfigs() {
     doReturn(new ArrayList<>(queues)).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
@@ -129,7 +133,7 @@ public class RqueueSystemManagerServiceTest {
   }
 
   @Test
-  public void testGetQueueConfigs() {
+  void testGetQueueConfigs() {
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(
@@ -140,7 +144,7 @@ public class RqueueSystemManagerServiceTest {
   }
 
   @Test
-  public void getQueueConfig() {
+  void getQueueConfig() {
     doReturn(Collections.singletonList(slowQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(Collections.singletonList(TestUtils.getQueueConfigKey(slowQueue)));

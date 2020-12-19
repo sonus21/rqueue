@@ -36,13 +36,13 @@ import org.springframework.data.redis.RedisSystemException;
 @Slf4j
 @SuppressWarnings("java:S107")
 public class JobImpl implements Job {
+  public final Duration expiry;
   private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
   private final RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
   private final Object userMessage;
-  public final Duration expiry;
   private final boolean isPeriodicJob;
 
   public JobImpl(
@@ -98,7 +98,7 @@ public class JobImpl implements Job {
 
   @Override
   public void checkIn(Object message) {
-    if(isPeriodicJob){
+    if (isPeriodicJob) {
       throw new UnsupportedOperationException("CheckIn is not supported for periodic job");
     }
     log.debug("Checkin {} Message: {}", rqueueJob.getId(), message);
@@ -114,6 +114,11 @@ public class JobImpl implements Job {
   @Override
   public MessageMetadata getMessageMetadata() {
     return rqueueJob.getMessageMetadata();
+  }
+
+  public void setMessageMetadata(MessageMetadata m) {
+    this.rqueueJob.setMessageMetadata(m);
+    this.save();
   }
 
   @Override
@@ -138,11 +143,6 @@ public class JobImpl implements Job {
   @Override
   public QueueDetail getQueueDetail() {
     return queueDetail;
-  }
-
-  public void setMessageMetadata(MessageMetadata m) {
-    this.rqueueJob.setMessageMetadata(m);
-    this.save();
   }
 
   private void setMessageStatus(MessageStatus messageStatus) {

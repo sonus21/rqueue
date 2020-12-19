@@ -23,6 +23,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
@@ -53,10 +55,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class RqueueTaskAggregatorServiceTest {
+@CoreUnitTest
+ class RqueueTaskAggregatorServiceTest extends TestBase {
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
@@ -149,7 +154,7 @@ public class RqueueTaskAggregatorServiceTest {
   }
 
   @Test
-  public void onApplicationEvent() throws TimedOutException {
+   void onApplicationEvent() throws TimedOutException {
     if (LocalDateTime.now(ZoneOffset.UTC).getHour() == 23) {
       log.info("This test cannot be run at this time");
       return;
@@ -157,11 +162,13 @@ public class RqueueTaskAggregatorServiceTest {
     String id = "__rq::q-stat::" + queueName;
     doReturn(id).when(rqueueConfig).getQueueStatisticsKey(queueName);
     doReturn("__rq::lock::" + id).when(rqueueConfig).getLockKey(id);
+    doReturn("broker-id").when(rqueueConfig).getBrokerId();
 
     doReturn(true)
         .when(rqueueLockManager)
         .acquireLock(
             "__rq::lock::" + id,
+            "broker-id",
             Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS));
     List<QueueStatistics> queueStatistics = new ArrayList<>();
     doAnswer(

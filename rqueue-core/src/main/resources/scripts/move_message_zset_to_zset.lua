@@ -10,6 +10,6 @@ if #srcValues > 0 then
         redis.call('ZADD', KEYS[2], score, v)
     end
     redis.call('ZREM', KEYS[1], unpack(srcValues))
-end;
+end ;
 local size = redis.call('ZCARD', KEYS[1])
 return size
