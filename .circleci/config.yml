@@ -168,6 +168,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run: ls -r .
       - run: ./gradlew coveralls
 
 
