@@ -128,10 +128,14 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
 
     reports {
         xml.enabled true
-        xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
         csv.enabled false
         html.enabled true
     }
+
+    doFirst {
+        executionData = files(executionData.findAll { it.exists() })
+    }
+
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it,
@@ -166,5 +170,5 @@ codeCoverageReport.dependsOn {
 coveralls {
     description = 'Uploads the aggregated coverage report to Coveralls'
     sourceDirs = publishedProjects.sourceSets.main.allSource.srcDirs.flatten()
-    jacocoReportPath "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+    jacocoReportPath = "${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
 }

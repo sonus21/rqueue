@@ -18,6 +18,8 @@ executors:
       ORG_GRADLE_PROJECT_sonatypePassword: xxx
       USER_NAME: rqueue
       REDIS_RUNNING: "true"
+    run:
+
 
 
 jobs:
@@ -77,6 +79,13 @@ jobs:
       # Reuse the workspace from the build job
       - attach_workspace:
           at: .
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo add-apt-repository ppa:chris-lea/redis-server
+            sudo apt-get update
+            sudo apt-get -y install redis-server
+            redis-cli --version
       - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags="redisCluster,producerOnly"
       - persist_to_workspace:
           root: .
@@ -117,6 +126,13 @@ jobs:
       # Reuse the workspace from the build job
       - attach_workspace:
           at: .
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo add-apt-repository ppa:chris-lea/redis-server
+            sudo apt-get update
+            sudo apt-get -y install redis-server
+            redis-cli --version
       - run:
           name: Setup Redis Cluster
           background: true
