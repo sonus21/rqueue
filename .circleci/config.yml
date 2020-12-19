@@ -115,7 +115,7 @@ jobs:
           command: |
             sudo add-apt-repository ppa:chris-lea/redis-server
             sudo apt-get update
-            sudo apt-get --allow install redis-server
+            sudo apt-get -y install redis-server
             redis-cli --version
       - run:
           name: Setup Redis Cluster
