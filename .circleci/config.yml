@@ -163,7 +163,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: ls -r .
+      - run: ls -r build/reports/jacoco/test
       - run: pwd
       - run: ./gradlew coveralls
 
