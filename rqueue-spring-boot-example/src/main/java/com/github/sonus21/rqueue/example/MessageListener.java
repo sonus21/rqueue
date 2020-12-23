@@ -70,7 +70,7 @@ public class MessageListener {
       value = "job-queue",
       deadLetterQueue = "job-morgue",
       numRetries = "2",
-      deadLetterQueueListenerEnabled = "false",
+      deadLetterQueueListenerEnabled = "true",
       concurrency = "1-3",
       active = "true")
   @NewSpan

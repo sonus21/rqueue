@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.test.dto.PeriodicJob;
 import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.dto.Sms;
-import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
+import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.lang.ref.WeakReference;
@@ -48,14 +48,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.transaction.annotation.Transactional;
 
 @com.github.sonus21.rqueue.annotation.MessageListener
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-@Transactional
 @Slf4j
 public class MessageListener {
-  @NonNull private ConsumedMessageService consumedMessageService;
+  @NonNull private ConsumedMessageStore consumedMessageStore;
   @NonNull private FailureManager failureManager;
   @NonNull private RqueueConfig rqueueConfig;
   private ScheduledExecutorService scheduledExecutorService;
@@ -108,7 +106,7 @@ public class MessageListener {
     if (failureManager.shouldFail(job.getId())) {
       throw new Exception("Failing job task to be retried" + job);
     }
-    consumedMessageService.save(job, null, jobQueue);
+    consumedMessageStore.save(job, null, jobQueue);
   }
 
   @PostConstruct
@@ -129,7 +127,7 @@ public class MessageListener {
     if (failureManager.shouldFail(notification.getId())) {
       throw new Exception("Failing notification task to be retried" + notification);
     }
-    consumedMessageService.save(notification, null, notificationQueueName);
+    consumedMessageStore.save(notification, null, notificationQueueName);
   }
 
   @RqueueListener(
@@ -144,7 +142,7 @@ public class MessageListener {
       @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job)
       throws Exception {
     log.info("Email: {} Message: {}", email, message);
-    consumedMessageService.save(email, job.getId(), emailQueue);
+    consumedMessageStore.save(email, job.getId(), emailQueue);
     if (failureManager.shouldFail(email.getId())) {
       throw new Exception("Failing email task to be retried" + email);
     }
@@ -161,7 +159,7 @@ public class MessageListener {
     if (failureManager.shouldFail(sms.getId())) {
       throw new Exception("Failing sms task to be retried" + sms);
     }
-    consumedMessageService.save(sms, null, smsQueue);
+    consumedMessageStore.save(sms, null, smsQueue);
   }
 
   @RqueueListener(
@@ -175,7 +173,7 @@ public class MessageListener {
     if (failureManager.shouldFail(chatIndexing.getId())) {
       throw new Exception("Failing chat indexing task to be retried" + chatIndexing);
     }
-    consumedMessageService.save(chatIndexing, null, chatIndexingQueue);
+    consumedMessageStore.save(chatIndexing, null, chatIndexingQueue);
   }
 
   @RqueueListener(
@@ -189,7 +187,7 @@ public class MessageListener {
     if (failureManager.shouldFail(feedGeneration.getId())) {
       throw new Exception("Failing feedGeneration task to be retried" + feedGeneration);
     }
-    consumedMessageService.save(feedGeneration, null, feedGenerationQueue);
+    consumedMessageStore.save(feedGeneration, null, feedGenerationQueue);
   }
 
   @RqueueListener(
@@ -203,7 +201,7 @@ public class MessageListener {
     if (failureManager.shouldFail(reservation.getId())) {
       throw new Exception("Failing reservation task to be retried" + reservation);
     }
-    consumedMessageService.save(reservation, null, reservationQueue);
+    consumedMessageStore.save(reservation, null, reservationQueue);
   }
 
   @RqueueListener(
@@ -217,7 +215,7 @@ public class MessageListener {
     if (failureManager.shouldFail(request.getId())) {
       throw new Exception("Failing reservation request task to be retried" + request);
     }
-    consumedMessageService.save(request, null, reservationRequestQueue);
+    consumedMessageStore.save(request, null, reservationRequestQueue);
   }
 
   @RqueueListener(
@@ -227,7 +225,7 @@ public class MessageListener {
   public void onMessageReservationRequestDeadLetterQueue(ReservationRequest request)
       throws Exception {
     log.info("ReservationRequest Dead Letter Queue{}", request);
-    consumedMessageService.save(
+    consumedMessageStore.save(
         request, "reservation-request-dlq", reservationRequestDeadLetterQueue);
   }
 
@@ -236,7 +234,7 @@ public class MessageListener {
     log.info("onMessageEmailList {}", emailList);
     String consumedId = UUID.randomUUID().toString();
     for (Email email : emailList) {
-      consumedMessageService.save(email, consumedId, listEmailQueue);
+      consumedMessageStore.save(email, consumedId, listEmailQueue);
     }
   }
 
@@ -253,7 +251,7 @@ public class MessageListener {
     if (failureManager.shouldFail(periodicJob.getId())) {
       throw new Exception("Failing PeriodicJob task to be retried" + periodicJob);
     }
-    consumedMessageService.save(periodicJob, UUID.randomUUID().toString(), periodicJobQueue);
+    consumedMessageStore.save(periodicJob, UUID.randomUUID().toString(), periodicJobQueue);
     if (checkinEnabled) {
       long endTime = System.currentTimeMillis() + 1000L * periodicJob.getExecutionTime();
       scheduledExecutorService.schedule(
@@ -284,7 +282,7 @@ public class MessageListener {
     long endTime = System.currentTimeMillis() + longRunningJob.getRunTime();
     scheduledExecutorService.schedule(
         new CheckinClerk(scheduledExecutorService, job, endTime, 500L), 10L, TimeUnit.MILLISECONDS);
-    consumedMessageService.save(longRunningJob, rqueueMessage.getId(), longRunningJobQueue);
+    consumedMessageStore.save(longRunningJob, rqueueMessage.getId(), longRunningJobQueue);
     do {
       TimeoutUtils.sleep(200L);
     } while (System.currentTimeMillis() < endTime);

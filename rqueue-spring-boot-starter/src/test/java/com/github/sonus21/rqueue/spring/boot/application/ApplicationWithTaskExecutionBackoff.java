@@ -17,8 +17,10 @@
 package com.github.sonus21.rqueue.spring.boot.application;
 
 import com.github.sonus21.rqueue.test.application.BaseApplicationWithBackoff;
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
@@ -30,7 +32,22 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class ApplicationWithTaskExecutionBackoff extends BaseApplicationWithBackoff {
+  private static volatile ConfigurableApplicationContext context;
+  private static ClassLoader mainThreadClassLoader;
+
   public static void main(String[] args) {
-    SpringApplication.run(ApplicationWithTaskExecutionBackoff.class, args);
+    mainThreadClassLoader = Thread.currentThread().getContextClassLoader();
+    context = SpringApplication.run(ApplicationWithTaskExecutionBackoff.class, args);
+  }
+
+  public static void restart() {
+    ApplicationArguments args = context.getBean(ApplicationArguments.class);
+    Thread thread = new Thread(() -> {
+      context.close();
+      context = SpringApplication.run(Application.class, args.getSourceArgs());
+    });
+    thread.setContextClassLoader(mainThreadClassLoader);
+    thread.setDaemon(false);
+    thread.start();
   }
 }

@@ -29,17 +29,20 @@ import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class ConsumedMessageService {
+@Slf4j
+public class ConsumedMessageStore {
   @NonNull private final ConsumedMessageRepository consumedMessageRepository;
   @NonNull private final ObjectMapper objectMapper;
 
   public ConsumedMessage save(BaseQueueMessage message, String tag, String queueName)
       throws JsonProcessingException {
+    log.info("Queue '{}' Message: {} Tag: '{}'", queueName, message, tag);
     ConsumedMessage consumedMessage =
         consumedMessageRepository.findByMessageIdAndTag(message.getId(), tag);
     String textMessage = objectMapper.writeValueAsString(message);
@@ -86,9 +89,17 @@ public class ConsumedMessageService {
     return idToMessage;
   }
 
+  public List<ConsumedMessage> getAllMessages() {
+    List<ConsumedMessage> consumedMessages = new ArrayList<>();
+    for (ConsumedMessage consumedMessage : consumedMessageRepository.findAll()) {
+      consumedMessages.add(consumedMessage);
+    }
+    return consumedMessages;
+  }
+
   public ConsumedMessage getConsumedMessage(String messageId) {
     List<ConsumedMessage> messages = getConsumedMessages(messageId);
-    if (messages.size() == 0) {
+    if (messages.isEmpty()) {
       return null;
     }
     if (messages.size() == 1) {
@@ -98,10 +109,10 @@ public class ConsumedMessageService {
   }
 
   public List<ConsumedMessage> getConsumedMessages(String messageId) {
-    return new ArrayList<>(consumedMessageRepository.findByMessageId(messageId));
+    return consumedMessageRepository.findByMessageId(messageId);
   }
 
   public List<ConsumedMessage> getConsumedMessagesForQueue(String queueName) {
-    return new ArrayList<>(consumedMessageRepository.findByQueueName(queueName));
+    return consumedMessageRepository.findByQueueName(queueName);
   }
 }

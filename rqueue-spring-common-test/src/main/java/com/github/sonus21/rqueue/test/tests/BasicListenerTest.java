@@ -44,7 +44,7 @@ public abstract class BasicListenerTest extends SpringTestBase {
     waitFor(
         () -> {
           Notification notificationInDb =
-              consumedMessageService.getMessage(notification.getId(), Notification.class);
+              consumedMessageStore.getMessage(notification.getId(), Notification.class);
           return notification.equals(notificationInDb);
         },
         "notification to be executed");
@@ -63,10 +63,10 @@ public abstract class BasicListenerTest extends SpringTestBase {
     TimeoutUtils.waitFor(
         () -> getMessageCount(listEmailQueue) == 0, "waiting for email list queue to drain");
     Collection<ConsumedMessage> messages =
-        consumedMessageService.getConsumedMessages(
+        consumedMessageStore.getConsumedMessages(
             emails.stream().map(Email::getId).collect(Collectors.toList()));
     Collection<ConsumedMessage> delayedMessages =
-        consumedMessageService.getConsumedMessages(
+        consumedMessageStore.getConsumedMessages(
             delayedEmails.stream().map(Email::getId).collect(Collectors.toList()));
     assertEquals(n, messages.size());
     assertEquals(n, delayedEmails.size());

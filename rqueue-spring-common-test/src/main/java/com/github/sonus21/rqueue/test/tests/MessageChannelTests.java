@@ -85,11 +85,11 @@ public abstract class MessageChannelTests extends SpringTestBase {
     waitFor(
         () -> 0 == getMessageCount(jobQueue), 30 * Constants.ONE_MILLI, "messages to be consumed");
     waitFor(
-        () -> 200 == consumedMessageService.getMessages(ids, Job.class).size(),
+        () -> 200 == consumedMessageStore.getMessages(ids, Job.class).size(),
         30 * Constants.ONE_MILLI,
         "message count to be matched");
     waitFor(
-        () -> jobs.containsAll(consumedMessageService.getMessages(ids, Job.class).values()),
+        () -> jobs.containsAll(consumedMessageStore.getMessages(ids, Job.class).values()),
         30 * Constants.ONE_MILLI,
         "All jobs to be executed");
   }

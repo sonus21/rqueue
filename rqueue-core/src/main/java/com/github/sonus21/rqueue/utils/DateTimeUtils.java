@@ -23,15 +23,12 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class DateTimeUtils {
-  private static DateTimeFormatter simple = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+  private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
 
   DateTimeUtils() {}
 
   public static String milliToHumanRepresentation(long millis) {
     String prefix = "";
-    if (millis < 0) {
-      prefix = "-";
-    }
     long seconds = millis / Constants.ONE_MILLI;
     long minutes = seconds / Constants.SECONDS_IN_A_MINUTE;
     seconds = seconds % Constants.SECONDS_IN_A_MINUTE; // remaining seconds

@@ -65,7 +65,7 @@ class MessageDeduplicationTest extends SpringTestBase {
         notificationQueue, newNotification.getId(), newNotification, 1000L);
     waitFor(() -> getMessageCount(notificationQueue) == 0, 30_000, "notification to be sent");
     Notification notificationFromDb =
-        consumedMessageService.getMessage(newNotification.getId(), Notification.class);
+        consumedMessageStore.getMessage(newNotification.getId(), Notification.class);
     assertEquals(newNotification, notificationFromDb);
   }
 }

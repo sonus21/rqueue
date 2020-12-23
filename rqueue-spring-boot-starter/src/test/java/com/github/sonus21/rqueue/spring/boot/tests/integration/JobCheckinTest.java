@@ -63,7 +63,7 @@ class JobCheckinTest extends SpringTestBase {
     enqueue(longRunningJobQueue, longRunningJob);
     TimeoutUtils.waitFor(() -> getMessageCount(longRunningJobQueue) == 0, "message to be consumed");
     ConsumedMessage consumedMessage =
-        consumedMessageService.getConsumedMessage(longRunningJob.getId());
+        consumedMessageStore.getConsumedMessage(longRunningJob.getId());
     String jobsKey = rqueueConfig.getJobsKey(consumedMessage.getTag());
     List<String> jobIds = stringRqueueRedisTemplate.lrange(jobsKey, 0, -1);
     List<RqueueJob> rqueueJobs = rqueueJobDao.getJobs(jobIds);
@@ -84,7 +84,7 @@ class JobCheckinTest extends SpringTestBase {
     enqueue(longRunningJobQueue, longRunningJob);
     TimeoutUtils.waitFor(() -> getMessageCount(longRunningJobQueue) == 0, "message to be consumed");
     ConsumedMessage consumedMessage =
-        consumedMessageService.getConsumedMessage(longRunningJob.getId());
+        consumedMessageStore.getConsumedMessage(longRunningJob.getId());
     String jobsKey = rqueueConfig.getJobsKey(consumedMessage.getTag());
     List<String> jobIds = stringRqueueRedisTemplate.lrange(jobsKey, 0, -1);
     List<RqueueJob> rqueueJobs = rqueueJobDao.getJobs(jobIds);
@@ -115,7 +115,7 @@ class JobCheckinTest extends SpringTestBase {
         () -> {
           printQueueStats(periodicJobQueue);
           printConsumedMessage(periodicJobQueue);
-          return consumedMessageService.getConsumedMessages(job.getId()).size() > 1;
+          return consumedMessageStore.getConsumedMessages(job.getId()).size() > 1;
         },
         30_000,
         "at least two execution");

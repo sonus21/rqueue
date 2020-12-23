@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
@@ -64,6 +65,7 @@ public class QueueDetail extends SerializableBase {
     return !StringUtils.isEmpty(deadLetterQueueName);
   }
 
+  @JsonIgnore
   public DeadLetterQueue getDeadLetterQueue() {
     return new DeadLetterQueue(deadLetterQueueName, deadLetterConsumerEnabled);
   }

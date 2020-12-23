@@ -32,7 +32,7 @@ import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
-import com.github.sonus21.rqueue.test.service.ConsumedMessageService;
+import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -56,7 +56,7 @@ public abstract class SpringTestBase extends TestBase {
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueWebConfig rqueueWebConfig;
   @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  @Autowired protected ConsumedMessageService consumedMessageService;
+  @Autowired protected ConsumedMessageStore consumedMessageStore;
   @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
   @Autowired protected FailureManager failureManager;
   @Autowired protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
@@ -202,7 +202,7 @@ public abstract class SpringTestBase extends TestBase {
 
   protected void printConsumedMessage(String queueName) {
     for (ConsumedMessage consumedMessage :
-        consumedMessageService.getConsumedMessagesForQueue(queueName)) {
+        consumedMessageStore.getConsumedMessagesForQueue(queueName)) {
       log.info("Queue {} Msg: {}", queueName, consumedMessage);
     }
   }

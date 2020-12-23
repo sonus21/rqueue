@@ -39,7 +39,7 @@ public class RetryTests extends SpringTestBase {
     rqueueMessageSender.put(jobQueue, job);
     waitFor(
         () -> {
-          Job jobInDb = consumedMessageService.getMessage(job.getId(), Job.class);
+          Job jobInDb = consumedMessageStore.getMessage(job.getId(), Job.class);
           return job.equals(jobInDb);
         },
         "job to be executed");
@@ -94,7 +94,7 @@ public class RetryTests extends SpringTestBase {
         () -> failureManager.getFailureCount(email.getId()) == emailRetryCount - 1,
         "email task needs to be retried");
     waitFor(() -> getMessageCount(emailQueue) == 0, "job to be executed");
-    Email emailInDb = consumedMessageService.getMessage(email.getId(), Email.class);
+    Email emailInDb = consumedMessageStore.getMessage(email.getId(), Email.class);
     assertEquals(email, emailInDb);
   }
 
@@ -128,12 +128,12 @@ public class RetryTests extends SpringTestBase {
     waitFor(
         () -> {
           ReservationRequest requestInDb =
-              consumedMessageService.getMessage(request.getId(), ReservationRequest.class);
+              consumedMessageStore.getMessage(request.getId(), ReservationRequest.class);
           return request.equals(requestInDb);
         },
         30000,
         "ReservationRequest to be run");
-    ConsumedMessage consumedMessage = consumedMessageService.getConsumedMessage(request.getId());
+    ConsumedMessage consumedMessage = consumedMessageStore.getConsumedMessage(request.getId());
     assertEquals(consumedMessage.getTag(), "reservation-request-dlq");
     assertEquals(
         new Long(0), stringRqueueRedisTemplate.getListSize(reservationRequestDeadLetterQueue));
@@ -153,7 +153,7 @@ public class RetryTests extends SpringTestBase {
         "email task needs to be retried");
     waitFor(() -> getMessageCount(emailQueue) == 0, "job to be executed");
     List<ConsumedMessage> consumedMessages =
-        consumedMessageService.getConsumedMessages(email.getId());
+        consumedMessageStore.getConsumedMessages(email.getId());
     assertTrue(consumedMessages.size() > 1);
     log.info("Number of executions {}", consumedMessages.size());
   }

@@ -16,11 +16,10 @@
             <option value="50">50</option>
             <option value="100">100</option>
           </select>
-          <button type="button" class="btn btn-danger btn-delete-all btn-sm display-none" id="clear-queue"
-                  onclick="deleteAll()">Delete All
+          <button type="button" class="btn btn-danger btn-delete-all btn-sm display-none"
+                  id="clear-queue">Delete All
           </button>
-          <button class="btn btn-info btn-sm btn-poll float-right" onclick="pollQueue()">Poll
-          </button>
+          <button id="poll-queue-btn" class="btn btn-info btn-sm btn-poll float-right">Poll</button>
         </div>
         <hr/>
         <div class="container">
@@ -39,16 +38,15 @@
       <!-- Modal footer -->
       <div class="modal-footer data-explorer-footer">
         <div>
-          <button type="button" class="btn btn-info display-none"
-                  id="previous-page-button" onclick="prevPage()">Previous
+          <button type="button" class="btn btn-info" id="previous-page-button">
+            Previous
           </button>
         </div>
         <div class="text-center">
           <span id="display-page-number"></span>
         </div>
         <div>
-          <button type="button" class="btn btn-info display-none" id="next-page-button"
-                  onclick="nextPage()">Next
+          <button type="button" class="btn btn-info" id="next-page-button">Next
           </button>
         </div>
       </div>

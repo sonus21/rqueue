@@ -26,9 +26,7 @@ import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.tests.RetryTests;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.devtools.restart.Restarter;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -58,7 +56,6 @@ class MultiExecutionTests extends RetryTests {
   }
 
   @Test
-  @Disabled
   void testRestartApplication() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(60000);
     enqueue(longRunningJobQueue, longRunningJob);
@@ -66,14 +63,12 @@ class MultiExecutionTests extends RetryTests {
         () -> getProcessingMessages(longRunningJobQueue).size() == 1,
         "message to be in processing queue");
     waitFor(
-        () -> consumedMessageService.getConsumedMessages(longRunningJob.getId()).size() == 1,
-        "waiting for message to be consumed",
-        () ->
-            System.out.println(consumedMessageService.getConsumedMessage(longRunningJob.getId())));
-    Restarter.getInstance().restart();
+        () -> consumedMessageStore.getConsumedMessages(longRunningJob.getId()).size() == 1,
+        "waiting for message to be consumed");
+    ApplicationWithTaskExecutionBackoff.restart();
     TimeoutUtils.sleep(30_000);
     ConsumedMessage consumedMessage =
-        consumedMessageService.getConsumedMessage(longRunningJob.getId());
+        consumedMessageStore.getConsumedMessage(longRunningJob.getId());
     String jobsKey = rqueueConfig.getJobsKey(consumedMessage.getTag());
     waitFor(
         () -> stringRqueueRedisTemplate.lrange(jobsKey, 0, -1).size() == 2,

@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.models.event;
 
 import lombok.Getter;
+import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
 /**
  * This event is generated at RqueueContainer startup and shutdown.
@@ -28,6 +29,7 @@ import org.springframework.context.ApplicationEvent;
  * event.
  */
 @Getter
+@ToString(callSuper = true)
 public class RqueueBootstrapEvent extends ApplicationEvent {
 
   private static final long serialVersionUID = 1955427920805054136L;

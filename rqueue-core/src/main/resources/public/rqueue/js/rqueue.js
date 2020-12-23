@@ -111,8 +111,8 @@ function refreshLatencyChart(chartParams, div_id) {
 //  Data Exploration
 //==================================================================
 
-function exploreData(e) {
-  var element = $(e);
+function exploreData() {
+  var element = $(this);
   dataName = element.data('name');
   dataType = element.data('type');
   dataKey = element.data('key');
@@ -157,14 +157,14 @@ function displayTable(nextOrPrev) {
         }
       }
       if (rows.length === pageSize) {
-        $('#next-page-button').show();
+        $('#next-page-button').prop("disabled", false);
       } else {
-        $('#next-page-button').hide();
+        $('#next-page-button').prop("disabled", true);
       }
       if (currentPage > 0) {
-        $('#previous-page-button').show();
+        $('#previous-page-button').prop("disabled", false);
       } else {
-        $('#previous-page-button').hide();
+        $('#previous-page-button').prop("disabled", true);
         tableHeader.empty();
         var headers = response.headers;
         for (var i = 0; i < headers.length; i++) {
@@ -180,7 +180,7 @@ function displayTable(nextOrPrev) {
           tds += ("<td>" + row[j] + "</td>");
         }
         if (row[row.length - 1] === 'DELETE') {
-          tds += ("<td><a href='#' class='delete-message-btn btn-danger' onclick='deleteMessage(this)'>Delete </a></td>");
+          tds += ("<td><a href='#' class='delete-message-btn btn-danger'>Delete </a></td>");
         } else {
           tds += ("<td>" + row[j] + "</td>");
         }
@@ -368,8 +368,8 @@ function updateDeleteModal() {
   $('#delete-modal').modal('show');
 }
 
-function deleteMessage(e) {
-  var id = e.parentNode.parentNode.children[0].textContent;
+function deleteMessage() {
+  var id = $($($($(this).parent()).parent()).children()[0]).text();
   var url = getAbsoluteUrl('rqueue/api/v1/data-set/' + queueName + "/" + id);
   $.ajax({
     url: url,
@@ -450,3 +450,12 @@ $('.delete-btn').on("click", function () {
   }
 });
 //=======================================================================
+// Attach events to avoid CSP issue
+//=======================================================================
+$(document).on('click', '#previous-page-button', prevPage);
+$(document).on('click', '#next-page-button', nextPage);
+$(document).on('click', '#poll-queue-btn', pollQueue);
+$(document).on('click', '#clear-queue', deleteAll);
+$(document).on('click', '.delete-message-btn', deleteMessage);
+$(document).on('click', '#view-data', exploreData);
+$(document).on('click', '.data-explorer', exploreData);
