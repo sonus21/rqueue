@@ -1,6 +1,6 @@
 -- get current value
 local value = redis.call('GET', KEYS[1])
-if value then
+if not value then
     return true
 end
 if value == ARGV[1] then

@@ -35,7 +35,7 @@ public abstract class CustomMessageConverterApplication extends ApplicationBasic
 
   @PreDestroy
   public void preDestroy() {
-    destroy();
+    cleanup();
   }
 
   @Bean

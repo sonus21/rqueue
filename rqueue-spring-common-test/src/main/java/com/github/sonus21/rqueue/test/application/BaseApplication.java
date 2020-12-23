@@ -34,7 +34,7 @@ public abstract class BaseApplication extends ApplicationBasicConfiguration {
 
   @PreDestroy
   public void preDestroy() {
-    destroy();
+    cleanup();
   }
 
   @Bean

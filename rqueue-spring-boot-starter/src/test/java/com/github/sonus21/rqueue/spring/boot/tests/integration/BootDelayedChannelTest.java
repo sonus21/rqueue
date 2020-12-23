@@ -36,7 +36,7 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=BootDelayedChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
-      "monitor.thread.count=1",
+      "monitor.enabled=true"
     })
 @SpringBootTest
 @Slf4j

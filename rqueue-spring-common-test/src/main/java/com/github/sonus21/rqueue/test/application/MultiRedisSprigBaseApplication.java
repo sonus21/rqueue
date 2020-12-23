@@ -50,7 +50,7 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
 
   @PreDestroy
   public void preDestroy() {
-    destroy();
+    cleanup();
     if (redisServer2 != null) {
       redisServer2.stop();
     }

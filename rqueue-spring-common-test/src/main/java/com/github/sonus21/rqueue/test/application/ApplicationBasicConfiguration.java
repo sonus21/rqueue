@@ -16,34 +16,22 @@
 
 package com.github.sonus21.rqueue.test.application;
 
+import com.athaydes.javanna.Javanna;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.github.sonus21.junit.BootstrapRedis;
+import com.github.sonus21.junit.RedisBootstrapperBase;
+import java.util.HashMap;
 import javax.sql.DataSource;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.connection.RedisNode;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import redis.embedded.RedisServer;
 
 @Slf4j
-public abstract class ApplicationBasicConfiguration {
-  private static final Logger monitorLogger = LoggerFactory.getLogger("monitor");
-  protected RedisServer redisServer;
-  protected ExecutorService executorService;
-  protected List<MonitorProcess> processes;
+public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBase {
 
   @Value("${mysql.db.name}")
   protected String dbName;
@@ -64,67 +52,18 @@ public abstract class ApplicationBasicConfiguration {
   protected boolean monitoringEnabled;
 
   protected void init() {
-    if (monitoringEnabled && monitorThreads == 0) {
-      monitorThreads = 1;
-    }
-    if (monitorThreads > 0) {
-      executorService = Executors.newFixedThreadPool(monitorThreads);
-      processes = new ArrayList<>();
-    }
-    if (monitoringEnabled) {
-      monitor(redisHost, redisPort);
-    }
-    if (useSystemRedis) {
-      return;
-    }
-    if (redisServer == null) {
-      log.info("Starting Redis at port {}", redisPort);
-      redisServer = new RedisServer(redisPort);
-      redisServer.start();
-    }
-  }
-
-  protected void destroy() {
-    if (redisServer != null) {
-      redisServer.stop();
-    }
-
-    if (processes != null) {
-      for (MonitorProcess monitorProcess : processes) {
-        monitorProcess.process.destroy();
-        monitorLogger.info("RedisNode {} ", monitorProcess.redisNode);
-        for (String line : monitorProcess.out) {
-          monitorLogger.info("{}", line);
-        }
-      }
-    }
-    if (executorService != null) {
-      executorService.shutdown();
-    }
-  }
-
-  protected void monitor(String host, int port) {
-    log.info("Monitor {}:{}", host, port);
-    executorService.submit(
-        () -> {
-          try {
-            Process process =
-                Runtime.getRuntime()
-                    .exec("redis-cli " + " -h " + host + " -p " + port + " monitor");
-            List<String> lines = new LinkedList<>();
-            MonitorProcess monitorProcess =
-                new MonitorProcess(process, new RedisNode(host, port), lines);
-            processes.add(monitorProcess);
-            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String s;
-            while ((s = br.readLine()) != null) {
-              lines.add(s);
-            }
-            process.waitFor();
-          } catch (Exception e) {
-            monitorLogger.error("Process call failed", e);
-          }
-        });
+    final BootstrapRedis bootstrapRedis =
+        Javanna.createAnnotation(
+            BootstrapRedis.class,
+            new HashMap<String, Object>() {
+              private static final long serialVersionUID = -786051705319430908L;
+              {
+                put("port", redisPort);
+                put("monitorRedis", monitoringEnabled);
+                put("monitorThreadsCount", monitorThreads);
+              }
+            });
+    super.bootstrap(bootstrapRedis);
   }
 
   @Bean
@@ -147,12 +86,5 @@ public abstract class ApplicationBasicConfiguration {
   @Bean
   public ObjectMapper objectMapper() {
     return new ObjectMapper();
-  }
-
-  @AllArgsConstructor
-  public static class MonitorProcess {
-    Process process;
-    RedisNode redisNode;
-    List<String> out;
   }
 }

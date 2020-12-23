@@ -80,6 +80,8 @@ public abstract class MessageScheduler
 
   protected abstract int getThreadPoolSize();
 
+  protected abstract boolean isProcessingQueue(String queueName);
+
   private void doStart() {
     for (String queueName : queueRunningState.keySet()) {
       startQueue(queueName);
@@ -203,7 +205,11 @@ public abstract class MessageScheduler
       long requiredDelay = max(1, startTime - currentTime);
       long taskStartTime = startTime;
       MessageMoverTask timerTask =
-          new MessageMoverTask(queueDetail.getName(), queueDetail.getQueueName(), zsetName);
+          new MessageMoverTask(
+              queueDetail.getName(),
+              queueDetail.getQueueName(),
+              zsetName,
+              isProcessingQueue(queueDetail.getName()));
       Future<?> future;
       if (requiredDelay < MIN_DELAY) {
         future = scheduler.submit(timerTask);
@@ -233,7 +239,11 @@ public abstract class MessageScheduler
     }
     // Run was succeeded or cancelled submit new one
     MessageMoverTask timerTask =
-        new MessageMoverTask(queueDetail.getName(), queueDetail.getQueueName(), zsetName);
+        new MessageMoverTask(
+            queueDetail.getName(),
+            queueDetail.getQueueName(),
+            zsetName,
+            isProcessingQueue(zsetName));
     Future<?> future =
         scheduler.schedule(
             timerTask, Instant.ofEpochMilli(getNextScheduleTime(queueName, startTime)));
@@ -276,11 +286,13 @@ public abstract class MessageScheduler
     private final String name;
     private final String queueName;
     private final String zsetName;
+    private final boolean processingQueue;
 
-    MessageMoverTask(String name, String queueName, String zsetName) {
+    MessageMoverTask(String name, String queueName, String zsetName, boolean processingQueue) {
       this.name = name;
       this.queueName = queueName;
       this.zsetName = zsetName;
+      this.processingQueue = processingQueue;
     }
 
     @Override
@@ -291,7 +303,11 @@ public abstract class MessageScheduler
           long currentTime = System.currentTimeMillis();
           Long value =
               defaultScriptExecutor.execute(
-                  redisScript, Arrays.asList(queueName, zsetName), currentTime, MAX_MESSAGES);
+                  redisScript,
+                  Arrays.asList(queueName, zsetName),
+                  currentTime,
+                  MAX_MESSAGES,
+                  processingQueue ? 1 : 0);
           long nextExecutionTime = getNextScheduleTime(name, value);
           schedule(name, nextExecutionTime, true);
         }

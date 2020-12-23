@@ -37,7 +37,7 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=BootProcessingChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
-      "monitor.thread.count=1",
+      "monitor.enabled=true",
       "start.queue.enabled=true",
     })
 @SpringBootTest

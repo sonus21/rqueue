@@ -42,7 +42,7 @@ public abstract class BaseApplicationWithBackoff extends ApplicationBasicConfigu
 
   @PreDestroy
   public void preDestroy() {
-    destroy();
+    cleanup();
   }
 
   @Bean

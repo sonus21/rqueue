@@ -35,7 +35,7 @@ import org.springframework.test.context.TestPropertySource;
       "spring.redis.port=8005",
       "spring.redis2.port=8006",
       "spring.redis2.host=localhost",
-      "monitor.thread.count=1",
+      "monitor.enabled=true",
     })
 @SpringBootIntegrationTest
 class MultiRedisSetup extends RetryTests {

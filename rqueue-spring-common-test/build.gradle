@@ -5,26 +5,4 @@ dependencies {
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
     compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
 
-    // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
-
-    // https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api
-    compile group: 'javax.persistence', name: 'javax.persistence-api', version: "${jpaVersion}"
-
-    compile "com.h2database:h2:${h2Version}"
-    compile "it.ozimov:embedded-redis:${embeddedRedisVersion}"
-
-    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-jpa
-    compile group: 'org.springframework.data', name: 'spring-data-jpa', version: "${springBootVersion}"
-
-    // https://mvnrepository.com/artifact/org.hibernate/hibernate-core
-    compile group: 'org.hibernate', name: 'hibernate-core', version: "${hibernateVersion}"
-
-    // https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
-    compile group: 'javax.annotation', name: 'javax.annotation-api', version: "${javaxAnnotationVersion}"
-
-    compile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
-
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
-
 }
