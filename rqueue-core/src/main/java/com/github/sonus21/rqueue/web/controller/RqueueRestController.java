@@ -31,6 +31,8 @@ import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -80,9 +82,9 @@ public class RqueueRestController {
   @GetMapping("explore")
   @ResponseBody
   public DataViewResponse exploreQueue(
-      @RequestParam DataType type,
-      @RequestParam String name,
-      @RequestParam String src,
+      @RequestParam @NotNull DataType type,
+      @RequestParam @NotEmpty String name,
+      @RequestParam @NotEmpty String src,
       @RequestParam(defaultValue = "0", name = "page") int pageNumber,
       @RequestParam(defaultValue = "20", name = "count") int itemPerPage,
       HttpServletResponse response) {
@@ -118,7 +120,8 @@ public class RqueueRestController {
 
   @GetMapping("data-type")
   @ResponseBody
-  public StringResponse dataType(@RequestParam String name, HttpServletResponse response) {
+  public StringResponse dataType(
+      @RequestParam @NotEmpty String name, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
@@ -140,8 +143,8 @@ public class RqueueRestController {
   @GetMapping("data")
   @ResponseBody
   public DataViewResponse viewData(
-      @RequestParam String name,
-      @RequestParam DataType type,
+      @RequestParam @NotEmpty String name,
+      @RequestParam @NotNull DataType type,
       @RequestParam(required = false) String key,
       @RequestParam(defaultValue = "0", name = "page") int pageNumber,
       @RequestParam(defaultValue = "20", name = "count") int itemPerPage,

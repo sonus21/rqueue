@@ -26,6 +26,7 @@ import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.tests.RetryTests;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -56,6 +57,7 @@ class MultiExecutionTests extends RetryTests {
   }
 
   @Test
+  @Disabled(value = "This test requires some work for restarting spring application...")
   void testRestartApplication() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(60000);
     enqueue(longRunningJobQueue, longRunningJob);

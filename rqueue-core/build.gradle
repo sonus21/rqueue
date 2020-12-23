@@ -21,6 +21,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
     implementation 'org.jetbrains:annotations:20.1.0'
+    compile "javax.validation:validatin-api:${javaxValidationApiVersion}"
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
     compile "io.micrometer:micrometer-core:${microMeterVersion}", optional
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
