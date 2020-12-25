@@ -16,8 +16,9 @@
 
 package com.github.sonus21.rqueue.models.response;
 
+import com.github.sonus21.rqueue.models.SerializableBase;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -28,31 +29,25 @@ import lombok.ToString;
 
 @Getter
 @AllArgsConstructor
-@NoArgsConstructor
 @Setter
-@ToString(callSuper = true)
+@SuppressWarnings("java:S2160")
+@ToString
 @EqualsAndHashCode(callSuper = true)
-public class DataViewResponse extends BaseResponse {
-  private static final long serialVersionUID = -8359552138158857044L;
-  private List<String> headers;
-  private List<Action> actions = new ArrayList<>();
-  private List<TableRow> rows;
+@NoArgsConstructor
+public class TableRow extends SerializableBase {
+  private static final long serialVersionUID = -1493539297572507490L;
+  private List<TableColumn> columns = new ArrayList<>();
+  private List<RowColumnMeta> meta;
 
-  public static DataViewResponse createErrorMessage(String message) {
-    DataViewResponse response = new DataViewResponse();
-    response.setCode(1);
-    response.setMessage(message);
-    return response;
+  public TableRow(TableColumn column) {
+    this(Collections.singletonList(column), null);
   }
 
-  public void addRow(TableRow tableRow) {
-    if (rows == null) {
-      rows = new LinkedList<>();
-    }
-    rows.add(tableRow);
+  public TableRow(List<TableColumn> columns) {
+    this(columns, null);
   }
 
-  public void addAction(Action action) {
-    actions.add(action);
+  public void addColumn(TableColumn column) {
+    this.columns.add(column);
   }
 }

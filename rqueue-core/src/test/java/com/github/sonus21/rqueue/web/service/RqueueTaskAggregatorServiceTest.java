@@ -33,7 +33,6 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.impl.JobImpl;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
@@ -101,7 +100,6 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
         new JobImpl(
             rqueueConfig,
             mock(RqueueMessageMetadataService.class),
-            mock(RqueueStringDao.class),
             mock(RqueueJobDao.class),
             queueDetail,
             messageMetadata,

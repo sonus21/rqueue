@@ -73,4 +73,10 @@ public interface RqueueMessageTemplate {
 
   Long scheduleMessage(
       String queueName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds);
+
+  boolean renameCollection(String srcName, String tgtName);
+
+  boolean renameCollections(List<String> srcNames, List<String> tgtNames);
+
+  void deleteCollection(String name);
 }

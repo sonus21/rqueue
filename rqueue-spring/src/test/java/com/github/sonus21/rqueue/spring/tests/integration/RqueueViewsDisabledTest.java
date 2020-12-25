@@ -170,7 +170,7 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(delete("/rqueue/api/v1/data-set/" + emailDeadLetterQueue))
+            .perform(delete("/rqueue/api/v1/data-set/" + emailQueue + "/" + emailDeadLetterQueue))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()

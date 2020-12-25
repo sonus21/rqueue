@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.models;
+package com.github.sonus21.rqueue.models.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import java.io.Serializable;
+import com.github.sonus21.rqueue.models.SerializableBase;
+import com.github.sonus21.rqueue.models.enums.ActionType;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
+@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
-@JsonInclude(Include.NON_NULL)
-public abstract class SerializableBase implements Serializable {
+@ToString
+@EqualsAndHashCode(callSuper = true)
+public class Action extends SerializableBase {
 
-  private static final long serialVersionUID = -824188858192360018L;
+  private static final long serialVersionUID = 7809140410366162600L;
+  private ActionType actionType;
+  private String description;
 }

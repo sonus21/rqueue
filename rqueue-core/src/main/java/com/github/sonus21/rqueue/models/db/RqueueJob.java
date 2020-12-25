@@ -36,6 +36,9 @@ import lombok.Setter;
 public class RqueueJob extends SerializableBase {
   private static final long serialVersionUID = 6219118148061766036L;
   private String id;
+
+  private String messageId;
+
   // currently being consumed message
   private RqueueMessage rqueueMessage;
   // Message metadata for this message, metadata can have different RqueueMessage than currently
@@ -60,6 +63,7 @@ public class RqueueJob extends SerializableBase {
       String id, RqueueMessage rqueueMessage, MessageMetadata messageMetadata, Throwable error) {
     this(
         id,
+        rqueueMessage.getId(),
         rqueueMessage,
         messageMetadata,
         JobStatus.CREATED,

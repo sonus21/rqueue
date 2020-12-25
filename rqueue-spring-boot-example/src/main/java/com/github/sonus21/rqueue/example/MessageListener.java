@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class MessageListener {
-  private Random random = new Random();
+  private static final Random random = new Random();
 
   @Value("${delay.queue.fail.percentage:0}")
   private int percentageFailure;
@@ -70,7 +70,7 @@ public class MessageListener {
       value = "job-queue",
       deadLetterQueue = "job-morgue",
       numRetries = "2",
-      deadLetterQueueListenerEnabled = "true",
+      deadLetterQueueListenerEnabled = "false",
       concurrency = "1-3",
       active = "true")
   @NewSpan

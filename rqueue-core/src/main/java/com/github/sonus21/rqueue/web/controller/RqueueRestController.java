@@ -95,17 +95,20 @@ public class RqueueRestController {
     return rqueueQDetailService.getExplorePageData(src, name, type, pageNumber, itemPerPage);
   }
 
-  @DeleteMapping("data-set/{queueName}")
+  @DeleteMapping("data-set/{queueName}/{datasetName}")
   @ResponseBody
-  public BooleanResponse deleteAll(@PathVariable String queueName, HttpServletResponse response) {
+  public BooleanResponse deleteAll(
+      @PathVariable String queueName,
+      @PathVariable String datasetName,
+      HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.deleteQueueMessages(queueName, 0);
+    return rqueueUtilityService.makeEmpty(queueName, datasetName);
   }
 
-  @DeleteMapping("data-set/{queueName}/{messageId}")
+  @DeleteMapping("data-set/{queueName}/message/{messageId}")
   @ResponseBody
   public BooleanResponse deleteMessage(
       @PathVariable String queueName,

@@ -30,8 +30,12 @@ import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
+import com.github.sonus21.rqueue.models.enums.TableColumnType;
+import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.models.response.TableColumn;
+import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
@@ -39,7 +43,6 @@ import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -165,7 +168,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     return rqueueMessageTemplate.readFromZsetWithScore(name, start, end);
   }
 
-  private List<List<Serializable>> buildRows(
+  private List<TableRow> buildRows(
       List<TypedTuple<RqueueMessage>> rqueueMessages, RowBuilder rowBuilder) {
     if (CollectionUtils.isEmpty(rqueueMessages)) {
       return Collections.emptyList();
@@ -195,6 +198,25 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         .collect(Collectors.toList());
   }
 
+  private void addActionsIfRequired(
+      String src,
+      String name,
+      DataType type,
+      boolean delayedQueue,
+      boolean deadLetterQueue,
+      DataViewResponse response) {
+    if (deadLetterQueue) {
+      response.addAction(
+          new Action(ActionType.DELETE, String.format("dead letter queue '%s'", name)));
+    } else if (type == DataType.LIST) {
+      response.addAction(
+          new Action(ActionType.DELETE, String.format("pending messages for queue '%s'", src)));
+    } else if (delayedQueue) {
+      response.addAction(
+          new Action(ActionType.DELETE, String.format("delayed messages for queue '%s'", src)));
+    }
+  }
+
   @Override
   public DataViewResponse getExplorePageData(
       String src, String name, DataType type, int pageNumber, int itemPerPage) {
@@ -203,11 +225,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     boolean deadLetterQueue = queueConfig.isDeadLetterQueue(name);
     boolean timeQueue = queueConfig.getDelayedQueueName().equals(name);
     setHeadersIfRequired(deadLetterQueue, type, response, pageNumber);
-    if (deadLetterQueue) {
-      response.addAction(ActionType.DELETE);
-    } else {
-      response.addAction(ActionType.NONE);
-    }
+    addActionsIfRequired(src, name, type, timeQueue, deadLetterQueue, response);
     switch (type) {
       case ZSET:
         if (timeQueue) {
@@ -234,11 +252,11 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<Object> items = new ArrayList<>(stringRqueueRedisTemplate.getMembers(name));
     DataViewResponse response = new DataViewResponse();
     response.setHeaders(Collections.singletonList("Item"));
-    List<List<Serializable>> rows = new ArrayList<>();
+    List<TableRow> tableRows = new ArrayList<>();
     for (Object item : items) {
-      rows.add(Collections.singletonList(item.toString()));
+      tableRows.add(new TableRow(new TableColumn(item.toString())));
     }
-    response.setRows(rows);
+    response.setRows(tableRows);
     return response;
   }
 
@@ -246,9 +264,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     DataViewResponse response = new DataViewResponse();
     response.setHeaders(Collections.singletonList("Value"));
     Object val = stringRqueueRedisTemplate.get(name);
-    List<List<Serializable>> rows =
-        Collections.singletonList(Collections.singletonList(String.valueOf(val)));
-    response.setRows(rows);
+    response.addRow(new TableRow(new TableColumn(String.valueOf(val))));
     return response;
   }
 
@@ -257,18 +273,22 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     DataViewResponse response = new DataViewResponse();
     int start = pageNumber * itemPerPage;
     int end = start + itemPerPage - 1;
-    List<List<Serializable>> rows = new ArrayList<>();
+    List<TableRow> tableRows = new ArrayList<>();
     if (!StringUtils.isEmpty(key)) {
       Double score = stringRqueueRedisTemplate.getZsetMemberScore(name, key);
       response.setHeaders(Collections.singletonList("Score"));
-      rows.add(Collections.singletonList(score));
+      tableRows.add(new TableRow(new TableColumn(score)));
     } else {
-      response.setHeaders(Arrays.asList("Item", "Score"));
+      response.setHeaders(Arrays.asList("Value", "Score"));
       for (TypedTuple<String> tuple : stringRqueueRedisTemplate.zrangeWithScore(name, start, end)) {
-        rows.add(Arrays.asList(String.valueOf(tuple.getValue()), tuple.getScore()));
+        tableRows.add(
+            new TableRow(
+                Arrays.asList(
+                    new TableColumn(String.valueOf(tuple.getValue())),
+                    new TableColumn(tuple.getScore()))));
       }
     }
-    response.setRows(rows);
+    response.setRows(tableRows);
     return response;
   }
 
@@ -277,12 +297,11 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     response.setHeaders(Collections.singletonList("Item"));
     int start = pageNumber * itemPerPage;
     int end = start + itemPerPage - 1;
-    List<List<Serializable>> rows = new ArrayList<>();
+    List<TableRow> tableRows = new ArrayList<>();
     for (Object s : stringRqueueRedisTemplate.lrange(name, start, end)) {
-      List<Serializable> singletonList = Collections.singletonList(String.valueOf(s));
-      rows.add(singletonList);
+      tableRows.add(new TableRow(new TableColumn(String.valueOf(s))));
     }
-    response.setRows(rows);
+    response.setRows(tableRows);
     return response;
   }
 
@@ -314,7 +333,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (pageNumber != 0) {
       return;
     }
-    List<String> headers = newArrayList("Id", "Message");
+    List<String> headers = newArrayList("Id", "Message", "Type");
     if (DataType.ZSET == type) {
       headers.add("Time Left");
     }
@@ -406,9 +425,9 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       Entry<QueueConfig, String> entry = queueConfigAndDlq.get(i);
       QueueConfig queueConfig = entry.getKey();
       if (entry.getValue().isEmpty()) {
-        rows.add(Arrays.asList(queueConfig.getName(), "", ""));
+        rows.add(Arrays.asList(queueConfig.getName(), Constants.BLANK, Constants.BLANK));
       } else {
-        String name = "";
+        String name = Constants.BLANK;
         if (i == 0
             || !queueConfig
                 .getQueueName()
@@ -430,7 +449,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
           queueConfigAndDlq.add(new HashMap.SimpleEntry<>(queueConfig, dlq.getName()));
         }
       } else {
-        queueConfigAndDlq.add(new HashMap.SimpleEntry<>(queueConfig, ""));
+        queueConfigAndDlq.add(new HashMap.SimpleEntry<>(queueConfig, Constants.BLANK));
       }
     }
     List<List<Object>> rows = new ArrayList<>();
@@ -453,10 +472,10 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   }
 
   private interface RowBuilder {
-    List<Serializable> row(RqueueMessage rqueueMessage, boolean deleted, Double score);
+    TableRow row(RqueueMessage rqueueMessage, boolean deleted, Double score);
   }
 
-  static class ListRowBuilder implements RowBuilder {
+  class ListRowBuilder implements RowBuilder {
     private final boolean deadLetterQueue;
 
     ListRowBuilder(boolean deadLetterQueue) {
@@ -464,18 +483,28 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     }
 
     @Override
-    public List<Serializable> row(RqueueMessage rqueueMessage, boolean deleted, Double score) {
-      List<Serializable> row = newArrayList(rqueueMessage.getId(), rqueueMessage.toString());
+    public TableRow row(RqueueMessage rqueueMessage, boolean deleted, Double score) {
+      TableRow tableRow =
+          new TableRow(
+              newArrayList(
+                  new TableColumn(rqueueMessage.getId()),
+                  new TableColumn(rqueueMessage.toString())));
+      if (rqueueMessage.isPeriodicTask()) {
+        tableRow.addColumn(new TableColumn("Periodic(" + rqueueMessage.getPeriod() + ")Ms"));
+      } else {
+        tableRow.addColumn(new TableColumn("Simple"));
+      }
       if (!deadLetterQueue) {
         if (deleted) {
-          row.add("");
+          tableRow.addColumn(new TableColumn(Constants.BLANK));
         } else {
-          row.add(ActionType.DELETE);
+          tableRow.addColumn(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
         }
       } else {
-        row.add(DateTimeUtils.formatMilliToString(rqueueMessage.getReEnqueuedAt()));
+        tableRow.addColumn(
+            new TableColumn(DateTimeUtils.formatMilliToString(rqueueMessage.getReEnqueuedAt())));
       }
-      return row;
+      return tableRow;
     }
   }
 
@@ -489,18 +518,31 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     }
 
     @Override
-    public List<Serializable> row(RqueueMessage rqueueMessage, boolean deleted, Double score) {
-      List<Serializable> row = newArrayList(rqueueMessage.getId(), rqueueMessage.toString());
-      if (timeQueue) {
-        row.add(
-            DateTimeUtils.milliToHumanRepresentation(rqueueMessage.getProcessAt() - currentTime));
+    public TableRow row(RqueueMessage rqueueMessage, boolean deleted, Double score) {
+      TableRow row =
+          new TableRow(
+              newArrayList(
+                  new TableColumn(rqueueMessage.getId()),
+                  new TableColumn(rqueueMessage.toString())));
+      if (rqueueMessage.isPeriodicTask()) {
+        row.addColumn(new TableColumn("Periodic(" + rqueueMessage.getPeriod() + ")Ms"));
       } else {
-        row.add(DateTimeUtils.milliToHumanRepresentation(score.longValue() - currentTime));
+        row.addColumn(new TableColumn("Simple"));
+      }
+      if (timeQueue) {
+        row.addColumn(
+            new TableColumn(
+                DateTimeUtils.milliToHumanRepresentation(
+                    rqueueMessage.getProcessAt() - currentTime)));
+      } else {
+        row.addColumn(
+            new TableColumn(
+                DateTimeUtils.milliToHumanRepresentation(score.longValue() - currentTime)));
       }
       if (!deleted) {
-        row.add(ActionType.DELETE);
+        row.addColumn(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
       } else {
-        row.add(Constants.BLANK);
+        row.addColumn(new TableColumn(Constants.BLANK));
       }
       return row;
     }

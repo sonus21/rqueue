@@ -93,7 +93,6 @@ class RqueueExecutor extends MessageContainerBase {
           new JobImpl(
               rqueueConfig,
               Objects.requireNonNull(container.get()).rqueueMessageMetadataService(),
-              Objects.requireNonNull(container.get()).rqueueStringDao(),
               Objects.requireNonNull(container.get()).rqueueJobDao(),
               queueDetail,
               messageMetadata,
@@ -302,7 +301,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   @Override
-  void start() {
+  public void start() {
     if (job.getRqueueMessage().isPeriodicTask()) {
       processPeriodicMessage();
     } else {

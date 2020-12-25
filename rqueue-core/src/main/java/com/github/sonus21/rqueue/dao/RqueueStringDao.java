@@ -25,6 +25,10 @@ import org.springframework.data.redis.connection.DataType;
 public interface RqueueStringDao {
   void appendToList(String listName, String data);
 
+  Map<String, List<Object>> readFromLists(List<String> keys);
+
+  List<Object> readFromList(String key);
+
   void appendToListWithListExpiry(String listName, String data, Duration duration);
 
   void appendToSet(String setName, String... data);
@@ -50,6 +54,8 @@ public interface RqueueStringDao {
   DataType type(String key);
 
   void ltrim(String listName, int start, int end);
+
+  Long zrem(String listName, long min, long max);
 
   Boolean deleteIfSame(String key, String value);
 }

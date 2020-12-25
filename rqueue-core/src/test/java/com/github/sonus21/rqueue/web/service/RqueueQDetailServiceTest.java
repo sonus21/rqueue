@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.web.service;
 import static com.github.sonus21.rqueue.utils.TestUtils.createQueueConfig;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.doReturn;
@@ -38,10 +39,13 @@ import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
+import com.github.sonus21.rqueue.models.enums.TableColumnType;
+import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.models.response.TableColumn;
+import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -62,6 +66,7 @@ import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
+@SuppressWarnings("unchecked")
 class RqueueQDetailServiceTest extends TestBase {
   private final RedisTemplate<?, ?> redisTemplate = mock(RedisTemplate.class);
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate =
@@ -177,120 +182,175 @@ class RqueueQDetailServiceTest extends TestBase {
   }
 
   @Test
-  void getExplorePageDataTypeList() {
-    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
+  void getExplorePageDataQueue() {
     List<RqueueMessage> rqueueMessages =
         RqueueMessageUtils.generateMessages(messageConverter, "test", 10);
-    doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test", 0, 9);
-    DataViewResponse response =
-        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, 0, 10);
-
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
     headers.add("Id");
     headers.add("Message");
+    headers.add("Type");
     headers.add("Action");
     expectedResponse.setHeaders(headers);
-    List<List<Serializable>> lists = new ArrayList<>();
+    List<TableRow> lists = new ArrayList<>();
     for (RqueueMessage message : rqueueMessages) {
-      List<Serializable> l = new ArrayList<>();
-      l.add(message.getId());
-      l.add(message.toString());
-      l.add(ActionType.DELETE);
-      lists.add(l);
+      List<TableColumn> l = new ArrayList<>();
+      l.add(new TableColumn(message.getId()));
+      l.add(new TableColumn(message.toString()));
+      l.add(new TableColumn("Simple"));
+      l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
+      lists.add(new TableRow(l));
     }
     expectedResponse.setRows(lists);
+    expectedResponse.addAction(new Action(ActionType.DELETE, "pending messages for queue 'test'"));
+    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
+    doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test", 0, 9);
+    DataViewResponse response =
+        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, 0, 10);
     assertEquals(expectedResponse, response);
+  }
 
-    doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test-dlq", 0, 9);
-
-    response = rqueueQDetailService.getExplorePageData("test", "test-dlq", DataType.LIST, 0, 10);
-    expectedResponse.addAction(ActionType.DELETE);
-    headers.remove(2);
+  @Test
+  void getExplorePageDataDeadLetterQueue() {
+    List<RqueueMessage> rqueueMessages =
+        RqueueMessageUtils.generateMessages(messageConverter, "test", 10);
+    DataViewResponse expectedResponse = new DataViewResponse();
+    List<String> headers = new ArrayList<>();
+    headers.add("Id");
+    headers.add("Message");
+    headers.add("Type");
     headers.add("AddedOn");
     expectedResponse.setHeaders(headers);
-    for (List<Serializable> l : lists) {
-      l.remove(2);
-      l.add("");
+    List<TableRow> lists = new ArrayList<>();
+    for (RqueueMessage message : rqueueMessages) {
+      message.setReEnqueuedAt(System.currentTimeMillis());
+      List<TableColumn> l = new ArrayList<>();
+      l.add(new TableColumn(message.getId()));
+      l.add(new TableColumn(message.toString()));
+      l.add(new TableColumn("Simple"));
+      lists.add(new TableRow(l));
+    }
+    expectedResponse.setRows(lists);
+    expectedResponse.addAction(new Action(ActionType.DELETE, "dead letter queue 'test-dlq'"));
+    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
+    doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test-dlq", 0, 9);
+    DataViewResponse response =
+        rqueueQDetailService.getExplorePageData("test", "test-dlq", DataType.LIST, 0, 10);
+    for(TableRow row: response.getRows()){
+      assertNotEquals("", row.getColumns().get(3).getValue());
+      row.getColumns().remove(3);
     }
     assertEquals(expectedResponse, response);
   }
 
   @Test
-  void getExplorePageDataTypeListDeleteFewItems() {
+  void getExplorePageDataTypeQueueDeleteFewItems() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
-    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     List<RqueueMessage> rqueueMessages =
         RqueueMessageUtils.generateMessages(messageConverter, "test", 10);
-    doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test", 0, 9);
     List<MessageMetadata> messageMetadata = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       RqueueMessage message = rqueueMessages.get(i);
-      MessageMetadata metadata = new MessageMetadata(message.getId(), MessageStatus.DELETED);
+      MessageMetadata metadata = new MessageMetadata(message, MessageStatus.DELETED);
       metadata.setDeleted(true);
       messageMetadata.add(metadata);
     }
-    doReturn(messageMetadata).when(rqueueMessageMetadataService).findAll(anyCollection());
-    DataViewResponse response =
-        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, 0, 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
     headers.add("Id");
     headers.add("Message");
+    headers.add("Type");
     headers.add("Action");
     expectedResponse.setHeaders(headers);
-    List<List<Serializable>> lists = new ArrayList<>();
+    List<TableRow> lists = new ArrayList<>();
     for (int i = 0; i < 10; i++) {
       RqueueMessage message = rqueueMessages.get(i);
-      List<Serializable> l = new ArrayList<>();
-      l.add(message.getId());
-      l.add(message.toString());
+      List<TableColumn> l = new ArrayList<>();
+      l.add(new TableColumn(message.getId()));
+      l.add(new TableColumn(message.toString()));
+      l.add(new TableColumn("Simple"));
       if (i >= 5) {
-        l.add(ActionType.DELETE);
+        l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
       } else {
-        l.add("");
+        l.add(new TableColumn(""));
       }
-      lists.add(l);
+      lists.add(new TableRow(l));
     }
     expectedResponse.setRows(lists);
+    expectedResponse.addAction(new Action(ActionType.DELETE, "pending messages for queue 'test'"));
+
+    doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test", 0, 9);
+    doReturn(messageMetadata).when(rqueueMessageMetadataService).findAll(anyCollection());
+    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
+    DataViewResponse response =
+        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, 0, 10);
     assertEquals(expectedResponse, response);
   }
 
   @Test
-  void getExplorePageDataTypeZset() {
+  void getExplorePageDataTypeDelayedQueue() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
-    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     List<RqueueMessage> rqueueMessages =
         RqueueMessageUtils.generateMessages(messageConverter, "test", 100000, 10);
+    DataViewResponse expectedResponse = new DataViewResponse();
+    List<String> headers = new ArrayList<>();
+    headers.add("Id");
+    headers.add("Message");
+    headers.add("Type");
+    headers.add("Time Left");
+    headers.add("Action");
+    expectedResponse.setHeaders(headers);
+    List<TableRow> lists = new ArrayList<>();
+    for (RqueueMessage message : rqueueMessages) {
+      List<TableColumn> l = new ArrayList<>();
+      l.add(new TableColumn(message.getId()));
+      l.add(new TableColumn(message.toString()));
+      l.add(new TableColumn("Simple"));
+      l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
+      lists.add(new TableRow(l));
+    }
+    expectedResponse.setRows(lists);
+    expectedResponse.addAction(new Action(ActionType.DELETE, "delayed messages for queue 'test'"));
+
+    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromZset("__rq::d-queue::test", 0, 9);
     DataViewResponse response =
         rqueueQDetailService.getExplorePageData(
             "test", "__rq::d-queue::test", DataType.ZSET, 0, 10);
+    // clear time left
+    for (TableRow tableRow : response.getRows()) {
+      tableRow.getColumns().remove(3);
+    }
+    assertEquals(expectedResponse, response);
+  }
 
+  @Test
+  void getExplorePageDataTypeProcessingQueue() {
+    QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
+    queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
+    List<RqueueMessage> rqueueMessages =
+        RqueueMessageUtils.generateMessages(messageConverter, "test", 100000, 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
     headers.add("Id");
     headers.add("Message");
+    headers.add("Type");
     headers.add("Time Left");
     headers.add("Action");
     expectedResponse.setHeaders(headers);
-    List<List<Serializable>> lists = new ArrayList<>();
+    List<TableRow> lists = new ArrayList<>();
     for (RqueueMessage message : rqueueMessages) {
-      List<Serializable> l = new ArrayList<>();
-      l.add(message.getId());
-      l.add(message.toString());
-      l.add(ActionType.DELETE);
-      lists.add(l);
+      List<TableColumn> l = new ArrayList<>();
+      l.add(new TableColumn(message.getId()));
+      l.add(new TableColumn(message.toString()));
+      l.add(new TableColumn("Simple"));
+      l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
+      lists.add(new TableRow(l));
     }
     expectedResponse.setRows(lists);
-    // clear time left
-    for (List<Serializable> l : response.getRows()) {
-      l.remove(2);
-    }
-    assertEquals(expectedResponse, response);
-
+    doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(
             rqueueMessages.stream()
                 .map(e -> new DefaultTypedTuple<>(e, (double) System.currentTimeMillis() + 100L))
@@ -298,12 +358,12 @@ class RqueueQDetailServiceTest extends TestBase {
         .when(rqueueMessageTemplate)
         .readFromZsetWithScore("__rq::p-queue::test", 0, 9);
 
-    response =
+    DataViewResponse response =
         rqueueQDetailService.getExplorePageData(
             "test", "__rq::p-queue::test", DataType.ZSET, 0, 10);
     // clear time left
-    for (List<Serializable> l : response.getRows()) {
-      l.remove(2);
+    for (TableRow tableRow : response.getRows()) {
+      tableRow.getColumns().remove(3);
     }
     assertEquals(expectedResponse, response);
   }
@@ -314,12 +374,12 @@ class RqueueQDetailServiceTest extends TestBase {
     DataViewResponse response = rqueueQDetailService.viewData("key", DataType.KEY, null, 0, 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     expectedResponse.setHeaders(Collections.singletonList("Value"));
-    expectedResponse.setRows(Collections.singletonList(Collections.singletonList("test")));
+    expectedResponse.setRows(Collections.singletonList(new TableRow(new TableColumn("test"))));
     assertEquals(expectedResponse, response);
 
     doReturn(null).when(stringRqueueRedisTemplate).get("key2");
     response = rqueueQDetailService.viewData("key2", DataType.KEY, null, 0, 10);
-    expectedResponse.setRows(Collections.singletonList(Collections.singletonList("null")));
+    expectedResponse.setRows(Collections.singletonList(new TableRow(new TableColumn("null"))));
     assertEquals(expectedResponse, response);
   }
 
@@ -335,11 +395,11 @@ class RqueueQDetailServiceTest extends TestBase {
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.LIST, null, 0, 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     expectedResponse.setHeaders(Collections.singletonList("Item"));
-    List<List<Serializable>> rows = new ArrayList<>();
+    List<TableRow> tableRows = new ArrayList<>();
     for (Object o : objects) {
-      rows.add(Collections.singletonList(String.valueOf(o)));
+      tableRows.add(new TableRow(new TableColumn(String.valueOf(o))));
     }
-    expectedResponse.setRows(rows);
+    expectedResponse.setRows(tableRows);
     assertEquals(expectedResponse, response);
   }
 
@@ -353,20 +413,20 @@ class RqueueQDetailServiceTest extends TestBase {
                 messageConverter, "jobs", "buildMessage", null, null, null),
             200.0));
 
-    List<List<Serializable>> rows = new ArrayList<>();
+    List<TableRow> tableRows = new ArrayList<>();
     for (TypedTuple<Object> typedTuple : objects) {
-      List<Serializable> row = new ArrayList<>();
-      row.add(String.valueOf(typedTuple.getValue()));
-      row.add(typedTuple.getScore());
-      rows.add(row);
+      List<TableColumn> items = new ArrayList<>();
+      items.add(new TableColumn(String.valueOf(typedTuple.getValue())));
+      items.add(new TableColumn(typedTuple.getScore()));
+      tableRows.add(new TableRow(items));
     }
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
-    headers.add("Item");
+    headers.add("Value");
     headers.add("Score");
     expectedResponse.setHeaders(headers);
 
-    expectedResponse.setRows(rows);
+    expectedResponse.setRows(tableRows);
 
     doReturn(objects).when(stringRqueueRedisTemplate).zrangeWithScore("jobs", 0, 9);
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.ZSET, null, 0, 10);
@@ -380,13 +440,13 @@ class RqueueQDetailServiceTest extends TestBase {
     objects.add("Test");
     objects.add(
         RqueueMessageUtils.buildMessage(messageConverter, "jobs", "Test object", null, null, null));
-    List<List<Serializable>> rows = new ArrayList<>();
+    List<TableRow> tableRows = new ArrayList<>();
     for (Object object : objects) {
-      rows.add(Collections.singletonList(String.valueOf(object)));
+      tableRows.add(new TableRow(new TableColumn(String.valueOf(object))));
     }
     DataViewResponse expectedResponse = new DataViewResponse();
     expectedResponse.setHeaders(Collections.singletonList("Item"));
-    expectedResponse.setRows(rows);
+    expectedResponse.setRows(tableRows);
     doReturn(objects).when(stringRqueueRedisTemplate).getMembers("jobs");
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.SET, null, 0, 10);
     assertEquals(expectedResponse, response);

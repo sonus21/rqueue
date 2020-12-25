@@ -22,9 +22,14 @@ import java.util.Collection;
 import java.util.List;
 
 public interface RqueueJobDao {
+
+  void createJob(RqueueJob rqueueJob, Duration expiry);
+
   void save(RqueueJob rqueueJob, Duration expiry);
 
-  RqueueJob getJob(String jobId);
+  RqueueJob findById(String jobId);
 
-  List<RqueueJob> getJobs(Collection<String> jobIds);
+  List<RqueueJob> findJobsByIdIn(Collection<String> jobIds);
+
+  List<RqueueJob> finByMessageIdIn(List<String> messageIds);
 }

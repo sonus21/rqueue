@@ -66,7 +66,7 @@ class JobCheckinTest extends SpringTestBase {
         consumedMessageStore.getConsumedMessage(longRunningJob.getId());
     String jobsKey = rqueueConfig.getJobsKey(consumedMessage.getTag());
     List<String> jobIds = stringRqueueRedisTemplate.lrange(jobsKey, 0, -1);
-    List<RqueueJob> rqueueJobs = rqueueJobDao.getJobs(jobIds);
+    List<RqueueJob> rqueueJobs = rqueueJobDao.findJobsByIdIn(jobIds);
     assertFalse(rqueueJobs.isEmpty());
     assertFalse(rqueueJobs.get(0).getCheckins().isEmpty());
     assertTrue(rqueueJobs.get(0).getCheckins().size() > 1);
@@ -87,7 +87,7 @@ class JobCheckinTest extends SpringTestBase {
         consumedMessageStore.getConsumedMessage(longRunningJob.getId());
     String jobsKey = rqueueConfig.getJobsKey(consumedMessage.getTag());
     List<String> jobIds = stringRqueueRedisTemplate.lrange(jobsKey, 0, -1);
-    List<RqueueJob> rqueueJobs = rqueueJobDao.getJobs(jobIds);
+    List<RqueueJob> rqueueJobs = rqueueJobDao.findJobsByIdIn(jobIds);
     assertFalse(rqueueJobs.isEmpty());
     assertFalse(rqueueJobs.get(0).getCheckins().isEmpty());
     assertTrue(rqueueJobs.get(0).getCheckins().size() > 1);
@@ -121,7 +121,7 @@ class JobCheckinTest extends SpringTestBase {
         "at least two execution");
     String jobsKey = rqueueConfig.getJobsKey(messageId);
     List<String> jobIds = stringRqueueRedisTemplate.lrange(jobsKey, 0, -1);
-    List<RqueueJob> rqueueJobs = rqueueJobDao.getJobs(jobIds);
+    List<RqueueJob> rqueueJobs = rqueueJobDao.findJobsByIdIn(jobIds);
     assertTrue(rqueueJobs.isEmpty());
   }
 }

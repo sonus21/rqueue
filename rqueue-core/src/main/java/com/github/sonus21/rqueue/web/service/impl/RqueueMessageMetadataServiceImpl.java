@@ -52,6 +52,11 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
+  public void deleteAll(Collection<String> ids) {
+    rqueueMessageMetadataDao.deleteAll(ids);
+  }
+
+  @Override
   public List<MessageMetadata> findAll(Collection<String> ids) {
     return rqueueMessageMetadataDao.findAll(ids).stream()
         .filter(Objects::nonNull)

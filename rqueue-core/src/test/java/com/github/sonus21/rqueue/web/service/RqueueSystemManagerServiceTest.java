@@ -83,7 +83,7 @@ class RqueueSystemManagerServiceTest extends TestBase {
     assertFalse(queueConfig.isDeleted());
     doReturn(queueConfig)
         .when(rqueueSystemConfigDao)
-        .getQConfig(TestUtils.getQueueConfigKey("test"));
+        .getQConfig(TestUtils.getQueueConfigKey("test"), true);
     baseResponse = rqueueSystemManagerService.deleteQueue("test");
     assertEquals(0, baseResponse.getCode());
     assertEquals("Queue deleted", baseResponse.getMessage());

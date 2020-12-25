@@ -519,3 +519,7 @@ section {
   width: 100%;
   height: 500px;
 }
+
+.modal-data-explorer {
+  max-width: max-content;
+}

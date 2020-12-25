@@ -56,4 +56,9 @@ public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
   public void delete(String id) {
     template.delete(id);
   }
+
+  @Override
+  public void deleteAll(Collection<String> ids) {
+    template.delete(ids);
+  }
 }

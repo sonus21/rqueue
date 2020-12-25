@@ -27,7 +27,7 @@ import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
-import com.github.sonus21.rqueue.utils.BaseLogger;
+import com.github.sonus21.rqueue.utils.PrefixLogger;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 @Slf4j
 @SuppressWarnings("java:S107")
-class PostProcessingHandler extends BaseLogger {
+class PostProcessingHandler extends PrefixLogger {
   private final ApplicationEventPublisher applicationEventPublisher;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueMessageTemplate rqueueMessageTemplate;

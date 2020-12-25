@@ -25,11 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
+@Slf4j
 public class RqueueRedisTemplate<V extends Serializable> {
   protected RedisTemplate<String, V> redisTemplate;
 
@@ -102,6 +104,20 @@ public class RqueueRedisTemplate<V extends Serializable> {
     return redisTemplate.delete(key);
   }
 
+  public Object delete(Collection<String> keys) {
+    Object result =
+        RedisUtils.executePipeLine(
+            getRedisTemplate(),
+            ((connection, keySerializer, valueSerializer) -> {
+              // TODO fix cross slot error
+              for (String key : keys) {
+                connection.del(key.getBytes());
+              }
+            }));
+    log.debug("Pipeline result: {}", result);
+    return result;
+  }
+
   public DataType type(String key) {
     return redisTemplate.type(key);
   }
@@ -138,12 +154,18 @@ public class RqueueRedisTemplate<V extends Serializable> {
     if (oldKeys.size() != newKeys.size()) {
       throw new IllegalArgumentException("Old key and new key space set is different");
     }
-    RedisUtils.executePipeLine(
-        redisTemplate,
-        (connection, keySerializer, valueSerializer) -> {
-          for (int i = 0; i < oldKeys.size(); i++) {
-            connection.rename(oldKeys.get(i).getBytes(), newKeys.get(i).getBytes());
-          }
-        });
+    log.debug(
+        "Pipeline result: {}",
+        RedisUtils.executePipeLine(
+            redisTemplate,
+            (connection, keySerializer, valueSerializer) -> {
+              for (int i = 0; i < oldKeys.size(); i++) {
+                connection.rename(oldKeys.get(i).getBytes(), newKeys.get(i).getBytes());
+              }
+            }));
+  }
+
+  public Long zrem(String zsetName, long min, long max) {
+    return redisTemplate.opsForZSet().removeRange(zsetName, min, max);
   }
 }

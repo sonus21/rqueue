@@ -18,6 +18,7 @@ var queueName = null;
 var dataPageUrl = null;
 var dataKey = null;
 var dataName = null;
+var deleteActionMessage = null;
 var dataType = null;
 var currentPage = 0;
 var defaultPageSize = null;
@@ -63,9 +64,9 @@ function json(data) {
 function drawChartElement(data, options, div_id) {
   google.charts.load('current', {'packages': ['corechart']});
   google.charts.setOnLoadCallback(function () {
-    var chart = new google.visualization.LineChart(
+    let chart = new google.visualization.LineChart(
         document.getElementById(div_id));
-    var chartData = google.visualization.arrayToDataTable(data, false);
+    let chartData = google.visualization.arrayToDataTable(data, false);
     chart.draw(chartData, options);
   });
 }
@@ -73,11 +74,11 @@ function drawChartElement(data, options, div_id) {
 function drawChart(payload, div_id) {
   ajaxRequest(getAbsoluteUrl('rqueue/api/v1/chart'), 'POST', payload,
       function (response) {
-        var title = response.title;
-        var hTitle = response.hTitle;
-        var vTitle = response.vTitle;
-        var data = response.data;
-        var options = {
+        let title = response.title;
+        let hTitle = response.hTitle;
+        let vTitle = response.vTitle;
+        let data = response.data;
+        let options = {
           title: title,
           hAxis: {title: hTitle, minValue: 0, titleTextStyle: {color: '#333'}},
           vAxis: {minValue: 0, title: vTitle}
@@ -91,8 +92,8 @@ function drawChart(payload, div_id) {
 }
 
 function refreshStatsChart(chartParams, div_id) {
-  var types = [];
-  var aggregatorType = $('#stats-aggregator-type :selected').val();
+  let types = [];
+  let aggregatorType = $('#stats-aggregator-type :selected').val();
   $.each($("input[name='data-type']:checked"), function () {
     types.push($(this).val());
   });
@@ -112,15 +113,64 @@ function refreshLatencyChart(chartParams, div_id) {
 //==================================================================
 
 function exploreData() {
-  var element = $(this);
+  let element = $(this);
   dataName = element.data('name');
   dataType = element.data('type');
   dataKey = element.data('key');
 }
 
+function displayHeader(response, displayPageNumberEl, pageSize) {
+  let rows = response.rows;
+  let tableHeader = $('#table-header');
+  displayPageNumberEl.empty();
+  $('#clear-queue').hide();
+  for (let i = 0; i < response.actions.length; i++) {
+    switch (response.actions[i]) {
+      case 'DELETE':
+        $('#clear-queue').show();
+        break;
+      default:
+        console.log("Unknown action", response.actions[i])
+    }
+  }
+  if (rows.length === pageSize) {
+    $('#next-page-button').prop("disabled", false);
+  } else {
+    $('#next-page-button').prop("disabled", true);
+  }
+  if (currentPage > 0) {
+    $('#previous-page-button').prop("disabled", false);
+  } else {
+    $('#previous-page-button').prop("disabled", true);
+    tableHeader.empty();
+    let headers = response.headers;
+    for (let i = 0; i < headers.length; i++) {
+      tableHeader.append("<th>" + headers[i] + "</th>");
+    }
+  }
+}
+
+function renderRow(row, tableBody) {
+  let tds = "";
+  let columns = row.columns;
+  for (let j = 0; j < columns.length; j++) {
+    let column = columns[j];
+    if (column.type === 'DISPLAY') {
+      tds += ("<td>" + column.value + "</td>");
+    } else if (column.type === 'ACTION') {
+      if (column.value === 'DELETE') {
+        tds += ("<td><a href='#' class='delete-message-btn btn-danger'>Delete </a></td>");
+      } else {
+        console.log("Unknown value for action" + column.value);
+      }
+    }
+  }
+  tableBody.append("<tr>" + tds + "</tr>");
+}
+
 function displayTable(nextOrPrev) {
-  var pageSize = parseInt($('#page-size').val());
-  var pageNumber = currentPage;
+  let pageSize = parseInt($('#page-size').val());
+  let pageNumber = currentPage;
   if (nextOrPrev === null) {
     defaultPageSize = pageSize + '';
   } else if (nextOrPrev === true) {
@@ -128,7 +178,7 @@ function displayTable(nextOrPrev) {
   } else {
     pageNumber -= 1;
   }
-  var data = {
+  let data = {
     'src': queueName,
     'count': pageSize,
     'page': pageNumber,
@@ -142,49 +192,13 @@ function displayTable(nextOrPrev) {
     traditional: true,
     success: function (response) {
       currentPage = pageNumber;
-      var rows = response.rows;
-      var tableHeader = $('#table-header');
-      var displayPageNumberEl = $('#display-page-number');
-      displayPageNumberEl.empty();
-      $('#clear-queue').hide();
-      for (var i = 0; i < response.actions.length; i++) {
-        switch (response.actions[i]) {
-          case 'DELETE':
-            $('#clear-queue').show();
-            break;
-          default:
-            console.log("Unknown action", response.actions[i])
-        }
-      }
-      if (rows.length === pageSize) {
-        $('#next-page-button').prop("disabled", false);
-      } else {
-        $('#next-page-button').prop("disabled", true);
-      }
-      if (currentPage > 0) {
-        $('#previous-page-button').prop("disabled", false);
-      } else {
-        $('#previous-page-button').prop("disabled", true);
-        tableHeader.empty();
-        var headers = response.headers;
-        for (var i = 0; i < headers.length; i++) {
-          tableHeader.append("<th>" + headers[i] + "</th>");
-        }
-      }
-      var tableBody = $('#table-body');
+      let displayPageNumberEl = $('#display-page-number');
+      displayHeader(response, displayPageNumberEl, pageSize);
+      let tableBody = $('#table-body');
       tableBody.empty();
-      for (var i = 0; i < rows.length; i++) {
-        var tds = "";
-        var row = rows[i];
-        for (var j = 0; j < row.length - 1; j++) {
-          tds += ("<td>" + row[j] + "</td>");
-        }
-        if (row[row.length - 1] === 'DELETE') {
-          tds += ("<td><a href='#' class='delete-message-btn btn-danger'>Delete </a></td>");
-        } else {
-          tds += ("<td>" + row[j] + "</td>");
-        }
-        tableBody.append("<tr>" + tds + "</tr>");
+      let rows = response.rows;
+      for (let i = 0; i < rows.length; i++) {
+        renderRow(rows[i], tableBody);
       }
       displayPageNumberEl.append("Page #", pageNumber + 1);
     },
@@ -213,10 +227,10 @@ function prevPage() {
 }
 
 function updateDataType(element, callback) {
-  var el = $(element);
-  var key = el.val();
-  var typeIdEl = $('#' + el.attr('id') + "-type");
-  var url = getAbsoluteUrl('rqueue/api/v1/data-type?name=' + key);
+  let el = $(element);
+  let key = el.val();
+  let typeIdEl = $('#' + el.attr('id') + "-type");
+  let url = getAbsoluteUrl('rqueue/api/v1/data-type?name=' + key);
   typeIdEl.empty();
   $.ajax({
     url: url,
@@ -242,8 +256,8 @@ function updateDataType(element, callback) {
 
 $('#explore-queue').on('hidden.bs.modal', function () {
   currentPage = 0;
-  $('#previous-page-button').hide();
-  $('#next-page-button').hide();
+  $('#previous-page-button').prop("disabled", true);
+  $('#next-page-button').prop("disabled", true);
   $('#display-page-number').empty();
   $('#page-size').val(defaultPageSize);
 });
@@ -253,7 +267,7 @@ $('#explore-queue').on('hidden.bs.modal', function () {
 //==============================================================
 
 function enableKeyForm() {
-  var dataType = $('#data-name-type').text();
+  let dataType = $('#data-name-type').text();
   if (dataType === 'ZSET') {
     $('#data-key-form').show();
   } else {
@@ -264,13 +278,12 @@ function enableKeyForm() {
 }
 
 function enableFormsIfRequired() {
-  var dstDataType = $('#dst-data-type').text();
-  var srcDataType = $('#src-data-type').text();
-  debugger
+  let dstDataType = $('#dst-data-type').text();
+  let srcDataType = $('#src-data-type').text();
   if (dstDataType === 'ZSET') {
     $('#priority-controller-form').show();
   } else if (dstDataType === '' && srcDataType !== '') {
-    var dstDataName = dstDataEl.val();
+    let dstDataName = dstDataEl.val();
     if (dstDataName !== '') {
       $('#dst-data-type-input-form').show();
     }
@@ -294,7 +307,7 @@ function getSourceType() {
 }
 
 function getDstType() {
-  var type = convertVal($('#dst-data-type').text());
+  let type = convertVal($('#dst-data-type').text());
   if (type !== null) {
     return type;
   }
@@ -302,15 +315,15 @@ function getDstType() {
 }
 
 $('#move-button').on("click", function () {
-  var messageCount = $('#number-of-messages').val();
-  var other = {};
-  var dstType = getSourceType();
-  var srcType = getDstType();
+  let messageCount = $('#number-of-messages').val();
+  let other = {};
+  let dstType = getSourceType();
+  let srcType = getDstType();
   if (srcType === null) {
     alert("Source cannot be empty.");
     return;
   }
-  var payload = {
+  let payload = {
     'src': srcDataEl.val(),
     'srcType': srcType,
     'dst': dstDataEl.val(),
@@ -320,15 +333,17 @@ $('#move-button').on("click", function () {
     other['messageCount'] = parseInt(messageCount);
   }
   if ($('#priority-controller-form').is(":visible")) {
-    var val = $('#priority-val').val();
+    let val = $('#priority-val').val();
     if (val !== '') {
       other['newScore'] = val;
     }
-    var type = getSelectedOption('priority-type');
+    let type = getSelectedOption('priority-type');
     if (type === 'REL') {
       other['fixedScore'] = false;
     } else if (type === 'ABS') {
       other['fixedScore'] = true;
+    } else {
+      throw type;
     }
   }
   payload['other'] = other;
@@ -354,8 +369,9 @@ $('#move-button').on("click", function () {
 
 function deleteModalBody() {
   if (deleteButtonId === "DELETE_ALL" && dataName !== undefined) {
-    return "Do you really want to delete <b>Queue: </b>" + dataName
-        + "&nbsp;?&nbsp;This process cannot be undone.";
+    return "<strong>Are you sure?</strong> </br>You want to delete <b>"
+        + deleteActionMessage
+        + "</b>&nbsp;?&nbsp;</br>This process cannot be undone.";
   } else if (deleteButtonId === "DELETE_QUEUE" && queueName !== undefined) {
     return "Do you really want to delete <b>Queue: </b>" + queueName
         + "&nbsp;?&nbsp;This process cannot be undone.";
@@ -369,8 +385,8 @@ function updateDeleteModal() {
 }
 
 function deleteMessage() {
-  var id = $($($($(this).parent()).parent()).children()[0]).text();
-  var url = getAbsoluteUrl('rqueue/api/v1/data-set/' + queueName + "/" + id);
+  let id = $($($($(this).parent()).parent()).children()[0]).text();
+  let url = getAbsoluteUrl('rqueue/api/v1/data-set/' + queueName + "/message/" + id);
   $.ajax({
     url: url,
     type: 'DELETE',
@@ -402,7 +418,7 @@ $('.delete-queue').on("click", function () {
 
 function makeQueueEmpty() {
   $.ajax({
-    url: getAbsoluteUrl("rqueue/api/v1/data-set/" + dataName),
+    url: getAbsoluteUrl("rqueue/api/v1/data-set/" + queueName + "/" + dataName),
     type: 'DELETE',
     success: function (response) {
       if (response.code === 0) {

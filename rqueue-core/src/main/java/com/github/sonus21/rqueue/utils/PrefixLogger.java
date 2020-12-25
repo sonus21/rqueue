@@ -19,14 +19,14 @@ package com.github.sonus21.rqueue.utils;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
-public class BaseLogger {
+public class PrefixLogger {
   private final Logger log;
   private final String prefix;
 
-  public BaseLogger(Logger log, String groupName) {
+  public PrefixLogger(Logger log, String groupName) {
     this.log = log;
     if (StringUtils.isEmpty(groupName)) {
-      this.prefix = "";
+      this.prefix = Constants.BLANK;
     } else {
       this.prefix = "[" + groupName + "] ";
     }

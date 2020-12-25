@@ -21,6 +21,8 @@ import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.MessageSweeper;
+import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
@@ -75,7 +77,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   @Override
   public BooleanResponse deleteMessage(String queueName, String id) {
     String queueConfigKey = rqueueConfig.getQueueConfigKey(queueName);
-    QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey);
+    QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey, true);
     BooleanResponse booleanResponse = new BooleanResponse();
     if (queueConfig == null) {
       booleanResponse.setCode(1);
@@ -151,19 +153,15 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   }
 
   @Override
-  public BooleanResponse deleteQueueMessages(String queueName, int remainingMessages) {
-    int start = -1 * remainingMessages;
-    int end = -1;
-    if (remainingMessages == 0) {
-      start = 2;
-      end = 1;
-    }
-    if (rqueueStringDao.type(queueName)
-        == org.springframework.data.redis.connection.DataType.LIST) {
-      rqueueStringDao.ltrim(queueName, start, end);
-      return new BooleanResponse(true);
-    }
-    return new BooleanResponse(false);
+  public BooleanResponse makeEmpty(String queueName, String dataName) {
+    return new BooleanResponse(
+        MessageSweeper.getInstance(rqueueConfig, rqueueMessageTemplate, messageMetadataService)
+            .deleteMessage(
+                MessageDeleteRequest.builder()
+                    .dataName(dataName)
+                    .queueName(queueName)
+                    .dataType(rqueueStringDao.type(dataName))
+                    .build()));
   }
 
   private boolean shouldFetchVersionDetail() {

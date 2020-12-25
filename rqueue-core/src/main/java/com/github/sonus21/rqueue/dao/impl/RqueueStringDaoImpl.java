@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -51,6 +52,32 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @Override
   public void appendToList(String listName, String data) {
     redisTemplate.rpush(listName, data);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Map<String, List<Object>> readFromLists(List<String> keys) {
+    Map<String, List<Object>> out = new HashMap<>();
+    List<Object> redisOut =
+        RedisUtils.executePipeLine(
+            redisTemplate.getRedisTemplate(),
+            ((connection, keySerializer, valueSerializer) -> {
+              for (String key : keys) {
+                connection.lRange(key.getBytes(StandardCharsets.UTF_8), 0, -1);
+              }
+            }));
+    for (int i = 0; i < keys.size(); i++) {
+      List<Object> values = (List<Object>) redisOut.get(i);
+      if (!CollectionUtils.isEmpty(values)) {
+        out.put(keys.get(i), values);
+      }
+    }
+    return out;
+  }
+
+  @Override
+  public List<Object> readFromList(String key) {
+    return readFromLists(Collections.singletonList(key)).getOrDefault(key, Collections.emptyList());
   }
 
   @Override
@@ -142,6 +169,11 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @Override
   public void ltrim(String listName, int start, int end) {
     redisTemplate.ltrim(listName, start, end);
+  }
+
+  @Override
+  public Long zrem(String zsetName, long min, long max) {
+    return redisTemplate.zrem(zsetName, min, max);
   }
 
   @Override

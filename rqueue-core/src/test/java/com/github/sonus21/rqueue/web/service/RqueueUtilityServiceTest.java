@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -78,7 +79,7 @@ class RqueueUtilityServiceTest extends TestBase {
     assertEquals("Queue config not found!", response.getMessage());
 
     QueueConfig queueConfig = createQueueConfig("notification", 3, 10000L, null);
-    doReturn(queueConfig).when(rqueueSystemConfigDao).getQConfig(queueConfig.getId());
+    doReturn(queueConfig).when(rqueueSystemConfigDao).getQConfig(queueConfig.getId(), true);
     response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(0, response.getCode());
     assertNull(response.getMessage());
@@ -181,22 +182,26 @@ class RqueueUtilityServiceTest extends TestBase {
   }
 
   @Test
-  void deleteQueueMessages() {
+  void makeEmpty() {
+    doReturn(org.springframework.data.redis.connection.DataType.STRING)
+        .when(rqueueStringDao)
+        .type("__rq::xqueue::{{job}}");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> rqueueUtilityService.makeEmpty("job", "__rq::xqueue::{{job}}"));
+
     doReturn(org.springframework.data.redis.connection.DataType.LIST)
         .when(rqueueStringDao)
-        .type("job");
-    BooleanResponse response = rqueueUtilityService.deleteQueueMessages("job", 0);
-    assertTrue(response.isValue());
-    response = rqueueUtilityService.deleteQueueMessages("job", 100);
+        .type("__rq::queue::{{job}}");
+
+    BooleanResponse response = rqueueUtilityService.makeEmpty("job", "__rq::queue::{{job}}");
     assertTrue(response.isValue());
 
     doReturn(org.springframework.data.redis.connection.DataType.ZSET)
         .when(rqueueStringDao)
-        .type("job");
-    response = rqueueUtilityService.deleteQueueMessages("job", 100);
-    assertFalse(response.isValue());
-    verify(rqueueStringDao, times(1)).ltrim("job", 2, 1);
-    verify(rqueueStringDao, times(1)).ltrim("job", -100, -1);
+        .type("__rq::d-queue::{{job}}");
+    response = rqueueUtilityService.makeEmpty("job", "__rq::d-queue::{{job}}");
+    assertTrue(response.isValue());
   }
 
   @Test

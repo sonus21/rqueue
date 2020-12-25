@@ -231,6 +231,23 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
+  public boolean renameCollection(String srcName, String tgtName) {
+    rename(srcName, tgtName);
+    return true;
+  }
+
+  @Override
+  public boolean renameCollections(List<String> srcNames, List<String> tgtNames) {
+    rename(srcNames, tgtNames);
+    return true;
+  }
+
+  @Override
+  public void deleteCollection(String name) {
+    redisTemplate.delete(name);
+  }
+
+  @Override
   public List<RqueueMessage> readFromList(String name, long start, long end) {
     List<RqueueMessage> messages = lrange(name, start, end);
     if (messages == null) {

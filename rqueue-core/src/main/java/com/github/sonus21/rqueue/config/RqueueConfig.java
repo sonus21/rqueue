@@ -17,10 +17,11 @@
 package com.github.sonus21.rqueue.config;
 
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.net.Proxy;
 import java.util.UUID;
-import javax.annotation.PostConstruct;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -36,7 +37,8 @@ public class RqueueConfig {
   private final RedisConnectionFactory connectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
-  private String brokerId;
+  private static final String brokerId = UUID.randomUUID().toString();
+  private static final AtomicLong counter = new AtomicLong(1);
 
   @Value("${rqueue.version:2.1.0}")
   private String version;
@@ -46,6 +48,9 @@ public class RqueueConfig {
 
   @Value("${rqueue.key.prefix:__rq::}")
   private String prefix;
+
+  @Value("${rqueue.del.prefix:del::")
+  private String delPrefix;
 
   @Value("${rqueue.job.enabled:true}")
   private boolean jobEnabled;
@@ -114,11 +119,6 @@ public class RqueueConfig {
 
   @Value("${rqueue.system.mode:BOTH}")
   private RqueueMode mode;
-
-  @PostConstruct
-  public void init() {
-    this.brokerId = UUID.randomUUID().toString();
-  }
 
   public String getQueuesKey() {
     return prefix + queuesKeySuffix;
@@ -234,5 +234,17 @@ public class RqueueConfig {
 
   public String getJobsKey(String messageId) {
     return prefix + jobsKeyPrefix + messageId;
+  }
+
+  public String getDelDataName() {
+    return prefix
+        + delPrefix
+        + brokerId
+        + Constants.REDIS_KEY_SEPARATOR
+        + counter.incrementAndGet();
+  }
+
+  public String getBrokerId() {
+    return brokerId;
   }
 }

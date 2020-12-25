@@ -17,13 +17,12 @@
 package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.utils.BaseLogger;
+import com.github.sonus21.rqueue.utils.RetryableRunnable;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
 import org.slf4j.Logger;
-import org.slf4j.event.Level;
 
-abstract class MessageContainerBase extends BaseLogger implements Runnable {
+abstract class MessageContainerBase extends RetryableRunnable<Object> {
   protected final WeakReference<RqueueMessageListenerContainer> container;
 
   MessageContainerBase(Logger log, String groupName, RqueueMessageListenerContainer container) {
@@ -43,15 +42,4 @@ abstract class MessageContainerBase extends BaseLogger implements Runnable {
   boolean isQueueActive(String queueName) {
     return Objects.requireNonNull(container.get()).isQueueActive(queueName);
   }
-
-  @Override
-  public void run() {
-    try {
-      start();
-    } catch (Exception e) {
-      log(Level.ERROR, "Failed {}", e, e.getMessage());
-    }
-  }
-
-  abstract void start();
 }

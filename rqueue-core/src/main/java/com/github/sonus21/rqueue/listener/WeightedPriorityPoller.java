@@ -124,7 +124,7 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
   }
 
   @Override
-  void start() {
+  public void start() {
     initializeWeight();
     printDebugDetail();
     while (true) {

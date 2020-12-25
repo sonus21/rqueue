@@ -30,4 +30,6 @@ public interface RqueueMessageMetadataDao {
   void save(MessageMetadata messageMetadata, Duration duration);
 
   void delete(String id);
+
+  void deleteAll(Collection<String> ids);
 }

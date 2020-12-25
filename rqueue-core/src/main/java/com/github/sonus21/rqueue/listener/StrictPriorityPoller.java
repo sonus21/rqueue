@@ -86,14 +86,14 @@ class StrictPriorityPoller extends RqueueMessagePoller {
       if (shouldExit()) {
         return null;
       }
-      queueToPoll = "";
+      queueToPoll = BLANK;
     }
     log(Level.DEBUG, "Queue to be poll : {}", null, queueToPoll);
     return queueToPoll;
   }
 
   @Override
-  void start() {
+  public void start() {
     log(Level.DEBUG, "Running, Ordered Queues: {}", null, queues);
     while (true) {
       try {

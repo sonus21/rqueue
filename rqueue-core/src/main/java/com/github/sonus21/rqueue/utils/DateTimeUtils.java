@@ -28,7 +28,6 @@ public class DateTimeUtils {
   DateTimeUtils() {}
 
   public static String milliToHumanRepresentation(long millis) {
-    String prefix = "";
     long seconds = millis / Constants.ONE_MILLI;
     long minutes = seconds / Constants.SECONDS_IN_A_MINUTE;
     seconds = seconds % Constants.SECONDS_IN_A_MINUTE; // remaining seconds
@@ -48,7 +47,7 @@ public class DateTimeUtils {
         s = seconds + " Seconds.";
       }
     }
-    return prefix + s;
+    return s;
   }
 
   public static String formatMilliToString(Long milli) {

@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.spring.tests.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -34,6 +33,7 @@ import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
@@ -142,9 +142,13 @@ class RqueueRestControllerTest extends SpringWebTestBase {
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
-    assertEquals(Collections.singletonList(ActionType.DELETE), dataViewResponse.getActions());
+    assertEquals(
+        Collections.singletonList(
+            new Action(
+                ActionType.DELETE, String.format("dead letter queue '%s'", emailDeadLetterQueue))),
+        dataViewResponse.getActions());
     assertEquals(20, dataViewResponse.getRows().size());
-    assertEquals(3, dataViewResponse.getRows().get(0).size());
+    assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
   }
 
   @Test
@@ -166,22 +170,25 @@ class RqueueRestControllerTest extends SpringWebTestBase {
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
-    assertEquals(Collections.singletonList(ActionType.NONE), dataViewResponse.getActions());
+    assertEquals(1, dataViewResponse.getActions().size());
     assertEquals(20, dataViewResponse.getRows().size());
-    assertEquals(4, dataViewResponse.getRows().get(0).size());
+    assertEquals(5, dataViewResponse.getRows().get(0).getColumns().size());
   }
 
   @Test
   void deleteDataSet() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
-        this.mockMvc.perform(delete("/rqueue/api/v1/data-set/" + emailDeadLetterQueue)).andReturn();
+        this.mockMvc
+            .perform(delete("/rqueue/api/v1/data-set/" + emailQueue + "/" + emailDeadLetterQueue))
+            .andReturn();
     BooleanResponse booleanResponse =
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
     assertNull(booleanResponse.getMessage());
     assertEquals(0, booleanResponse.getCode());
     assertTrue(booleanResponse.isValue());
-    assertFalse(stringRqueueRedisTemplate.exist(emailDeadLetterQueue));
+    TimeoutUtils.waitFor(
+        () -> !stringRqueueRedisTemplate.exist(emailDeadLetterQueue), "dead letter queue deletion");
     assertEquals(-2, stringRqueueRedisTemplate.ttl(emailDeadLetterQueue));
   }
 
@@ -265,7 +272,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     MvcResult result =
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/data-set/" + emailQueue + "/" + message.getId())
+                delete("/rqueue/api/v1/data-set/" + emailQueue + "/message/" + message.getId())
                     .contentType(MediaType.APPLICATION_JSON))
             .andReturn();
     BooleanResponse response =

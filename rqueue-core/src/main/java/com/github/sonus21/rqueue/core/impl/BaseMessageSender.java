@@ -26,7 +26,7 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -34,18 +34,10 @@ import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @SuppressWarnings("WeakerAccess")
@@ -56,21 +48,16 @@ abstract class BaseMessageSender {
   @Autowired protected RqueueStringDao rqueueStringDao;
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
-  private ExecutorService executorService;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
-      MessageHeaders messageHeaders,
-      boolean shouldCreateExecutor) {
+      MessageHeaders messageHeaders) {
     notNull(messageTemplate, "messageTemplate cannot be null");
     notNull(messageConverter, "messageConverter cannot be null");
     this.messageTemplate = messageTemplate;
     this.messageConverter = messageConverter;
     this.messageHeaders = messageHeaders;
-    if (shouldCreateExecutor) {
-      this.executorService = Executors.newSingleThreadExecutor();
-    }
   }
 
   protected void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
@@ -153,54 +140,10 @@ abstract class BaseMessageSender {
     return rqueueMessage.getId();
   }
 
-  private List<String> getMessageIdFromList(String queueName) {
-    long batchSize = 1000;
-    long offset = 0;
-    List<String> ids = new LinkedList<>();
-    while (true) {
-      List<RqueueMessage> rqueueMessageList =
-          messageTemplate.readFromList(queueName, offset, batchSize);
-      if (!CollectionUtils.isEmpty(rqueueMessageList)) {
-        for (RqueueMessage rqueueMessage : rqueueMessageList) {
-          ids.add(rqueueMessage.getId());
-        }
-      }
-      if (CollectionUtils.isEmpty(rqueueMessageList) || rqueueMessageList.size() < batchSize) {
-        break;
-      }
-      offset += batchSize;
-    }
-    return ids;
-  }
-
-  private List<String> getMessageIdFromZset(String zsetName) {
-    List<String> ids = new LinkedList<>();
-    List<RqueueMessage> rqueueMessageList = messageTemplate.readFromZset(zsetName, 0, -1);
-    if (!CollectionUtils.isEmpty(rqueueMessageList)) {
-      for (RqueueMessage rqueueMessage : rqueueMessageList) {
-        ids.add(rqueueMessage.getId());
-      }
-    }
-    return ids;
-  }
-
   protected Object deleteAllMessages(QueueDetail queueDetail) {
-    List<String> messageIds = getMessageIdFromList(queueDetail.getQueueName());
-    List<String> messageIdFromProcessingSet =
-        getMessageIdFromZset(queueDetail.getProcessingQueueName());
-    List<String> messageIdFromDelayedSet = getMessageIdFromZset(queueDetail.getDelayedQueueName());
-    messageIds.addAll(messageIdFromProcessingSet);
-    messageIds.addAll(messageIdFromDelayedSet);
-    Object deleted =
-        rqueueStringDao.delete(
-            Arrays.asList(
-                queueDetail.getQueueName(),
-                queueDetail.getProcessingQueueName(),
-                queueDetail.getDelayedQueueName()));
-    if (!CollectionUtils.isEmpty(messageIds)) {
-      executorService.submit(new MessageDeleteJob(messageIds, queueDetail));
-    }
-    return deleted;
+    return MessageSweeper.getInstance(
+            rqueueConfig, messageTemplate, rqueueMessageMetadataService)
+        .deleteMessage(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {
@@ -231,29 +174,6 @@ abstract class BaseMessageSender {
                   rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)
               .build();
       EndpointRegistry.register(queueDetail);
-    }
-  }
-
-  private class MessageDeleteJob implements Runnable {
-    private static final int batchSize = 1000;
-    private final QueueDetail queueDetail;
-    private final List<String> ids;
-
-    MessageDeleteJob(List<String> ids, QueueDetail queueDetail) {
-      this.ids = ids;
-      this.queueDetail = queueDetail;
-    }
-
-    @Override
-    public void run() {
-      for (List<String> subIds : ListUtils.partition(ids, batchSize)) {
-        List<String> messageMetaIds =
-            subIds.stream()
-                .map(e -> RqueueMessageUtils.getMessageMetaId(queueDetail.getName(), e))
-                .collect(Collectors.toList());
-        rqueueStringDao.delete(messageMetaIds);
-        log.info("Deleted {} messages meta", messageMetaIds.size());
-      }
     }
   }
 }

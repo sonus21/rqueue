@@ -74,7 +74,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   @Override
   public BaseResponse deleteQueue(String queueName) {
     QueueConfig queueConfig =
-        rqueueSystemConfigDao.getQConfig(rqueueConfig.getQueueConfigKey(queueName));
+        rqueueSystemConfigDao.getQConfig(rqueueConfig.getQueueConfigKey(queueName), true);
     BaseResponse baseResponse = new BaseResponse();
     if (queueConfig == null) {
       baseResponse.setCode(1);

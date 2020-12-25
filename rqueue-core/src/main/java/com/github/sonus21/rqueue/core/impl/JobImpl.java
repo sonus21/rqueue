@@ -20,7 +20,6 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -48,7 +47,6 @@ public class JobImpl implements Job {
   public JobImpl(
       RqueueConfig rqueueConfig,
       RqueueMessageMetadataService messageMetadataService,
-      RqueueStringDao rqueueStringDao,
       RqueueJobDao rqueueJobDao,
       QueueDetail queueDetail,
       MessageMetadata messageMetadata,
@@ -66,9 +64,7 @@ public class JobImpl implements Job {
     this.isPeriodicJob = rqueueMessage.isPeriodicTask();
     if (rqueueConfig.isJobEnabled()) {
       if (!isPeriodicJob) {
-        rqueueStringDao.appendToListWithListExpiry(
-            rqueueConfig.getJobsKey(rqueueMessage.getId()), rqueueJob.getId(), expiry);
-        this.save();
+        rqueueJobDao.createJob(rqueueJob, expiry);
       }
     }
   }
