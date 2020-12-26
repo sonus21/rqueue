@@ -56,7 +56,13 @@ public class RqueueJobServiceImpl implements RqueueJobService {
                 "%s/%s",
                 DateTimeUtils.formatMilliToString(job.getCreatedAt()),
                 DateTimeUtils.formatMilliToString(job.getUpdatedAt()))));
-    columns.add(new TableColumn(DateTimeUtils.milliToHumanRepresentation(job.getLastCheckinAt())));
+    if (job.getLastCheckinAt() == 0) {
+      columns.add(new TableColumn(""));
+    } else {
+      long timeDifference = System.currentTimeMillis() - job.getLastCheckinAt();
+      columns.add(
+          new TableColumn(DateTimeUtils.milliToHumanRepresentation(timeDifference) + " Ago"));
+    }
     if (job.getError() != null) {
       columns.add(new TableColumn(String.valueOf(job.getError())));
     } else {

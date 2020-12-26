@@ -187,9 +187,11 @@ public class MessageListener {
     log.info("ChatIndexing message: {}", chatIndexing);
   }
 
+  // checkin job example
   @RqueueListener(value = "chat-indexing-weekly", priority = "5", priorityGroup = "chat")
-  public void onMessage(ChatIndexing chatIndexing) {
+  public void onMessage(ChatIndexing chatIndexing, @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job) {
     log.info("ChatIndexing message: {}", chatIndexing);
+    job.checkIn("Chat indexing...");
   }
 }
 ```
@@ -206,6 +208,10 @@ Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 <br/>
 <br/>
 [![Explore Queue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
+
+
+<br/>
+[![Jobs](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/jobs.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/jobs.png)
 
 ## In Production
 

@@ -44,9 +44,10 @@ class RqueueMessageManagerTest extends SpringTestBase {
     enqueueIn(Notification.newInstance(), queueDetail.getProcessingQueueName(), 1000_000);
     rqueueMessageManager.deleteAllMessages(notificationQueue);
     TimeoutUtils.waitFor(
-        () -> getMessageCount(notificationQueue) == 0, "all messages to be deleted");
+        () -> getMessageCount(notificationQueue) == 0, 15_000L, "all messages to be deleted");
     TimeoutUtils.waitFor(
         () -> stringRqueueRedisTemplate.getRedisTemplate().keys("__rq::m-mdata::*").isEmpty(),
+        15_000L,
         "metadata deletion");
   }
 }

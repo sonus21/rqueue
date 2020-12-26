@@ -373,7 +373,7 @@ public abstract class SpringTestBase extends TestBase {
 
   protected void deleteAllMessages(String queueName) throws TimedOutException {
     int i = 0;
-    while (i < 3) {
+    while (true) {
       try {
         deleteAllMessageInternal(queueName);
         return;
