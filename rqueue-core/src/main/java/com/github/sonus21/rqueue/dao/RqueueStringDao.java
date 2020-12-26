@@ -23,8 +23,6 @@ import java.util.Map;
 import org.springframework.data.redis.connection.DataType;
 
 public interface RqueueStringDao {
-  void appendToList(String listName, String data);
-
   Map<String, List<Object>> readFromLists(List<String> keys);
 
   List<Object> readFromList(String key);
@@ -52,10 +50,6 @@ public interface RqueueStringDao {
   Long getSortedSetSize(String name);
 
   DataType type(String key);
-
-  void ltrim(String listName, int start, int end);
-
-  Long zrem(String listName, long min, long max);
 
   Boolean deleteIfSame(String key, String value);
 }

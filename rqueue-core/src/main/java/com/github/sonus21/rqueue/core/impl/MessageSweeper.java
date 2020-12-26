@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.data.redis.connection.DataType;
@@ -76,8 +77,61 @@ public class MessageSweeper {
     return MessageSweeper.messageSweeper;
   }
 
+  public boolean deleteMessage(MessageDeleteRequest request) {
+    log.debug("MessageDeleteRequest {}", request);
+    if (!request.isValid()) {
+      throw new IllegalArgumentException("Message request is not valid");
+    }
+    List<DeleteJobData> deleteJobData = new ArrayList<>();
+    QueueDetail detail = request.queueDetail;
+    if (detail != null) {
+      String newQueueName = rqueueConfig.getDelDataName();
+      String newDelayedZsetName = rqueueConfig.getDelDataName();
+      String newProcessingZsetName = rqueueConfig.getDelDataName();
+      messageTemplate.renameCollections(
+          Arrays.asList(
+              detail.getQueueName(), detail.getDelayedQueueName(), detail.getProcessingQueueName()),
+          Arrays.asList(newQueueName, newDelayedZsetName, newProcessingZsetName));
+      deleteJobData.add(new DeleteJobData(newQueueName, DataType.LIST));
+      deleteJobData.add(new DeleteJobData(newDelayedZsetName, DataType.ZSET));
+      deleteJobData.add(new DeleteJobData(newProcessingZsetName, DataType.ZSET));
+    } else {
+      switch (request.dataType) {
+        case LIST:
+          DeleteJobData data = new DeleteJobData(rqueueConfig.getDelDataName(), request.dataType);
+          messageTemplate.renameCollection(request.dataName, data.name);
+          deleteJobData.add(data);
+          break;
+        case ZSET:
+          data = new DeleteJobData(rqueueConfig.getDelDataName(), request.dataType);
+          messageTemplate.renameCollection(request.dataName, data.name);
+          deleteJobData.add(data);
+          break;
+        default:
+          throw new UnknownSwitchCase(request.dataType.code());
+      }
+    }
+    if (!CollectionUtils.isEmpty(deleteJobData)) {
+      if (detail != null) {
+        executorService.submit(new MessageDeleteJob(deleteJobData, detail.getName()));
+      } else {
+        executorService.submit(new MessageDeleteJob(deleteJobData, request.queueName));
+      }
+    }
+    return true;
+  }
+
+  @AllArgsConstructor
+  private static class DeleteJobData {
+
+    private final String name;
+    private final DataType type;
+  }
+
   @Builder
+  @ToString
   public static class MessageDeleteRequest {
+
     private final QueueDetail queueDetail;
     private final String dataName;
     private final String queueName;
@@ -91,12 +145,6 @@ public class MessageSweeper {
           && !StringUtils.isEmpty(queueName)
           && Arrays.asList(DataType.LIST, DataType.ZSET).contains(dataType);
     }
-  }
-
-  @AllArgsConstructor
-  private static class DeleteJobData {
-    private final String name;
-    private final DataType type;
   }
 
   private class MessageDeleteJob extends RetryableRunnable<DeleteJobData> {
@@ -152,7 +200,7 @@ public class MessageSweeper {
                 .map(e -> RqueueMessageUtils.getMessageMetaId(queueName, e))
                 .collect(Collectors.toList());
         rqueueMessageMetadataService.deleteAll(messageMetaIds);
-        log.info("Deleted {} messages meta", messageMetaIds.size());
+        log.debug("Deleted {} messages meta", messageMetaIds.size());
       }
       messageTemplate.deleteCollection(data.name);
     }
@@ -161,48 +209,5 @@ public class MessageSweeper {
     public void consume(DeleteJobData data) {
       delete(data);
     }
-  }
-
-  public boolean deleteMessage(MessageDeleteRequest request) {
-    if (!request.isValid()) {
-      throw new IllegalArgumentException("Message request is not valid");
-    }
-    List<DeleteJobData> deleteJobData = new ArrayList<>();
-    QueueDetail detail = request.queueDetail;
-    if (detail != null) {
-      String newQueueName = rqueueConfig.getDelDataName();
-      String newDelayedZsetName = rqueueConfig.getDelDataName();
-      String newProcessingZsetName = rqueueConfig.getDelDataName();
-      messageTemplate.renameCollections(
-          Arrays.asList(
-              detail.getQueueName(), detail.getDelayedQueueName(), detail.getProcessingQueueName()),
-          Arrays.asList(newQueueName, newDelayedZsetName, newProcessingZsetName));
-      deleteJobData.add(new DeleteJobData(newQueueName, DataType.LIST));
-      deleteJobData.add(new DeleteJobData(newDelayedZsetName, DataType.ZSET));
-      deleteJobData.add(new DeleteJobData(newProcessingZsetName, DataType.ZSET));
-    } else {
-      switch (request.dataType) {
-        case LIST:
-          DeleteJobData data = new DeleteJobData(rqueueConfig.getDelDataName(), request.dataType);
-          messageTemplate.renameCollection(request.dataName, data.name);
-          deleteJobData.add(data);
-          break;
-        case ZSET:
-          data = new DeleteJobData(rqueueConfig.getDelDataName(), request.dataType);
-          messageTemplate.renameCollection(request.dataName, data.name);
-          deleteJobData.add(data);
-          break;
-        default:
-          throw new UnknownSwitchCase(request.dataType.code());
-      }
-    }
-    if (!CollectionUtils.isEmpty(deleteJobData)) {
-      if (detail != null) {
-        executorService.submit(new MessageDeleteJob(deleteJobData, detail.getName()));
-      } else {
-        executorService.submit(new MessageDeleteJob(deleteJobData, request.queueName));
-      }
-    }
-    return true;
   }
 }

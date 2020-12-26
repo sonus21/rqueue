@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
@@ -27,6 +28,7 @@ import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
+import com.github.sonus21.rqueue.web.service.RqueueJobService;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
@@ -53,6 +55,7 @@ public class RqueueRestController {
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueQManagerService;
   private final RqueueWebConfig rqueueWebConfig;
+  private final RqueueJobService rqueueJobService;
 
   @Autowired
   public RqueueRestController(
@@ -60,12 +63,14 @@ public class RqueueRestController {
       RqueueQDetailService rqueueQDetailService,
       RqueueUtilityService rqueueUtilityService,
       RqueueSystemManagerService rqueueQManagerService,
-      RqueueWebConfig rqueueWebConfig) {
+      RqueueWebConfig rqueueWebConfig,
+      RqueueJobService rqueueJobService) {
     this.rqueueDashboardChartService = rqueueDashboardChartService;
     this.rqueueQDetailService = rqueueQDetailService;
     this.rqueueUtilityService = rqueueUtilityService;
     this.rqueueQManagerService = rqueueQManagerService;
     this.rqueueWebConfig = rqueueWebConfig;
+    this.rqueueJobService = rqueueJobService;
   }
 
   @PostMapping("chart")
@@ -77,6 +82,18 @@ public class RqueueRestController {
       return null;
     }
     return rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
+  }
+
+  @GetMapping("jobs")
+  @ResponseBody
+  public DataViewResponse getJobs(
+      @RequestParam(name = "message-id") @NotEmpty String messageId, HttpServletResponse response)
+      throws ProcessingException {
+    if (!rqueueWebConfig.isEnable()) {
+      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      return null;
+    }
+    return rqueueJobService.getJobs(messageId);
   }
 
   @GetMapping("explore")

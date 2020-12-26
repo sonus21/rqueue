@@ -69,8 +69,6 @@ public interface RqueueMessageTemplate {
 
   List<TypedTuple<RqueueMessage>> readFromZsetWithScore(String name, long start, long end);
 
-  Long getScore(String delayedQueueName, RqueueMessage rqueueMessage);
-
   Long scheduleMessage(
       String queueName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds);
 

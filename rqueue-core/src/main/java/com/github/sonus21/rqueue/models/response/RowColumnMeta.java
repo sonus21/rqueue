@@ -30,7 +30,12 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class RowColumnMeta extends SerializableBase {
+
   private static final long serialVersionUID = 7727947329124106340L;
-  private String type;
+  private RowColumnMetaType type;
   private Serializable data;
+
+  public RowColumnMeta(RowColumnMetaType type) {
+    this(type, null);
+  }
 }

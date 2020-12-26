@@ -34,6 +34,6 @@ import lombok.ToString;
 public class Action extends SerializableBase {
 
   private static final long serialVersionUID = 7809140410366162600L;
-  private ActionType actionType;
+  private ActionType type;
   private String description;
 }

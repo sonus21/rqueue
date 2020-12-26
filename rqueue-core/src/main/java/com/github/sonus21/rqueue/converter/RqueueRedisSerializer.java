@@ -71,7 +71,6 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
           mapper.registerModule(new SimpleModule().addSerializer(new NullValueSerializer()));
       this.mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       this.mapper = mapper.enableDefaultTyping(DefaultTyping.NON_FINAL, As.PROPERTY);
-      this.mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override

@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,7 +112,7 @@ public class RqueueRedisTemplate<V extends Serializable> {
             ((connection, keySerializer, valueSerializer) -> {
               // TODO fix cross slot error
               for (String key : keys) {
-                connection.del(key.getBytes());
+                connection.del(keySerializer.serialize(key));
               }
             }));
     log.debug("Pipeline result: {}", result);
@@ -154,18 +155,31 @@ public class RqueueRedisTemplate<V extends Serializable> {
     if (oldKeys.size() != newKeys.size()) {
       throw new IllegalArgumentException("Old key and new key space set is different");
     }
+    List<String> srcKeys = new LinkedList<>();
+    List<String> dstKeys = new LinkedList<>();
+    for (int i = 0; i < oldKeys.size(); i++) {
+      String key = oldKeys.get(i);
+      if (exist(key)) {
+        srcKeys.add(key);
+        dstKeys.add(newKeys.get(i));
+      }
+    }
     log.debug(
         "Pipeline result: {}",
         RedisUtils.executePipeLine(
             redisTemplate,
             (connection, keySerializer, valueSerializer) -> {
-              for (int i = 0; i < oldKeys.size(); i++) {
-                connection.rename(oldKeys.get(i).getBytes(), newKeys.get(i).getBytes());
+              for (int i = 0; i < srcKeys.size(); i++) {
+                // TODO fix cross slot error?
+                byte[] src = keySerializer.serialize(srcKeys.get(i));
+                byte[] dst = keySerializer.serialize(dstKeys.get(i));
+                connection.rename(src, dst);
               }
             }));
-  }
-
-  public Long zrem(String zsetName, long min, long max) {
-    return redisTemplate.opsForZSet().removeRange(zsetName, min, max);
+    if (srcKeys.size() != oldKeys.size()) {
+      List<String> diff = new LinkedList<>(oldKeys);
+      diff.removeAll(srcKeys);
+      log.info("Some keys does not exist diff: {}", diff);
+    }
   }
 }

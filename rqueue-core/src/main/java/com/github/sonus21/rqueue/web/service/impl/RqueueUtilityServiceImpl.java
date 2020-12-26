@@ -154,13 +154,18 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public BooleanResponse makeEmpty(String queueName, String dataName) {
+    org.springframework.data.redis.connection.DataType type = rqueueStringDao.type(dataName);
+    // empty data structure
+    if (type == null || type == org.springframework.data.redis.connection.DataType.NONE) {
+      return new BooleanResponse(true);
+    }
     return new BooleanResponse(
         MessageSweeper.getInstance(rqueueConfig, rqueueMessageTemplate, messageMetadataService)
             .deleteMessage(
                 MessageDeleteRequest.builder()
                     .dataName(dataName)
                     .queueName(queueName)
-                    .dataType(rqueueStringDao.type(dataName))
+                    .dataType(type)
                     .build()));
   }
 

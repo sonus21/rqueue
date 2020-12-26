@@ -17,8 +17,7 @@
 package com.github.sonus21.rqueue.models.response;
 
 import com.github.sonus21.rqueue.models.SerializableBase;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -35,12 +34,13 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class TableRow extends SerializableBase {
+
   private static final long serialVersionUID = -1493539297572507490L;
-  private List<TableColumn> columns = new ArrayList<>();
+  private List<TableColumn> columns = new LinkedList<>();
   private List<RowColumnMeta> meta;
 
   public TableRow(TableColumn column) {
-    this(Collections.singletonList(column), null);
+    addColumn(column);
   }
 
   public TableRow(List<TableColumn> columns) {

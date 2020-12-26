@@ -29,12 +29,14 @@ import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.time.Instant;
@@ -361,11 +363,12 @@ public abstract class SpringTestBase extends TestBase {
     return rqueueMessageManager.getAllMessages(queueName);
   }
 
-  protected boolean deleteAllMessages(String queueName) {
+  protected void deleteAllMessages(String queueName) throws TimedOutException {
     if (random.nextBoolean()) {
-      return rqueueMessageSender.deleteAllMessages(queueName);
+      rqueueMessageSender.deleteAllMessages(queueName);
     }
-    return rqueueMessageManager.deleteAllMessages(queueName);
+    rqueueMessageManager.deleteAllMessages(queueName);
+    TimeoutUtils.waitFor(() -> getMessageCount(queueName) == 0, "message deletion");
   }
 
   public interface Factory {

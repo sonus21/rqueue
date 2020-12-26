@@ -14,24 +14,27 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.dao;
+package com.github.sonus21.rqueue.exception;
 
-import com.github.sonus21.rqueue.models.db.RqueueJob;
-import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
+public class ProcessingException extends Exception {
 
-public interface RqueueJobDao {
+  private static final long serialVersionUID = 9003794852942108696L;
+  private final Object data;
 
-  void createJob(RqueueJob rqueueJob, Duration expiry);
+  public ProcessingException(String message) {
+    this(message, null);
+  }
 
-  void save(RqueueJob rqueueJob, Duration expiry);
+  public ProcessingException(String message, Object data) {
+    super(message);
+    this.data = null;
+  }
 
-  RqueueJob findById(String jobId);
-
-  List<RqueueJob> findJobsByIdIn(Collection<String> jobIds);
-
-  List<RqueueJob> finByMessageIdIn(List<String> messageIds);
-
-  List<RqueueJob> finByMessageId(String messageId);
+  @Override
+  public String toString() {
+    if (data == null) {
+      return super.toString();
+    }
+    return super.toString() + data;
+  }
 }

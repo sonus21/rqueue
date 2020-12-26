@@ -83,11 +83,12 @@ public abstract class RqueueListenerBaseConfig {
     }
     RedisConnectionFactory connectionFactory =
         simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
+    RqueueRedisTemplate<Integer> rqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
     int version;
     if (dbVersion == null) {
-      version = RedisUtils.updateAndGetVersion(connectionFactory, versionKey, 2);
+      version = RedisUtils.updateAndGetVersion(rqueueRedisTemplate, versionKey, MAX_DB_VERSION);
     } else if (dbVersion >= 1 && dbVersion <= MAX_DB_VERSION) {
-      RedisUtils.setVersion(connectionFactory, versionKey, dbVersion);
+      RedisUtils.setVersion(rqueueRedisTemplate, versionKey, dbVersion);
       version = dbVersion;
     } else {
       throw new IllegalStateException("Rqueue db version '" + dbVersion + "' is not correct");

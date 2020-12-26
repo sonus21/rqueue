@@ -14,24 +14,12 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.dao;
+package com.github.sonus21.rqueue.web.service;
 
-import com.github.sonus21.rqueue.models.db.RqueueJob;
-import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
+import com.github.sonus21.rqueue.exception.ProcessingException;
+import com.github.sonus21.rqueue.models.response.DataViewResponse;
 
-public interface RqueueJobDao {
+public interface RqueueJobService {
 
-  void createJob(RqueueJob rqueueJob, Duration expiry);
-
-  void save(RqueueJob rqueueJob, Duration expiry);
-
-  RqueueJob findById(String jobId);
-
-  List<RqueueJob> findJobsByIdIn(Collection<String> jobIds);
-
-  List<RqueueJob> finByMessageIdIn(List<String> messageIds);
-
-  List<RqueueJob> finByMessageId(String messageId);
+  DataViewResponse getJobs(String messageId) throws ProcessingException;
 }

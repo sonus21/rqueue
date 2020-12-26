@@ -22,7 +22,6 @@ import com.github.sonus21.rqueue.core.RedisScriptFactory;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.utils.RedisUtils;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,11 +49,6 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   }
 
   @Override
-  public void appendToList(String listName, String data) {
-    redisTemplate.rpush(listName, data);
-  }
-
-  @Override
   @SuppressWarnings("unchecked")
   public Map<String, List<Object>> readFromLists(List<String> keys) {
     Map<String, List<Object>> out = new HashMap<>();
@@ -63,7 +57,7 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
             redisTemplate.getRedisTemplate(),
             ((connection, keySerializer, valueSerializer) -> {
               for (String key : keys) {
-                connection.lRange(key.getBytes(StandardCharsets.UTF_8), 0, -1);
+                connection.lRange(Objects.requireNonNull(keySerializer.serialize(key)), 0, -1);
               }
             }));
     for (int i = 0; i < keys.size(); i++) {
@@ -85,9 +79,10 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
     RedisUtils.executePipeLine(
         redisTemplate.getRedisTemplate(),
         (connection, keySerializer, valueSerializer) -> {
-          connection.rPush(
-              listName.getBytes(StandardCharsets.UTF_8), data.getBytes(StandardCharsets.UTF_8));
-          connection.expire(listName.getBytes(StandardCharsets.UTF_8), duration.getSeconds());
+          byte[] key = keySerializer.serialize(listName);
+          byte[] value = valueSerializer.serialize(data);
+          connection.rPush(key, value);
+          connection.expire(key, duration.getSeconds());
         });
   }
 
@@ -134,12 +129,12 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
         ((connection, keySerializer, valueSerializer) -> {
           // potential cross slot error
           for (String key : keysToBeRemoved) {
-            connection.del(key.getBytes());
+            connection.del(keySerializer.serialize(key));
           }
           if (!CollectionUtils.isEmpty(objectsToBeStored)) {
             for (Entry<String, Object> entry : objectsToBeStored.entrySet()) {
               connection.set(
-                  entry.getKey().getBytes(),
+                  Objects.requireNonNull(keySerializer.serialize(entry.getKey())),
                   Objects.requireNonNull(valueSerializer.serialize(entry.getValue())));
             }
           }
@@ -164,16 +159,6 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @Override
   public DataType type(String key) {
     return redisTemplate.type(key);
-  }
-
-  @Override
-  public void ltrim(String listName, int start, int end) {
-    redisTemplate.ltrim(listName, start, end);
-  }
-
-  @Override
-  public Long zrem(String zsetName, long min, long max) {
-    return redisTemplate.zrem(zsetName, min, max);
   }
 
   @Override

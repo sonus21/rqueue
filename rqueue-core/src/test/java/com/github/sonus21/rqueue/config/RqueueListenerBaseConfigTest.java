@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.config;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,10 +40,16 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @CoreUnitTest
 class RqueueListenerBaseConfigTest extends TestBase {
-  @Mock private RedisConnection redisConnection;
-  @Mock private ConfigurableBeanFactory beanFactory;
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+
+  @Mock
+  private RedisConnection redisConnection;
+  @Mock
+  private ConfigurableBeanFactory beanFactory;
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+  private final String versionKey = "__rq::version";
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
 
   @BeforeEach
   public void init() {
@@ -55,14 +64,69 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigSetConnectionFactoryFromBeanFactory() throws IllegalAccessException {
+  void testRqueueConfigSetConnectionFactoryFromBeanFactoryNoExistingData()
+      throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
-
+    doReturn(Collections.singletonList(0L)).when(redisConnection).closePipeline();
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
     doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", null));
+    RqueueConfig rqueueConfig = rqueueSystemConfig.rqueueConfig(beanFactory, versionKey, null);
+    assertNotNull(rqueueConfig);
     assertNotNull(factory.getRedisConnectionFactory());
+    assertEquals(2, rqueueConfig.getDbVersion());
+    verify(redisConnection, times(1))
+        .set(
+            versionKey.getBytes(StandardCharsets.UTF_8),
+            String.valueOf(2).getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void testRqueueConfigSetConnectionFactoryFromBeanFactoryExistingData()
+      throws IllegalAccessException {
+    doReturn(redisConnection).when(redisConnectionFactory).getConnection();
+    doReturn(Collections.singletonList(2L)).when(redisConnection).closePipeline();
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
+    doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
+    RqueueConfig rqueueConfig = rqueueSystemConfig.rqueueConfig(beanFactory, versionKey, null);
+    assertNotNull(rqueueConfig);
+    assertNotNull(factory.getRedisConnectionFactory());
+    assertEquals(1, rqueueConfig.getDbVersion());
+    verify(redisConnection, times(1))
+        .set(
+            versionKey.getBytes(StandardCharsets.UTF_8),
+            String.valueOf(1).getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void testRqueueConfigSetConnectionFactoryFromBeanFactoryWithDifferentValue()
+      throws IllegalAccessException {
+    doReturn(redisConnection).when(redisConnectionFactory).getConnection();
+    doReturn(String.valueOf(1).getBytes(StandardCharsets.UTF_8)).when(redisConnection).get(any());
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
+    doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
+    RqueueConfig rqueueConfig = rqueueSystemConfig.rqueueConfig(beanFactory, versionKey, null);
+    assertNotNull(rqueueConfig);
+    assertNotNull(factory.getRedisConnectionFactory());
+    assertEquals(1, rqueueConfig.getDbVersion());
+    verify(redisConnection, times(0)).set(any(), any());
+  }
+
+  @Test
+  void testRqueueConfigSetConnectionFactoryFromBeanFactoryWithLatestVersion()
+      throws IllegalAccessException {
+    doReturn(redisConnection).when(redisConnectionFactory).getConnection();
+    doReturn(String.valueOf(2).getBytes(StandardCharsets.UTF_8)).when(redisConnection).get(any());
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
+    doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
+    RqueueConfig rqueueConfig = rqueueSystemConfig.rqueueConfig(beanFactory, versionKey, null);
+    assertNotNull(rqueueConfig);
+    assertNotNull(factory.getRedisConnectionFactory());
+    assertEquals(2, rqueueConfig.getDbVersion());
+    verify(redisConnection, times(0)).set(any(), any());
   }
 
   @Test
@@ -72,8 +136,10 @@ class RqueueListenerBaseConfigTest extends TestBase {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
     doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", 1));
+    RqueueConfig rqueueConfig = rqueueSystemConfig.rqueueConfig(beanFactory, versionKey, 1);
     assertNotNull(factory.getRedisConnectionFactory());
+    assertEquals(1, rqueueConfig.getDbVersion());
+    verify(redisConnection, times(1)).set(any(), any());
   }
 
   @Test
@@ -83,17 +149,17 @@ class RqueueListenerBaseConfigTest extends TestBase {
     doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
     Assertions.assertThrows(
         IllegalStateException.class,
-        () -> rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", 3));
+        () -> rqueueSystemConfig.rqueueConfig(beanFactory, versionKey, 3));
   }
 
   @Test
   void testRqueueConfigDoesNotChangeConnectionFactory() throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
-
+    doReturn(String.valueOf(2).getBytes(StandardCharsets.UTF_8)).when(redisConnection).get(any());
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
-    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, "__rq::version", null));
+    assertNotNull(rqueueSystemConfig.rqueueConfig(beanFactory, versionKey, null));
     assertNotNull(factory.getRedisConnectionFactory());
     assertEquals(redisConnectionFactory, factory.getRedisConnectionFactory());
     verify(beanFactory, times(0)).getBean(RedisConnectionFactory.class);

@@ -34,6 +34,8 @@ import com.github.sonus21.rqueue.models.enums.TableColumnType;
 import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.models.response.RowColumnMeta;
+import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -356,7 +358,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
               stringRqueueRedisTemplate.getRedisTemplate(),
               ((connection, keySerializer, valueSerializer) -> {
                 for (QueueConfig queueConfig : queueConfigs) {
-                  connection.zCard(queueConfig.getProcessingQueueName().getBytes());
+                  connection.zCard(keySerializer.serialize(queueConfig.getProcessingQueueName()));
                 }
               }));
     }
@@ -381,7 +383,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
               stringRqueueRedisTemplate.getRedisTemplate(),
               ((connection, keySerializer, valueSerializer) -> {
                 for (QueueConfig queueConfig : queueConfigs) {
-                  connection.lLen(queueConfig.getQueueName().getBytes());
+                  connection.lLen(keySerializer.serialize(queueConfig.getQueueName()));
                 }
               }));
     }
@@ -404,7 +406,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
               stringRqueueRedisTemplate.getRedisTemplate(),
               ((connection, keySerializer, valueSerializer) -> {
                 for (QueueConfig queueConfig : queueConfigs) {
-                  connection.zCard(queueConfig.getDelayedQueueName().getBytes());
+                  connection.zCard(keySerializer.serialize(queueConfig.getDelayedQueueName()));
                 }
               }));
     }
@@ -461,7 +463,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
               ((connection, keySerializer, valueSerializer) -> {
                 for (Entry<QueueConfig, String> entry : queueConfigAndDlq) {
                   if (!entry.getValue().isEmpty()) {
-                    connection.lLen(entry.getValue().getBytes());
+                    connection.lLen(keySerializer.serialize(entry.getValue()));
                   }
                 }
               }));
@@ -472,6 +474,22 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   }
 
   private interface RowBuilder {
+
+    default TableRow getRow(RqueueMessage rqueueMessage) {
+      TableRow row = new TableRow(new TableColumn(rqueueMessage.getId()));
+      TableColumn column = new TableColumn(rqueueMessage.toString());
+      column.setMeta(
+          Collections.singletonList(
+              new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, rqueueMessage.getId())));
+      row.addColumn(column);
+      if (rqueueMessage.isPeriodicTask()) {
+        row.addColumn(new TableColumn("Periodic(" + rqueueMessage.getPeriod() + ")Ms"));
+      } else {
+        row.addColumn(new TableColumn("Simple"));
+      }
+      return row;
+    }
+
     TableRow row(RqueueMessage rqueueMessage, boolean deleted, Double score);
   }
 
@@ -484,16 +502,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
     @Override
     public TableRow row(RqueueMessage rqueueMessage, boolean deleted, Double score) {
-      TableRow tableRow =
-          new TableRow(
-              newArrayList(
-                  new TableColumn(rqueueMessage.getId()),
-                  new TableColumn(rqueueMessage.toString())));
-      if (rqueueMessage.isPeriodicTask()) {
-        tableRow.addColumn(new TableColumn("Periodic(" + rqueueMessage.getPeriod() + ")Ms"));
-      } else {
-        tableRow.addColumn(new TableColumn("Simple"));
-      }
+      TableRow tableRow = getRow(rqueueMessage);
       if (!deadLetterQueue) {
         if (deleted) {
           tableRow.addColumn(new TableColumn(Constants.BLANK));
@@ -519,16 +528,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
     @Override
     public TableRow row(RqueueMessage rqueueMessage, boolean deleted, Double score) {
-      TableRow row =
-          new TableRow(
-              newArrayList(
-                  new TableColumn(rqueueMessage.getId()),
-                  new TableColumn(rqueueMessage.toString())));
-      if (rqueueMessage.isPeriodicTask()) {
-        row.addColumn(new TableColumn("Periodic(" + rqueueMessage.getPeriod() + ")Ms"));
-      } else {
-        row.addColumn(new TableColumn("Simple"));
-      }
+      TableRow row = getRow(rqueueMessage);
       if (timeQueue) {
         row.addColumn(
             new TableColumn(

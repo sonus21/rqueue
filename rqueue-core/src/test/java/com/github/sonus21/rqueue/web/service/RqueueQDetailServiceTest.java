@@ -43,6 +43,8 @@ import com.github.sonus21.rqueue.models.enums.TableColumnType;
 import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.models.response.RowColumnMeta;
+import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
@@ -196,7 +198,14 @@ class RqueueQDetailServiceTest extends TestBase {
     for (RqueueMessage message : rqueueMessages) {
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(new TableColumn(message.toString()));
+      l.add(
+          new TableColumn(
+              TableColumnType.DISPLAY,
+              message.toString(),
+              Collections
+                  .singletonList(
+                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
       lists.add(new TableRow(l));
@@ -226,7 +235,14 @@ class RqueueQDetailServiceTest extends TestBase {
       message.setReEnqueuedAt(System.currentTimeMillis());
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(new TableColumn(message.toString()));
+      l.add(
+          new TableColumn(
+              TableColumnType.DISPLAY,
+              message.toString(),
+              Collections
+                  .singletonList(
+                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+
       l.add(new TableColumn("Simple"));
       lists.add(new TableRow(l));
     }
@@ -236,7 +252,7 @@ class RqueueQDetailServiceTest extends TestBase {
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test-dlq", 0, 9);
     DataViewResponse response =
         rqueueQDetailService.getExplorePageData("test", "test-dlq", DataType.LIST, 0, 10);
-    for(TableRow row: response.getRows()){
+    for (TableRow row : response.getRows()) {
       assertNotEquals("", row.getColumns().get(3).getValue());
       row.getColumns().remove(3);
     }
@@ -268,7 +284,13 @@ class RqueueQDetailServiceTest extends TestBase {
       RqueueMessage message = rqueueMessages.get(i);
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(new TableColumn(message.toString()));
+      l.add(
+          new TableColumn(
+              TableColumnType.DISPLAY,
+              message.toString(),
+              Collections
+                  .singletonList(
+                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
       l.add(new TableColumn("Simple"));
       if (i >= 5) {
         l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
@@ -306,7 +328,13 @@ class RqueueQDetailServiceTest extends TestBase {
     for (RqueueMessage message : rqueueMessages) {
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(new TableColumn(message.toString()));
+      l.add(
+          new TableColumn(
+              TableColumnType.DISPLAY,
+              message.toString(),
+              Collections
+                  .singletonList(
+                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
       lists.add(new TableRow(l));
@@ -344,7 +372,14 @@ class RqueueQDetailServiceTest extends TestBase {
     for (RqueueMessage message : rqueueMessages) {
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(new TableColumn(message.toString()));
+      l.add(
+          new TableColumn(
+              TableColumnType.DISPLAY,
+              message.toString(),
+              Collections
+                  .singletonList(
+                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
       lists.add(new TableRow(l));

@@ -210,15 +210,6 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
-  public Long getScore(String delayedQueueName, RqueueMessage rqueueMessage) {
-    Double score = redisTemplate.opsForZSet().score(delayedQueueName, rqueueMessage);
-    if (score == null) {
-      return null;
-    }
-    return score.longValue();
-  }
-
-  @Override
   public Long scheduleMessage(
       String zsetName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds) {
     RedisScript<Long> script = getScript(ScriptType.SCHEDULE_MESSAGE);

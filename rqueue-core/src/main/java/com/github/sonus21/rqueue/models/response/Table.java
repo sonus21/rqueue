@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.dao;
+package com.github.sonus21.rqueue.models.response;
 
-import com.github.sonus21.rqueue.models.db.RqueueJob;
-import java.time.Duration;
-import java.util.Collection;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-public interface RqueueJobDao {
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class Table extends BaseResponse {
 
-  void createJob(RqueueJob rqueueJob, Duration expiry);
-
-  void save(RqueueJob rqueueJob, Duration expiry);
-
-  RqueueJob findById(String jobId);
-
-  List<RqueueJob> findJobsByIdIn(Collection<String> jobIds);
-
-  List<RqueueJob> finByMessageIdIn(List<String> messageIds);
-
-  List<RqueueJob> finByMessageId(String messageId);
+  private static final long serialVersionUID = -7188146334911288456L;
+  private List<String> headers;
+  private List<TableRow> rows;
 }

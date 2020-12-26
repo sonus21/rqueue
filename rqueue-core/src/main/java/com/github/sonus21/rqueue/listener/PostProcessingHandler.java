@@ -133,7 +133,8 @@ class PostProcessingHandler extends PrefixLogger {
       QueueDetail queueDetail,
       String queueName,
       RqueueMessage oldMessage,
-      RqueueMessage newMessage) {
+      RqueueMessage newMessage,
+      boolean lPush) {
     RedisUtils.executePipeLine(
         rqueueMessageTemplate.getTemplate(),
         (connection, keySerializer, valueSerializer) -> {
@@ -143,7 +144,11 @@ class PostProcessingHandler extends PrefixLogger {
               keySerializer.serialize(queueDetail.getProcessingQueueName());
           byte[] queueNameBytes = keySerializer.serialize(queueName);
           assert queueNameBytes != null;
-          connection.rPush(queueNameBytes, newMessageBytes);
+          if (lPush) {
+            connection.lPush(queueNameBytes, newMessageBytes);
+          } else {
+            connection.rPush(queueNameBytes, newMessageBytes);
+          }
           assert processingQueueNameBytes != null;
           connection.zRem(processingQueueNameBytes, oldMessageBytes);
         });
@@ -165,12 +170,13 @@ class PostProcessingHandler extends PrefixLogger {
             null,
             queueDetail.getDeadLetterQueue());
         moveMessageToQueue(
-            queueDetail, queueDetail.getDeadLetterQueueName(), oldMessage, newMessage);
+            queueDetail, queueDetail.getDeadLetterQueueName(), oldMessage, newMessage, true);
       } else {
-        moveMessageToQueue(queueDetail, queueConfig.getQueueName(), oldMessage, newMessage);
+        moveMessageToQueue(queueDetail, queueConfig.getQueueName(), oldMessage, newMessage, false);
       }
     } else {
-      moveMessageToQueue(queueDetail, queueDetail.getDeadLetterQueueName(), oldMessage, newMessage);
+      moveMessageToQueue(
+          queueDetail, queueDetail.getDeadLetterQueueName(), oldMessage, newMessage, true);
     }
   }
 

@@ -125,12 +125,14 @@ function displayHeader(response, displayPageNumberEl, pageSize) {
   displayPageNumberEl.empty();
   $('#clear-queue').hide();
   for (let i = 0; i < response.actions.length; i++) {
-    switch (response.actions[i]) {
+    let action = response.actions[i];
+    switch (action.type) {
       case 'DELETE':
         $('#clear-queue').show();
+        deleteActionMessage = action.description;
         break;
       default:
-        console.log("Unknown action", response.actions[i])
+        console.log("Unknown action", action)
     }
   }
   if (rows.length === pageSize) {
@@ -150,22 +152,114 @@ function displayHeader(response, displayPageNumberEl, pageSize) {
   }
 }
 
+function constructTable(table, className) {
+  // table : { headers: ["item", "score"], "rows: [{"columns":[{type:, value:, meta:[]}]}] }
+  //
+  let tableEl = $('<table>').addClass(className);
+  let thead = $('<thead>');
+  let headers = table.headers;
+  let rows = table.rows;
+  for (let i = 0; i < headers.length; i++) {
+    let row = $('<th>').text(headers[i]);
+    thead.append(row);
+  }
+  let tbody = $('<tbody>');
+  for (let i = 0; i < rows.length; i++) {
+    let tr = $('<tr>');
+    let row = rows[i];
+    let columns = row.columns;
+    for (let j = 0; j < columns.length; j++) {
+      let column = columns[j];
+      if (column.type === 'DISPLAY') {
+        tr.append($('<td>').text(column.value))
+      } else {
+        console.log("unknown column type", column);
+      }
+    }
+    tbody.append(tr);
+  }
+  tableEl.append(thead).append(tbody);
+  return tableEl;
+}
+
+function jobsCloseButton() {
+  $(this).siblings('.jobs-div').remove();
+  $(this).remove();
+}
+
+function jobsButton() {
+  let el = $(this);
+  let messageId = el.attr('id');
+  let url = getAbsoluteUrl('rqueue/api/v1/jobs?message-id=' + messageId);
+  el.siblings('.jobs-div').remove();
+  el.siblings('.jobs-closer-btn').remove();
+  let jobsDiv = $('<div>').addClass('jobs-div');
+  let jobsDivCloser = $("<button>").addClass(
+      'btn btn-link jobs-closer-btn').text("close");
+  $.ajax({
+    url: url,
+    success: function (response) {
+      if (response.code === 0) {
+        if (response.rows.length > 0) {
+          jobsDiv.append(
+              constructTable(response, 'table table-bordered jobs-table'));
+        } else {
+          jobsDiv.append($("<strong>").text(response.message));
+        }
+        el.parent().append(jobsDivCloser);
+        el.parent().append(jobsDiv);
+      } else {
+        alert("Failed:" + response.message + " Please retry!");
+        console.log(response);
+      }
+    },
+    fail: function (response) {
+      console.log('failed, ' + response);
+      showError("Something went wrong! Please retry!");
+    }
+  });
+}
+
+function renderColumn(column) {
+  let td = $('<td>');
+  if (column.type === 'DISPLAY') {
+    if (column.meta !== undefined) {
+      let div = $('<div>');
+      div.append($('<p>').text(column.value));
+      for (let i = 0; i < column.meta.length; i++) {
+        let meta = column.meta[i];
+        switch (meta.type) {
+          case 'JOBS_BUTTON':
+            div.append($('<button>').attr('id', meta.data).addClass(
+                'btn btn-link jobs-btn').text('Jobs'))
+            break
+          default:
+            console.log("Unknown meta type", meta);
+        }
+      }
+      td.append(div);
+    } else {
+      td.text(column.value);
+    }
+  } else if (column.type === 'ACTION') {
+    if (column.value === 'DELETE') {
+      td.append(
+          $('<a>').addClass('delete-message-btn btn-danger').text('Delete'));
+    } else {
+      console.log("Unknown value for action" + column.value);
+    }
+  }
+  return td;
+}
+
 function renderRow(row, tableBody) {
-  let tds = "";
+  let tr = $('<tr>');
   let columns = row.columns;
   for (let j = 0; j < columns.length; j++) {
     let column = columns[j];
-    if (column.type === 'DISPLAY') {
-      tds += ("<td>" + column.value + "</td>");
-    } else if (column.type === 'ACTION') {
-      if (column.value === 'DELETE') {
-        tds += ("<td><a href='#' class='delete-message-btn btn-danger'>Delete </a></td>");
-      } else {
-        console.log("Unknown value for action" + column.value);
-      }
-    }
+    tr.append(renderColumn(column));
   }
-  tableBody.append("<tr>" + tds + "</tr>");
+  tableBody.append(tr);
 }
 
 function displayTable(nextOrPrev) {
@@ -386,7 +480,8 @@ function updateDeleteModal() {
 
 function deleteMessage() {
   let id = $($($($(this).parent()).parent()).children()[0]).text();
-  let url = getAbsoluteUrl('rqueue/api/v1/data-set/' + queueName + "/message/" + id);
+  let url = getAbsoluteUrl(
+      'rqueue/api/v1/data-set/' + queueName + "/message/" + id);
   $.ajax({
     url: url,
     type: 'DELETE',
@@ -475,3 +570,5 @@ $(document).on('click', '#clear-queue', deleteAll);
 $(document).on('click', '.delete-message-btn', deleteMessage);
 $(document).on('click', '#view-data', exploreData);
 $(document).on('click', '.data-explorer', exploreData);
+$(document).on('click', '.jobs-btn', jobsButton);
+$(document).on('click', '.jobs-closer-btn', jobsCloseButton);

@@ -522,4 +522,13 @@ section {
 
 .modal-data-explorer {
   max-width: max-content;
+  min-width: 650px;
+}
+
+.jobs-table {
+
+}
+
+.jobs-row {
+
 }

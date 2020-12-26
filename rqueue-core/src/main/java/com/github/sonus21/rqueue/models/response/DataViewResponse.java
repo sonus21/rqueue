@@ -36,7 +36,7 @@ public class DataViewResponse extends BaseResponse {
   private static final long serialVersionUID = -8359552138158857044L;
   private List<String> headers;
   private List<Action> actions = new ArrayList<>();
-  private List<TableRow> rows;
+  private List<TableRow> rows = new LinkedList<>();
 
   public static DataViewResponse createErrorMessage(String message) {
     DataViewResponse response = new DataViewResponse();
@@ -46,9 +46,6 @@ public class DataViewResponse extends BaseResponse {
   }
 
   public void addRow(TableRow tableRow) {
-    if (rows == null) {
-      rows = new LinkedList<>();
-    }
     rows.add(tableRow);
   }
 

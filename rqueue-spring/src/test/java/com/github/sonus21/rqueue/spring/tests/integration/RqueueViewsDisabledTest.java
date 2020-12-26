@@ -33,6 +33,7 @@ import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Job;
+import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -244,6 +245,21 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
         this.mockMvc
             .perform(
                 delete("/rqueue/api/v1/data-set/" + jobQueue + "/" + job.getId())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
+            .andReturn()
+            .getResponse()
+            .getContentAsString());
+  }
+
+  @Test
+  void getJobs() throws Exception {
+    assertEquals(
+        "",
+        this.mockMvc
+            .perform(
+                get("/rqueue/api/v1/jobs/")
+                    .param("message-id", UUID.randomUUID().toString())
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
