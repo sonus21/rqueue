@@ -363,7 +363,7 @@ public abstract class SpringTestBase extends TestBase {
     return rqueueMessageManager.getAllMessages(queueName);
   }
 
-  protected void deleteAllMessages(String queueName) throws TimedOutException {
+  private void deleteAllMessageInternal(String queueName) throws TimedOutException {
     if (random.nextBoolean()) {
       rqueueMessageSender.deleteAllMessages(queueName);
     }
@@ -371,11 +371,29 @@ public abstract class SpringTestBase extends TestBase {
     TimeoutUtils.waitFor(() -> getMessageCount(queueName) == 0, "message deletion");
   }
 
+  protected void deleteAllMessages(String queueName) throws TimedOutException {
+    int i = 0;
+    while (i < 3) {
+      try {
+        deleteAllMessageInternal(queueName);
+        return;
+      } catch (TimedOutException e) {
+        if (i == 2) {
+          throw e;
+        }
+      }
+      TimeoutUtils.sleep(1000);
+      i++;
+    }
+  }
+
   public interface Factory {
+
     Object next(int i);
   }
 
   public interface Delay {
+
     long getDelay(int i);
   }
 }
