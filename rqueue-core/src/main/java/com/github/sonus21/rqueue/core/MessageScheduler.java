@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import lombok.AllArgsConstructor;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
@@ -282,18 +283,12 @@ public abstract class MessageScheduler
   }
 
   @ToString
+  @AllArgsConstructor
   private class MessageMoverTask implements Runnable {
     private final String name;
     private final String queueName;
     private final String zsetName;
     private final boolean processingQueue;
-
-    MessageMoverTask(String name, String queueName, String zsetName, boolean processingQueue) {
-      this.name = name;
-      this.queueName = queueName;
-      this.zsetName = zsetName;
-      this.processingQueue = processingQueue;
-    }
 
     @Override
     public void run() {

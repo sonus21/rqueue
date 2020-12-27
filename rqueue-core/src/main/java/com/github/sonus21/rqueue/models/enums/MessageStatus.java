@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.github.sonus21.rqueue.models.db;
+package com.github.sonus21.rqueue.models.enums;
 
-import com.github.sonus21.rqueue.models.enums.JobStatus;
-import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

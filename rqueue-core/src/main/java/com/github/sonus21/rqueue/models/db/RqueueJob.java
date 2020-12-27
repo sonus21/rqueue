@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -78,7 +79,7 @@ public class RqueueJob extends SerializableBase {
     }
   }
 
-  public void checkIn(Object message) {
+  public void checkIn(Serializable message) {
     synchronized (this) {
       long checkInTime = System.currentTimeMillis();
       this.checkins.add(new CheckinMessage(message, checkInTime));

@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.core;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
+import java.io.Serializable;
 
 public interface Job {
 
@@ -43,7 +44,7 @@ public interface Job {
    * @param message a serializable message, it could be a simple string like PING or some context
    *     data that says about the current execution state.
    */
-  void checkIn(Object message);
+  void checkIn(Serializable message);
 
   /**
    * A message that was enqueued

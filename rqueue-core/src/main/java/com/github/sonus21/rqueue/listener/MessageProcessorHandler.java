@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
-import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.PrefixLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;

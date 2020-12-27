@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.models.db;
 
 import com.github.sonus21.rqueue.models.SerializableBase;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,6 +32,6 @@ import lombok.Setter;
 public class CheckinMessage extends SerializableBase {
 
   private static final long serialVersionUID = 4727068901984917510L;
-  private Object message;
+  private Serializable message;
   private long at;
 }
