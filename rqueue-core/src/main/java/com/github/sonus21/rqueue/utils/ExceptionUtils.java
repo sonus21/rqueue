@@ -15,7 +15,7 @@ public final class ExceptionUtils {
     e.printStackTrace(pw);
     String stacktrace = sw.toString();
     if (stacktrace.length() > maxLength + 3) {
-      stacktrace = stacktrace.substring(maxLength) + "...";
+      stacktrace = stacktrace.substring(0, maxLength) + "...";
     }
     return stacktrace;
   }
