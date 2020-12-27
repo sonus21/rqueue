@@ -21,6 +21,14 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import java.io.Serializable;
 
+/**
+ * On each execution Rqueue creates a job to track it's status and execution progress.
+ *
+ * <p>A job belongs to a single message poll, each message listener call creates an execution {@link
+ * com.github.sonus21.rqueue.models.db.Execution} and that has a detail for specific execution.
+ * Overall job status can be found using this job interface. This object is available via {@link
+ * org.springframework.messaging.handler.annotation.Header} in listener method.
+ */
 public interface Job {
 
   /**
@@ -39,10 +47,15 @@ public interface Job {
 
   /**
    * Checkin allows you to display a message for long running tasks, so that you can see the
-   * progress
+   * progress.
    *
-   * @param message a serializable message, it could be a simple string like PING or some context
-   *     data that says about the current execution state.
+   * <p>The checking message could be anything given message's <b>JSON</b>
+   * serializable/deserializable. The message could be the current status of the job or anything
+   * else.
+   *
+   * <p><b>NOTE:</b> Checkin is not allowed for periodic job
+   *
+   * @param message a serializable message
    */
   void checkIn(Serializable message);
 
@@ -82,5 +95,10 @@ public interface Job {
    */
   long getExecutionTime();
 
+  /**
+   * Queue detail on which this job was executing
+   *
+   * @return queue detail object
+   */
   QueueDetail getQueueDetail();
 }

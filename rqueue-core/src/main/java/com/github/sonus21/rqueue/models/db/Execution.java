@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import lombok.AllArgsConstructor;
@@ -23,17 +24,20 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class Execution extends SerializableBase {
 
   private static final long serialVersionUID = 3893537050761142817L;
   private long startTime;
   private long endTime;
-  private Throwable error;
+  private String error;
+  @JsonIgnore private Throwable exception;
   private ExecutionStatus status;
 }

@@ -346,7 +346,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertEquals(1, response.getRows().size());
     assertEquals(6, response.getRows().get(0).getColumns().size());
     for (TableColumn column : response.getRows().get(0).getColumns()) {
-      assertNotNull(column.getValue());
+      assertNotNull(column.getValue(), column.toString());
       assertEquals(TableColumnType.DISPLAY, column.getType());
     }
 

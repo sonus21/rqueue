@@ -16,10 +16,14 @@
 
 package com.github.sonus21.rqueue.models.db;
 
+import static com.github.sonus21.rqueue.utils.ExceptionUtils.getTraceback;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
+import com.github.sonus21.rqueue.utils.Constants;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,12 +32,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = true)
 public class RqueueJob extends SerializableBase {
   private static final long serialVersionUID = 6219118148061766036L;
   private String id;
@@ -53,8 +59,10 @@ public class RqueueJob extends SerializableBase {
   private List<CheckinMessage> checkins;
   // all executions for this job
   private List<Execution> executions;
+  // stack trace
+  private String error;
   // any error occurred during execution
-  private Throwable error;
+  @JsonIgnore private Throwable exception;
   // when this job was created
   private long createdAt;
   // whe this job was updated last time
@@ -71,12 +79,19 @@ public class RqueueJob extends SerializableBase {
         0,
         new LinkedList<>(),
         new LinkedList<>(),
-        error,
+        null,
+        null,
         System.currentTimeMillis(),
         System.currentTimeMillis());
     if (error != null) {
+      updateError(error);
       this.status = JobStatus.FAILED;
     }
+  }
+
+  private void updateError(Throwable e) {
+    this.exception = e;
+    this.error = getTraceback(e, Constants.MAX_STACKTRACE_LENGTH);
   }
 
   public void checkIn(Serializable message) {
@@ -91,7 +106,7 @@ public class RqueueJob extends SerializableBase {
 
   public Execution startNewExecution() {
     Execution execution =
-        new Execution(System.currentTimeMillis(), 0, null, ExecutionStatus.IN_PROGRESS);
+        new Execution(System.currentTimeMillis(), 0, null, null, ExecutionStatus.IN_PROGRESS);
     this.executions.add(execution);
     return execution;
   }
@@ -99,10 +114,11 @@ public class RqueueJob extends SerializableBase {
   public void updateExecutionStatus(ExecutionStatus status, Throwable e) {
     Execution execution = this.executions.get(this.executions.size() - 1);
     execution.setStatus(status);
-    execution.setError(e);
+    execution.setError(getTraceback(e, Constants.MAX_STACKTRACE_LENGTH));
+    execution.setException(e);
     execution.setEndTime(System.currentTimeMillis());
-    if (e != null && error == null) {
-      error = e;
+    if (e != null && exception == null) {
+      updateError(e);
     }
   }
 }

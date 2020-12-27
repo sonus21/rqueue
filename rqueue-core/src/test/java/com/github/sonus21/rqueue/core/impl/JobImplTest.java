@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.core.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -36,9 +37,9 @@ import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
@@ -322,7 +323,9 @@ class JobImplTest extends TestBase {
     Execution execution = job.execute();
     job.updateExecutionStatus(ExecutionStatus.FAILED, exception);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
-    assertEquals(exception, execution.getError());
+    assertEquals(exception, execution.getException());
+    assertNotNull(execution.getError());
+    assertNotEquals("", execution.getError());
     assertEquals(exception, job.getException());
     assertEquals(ExecutionStatus.FAILED, execution.getStatus());
     verify(rqueueJobDao, times(1)).createJob(any(), any());

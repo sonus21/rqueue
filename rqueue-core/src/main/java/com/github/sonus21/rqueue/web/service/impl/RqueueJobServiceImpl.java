@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
+import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueJobService;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -63,8 +64,8 @@ public class RqueueJobServiceImpl implements RqueueJobService {
       columns.add(
           new TableColumn(DateTimeUtils.milliToHumanRepresentation(timeDifference) + " Ago"));
     }
-    if (job.getError() != null) {
-      columns.add(new TableColumn(String.valueOf(job.getError())));
+    if (!StringUtils.isEmpty(job.getError())) {
+      columns.add(new TableColumn(job.getError()));
     } else {
       columns.add(new TableColumn(Constants.BLANK));
     }
