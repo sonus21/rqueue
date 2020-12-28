@@ -28,6 +28,8 @@ public interface RqueueMessageMetadataService {
 
   void delete(String id);
 
+  void deleteAll(Collection<String> ids);
+
   List<MessageMetadata> findAll(Collection<String> ids);
 
   void save(MessageMetadata messageMetadata, Duration duration);

@@ -16,15 +16,30 @@
 
 package com.github.sonus21.rqueue.exception;
 
-public class ProcessingException extends Throwable {
+public class ProcessingException extends Exception {
 
   private static final long serialVersionUID = 9003794852942108696L;
+
+  private Object data;
 
   public ProcessingException(Throwable t) {
     super(t);
   }
 
   public ProcessingException(String message) {
+    this(message, null);
+  }
+
+  public ProcessingException(String message, Object data) {
     super(message);
+    this.data = data;
+  }
+
+  @Override
+  public String toString() {
+    if (data == null) {
+      return super.toString();
+    }
+    return super.toString() + data;
   }
 }

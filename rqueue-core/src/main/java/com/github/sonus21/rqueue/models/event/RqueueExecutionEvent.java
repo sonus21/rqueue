@@ -16,38 +16,40 @@
 
 package com.github.sonus21.rqueue.models.event;
 
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * This event is generated once a message is consumed. It's generated in all cases whether execution
+ * was success or fail.
+ */
 @Getter
 public class RqueueExecutionEvent extends ApplicationEvent {
   private static final long serialVersionUID = -7762050873209497221L;
-  private final TaskStatus status;
-  private final RqueueMessage rqueueMessage;
-  private final QueueDetail queueDetail;
-  private final MessageMetadata messageMetadata;
+  /** Task status for this job, it could be null when execution was failed. */
+  @Nullable @Deprecated private final TaskStatus status;
+  // Rqueue message that was consumed
+  @NotNull @Deprecated private final RqueueMessage rqueueMessage;
+  // MessageMetadata corresponding to this
+  @NotNull @Deprecated private final MessageMetadata messageMetadata;
+  // Queue Detail object
+  @NotNull private final transient QueueDetail queueDetail;
+  // Job corresponding to this execution
+  @NotNull private final transient Job job;
 
-  /**
-   * Create a new QueueTaskEvent.
-   *
-   * @param queueDetail queue detail on which this event occur
-   * @param rqueueMessage rqueue message object
-   * @param status task status
-   * @param messageMetadata message metadata.
-   */
-  public RqueueExecutionEvent(
-      QueueDetail queueDetail,
-      RqueueMessage rqueueMessage,
-      TaskStatus status,
-      MessageMetadata messageMetadata) {
-    super(queueDetail);
-    this.queueDetail = queueDetail;
-    this.status = status;
-    this.rqueueMessage = rqueueMessage;
-    this.messageMetadata = messageMetadata;
+  public RqueueExecutionEvent(Job job) {
+    super(job.getQueueDetail());
+    this.queueDetail = job.getQueueDetail();
+    this.status = job.getMessageMetadata().getStatus().getTaskStatus();
+    this.rqueueMessage = job.getRqueueMessage();
+    this.messageMetadata = job.getMessageMetadata();
+    this.job = job;
   }
 }

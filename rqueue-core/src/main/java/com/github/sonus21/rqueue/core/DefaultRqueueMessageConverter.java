@@ -18,14 +18,21 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 import lombok.EqualsAndHashCode;
 import org.springframework.messaging.converter.CompositeMessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 
+/** Default Message Converter for Rqueue messages. */
 @EqualsAndHashCode(callSuper = true)
 public final class DefaultRqueueMessageConverter extends CompositeMessageConverter {
 
   public DefaultRqueueMessageConverter() {
     super(ImmutableList.of(new GenericMessageConverter(), new StringMessageConverter()));
+  }
+
+  public DefaultRqueueMessageConverter(Collection<MessageConverter> converters) {
+    super(converters);
   }
 }

@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.spring;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueListenerBaseConfig;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
@@ -35,7 +34,6 @@ import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsRegistry;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Conditional;
@@ -43,7 +41,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 
 @Configuration
-@ComponentScan("com.github.sonus21.rqueue.web")
+@ComponentScan({"com.github.sonus21.rqueue.web", "com.github.sonus21.rqueue.dao"})
 public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
   @Bean
@@ -99,10 +97,9 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   @Bean
   @Conditional(MetricsEnabled.class)
   @DependsOn({"meterRegistry", "rqueueMetricsProperties"})
-  public RqueueMetricsRegistry rqueueMetricsRegistry(
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> rqueueRedisTemplate) {
+  public RqueueMetricsRegistry rqueueMetricsRegistry() {
     QueueCounter queueCounter = new QueueCounter();
-    return new RqueueMetrics(rqueueRedisTemplate, queueCounter);
+    return new RqueueMetrics(queueCounter);
   }
 
   @Bean

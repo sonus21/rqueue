@@ -16,16 +16,40 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.models.db.Execution;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.messaging.MessageHeaders;
 
+/** */
 public final class RqueueMessageHeaders {
+
+  /**
+   * This field is mapped to queue name, in the case of the Priority based queueing destination is
+   * defined as
+   *
+   * <p>&lt;queue_name&gt;_&lt;priority&gt;
+   */
   public static final String DESTINATION = "destination";
+
+  /** Id corresponding to this message */
   public static final String ID = "messageId";
+  /** this field will provide a {@link RqueueMessage} object */
   public static final String MESSAGE = "message";
+
+  /**
+   * A reference to {@link Job} object, that can be used in listener to perform different operation
+   */
+  public static final String JOB = "job";
+  /**
+   * A reference to {@link Execution} object, that can provide current execution detail A single job
+   * can have more than one executions due to retry
+   */
+  public static final String EXECUTION = "execution";
+
   private static final MessageHeaders emptyMessageHeaders =
       new MessageHeaders(Collections.emptyMap());
 
@@ -35,11 +59,18 @@ public final class RqueueMessageHeaders {
     return emptyMessageHeaders;
   }
 
-  static MessageHeaders buildMessageHeaders(String destination, RqueueMessage rqueueMessage) {
-    Map<String, Object> headers = new HashMap<>(3);
+  static MessageHeaders buildMessageHeaders(
+      String destination, RqueueMessage rqueueMessage, Job job, Execution execution) {
+    Map<String, Object> headers = new HashMap<>(5);
     headers.put(DESTINATION, destination);
     headers.put(ID, rqueueMessage.getId());
     headers.put(MESSAGE, rqueueMessage);
+    if (job != null) {
+      headers.put(JOB, job);
+    }
+    if (execution != null) {
+      headers.put(EXECUTION, execution);
+    }
     return new MessageHeaders(headers);
   }
 }

@@ -27,33 +27,81 @@ public final class DateTimeUtils {
 
   private DateTimeUtils() {}
 
-  public static String milliToHumanRepresentation(long millis) {
-    String prefix = "";
-    long absMillis = millis;
-    if (millis < 0) {
-      prefix = "-";
-      absMillis = -1 * millis;
+  private static String hourString(long hour) {
+    if (hour > 1) {
+      return hour + " Hours";
     }
-    long seconds = absMillis / Constants.ONE_MILLI;
+    return hour + " Hour";
+  }
+
+  private static String minuteString(long minutes) {
+    if (minutes > 1) {
+      return minutes + " Minutes";
+    }
+    return minutes + " Minute";
+  }
+
+  private static String secondString(long seconds) {
+    if (seconds > 1) {
+      return seconds + " Seconds";
+    }
+    return seconds + " Second";
+  }
+
+  private static String dayString(long days) {
+    if (days > 1) {
+      return days + " Days";
+    }
+    return days + " Day";
+  }
+
+  private static String formatDay(long days, long hours, long minutes, long seconds) {
+    if (hours == 0 && minutes == 0 && seconds == 0) {
+      return dayString(days);
+    }
+    if (minutes == 0 && seconds == 0) {
+      return String.format("%s, %s", dayString(days), hourString(hours));
+    }
+    if (seconds == 0) {
+      return String.format("%s, %s, %s", dayString(days), hourString(hours), minuteString(minutes));
+    }
+    return String.format(
+        "%s, %s, %s, %s",
+        dayString(days), hourString(hours), minuteString(minutes), secondString(seconds));
+  }
+
+  private static String formatHour(long hours, long minutes, long seconds) {
+    if (minutes == 0 && seconds == 0) {
+      return hourString(hours);
+    }
+    if (seconds == 0) {
+      return String.format("%s, %s", hourString(hours), minuteString(minutes));
+    }
+    return String.format(
+        "%s, %s, %s", hourString(hours), minuteString(minutes), secondString(seconds));
+  }
+
+  public static String milliToHumanRepresentation(long millis) {
+    long seconds = millis / Constants.ONE_MILLI;
     long minutes = seconds / Constants.SECONDS_IN_A_MINUTE;
     seconds = seconds % Constants.SECONDS_IN_A_MINUTE; // remaining seconds
     long hours = minutes / Constants.MINUTES_IN_AN_HOUR;
     minutes = minutes % Constants.MINUTES_IN_AN_HOUR; // remaining minutes
     long days = hours / Constants.HOURS_IN_A_DAY;
     hours = hours % Constants.HOURS_IN_A_DAY; // remaining hours
-    String s;
     if (days != 0) {
-      s = days + " Day, " + hours + " Hours, " + minutes + " Minutes, " + seconds + " Seconds.";
-    } else {
-      if (hours != 0) {
-        s = hours + " Hours, " + minutes + " Minutes, " + seconds + " Seconds.";
-      } else if (minutes != 0) {
-        s = minutes + " Minutes, " + seconds + " Seconds.";
-      } else {
-        s = seconds + " Seconds.";
-      }
+      return formatDay(days, hours, minutes, seconds);
     }
-    return prefix + s;
+    if (hours != 0) {
+      return formatHour(hours, minutes, seconds);
+    }
+    if (minutes != 0) {
+      if (seconds == 0) {
+        return minuteString(minutes);
+      }
+      return String.format("%s, %s", minuteString(minutes), secondString(seconds));
+    }
+    return secondString(seconds);
   }
 
   public static String formatMilliToString(Long milli) {

@@ -45,9 +45,8 @@
       {% for queueData in queueRedisDataDetails %}
       <tr>
         <td>
-          <a href="#" data-toggle="modal" data-target="#explore-queue"
-             data-name="{{queueData.value.name}}" data-type="{{queueData.value.type}}"
-             onclick="exploreData(this)">
+          <a href="#" class="data-explorer" data-toggle="modal" data-target="#explore-queue"
+             data-name="{{queueData.value.name}}" data-type="{{queueData.value.type}}">
             {{queueData.key.name}}
           </a>
         </td>

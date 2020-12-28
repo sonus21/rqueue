@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.web.service.impl;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MinMax;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
@@ -30,7 +31,6 @@ import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import java.io.Serializable;

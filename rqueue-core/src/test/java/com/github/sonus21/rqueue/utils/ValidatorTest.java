@@ -18,37 +18,40 @@ package com.github.sonus21.rqueue.utils;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import org.junit.jupiter.api.Test;
 
-public class ValidatorTest {
+@CoreUnitTest
+class ValidatorTest extends TestBase {
 
   @Test
-  public void validateMessage() {
+  void validateMessage() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateMessage(null));
   }
 
   @Test
-  public void validateMessageId() {
+  void validateMessageId() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateMessageId(null));
   }
 
   @Test
-  public void validateRetryCount() {
+  void validateRetryCount() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateRetryCount(-1));
   }
 
   @Test
-  public void validateDelay() {
+  void validateDelay() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateDelay(-100L));
   }
 
   @Test
-  public void validateQueue() {
+  void validateQueue() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validateQueue(null));
   }
 
   @Test
-  public void validatePriority() {
+  void validatePriority() {
     assertThrows(IllegalArgumentException.class, () -> Validator.validatePriority(null));
   }
 }

@@ -27,6 +27,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
@@ -34,12 +37,14 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueQStore;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
@@ -47,16 +52,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.converter.MessageConverter;
 
-@ExtendWith(MockitoExtension.class)
+@CoreUnitTest
 @SuppressWarnings("unchecked")
-public class RqueueExecutorTest {
+class RqueueExecutorTest extends TestBase {
   private RqueueMessageListenerContainer container = mock(RqueueMessageListenerContainer.class);
   private WeakReference<RqueueMessageListenerContainer> containerWeakReference =
       new WeakReference<>(container);
@@ -64,6 +67,9 @@ public class RqueueExecutorTest {
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private RqueueMessageMetadataService rqueueMessageMetadataService =
       mock(RqueueMessageMetadataService.class);
+  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
+  private RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);
+  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
   private TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
   private TestMessageProcessor discardProcessor = new TestMessageProcessor();
   private TestMessageProcessor preProcessMessageProcessor = new TestMessageProcessor();
@@ -75,7 +81,7 @@ public class RqueueExecutorTest {
   private PostProcessingHandler postProcessingHandler;
   private ApplicationEventPublisher applicationEventPublisher =
       mock(ApplicationEventPublisher.class);
-  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private RqueueQStore rqueueQStore = mock(RqueueQStore.class);
   private String queueName = "test-queue";
   private MessageMetadata defaultMessageMetadata;
 
@@ -89,18 +95,19 @@ public class RqueueExecutorTest {
             rqueueConfig,
             rqueueWebConfig,
             applicationEventPublisher,
-            rqueueMessageMetadataService,
             messageTemplate,
             taskBackOff,
             messageProcessorHandler,
-            rqueueSystemConfigDao);
+            rqueueQStore);
     MessageConverter messageConverter = new GenericMessageConverter();
     rqueueMessage.setId(UUID.randomUUID().toString());
-    doReturn(rqueueMessageMetadataService).when(container).getRqueueMessageMetadataService();
+    doReturn(rqueueMessageMetadataService).when(container).rqueueMessageMetadataService();
     doReturn(true).when(container).isQueueActive(anyString());
     doReturn(preProcessMessageProcessor).when(container).getPreExecutionMessageProcessor();
     doReturn(messageHandler).when(container).getRqueueMessageHandler();
     doReturn(messageConverter).when(messageHandler).getMessageConverter();
+    doReturn(rqueueJobDao).when(container).rqueueJobDao();
+    doReturn(rqueueStringDao).when(container).rqueueStringDao();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
         .handleMessage(any());
@@ -115,7 +122,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void callDiscardProcessor() {
+  void callDiscardProcessor() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     doReturn(defaultMessageMetadata)
@@ -123,18 +130,18 @@ public class RqueueExecutorTest {
         .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doAnswer(i -> defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     assertEquals(1, discardProcessor.getCount());
   }
 
   @Test
-  public void callDeadLetterProcessor() {
+  void callDeadLetterProcessor() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName, "test-dlq");
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
@@ -142,18 +149,18 @@ public class RqueueExecutorTest {
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     assertEquals(1, deadLetterProcessor.getCount());
   }
 
   @Test
-  public void messageIsParkedForRetry() {
+  void messageIsParkedForRetry() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
@@ -161,12 +168,12 @@ public class RqueueExecutorTest {
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageTemplate, times(1))
         .moveMessage(
@@ -178,7 +185,7 @@ public class RqueueExecutorTest {
   }
 
   @Test
-  public void messageIsNotExecutedWhenDeletedManually() {
+  void messageIsNotExecutedWhenDeletedManually() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     messageMetadata.setDeleted(true);
@@ -186,18 +193,18 @@ public class RqueueExecutorTest {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(eq(rqueueMessage));
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
   }
 
   @Test
-  public void messageIsDeletedWhileExecuting() {
+  void messageIsDeletedWhileExecuting() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     AtomicInteger atomicInteger = new AtomicInteger(0);
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
@@ -217,18 +224,18 @@ public class RqueueExecutorTest {
         .get(RqueueMessageUtils.getMessageMetaId(queueName, rqueueMessage.getId()));
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
   }
 
   @Test
-  public void handleIgnoredMessage() {
+  void handleIgnoredMessage() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     MessageProcessor messageProcessor =
         new MessageProcessor() {
@@ -242,16 +249,16 @@ public class RqueueExecutorTest {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-            rqueueMessage,
-            queueDetail,
-            semaphore,
             containerWeakReference,
             rqueueConfig,
-            postProcessingHandler)
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
     verify(messageTemplate, times(1))
-        .removeFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
+        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
   }
 
   private class TestMessageProcessor implements MessageProcessor {

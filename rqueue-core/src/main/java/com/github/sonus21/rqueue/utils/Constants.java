@@ -44,6 +44,8 @@ public final class Constants {
       "https://api.github.com/repos/sonus21/rqueue/releases/latest";
   public static final String DEFAULT_PRIORITY_KEY = "DEFAULT_PRIORITY";
   public static final String DEFAULT_PRIORITY_GROUP = "Default";
+  public static final String REDIS_KEY_SEPARATOR = "::";
+  public static final int MAX_STACKTRACE_LENGTH = 3000;
 
   private Constants() {}
 }

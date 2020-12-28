@@ -65,4 +65,8 @@ public class DelayedMessageScheduler extends AbstractMessageScheduler {
 
   @Override
   public void onApplicationEvent(RqueueBootstrapEvent event) {}
+
+  protected boolean isProcessingQueue(String queueName) {
+    return false;
+  }
 }

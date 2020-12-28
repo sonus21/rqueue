@@ -21,33 +21,39 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueLockManagerImplTest {
-  private RqueueRedisTemplate<String> template = mock(RqueueRedisTemplate.class);
-  private RqueueLockManager rqueueLockManager = new RqueueLockManagerImpl(template);
-  private String lockKey = "test-key";
+@CoreUnitTest
+class RqueueLockManagerImplTest extends TestBase {
+  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
+  private final RqueueLockManager rqueueLockManager = new RqueueLockManagerImpl(rqueueStringDao);
+  private final String lockKey = "test-key";
+  private final String lockValue = "test-value";
 
   @Test
-  public void acquireLock() {
-    assertFalse(rqueueLockManager.acquireLock(lockKey, Duration.ofSeconds(5)));
-    doReturn(Boolean.FALSE).when(template).setIfAbsent(lockKey, lockKey, Duration.ofSeconds(5));
-    assertFalse(rqueueLockManager.acquireLock(lockKey, Duration.ofSeconds(5)));
-    doReturn(Boolean.TRUE).when(template).setIfAbsent(lockKey, lockKey, Duration.ofSeconds(1));
-    assertTrue(rqueueLockManager.acquireLock(lockKey, Duration.ofSeconds(1)));
+  void acquireLock() {
+    assertFalse(rqueueLockManager.acquireLock(lockKey, lockValue, Duration.ofSeconds(5)));
+    doReturn(Boolean.FALSE)
+        .when(rqueueStringDao)
+        .setIfAbsent(lockKey, lockValue, Duration.ofSeconds(5));
+    assertFalse(rqueueLockManager.acquireLock(lockKey, lockValue, Duration.ofSeconds(5)));
+    doReturn(Boolean.TRUE)
+        .when(rqueueStringDao)
+        .setIfAbsent(lockKey, lockValue, Duration.ofSeconds(1));
+    assertTrue(rqueueLockManager.acquireLock(lockKey, lockValue, Duration.ofSeconds(1)));
   }
 
   @Test
-  public void releaseLock() {
-    assertFalse(rqueueLockManager.releaseLock(lockKey));
-    doReturn(Boolean.FALSE).when(template).delete(lockKey);
-    assertFalse(rqueueLockManager.releaseLock(lockKey));
-    doReturn(Boolean.TRUE).when(template).delete(lockKey);
-    assertTrue(rqueueLockManager.releaseLock(lockKey));
+  void releaseLock() {
+    assertFalse(rqueueLockManager.releaseLock(lockKey, lockValue));
+    doReturn(Boolean.FALSE).when(rqueueStringDao).deleteIfSame(lockKey, lockValue);
+    assertFalse(rqueueLockManager.releaseLock(lockKey, lockValue));
+    doReturn(Boolean.TRUE).when(rqueueStringDao).deleteIfSame(lockKey, lockValue);
+    assertTrue(rqueueLockManager.releaseLock(lockKey, lockValue));
   }
 }

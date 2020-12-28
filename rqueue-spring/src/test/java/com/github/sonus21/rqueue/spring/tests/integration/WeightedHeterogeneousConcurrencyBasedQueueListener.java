@@ -16,19 +16,17 @@
 
 package com.github.sonus21.rqueue.spring.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
+import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.AllQueueMode;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -48,20 +46,21 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "feed.generation.queue.concurrency=1-5",
       "chat.indexing.queue.concurrency=3-5"
     })
-public class WeightedHeterogeneousConcurrencyBasedQueueListener extends AllQueueMode {
+@SpringIntegrationTest
+class WeightedHeterogeneousConcurrencyBasedQueueListener extends AllQueueMode {
 
   @Test
-  public void verifySimpleQueue() throws TimedOutException {
+  void verifySimpleQueue() throws TimedOutException {
     testSimpleConsumer();
   }
 
   @Test
-  public void verifyQueueLevelConsumer() throws TimedOutException {
+  void verifyQueueLevelConsumer() throws TimedOutException {
     checkQueueLevelConsumer();
   }
 
   @Test
-  public void verifyGroupConsumer() throws TimedOutException {
+  void verifyGroupConsumer() throws TimedOutException {
     checkGroupConsumer();
   }
 }

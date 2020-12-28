@@ -16,20 +16,18 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.junit.TestRunner;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
 import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = ApplicationListenerDisabled.class)
 @TestPropertySource(
     properties = {
@@ -38,15 +36,16 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=BootDelayedChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
-      "monitor.thread.count=1",
+      "monitor.enabled=true"
     })
 @SpringBootTest
 @Slf4j
-@DisabledIfEnvironmentVariable(named = "CI_ENV", matches = "true")
-public class BootDelayedChannelTest extends MessageChannelTests {
+@Tag("redisCluster")
+@SpringBootIntegrationTest
+class BootDelayedChannelTest extends MessageChannelTests {
 
   @Test
-  public void publishMessageIsTriggeredOnMessageAddition() throws Exception {
+  void publishMessageIsTriggeredOnMessageAddition() throws Exception {
     TestRunner.run(
         this::verifyPublishMessageIsTriggeredOnMessageAddition,
         () -> deleteAllMessages(emailQueue),

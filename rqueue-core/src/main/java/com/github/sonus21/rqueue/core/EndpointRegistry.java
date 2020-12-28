@@ -25,12 +25,26 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Stores all registered queue details
+ *
+ * <p>this stores all the queue details mapped from {@link
+ * com.github.sonus21.rqueue.annotation.RqueueListener}.
+ */
 public final class EndpointRegistry {
   private static final Object lock = new Object();
   private static final Map<String, QueueDetail> queueNameToDetail = new HashMap<>();
 
   private EndpointRegistry() {}
 
+  /**
+   * Get QueueDetail for the given queue. If queue is having priority than it should be called with
+   * {@link com.github.sonus21.rqueue.utils.PriorityUtils#getQueueNameForPriority(String, String)}.
+   *
+   * @param queueName queue name
+   * @return queue detail
+   * @throws QueueDoesNotExist this error is thrown when queue is not registered.
+   */
   public static QueueDetail get(String queueName) {
     QueueDetail queueDetail = queueNameToDetail.get(queueName);
     if (queueDetail == null) {

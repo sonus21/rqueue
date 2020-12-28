@@ -23,23 +23,28 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.impl.JobImpl;
+import com.github.sonus21.rqueue.dao.RqueueJobDao;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.models.db.QueueStatisticsTest;
-import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -52,7 +57,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class RqueueTaskAggregatorServiceTest {
+@CoreUnitTest
+class RqueueTaskAggregatorServiceTest extends TestBase {
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
@@ -77,28 +83,43 @@ public class RqueueTaskAggregatorServiceTest {
     assertNotNull(FieldUtils.readField(this.rqueueTaskAggregatorService, "taskExecutor", true));
   }
 
-  private RqueueExecutionEvent generateTaskEventWithStatus(TaskStatus status) {
+  private RqueueExecutionEvent generateTaskEventWithStatus(MessageStatus status) {
     double r = Math.random();
-    RqueueMessage rqueueMessage = new RqueueMessage("test-queue", "test", null, null);
-    MessageMetadata messageMetadata =
-        new MessageMetadata(rqueueMessage.getId(), MessageStatus.FAILED);
+    RqueueMessage rqueueMessage =
+        RqueueMessage.builder()
+            .queueName("test-queue")
+            .message("test")
+            .processAt(System.currentTimeMillis())
+            .queuedTime(System.nanoTime())
+            .build();
+    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, status);
     messageMetadata.setTotalExecutionTime(10 + (long) r * 10000);
     rqueueMessage.setFailureCount((int) r * 10);
-    return new RqueueExecutionEvent(
-        TestUtils.createQueueDetail(queueName), rqueueMessage, status, messageMetadata);
+    QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
+    Job job =
+        new JobImpl(
+            rqueueConfig,
+            mock(RqueueMessageMetadataService.class),
+            mock(RqueueJobDao.class),
+            queueDetail,
+            messageMetadata,
+            rqueueMessage,
+            null,
+            null);
+    return new RqueueExecutionEvent(job);
   }
 
   private RqueueExecutionEvent generateTaskEvent() {
     double r = Math.random();
-    TaskStatus taskStatus;
+    MessageStatus messageStatus;
     if (r < 0.3) {
-      taskStatus = TaskStatus.SUCCESSFUL;
+      messageStatus = MessageStatus.SUCCESSFUL;
     } else if (r < 0.6) {
-      taskStatus = TaskStatus.DISCARDED;
+      messageStatus = MessageStatus.DISCARDED;
     } else {
-      taskStatus = TaskStatus.MOVED_TO_DLQ;
+      messageStatus = MessageStatus.MOVED_TO_DLQ;
     }
-    return generateTaskEventWithStatus(taskStatus);
+    return generateTaskEventWithStatus(messageStatus);
   }
 
   private void addEvent(RqueueExecutionEvent event, TasksStat stats, boolean updateTaskStat) {
@@ -106,7 +127,7 @@ public class RqueueTaskAggregatorServiceTest {
     if (!updateTaskStat) {
       return;
     }
-    switch (event.getStatus()) {
+    switch (event.getJob().getMessageMetadata().getStatus().getTaskStatus()) {
       case DISCARDED:
         stats.discarded += 1;
         break;
@@ -129,7 +150,7 @@ public class RqueueTaskAggregatorServiceTest {
   }
 
   @Test
-  public void onApplicationEvent() throws TimedOutException {
+  void onApplicationEvent() throws TimedOutException {
     if (LocalDateTime.now(ZoneOffset.UTC).getHour() == 23) {
       log.info("This test cannot be run at this time");
       return;
@@ -137,11 +158,13 @@ public class RqueueTaskAggregatorServiceTest {
     String id = "__rq::q-stat::" + queueName;
     doReturn(id).when(rqueueConfig).getQueueStatisticsKey(queueName);
     doReturn("__rq::lock::" + id).when(rqueueConfig).getLockKey(id);
+    doReturn("broker-id").when(rqueueConfig).getBrokerId();
 
     doReturn(true)
         .when(rqueueLockManager)
         .acquireLock(
             "__rq::lock::" + id,
+            "broker-id",
             Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS));
     List<QueueStatistics> queueStatistics = new ArrayList<>();
     doAnswer(
@@ -161,22 +184,22 @@ public class RqueueTaskAggregatorServiceTest {
     }
     if (tasksStat.movedToDlq == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.MOVED_TO_DLQ);
+      event = generateTaskEventWithStatus(MessageStatus.MOVED_TO_DLQ);
       addEvent(event, tasksStat, true);
     }
     if (tasksStat.success == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.SUCCESSFUL);
+      event = generateTaskEventWithStatus(MessageStatus.SUCCESSFUL);
       addEvent(event, tasksStat, true);
     }
     if (tasksStat.discarded == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.DISCARDED);
+      event = generateTaskEventWithStatus(MessageStatus.DISCARDED);
       addEvent(event, tasksStat, totalEvents < 500);
     }
     if (tasksStat.retried == 0) {
       totalEvents += 1;
-      event = generateTaskEventWithStatus(TaskStatus.DISCARDED);
+      event = generateTaskEventWithStatus(MessageStatus.DISCARDED);
       event.getRqueueMessage().setFailureCount(10);
       addEvent(event, tasksStat, totalEvents < 500);
     }

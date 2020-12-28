@@ -17,11 +17,16 @@
 package com.github.sonus21.rqueue.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.io.Serializable;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
+@EqualsAndHashCode
+@JsonInclude(Include.NON_NULL)
 public abstract class SerializableBase implements Serializable {
 
   private static final long serialVersionUID = -824188858192360018L;

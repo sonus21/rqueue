@@ -30,6 +30,7 @@ import org.springframework.lang.NonNull;
 
 @SuppressWarnings("WeakerAccess")
 public final class ValueResolver {
+
   private ValueResolver() {}
 
   @SuppressWarnings("unchecked")
@@ -63,10 +64,18 @@ public final class ValueResolver {
 
   public static boolean convertToBoolean(String s) {
     String tmpString = clean(s);
-    if (tmpString.equalsIgnoreCase("true")) {
+    if (tmpString == null) {
+      return false;
+    }
+    if (tmpString.equalsIgnoreCase("true")
+        || tmpString.equals("1")
+        || tmpString.equalsIgnoreCase("yes")) {
       return true;
     }
-    if (tmpString.equalsIgnoreCase("false")) {
+    if (tmpString.equalsIgnoreCase("false")
+        || tmpString.equals("0")
+        || tmpString.equals("")
+        || tmpString.equalsIgnoreCase("no")) {
       return false;
     }
     throw new IllegalArgumentException(s + " cannot be converted to boolean");

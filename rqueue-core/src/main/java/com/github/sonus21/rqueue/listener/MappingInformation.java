@@ -31,15 +31,15 @@ import lombok.Getter;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 class MappingInformation implements Comparable<MappingInformation> {
-  @EqualsAndHashCode.Include private Set<String> queueNames;
-  private int numRetry;
-  private String deadLetterQueueName;
-  private boolean deadLetterConsumerEnabled;
-  private long visibilityTimeout;
-  private boolean active;
-  private Concurrency concurrency;
-  private String priorityGroup;
-  private Map<String, Integer> priority;
+  @EqualsAndHashCode.Include private final Set<String> queueNames;
+  private final int numRetry;
+  private final String deadLetterQueueName;
+  private final boolean deadLetterConsumerEnabled;
+  private final long visibilityTimeout;
+  private final boolean active;
+  private final Concurrency concurrency;
+  private final String priorityGroup;
+  private final Map<String, Integer> priority;
 
   @Override
   public String toString() {

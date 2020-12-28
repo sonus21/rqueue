@@ -16,18 +16,16 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.MessageConverterApplication;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = MessageConverterApplication.class)
 @SpringBootTest
 @Slf4j
@@ -39,9 +37,10 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=CustomMessageConverterTest",
       "use.system.redis=false",
     })
-public class CustomMessageConverterTest extends BasicListenerTest {
+@SpringBootIntegrationTest
+class CustomMessageConverterTest extends BasicListenerTest {
   @Test
-  public void verifyListenerIsWorking() throws TimedOutException {
+  void verifyListenerIsWorking() throws TimedOutException {
     verifySimpleTaskExecution();
   }
 }

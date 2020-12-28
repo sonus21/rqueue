@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
@@ -42,27 +43,29 @@ import lombok.ToString;
 @ToString
 public class QueueDetail extends SerializableBase {
 
-  private static final long serialVersionUID = -3835914471365118325L;
-  private String name;
-  private int numRetry;
-  private long visibilityTimeout;
-  private String queueName;
-  private String deadLetterQueueName;
-  private boolean deadLetterConsumerEnabled;
-  private String processingQueueName;
-  private String processingQueueChannelName;
-  private String delayedQueueName;
-  private String delayedQueueChannelName;
-  private boolean active;
-  private Concurrency concurrency;
+  private static final long serialVersionUID = 9153752084449974622L;
+  private final String name;
+  private final int numRetry;
+  // visibility timeout in miliseconds
+  private final long visibilityTimeout;
+  private final String queueName;
+  private final String deadLetterQueueName;
+  private final boolean deadLetterConsumerEnabled;
+  private final String processingQueueName;
+  private final String processingQueueChannelName;
+  private final String delayedQueueName;
+  private final String delayedQueueChannelName;
+  private final boolean active;
+  private final Concurrency concurrency;
+  private final boolean systemGenerated;
   private Map<String, Integer> priority;
   private String priorityGroup;
-  private boolean systemGenerated;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
   }
 
+  @JsonIgnore
   public DeadLetterQueue getDeadLetterQueue() {
     return new DeadLetterQueue(deadLetterQueueName, deadLetterConsumerEnabled);
   }

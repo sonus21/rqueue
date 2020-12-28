@@ -17,18 +17,20 @@
 package com.github.sonus21.rqueue.core.impl;
 
 import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildMessage;
+import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildPeriodicMessage;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.MessageStatus;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
@@ -40,12 +42,12 @@ import org.springframework.messaging.converter.MessageConverter;
 @Slf4j
 @SuppressWarnings("WeakerAccess")
 abstract class BaseMessageSender {
+  protected final MessageHeaders messageHeaders;
   protected MessageConverter messageConverter;
   protected RqueueMessageTemplate messageTemplate;
-  @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Autowired protected RqueueStringDao rqueueStringDao;
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
-  protected final MessageHeaders messageHeaders;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
@@ -58,7 +60,7 @@ abstract class BaseMessageSender {
     this.messageHeaders = messageHeaders;
   }
 
-  private void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
+  protected void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration;
     if (delayInMillis != null) {
@@ -81,14 +83,14 @@ abstract class BaseMessageSender {
       Long delayInMilliSecs) {
     RqueueMessage rqueueMessage =
         buildMessage(
-            messageConverter, message, queueName, retryCount, delayInMilliSecs, messageHeaders);
+            messageConverter, queueName, message, retryCount, delayInMilliSecs, messageHeaders);
     if (messageId != null) {
       rqueueMessage.setId(messageId);
     }
     return rqueueMessage;
   }
 
-  private void enqueue(
+  protected void enqueue(
       QueueDetail queueDetail, RqueueMessage rqueueMessage, Long delayInMilliSecs) {
     if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
       messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
@@ -117,6 +119,31 @@ abstract class BaseMessageSender {
       return null;
     }
     return rqueueMessage.getId();
+  }
+
+  protected String pushPeriodicMessage(
+      String queueName, String messageId, Object message, long periodInMilliSeconds) {
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
+    RqueueMessage rqueueMessage =
+        buildPeriodicMessage(
+            messageConverter, queueName, message, periodInMilliSeconds, messageHeaders);
+    if (messageId != null) {
+      rqueueMessage.setId(messageId);
+    }
+    try {
+      enqueue(queueDetail, rqueueMessage, periodInMilliSeconds);
+      storeMessageMetadata(rqueueMessage, periodInMilliSeconds);
+    } catch (Exception e) {
+      log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
+      return null;
+    }
+    return rqueueMessage.getId();
+  }
+
+  protected Object deleteAllMessages(QueueDetail queueDetail) {
+    return MessageSweeper.getInstance(
+            rqueueConfig, messageTemplate, rqueueMessageMetadataService)
+        .deleteMessage(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {

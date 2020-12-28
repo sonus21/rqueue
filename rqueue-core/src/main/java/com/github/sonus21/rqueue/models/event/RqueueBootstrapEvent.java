@@ -17,9 +17,19 @@
 package com.github.sonus21.rqueue.models.event;
 
 import lombok.Getter;
+import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
-
+/**
+ * This event is generated at RqueueContainer startup and shutdown.
+ *
+ * <p>This event can be used for different purpose, like registering some queue once Rqueue has
+ * started, deleting all queue messages, cleaning up some resources at shutdown etc.
+ *
+ * <p>{@link RqueueBootstrapEvent#start} is false means it's shutdown event otherwise it's bootstrap
+ * event.
+ */
 @Getter
+@ToString(callSuper = true)
 public class RqueueBootstrapEvent extends ApplicationEvent {
 
   private static final long serialVersionUID = 1955427920805054136L;
@@ -28,5 +38,15 @@ public class RqueueBootstrapEvent extends ApplicationEvent {
   public RqueueBootstrapEvent(Object source, boolean start) {
     super(source);
     this.start = start;
+  }
+
+  // whether this is startup event
+  public boolean isStartup() {
+    return start;
+  }
+
+  // whether this is a shutdown event
+  public boolean isShutdown() {
+    return !start;
   }
 }

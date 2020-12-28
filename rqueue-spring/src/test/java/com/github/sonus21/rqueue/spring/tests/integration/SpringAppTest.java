@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
@@ -29,6 +28,7 @@ import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
+import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.tests.AllQueueMode;
@@ -40,13 +40,11 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -66,10 +64,11 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "email.queue.retry.count=-1",
       "rqueue.retry.per.poll=10"
     })
-public class SpringAppTest extends AllQueueMode {
+@SpringIntegrationTest
+class SpringAppTest extends AllQueueMode {
 
   @Test
-  public void numActiveQueues() {
+  void numActiveQueues() {
     Map<String, QueueDetail> registeredQueue = EndpointRegistry.getActiveQueueMap();
     assertEquals(10, registeredQueue.size());
     assertFalse(registeredQueue.containsKey(notificationQueue));
@@ -81,22 +80,22 @@ public class SpringAppTest extends AllQueueMode {
   }
 
   @Test
-  public void verifySimpleQueue() throws TimedOutException {
+  void verifySimpleQueue() throws TimedOutException {
     testSimpleConsumer();
   }
 
   @Test
-  public void verifyQueueLevelConsumer() throws TimedOutException {
+  void verifyQueueLevelConsumer() throws TimedOutException {
     checkQueueLevelConsumer();
   }
 
   @Test
-  public void verifyGroupConsumer() throws TimedOutException {
+  void verifyGroupConsumer() throws TimedOutException {
     checkGroupConsumer();
   }
 
   @Test
-  public void verifyDefaultDeadLetterQueueRetry() throws TimedOutException {
+  void verifyDefaultDeadLetterQueueRetry() throws TimedOutException {
     Email email = Email.newInstance();
     failureManager.createFailureDetail(email.getId(), 3, 10);
     enqueue(emailQueue, email);
@@ -111,12 +110,12 @@ public class SpringAppTest extends AllQueueMode {
   }
 
   @Test
-  public void testQueueDoesNotExist() {
+  void testQueueDoesNotExist() {
     assertThrows(QueueDoesNotExist.class, () -> enqueue("job-push", Email.newInstance()));
   }
 
   @Test
-  public void testOnlyPushMode() {
+  void testOnlyPushMode() {
     Date date = Date.from(Instant.now().plusMillis(1000));
     registerQueue("job-push");
     registerQueue("sms-push", "critical", "high", "low");

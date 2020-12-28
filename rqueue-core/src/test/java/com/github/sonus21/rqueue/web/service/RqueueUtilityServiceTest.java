@@ -21,16 +21,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.dao.RqueueQStore;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
@@ -52,24 +54,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class RqueueUtilityServiceTest {
-  private RqueueRedisTemplate<String> stringRqueueRedisTemplate = mock(RqueueRedisTemplate.class);
-  private RqueueQStore rqueueQStore = mock(RqueueQStore.class);
-  private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
-  private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  private RqueueMessageMetadataService messageMetadataService =
+  private final RqueueQStore rqueueQStore = mock(RqueueQStore.class);
+  private final RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
+  private final RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
+  private final RqueueMessageMetadataService messageMetadataService =
       mock(RqueueMessageMetadataService.class);
-  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private RqueueUtilityService rqueueUtilityService =
+  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
+  private final RqueueUtilityService rqueueUtilityService =
       new RqueueUtilityServiceImpl(
           rqueueConfig,
           rqueueWebConfig,
-          stringRqueueRedisTemplate,
           rqueueQStore,
+          rqueueStringDao,
           rqueueMessageTemplate,
           messageMetadataService);
 
   @Test
-  public void deleteMessage() {
+  void deleteMessage() {
     doReturn("__rq::q-config::notification").when(rqueueConfig).getQueueConfigKey("notification");
     String id = UUID.randomUUID().toString();
     BaseResponse response = rqueueUtilityService.deleteMessage("notification", id);
@@ -77,7 +79,7 @@ public class RqueueUtilityServiceTest {
     assertEquals("Queue config not found!", response.getMessage());
 
     QueueConfig queueConfig = createQueueConfig("notification", 3, 10000L, null);
-    doReturn(queueConfig).when(rqueueQStore).getQConfig(queueConfig.getId());
+    doReturn(queueConfig).when(rqueueQStore).getQConfig(queueConfig.getId(), true);
     response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(0, response.getCode());
     assertNull(response.getMessage());
@@ -85,7 +87,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void moveMessageInvalidRequest() {
+  void moveMessageInvalidRequest() {
     MessageMoveRequest request = new MessageMoveRequest();
     request.setSrc("job");
     request.setDst("__rq::d-queue::job");
@@ -96,7 +98,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void moveMessageToZset() {
+  void moveMessageToZset() {
     doReturn(100).when(rqueueWebConfig).getMaxMessageMoveCount();
     MessageMoveRequest request = new MessageMoveRequest();
     request.setSrc("job");
@@ -149,7 +151,7 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void moveMessageToList() {
+  void moveMessageToList() {
     doReturn(100).when(rqueueWebConfig).getMaxMessageMoveCount();
     MessageMoveRequest request = new MessageMoveRequest();
     request.setSrc("__rq::d-queue:job");
@@ -180,28 +182,32 @@ public class RqueueUtilityServiceTest {
   }
 
   @Test
-  public void deleteQueueMessages() {
+  void makeEmpty() {
+    doReturn(org.springframework.data.redis.connection.DataType.STRING)
+        .when(rqueueStringDao)
+        .type("__rq::xqueue::{{job}}");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> rqueueUtilityService.makeEmpty("job", "__rq::xqueue::{{job}}"));
+
     doReturn(org.springframework.data.redis.connection.DataType.LIST)
-        .when(stringRqueueRedisTemplate)
-        .type("job");
-    BooleanResponse response = rqueueUtilityService.deleteQueueMessages("job", 0);
-    assertTrue(response.isValue());
-    response = rqueueUtilityService.deleteQueueMessages("job", 100);
+        .when(rqueueStringDao)
+        .type("__rq::queue::{{job}}");
+
+    BooleanResponse response = rqueueUtilityService.makeEmpty("job", "__rq::queue::{{job}}");
     assertTrue(response.isValue());
 
     doReturn(org.springframework.data.redis.connection.DataType.ZSET)
-        .when(stringRqueueRedisTemplate)
-        .type("job");
-    response = rqueueUtilityService.deleteQueueMessages("job", 100);
-    assertFalse(response.isValue());
-    verify(stringRqueueRedisTemplate, times(1)).ltrim("job", 2, 1);
-    verify(stringRqueueRedisTemplate, times(1)).ltrim("job", -100, -1);
+        .when(rqueueStringDao)
+        .type("__rq::d-queue::{{job}}");
+    response = rqueueUtilityService.makeEmpty("job", "__rq::d-queue::{{job}}");
+    assertTrue(response.isValue());
   }
 
   @Test
-  public void getDataType() {
+  void getDataType() {
     doReturn(org.springframework.data.redis.connection.DataType.STRING)
-        .when(stringRqueueRedisTemplate)
+        .when(rqueueStringDao)
         .type("job");
     StringResponse stringResponse = new StringResponse("KEY");
     assertEquals(stringResponse, rqueueUtilityService.getDataType("job"));

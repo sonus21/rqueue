@@ -1,0 +1,43 @@
+<configuration>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
+    <encoder>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
+    <encoder>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+    <file>log/test.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>log/test.%d{yyyy-MM-dd-HH}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>100MB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="MONITOR">
+    <encoder>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+    <file>log/monitor.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>log/monitor.%d{yyyy-MM-dd-HH}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>100MB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <logger additivity="false" level="DEBUG" name="com.github.sonus21">
+    <appender-ref ref="FILE"/>
+  </logger>
+
+  <logger level="DEBUG" name="monitor" additivity="false">
+    <appender-ref ref="MONITOR"/>
+  </logger>
+
+  <root level="INFO">
+    <appender-ref ref="FILE"/>
+  </root>
+
+</configuration>

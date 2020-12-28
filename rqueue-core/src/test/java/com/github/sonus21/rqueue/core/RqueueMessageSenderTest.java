@@ -29,6 +29,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -37,11 +39,9 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueMessageSenderTest {
+@CoreUnitTest
+class RqueueMessageSenderTest extends TestBase {
   private RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageSender rqueueMessageSender =
       new RqueueMessageSenderImpl(rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
@@ -64,18 +64,18 @@ public class RqueueMessageSenderTest {
   }
 
   @Test
-  public void putWithNullQueueName() {
+  void putWithNullQueueName() {
     assertThrows(IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(null, null));
   }
 
   @Test
-  public void putWithNullMessage() {
+  void putWithNullMessage() {
     assertThrows(
         IllegalArgumentException.class, () -> rqueueMessageSender.enqueue(queueName, null));
   }
 
   @Test
-  public void put() {
+  void put() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class));
@@ -83,7 +83,7 @@ public class RqueueMessageSenderTest {
   }
 
   @Test
-  public void putWithRetry() {
+  void putWithRetry() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class));
@@ -91,7 +91,7 @@ public class RqueueMessageSenderTest {
   }
 
   @Test
-  public void putWithDelay() {
+  void putWithDelay() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
@@ -102,7 +102,7 @@ public class RqueueMessageSenderTest {
   }
 
   @Test
-  public void putWithDelayAndRetry() {
+  void putWithDelayAndRetry() {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
@@ -113,7 +113,7 @@ public class RqueueMessageSenderTest {
   }
 
   @Test
-  public void moveMessageFromQueueExceptions() {
+  void moveMessageFromQueueExceptions() {
     // source is not provided
     try {
       rqueueMessageSender.moveMessageFromDeadLetterToQueue(null, queueName, null);
@@ -134,7 +134,7 @@ public class RqueueMessageSenderTest {
   }
 
   @Test
-  public void moveMessageFromDeadLetterToQueueDefaultSize() {
+  void moveMessageFromDeadLetterToQueueDefaultSize() {
     doReturn(new MessageMoveResult(100, true))
         .when(rqueueMessageTemplate)
         .moveMessageListToList(anyString(), anyString(), anyInt());
@@ -146,7 +146,7 @@ public class RqueueMessageSenderTest {
   }
 
   @Test
-  public void moveMessageFromDeadLetterToQueueFixedSize() {
+  void moveMessageFromDeadLetterToQueueFixedSize() {
     doReturn(new MessageMoveResult(10, true))
         .when(rqueueMessageTemplate)
         .moveMessageListToList(anyString(), anyString(), anyInt());

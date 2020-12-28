@@ -32,8 +32,8 @@ public enum DataType {
   KEY("Simple key/value", false),
   SET("Set", false);
 
-  private String description;
-  private boolean enabled;
+  private final String description;
+  private final boolean enabled;
 
   public static DataType convertDataType(org.springframework.data.redis.connection.DataType type) {
     switch (type) {

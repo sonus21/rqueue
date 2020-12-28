@@ -18,27 +18,26 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:8004"})
-public class RqueueMessageTemplateTest extends SpringTestBase {
+@SpringBootIntegrationTest
+class RqueueMessageTemplateTest extends SpringTestBase {
   @Test
-  public void moveMessageFromDeadLetterQueueToOriginalQueue() {
+  void moveMessageFromDeadLetterQueueToOriginalQueue() {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10);
     rqueueMessageSender.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
     assertEquals(10, stringRqueueRedisTemplate.getListSize(emailQueue).intValue());
@@ -46,7 +45,7 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
   }
 
   @Test
-  public void moveMessageFromOneQueueToAnother() {
+  void moveMessageFromOneQueueToAnother() {
     String queue1 = emailDeadLetterQueue + "t";
     String queue2 = emailQueue + "t";
     enqueue(queue1, i -> Email.newInstance(), 10);
@@ -59,7 +58,7 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
   }
 
   @Test
-  public void moveMessageListToZset() {
+  void moveMessageListToZset() {
     String queue = "moveMessageListToZset";
     String tgtZset = "moveMessageListToZsetTgt";
     enqueue(queue, i -> Email.newInstance(), 10);
@@ -70,7 +69,7 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
   }
 
   @Test
-  public void moveMessageZsetToList() {
+  void moveMessageZsetToList() {
     String zset = notificationQueue + "zset";
     String list = notificationQueue + "list";
     enqueueIn(zset, i -> Notification.newInstance(), i -> 50000L, 10);
@@ -80,7 +79,7 @@ public class RqueueMessageTemplateTest extends SpringTestBase {
   }
 
   @Test
-  public void moveMessageZsetToZset() {
+  void moveMessageZsetToZset() {
     String srcZset = jobQueue + "src";
     String tgtZset = jobQueue + "tgt";
     enqueueIn(srcZset, i -> Job.newInstance(), i -> 5000L, 10);

@@ -19,31 +19,29 @@ package com.github.sonus21.rqueue.spring.boot.tests.unit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
-import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
 import java.util.Collections;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.converter.MessageConverter;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueListenerAutoConfigTest {
+@SpringBootUnitTest
+class RqueueListenerAutoConfigTest extends TestBase {
   @Mock private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
   @Mock private BeanFactory beanFactory;
   @Mock private RedisConnectionFactory redisConnectionFactory;
@@ -55,12 +53,12 @@ public class RqueueListenerAutoConfigTest {
   }
 
   @Test
-  public void rqueueMessageHandlerDefaultCreation() {
+  void rqueueMessageHandlerDefaultCreation() {
     assertNotNull(rqueueMessageAutoConfig.rqueueMessageHandler());
   }
 
   @Test
-  public void rqueueMessageHandlerReused() throws IllegalAccessException {
+  void rqueueMessageHandlerReused() throws IllegalAccessException {
     RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
@@ -71,7 +69,7 @@ public class RqueueListenerAutoConfigTest {
   }
 
   @Test
-  public void rqueueMessageListenerContainer() throws IllegalAccessException {
+  void rqueueMessageListenerContainer() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
@@ -82,7 +80,7 @@ public class RqueueListenerAutoConfigTest {
   }
 
   @Test
-  public void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
+  void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
     factory.setRqueueMessageTemplate(messageTemplate);
@@ -93,7 +91,7 @@ public class RqueueListenerAutoConfigTest {
   }
 
   @Test
-  public void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
+  void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     MessageConverter messageConverter = new GenericMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();

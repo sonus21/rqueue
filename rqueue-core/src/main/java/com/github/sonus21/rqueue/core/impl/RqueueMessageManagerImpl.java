@@ -51,9 +51,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
   public boolean deleteAllMessages(String queueName) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     try {
-      stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
-      stringRqueueRedisTemplate.delete(queueDetail.getProcessingQueueName());
-      stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
+      deleteAllMessages(queueDetail);
       return true;
     } catch (Exception e) {
       log.error("Delete all message failed", e);
@@ -64,12 +62,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
   @Override
   public List<Object> getAllMessages(String queueName) {
     List<Object> messages = new ArrayList<>();
-    QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    for (RqueueMessage message :
-        messageTemplate.getAllMessages(
-            queueDetail.getQueueName(),
-            queueDetail.getProcessingQueueName(),
-            queueDetail.getDelayedQueueName())) {
+    for (RqueueMessage message : getAllRqueueMessage(queueName)) {
       messages.add(RqueueMessageUtils.convertMessageToObject(message, messageConverter));
     }
     return messages;
@@ -97,10 +90,20 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
   }
 
   @Override
+  public List<RqueueMessage> getAllRqueueMessage(String queueName) {
+    QueueDetail queueDetail = EndpointRegistry.get(queueName);
+    return messageTemplate.getAllMessages(
+        queueDetail.getQueueName(),
+        queueDetail.getProcessingQueueName(),
+        queueDetail.getDelayedQueueName());
+  }
+
+  @Override
   public boolean exist(String queueName, String id) {
-    if (rqueueLockManager.acquireLock(queueName, Duration.ofSeconds(1))) {
+    if (rqueueLockManager.acquireLock(
+        queueName, rqueueConfig.getBrokerId(), Duration.ofSeconds(1))) {
       boolean exist = getMessage(queueName, id) != null;
-      rqueueLockManager.releaseLock(queueName);
+      rqueueLockManager.releaseLock(queueName, rqueueConfig.getBrokerId());
       return exist;
     }
     throw new LockCanNotBeAcquired(queueName);

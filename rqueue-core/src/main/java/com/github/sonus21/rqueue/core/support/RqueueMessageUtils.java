@@ -17,10 +17,12 @@
 package com.github.sonus21.rqueue.core.support;
 
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConversionException;
@@ -28,13 +30,12 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
 public final class RqueueMessageUtils {
+  private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
+
   private RqueueMessageUtils() {}
 
-  private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
-  private static final String KEY_SEPARATOR = "::";
-
   public static String getMessageMetaId(String queueName, String messageId) {
-    return META_DATA_KEY_PREFIX + queueName + KEY_SEPARATOR + messageId;
+    return META_DATA_KEY_PREFIX + queueName + REDIS_KEY_SEPARATOR + messageId;
   }
 
   public static Object convertMessageToObject(
@@ -47,30 +48,77 @@ public final class RqueueMessageUtils {
     return messageConverter.fromMessage(message, null);
   }
 
-  public static RqueueMessage buildMessage(
+  public static RqueueMessage buildPeriodicMessage(
       MessageConverter converter,
-      Object object,
       String queueName,
-      Integer retryCount,
-      Long delay,
+      Object message,
+      long period,
       MessageHeaders messageHeaders) {
-    Message<?> msg = converter.toMessage(object, messageHeaders);
+    Message<?> msg = converter.toMessage(message, messageHeaders);
     if (msg == null) {
       throw new MessageConversionException("Message could not be build (null)");
     }
     Object payload = msg.getPayload();
+    long processAt = System.currentTimeMillis() + period;
+    String strMessage;
     if (payload instanceof String) {
-      return new RqueueMessage(queueName, (String) payload, retryCount, delay);
+      strMessage = (String) payload;
+    } else if (payload instanceof byte[]) {
+      strMessage = new String((byte[]) payload);
+    } else {
+      throw new MessageConversionException("Message payload is neither String nor byte[]");
     }
-    if (payload instanceof byte[]) {
-      return new RqueueMessage(queueName, new String((byte[]) msg.getPayload()), retryCount, delay);
+    return RqueueMessage.builder()
+        .id(UUID.randomUUID().toString())
+        .queueName(queueName)
+        .message(strMessage)
+        .processAt(processAt)
+        .period(period)
+        .build();
+  }
+
+  public static RqueueMessage buildMessage(
+      MessageConverter converter,
+      String queueName,
+      Object message,
+      Integer retryCount,
+      Long delay,
+      MessageHeaders messageHeaders) {
+    Message<?> msg = converter.toMessage(message, messageHeaders);
+    if (msg == null) {
+      throw new MessageConversionException("Message could not be build (null)");
     }
-    throw new MessageConversionException("Message payload is neither String nor byte[]");
+    long queuedTime = System.nanoTime();
+    long processAt = System.currentTimeMillis();
+    if (delay != null) {
+      processAt += delay;
+    }
+    Object payload = msg.getPayload();
+    String strMessage;
+    if (payload instanceof String) {
+      strMessage = (String) payload;
+    } else if (payload instanceof byte[]) {
+      strMessage = new String((byte[]) payload);
+    } else {
+      throw new MessageConversionException("Message payload is neither String nor byte[]");
+    }
+    return RqueueMessage.builder()
+        .retryCount(retryCount)
+        .queuedTime(queuedTime)
+        .id(UUID.randomUUID().toString())
+        .queueName(queueName)
+        .message(strMessage)
+        .processAt(processAt)
+        .build();
   }
 
   public static List<RqueueMessage> generateMessages(
       MessageConverter converter, String queueName, int count) {
     return generateMessages(converter, "Test Object", queueName, null, null, count);
+  }
+
+  public static RqueueMessage generateMessage(MessageConverter converter, String queueName) {
+    return generateMessages(converter, "Test Object", queueName, null, null, 1).get(0);
   }
 
   public static List<RqueueMessage> generateMessages(
@@ -87,7 +135,7 @@ public final class RqueueMessageUtils {
       int count) {
     List<RqueueMessage> messages = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      messages.add(buildMessage(converter, object, queueName, retryCount, delay, null));
+      messages.add(buildMessage(converter, queueName, object, retryCount, delay, null));
     }
     return messages;
   }

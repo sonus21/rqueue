@@ -1,0 +1,186 @@
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2.1
+executors:
+  rqueue-executor:
+    machine:
+      image: ubuntu-1604:202007-01
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+      ORG_GRADLE_PROJECT_sonatypeUsername: xxx
+      ORG_GRADLE_PROJECT_sonatypePassword: xxx
+      USER_NAME: rqueue
+      REDIS_RUNNING: "true"
+
+
+jobs:
+  build:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: gradle dependencies
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+      - run: ./gradlew compileJava
+      - run: ./gradlew compileTestJava
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  unit_test:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+    steps:
+      - attach_workspace:
+          at: .
+      - run: ./gradlew codeCoverageReport -DincludeTags=unit
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  producer_only_test:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo add-apt-repository ppa:chris-lea/redis-server
+            sudo apt-get update
+            sudo apt-get -y install redis-server
+            redis-cli --version
+      - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  integration_test:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo add-apt-repository ppa:chris-lea/redis-server
+            sudo apt-get update
+            sudo apt-get -y install redis-server
+            redis-cli --version
+      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  redis_custer_test:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+    steps:
+      # Reuse the workspace from the build job
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo add-apt-repository ppa:chris-lea/redis-server
+            sudo apt-get update
+            sudo apt-get -y install redis-server
+            redis-cli --version
+      - run:
+          name: Setup Redis Cluster
+          background: true
+          command: |
+            mkdir 9000 9001 9002 9003 9004 9005
+            printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
+            printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
+            printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
+            printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
+            printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
+            printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+            cd 9000 && redis-server ./redis.conf &
+            cd 9001 && redis-server ./redis.conf &
+            cd 9002 && redis-server ./redis.conf &
+            cd 9003 && redis-server ./redis.conf &
+            cd 9004 && redis-server ./redis.conf &
+            cd 9005 && redis-server ./redis.conf &
+            sleep 30
+            redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
+      - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  report_code_coverage:
+    executor: rqueue-executor
+    environment:
+      SPRING_BOOT_VERSION: 2.1.0.RELEASE
+      SPRING_VERSION: 5.1.2.RELEASE
+      SPRING_DATA_VERSION: 2.1.2.RELEASE
+      MICROMETER_VERSION: 1.1.0
+    steps:
+      - attach_workspace:
+          at: .
+      - run: ls -r build/reports/jacoco/test
+      - run: pwd
+      - run: ./gradlew coveralls
+
+workflows:
+  main:
+    jobs:
+      - build
+      - unit_test:
+          requires:
+            - build
+      - producer_only_test:
+          requires:
+            - unit_test
+      - integration_test:
+          requires:
+            - producer_only_test
+      - redis_custer_test:
+          requires:
+            - integration_test
+      - report_code_coverage:
+          requires:
+            - redis_custer_test

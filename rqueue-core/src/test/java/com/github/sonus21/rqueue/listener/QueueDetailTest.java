@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -33,10 +35,11 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class QueueDetailTest {
+@CoreUnitTest
+class QueueDetailTest extends TestBase {
 
   @Test
-  public void isDlqSet() {
+  void isDlqSet() {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     assertFalse(queueDetail.isDlqSet());
     QueueDetail queueDetail2 = TestUtils.createQueueDetail("test", "test-dlq");
@@ -44,7 +47,7 @@ public class QueueDetailTest {
   }
 
   @Test
-  public void toConfig() {
+  void toConfig() {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test");
     QueueConfig expectedConfig =
         QueueConfig.builder()
@@ -78,7 +81,7 @@ public class QueueDetailTest {
   }
 
   @Test
-  public void expandQueueDetail() {
+  void expandQueueDetail() {
     Map<String, Integer> priority = new HashMap<>();
     priority.put("critical", 10);
     priority.put("high", 5);

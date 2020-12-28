@@ -27,9 +27,9 @@ import org.springframework.data.redis.core.script.RedisScript;
 @SuppressWarnings("unchecked")
 @ToString
 public class RedisScriptFactory {
-  public static RedisScript getScript(ScriptType type) {
+  public static <T> RedisScript<T> getScript(ScriptType type) {
     Resource resource = new ClassPathResource(type.getPath());
-    DefaultRedisScript script = new DefaultRedisScript();
+    DefaultRedisScript<T> script = new DefaultRedisScript<>();
     script.setLocation(resource);
     switch (type) {
       case ENQUEUE_MESSAGE:
@@ -39,10 +39,14 @@ public class RedisScriptFactory {
       case MOVE_MESSAGE_LIST_TO_ZSET:
       case MOVE_MESSAGE_ZSET_TO_ZSET:
       case MOVE_MESSAGE_ZSET_TO_LIST:
-        script.setResultType(Long.class);
+      case SCHEDULE_MESSAGE:
+        script.setResultType((Class<T>) Long.class);
+        return script;
+      case DELETE_IF_SAME:
+        script.setResultType((Class<T>) Boolean.class);
         return script;
       case DEQUEUE_MESSAGE:
-        script.setResultType(List.class);
+        script.setResultType((Class<T>) List.class);
         return script;
       default:
         throw new UnknownSwitchCase(type.toString());
@@ -57,7 +61,9 @@ public class RedisScriptFactory {
     MOVE_MESSAGE_LIST_TO_LIST("scripts/move_message_list_to_list.lua"),
     MOVE_MESSAGE_LIST_TO_ZSET("scripts/move_message_list_to_zset.lua"),
     MOVE_MESSAGE_ZSET_TO_ZSET("scripts/move_message_zset_to_zset.lua"),
-    MOVE_MESSAGE_ZSET_TO_LIST("scripts/move_message_zset_to_list.lua");
+    MOVE_MESSAGE_ZSET_TO_LIST("scripts/move_message_zset_to_list.lua"),
+    SCHEDULE_MESSAGE("scripts/schedule_message.lua"),
+    DELETE_IF_SAME("scripts/delete_if_same.lua");
     private final String path;
 
     ScriptType(String path) {

@@ -60,7 +60,7 @@ public class RqueueRedisMessagePublisherImpl implements RqueueRedisMessagePublis
       throws ProcessingException {
     PubSubMessage pubSubMessage =
         PubSubMessage.builder()
-            .senderId(rqueueConfig.getId())
+            .senderId(rqueueConfig.getBrokerId())
             .role(role)
             .eventChannel(channelType)
             .eventType(eventType)

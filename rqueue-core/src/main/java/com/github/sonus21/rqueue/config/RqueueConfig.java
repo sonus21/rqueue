@@ -17,9 +17,11 @@
 package com.github.sonus21.rqueue.config;
 
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.net.Proxy;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,17 +30,17 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @Getter
 @Setter
 public class RqueueConfig {
+  private static final String brokerId = UUID.randomUUID().toString();
+  private static final AtomicLong counter = new AtomicLong(1);
   private final RedisConnectionFactory connectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
-  private final String id;
 
   public RqueueConfig(
       RedisConnectionFactory connectionFactory, boolean sharedConnection, int dbVersion) {
     this.connectionFactory = connectionFactory;
     this.sharedConnection = sharedConnection;
     this.dbVersion = dbVersion;
-    this.id = UUID.randomUUID().toString();
   }
 
   @Value("${rqueue.version:2.1.0}")
@@ -49,6 +51,18 @@ public class RqueueConfig {
 
   @Value("${rqueue.key.prefix:__rq::}")
   private String prefix;
+
+  @Value("${rqueue.del.prefix:del::")
+  private String delPrefix;
+
+  @Value("${rqueue.job.enabled:true}")
+  private boolean jobEnabled;
+
+  @Value("${rqueue.job.key.prefix:job::}")
+  private String jobKeyPrefix;
+
+  @Value("${rqueue.jobs.key.prefix:jobs::}")
+  private String jobsKeyPrefix;
 
   @Value("${rqueue.cluster.mode:true}")
   private boolean clusterMode;
@@ -113,9 +127,11 @@ public class RqueueConfig {
   @Value("${rqueue.net.proxy.type:HTTP}")
   private Proxy.Type proxyType;
 
+  // 7 days
   @Value("${rqueue.message.durability:10080}")
   private long messageDurabilityInMinute;
 
+  // 30 minutes
   @Value("${rqueue.message.durability.in-terminal-state:1800}")
   private long messageDurabilityInTerminalStateInSecond;
 
@@ -248,5 +264,24 @@ public class RqueueConfig {
 
   public String getTopicConfigurationKey(String topic) {
     return getPrefix() + topicConfigurationPrefix + topic;
+    }
+  public String getJobId() {
+    return prefix + jobKeyPrefix + UUID.randomUUID().toString();
+  }
+
+  public String getJobsKey(String messageId) {
+    return prefix + jobsKeyPrefix + messageId;
+  }
+
+  public String getDelDataName() {
+    return prefix
+        + delPrefix
+        + brokerId
+        + Constants.REDIS_KEY_SEPARATOR
+        + counter.incrementAndGet();
+  }
+
+  public String getBrokerId() {
+    return brokerId;
   }
 }

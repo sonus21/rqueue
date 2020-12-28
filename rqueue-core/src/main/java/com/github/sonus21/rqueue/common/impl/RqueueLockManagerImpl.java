@@ -16,31 +16,31 @@
 
 package com.github.sonus21.rqueue.common.impl;
 
-import static org.springframework.util.Assert.isTrue;
-
 import com.github.sonus21.rqueue.common.RqueueLockManager;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import java.time.Duration;
-import org.springframework.util.StringUtils;
+import org.springframework.util.Assert;
 
 public class RqueueLockManagerImpl implements RqueueLockManager {
-  private final RqueueRedisTemplate<String> redisTemplate;
+  private final RqueueStringDao rqueueStringDao;
 
-  public RqueueLockManagerImpl(RqueueRedisTemplate<String> redisTemplate) {
-    this.redisTemplate = redisTemplate;
+  public RqueueLockManagerImpl(RqueueStringDao rqueueStringDao) {
+    this.rqueueStringDao = rqueueStringDao;
   }
 
   @Override
-  public boolean acquireLock(String lockKey, Duration duration) {
-    isTrue(!StringUtils.isEmpty(lockKey), "key cannot be null.");
-    Boolean result = redisTemplate.setIfAbsent(lockKey, lockKey, duration);
+  public boolean acquireLock(String lockKey, String lockValue, Duration duration) {
+    Assert.hasText(lockKey, "key cannot be null.");
+    Assert.hasText(lockValue, "value cannot be null.");
+    Boolean result = rqueueStringDao.setIfAbsent(lockKey, lockValue, duration);
     return Boolean.TRUE.equals(result);
   }
 
   @Override
-  public boolean releaseLock(String lockKey) {
-    isTrue(!StringUtils.isEmpty(lockKey), "key cannot be null.");
-    Boolean result = redisTemplate.delete(lockKey);
+  public boolean releaseLock(String lockKey, String lockValue) {
+    Assert.hasText(lockKey, "key cannot be null.");
+    Assert.hasText(lockValue, "value cannot be null.");
+    Boolean result = rqueueStringDao.deleteIfSame(lockKey, lockValue);
     return Boolean.TRUE.equals(result);
   }
 }

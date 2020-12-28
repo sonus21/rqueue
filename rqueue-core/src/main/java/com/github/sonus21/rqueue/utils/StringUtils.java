@@ -41,7 +41,11 @@ public final class StringUtils {
   }
 
   public static String getBeanName(String queueName) {
-    return convertToCamelCase(queueName);
+    String beanName = convertToCamelCase(queueName);
+    if (beanName.isEmpty()) {
+      return getBeanName("bean" + queueName);
+    }
+    return beanName;
   }
 
   public static String convertToCamelCase(String string) {
@@ -50,9 +54,11 @@ public final class StringUtils {
       throw new IllegalArgumentException("string is empty");
     }
     StringBuilder sb = new StringBuilder();
+    boolean seenAlpha = false;
     for (int i = 0; i < txt.length(); i++) {
       char c = txt.charAt(i);
       if (isAlpha(c)) {
+        seenAlpha = true;
         if (i == 0) {
           sb.append(c);
         } else if (!isAlpha(txt.charAt(i - 1))) {
@@ -63,17 +69,22 @@ public final class StringUtils {
         } else {
           sb.append(Character.toLowerCase(c));
         }
+      } else if (seenAlpha && Character.isDigit(c)) {
+        sb.append(c);
       }
     }
     String convertedTxt = sb.toString();
     if (convertedTxt.isEmpty()) {
-      return txt;
+      return convertedTxt;
     }
     return Introspector.decapitalize(convertedTxt);
   }
 
   public static String groupName(String name) {
     String groupName = convertToCamelCase(name);
+    if (groupName.isEmpty()) {
+      return groupName("Group" + name);
+    }
     if (isAlpha(groupName.charAt(0)) && Character.isLowerCase(groupName.charAt(0))) {
       char[] chars = groupName.toCharArray();
       chars[0] = Character.toUpperCase(chars[0]);

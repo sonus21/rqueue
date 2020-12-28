@@ -22,6 +22,8 @@ import static com.github.sonus21.rqueue.metrics.RqueueMetrics.QUEUE_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.metrics.MetricsPropertiesTest.MetricProperties;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -30,11 +32,9 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class QueueCounterTest {
+@CoreUnitTest
+class QueueCounterTest extends TestBase {
   private MetricProperties metricsProperties = new MetricProperties();
 
   private void updateCount(String type, QueueCounter counter, String queueName) {
@@ -80,12 +80,12 @@ public class QueueCounterTest {
   }
 
   @Test
-  public void updateFailureCount() {
+  void updateFailureCount() {
     validateCountStatistics(TestUtils.createQueueDetail("simple-queue", 10000L), "failure");
   }
 
   @Test
-  public void updateExecutionCount() {
+  void updateExecutionCount() {
     validateCountStatistics(TestUtils.createQueueDetail("delayed-queue", 900000L), "success");
   }
 }

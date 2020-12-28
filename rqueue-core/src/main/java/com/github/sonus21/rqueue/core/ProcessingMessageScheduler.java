@@ -61,6 +61,11 @@ public class ProcessingMessageScheduler extends AbstractMessageScheduler {
   }
 
   @Override
+  protected boolean isProcessingQueue(String queueName) {
+    return true;
+  }
+
+  @Override
   protected String getThreadNamePrefix() {
     return "processingMessageScheduler-";
   }

@@ -3,13 +3,10 @@ ext.name = 'Rqueue Spring Java'
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"
     apply from: "${rootDir}/gradle/packaging.gradle"
+    apply from: "${rootDir}/gradle/test-runner.gradle"
 }
 
 dependencies {
     compile project(":rqueue-core")
-    testCompile project(":rqueue-common-test")
-}
-
-test {
-    useJUnitPlatform()
+    testCompile project(":rqueue-spring-common-test")
 }

@@ -2,6 +2,7 @@ plugins {
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'nebula.optional-base' version '5.0.2'
+    id "com.adarshr.test-logger" version "2.1.1"
 }
 allprojects {
     apply plugin: 'idea'
@@ -12,6 +13,7 @@ allprojects {
     apply plugin: 'signing'
     apply plugin: 'jacoco'
     apply plugin: 'nebula.optional-base'
+    apply plugin: 'com.adarshr.test-logger'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -62,6 +64,7 @@ ext {
 
     // other dependencies
     javaxValidationVersion = '2.0.1.Final'
+    javaxValidationApiVersion = '2.0.1.Final'
     protobufVersion = '3.12.3'
     protobufGradlePluginVersion = '0.8.12'
 }
@@ -69,7 +72,7 @@ ext {
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '2.1.1-RELEASE'
+    version = '2.2.0-RELEASE'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
@@ -109,16 +112,6 @@ def publishedProjects = subprojects.findAll({ subproject ->
     subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example") && !subproject.name.contains("test")
 })
 
-task jacocoMerge(type: JacocoMerge) {
-    publishedProjects.each { subproject ->
-        executionData subproject.tasks.withType(Test)
-    }
-    doFirst {
-        executionData = files(executionData.findAll { it.exists() })
-    }
-}
-
-
 task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
@@ -127,10 +120,10 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
     }
 
     reports {
+        csv.enabled false
+        html.enabled = System.getenv("CIRCLECI") != "true"
         xml.enabled true
         xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-        csv.enabled false
-        html.enabled true
     }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
@@ -142,6 +135,8 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
             )
         }))
     }
+    dependsOn(subprojects*.test)
+    doLast {}
     test.useTestNG()
 }
 
@@ -157,10 +152,6 @@ clean.doLast {
             delete _files
         }
     })
-};
-
-codeCoverageReport.dependsOn {
-    subprojects*.test
 }
 
 coveralls {

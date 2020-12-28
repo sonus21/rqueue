@@ -600,4 +600,86 @@ public interface RqueueMessageEnqueuer {
     return enqueueAtWithPriority(
         queueName, priority, messageId, message, timeInMilliSeconds - System.currentTimeMillis());
   }
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param periodInMilliSeconds period of this job in milliseconds.
+   * @return message id on successful enqueue otherwise null.
+   */
+  String enqueuePeriodic(String queueName, Object message, long periodInMilliSeconds);
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param period period of this job
+   * @param unit period unit
+   * @return message id on successful enqueue otherwise null.
+   */
+  default String enqueuePeriodic(String queueName, Object message, long period, TimeUnit unit) {
+    return enqueuePeriodic(queueName, message, unit.toMillis(period));
+  }
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param message message object it could be any arbitrary object.
+   * @param period job period
+   * @return message id on successful enqueue otherwise null.
+   */
+  default String enqueuePeriodic(String queueName, Object message, Duration period) {
+    return enqueuePeriodic(queueName, message, period.toMillis());
+  }
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId message id corresponding to this message
+   * @param message message object it could be any arbitrary object.
+   * @param periodInMilliSeconds period of this job in milliseconds.
+   * @return success or failure
+   */
+  boolean enqueuePeriodic(
+      String queueName, String messageId, Object message, long periodInMilliSeconds);
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId message id corresponding to this message
+   * @param message message object it could be any arbitrary object.
+   * @param period period of this job .
+   * @param unit unit of this period
+   * @return success or failure
+   */
+  default boolean enqueuePeriodic(
+      String queueName, String messageId, Object message, long period, TimeUnit unit) {
+    return enqueuePeriodic(queueName, messageId, message, unit.toMillis(period));
+  }
+
+  /**
+   * Enqueue a message on given queue that will be running after a given period. It works like
+   * periodic cron that's scheduled at certain interval, for example every 30 seconds.
+   *
+   * @param queueName on which queue message has to be send
+   * @param messageId message id corresponding to this message
+   * @param message message object it could be any arbitrary object.
+   * @param period period of this job .
+   * @return success or failure
+   */
+  default boolean enqueuePeriodic(
+      String queueName, String messageId, Object message, Duration period) {
+    return enqueuePeriodic(queueName, messageId, message, period.toMillis());
+  }
 }

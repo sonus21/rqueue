@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.listener;
 
 import static org.springframework.util.Assert.notNull;
 
+import com.github.sonus21.rqueue.annotation.MessageListener;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
@@ -39,6 +40,7 @@ import java.util.Set;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
@@ -61,17 +63,21 @@ import org.springframework.util.comparator.ComparableComparator;
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
   private final ConversionService conversionService;
   private final MessageConverter messageConverter;
+  private final boolean inspectAllBean;
 
-  // Only used in test
-  @Deprecated
   public RqueueMessageHandler() {
-    this(new DefaultRqueueMessageConverter());
+    this(new DefaultRqueueMessageConverter(), true);
+  }
+
+  public RqueueMessageHandler(final MessageConverter messageConverter, boolean inspectAllBean) {
+    notNull(messageConverter, "messageConverter cannot be null");
+    this.messageConverter = messageConverter;
+    this.inspectAllBean = inspectAllBean;
+    this.conversionService = new DefaultFormattingConversionService();
   }
 
   public RqueueMessageHandler(final MessageConverter messageConverter) {
-    notNull(messageConverter, "messageConverter cannot be null");
-    this.messageConverter = messageConverter;
-    this.conversionService = new DefaultFormattingConversionService();
+    this(messageConverter, true);
   }
 
   private ConfigurableBeanFactory getBeanFactory() {
@@ -103,7 +109,10 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected boolean isHandler(Class<?> beanType) {
-    return true;
+    if (inspectAllBean) {
+      return true;
+    }
+    return AnnotatedElementUtils.hasAnnotation(beanType, MessageListener.class);
   }
 
   private Concurrency resolveConcurrency(RqueueListener rqueueListener) {
@@ -220,7 +229,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       if (mappingInformation.isValid()) {
         return mappingInformation;
       }
-      logger.warn("Queue '" + mappingInformation + "' not configured");
+      logger.warn("Invalid Queue '" + mappingInformation + "' configuration");
     }
     return null;
   }

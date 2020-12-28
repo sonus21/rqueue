@@ -55,4 +55,10 @@ public final class Validator {
       throw new IllegalArgumentException("priority cannot be empty");
     }
   }
+
+  public static void validatePeriod(long period) {
+    if (period < Constants.ONE_MILLI) {
+      throw new IllegalArgumentException("period must be greater than or equal to one second.");
+    }
+  }
 }
