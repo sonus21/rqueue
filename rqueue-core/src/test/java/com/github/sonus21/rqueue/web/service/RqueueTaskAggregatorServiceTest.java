@@ -37,14 +37,15 @@ import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.models.db.QueueStatisticsTest;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import com.github.sonus21.rqueue.web.service.impl.RqueueTaskAggregatorService;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -63,7 +64,7 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private RqueueTaskAggregatorService rqueueTaskAggregatorService =
+  private RqueueTaskAggregator rqueueTaskAggregatorService =
       new RqueueTaskAggregatorService(
           rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
   private String queueName = "test-queue";

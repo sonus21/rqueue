@@ -67,11 +67,11 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
 
   @Override
   public void save(MessageMetadata messageMetadata, Duration duration) {
-    save(Collections.singletonList(messageMetadata), duration);
+    saveAll(Collections.singletonList(messageMetadata), duration);
   }
 
   @Override
-  public void save(List<MessageMetadata> messageMetadata, Duration duration) {
+  public void saveAll(List<MessageMetadata> messageMetadata, Duration duration) {
     rqueueMessageMetadataDao.saveAll(messageMetadata, duration);
   }
 

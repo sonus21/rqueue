@@ -43,9 +43,10 @@ import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.exception.LockException;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.exception.ValidationException;
+import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.EventType;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.request.Message;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
@@ -100,18 +101,24 @@ public class QueueServiceImpl implements QueueService {
       queueName =
           PriorityUtils.getQueueNameForPriority(queueName, request.getQueue().getPriority());
     }
-    return new RqueueMessage(queueName, msg, request.getRetryCount(), request.getDelay());
+    return RqueueMessageUtils.buildMessage(
+        queueName,
+        msg,
+        request.getRetryCount(),
+        request.getDelay(),
+        RqueueMessageHeaders.emptyMessageHeaders());
   }
 
   @Override
   public CreateQueueResponse create(CreateQueueRequest request)
       throws LockException, ValidationException, ProcessingException {
-    if (rqueueLockManager.acquireLock(rqueueConfig.getQueuesKey(), Duration.ofSeconds(5))) {
+    if (rqueueLockManager.acquireLock(
+        rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId(), Duration.ofSeconds(5))) {
       List<Queue> queues = queueStore.getAllQueue();
       for (Queue queue : queues) {
         for (Queue newQueue : request.getQueues()) {
           if (queue.getName().equals(newQueue.getName())) {
-            rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey());
+            rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId());
             throw new ValidationException(ErrorCode.QUEUE_ALREADY_EXIST);
           }
         }
@@ -129,7 +136,8 @@ public class QueueServiceImpl implements QueueService {
     if (CollectionUtils.isEmpty(request.getPriority()) && request.getVisibilityTimeout() == null) {
       throw new ValidationException(ErrorCode.QUEUE_UPDATE_PARAMETERS_MISSING);
     }
-    if (rqueueLockManager.acquireLock(rqueueConfig.getQueuesKey(), Duration.ofSeconds(5))) {
+    if (rqueueLockManager.acquireLock(
+        rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId(), Duration.ofSeconds(5))) {
       if (queueStore.isQueueExist(request)) {
         QueueConfig queueConfig = queueStore.getConfig(request);
         boolean updateRequired = false;
@@ -160,15 +168,15 @@ public class QueueServiceImpl implements QueueService {
           }
         }
         if (!updateRequired) {
-          rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey());
+          rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId());
           throw new ValidationException(ErrorCode.NOTHING_TO_UPDATE);
         }
         queueStore.update(request, queueConfig, request.getVisibilityTimeout(), userPriority);
         rqueueRedisMessagePublisher.publishBrokerQueue(EventType.UPDATE, (Queue) request);
-        rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey());
+        rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId());
         return new UpdateQueueResponse();
       }
-      rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey());
+      rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId());
       throw new ValidationException(ErrorCode.QUEUE_DOES_NOT_EXIST);
     }
     throw new LockException("Queue lock cannot be acquired");
@@ -177,14 +185,15 @@ public class QueueServiceImpl implements QueueService {
   @Override
   public DeleteQueueResponse delete(DeleteQueueRequest request)
       throws ProcessingException, ValidationException, LockException {
-    if (rqueueLockManager.acquireLock(rqueueConfig.getQueuesKey(), Duration.ofSeconds(5))) {
+    if (rqueueLockManager.acquireLock(
+        rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId(), Duration.ofSeconds(5))) {
       if (queueStore.isQueueExist(request)) {
         queueStore.delete(request);
         rqueueRedisMessagePublisher.publishBrokerQueue(EventType.DELETION, request);
-        rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey());
+        rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId());
         return new DeleteQueueResponse();
       }
-      rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey());
+      rqueueLockManager.releaseLock(rqueueConfig.getQueuesKey(), rqueueConfig.getBrokerId());
       throw new ValidationException(ErrorCode.QUEUE_DOES_NOT_EXIST);
     }
     throw new LockException("Queue lock cannot be acquired");
@@ -311,7 +320,7 @@ public class QueueServiceImpl implements QueueService {
                 })
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-    rqueueMessageMetadataService.save(
+    rqueueMessageMetadataService.saveAll(
         metadataToBeSaved, Duration.ofMillis(2 * queueConfig.getVisibilityTimeout()));
     rqueueMessageTemplate.removeFromZset(
         queueConfig.getProcessingQueue(),

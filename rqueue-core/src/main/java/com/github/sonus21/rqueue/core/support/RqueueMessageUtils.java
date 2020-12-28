@@ -78,6 +78,27 @@ public final class RqueueMessageUtils {
   }
 
   public static RqueueMessage buildMessage(
+      String queueName,
+      String strMessage,
+      Integer retryCount,
+      Long delay,
+      MessageHeaders messageHeaders) {
+    long queuedTime = System.nanoTime();
+    long processAt = System.currentTimeMillis();
+    if (delay != null) {
+      processAt += delay;
+    }
+    return RqueueMessage.builder()
+        .retryCount(retryCount)
+        .queuedTime(queuedTime)
+        .id(UUID.randomUUID().toString())
+        .queueName(queueName)
+        .message(strMessage)
+        .processAt(processAt)
+        .build();
+  }
+
+  public static RqueueMessage buildMessage(
       MessageConverter converter,
       String queueName,
       Object message,
@@ -88,11 +109,6 @@ public final class RqueueMessageUtils {
     if (msg == null) {
       throw new MessageConversionException("Message could not be build (null)");
     }
-    long queuedTime = System.nanoTime();
-    long processAt = System.currentTimeMillis();
-    if (delay != null) {
-      processAt += delay;
-    }
     Object payload = msg.getPayload();
     String strMessage;
     if (payload instanceof String) {
@@ -102,14 +118,7 @@ public final class RqueueMessageUtils {
     } else {
       throw new MessageConversionException("Message payload is neither String nor byte[]");
     }
-    return RqueueMessage.builder()
-        .retryCount(retryCount)
-        .queuedTime(queuedTime)
-        .id(UUID.randomUUID().toString())
-        .queueName(queueName)
-        .message(strMessage)
-        .processAt(processAt)
-        .build();
+    return buildMessage(queueName, strMessage, retryCount, delay, messageHeaders);
   }
 
   public static List<RqueueMessage> generateMessages(

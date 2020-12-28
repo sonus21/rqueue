@@ -41,10 +41,12 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.exception.LockException;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.exception.ValidationException;
+import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.enums.EventType;
 import com.github.sonus21.rqueue.web.service.RqueueMessageConverter;
 import com.github.sonus21.rqueue.web.service.RqueueRedisMessagePublisher;
@@ -103,11 +105,11 @@ public class TopicServiceImpl implements TopicService {
     }
     Duration duration = Duration.ofSeconds(5);
     String topicKey = rqueueConfig.getTopicsKey();
-    if (rqueueLockManager.acquireLock(topicKey, duration)) {
+    if (rqueueLockManager.acquireLock(topicKey, rqueueConfig.getBrokerId(), duration)) {
       validateTopicCreation(topics);
       topicStore.addTopics(topics);
       rqueueRedisMessagePublisher.publishBrokerTopic(EventType.ADD, topics);
-      rqueueLockManager.releaseLock(topicKey);
+      rqueueLockManager.releaseLock(topicKey, rqueueConfig.getBrokerId());
       CreateTopicResponse response = new CreateTopicResponse();
       response.set(ErrorCode.SUCCESS, "topic created");
       return response;
@@ -120,24 +122,24 @@ public class TopicServiceImpl implements TopicService {
       throws ValidationException, ProcessingException, LockException {
     Duration duration = Duration.ofSeconds(5);
     String topicsKey = rqueueConfig.getTopicsKey();
-    if (rqueueLockManager.acquireLock(topicsKey, duration)) {
+    if (rqueueLockManager.acquireLock(topicsKey, rqueueConfig.getBrokerId(), duration)) {
       Topic topic = request.getTopic();
       if (topicStore.isExist(topic)) {
         SubscriptionResponse response = new SubscriptionResponse();
         String topicKey = rqueueConfig.getTopicName(topic.getName());
-        if (rqueueLockManager.acquireLock(topicKey, duration)) {
+        if (rqueueLockManager.acquireLock(topicKey, rqueueConfig.getBrokerId(), duration)) {
           validateSubscription(topic, request.getSubscriptions());
           topicStore.addSubscriptions(request.getTopic(), request.getSubscriptions());
-          rqueueLockManager.releaseLock(topicKey);
-          rqueueLockManager.releaseLock(topicsKey);
+          rqueueLockManager.releaseLock(topicKey, rqueueConfig.getBrokerId());
+          rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
           rqueueRedisMessagePublisher.publishBrokerTopic(EventType.UPDATE, topic);
           response.set(ErrorCode.SUCCESS, "topic subscribed");
           return response;
         }
-        rqueueLockManager.releaseLock(topicsKey);
+        rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
         throw new LockException("topic lock is not available");
       }
-      rqueueLockManager.releaseLock(topicsKey);
+      rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
       throw new ValidationException(ErrorCode.TOPIC_DOES_NOT_EXIST);
     }
     throw new LockException("topic lock is not available");
@@ -161,42 +163,42 @@ public class TopicServiceImpl implements TopicService {
       throws ValidationException, LockException, ProcessingException {
     Duration duration = Duration.ofSeconds(5);
     String topicsKey = rqueueConfig.getTopicsKey();
-    if (rqueueLockManager.acquireLock(topicsKey, duration)) {
+    if (rqueueLockManager.acquireLock(topicsKey, rqueueConfig.getBrokerId(), duration)) {
       Topic topic = request.getTopic();
       if (topicStore.isExist(topic)) {
         String topicKey = rqueueConfig.getTopicName(topic.getName());
-        if (rqueueLockManager.acquireLock(topicKey, duration)) {
+        if (rqueueLockManager.acquireLock(topicKey, rqueueConfig.getBrokerId(), duration)) {
           List<SubscriptionConfig> subscriptionConfigs = topicStore.getSubscriptionConfig(topic);
           Observer target = request.getObserver();
           for (SubscriptionConfig subscriptionConfig : subscriptionConfigs) {
             if (subscriptionConfig.getTarget().equals(target.getTarget())
                 && subscriptionConfig.getTargetType() == target.getTargetType()) {
               topicStore.removeSubscription(topic, subscriptionConfig);
-              rqueueLockManager.releaseLock(topicKey);
-              rqueueLockManager.releaseLock(topicsKey);
+              rqueueLockManager.releaseLock(topicKey, rqueueConfig.getBrokerId());
+              rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
               rqueueRedisMessagePublisher.publishBrokerTopic(EventType.UPDATE, topic);
               UnsubscriptionResponse response = new UnsubscriptionResponse();
               response.set(ErrorCode.SUCCESS, "Unsubscribed");
               return response;
             }
           }
-          rqueueLockManager.releaseLock(topicKey);
-          rqueueLockManager.releaseLock(topicsKey);
+          rqueueLockManager.releaseLock(topicKey, rqueueConfig.getBrokerId());
+          rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
           throw new ValidationException(ErrorCode.SUBSCRIPTION_DOES_NOT_EXIST);
         }
-        rqueueLockManager.releaseLock(topicsKey);
+        rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
         throw new LockException("topic lock is not available");
       }
-      rqueueLockManager.releaseLock(topicsKey);
+      rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
       throw new ValidationException(ErrorCode.TOPIC_DOES_NOT_EXIST);
     }
     throw new LockException("topic lock is not available");
   }
 
   private RqueueMessage createMessage(MessagePushRequest request) throws ProcessingException {
-    String msg;
-    msg = rqueueMessageConverter.fromMessage(request.getMessage());
-    return new RqueueMessage(request.getTopic().getName(), msg, null, null);
+    String msg = rqueueMessageConverter.fromMessage(request.getMessage());
+    return RqueueMessageUtils.buildMessage(
+        request.getTopic().getName(), msg, null, null, RqueueMessageHeaders.emptyMessageHeaders());
   }
 
   @Override
@@ -226,33 +228,33 @@ public class TopicServiceImpl implements TopicService {
       throws ValidationException, ProcessingException, LockException {
     Duration duration = Duration.ofSeconds(5);
     String topicsKey = rqueueConfig.getTopicsKey();
-    if (rqueueLockManager.acquireLock(topicsKey, duration)) {
+    if (rqueueLockManager.acquireLock(topicsKey, rqueueConfig.getBrokerId(), duration)) {
       Topic topic = request.getTopic();
       if (topicStore.isExist(topic)) {
         SubscriptionUpdateResponse response = new SubscriptionUpdateResponse();
         String topicKey = rqueueConfig.getTopicName(topic.getName());
-        if (rqueueLockManager.acquireLock(topicKey, duration)) {
+        if (rqueueLockManager.acquireLock(topicKey, rqueueConfig.getBrokerId(), duration)) {
           List<SubscriptionConfig> subscriptionConfigs = topicStore.getSubscriptionConfig(topic);
           Subscription subscription = request.getSubscription();
           for (SubscriptionConfig subscriptionConfig : subscriptionConfigs) {
             if (subscriptionConfig.getTargetType() == subscription.getTargetType()
                 && subscription.getTarget().equals(subscriptionConfig.getTarget())) {
               topicStore.updateSubscription(topic, subscriptionConfig, subscription);
-              rqueueLockManager.releaseLock(topicKey);
-              rqueueLockManager.releaseLock(topicsKey);
+              rqueueLockManager.releaseLock(topicKey, rqueueConfig.getBrokerId());
+              rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
               rqueueRedisMessagePublisher.publishBrokerTopic(EventType.UPDATE, topic);
               response.set(ErrorCode.SUCCESS, "subscription updated");
               return response;
             }
           }
-          rqueueLockManager.releaseLock(topicKey);
-          rqueueLockManager.releaseLock(topicsKey);
+          rqueueLockManager.releaseLock(topicKey, rqueueConfig.getBrokerId());
+          rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
           throw new ValidationException(ErrorCode.SUBSCRIPTION_DOES_NOT_EXIST);
         }
-        rqueueLockManager.releaseLock(topicsKey);
+        rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
         throw new LockException("topic lock is not available");
       }
-      rqueueLockManager.releaseLock(topicsKey);
+      rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
       throw new ValidationException(ErrorCode.TOPIC_DOES_NOT_EXIST);
     }
     throw new LockException("topic lock is not available");
@@ -263,16 +265,16 @@ public class TopicServiceImpl implements TopicService {
       throws LockException, ProcessingException, ValidationException {
     Duration duration = Duration.ofSeconds(5);
     String topicsKey = rqueueConfig.getTopicsKey();
-    if (rqueueLockManager.acquireLock(topicsKey, duration)) {
+    if (rqueueLockManager.acquireLock(topicsKey, rqueueConfig.getBrokerId(), duration)) {
       TopicConfig topicConfig = topicStore.getTopicConfig(request.getTopic());
       if (topicConfig != null && !topicConfig.isDeleted()) {
         DeleteTopicResponse response = new DeleteTopicResponse();
         topicStore.removeTopic(request.getTopic());
-        rqueueLockManager.releaseLock(topicsKey);
+        rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
         rqueueRedisMessagePublisher.publishBrokerTopic(EventType.DELETION, request.getTopic());
         response.set(ErrorCode.SUCCESS, "topic deleted");
       }
-      rqueueLockManager.releaseLock(topicsKey);
+      rqueueLockManager.releaseLock(topicsKey, rqueueConfig.getBrokerId());
       throw new ValidationException(ErrorCode.TOPIC_DOES_NOT_EXIST);
     }
     throw new LockException("topic lock is not available");

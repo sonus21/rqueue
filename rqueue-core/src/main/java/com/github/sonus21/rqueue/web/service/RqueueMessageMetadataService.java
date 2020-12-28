@@ -34,7 +34,7 @@ public interface RqueueMessageMetadataService {
 
   void save(MessageMetadata messageMetadata, Duration duration);
 
-  void save(List<MessageMetadata> messageMetadata, Duration duration);
+  void saveAll(List<MessageMetadata> messageMetadata, Duration duration);
 
   MessageMetadata getByMessageId(String queueName, String messageId);
 
