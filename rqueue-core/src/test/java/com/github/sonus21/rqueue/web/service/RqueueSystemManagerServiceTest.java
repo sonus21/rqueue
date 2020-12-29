@@ -31,6 +31,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.RqueueQStore;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.exception.ErrorCode;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
@@ -81,7 +82,7 @@ class RqueueSystemManagerServiceTest extends TestBase {
   @Test
   void deleteQueue() {
     BaseResponse baseResponse = rqueueSystemManagerService.deleteQueue("test");
-    assertEquals(1, baseResponse.getCode());
+    assertEquals(ErrorCode.CONCURRENT_REQUEST, baseResponse.getCode());
     assertEquals("Queue not found", baseResponse.getMessage());
     QueueConfig queueConfig = TestUtils.createQueueConfig("test", 10, 10000L, null);
     assertFalse(queueConfig.isDeleted());

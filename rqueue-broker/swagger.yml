@@ -1,0 +1,173 @@
+swagger: '2.0'
+info:
+  description: Rqueue Broker Rest API
+  version: 0.1.0
+  title: Rqueue Broker Rest API
+  contact:
+    email: sonunitw@gmail.com
+schemes:
+  - https
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  "/api/v1/auth/login":
+    parameters:
+      - name: ''
+        in: body
+        schema:
+          "$ref": "#/definitions/UsernameAndPassword"
+    post:
+      tags:
+        - auth
+      description: Authenticate User
+      responses:
+        '200':
+          description: On successful response
+          schema:
+            "$ref": "#/definitions/BaseResponse"
+  "/api/v1/auth/logout":
+    parameters: [ ]
+    post:
+      tags:
+        - auth
+      description: Logout User
+      responses:
+        '200':
+          description: On successful response
+          schema:
+            "$ref": "#/definitions/BaseResponse"
+  "/api/v1/auth/root-user-name":
+    parameters: [ ]
+    put:
+      tags:
+        - auth
+      parameters:
+        - name: ''
+          in: body
+          schema:
+            "$ref": "#/definitions/Username"
+      description: Update Root Username
+      responses:
+        '200':
+          description: On successful response
+          schema:
+            "$ref": "#/definitions/BaseResponse"
+  "/api/v1/auth/root-user-password":
+    parameters: [ ]
+    put:
+      tags:
+        - auth
+      parameters:
+        - name: ''
+          in: body
+          schema:
+            "$ref": "#/definitions/Password"
+      description: Update Root Password
+      responses:
+        '200':
+          description: On successful response
+          schema:
+            "$ref": "#/definitions/BaseResponse"
+  "/api/v1/auth/token":
+    parameters: [ ]
+    post:
+      tags:
+        - auth
+      parameters:
+        - name: ''
+          in: body
+          schema:
+            "$ref": "#/definitions/Token"
+      description: Generate New token
+      responses:
+        '200':
+          description: On successful response
+          schema:
+            "$ref": "#/definitions/BaseResponse"
+definitions:
+  CodeAndMessage:
+    type: object
+    required:
+      - code
+    properties:
+      code:
+        $ref: "#/definitions/Code"
+      message:
+        type: string
+  FieldError:
+    type: object
+    properties:
+      name:
+        type: string
+      messages:
+        type: array
+        items:
+          "$ref": "#/definitions/CodeAndMessage"
+  BaseResponse:
+    allOf:
+      - "$ref": "#/definitions/CodeAndMessage"
+      - type: object
+        properties:
+          errors:
+            type: array
+            items:
+              "$ref": "#/definitions/FieldError"
+  UsernameAndPassword:
+    type: object
+    required:
+      - username
+      - password
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+  Username:
+    type: object
+    properties:
+      username:
+        type: string
+  Password:
+    type: object
+    properties:
+      password:
+        type: string
+  Code:
+    type: integer
+    description: >
+      * 0 => Success
+      * 1 => Error
+      * 2 => Validation Error
+      * 101 => Concurrent Request
+      * 102 => Topic list can not be empty
+      * 103 => Topic already exist
+      * 104 => Duplicate topic
+      * 105 => Topic does not exist
+      * 106 => Topic Already subscribed
+      * 107 => Subscription does not exist
+      * 108 => No message provided
+      * 109 => Invalid username or password
+      * 110 => Token does not exist
+      * 111 => Username is required
+      * 112 => Password is required
+      * 113 => Password does not satisfy password constraints
+      * 114 => Unauthorized access
+      * 115 => Old password did not match
+      * 116 => Queue already exist
+      * 117 => Queue does not exist
+      * 118 => Queue update parameter missing
+      * 119 => Nothing to update
+      * 120 => Invalid queue priority
+  Token:
+    type: object
+    required:
+      - name
+      - value
+    properties:
+      name:
+        type: string
+      value:
+        type: string

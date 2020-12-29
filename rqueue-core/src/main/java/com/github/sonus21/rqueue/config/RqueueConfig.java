@@ -23,25 +23,22 @@ import java.net.Proxy;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @Getter
 @Setter
+@RequiredArgsConstructor
+@Configuration
 public class RqueueConfig {
-  private static final String brokerId = UUID.randomUUID().toString();
-  private static final AtomicLong counter = new AtomicLong(1);
   private final RedisConnectionFactory connectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
-
-  public RqueueConfig(
-      RedisConnectionFactory connectionFactory, boolean sharedConnection, int dbVersion) {
-    this.connectionFactory = connectionFactory;
-    this.sharedConnection = sharedConnection;
-    this.dbVersion = dbVersion;
-  }
+  private static final String brokerId = UUID.randomUUID().toString();
+  private static final AtomicLong counter = new AtomicLong(1);
 
   @Value("${rqueue.version:2.1.0}")
   private String version;

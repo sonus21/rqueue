@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.core;
 import static java.lang.Long.max;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,15 +77,5 @@ public class ProcessingMessageScheduler extends AbstractMessageScheduler {
       return currentTime + delay;
     }
     return max(currentTime, value);
-  }
-
-  @Override
-  public void destroy() throws Exception {
-    //TODO
-  }
-
-  @Override
-  public void onApplicationEvent(RqueueBootstrapEvent event) {
-    //TODO
   }
 }
