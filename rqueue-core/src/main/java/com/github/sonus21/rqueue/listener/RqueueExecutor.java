@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
 import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
+import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -267,33 +268,48 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
+  private long getTtlForScheduledMessageKey(RqueueMessage message) {
+    // Assume a message can be executing for at most 2x of their visibility timeout
+    // due to failure in some other job same message should not be enqueued
+    long expiryInSeconds = 2 * job.getQueueDetail().getVisibilityTimeout() / ONE_MILLI;
+    // A message wil be processed after period, so it must stay in the system till that time
+    // how many more seconds are left to process this message
+    long remainingTime = (message.getProcessAt() - System.currentTimeMillis()) / ONE_MILLI;
+    if (remainingTime > 0) {
+      expiryInSeconds += remainingTime;
+    }
+    return expiryInSeconds;
+  }
+
+  private String getScheduledMessageKey(RqueueMessage message) {
+    // avoid duplicate message enqueue due to retry by checking the message key
+    // avoid cross slot error by using tagged queue name in the key
+    // enqueuing duplicate message can lead to duplicate consumption when one job is executing task
+    // at the same time this message was enqueued.
+    return String.format(
+        "%s%s%s%ssch%s%d",
+        job.getQueueDetail().getQueueName(),
+        REDIS_KEY_SEPARATOR,
+        job.getRqueueMessage().getId(),
+        REDIS_KEY_SEPARATOR,
+        REDIS_KEY_SEPARATOR,
+        message.getProcessAt());
+  }
+
   private void processPeriodicMessage() {
     RqueueMessage newMessage =
         job.getRqueueMessage().toBuilder()
             .processAt(job.getRqueueMessage().nextProcessAt())
             .build();
-    // avoid duplicate message enqueue due to retry by checking the message key
-    // avoid cross slot error by using tagged queue name in the key
-    String messageId =
-        job.getQueueDetail().getQueueName()
-            + Constants.REDIS_KEY_SEPARATOR
-            + job.getRqueueMessage().getId()
-            + "::sch::"
-            + newMessage.getProcessAt();
-    // let's assume a message can be executing for at most 2x of their visibility timeout
-    long expiryInSeconds = 2 * job.getQueueDetail().getVisibilityTimeout() / ONE_MILLI;
-    // how many more seconds are left to process this message
-    long remainingTime = (newMessage.getProcessAt() - System.currentTimeMillis()) / ONE_MILLI;
-    if (remainingTime > 0) {
-      expiryInSeconds += remainingTime;
-    }
+    String messageKey = getScheduledMessageKey(newMessage);
+    long expiryInSeconds = getTtlForScheduledMessageKey(newMessage);
     log.debug(
         "Schedule periodic message: {} Status: {}",
         job.getRqueueMessage(),
         getRqueueMessageTemplate()
             .scheduleMessage(
                 job.getQueueDetail().getDelayedQueueName(),
-                messageId,
+                messageKey,
                 newMessage,
                 expiryInSeconds));
     handleMessage();
