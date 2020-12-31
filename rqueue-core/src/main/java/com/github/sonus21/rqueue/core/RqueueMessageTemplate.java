@@ -70,7 +70,7 @@ public interface RqueueMessageTemplate {
   List<TypedTuple<RqueueMessage>> readFromZsetWithScore(String name, long start, long end);
 
   Long scheduleMessage(
-      String queueName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds);
+      String queueName, String messageId, RqueueMessage rqueueMessage, Long expiryInSeconds);
 
   boolean renameCollection(String srcName, String tgtName);
 

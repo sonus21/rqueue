@@ -74,7 +74,10 @@ public class RqueueMessage extends SerializableBase {
 
   @JsonIgnore
   public long nextProcessAt() {
-    return processAt + period;
+    if (isPeriodicTask()) {
+      return processAt + period;
+    }
+    throw new IllegalStateException("Only applicable for periodic message");
   }
 
   @JsonIgnore

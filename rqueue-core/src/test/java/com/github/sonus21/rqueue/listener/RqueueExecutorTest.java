@@ -42,6 +42,7 @@ import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
@@ -76,13 +77,14 @@ class RqueueExecutorTest extends TestBase {
   private RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
   private RqueueMessageHandler messageHandler = mock(RqueueMessageHandler.class);
   private RqueueMessage rqueueMessage = new RqueueMessage();
-  private Semaphore semaphore = new Semaphore(100);
-  private TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
+  private final Semaphore semaphore = new Semaphore(100);
+  private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
   private PostProcessingHandler postProcessingHandler;
   private ApplicationEventPublisher applicationEventPublisher =
       mock(ApplicationEventPublisher.class);
-  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
-  private String queueName = "test-queue";
+  private final RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private final String queueName = "test-queue";
+  private final Object payload = "test message";
   private MessageMetadata defaultMessageMetadata;
 
   @BeforeEach
@@ -99,14 +101,13 @@ class RqueueExecutorTest extends TestBase {
             taskBackOff,
             messageProcessorHandler,
             rqueueSystemConfigDao);
-    MessageConverter messageConverter = new GenericMessageConverter();
-    rqueueMessage.setId(UUID.randomUUID().toString());
     doReturn(rqueueMessageMetadataService).when(container).rqueueMessageMetadataService();
     doReturn(true).when(container).isQueueActive(anyString());
     doReturn(preProcessMessageProcessor).when(container).getPreExecutionMessageProcessor();
     doReturn(messageHandler).when(container).getRqueueMessageHandler();
     doReturn(messageConverter).when(messageHandler).getMessageConverter();
     doReturn(rqueueJobDao).when(container).rqueueJobDao();
+    doReturn(messageTemplate).when(container).getRqueueMessageTemplate();
     doReturn(rqueueStringDao).when(container).rqueueStringDao();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
