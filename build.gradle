@@ -69,7 +69,7 @@ ext {
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '2.2.0-RELEASE'
+    version = '2.3.0-RELEASE'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
@@ -109,16 +109,6 @@ def publishedProjects = subprojects.findAll({ subproject ->
     subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example") && !subproject.name.contains("test")
 })
 
-task jacocoMerge(type: JacocoMerge) {
-    publishedProjects.each { subproject ->
-        executionData subproject.tasks.withType(Test)
-    }
-    doFirst {
-        executionData = files(executionData.findAll { it.exists() })
-    }
-}
-
-
 task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
@@ -127,10 +117,10 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
     }
 
     reports {
+        csv.enabled false
+        html.enabled = System.getenv("CIRCLECI") != "true"
         xml.enabled true
         xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-        csv.enabled false
-        html.enabled true
     }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
@@ -142,6 +132,8 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
             )
         }))
     }
+    dependsOn(subprojects*.test)
+    doLast {}
     test.useTestNG()
 }
 
@@ -157,10 +149,6 @@ clean.doLast {
             delete _files
         }
     })
-};
-
-codeCoverageReport.dependsOn {
-    subprojects*.test
 }
 
 coveralls {

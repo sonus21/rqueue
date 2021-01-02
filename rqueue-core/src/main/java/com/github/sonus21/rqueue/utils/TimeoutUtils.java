@@ -28,14 +28,16 @@ import java.util.function.BooleanSupplier;
  * throw TimeOutException. If postmortem method is provided then it will call that method before
  * throwing exception.
  */
-public class TimeoutUtils {
+public final class TimeoutUtils {
 
-  private TimeoutUtils() {}
+  private TimeoutUtils() {
+  }
 
   public static void waitFor(
       BooleanSupplier callback, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
-    waitFor(callback, waitTimeInMilliSeconds, description, () -> {});
+    waitFor(callback, waitTimeInMilliSeconds, description, () -> {
+    });
   }
 
   public static void waitFor(BooleanSupplier callback, String description)

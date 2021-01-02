@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import lombok.AllArgsConstructor;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
@@ -79,6 +80,8 @@ public abstract class MessageScheduler
   protected abstract String getThreadNamePrefix();
 
   protected abstract int getThreadPoolSize();
+
+  protected abstract boolean isProcessingQueue(String queueName);
 
   private void doStart() {
     for (String queueName : queueRunningState.keySet()) {
@@ -203,7 +206,11 @@ public abstract class MessageScheduler
       long requiredDelay = max(1, startTime - currentTime);
       long taskStartTime = startTime;
       MessageMoverTask timerTask =
-          new MessageMoverTask(queueDetail.getName(), queueDetail.getQueueName(), zsetName);
+          new MessageMoverTask(
+              queueDetail.getName(),
+              queueDetail.getQueueName(),
+              zsetName,
+              isProcessingQueue(queueDetail.getName()));
       Future<?> future;
       if (requiredDelay < MIN_DELAY) {
         future = scheduler.submit(timerTask);
@@ -233,18 +240,21 @@ public abstract class MessageScheduler
     }
     // Run was succeeded or cancelled submit new one
     MessageMoverTask timerTask =
-        new MessageMoverTask(queueDetail.getName(), queueDetail.getQueueName(), zsetName);
+        new MessageMoverTask(
+            queueDetail.getName(),
+            queueDetail.getQueueName(),
+            zsetName,
+            isProcessingQueue(zsetName));
     Future<?> future =
         scheduler.schedule(
             timerTask, Instant.ofEpochMilli(getNextScheduleTime(queueName, startTime)));
     addTask(timerTask, new ScheduledTaskDetail(startTime, future));
   }
 
-  @SuppressWarnings("unchecked")
   protected void initialize() {
     List<String> queueNames = EndpointRegistry.getActiveQueues();
     defaultScriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
-    redisScript = (RedisScript<Long>) RedisScriptFactory.getScript(ScriptType.MOVE_EXPIRED_MESSAGE);
+    redisScript = RedisScriptFactory.getScript(ScriptType.MOVE_EXPIRED_MESSAGE);
     queueRunningState = new ConcurrentHashMap<>(queueNames.size());
     queueNameToScheduledTask = new ConcurrentHashMap<>(queueNames.size());
     channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
@@ -262,7 +272,7 @@ public abstract class MessageScheduler
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
     doStop();
-    if (event.isStart()) {
+    if (event.isStartup()) {
       if (EndpointRegistry.getActiveQueueCount() == 0) {
         getLogger().warn("No queues are configured");
         return;
@@ -273,16 +283,12 @@ public abstract class MessageScheduler
   }
 
   @ToString
+  @AllArgsConstructor
   private class MessageMoverTask implements Runnable {
     private final String name;
     private final String queueName;
     private final String zsetName;
-
-    MessageMoverTask(String name, String queueName, String zsetName) {
-      this.name = name;
-      this.queueName = queueName;
-      this.zsetName = zsetName;
-    }
+    private final boolean processingQueue;
 
     @Override
     public void run() {
@@ -292,7 +298,11 @@ public abstract class MessageScheduler
           long currentTime = System.currentTimeMillis();
           Long value =
               defaultScriptExecutor.execute(
-                  redisScript, Arrays.asList(queueName, zsetName), currentTime, MAX_MESSAGES);
+                  redisScript,
+                  Arrays.asList(queueName, zsetName),
+                  currentTime,
+                  MAX_MESSAGES,
+                  processingQueue ? 1 : 0);
           long nextExecutionTime = getNextScheduleTime(name, value);
           schedule(name, nextExecutionTime, true);
         }

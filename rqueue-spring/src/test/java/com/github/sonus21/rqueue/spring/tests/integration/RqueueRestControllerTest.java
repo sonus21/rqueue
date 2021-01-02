@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.spring.tests.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -25,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -33,26 +32,32 @@ import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.enums.DataType;
+import com.github.sonus21.rqueue.models.enums.TableColumnType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
+import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.app.SpringApp.DeleteMessageListener;
+import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
+import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -61,7 +66,6 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -69,14 +73,14 @@ import org.springframework.test.web.servlet.MvcResult;
       "spring.redis.port=7001",
       "mysql.db.name=RqueueRestController",
       "max.workers.count=40",
-      "notification.queue.active=false",
       "rqueue.web.statistic.history.day=180"
     })
-public class RqueueRestControllerTest extends SpringWebTestBase {
+@SpringIntegrationTest
+class RqueueRestControllerTest extends SpringWebTestBase {
   @Autowired private DeleteMessageListener deleteMessageListener;
 
   @Test
-  public void testGetChartLatency() throws Exception {
+  void getChartLatency() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -102,7 +106,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void testGetChartStats() throws Exception {
+  void getChartStats() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -128,7 +132,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void testExploreDataList() throws Exception {
+  void exploreDataList() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
         this.mockMvc
@@ -143,13 +147,17 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
-    assertEquals(Collections.singletonList(ActionType.DELETE), dataViewResponse.getActions());
+    assertEquals(
+        Collections.singletonList(
+            new Action(
+                ActionType.DELETE, String.format("dead letter queue '%s'", emailDeadLetterQueue))),
+        dataViewResponse.getActions());
     assertEquals(20, dataViewResponse.getRows().size());
-    assertEquals(3, dataViewResponse.getRows().get(0).size());
+    assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
   }
 
   @Test
-  public void testExploreDataZset() throws Exception {
+  void exploreDataZset() throws Exception {
     for (int i = 0; i < 30; i++) {
       enqueueIn(
           emailQueue, Email.newInstance(), Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
@@ -167,27 +175,55 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
-    assertEquals(Collections.singletonList(ActionType.NONE), dataViewResponse.getActions());
+    assertEquals(1, dataViewResponse.getActions().size());
     assertEquals(20, dataViewResponse.getRows().size());
-    assertEquals(4, dataViewResponse.getRows().get(0).size());
+    assertEquals(5, dataViewResponse.getRows().get(0).getColumns().size());
   }
 
   @Test
-  public void deleteDataSet() throws Exception {
+  void exploreDataProcessingQueue() throws Exception {
+    String processingSet = rqueueConfig.getProcessingQueueName(emailQueue);
+    for (int i = 0; i < 30; i++) {
+      enqueueIn(
+          Email.newInstance(), processingSet, Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
+    }
+    MvcResult result =
+        this.mockMvc
+            .perform(
+                get("/rqueue/api/v1/explore")
+                    .param("type", "ZSET")
+                    .param("src", emailQueue)
+                    .param("name", processingSet))
+            .andReturn();
+
+    DataViewResponse dataViewResponse =
+        mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
+    assertNull(dataViewResponse.getMessage());
+    assertEquals(0, dataViewResponse.getCode());
+    assertEquals(0, dataViewResponse.getActions().size());
+    assertEquals(20, dataViewResponse.getRows().size());
+    assertEquals(5, dataViewResponse.getRows().get(0).getColumns().size());
+  }
+
+  @Test
+  void deleteDataSet() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
-        this.mockMvc.perform(delete("/rqueue/api/v1/data-set/" + emailDeadLetterQueue)).andReturn();
+        this.mockMvc
+            .perform(delete("/rqueue/api/v1/data-set/" + emailQueue + "/" + emailDeadLetterQueue))
+            .andReturn();
     BooleanResponse booleanResponse =
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
     assertNull(booleanResponse.getMessage());
     assertEquals(0, booleanResponse.getCode());
     assertTrue(booleanResponse.isValue());
-    assertFalse(stringRqueueRedisTemplate.exist(emailDeadLetterQueue));
-    assertEquals(-2, stringRqueueRedisTemplate.ttl(emailDeadLetterQueue));
+    TimeoutUtils.waitFor(
+        () -> stringRqueueRedisTemplate.lrange(emailDeadLetterQueue, 0, -1).size() == 0,
+        "dead letter queue deletion");
   }
 
   @Test
-  public void dataType() throws Exception {
+  void dataType() throws Exception {
     enqueue(Email.newInstance(), emailDeadLetterQueue);
     MvcResult result =
         this.mockMvc
@@ -201,7 +237,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void moveMessage() throws Exception {
+  void moveMessage() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MessageMoveRequest request =
         new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
@@ -221,7 +257,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void viewData() throws Exception {
+  void viewData() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
         this.mockMvc
@@ -239,7 +275,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void deleteQueue() throws Exception {
+  void deleteQueue() throws Exception {
     for (int i = 0; i < 30; i++) {
       enqueue(jobQueue, Job.newInstance());
     }
@@ -255,7 +291,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void deleteMessage() throws Exception {
+  void deleteMessage() throws Exception {
     Email email = Email.newInstance();
     deleteMessageListener.clear();
     enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
@@ -266,7 +302,7 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
     MvcResult result =
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/data-set/" + emailQueue + "/" + message.getId())
+                delete("/rqueue/api/v1/data-set/" + emailQueue + "/message/" + message.getId())
                     .contentType(MediaType.APPLICATION_JSON))
             .andReturn();
     BooleanResponse response =
@@ -283,5 +319,49 @@ public class RqueueRestControllerTest extends SpringWebTestBase {
         },
         30 * Constants.ONE_MILLI,
         "message to be deleted");
+  }
+
+  @Test
+  void jobsData() throws Exception {
+    List<String> messageIds = new ArrayList<>();
+    for (int i = 0; i < 30; i++) {
+      messageIds.add(rqueueMessageEnqueuer.enqueue(notificationQueue, Notification.newInstance()));
+    }
+    TimeoutUtils.waitFor(
+        () -> getMessageCount(notificationQueue) == 0,
+        Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
+        "notifications to be sent");
+    String messageId = messageIds.get(random.nextInt(messageIds.size()));
+    MvcResult result =
+        this.mockMvc
+            .perform(
+                get("/rqueue/api/v1/jobs")
+                    .param("message-id", messageId)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+    DataViewResponse response =
+        mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
+    assertEquals(0, response.getCode());
+    assertEquals(6, response.getHeaders().size());
+    assertEquals(1, response.getRows().size());
+    assertEquals(6, response.getRows().get(0).getColumns().size());
+    for (TableColumn column : response.getRows().get(0).getColumns()) {
+      assertNotNull(column.getValue(), column.toString());
+      assertEquals(TableColumnType.DISPLAY, column.getType());
+    }
+
+    result =
+        this.mockMvc
+            .perform(
+                get("/rqueue/api/v1/jobs")
+                    .param("message-id", UUID.randomUUID().toString())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+
+    response = mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
+    assertEquals(0, response.getCode());
+    assertEquals("No jobs found", response.getMessage());
+    assertNull(response.getHeaders());
+    assertEquals(0, response.getRows().size());
   }
 }

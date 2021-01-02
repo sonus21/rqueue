@@ -16,19 +16,17 @@
 
 package com.github.sonus21.rqueue.spring.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
+import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MultiLevelQueueTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -42,15 +40,16 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "use.system.redis=false",
       "priority.mode=WEIGHTED",
     })
-public class WeightedMultiLevelQueueListener extends MultiLevelQueueTest {
+@SpringIntegrationTest
+class WeightedMultiLevelQueueListener extends MultiLevelQueueTest {
 
   @Test
-  public void simple() throws TimedOutException {
+  void simple() throws TimedOutException {
     checkQueueLevelConsumer();
   }
 
   @Test
-  public void delayed() throws TimedOutException {
+  void delayed() throws TimedOutException {
     checkQueueLevelConsumerWithDelay();
   }
 }

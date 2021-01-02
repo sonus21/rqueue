@@ -28,7 +28,7 @@ public interface RqueueUtilityService {
 
   MessageMoveResponse moveMessage(MessageMoveRequest messageMoveRequest);
 
-  BooleanResponse deleteQueueMessages(String queueName, int remainingMessage);
+  BooleanResponse makeEmpty(String queueName, String dataName);
 
   Pair<String, String> getLatestVersion();
 

@@ -25,8 +25,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.models.db.JobRunTime;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.models.db.QueueStatisticsTest;
@@ -36,7 +39,6 @@ import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.web.service.impl.RqueueDashboardChartServiceImpl;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -47,12 +49,10 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @Slf4j
-public class RqueueDashboardChartServiceTest {
+@CoreUnitTest
+class RqueueDashboardChartServiceTest extends TestBase {
   private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
   private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
   private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
@@ -102,7 +102,7 @@ public class RqueueDashboardChartServiceTest {
   }
 
   @Test
-  public void latencyChartHeaders() {
+  void latencyChartHeaders() {
     doReturn(queues).when(rqueueSystemManagerService).getQueues();
     ChartDataRequest chartDataRequest = new ChartDataRequest();
     chartDataRequest.setType(ChartType.LATENCY);
@@ -174,7 +174,7 @@ public class RqueueDashboardChartServiceTest {
   }
 
   @Test
-  public void statsChartHeaders() {
+  void statsChartHeaders() {
     doReturn(queues).when(rqueueSystemManagerService).getQueues();
     ChartDataRequest chartDataRequest = new ChartDataRequest();
     chartDataRequest.setType(ChartType.STATS);
@@ -204,7 +204,7 @@ public class RqueueDashboardChartServiceTest {
   }
 
   @Test
-  public void getDashboardChartDataLatencyDaily() {
+  void getDashboardChartDataLatencyDaily() {
     LocalDateTime localDateTime = LocalDateTime.now();
     if (localDateTime.getHour() > 22) {
       log.info("test cannot be run at this time");
@@ -242,7 +242,7 @@ public class RqueueDashboardChartServiceTest {
   }
 
   @Test
-  public void getDashboardChartDataStatsDaily() {
+  void getDashboardChartDataStatsDaily() {
     LocalDateTime localDateTime = LocalDateTime.now();
     if (localDateTime.getHour() > 22) {
       log.info("test cannot be run at this time");
@@ -280,7 +280,7 @@ public class RqueueDashboardChartServiceTest {
   }
 
   @Test
-  public void getDashboardChartDataStatsDailyMissingDays() {
+  void getDashboardChartDataStatsDailyMissingDays() {
     LocalDateTime localDateTime = LocalDateTime.now();
     if (localDateTime.getHour() > 22) {
       log.info("test cannot be run at this time");

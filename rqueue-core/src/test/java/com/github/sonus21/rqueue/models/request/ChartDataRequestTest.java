@@ -19,20 +19,20 @@ package com.github.sonus21.rqueue.models.request;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class ChartDataRequestTest {
+@CoreUnitTest
+class ChartDataRequestTest extends TestBase {
 
   @Test
-  public void validate() {
+  void validate() {
     ChartDataRequest chartDataRequest = new ChartDataRequest();
     ChartDataResponse response = chartDataRequest.validate();
     assertEquals(1, response.getCode());

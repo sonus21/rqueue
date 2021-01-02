@@ -41,7 +41,6 @@ import org.springframework.util.CollectionUtils;
  *
  * <p>It communicates with the Redis using Lua script and direct calls.
  */
-@SuppressWarnings("unchecked")
 @Slf4j
 public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage>
     implements RqueueMessageTemplate {
@@ -59,8 +58,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       String processingChannelName,
       long visibilityTimeout) {
     long currentTime = System.currentTimeMillis();
-    RedisScript<RqueueMessage> script =
-        (RedisScript<RqueueMessage>) getScript(ScriptType.DEQUEUE_MESSAGE);
+    RedisScript<RqueueMessage> script = getScript(ScriptType.DEQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(queueName, processingQueueName, processingChannelName),
@@ -71,7 +69,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.ENQUEUE_MESSAGE);
+    RedisScript<Long> script = getScript(ScriptType.ENQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(delayQueueName, delayQueueChannelName),
@@ -93,7 +91,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public void moveMessage(
       String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.MOVE_MESSAGE);
+    RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE);
     Long response =
         scriptExecutor.execute(
             script,
@@ -128,7 +126,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
 
   private MessageMoveResult moveMessageToList(
       String src, String dst, int maxMessage, ScriptType scriptType) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(scriptType);
+    RedisScript<Long> script = getScript(scriptType);
     long messagesInSrc = maxMessage;
     int remainingMessages = maxMessage;
     while (messagesInSrc > 0 && remainingMessages > 0) {
@@ -156,7 +154,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public MessageMoveResult moveMessageListToZset(
       String sourceList, String destinationZset, int maxMessage, long score) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.MOVE_MESSAGE_LIST_TO_ZSET);
+    RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE_LIST_TO_ZSET);
     long messagesInList = maxMessage;
     int remainingMessages = maxMessage;
     while (messagesInList > 0 && remainingMessages > 0) {
@@ -176,7 +174,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       int maxMessage,
       long newScore,
       boolean fixedScore) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.MOVE_MESSAGE_ZSET_TO_ZSET);
+    RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE_ZSET_TO_ZSET);
     long messageInZset = maxMessage;
     int remainingMessages = maxMessage;
     while (messageInZset > 0 && remainingMessages > 0) {
@@ -212,24 +210,32 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
-  public Long getScore(String delayedQueueName, RqueueMessage rqueueMessage) {
-    Double score = redisTemplate.opsForZSet().score(delayedQueueName, rqueueMessage);
-    if (score == null) {
-      return null;
-    }
-    return score.longValue();
-  }
-
-  @Override
   public Long scheduleMessage(
-      String zsetName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds) {
-    RedisScript<Long> script = (RedisScript<Long>) getScript(ScriptType.SCHEDULE_MESSAGE);
+      String zsetName, String messageId, RqueueMessage rqueueMessage, Long expiryInSeconds) {
+    RedisScript<Long> script = getScript(ScriptType.SCHEDULE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(messageId, zsetName),
-        expiryInMilliSeconds,
+        expiryInSeconds,
         rqueueMessage,
         rqueueMessage.getProcessAt());
+  }
+
+  @Override
+  public boolean renameCollection(String srcName, String tgtName) {
+    rename(srcName, tgtName);
+    return true;
+  }
+
+  @Override
+  public boolean renameCollections(List<String> srcNames, List<String> tgtNames) {
+    rename(srcNames, tgtNames);
+    return true;
+  }
+
+  @Override
+  public void deleteCollection(String name) {
+    redisTemplate.delete(name);
   }
 
   @Override

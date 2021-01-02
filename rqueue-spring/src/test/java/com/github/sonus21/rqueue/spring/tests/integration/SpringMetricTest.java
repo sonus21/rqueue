@@ -16,35 +16,34 @@
 
 package com.github.sonus21.rqueue.spring.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
+import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(properties = {"rqueue.retry.per.poll=20", "spring.redis.port=7005"})
-public class SpringMetricTest extends MetricTest {
+@SpringIntegrationTest
+class SpringMetricTest extends MetricTest {
   @Test
-  public void delayedQueueStatus() throws TimedOutException {
+  void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }
 
   @Test
-  public void metricStatus() throws TimedOutException {
+  void metricStatus() throws TimedOutException {
     this.verifyMetricStatus();
   }
 
   @Test
-  public void countStatusTest() throws TimedOutException {
+  void countStatusTest() throws TimedOutException {
     this.verifyCountStatus();
   }
 }

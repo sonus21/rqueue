@@ -21,6 +21,12 @@ import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
+/**
+ * Rqueue message template is used to send messages
+ *
+ * <p>Methods from this class should not be used in the application code, these methods are bound to
+ * change as new and new features are added to Rqueue.
+ */
 public interface RqueueMessageTemplate {
   RqueueMessage pop(
       String queueName,
@@ -63,8 +69,12 @@ public interface RqueueMessageTemplate {
 
   List<TypedTuple<RqueueMessage>> readFromZsetWithScore(String name, long start, long end);
 
-  Long getScore(String delayedQueueName, RqueueMessage rqueueMessage);
-
   Long scheduleMessage(
-      String queueName, String messageId, RqueueMessage rqueueMessage, long expiryInMilliSeconds);
+      String queueName, String messageId, RqueueMessage rqueueMessage, Long expiryInSeconds);
+
+  boolean renameCollection(String srcName, String tgtName);
+
+  boolean renameCollections(List<String> srcNames, List<String> tgtNames);
+
+  void deleteCollection(String name);
 }

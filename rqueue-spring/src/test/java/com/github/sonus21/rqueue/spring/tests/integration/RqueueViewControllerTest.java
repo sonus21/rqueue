@@ -20,17 +20,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
+import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.jtwig.spring.JtwigView;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -38,7 +37,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.ui.ModelMap;
 
 @ContextConfiguration(classes = SpringApp.class)
-@ExtendWith(SpringTestTracerExtension.class)
 @Slf4j
 @WebAppConfiguration
 @TestPropertySource(
@@ -49,7 +47,8 @@ import org.springframework.ui.ModelMap;
       "notification.queue.active=false",
       "rqueue.web.statistic.history.day=180",
     })
-public class RqueueViewControllerTest extends SpringWebTestBase {
+@SpringIntegrationTest
+class RqueueViewControllerTest extends SpringWebTestBase {
   private void verifyBasicData(ModelMap model, NavTab navTab) {
     assertNotNull(model.get("latestVersion"));
     assertNotNull(model.get("version"));
@@ -62,7 +61,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void home() throws Exception {
+  void home() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
@@ -81,7 +80,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void queues() throws Exception {
+  void queues() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/queues")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
@@ -93,7 +92,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void queueDetail() throws Exception {
+  void queueDetail() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/queues/" + jobQueue)).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
@@ -118,7 +117,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void running() throws Exception {
+  void running() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/running")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
@@ -130,7 +129,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void scheduled() throws Exception {
+  void scheduled() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/scheduled")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
@@ -142,7 +141,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void dead() throws Exception {
+  void dead() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/dead")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
@@ -154,7 +153,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void pending() throws Exception {
+  void pending() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/pending")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();
@@ -166,7 +165,7 @@ public class RqueueViewControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  public void utility() throws Exception {
+  void utility() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/utility")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     JtwigView jtwigView = (JtwigView) result.getModelAndView().getView();

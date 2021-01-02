@@ -16,24 +16,19 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
 import java.util.List;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-public class RedisUtils {
-  private RedisUtils() {}
-
-  public interface RedisTemplateProvider {
-    <V> RedisTemplate<String, V> getRedisTemplate(RedisConnectionFactory redisConnectionFactory);
-  }
-
-  @SuppressWarnings({"java:S1104","java:S1444"})
+public final class RedisUtils {
+  @SuppressWarnings({"java:S1104", "java:S1444"})
   public static RedisTemplateProvider redisTemplateProvider =
       new RedisTemplateProvider() {
         @Override
@@ -51,56 +46,75 @@ public class RedisUtils {
         }
       };
 
+  private RedisUtils() {}
+
   public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
     return redisTemplateProvider.getRedisTemplate(redisConnectionFactory);
   }
 
+  @SuppressWarnings("unchecked")
   public static <V> List<Object> executePipeLine(
       RedisTemplate<String, V> template, RedisPipelineCallback callback) {
     return template.executePipelined(
         (RedisCallback<Object>)
             connection -> {
-              RqueueRedisSerializer valueSerializer =
-                  (RqueueRedisSerializer) template.getValueSerializer();
-              StringRedisSerializer keySerializer =
-                  (StringRedisSerializer) template.getKeySerializer();
+              RedisSerializer<String> keySerializer =
+                  (RedisSerializer<String>) template.getKeySerializer();
+              RedisSerializer<Object> valueSerializer =
+                  (RedisSerializer<Object>) template.getValueSerializer();
               callback.doInRedis(connection, keySerializer, valueSerializer);
               return null;
             });
   }
 
   public static void setVersion(
-      RedisConnectionFactory connectionFactory, String versionKey, int version) {
-    RedisConnection connection = RedisConnectionUtils.getConnection(connectionFactory);
-    byte[] versionKeyBytes = versionKey.getBytes();
-    connection.set(versionKeyBytes, String.valueOf(version).getBytes());
+      RqueueRedisTemplate<Integer> rqueueRedisTemplate, String versionKey, int version) {
+    rqueueRedisTemplate.set(versionKey, version);
+  }
+
+  private static int checkDbVersion(Object data) {
+    if (data instanceof Integer || data instanceof Long) {
+      return ((Number) data).intValue();
+    } else if (data instanceof String) {
+      return Integer.parseInt((String) data);
+    } else if (data != null) {
+      throw new IllegalStateException("Invalid db version" + data);
+    }
+    return -1;
   }
 
   public static int updateAndGetVersion(
-      RedisConnectionFactory redisConnectionFactory, String versionDbKey, int defaultVersion) {
-    RedisConnection connection = RedisConnectionUtils.getConnection(redisConnectionFactory);
-    byte[] versionKey = versionDbKey.getBytes();
-    byte[] versionFromDb = connection.get(versionKey);
-    if (SerializationUtils.isEmpty(versionFromDb)) {
-      Long count =
-          connection.eval(
-              "return #redis.pcall('keys', 'rqueue-*')".getBytes(), ReturnType.INTEGER, 0);
-      if (count != null && count > 0L) {
-        int version = 1;
-        connection.set(versionKey, String.valueOf(version).getBytes());
-        return version;
-      }
-      connection.set(versionKey, String.valueOf(defaultVersion).getBytes());
-      return defaultVersion;
+      RqueueRedisTemplate<Integer> rqueueRedisTemplate, String versionKey, int defaultVersion) {
+    Object data = rqueueRedisTemplate.get(versionKey);
+    int dbVersion = checkDbVersion(data);
+    if (dbVersion > 0) {
+      return dbVersion;
     }
-    return Integer.parseInt(new String(versionFromDb));
+    List<Object> result =
+        RedisUtils.executePipeLine(
+            rqueueRedisTemplate.getRedisTemplate(),
+            ((connection, keySerializer, valueSerializer) ->
+                connection.eval(
+                    "return #redis.pcall('keys', 'rqueue-*')".getBytes(), ReturnType.INTEGER, 0)));
+    Long count = (Long) result.get(0);
+    if (count != null && count > 0L) {
+      rqueueRedisTemplate.set(versionKey, 1);
+      return 1;
+    }
+    rqueueRedisTemplate.set(versionKey, defaultVersion);
+    return defaultVersion;
+  }
+
+  public interface RedisTemplateProvider {
+    <V> RedisTemplate<String, V> getRedisTemplate(RedisConnectionFactory redisConnectionFactory);
   }
 
   public interface RedisPipelineCallback {
+
     void doInRedis(
         RedisConnection connection,
-        StringRedisSerializer keySerializer,
-        RqueueRedisSerializer valueSerializer);
+        RedisSerializer<String> keySerializer,
+        RedisSerializer<Object> valueSerializer);
   }
 }

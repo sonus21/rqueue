@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.QueueEvents;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
@@ -31,7 +32,6 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueQStatsDao;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -209,15 +209,16 @@ public class RqueueTaskAggregatorService
 
   private class EventAggregator implements Runnable {
     private void aggregate(RqueueExecutionEvent event, TasksStat stat) {
-      if (event.getStatus() == TaskStatus.DISCARDED) {
+      TaskStatus taskStatus = event.getJob().getMessageMetadata().getStatus().getTaskStatus();
+      if (TaskStatus.DISCARDED.equals(taskStatus)) {
         stat.discarded += 1;
-      } else if (event.getStatus() == TaskStatus.SUCCESSFUL) {
+      } else if (TaskStatus.SUCCESSFUL.equals(taskStatus)) {
         stat.success += 1;
-      } else if (event.getStatus() == TaskStatus.MOVED_TO_DLQ) {
+      } else if (TaskStatus.MOVED_TO_DLQ.equals(taskStatus)) {
         stat.movedToDlq += 1;
       }
-      RqueueMessage rqueueMessage = event.getRqueueMessage();
-      MessageMetadata messageMetadata = event.getMessageMetadata();
+      RqueueMessage rqueueMessage = event.getJob().getRqueueMessage();
+      MessageMetadata messageMetadata = event.getJob().getMessageMetadata();
       if (rqueueMessage.getFailureCount() != 0) {
         stat.retried += 1;
       }
@@ -262,7 +263,9 @@ public class RqueueTaskAggregatorService
         boolean locked = false;
         try {
           if (rqueueLockManager.acquireLock(
-              lockKey, Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
+              lockKey,
+              rqueueConfig.getBrokerId(),
+              Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
             locked = true;
             aggregate(events);
           } else {
@@ -272,7 +275,7 @@ public class RqueueTaskAggregatorService
           }
         } finally {
           if (locked) {
-            rqueueLockManager.releaseLock(lockKey);
+            rqueueLockManager.releaseLock(lockKey, rqueueConfig.getBrokerId());
           }
         }
       }

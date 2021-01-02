@@ -16,18 +16,16 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
@@ -41,45 +39,21 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=BootApplicationTest",
       "use.system.redis=false",
     })
-public class ApplicationTest extends BasicListenerTest {
+@SpringBootIntegrationTest
+class ApplicationTest extends BasicListenerTest {
 
   @Test
-  public void afterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
-    verifyAfterNRetryTaskIsDeletedFromProcessingQueue();
-  }
-
-  @Test
-  public void messageMovedToDeadLetterQueue() throws TimedOutException {
-    verifyMessageMovedToDeadLetterQueue();
-  }
-
-  @Test
-  public void messageIsDiscardedAfterRetries() throws TimedOutException {
-    verifyMessageIsDiscardedAfterRetries();
-  }
-
-  @Test
-  public void notificationOnMessageIsTriggered() throws TimedOutException {
+  void onMessageNotification() throws TimedOutException {
     verifySimpleTaskExecution();
   }
 
   @Test
-  public void emailIsRetried() throws TimedOutException {
-    verifyRetry();
+  void delayedEnqueue() throws TimedOutException {
+    verifyDelayedTaskExecution();
   }
 
   @Test
-  public void jobIsRetriedAndMessageIsInProcessingQueue() throws TimedOutException {
-    verifyMessageIsInProcessingQueue();
-  }
-
-  @Test
-  public void messageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
-    verifyMessageIsConsumedByDeadLetterQueueListener();
-  }
-
-  @Test
-  public void testListMessageListener() throws TimedOutException {
+  void listMessageListener() throws TimedOutException {
     verifyListMessageListener();
   }
 }

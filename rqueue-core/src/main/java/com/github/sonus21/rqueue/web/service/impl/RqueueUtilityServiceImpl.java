@@ -18,10 +18,13 @@ package com.github.sonus21.rqueue.web.service.impl;
 
 import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.MessageSweeper;
+import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -32,7 +35,6 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import java.time.Duration;
@@ -40,7 +42,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueWebConfig rqueueWebConfig;
-  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  private final RqueueStringDao rqueueStringDao;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageMetadataService messageMetadataService;
@@ -61,11 +62,11 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   public RqueueUtilityServiceImpl(
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate,
+      RqueueStringDao rqueueStringDao,
       RqueueSystemConfigDao rqueueSystemConfigDao,
       RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMessageMetadataService messageMetadataService) {
-    this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
+    this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueConfig = rqueueConfig;
@@ -76,7 +77,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   @Override
   public BooleanResponse deleteMessage(String queueName, String id) {
     String queueConfigKey = rqueueConfig.getQueueConfigKey(queueName);
-    QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey);
+    QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey, true);
     BooleanResponse booleanResponse = new BooleanResponse();
     if (queueConfig == null) {
       booleanResponse.setCode(1);
@@ -152,19 +153,20 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   }
 
   @Override
-  public BooleanResponse deleteQueueMessages(String queueName, int remainingMessages) {
-    int start = -1 * remainingMessages;
-    int end = -1;
-    if (remainingMessages == 0) {
-      start = 2;
-      end = 1;
-    }
-    if (stringRqueueRedisTemplate.type(queueName)
-        == org.springframework.data.redis.connection.DataType.LIST) {
-      stringRqueueRedisTemplate.ltrim(queueName, start, end);
+  public BooleanResponse makeEmpty(String queueName, String dataName) {
+    org.springframework.data.redis.connection.DataType type = rqueueStringDao.type(dataName);
+    // empty data structure
+    if (type == null || type == org.springframework.data.redis.connection.DataType.NONE) {
       return new BooleanResponse(true);
     }
-    return new BooleanResponse(false);
+    return new BooleanResponse(
+        MessageSweeper.getInstance(rqueueConfig, rqueueMessageTemplate, messageMetadataService)
+            .deleteMessage(
+                MessageDeleteRequest.builder()
+                    .dataName(dataName)
+                    .queueName(queueName)
+                    .dataType(type)
+                    .build()));
   }
 
   private boolean shouldFetchVersionDetail() {
@@ -196,7 +198,6 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public StringResponse getDataType(String name) {
-    return new StringResponse(
-        DataType.convertDataType(stringRqueueRedisTemplate.type(name)).name());
+    return new StringResponse(DataType.convertDataType(rqueueStringDao.type(name)).name());
   }
 }

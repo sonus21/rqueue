@@ -16,19 +16,19 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
+import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ExtendWith(SpringTestTracerExtension.class)
 @ContextConfiguration(classes = ApplicationListenerDisabled.class)
 @TestPropertySource(
     properties = {
@@ -37,15 +37,17 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=BootProcessingChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
-      "monitor.thread.count=1",
+      "monitor.enabled=true",
       "start.queue.enabled=true",
     })
 @SpringBootTest
 @Slf4j
+@Tag("redisCluster")
+@SpringBootIntegrationTest
 @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
-public class BootProcessingChannelTest extends MessageChannelTests {
+class BootProcessingChannelTest extends MessageChannelTests {
   @Test
-  public void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
+  void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
     verifyPublishMessageIsTriggeredOnMessageRemoval();
   }
 }

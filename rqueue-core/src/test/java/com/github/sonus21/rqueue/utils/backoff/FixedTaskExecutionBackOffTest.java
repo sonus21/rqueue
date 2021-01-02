@@ -19,12 +19,15 @@ package com.github.sonus21.rqueue.utils.backoff;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import org.junit.jupiter.api.Test;
 
-public class FixedTaskExecutionBackOffTest {
+@CoreUnitTest
+class FixedTaskExecutionBackOffTest extends TestBase {
 
   @Test
-  public void construct() {
+  void construct() {
     FixedTaskExecutionBackOff backOff = new FixedTaskExecutionBackOff(1000, 100);
     assertEquals(1000L, backOff.getInterval());
     assertEquals(100, backOff.getMaxRetries());
@@ -33,7 +36,7 @@ public class FixedTaskExecutionBackOffTest {
   }
 
   @Test
-  public void setInterval() {
+  void setInterval() {
     FixedTaskExecutionBackOff backOff = new FixedTaskExecutionBackOff();
     backOff.setInterval(200L);
     assertEquals(200L, backOff.nextBackOff(null, null, 1));
@@ -41,7 +44,7 @@ public class FixedTaskExecutionBackOffTest {
   }
 
   @Test
-  public void setMaxRetries() {
+  void setMaxRetries() {
     FixedTaskExecutionBackOff backOff = new FixedTaskExecutionBackOff();
     backOff.setMaxRetries(3);
     assertEquals(5000L, backOff.nextBackOff(null, null, 1));
@@ -50,12 +53,12 @@ public class FixedTaskExecutionBackOffTest {
   }
 
   @Test
-  public void constructNegativeInterval() {
+  void constructNegativeInterval() {
     assertThrows(IllegalArgumentException.class, () -> new FixedTaskExecutionBackOff(-1, 100));
   }
 
   @Test
-  public void constructNegativeRetries() {
+  void constructNegativeRetries() {
     assertThrows(IllegalArgumentException.class, () -> new FixedTaskExecutionBackOff(100L, -1));
   }
 }

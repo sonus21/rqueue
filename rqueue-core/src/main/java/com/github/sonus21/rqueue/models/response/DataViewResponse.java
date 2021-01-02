@@ -16,11 +16,11 @@
 
 package com.github.sonus21.rqueue.models.response;
 
-import com.github.sonus21.rqueue.models.enums.ActionType;
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,12 +31,12 @@ import lombok.ToString;
 @NoArgsConstructor
 @Setter
 @ToString(callSuper = true)
-@SuppressWarnings("java:S2160")
+@EqualsAndHashCode(callSuper = true)
 public class DataViewResponse extends BaseResponse {
   private static final long serialVersionUID = -8359552138158857044L;
   private List<String> headers;
-  private List<ActionType> actions = new ArrayList<>();
-  private List<List<Serializable>> rows;
+  private List<Action> actions = new ArrayList<>();
+  private List<TableRow> rows = new LinkedList<>();
 
   public static DataViewResponse createErrorMessage(String message) {
     DataViewResponse response = new DataViewResponse();
@@ -45,7 +45,11 @@ public class DataViewResponse extends BaseResponse {
     return response;
   }
 
-  public void addAction(ActionType actionType) {
-    actions.add(actionType);
+  public void addRow(TableRow tableRow) {
+    rows.add(tableRow);
+  }
+
+  public void addAction(Action action) {
+    actions.add(action);
   }
 }

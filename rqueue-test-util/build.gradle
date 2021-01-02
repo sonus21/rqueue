@@ -28,4 +28,20 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
     compile group: 'org.springframework.data', name: 'spring-data-redis', version: "${springDataVersion}"
+    // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
+    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
+
+    // https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api
+    compile group: 'javax.persistence', name: 'javax.persistence-api', version: "${jpaVersion}"
+
+    compile "com.h2database:h2:${h2Version}"
+    compile "it.ozimov:embedded-redis:${embeddedRedisVersion}"
+
+    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-jpa
+    compile group: 'org.springframework.data', name: 'spring-data-jpa', version: "${springBootVersion}"
+
+    // https://mvnrepository.com/artifact/org.hibernate/hibernate-core
+    compile group: 'org.hibernate', name: 'hibernate-core', version: "${hibernateVersion}"
+
+    compile "com.athaydes.javanna:javanna:1.1"
 }

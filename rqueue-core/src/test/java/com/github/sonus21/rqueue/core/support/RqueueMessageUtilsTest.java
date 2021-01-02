@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -38,47 +40,17 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
-class RqueueMessageUtilsTest {
+@CoreUnitTest
+class RqueueMessageUtilsTest extends TestBase {
 
-  DefaultRqueueMessageConverter messageConverter = new DefaultRqueueMessageConverter();
   private final String queue = "test-queue";
+  DefaultRqueueMessageConverter messageConverter = new DefaultRqueueMessageConverter();
   DefaultRqueueMessageConverter messageConverter2 =
       new DefaultRqueueMessageConverter(
           ImmutableList.of(
               new GenericMessageConverter(),
               new StringMessageConverter(),
               new NoMessageConverter()));
-
-  static class NoMessageConverter implements MessageConverter {
-
-    @Override
-    public Object fromMessage(Message<?> message, Class<?> aClass) {
-      return null;
-    }
-
-    @Override
-    public Message<?> toMessage(Object o, MessageHeaders messageHeaders) {
-      return new GenericMessage<>(o);
-    }
-  }
-
-  @Data
-  static class Email {
-    String id;
-    String email;
-
-    static Email newInstance() {
-      Email email = new Email();
-      email.id = UUID.randomUUID().toString();
-      email.email = RandomStringUtils.randomAlphabetic(10) + "@test.com";
-      return email;
-    }
-  }
-
-  @Data
-  static class GenericClass<T> {
-    T id;
-  }
 
   @Test
   void buildPeriodicMessage() {
@@ -224,5 +196,36 @@ class RqueueMessageUtilsTest {
     } catch (MessageConversionException e) {
       assertEquals("Message payload is neither String nor byte[]", e.getMessage());
     }
+  }
+
+  static class NoMessageConverter implements MessageConverter {
+
+    @Override
+    public Object fromMessage(Message<?> message, Class<?> aClass) {
+      return null;
+    }
+
+    @Override
+    public Message<?> toMessage(Object o, MessageHeaders messageHeaders) {
+      return new GenericMessage<>(o);
+    }
+  }
+
+  @Data
+  static class Email {
+    String id;
+    String email;
+
+    static Email newInstance() {
+      Email email = new Email();
+      email.id = UUID.randomUUID().toString();
+      email.email = RandomStringUtils.randomAlphabetic(10) + "@test.com";
+      return email;
+    }
+  }
+
+  @Data
+  static class GenericClass<T> {
+    T id;
   }
 }

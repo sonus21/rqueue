@@ -21,15 +21,18 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
+@Slf4j
 public class RqueueRedisTemplate<V extends Serializable> {
   protected RedisTemplate<String, V> redisTemplate;
 
@@ -102,6 +105,20 @@ public class RqueueRedisTemplate<V extends Serializable> {
     return redisTemplate.delete(key);
   }
 
+  public Object delete(Collection<String> keys) {
+    Object result =
+        RedisUtils.executePipeLine(
+            getRedisTemplate(),
+            ((connection, keySerializer, valueSerializer) -> {
+              // TODO fix cross slot error
+              for (String key : keys) {
+                connection.del(keySerializer.serialize(key));
+              }
+            }));
+    log.debug("Pipeline result: {}", result);
+    return result;
+  }
+
   public DataType type(String key) {
     return redisTemplate.type(key);
   }
@@ -128,5 +145,41 @@ public class RqueueRedisTemplate<V extends Serializable> {
 
   public Boolean zadd(String key, V val, long score) {
     return redisTemplate.opsForZSet().add(key, val, score);
+  }
+
+  public void rename(String oldKey, String newKey) {
+    rename(Collections.singletonList(oldKey), Collections.singletonList(newKey));
+  }
+
+  public void rename(List<String> oldKeys, List<String> newKeys) {
+    if (oldKeys.size() != newKeys.size()) {
+      throw new IllegalArgumentException("Old key and new key space set is different");
+    }
+    List<String> srcKeys = new LinkedList<>();
+    List<String> dstKeys = new LinkedList<>();
+    for (int i = 0; i < oldKeys.size(); i++) {
+      String key = oldKeys.get(i);
+      if (exist(key)) {
+        srcKeys.add(key);
+        dstKeys.add(newKeys.get(i));
+      }
+    }
+    log.debug(
+        "Pipeline result: {}",
+        RedisUtils.executePipeLine(
+            redisTemplate,
+            (connection, keySerializer, valueSerializer) -> {
+              for (int i = 0; i < srcKeys.size(); i++) {
+                // TODO fix cross slot error?
+                byte[] src = keySerializer.serialize(srcKeys.get(i));
+                byte[] dst = keySerializer.serialize(dstKeys.get(i));
+                connection.rename(src, dst);
+              }
+            }));
+    if (srcKeys.size() != oldKeys.size()) {
+      List<String> diff = new LinkedList<>(oldKeys);
+      diff.removeAll(srcKeys);
+      log.info("Some keys does not exist diff: {}", diff);
+    }
   }
 }

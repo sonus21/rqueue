@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.config;
 import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
+import com.github.sonus21.rqueue.annotation.MessageListener;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -87,6 +88,13 @@ public class SimpleRqueueListenerContainerFactory {
   private PriorityMode priorityMode;
 
   /**
+   * Whether all beans of spring application should be inspected to find methods annotated with
+   * {@link RqueueListener}, otherwise it will only inspect beans those are annotated with {@link
+   * MessageListener}
+   */
+  private boolean inspectAllBean = true;
+
+  /**
    * Whenever a consumer fails then the consumed message can be delayed for further consumption. The
    * delay of that can be configured, by default same message would be retried in 5 seconds and this
    * will continue due to default task interval. {@link
@@ -145,7 +153,7 @@ public class SimpleRqueueListenerContainerFactory {
    */
   public RqueueMessageHandler getRqueueMessageHandler() {
     if (rqueueMessageHandler == null) {
-      rqueueMessageHandler = new RqueueMessageHandler(getMessageConverter());
+      rqueueMessageHandler = new RqueueMessageHandler(getMessageConverter(), inspectAllBean);
     }
     return rqueueMessageHandler;
   }
@@ -218,11 +226,6 @@ public class SimpleRqueueListenerContainerFactory {
     return Collections.singletonList(getMessageConverter());
   }
 
-  /** @return the message converter */
-  public MessageConverter getMessageConverter() {
-    return messageConverter;
-  }
-
   /**
    * For message (de)serialization we might need one or more message converters, configure those
    * message converters
@@ -238,6 +241,11 @@ public class SimpleRqueueListenerContainerFactory {
     } else {
       setMessageConverter(new CompositeMessageConverter(messageConverters));
     }
+  }
+
+  /** @return the message converter */
+  public MessageConverter getMessageConverter() {
+    return messageConverter;
   }
 
   /**
@@ -466,5 +474,9 @@ public class SimpleRqueueListenerContainerFactory {
   public void setMessageHeaders(MessageHeaders messageHeaders) {
     notEmpty(messageHeaders, "messageHeaders can not be empty");
     this.messageHeaders = messageHeaders;
+  }
+
+  public void setInspectAllBean(boolean inspectAllBean) {
+    this.inspectAllBean = inspectAllBean;
   }
 }

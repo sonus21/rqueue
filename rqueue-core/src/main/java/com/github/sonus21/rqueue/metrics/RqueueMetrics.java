@@ -16,9 +16,9 @@
 
 package com.github.sonus21.rqueue.metrics;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import io.micrometer.core.instrument.Gauge;
@@ -40,23 +40,21 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
-  private final RqueueRedisTemplate<String> rqueueMessageTemplate;
   private final QueueCounter queueCounter;
   @Autowired private MetricsProperties metricsProperties;
   @Autowired private MeterRegistry meterRegistry;
+  @Autowired private RqueueStringDao rqueueStringDao;
 
-  public RqueueMetrics(
-      RqueueRedisTemplate<String> rqueueMessageTemplate, QueueCounter queueCounter) {
-    this.rqueueMessageTemplate = rqueueMessageTemplate;
+  public RqueueMetrics(QueueCounter queueCounter) {
     this.queueCounter = queueCounter;
   }
 
   private long size(String name, boolean isZset) {
     Long val;
     if (!isZset) {
-      val = rqueueMessageTemplate.getListSize(name);
+      val = rqueueStringDao.getListSize(name);
     } else {
-      val = rqueueMessageTemplate.getZsetSize(name);
+      val = rqueueStringDao.getSortedSetSize(name);
     }
     if (val == null) {
       return 0;
@@ -101,7 +99,7 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   @Override
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
-    if (event.isStart()) {
+    if (event.isStartup()) {
       monitor();
     }
   }

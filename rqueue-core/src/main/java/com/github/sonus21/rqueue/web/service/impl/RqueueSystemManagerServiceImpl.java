@@ -18,16 +18,15 @@ package com.github.sonus21.rqueue.web.service.impl;
 
 import static com.google.common.collect.Lists.newArrayList;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
-import com.github.sonus21.rqueue.utils.RedisUtils;
-import com.github.sonus21.rqueue.web.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +34,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -45,16 +43,16 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerService {
   private final RqueueConfig rqueueConfig;
-  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  private final RqueueStringDao rqueueStringDao;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
 
   @Autowired
   public RqueueSystemManagerServiceImpl(
       RqueueConfig rqueueConfig,
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate,
+      RqueueStringDao rqueueStringDao,
       RqueueSystemConfigDao rqueueSystemConfigDao) {
     this.rqueueConfig = rqueueConfig;
-    this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
+    this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
   }
 
@@ -76,7 +74,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   @Override
   public BaseResponse deleteQueue(String queueName) {
     QueueConfig queueConfig =
-        rqueueSystemConfigDao.getQConfig(rqueueConfig.getQueueConfigKey(queueName));
+        rqueueSystemConfigDao.getQConfig(rqueueConfig.getQueueConfigKey(queueName), true);
     BaseResponse baseResponse = new BaseResponse();
     if (queueConfig == null) {
       baseResponse.setCode(1);
@@ -85,14 +83,8 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
     }
     queueConfig.setDeletedOn(System.currentTimeMillis());
     queueConfig.setDeleted(true);
-    RedisUtils.executePipeLine(
-        stringRqueueRedisTemplate.getRedisTemplate(),
-        ((connection, keySerializer, valueSerializer) -> {
-          for (String key : queueKeys(queueConfig)) {
-            connection.del(key.getBytes());
-          }
-          connection.set(queueConfig.getId().getBytes(), valueSerializer.serialize(queueConfig));
-        }));
+    rqueueStringDao.deleteAndSet(
+        queueKeys(queueConfig), Collections.singletonMap(queueConfig.getId(), queueConfig));
     baseResponse.setCode(0);
     baseResponse.setMessage("Queue deleted");
     return baseResponse;
@@ -133,7 +125,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
     for (QueueDetail queueDetail : queueDetails) {
       queues[i++] = queueDetail.getName();
     }
-    stringRqueueRedisTemplate.addToSet(rqueueConfig.getQueuesKey(), queues);
+    rqueueStringDao.appendToSet(rqueueConfig.getQueuesKey(), queues);
     List<String> ids =
         Arrays.stream(queues).map(rqueueConfig::getQueueConfigKey).collect(Collectors.toList());
     List<QueueConfig> queueConfigs = rqueueSystemConfigDao.findAllQConfig(ids);
@@ -159,7 +151,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   @Override
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
-    if (event.isStart()) {
+    if (event.isStartup()) {
       List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
       if (queueDetails.isEmpty()) {
         return;
@@ -170,11 +162,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
 
   @Override
   public List<String> getQueues() {
-    Set<String> members = stringRqueueRedisTemplate.getMembers(rqueueConfig.getQueuesKey());
-    if (CollectionUtils.isEmpty(members)) {
-      return Collections.emptyList();
-    }
-    return new ArrayList<>(members);
+    return rqueueStringDao.readFromSet(rqueueConfig.getQueuesKey());
   }
 
   @Override

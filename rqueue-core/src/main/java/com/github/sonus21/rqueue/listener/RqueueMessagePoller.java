@@ -64,12 +64,12 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
         .getTaskExecutor()
         .execute(
             new RqueueExecutor(
-                message,
-                queueDetail,
-                queueThread.getSemaphore(),
                 container,
                 rqueueConfig,
-                postProcessingHandler));
+                postProcessingHandler,
+                message,
+                queueDetail,
+                queueThread.getSemaphore()));
   }
 
   boolean shouldExit() {

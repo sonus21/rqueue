@@ -23,13 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
-public class RqueueMessageTest {
+@CoreUnitTest
+class RqueueMessageTest extends TestBase {
   private ObjectMapper objectMapper = new ObjectMapper();
   private String queueName = "test-queue";
   private String queueMessage = "This is a test message";
@@ -37,7 +37,7 @@ public class RqueueMessageTest {
   private long delay = 100L;
 
   @Test
-  public void testSetReEnqueuedAt() {
+  void setReEnqueuedAt() {
     RqueueMessage message =
         RqueueMessage.builder()
             .queueName(queueName)
@@ -52,7 +52,7 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testObjectEquality() throws JsonProcessingException {
+  void objectEquality() throws JsonProcessingException {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -67,7 +67,7 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testObjectEqualityWithoutDelay() throws JsonProcessingException {
+  void objectEqualityWithoutDelay() throws JsonProcessingException {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -82,7 +82,7 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testObjectEqualityWithDifferentObject() {
+  void objectEqualityWithDifferentObject() {
     RqueueMessage message =
         RqueueMessage.builder()
             .queueName(queueName)
@@ -95,7 +95,7 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testObjectEqualityWithDifferentId() {
+  void objectEqualityWithDifferentId() {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -119,7 +119,7 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testToString() {
+  void RqueueMessageToString() {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -143,7 +143,7 @@ public class RqueueMessageTest {
   }
 
   @Test
-  public void testIsPeriodic() {
+  void isPeriodic() {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())

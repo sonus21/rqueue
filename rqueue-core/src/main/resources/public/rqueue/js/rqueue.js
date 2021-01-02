@@ -18,6 +18,7 @@ var queueName = null;
 var dataPageUrl = null;
 var dataKey = null;
 var dataName = null;
+var deleteActionMessage = null;
 var dataType = null;
 var currentPage = 0;
 var defaultPageSize = null;
@@ -63,9 +64,9 @@ function json(data) {
 function drawChartElement(data, options, div_id) {
   google.charts.load('current', {'packages': ['corechart']});
   google.charts.setOnLoadCallback(function () {
-    var chart = new google.visualization.LineChart(
+    let chart = new google.visualization.LineChart(
         document.getElementById(div_id));
-    var chartData = google.visualization.arrayToDataTable(data, false);
+    let chartData = google.visualization.arrayToDataTable(data, false);
     chart.draw(chartData, options);
   });
 }
@@ -73,11 +74,11 @@ function drawChartElement(data, options, div_id) {
 function drawChart(payload, div_id) {
   ajaxRequest(getAbsoluteUrl('rqueue/api/v1/chart'), 'POST', payload,
       function (response) {
-        var title = response.title;
-        var hTitle = response.hTitle;
-        var vTitle = response.vTitle;
-        var data = response.data;
-        var options = {
+        let title = response.title;
+        let hTitle = response.hTitle;
+        let vTitle = response.vTitle;
+        let data = response.data;
+        let options = {
           title: title,
           hAxis: {title: hTitle, minValue: 0, titleTextStyle: {color: '#333'}},
           vAxis: {minValue: 0, title: vTitle}
@@ -91,8 +92,8 @@ function drawChart(payload, div_id) {
 }
 
 function refreshStatsChart(chartParams, div_id) {
-  var types = [];
-  var aggregatorType = $('#stats-aggregator-type :selected').val();
+  let types = [];
+  let aggregatorType = $('#stats-aggregator-type :selected').val();
   $.each($("input[name='data-type']:checked"), function () {
     types.push($(this).val());
   });
@@ -111,16 +112,159 @@ function refreshLatencyChart(chartParams, div_id) {
 //  Data Exploration
 //==================================================================
 
-function exploreData(e) {
-  var element = $(e);
+function exploreData() {
+  let element = $(this);
   dataName = element.data('name');
   dataType = element.data('type');
   dataKey = element.data('key');
 }
 
+function displayHeader(response, displayPageNumberEl, pageSize) {
+  let rows = response.rows;
+  let tableHeader = $('#table-header');
+  displayPageNumberEl.empty();
+  $('#clear-queue').hide();
+  for (let i = 0; i < response.actions.length; i++) {
+    let action = response.actions[i];
+    switch (action.type) {
+      case 'DELETE':
+        $('#clear-queue').show();
+        deleteActionMessage = action.description;
+        break;
+      default:
+        console.log("Unknown action", action)
+    }
+  }
+  if (rows.length === pageSize) {
+    $('#next-page-button').prop("disabled", false);
+  } else {
+    $('#next-page-button').prop("disabled", true);
+  }
+  if (currentPage > 0) {
+    $('#previous-page-button').prop("disabled", false);
+  } else {
+    $('#previous-page-button').prop("disabled", true);
+    tableHeader.empty();
+    let headers = response.headers;
+    for (let i = 0; i < headers.length; i++) {
+      tableHeader.append("<th>" + headers[i] + "</th>");
+    }
+  }
+}
+
+function constructTable(table, className) {
+  // table : { headers: ["item", "score"], "rows: [{"columns":[{type:, value:, meta:[]}]}] }
+  //
+  let tableEl = $('<table>').addClass(className);
+  let thead = $('<thead>');
+  let headers = table.headers;
+  let rows = table.rows;
+  for (let i = 0; i < headers.length; i++) {
+    let row = $('<th>').text(headers[i]);
+    thead.append(row);
+  }
+  let tbody = $('<tbody>');
+  for (let i = 0; i < rows.length; i++) {
+    let tr = $('<tr>');
+    let row = rows[i];
+    let columns = row.columns;
+    for (let j = 0; j < columns.length; j++) {
+      let column = columns[j];
+      if (column.type === 'DISPLAY') {
+        tr.append($('<td>').text(column.value))
+      } else {
+        console.log("unknown column type", column);
+      }
+    }
+    tbody.append(tr);
+  }
+  tableEl.append(thead).append(tbody);
+  return tableEl;
+}
+
+function jobsCloseButton() {
+  $(this).siblings('.jobs-div').remove();
+  $(this).remove();
+}
+
+function jobsButton() {
+  let el = $(this);
+  let messageId = el.attr('id');
+  let url = getAbsoluteUrl('rqueue/api/v1/jobs?message-id=' + messageId);
+  el.siblings('.jobs-div').remove();
+  el.siblings('.jobs-closer-btn').remove();
+  let jobsDiv = $('<div>').addClass('jobs-div');
+  let jobsDivCloser = $("<button>").addClass(
+      'btn btn-link jobs-closer-btn').text("close");
+  $.ajax({
+    url: url,
+    success: function (response) {
+      if (response.code === 0) {
+        if (response.rows.length > 0) {
+          jobsDiv.append(
+              constructTable(response, 'table table-bordered jobs-table'));
+        } else {
+          jobsDiv.append($("<strong>").text(response.message));
+        }
+        el.parent().append(jobsDivCloser);
+        el.parent().append(jobsDiv);
+      } else {
+        alert("Failed:" + response.message + " Please retry!");
+        console.log(response);
+      }
+    },
+    fail: function (response) {
+      console.log('failed, ' + response);
+      showError("Something went wrong! Please retry!");
+    }
+  });
+}
+
+function renderColumn(column) {
+  let td = $('<td>');
+  if (column.type === 'DISPLAY') {
+    if (column.meta !== undefined) {
+      let div = $('<div>');
+      div.append($('<p>').text(column.value));
+      for (let i = 0; i < column.meta.length; i++) {
+        let meta = column.meta[i];
+        switch (meta.type) {
+          case 'JOBS_BUTTON':
+            div.append($('<button>').attr('id', meta.data).addClass(
+                'btn btn-link jobs-btn').text('Jobs'))
+            break
+          default:
+            console.log("Unknown meta type", meta);
+        }
+      }
+      td.append(div);
+    } else {
+      td.text(column.value);
+    }
+  } else if (column.type === 'ACTION') {
+    if (column.value === 'DELETE') {
+      td.append(
+          $('<a>').addClass('delete-message-btn btn-danger').text('Delete'));
+    } else {
+      console.log("Unknown value for action" + column.value);
+    }
+  }
+  return td;
+}
+
+function renderRow(row, tableBody) {
+  let tr = $('<tr>');
+  let columns = row.columns;
+  for (let j = 0; j < columns.length; j++) {
+    let column = columns[j];
+    tr.append(renderColumn(column));
+  }
+  tableBody.append(tr);
+}
+
 function displayTable(nextOrPrev) {
-  var pageSize = parseInt($('#page-size').val());
-  var pageNumber = currentPage;
+  let pageSize = parseInt($('#page-size').val());
+  let pageNumber = currentPage;
   if (nextOrPrev === null) {
     defaultPageSize = pageSize + '';
   } else if (nextOrPrev === true) {
@@ -128,7 +272,7 @@ function displayTable(nextOrPrev) {
   } else {
     pageNumber -= 1;
   }
-  var data = {
+  let data = {
     'src': queueName,
     'count': pageSize,
     'page': pageNumber,
@@ -142,49 +286,13 @@ function displayTable(nextOrPrev) {
     traditional: true,
     success: function (response) {
       currentPage = pageNumber;
-      var rows = response.rows;
-      var tableHeader = $('#table-header');
-      var displayPageNumberEl = $('#display-page-number');
-      displayPageNumberEl.empty();
-      $('#clear-queue').hide();
-      for (var i = 0; i < response.actions.length; i++) {
-        switch (response.actions[i]) {
-          case 'DELETE':
-            $('#clear-queue').show();
-            break;
-          default:
-            console.log("Unknown action", response.actions[i])
-        }
-      }
-      if (rows.length === pageSize) {
-        $('#next-page-button').show();
-      } else {
-        $('#next-page-button').hide();
-      }
-      if (currentPage > 0) {
-        $('#previous-page-button').show();
-      } else {
-        $('#previous-page-button').hide();
-        tableHeader.empty();
-        var headers = response.headers;
-        for (var i = 0; i < headers.length; i++) {
-          tableHeader.append("<th>" + headers[i] + "</th>");
-        }
-      }
-      var tableBody = $('#table-body');
+      let displayPageNumberEl = $('#display-page-number');
+      displayHeader(response, displayPageNumberEl, pageSize);
+      let tableBody = $('#table-body');
       tableBody.empty();
-      for (var i = 0; i < rows.length; i++) {
-        var tds = "";
-        var row = rows[i];
-        for (var j = 0; j < row.length - 1; j++) {
-          tds += ("<td>" + row[j] + "</td>");
-        }
-        if (row[row.length - 1] === 'DELETE') {
-          tds += ("<td><a href='#' class='delete-message-btn btn-danger' onclick='deleteMessage(this)'>Delete </a></td>");
-        } else {
-          tds += ("<td>" + row[j] + "</td>");
-        }
-        tableBody.append("<tr>" + tds + "</tr>");
+      let rows = response.rows;
+      for (let i = 0; i < rows.length; i++) {
+        renderRow(rows[i], tableBody);
       }
       displayPageNumberEl.append("Page #", pageNumber + 1);
     },
@@ -213,10 +321,10 @@ function prevPage() {
 }
 
 function updateDataType(element, callback) {
-  var el = $(element);
-  var key = el.val();
-  var typeIdEl = $('#' + el.attr('id') + "-type");
-  var url = getAbsoluteUrl('rqueue/api/v1/data-type?name=' + key);
+  let el = $(element);
+  let key = el.val();
+  let typeIdEl = $('#' + el.attr('id') + "-type");
+  let url = getAbsoluteUrl('rqueue/api/v1/data-type?name=' + key);
   typeIdEl.empty();
   $.ajax({
     url: url,
@@ -242,8 +350,8 @@ function updateDataType(element, callback) {
 
 $('#explore-queue').on('hidden.bs.modal', function () {
   currentPage = 0;
-  $('#previous-page-button').hide();
-  $('#next-page-button').hide();
+  $('#previous-page-button').prop("disabled", true);
+  $('#next-page-button').prop("disabled", true);
   $('#display-page-number').empty();
   $('#page-size').val(defaultPageSize);
 });
@@ -253,7 +361,7 @@ $('#explore-queue').on('hidden.bs.modal', function () {
 //==============================================================
 
 function enableKeyForm() {
-  var dataType = $('#data-name-type').text();
+  let dataType = $('#data-name-type').text();
   if (dataType === 'ZSET') {
     $('#data-key-form').show();
   } else {
@@ -264,13 +372,12 @@ function enableKeyForm() {
 }
 
 function enableFormsIfRequired() {
-  var dstDataType = $('#dst-data-type').text();
-  var srcDataType = $('#src-data-type').text();
-  debugger
+  let dstDataType = $('#dst-data-type').text();
+  let srcDataType = $('#src-data-type').text();
   if (dstDataType === 'ZSET') {
     $('#priority-controller-form').show();
   } else if (dstDataType === '' && srcDataType !== '') {
-    var dstDataName = dstDataEl.val();
+    let dstDataName = dstDataEl.val();
     if (dstDataName !== '') {
       $('#dst-data-type-input-form').show();
     }
@@ -294,7 +401,7 @@ function getSourceType() {
 }
 
 function getDstType() {
-  var type = convertVal($('#dst-data-type').text());
+  let type = convertVal($('#dst-data-type').text());
   if (type !== null) {
     return type;
   }
@@ -302,15 +409,15 @@ function getDstType() {
 }
 
 $('#move-button').on("click", function () {
-  var messageCount = $('#number-of-messages').val();
-  var other = {};
-  var dstType = getSourceType();
-  var srcType = getDstType();
+  let messageCount = $('#number-of-messages').val();
+  let other = {};
+  let dstType = getSourceType();
+  let srcType = getDstType();
   if (srcType === null) {
     alert("Source cannot be empty.");
     return;
   }
-  var payload = {
+  let payload = {
     'src': srcDataEl.val(),
     'srcType': srcType,
     'dst': dstDataEl.val(),
@@ -320,15 +427,17 @@ $('#move-button').on("click", function () {
     other['messageCount'] = parseInt(messageCount);
   }
   if ($('#priority-controller-form').is(":visible")) {
-    var val = $('#priority-val').val();
+    let val = $('#priority-val').val();
     if (val !== '') {
       other['newScore'] = val;
     }
-    var type = getSelectedOption('priority-type');
+    let type = getSelectedOption('priority-type');
     if (type === 'REL') {
       other['fixedScore'] = false;
     } else if (type === 'ABS') {
       other['fixedScore'] = true;
+    } else {
+      throw type;
     }
   }
   payload['other'] = other;
@@ -354,8 +463,9 @@ $('#move-button').on("click", function () {
 
 function deleteModalBody() {
   if (deleteButtonId === "DELETE_ALL" && dataName !== undefined) {
-    return "Do you really want to delete <b>Queue: </b>" + dataName
-        + "&nbsp;?&nbsp;This process cannot be undone.";
+    return "<strong>Are you sure?</strong> </br>You want to delete <b>"
+        + deleteActionMessage
+        + "</b>&nbsp;?&nbsp;</br>This process cannot be undone.";
   } else if (deleteButtonId === "DELETE_QUEUE" && queueName !== undefined) {
     return "Do you really want to delete <b>Queue: </b>" + queueName
         + "&nbsp;?&nbsp;This process cannot be undone.";
@@ -368,9 +478,10 @@ function updateDeleteModal() {
   $('#delete-modal').modal('show');
 }
 
-function deleteMessage(e) {
-  var id = e.parentNode.parentNode.children[0].textContent;
-  var url = getAbsoluteUrl('rqueue/api/v1/data-set/' + queueName + "/" + id);
+function deleteMessage() {
+  let id = $($($($(this).parent()).parent()).children()[0]).text();
+  let url = getAbsoluteUrl(
+      'rqueue/api/v1/data-set/' + queueName + "/message/" + id);
   $.ajax({
     url: url,
     type: 'DELETE',
@@ -402,7 +513,7 @@ $('.delete-queue').on("click", function () {
 
 function makeQueueEmpty() {
   $.ajax({
-    url: getAbsoluteUrl("rqueue/api/v1/data-set/" + dataName),
+    url: getAbsoluteUrl("rqueue/api/v1/data-set/" + queueName + "/" + dataName),
     type: 'DELETE',
     success: function (response) {
       if (response.code === 0) {
@@ -450,3 +561,14 @@ $('.delete-btn').on("click", function () {
   }
 });
 //=======================================================================
+// Attach events to avoid CSP issue
+//=======================================================================
+$(document).on('click', '#previous-page-button', prevPage);
+$(document).on('click', '#next-page-button', nextPage);
+$(document).on('click', '#poll-queue-btn', pollQueue);
+$(document).on('click', '#clear-queue', deleteAll);
+$(document).on('click', '.delete-message-btn', deleteMessage);
+$(document).on('click', '#view-data', exploreData);
+$(document).on('click', '.data-explorer', exploreData);
+$(document).on('click', '.jobs-btn', jobsButton);
+$(document).on('click', '.jobs-closer-btn', jobsCloseButton);

@@ -16,19 +16,22 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
-import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_DAY;
+import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
+import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.impl.JobImpl;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
+import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.db.MessageStatus;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
@@ -39,57 +42,71 @@ import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 class RqueueExecutor extends MessageContainerBase {
-  private final QueueDetail queueDetail;
-  private final RqueueMessage rqueueMessage;
   private final RqueueMessageHandler rqueueMessageHandler;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final PostProcessingHandler postProcessingHandler;
   private final Semaphore semaphore;
   private final RqueueConfig rqueueConfig;
   private Message<String> message;
-  private MessageMetadata messageMetadata;
-  private Object userMessage;
   private boolean updatedToProcessing;
+  private JobImpl job;
+  private ExecutionStatus status;
+  private Throwable error;
+  private int failureCount;
 
   RqueueExecutor(
-      RqueueMessage rqueueMessage,
-      QueueDetail queueDetail,
-      Semaphore semaphore,
       WeakReference<RqueueMessageListenerContainer> container,
       RqueueConfig rqueueConfig,
-      PostProcessingHandler postProcessingHandler) {
+      PostProcessingHandler postProcessingHandler,
+      RqueueMessage rqueueMessage,
+      QueueDetail queueDetail,
+      Semaphore semaphore) {
     super(log, queueDetail.getName(), container);
-    this.rqueueMessage = rqueueMessage;
-    this.queueDetail = queueDetail;
-    this.semaphore = semaphore;
-    this.rqueueMessageHandler = Objects.requireNonNull(container.get()).getRqueueMessageHandler();
     this.rqueueConfig = rqueueConfig;
     this.postProcessingHandler = postProcessingHandler;
     this.rqueueMessageMetadataService =
-        Objects.requireNonNull(container.get()).getRqueueMessageMetadataService();
-    init();
+        Objects.requireNonNull(container.get()).rqueueMessageMetadataService();
+    this.rqueueMessageHandler = Objects.requireNonNull(container.get()).getRqueueMessageHandler();
+    this.semaphore = semaphore;
+    init(rqueueMessage, queueDetail);
   }
 
-  private void init() {
-    this.message =
+  private void init(RqueueMessage rqueueMessage, QueueDetail queueDetail) {
+    Message<String> tmpMessage =
         MessageBuilder.createMessage(
             rqueueMessage.getMessage(),
-            RqueueMessageHeaders.buildMessageHeaders(queueDetail.getName(), rqueueMessage));
+            buildMessageHeaders(queueDetail.getName(), rqueueMessage, null, null));
+    MessageMetadata messageMetadata =
+        rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
+    Throwable t = null;
+    Object userMessage = null;
     try {
-      this.userMessage =
+      userMessage =
           RqueueMessageUtils.convertMessageToObject(
-              message, rqueueMessageHandler.getMessageConverter());
+              tmpMessage, rqueueMessageHandler.getMessageConverter());
     } catch (Exception e) {
       log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
+      t = e;
       throw e;
+    } finally {
+      this.job =
+          new JobImpl(
+              rqueueConfig,
+              Objects.requireNonNull(container.get()).rqueueMessageMetadataService(),
+              Objects.requireNonNull(container.get()).rqueueJobDao(),
+              queueDetail,
+              messageMetadata,
+              rqueueMessage,
+              userMessage,
+              t);
     }
-    this.messageMetadata = rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
+    this.failureCount = job.getRqueueMessage().getFailureCount();
   }
 
   private int getMaxRetryCount() {
-    return rqueueMessage.getRetryCount() == null
-        ? queueDetail.getNumRetry()
-        : rqueueMessage.getRetryCount();
+    return job.getRqueueMessage().getRetryCount() == null
+        ? job.getQueueDetail().getNumRetry()
+        : job.getRqueueMessage().getRetryCount();
   }
 
   private void updateCounter(boolean fail) {
@@ -99,14 +116,14 @@ class RqueueExecutor extends MessageContainerBase {
       return;
     }
     if (fail) {
-      counter.updateFailureCount(queueDetail.getName());
+      counter.updateFailureCount(job.getQueueDetail().getName());
     } else {
-      counter.updateExecutionCount(queueDetail.getName());
+      counter.updateExecutionCount(job.getQueueDetail().getName());
     }
   }
 
   private long maxExecutionTime() {
-    return queueDetail.getVisibilityTimeout() - DELTA_BETWEEN_RE_ENQUEUE_TIME;
+    return job.getQueueDetail().getVisibilityTimeout() - DELTA_BETWEEN_RE_ENQUEUE_TIME;
   }
 
   private long getMaxProcessingTime() {
@@ -114,22 +131,28 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean isMessageDeleted() {
-    if (this.messageMetadata.isDeleted()) {
+    if (job.getMessageMetadata().isDeleted()) {
       return true;
     }
-    this.messageMetadata = rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
-    return this.messageMetadata.isDeleted();
+    MessageMetadata newMessageMetadata =
+        rqueueMessageMetadataService.getOrCreateMessageMetadata(job.getRqueueMessage());
+    if (!newMessageMetadata.equals(job.getMessageMetadata())) {
+      // TODO what happens to the current execution data
+      job.setMessageMetadata(newMessageMetadata);
+    }
+    return job.getMessageMetadata().isDeleted();
   }
 
   private boolean shouldIgnore() {
     return !Objects.requireNonNull(container.get())
         .getPreExecutionMessageProcessor()
-        .process(userMessage, rqueueMessage);
+        .process(job.getMessage(), job.getRqueueMessage());
   }
 
   private boolean isOldMessage() {
-    return messageMetadata.getRqueueMessage() != null
-        && messageMetadata.getRqueueMessage().getQueuedTime() != rqueueMessage.getQueuedTime();
+    return job.getMessageMetadata().getRqueueMessage() != null
+        && job.getMessageMetadata().getRqueueMessage().getQueuedTime()
+            != job.getRqueueMessage().getQueuedTime();
   }
 
   private int getRetryCount() {
@@ -141,7 +164,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean queueInActive() {
-    return !isQueueActive(queueDetail.getName());
+    return !isQueueActive(job.getQueueDetail().getName());
   }
 
   private ExecutionStatus getStatus() {
@@ -151,11 +174,11 @@ class RqueueExecutor extends MessageContainerBase {
     if (shouldIgnore()) {
       return ExecutionStatus.IGNORED;
     }
-    if (isOldMessage()) {
-      return ExecutionStatus.OLD_MESSAGE;
-    }
     if (isMessageDeleted()) {
       return ExecutionStatus.DELETED;
+    }
+    if (isOldMessage()) {
+      return ExecutionStatus.OLD_MESSAGE;
     }
     return null;
   }
@@ -165,9 +188,7 @@ class RqueueExecutor extends MessageContainerBase {
       return;
     }
     this.updatedToProcessing = true;
-    messageMetadata.setStatus(MessageStatus.PROCESSING);
-    this.rqueueMessageMetadataService.save(
-        messageMetadata, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
+    this.job.updateMessageStatus(MessageStatus.PROCESSING);
   }
 
   private void logExecutionTimeWarning(
@@ -179,83 +200,127 @@ class RqueueExecutor extends MessageContainerBase {
           Level.WARN,
           "Message listener is taking longer time [Queue: {}, TaskStatus: {}] MaxAllowedTime: {}, ExecutionTime: {}",
           null,
-          queueDetail.getQueueName(),
+          job.getQueueDetail().getName(),
           status,
           maxAllowedTime,
           executionTime);
     }
   }
 
-  private void processSimpleMessage() {
-    int failureCount = rqueueMessage.getFailureCount();
+  private void begin() {
+    Execution execution = job.execute();
+    RqueueMessage rqueueMessage = job.getRqueueMessage();
+    this.message =
+        MessageBuilder.createMessage(
+            rqueueMessage.getMessage(),
+            buildMessageHeaders(job.getQueueDetail().getName(), rqueueMessage, job, execution));
+    this.error = null;
+    this.status = getStatus();
+  }
+
+  private void end() {
+    if (status == null) {
+      job.updateExecutionStatus(ExecutionStatus.FAILED, error);
+    } else {
+      job.updateExecutionStatus(status, error);
+    }
+  }
+
+  private void execute() {
+    try {
+      updateToProcessing();
+      updateCounter(false);
+      rqueueMessageHandler.handleMessage(message);
+      status = ExecutionStatus.SUCCESSFUL;
+    } catch (MessagingException e) {
+      updateCounter(true);
+      failureCount += 1;
+      error = e;
+    } catch (Exception e) {
+      updateCounter(true);
+      failureCount += 1;
+      error = e;
+      log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, job.getRqueueMessage());
+    }
+  }
+
+  private void handleMessage() {
     long maxProcessingTime = getMaxProcessingTime();
     long startTime = System.currentTimeMillis();
     int retryCount = getRetryCount();
     int attempt = 1;
-    ExecutionStatus status;
     try {
       do {
-        log(Level.DEBUG, "Attempt {} message: {}", null, attempt, userMessage);
-        status = getStatus();
-        if (status != null) {
-          break;
-        }
-        try {
-          updateToProcessing();
-          updateCounter(false);
-          rqueueMessageHandler.handleMessage(message);
-          status = ExecutionStatus.SUCCESSFUL;
-        } catch (MessagingException e) {
-          updateCounter(true);
-          failureCount += 1;
-        } catch (Exception e) {
-          updateCounter(true);
-          failureCount += 1;
-          log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, rqueueMessage);
+        log(Level.DEBUG, "Attempt {} message: {}", null, attempt, job.getMessage());
+        begin();
+        if (status == null) {
+          execute();
         }
         retryCount -= 1;
         attempt += 1;
+        end();
       } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
       postProcessingHandler.handle(
-          queueDetail,
-          rqueueMessage,
-          userMessage,
-          messageMetadata,
-          (status == null ? ExecutionStatus.FAILED : status),
-          failureCount,
-          startTime);
+          job, (status == null ? ExecutionStatus.FAILED : status), failureCount);
       logExecutionTimeWarning(maxProcessingTime, startTime, status);
     } finally {
       semaphore.release();
     }
   }
 
-  private void processPeriodicMessage() {
-    RqueueMessage newMessage =
-        rqueueMessage.toBuilder().processAt(rqueueMessage.nextProcessAt()).build();
+  private long getTtlForScheduledMessageKey(RqueueMessage message) {
+    // Assume a message can be executing for at most 2x of their visibility timeout
+    // due to failure in some other job same message should not be enqueued
+    long expiryInSeconds = 2 * job.getQueueDetail().getVisibilityTimeout() / ONE_MILLI;
+    // A message wil be processed after period, so it must stay in the system till that time
+    // how many more seconds are left to process this message
+    long remainingTime = (message.getProcessAt() - System.currentTimeMillis()) / ONE_MILLI;
+    if (remainingTime > 0) {
+      expiryInSeconds += remainingTime;
+    }
+    return expiryInSeconds;
+  }
+
+  private String getScheduledMessageKey(RqueueMessage message) {
     // avoid duplicate message enqueue due to retry by checking the message key
     // avoid cross slot error by using tagged queue name in the key
-    String messageId =
-        queueDetail.getQueueName()
-            + "::"
-            + rqueueMessage.getId()
-            + "::sch::"
-            + newMessage.getProcessAt();
+    // enqueuing duplicate message can lead to duplicate consumption when one job is executing task
+    // at the same time this message was enqueued.
+    return String.format(
+        "%s%s%s%ssch%s%d",
+        job.getQueueDetail().getQueueName(),
+        REDIS_KEY_SEPARATOR,
+        job.getRqueueMessage().getId(),
+        REDIS_KEY_SEPARATOR,
+        REDIS_KEY_SEPARATOR,
+        message.getProcessAt());
+  }
+
+  private void processPeriodicMessage() {
+    RqueueMessage newMessage =
+        job.getRqueueMessage().toBuilder()
+            .processAt(job.getRqueueMessage().nextProcessAt())
+            .build();
+    String messageKey = getScheduledMessageKey(newMessage);
+    long expiryInSeconds = getTtlForScheduledMessageKey(newMessage);
     log.debug(
         "Schedule periodic message: {} Status: {}",
-        rqueueMessage,
+        job.getRqueueMessage(),
         getRqueueMessageTemplate()
             .scheduleMessage(
-                queueDetail.getDelayedQueueName(), messageId, newMessage, SECONDS_IN_A_DAY));
-    processSimpleMessage();
+                job.getQueueDetail().getDelayedQueueName(),
+                messageKey,
+                newMessage,
+                expiryInSeconds));
+    handleMessage();
   }
 
   @Override
-  void start() {
-    if (rqueueMessage.isPeriodicTask()) {
+  public void start() {
+    if (job.getRqueueMessage().isPeriodicTask()) {
       processPeriodicMessage();
     } else {
-      processSimpleMessage();
+      handleMessage();
     }
   }
 }

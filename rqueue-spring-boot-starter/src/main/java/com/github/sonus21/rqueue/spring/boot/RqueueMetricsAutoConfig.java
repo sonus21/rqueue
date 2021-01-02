@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.spring.boot;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.metrics.QueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
@@ -28,7 +27,6 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -44,9 +42,7 @@ import org.springframework.context.annotation.Import;
 public class RqueueMetricsAutoConfig {
   @Bean
   public RqueueMetricsRegistry rqueueMetricsRegistry(
-      MetricsProperties metricsProperties,
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> rqueueRedisTemplate,
-      RqueueMetricsProperties rqueueMetricsProperties) {
+      MetricsProperties metricsProperties, RqueueMetricsProperties rqueueMetricsProperties) {
     Tags actualTags = Tags.empty();
     for (Entry<String, String> e : getTags(metricsProperties).entrySet()) {
       actualTags = Tags.concat(actualTags, e.getKey(), e.getValue());
@@ -56,7 +52,7 @@ public class RqueueMetricsAutoConfig {
     }
     rqueueMetricsProperties.setMetricTags(actualTags);
     QueueCounter queueCounter = new QueueCounter();
-    return new RqueueMetrics(rqueueRedisTemplate, queueCounter);
+    return new RqueueMetrics(queueCounter);
   }
 
   @SuppressWarnings("unchecked")

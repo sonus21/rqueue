@@ -19,47 +19,50 @@ package com.github.sonus21.rqueue.utils.backoff;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import org.junit.jupiter.api.Test;
 
-public class ExponentialTaskExecutionBackOffTest {
+@CoreUnitTest
+class ExponentialTaskExecutionBackOffTest extends TestBase {
 
   @Test
-  public void negativeInitialValue() {
+  void negativeInitialValue() {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExponentialTaskExecutionBackOff(-1, 100, 1.5, 100));
   }
 
   @Test
-  public void smallerMaxInterval() {
+  void smallerMaxInterval() {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExponentialTaskExecutionBackOff(100, 99, 1.5, 100));
   }
 
   @Test
-  public void smallerMultiplier() {
+  void smallerMultiplier() {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExponentialTaskExecutionBackOff(1000L, 3000000L, 0.5, 100));
   }
 
   @Test
-  public void negativeMaxRetries() {
+  void negativeMaxRetries() {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExponentialTaskExecutionBackOff(1000L, 3000000L, 1.5, -1));
   }
 
   @Test
-  public void construct() {
+  void construct() {
     ExponentialTaskExecutionBackOff e =
         new ExponentialTaskExecutionBackOff(1000L, 3000000L, 1.5, 3);
     assertEquals((long) (Math.pow(1.5, 3) * 1000L), e.getDelay(3));
   }
 
   @Test
-  public void setMaxRetries() {
+  void setMaxRetries() {
     ExponentialTaskExecutionBackOff e = new ExponentialTaskExecutionBackOff();
     e.setMaxRetries(3);
     assertEquals(-1, e.nextBackOff(null, null, 3));
@@ -68,7 +71,7 @@ public class ExponentialTaskExecutionBackOffTest {
   }
 
   @Test
-  public void setMultiplier() {
+  void setMultiplier() {
     ExponentialTaskExecutionBackOff e = new ExponentialTaskExecutionBackOff();
     e.setMultiplier(1.2);
     assertEquals((long) (Math.pow(1.2, 3) * 1500), e.nextBackOff(null, null, 3));
@@ -76,7 +79,7 @@ public class ExponentialTaskExecutionBackOffTest {
   }
 
   @Test
-  public void setMaxInterval() {
+  void setMaxInterval() {
     ExponentialTaskExecutionBackOff e = new ExponentialTaskExecutionBackOff();
     e.setMaxInterval(100000L);
     assertEquals(100000L, e.nextBackOff(null, null, 60));
@@ -84,13 +87,13 @@ public class ExponentialTaskExecutionBackOffTest {
   }
 
   @Test
-  public void setMaxLongValue() {
+  void setMaxLongValue() {
     ExponentialTaskExecutionBackOff e = new ExponentialTaskExecutionBackOff();
     assertEquals(-1, e.nextBackOff(null, null, 110));
   }
 
   @Test
-  public void setInitialInterval() {
+  void setInitialInterval() {
     ExponentialTaskExecutionBackOff e = new ExponentialTaskExecutionBackOff();
     e.setInitialInterval(2000L);
     assertEquals((long) (Math.pow(1.5, 3) * 2000), e.nextBackOff(null, null, 3));

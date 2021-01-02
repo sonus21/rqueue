@@ -162,10 +162,13 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
   @Override
   public boolean deleteAllMessages(String queueName) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
-    stringRqueueRedisTemplate.delete(queueDetail.getProcessingQueueName());
-    stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
-    return true;
+    try {
+      deleteAllMessages(queueDetail);
+      return true;
+    } catch (Exception e) {
+      log.error("DeleteAllMessages failed", e);
+      return false;
+    }
   }
 
   @Override

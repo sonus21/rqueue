@@ -58,4 +58,11 @@ public class DelayedMessageScheduler extends MessageScheduler {
   protected int getThreadPoolSize() {
     return rqueueSchedulerConfig.getDelayedMessageThreadPoolSize();
   }
+
+  @Override
+  protected boolean isProcessingQueue(String queueName) {
+    return false;
+  }
+
+
 }

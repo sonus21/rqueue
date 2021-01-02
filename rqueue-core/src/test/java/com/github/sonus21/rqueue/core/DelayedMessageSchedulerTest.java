@@ -30,6 +30,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
@@ -45,13 +47,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.connection.DefaultMessage;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisCallback;
@@ -60,9 +60,9 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-@ExtendWith(MockitoExtension.class)
+@CoreUnitTest
 @SuppressWarnings("unchecked")
-public class DelayedMessageSchedulerTest {
+class DelayedMessageSchedulerTest extends TestBase {
   @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
   @Mock private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
   @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
@@ -84,18 +84,18 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void getChannelName() {
+  void getChannelName() {
     assertEquals(
         slowQueueDetail.getDelayedQueueChannelName(), messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
-  public void getZsetName() {
+  void getZsetName() {
     assertEquals(slowQueueDetail.getDelayedQueueName(), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
-  public void getNextScheduleTime() {
+  void getNextScheduleTime() {
     long currentTime = System.currentTimeMillis();
     doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
     assertThat(
@@ -107,7 +107,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void afterPropertiesSetWithEmptyQueSet() throws Exception {
+  void afterPropertiesSetWithEmptyQueSet() throws Exception {
     EndpointRegistry.delete();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     assertNull(FieldUtils.readField(messageScheduler, "scheduler", true));
@@ -118,7 +118,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void start() throws Exception {
+  void start() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
@@ -140,7 +140,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void startAddsChannelToMessageListener() throws Exception {
+  void startAddsChannelToMessageListener() throws Exception {
     doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
@@ -162,7 +162,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void stop() throws Exception {
+  void stop() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
@@ -185,7 +185,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void destroy() throws Exception {
+  void destroy() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
@@ -213,7 +213,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void startSubmitsTask() throws Exception {
+  void startSubmitsTask() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
@@ -232,7 +232,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void startSubmitsTaskAndThatGetsExecuted() throws Exception {
+  void startSubmitsTaskAndThatGetsExecuted() throws Exception {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
@@ -254,7 +254,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void onCompletionOfExistingTaskNewTaskIsSubmitted() throws Exception {
+  void onCompletionOfExistingTaskNewTaskIsSubmitted() throws Exception {
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
       doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
       doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
@@ -284,7 +284,7 @@ public class DelayedMessageSchedulerTest {
   }
 
   @Test
-  public void onMessageListenerTest() throws Exception {
+  void onMessageListenerTest() throws Exception {
     doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();

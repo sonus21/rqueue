@@ -38,7 +38,9 @@ import org.springframework.util.CollectionUtils;
 @Setter
 @ToString
 @Builder
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(
+    callSuper = false,
+    exclude = {"createdOn", "updatedOn"})
 @AllArgsConstructor
 @NoArgsConstructor
 public class QueueConfig extends SerializableBase {

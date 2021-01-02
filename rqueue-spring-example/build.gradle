@@ -7,7 +7,7 @@ mainClassName = 'rqueue.spring.example.Main'
 
 dependencies {
     compile project(":rqueue-spring")
-    compile project(":rqueue-common-test")
+    compile project(":rqueue-spring-common-test")
 
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
     compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
