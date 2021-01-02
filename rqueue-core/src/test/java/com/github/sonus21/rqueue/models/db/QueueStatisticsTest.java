@@ -184,7 +184,7 @@ public class QueueStatisticsTest extends TestBase {
   }
 
   @Test
-  void testConstruct() {
+  void construct() {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     assertEquals(id, queueStatistics.getId());
     assertNotNull(queueStatistics.getCreatedOn());

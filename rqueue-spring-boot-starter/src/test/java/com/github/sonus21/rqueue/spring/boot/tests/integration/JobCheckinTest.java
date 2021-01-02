@@ -58,7 +58,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootIntegrationTest
 class JobCheckinTest extends SpringTestBase {
   @Test
-  void testJobCheckin() throws TimedOutException {
+  void jobCheckin() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(2000);
     enqueue(longRunningJobQueue, longRunningJob);
     TimeoutUtils.waitFor(() -> getMessageCount(longRunningJobQueue) == 0, "message to be consumed");
@@ -78,7 +78,7 @@ class JobCheckinTest extends SpringTestBase {
   }
 
   @Test
-  void testJobMultipleExecution() throws TimedOutException {
+  void jobMultipleExecution() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(2000);
     failureManager.createFailureDetail(longRunningJob.getId(), 3, 3);
     enqueue(longRunningJobQueue, longRunningJob);
@@ -107,7 +107,7 @@ class JobCheckinTest extends SpringTestBase {
   }
 
   @Test
-  void testSimplePeriodicMessage() throws TimedOutException {
+  void simplePeriodicMessage() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();
     String messageId =
         rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, Duration.ofSeconds(2));

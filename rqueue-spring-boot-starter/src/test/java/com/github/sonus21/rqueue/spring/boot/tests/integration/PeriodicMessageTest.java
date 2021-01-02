@@ -46,7 +46,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootIntegrationTest
 class PeriodicMessageTest extends SpringTestBase {
   @Test
-  void testSimplePeriodicMessage() throws TimedOutException {
+  void simplePeriodicMessage() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();
     String messageId =
         rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, Duration.ofSeconds(2));
@@ -62,7 +62,7 @@ class PeriodicMessageTest extends SpringTestBase {
   }
 
   @Test
-  void testPeriodicMessageWithTimeUnit() throws TimedOutException {
+  void periodicMessageWithTimeUnit() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();
     String messageId =
         rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, 2000, TimeUnit.MILLISECONDS);
@@ -74,7 +74,7 @@ class PeriodicMessageTest extends SpringTestBase {
   }
 
   @Test
-  void testPeriodicMessageMilliseconds() throws TimedOutException {
+  void periodicMessageMilliseconds() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();
     String messageId = rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, 2000);
     TimeoutUtils.waitFor(

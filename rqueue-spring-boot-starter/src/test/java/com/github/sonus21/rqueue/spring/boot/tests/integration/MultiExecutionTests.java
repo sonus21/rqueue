@@ -58,7 +58,7 @@ class MultiExecutionTests extends RetryTests {
 
   @Test
   @Disabled(value = "This test requires some work for restarting spring application...")
-  void testRestartApplication() throws TimedOutException {
+  void restartApplication() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(60000);
     enqueue(longRunningJobQueue, longRunningJob);
     waitFor(

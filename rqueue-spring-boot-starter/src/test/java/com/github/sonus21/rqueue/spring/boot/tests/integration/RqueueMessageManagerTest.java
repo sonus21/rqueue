@@ -37,7 +37,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootIntegrationTest
 class RqueueMessageManagerTest extends SpringTestBase {
   @Test
-  void testDeleteAll() throws TimedOutException {
+  void deleteAll() throws TimedOutException {
     QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);
     enqueue(notificationQueue, Notification.newInstance());
     enqueueIn(notificationQueue, Notification.newInstance(), 1000000);

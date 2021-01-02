@@ -53,7 +53,7 @@ class RedisScriptFactoryTest extends TestBase {
         "testExpiredMessageMoverWithFailureQueue",
         "__rq::p-queue::testExpiredMessageMoverWithFailureQueue"
       })
-  void testExpiredMessageMoverWithFailureQueue() {
+  void expiredMessageMoverWithFailureQueue() {
     String queueName = "testExpiredMessageMoverWithFailureQueue";
     String zsetName = "__rq::p-queue::testExpiredMessageMoverWithFailureQueue";
     RqueueMessage rqueueMessage1 = RqueueMessage.builder().message("Test message 1").build();
@@ -83,7 +83,7 @@ class RedisScriptFactoryTest extends TestBase {
 
   @Test
   @TestQueue(value = {"testExpiredMessageMover", "__rq::d-queue::testExpiredMessageMover"})
-  void testExpiredMessageMover() {
+  void expiredMessageMover() {
     String queueName = "testExpiredMessageMover";
     String zsetName = "__rq::d-queue::testExpiredMessageMover";
     RqueueMessage rqueueMessage1 = RqueueMessage.builder().message("Test message 1").build();
@@ -113,7 +113,7 @@ class RedisScriptFactoryTest extends TestBase {
 
   @Test
   @TestQueue("testDeleteIfSame")
-  void testDeleteIfSame() {
+  void deleteIfSame() {
     String key = "testDeleteIfSame";
     RqueueMessage rqueueMessage = RqueueMessage.builder().message("Test message 1").build();
     RqueueMessage rqueueMessage2 = RqueueMessage.builder().message("Test message 2").build();

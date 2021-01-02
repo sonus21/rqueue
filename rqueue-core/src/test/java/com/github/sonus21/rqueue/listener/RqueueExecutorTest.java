@@ -265,7 +265,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   @Test
-  void testHandlePeriodicMessage() {
+  void handlePeriodicMessage() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     long period = 10000L;
     RqueueMessage message =

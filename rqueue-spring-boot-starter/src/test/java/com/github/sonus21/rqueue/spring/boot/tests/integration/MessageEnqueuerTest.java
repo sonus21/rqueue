@@ -65,14 +65,14 @@ import org.springframework.test.context.TestPropertySource;
 class MessageEnqueuerTest extends SpringTestBase {
 
   @Test
-  void testEnqueueWithMessageId() throws TimedOutException {
+  void enqueueWithMessageId() throws TimedOutException {
     Email email = Email.newInstance();
     assertTrue(rqueueMessageEnqueuer.enqueue(emailQueue, email.getId(), email));
     waitFor(() -> getMessageCount(emailQueue) == 0, "email to be consumed");
   }
 
   @Test
-  void testEnqueueWithRetryWithMessageId() throws TimedOutException {
+  void enqueueWithRetryWithMessageId() throws TimedOutException {
     ChatIndexing chatIndexing = ChatIndexing.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueWithRetry(
@@ -81,21 +81,21 @@ class MessageEnqueuerTest extends SpringTestBase {
   }
 
   @Test
-  void testEnqueueWithPriorityWithMessageId() throws TimedOutException {
+  void enqueueWithPriorityWithMessageId() throws TimedOutException {
     Sms chat = Sms.newInstance();
     assertTrue(rqueueMessageEnqueuer.enqueueWithPriority(smsQueue, "medium", chat.getId(), chat));
     waitFor(() -> getMessageCount(smsQueue, "medium") == 0, "notification to be consumed");
   }
 
   @Test
-  void testEnqueueInWithMessageId() throws TimedOutException {
+  void enqueueInWithMessageId() throws TimedOutException {
     Job job = Job.newInstance();
     assertTrue(rqueueMessageEnqueuer.enqueueIn(jobQueue, job.getId(), job, 1000));
     waitFor(() -> getMessageCount(jobQueue) == 0, "job notification to be sent");
   }
 
   @Test
-  void testEnqueueInWithRetryWithMessageId() throws TimedOutException {
+  void enqueueInWithRetryWithMessageId() throws TimedOutException {
     Notification notification = Notification.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueInWithRetry(
@@ -104,7 +104,7 @@ class MessageEnqueuerTest extends SpringTestBase {
   }
 
   @Test
-  void testEnqueueInWithPriorityWithMessageId() throws TimedOutException {
+  void enqueueInWithPriorityWithMessageId() throws TimedOutException {
     Sms sms = Sms.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueInWithPriority(smsQueue, "high", sms.getId(), sms, 1000L));
@@ -112,7 +112,7 @@ class MessageEnqueuerTest extends SpringTestBase {
   }
 
   @Test
-  void testEnqueueAtWithMessageId() throws TimedOutException {
+  void enqueueAtWithMessageId() throws TimedOutException {
     FeedGeneration feedGeneration = FeedGeneration.newInstance();
     assertTrue(
         rqueueMessageEnqueuer.enqueueAt(

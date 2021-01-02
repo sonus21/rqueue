@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 class QueueConfigTest extends TestBase {
 
   @Test
-  void testBuilderToString() {
+  void builderToString() {
     QueueConfig.QueueConfigBuilder builder = QueueConfig.builder().concurrency(new MinMax<>(1, 5));
     System.out.println(builder.toString());
   }
@@ -56,7 +56,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-  void testVisibilityTimeout() {
+  void visibilityTimeout() {
     QueueConfig queueConfig = new QueueConfig();
     assertTrue(queueConfig.updateVisibilityTimeout(100L));
     assertEquals(100L, queueConfig.getVisibilityTimeout());
@@ -65,7 +65,7 @@ class QueueConfigTest extends TestBase {
   }
 
   @Test
-  void testBuilder() {
+  void builder() {
     QueueConfig queueConfig =
         QueueConfig.builder().id("__rq::q").name("q").visibilityTimeout(100L).numRetry(100).build();
     assertEquals("__rq::q", queueConfig.getId());

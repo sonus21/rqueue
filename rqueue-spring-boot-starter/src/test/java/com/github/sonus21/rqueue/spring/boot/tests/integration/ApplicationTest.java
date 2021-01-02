@@ -48,12 +48,12 @@ class ApplicationTest extends BasicListenerTest {
   }
 
   @Test
-  void testDelayedEnqueue() throws TimedOutException {
+  void delayedEnqueue() throws TimedOutException {
     verifyDelayedTaskExecution();
   }
 
   @Test
-  void testListMessageListener() throws TimedOutException {
+  void listMessageListener() throws TimedOutException {
     verifyListMessageListener();
   }
 }

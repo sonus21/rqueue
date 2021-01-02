@@ -69,7 +69,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodWithStringParameterIsInvoked() {
+  void methodWithStringParameterIsInvoked() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -82,7 +82,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodWithMessagePayloadParameterIsInvoked() {
+  void methodWithMessagePayloadParameterIsInvoked() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -95,7 +95,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodWithStringParameterCallExceptionHandler() {
+  void methodWithStringParameterCallExceptionHandler() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -116,7 +116,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodHavingMultipleQueueNames() {
+  void methodHavingMultipleQueueNames() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("incomingMessageHandler", IncomingMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -135,7 +135,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodHavingSpelGettingEvaluated() {
+  void methodHavingSpelGettingEvaluated() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("spelMessageHandler", SpelMessageHandler.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -150,7 +150,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodHavingNameFromPropertyFile() {
+  void methodHavingNameFromPropertyFile() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlersWithProperty.class);
     applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
@@ -175,7 +175,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodHavingNameFromPropertyFileWithExpression() {
+  void methodHavingNameFromPropertyFileWithExpression() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton(
         "messageHandler", MessageHandlerWithExpressionProperty.class);
@@ -196,7 +196,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   @Test
-  void testMethodHavingAllPropertiesSet() {
+  void methodHavingAllPropertiesSet() {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", MessageHandlerWithPlaceHolders.class);
     applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);

@@ -37,7 +37,7 @@ import org.springframework.test.context.ContextConfiguration;
 class ProducerOnlyTest extends BasicListenerTest {
 
   @Test
-  void testQueueCount() {
+  void queueCount() {
     log.info("Rqueue System Mode {}", rqueueConfig.getMode());
     assertEquals(18, EndpointRegistry.getRegisteredQueueCount(), rqueueConfig.getMode().toString());
     for (int i = 0; i < 10; i++) {

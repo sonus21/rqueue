@@ -110,12 +110,12 @@ class SpringAppTest extends AllQueueMode {
   }
 
   @Test
-  void testQueueDoesNotExist() {
+  void queueDoesNotExist() {
     assertThrows(QueueDoesNotExist.class, () -> enqueue("job-push", Email.newInstance()));
   }
 
   @Test
-  void testOnlyPushMode() {
+  void onlyPushMode() {
     Date date = Date.from(Instant.now().plusMillis(1000));
     registerQueue("job-push");
     registerQueue("sms-push", "critical", "high", "low");

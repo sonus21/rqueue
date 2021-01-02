@@ -37,7 +37,7 @@ class RqueueMessageTest extends TestBase {
   private long delay = 100L;
 
   @Test
-  void testSetReEnqueuedAt() {
+  void setReEnqueuedAt() {
     RqueueMessage message =
         RqueueMessage.builder()
             .queueName(queueName)
@@ -52,7 +52,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void testObjectEquality() throws JsonProcessingException {
+  void objectEquality() throws JsonProcessingException {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -67,7 +67,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void testObjectEqualityWithoutDelay() throws JsonProcessingException {
+  void objectEqualityWithoutDelay() throws JsonProcessingException {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -82,7 +82,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void testObjectEqualityWithDifferentObject() {
+  void objectEqualityWithDifferentObject() {
     RqueueMessage message =
         RqueueMessage.builder()
             .queueName(queueName)
@@ -95,7 +95,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void testObjectEqualityWithDifferentId() {
+  void objectEqualityWithDifferentId() {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -119,7 +119,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void testToString() {
+  void RqueueMessageToString() {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -143,7 +143,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void testIsPeriodic() {
+  void isPeriodic() {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())

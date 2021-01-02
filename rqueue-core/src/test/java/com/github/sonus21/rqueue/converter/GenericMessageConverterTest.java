@@ -98,7 +98,7 @@ class GenericMessageConverterTest extends TestBase {
   }
 
   @Test
-  void testMessageNonEmptyListWithGenericItem() {
+  void messageNonEmptyListWithGenericItem() {
     List<GenericTestData<String>> items =
         Collections.singletonList(new GenericTestData<>(10, "10"));
     assertNull(
@@ -106,7 +106,7 @@ class GenericMessageConverterTest extends TestBase {
   }
 
   @Test
-  void testToAndFromMessageList() {
+  void toAndFromMessageList() {
     List<Comment> dataList = Collections.singletonList(comment);
     Message message =
         genericMessageConverter.toMessage(dataList, RqueueMessageHeaders.emptyMessageHeaders());
@@ -115,7 +115,7 @@ class GenericMessageConverterTest extends TestBase {
   }
 
   @Test
-  void testGenericMessageToReturnNull() {
+  void genericMessageToReturnNull() {
     GenericTestData<Comment> data = new GenericTestData<>(10, comment);
     Message message =
         genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
@@ -124,7 +124,7 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   @Disabled
-  void testMultipleGenericFieldMessageToAndFrom() {
+  void multipleGenericFieldMessageToAndFrom() {
     MultiGenericTestData<Comment, Email> data = new MultiGenericTestData<>(10, comment, email);
     Message message =
         genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
@@ -135,7 +135,7 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   @Disabled
-  void testMultipleGenericSameTypeMessageToAndFrom() {
+  void multipleGenericSameTypeMessageToAndFrom() {
     MultiGenericTestData<Comment, Comment> data = new MultiGenericTestData<>(10, comment, comment);
     Message message =
         genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
@@ -146,7 +146,7 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   @Disabled
-  void testMultiLevelGenericMessageToAndFrom() {
+  void multiLevelGenericMessageToAndFrom() {
     GenericTestData<Comment> testData = new GenericTestData<>(10, comment);
     GenericTestData<Email> testData2 = new GenericTestData<>(100, email);
     MultiLevelGenericTestData<Comment, Email> data =
@@ -161,7 +161,7 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   @Disabled
-  void testMultiLevelGenericMessageToAndFromWithoutAllArgsConstructor() {
+  void multiLevelGenericMessageToAndFromWithoutAllArgsConstructor() {
     GenericTestData<Comment> testData = new GenericTestData<>(10, comment);
     GenericTestData<Email> testData2 = new GenericTestData<>(100, email);
     MultiLevelGenericTestDataNoArgs<Comment, Email> data = new MultiLevelGenericTestDataNoArgs<>();
@@ -178,7 +178,7 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   @Disabled
-  void testPredefinedGenericTypeToFromMessage() {
+  void predefinedGenericTypeToFromMessage() {
     MultiGenericTestData<Comment, Email> multiGenericTestData =
         new MultiGenericTestData<>(10, comment, email);
     GenericTestDataWithPredefinedType data =
@@ -192,7 +192,7 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   @Disabled
-  void testMultiGenericSameTypeToFromMessage() {
+  void multiGenericSameTypeToFromMessage() {
     GenericTestData<Comment> genericTestData = new GenericTestData<>(100, comment);
     MultiGenericTestData<Comment, Comment> multiGenericTestData =
         new MultiGenericTestData<>(200, comment, comment);
@@ -207,7 +207,7 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   @Disabled
-  void testMultiLevelGenericTestDataFixedTypeToFromMessage() {
+  void multiLevelGenericTestDataFixedTypeToFromMessage() {
     GenericTestData<Comment> genericTestData = new GenericTestData<>(100, comment);
     MultiGenericTestData<Email, String> multiGenericTestData =
         new MultiGenericTestData<>(200, email, "comment");

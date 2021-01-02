@@ -129,17 +129,6 @@ class RqueueSystemManagerServiceTest extends TestBase {
   }
 
   @Test
-  void testGetQueueConfigs() {
-    doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
-        .when(rqueueSystemConfigDao)
-        .findAllQConfig(
-            queues.stream().map(TestUtils::getQueueConfigKey).collect(Collectors.toList()));
-    assertEquals(
-        Arrays.asList(slowQueueConfig, fastQueueConfig),
-        rqueueSystemManagerService.getQueueConfigs(queues));
-  }
-
-  @Test
   void getQueueConfig() {
     doReturn(Collections.singletonList(slowQueueConfig))
         .when(rqueueSystemConfigDao)

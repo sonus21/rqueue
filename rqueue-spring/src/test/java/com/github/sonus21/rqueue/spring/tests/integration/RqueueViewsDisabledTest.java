@@ -134,7 +134,7 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
   }
 
   @Test
-  void testGetChart() throws Exception {
+  void getChart() throws Exception {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.STATS, AggregationType.DAILY);
     assertEquals(
@@ -151,7 +151,7 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
   }
 
   @Test
-  void testExploreData() throws Exception {
+  void exploreData() throws Exception {
     assertEquals(
         "",
         this.mockMvc

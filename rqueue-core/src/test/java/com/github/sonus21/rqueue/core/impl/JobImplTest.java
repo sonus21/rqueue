@@ -73,7 +73,7 @@ class JobImplTest extends TestBase {
   }
 
   @Test
-  void testConstruct() {
+  void construct() {
     new JobImpl(
         rqueueConfig,
         messageMetadataService,

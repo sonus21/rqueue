@@ -74,7 +74,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-  void testPollingInterval() {
+  void pollingInterval() {
     container.setPollingInterval(100L);
     assertEquals(100L, container.getPollingInterval());
   }
@@ -123,7 +123,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-  void testPhaseSetting() {
+  void phaseSetting() {
     assertEquals(Integer.MAX_VALUE, container.getPhase());
     container.setPhase(100);
     assertEquals(100, container.getPhase());
@@ -185,7 +185,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-  void testMessagesAreGettingFetchedFromRedis() throws Exception {
+  void messagesAreGettingFetchedFromRedis() throws Exception {
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
@@ -246,7 +246,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-  void testMessageFetcherRetryWorking() throws Exception {
+  void messageFetcherRetryWorking() throws Exception {
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     String fastQueueMessage = "This is fast queue";
     RqueueMessage message =
@@ -313,7 +313,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @Test
-  void testMessageHandlersAreInvoked() throws Exception {
+  void messageHandlersAreInvoked() throws Exception {
     RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);

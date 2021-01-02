@@ -80,7 +80,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   @Autowired private DeleteMessageListener deleteMessageListener;
 
   @Test
-  void testGetChartLatency() throws Exception {
+  void getChartLatency() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -106,7 +106,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  void testGetChartStats() throws Exception {
+  void getChartStats() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -132,7 +132,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  void testExploreDataList() throws Exception {
+  void exploreDataList() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     MvcResult result =
         this.mockMvc
@@ -157,7 +157,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  void testExploreDataZset() throws Exception {
+  void exploreDataZset() throws Exception {
     for (int i = 0; i < 30; i++) {
       enqueueIn(
           emailQueue, Email.newInstance(), Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
@@ -181,7 +181,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  void testExploreDataProcessingQueue() throws Exception {
+  void exploreDataProcessingQueue() throws Exception {
     String processingSet = rqueueConfig.getProcessingQueueName(emailQueue);
     for (int i = 0; i < 30; i++) {
       enqueueIn(
@@ -322,7 +322,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   }
 
   @Test
-  void testJobsData() throws Exception {
+  void jobsData() throws Exception {
     List<String> messageIds = new ArrayList<>();
     for (int i = 0; i < 30; i++) {
       messageIds.add(rqueueMessageEnqueuer.enqueue(notificationQueue, Notification.newInstance()));

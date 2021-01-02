@@ -64,7 +64,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigSetConnectionFactoryFromBeanFactoryNoExistingData()
+  void rqueueConfigSetConnectionFactoryFromBeanFactoryNoExistingData()
       throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
     doReturn(Collections.singletonList(0L)).when(redisConnection).closePipeline();
@@ -82,7 +82,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigSetConnectionFactoryFromBeanFactoryExistingData()
+  void rqueueConfigSetConnectionFactoryFromBeanFactoryExistingData()
       throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
     doReturn(Collections.singletonList(2L)).when(redisConnection).closePipeline();
@@ -100,7 +100,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigSetConnectionFactoryFromBeanFactoryWithDifferentValue()
+  void rqueueConfigSetConnectionFactoryFromBeanFactoryWithDifferentValue()
       throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
     doReturn(String.valueOf(1).getBytes(StandardCharsets.UTF_8)).when(redisConnection).get(any());
@@ -115,7 +115,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigSetConnectionFactoryFromBeanFactoryWithLatestVersion()
+  void rqueueConfigSetConnectionFactoryFromBeanFactoryWithLatestVersion()
       throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
     doReturn(String.valueOf(2).getBytes(StandardCharsets.UTF_8)).when(redisConnection).get(any());
@@ -130,7 +130,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigSetConnectionFactoryFromBeanFactoryWithDbVersion()
+  void rqueueConfigSetConnectionFactoryFromBeanFactoryWithDbVersion()
       throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
@@ -143,7 +143,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigInvalidDbVersion() throws IllegalAccessException {
+  void rqueueConfigInvalidDbVersion() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueSystemConfig = createConfig(factory);
     doReturn(redisConnectionFactory).when(beanFactory).getBean(RedisConnectionFactory.class);
@@ -153,7 +153,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testRqueueConfigDoesNotChangeConnectionFactory() throws IllegalAccessException {
+  void rqueueConfigDoesNotChangeConnectionFactory() throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
     doReturn(String.valueOf(2).getBytes(StandardCharsets.UTF_8)).when(redisConnection).get(any());
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
@@ -166,7 +166,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testGetMessageTemplateUseFromFactory() throws IllegalAccessException {
+  void getMessageTemplateUseFromFactory() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueListenerConfig = createConfig(factory);
     RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false, 1);
@@ -175,7 +175,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void testGetMessageTemplateSetTemplateInFactory() throws IllegalAccessException {
+  void getMessageTemplateSetTemplateInFactory() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueListenerConfig = createConfig(factory);
     RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false, 1);

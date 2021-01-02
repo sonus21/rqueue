@@ -47,14 +47,14 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootIntegrationTest
 class MessageDeduplicationTest extends SpringTestBase {
   @Test
-  void testEnqueueUnique() throws TimedOutException {
+  void enqueueUnique() throws TimedOutException {
     Email email = Email.newInstance();
     rqueueMessageEnqueuer.enqueueUnique(emailQueue, email.getId(), email);
     waitFor(() -> getMessageCount(emailQueue) == 0, "email to be sent");
   }
 
   @Test
-  void testEnqueueUniqueIn() throws TimedOutException {
+  void enqueueUniqueIn() throws TimedOutException {
     Notification notification = Notification.newInstance();
     rqueueMessageEnqueuer.enqueueUniqueIn(
         notificationQueue, notification.getId(), notification, 1000L);
