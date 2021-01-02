@@ -111,7 +111,7 @@ class SpringAppTest extends AllQueueMode {
 
   @Test
   void queueDoesNotExist() {
-    assertThrows(QueueDoesNotExist.class, () -> enqueue("job-push", Email.newInstance()));
+    assertThrows(QueueDoesNotExist.class, () -> enqueue("job-push-xyz", Email.newInstance()));
   }
 
   @Test
