@@ -47,14 +47,14 @@ services code is in Spring.
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.2.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.3.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.2.0-RELEASE</version>
+        <version>2.3.0-RELEASE</version>
     </dependency>
     ```
 
@@ -65,14 +65,14 @@ services code is in Spring.
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.2.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.3.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.2.0-RELEASE</version>
+       <version>2.3.0-RELEASE</version>
      </dependency>
     ```
 
@@ -189,7 +189,8 @@ public class MessageListener {
 
   // checkin job example
   @RqueueListener(value = "chat-indexing-weekly", priority = "5", priorityGroup = "chat")
-  public void onMessage(ChatIndexing chatIndexing, @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job) {
+  public void onMessage(ChatIndexing chatIndexing,
+      @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job) {
     log.info("ChatIndexing message: {}", chatIndexing);
     job.checkIn("Chat indexing...");
   }

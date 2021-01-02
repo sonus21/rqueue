@@ -74,9 +74,9 @@ public interface Job {
   MessageMetadata getMessageMetadata();
 
   /**
-   * The current status of this job, if you would like to know about the message status then check
-   * {@link MessageMetadata#getStatus()}
+   * The current status of this job, the message can have different status.
    *
+   * @see MessageMetadata
    * @return job status
    */
   JobStatus getStatus();

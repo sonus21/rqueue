@@ -41,6 +41,7 @@ public class MessageMetadata extends SerializableBase {
   private Long deletedOn;
   // latest RqueueMessage
   private RqueueMessage rqueueMessage;
+  // Rqueue message current status
   private MessageStatus status;
 
   public MessageMetadata(String id, MessageStatus messageStatus) {
