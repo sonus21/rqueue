@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.test.service;
@@ -40,20 +40,25 @@ public class ConsumedMessageStore {
   @NonNull private final ConsumedMessageRepository consumedMessageRepository;
   @NonNull private final ObjectMapper objectMapper;
 
-  public ConsumedMessage save(BaseQueueMessage message, String tag, String queueName)
+  public void save(BaseQueueMessage message, Object tag, String queueName)
       throws JsonProcessingException {
     log.info("Queue '{}' Message: {} Tag: '{}'", queueName, message, tag);
+    String tagStr;
+    if (tag instanceof String) {
+      tagStr = (String) tag;
+    } else {
+      tagStr = objectMapper.writeValueAsString(tag);
+    }
     ConsumedMessage consumedMessage =
-        consumedMessageRepository.findByMessageIdAndTag(message.getId(), tag);
+        consumedMessageRepository.findByMessageIdAndTag(message.getId(), tagStr);
     String textMessage = objectMapper.writeValueAsString(message);
     if (consumedMessage == null) {
-      consumedMessage = new ConsumedMessage(message.getId(), tag, queueName, textMessage);
+      consumedMessage = new ConsumedMessage(message.getId(), tagStr, queueName, textMessage);
     } else {
       consumedMessage.incrementCount();
       consumedMessage.setMessage(textMessage);
     }
     consumedMessageRepository.save(consumedMessage);
-    return consumedMessage;
   }
 
   public Collection<ConsumedMessage> getConsumedMessages(Collection<String> messageIds) {

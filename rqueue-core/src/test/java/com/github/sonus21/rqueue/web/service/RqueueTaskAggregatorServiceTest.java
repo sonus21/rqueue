@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.web.service;
@@ -37,9 +37,9 @@ import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.models.db.QueueStatisticsTest;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
@@ -59,14 +59,15 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 @CoreUnitTest
 class RqueueTaskAggregatorServiceTest extends TestBase {
-  private RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
-  private RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
-  private RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
-  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private RqueueTaskAggregatorService rqueueTaskAggregatorService =
+
+  private final RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
+  private final RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
+  private final RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
+  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private final RqueueTaskAggregatorService rqueueTaskAggregatorService =
       new RqueueTaskAggregatorService(
           rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
-  private String queueName = "test-queue";
+  private final String queueName = "test-queue";
 
   @BeforeEach
   public void initService() throws IllegalAccessException {
@@ -127,7 +128,7 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
     if (!updateTaskStat) {
       return;
     }
-    switch (event.getJob().getMessageMetadata().getStatus().getTaskStatus()) {
+    switch (event.getJob().getMessageMetadata().getStatus()) {
       case DISCARDED:
         stats.discarded += 1;
         break;
@@ -138,8 +139,8 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
         stats.movedToDlq += 1;
         break;
     }
-    RqueueMessage rqueueMessage = event.getRqueueMessage();
-    MessageMetadata messageMetadata = event.getMessageMetadata();
+    RqueueMessage rqueueMessage = event.getJob().getRqueueMessage();
+    MessageMetadata messageMetadata = event.getJob().getMessageMetadata();
     if (rqueueMessage.getFailureCount() != 0) {
       stats.retried += 1;
     }
@@ -200,7 +201,7 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
     if (tasksStat.retried == 0) {
       totalEvents += 1;
       event = generateTaskEventWithStatus(MessageStatus.DISCARDED);
-      event.getRqueueMessage().setFailureCount(10);
+      event.getJob().getRqueueMessage().setFailureCount(10);
       addEvent(event, tasksStat, totalEvents < 500);
     }
     for (; totalEvents < 501; totalEvents++) {

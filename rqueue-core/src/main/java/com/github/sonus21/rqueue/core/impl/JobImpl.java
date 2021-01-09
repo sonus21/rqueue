@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core.impl;
@@ -30,12 +30,15 @@ import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisSystemException;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @SuppressWarnings("java:S107")
 public class JobImpl implements Job {
+
   public final Duration expiry;
   private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
@@ -44,6 +47,8 @@ public class JobImpl implements Job {
   private final RqueueJob rqueueJob;
   private final Object userMessage;
   private final boolean isPeriodicJob;
+  private boolean deleted;
+  private boolean released;
 
   public JobImpl(
       RqueueConfig rqueueConfig,
@@ -164,6 +169,42 @@ public class JobImpl implements Job {
     Execution execution = rqueueJob.startNewExecution();
     save();
     return execution;
+  }
+
+  @Override
+  public Execution getLatestExecution() {
+    List<Execution> executions = rqueueJob.getExecutions();
+    if (CollectionUtils.isEmpty(executions)) {
+      return null;
+    }
+    return executions.get(executions.size() - 1);
+  }
+
+  @Override
+  public void release(JobStatus jobStatus) {
+    this.released = true;
+    // TODO
+  }
+
+  @Override
+  public void release(JobStatus status, Duration duration) {
+    this.released = true;
+    // TODO
+  }
+
+  @Override
+  public void delete(JobStatus status) {
+    this.deleted = true;
+  }
+
+  @Override
+  public boolean isDeleted() {
+    return deleted;
+  }
+
+  @Override
+  public boolean isReleased() {
+    return released;
   }
 
   public void updateExecutionStatus(ExecutionStatus status, Throwable e) {

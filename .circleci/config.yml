@@ -3,6 +3,90 @@
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
 version: 2.1
+
+aliases:
+  attach_workspace: &attach_workspace
+    attach_workspace:
+      at: .
+
+  environment: &environment
+    environment:
+      SPRING_BOOT_VERSION: 2.2.0.RELEASE
+      SPRING_VERSION: 5.2.0.RELEASE
+      SPRING_DATA_VERSION: 2.2.0.RELEASE
+      MICROMETER_VERSION: 1.3.2
+
+  persist_to_workspace: &persist_to_workspace
+    persist_to_workspace:
+      root: .
+      paths:
+        - .
+
+  redis_dep: &redis_dep
+    run:
+      name: Install Dependencies
+      command: |
+        sudo add-apt-repository ppa:chris-lea/redis-server
+        sudo apt-get update
+        sudo apt-get -y install redis-server
+        redis-cli --version
+
+  redis_cluster_setup: &redis_cluster_setup
+    run:
+      name: Setup Redis Cluster
+      background: true
+      command: |
+        mkdir 9000 9001 9002 9003 9004 9005
+        printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
+        printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
+        printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
+        printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
+        printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
+        printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+        cd 9000 && redis-server ./redis.conf &
+        cd 9001 && redis-server ./redis.conf &
+        cd 9002 && redis-server ./redis.conf &
+        cd 9003 && redis-server ./redis.conf &
+        cd 9004 && redis-server ./redis.conf &
+        cd 9005 && redis-server ./redis.conf &
+        sleep 30
+        redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
+
+  default: &default
+    executor: rqueue-executor
+    <<: *environment
+
+  copy_logs: &copy_logs
+    run:
+      name: Copy Log Files
+      when: always
+      command: |
+        mkdir log || true
+        test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
+        test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
+        test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
+        test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
+        test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
+        test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
+
+  copy_test_results: &copy_test_results
+    run:
+      name: Copy Test Result Files
+      when: always
+      command: |
+        mkdir test-results || true
+        test -d rqueue-spring-boot-starter/build/reports/junit/xml && cp -r rqueue-spring-boot-starter/build/reports/junit/xml test-results
+        test -d rqueue-spring/build/reports/junit/xml && cp -r rqueue-spring/build/reports/junit/xml test-results
+        test -d rqueue-core/build/reports/junit/xml && cp -r rqueue-core/build/reports/junit/xml test-results
+
+  store_logs: &store_logs
+    store_artifacts:
+      path: log/
+  store_test_results: &store_test_results
+    store_test_results:
+      path: test-results
+
+
 executors:
   rqueue-executor:
     machine:
@@ -22,13 +106,7 @@ executors:
 
 jobs:
   build:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
-
+    <<: *default
     steps:
       - checkout
       - restore_cache:
@@ -44,126 +122,67 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
       - run: ./gradlew compileJava
       - run: ./gradlew compileTestJava
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      - *persist_to_workspace
+
   unit_test:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
+    <<: *default
     steps:
-      - attach_workspace:
-          at: .
+      - *attach_workspace
       - run: ./gradlew codeCoverageReport -DincludeTags=unit
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      - *persist_to_workspace
+      - *copy_logs
+      - *copy_test_results
+      - *store_logs
+      - *store_test_results
+
+
   producer_only_test:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
+    <<: *default
     steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install Dependencies
-          command: |
-            sudo add-apt-repository ppa:chris-lea/redis-server
-            sudo apt-get update
-            sudo apt-get -y install redis-server
-            redis-cli --version
+      - *attach_workspace
+      - *redis_dep
       - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      - *persist_to_workspace
+      - *copy_logs
+      - *copy_test_results
+      - *store_logs
+      - *store_test_results
+
 
   integration_test:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
+    <<: *default
     steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install Dependencies
-          command: |
-            sudo add-apt-repository ppa:chris-lea/redis-server
-            sudo apt-get update
-            sudo apt-get -y install redis-server
-            redis-cli --version
+      - *attach_workspace
+      - *redis_dep
       - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      - *persist_to_workspace
+      - *copy_logs
+      - *copy_test_results
+      - *store_logs
+      - *store_test_results
 
   redis_custer_test:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
+    <<: *default
     steps:
-      # Reuse the workspace from the build job
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install Dependencies
-          command: |
-            sudo add-apt-repository ppa:chris-lea/redis-server
-            sudo apt-get update
-            sudo apt-get -y install redis-server
-            redis-cli --version
-      - run:
-          name: Setup Redis Cluster
-          background: true
-          command: |
-            mkdir 9000 9001 9002 9003 9004 9005
-            printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
-            printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
-            printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
-            printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
-            printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
-            printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
-            cd 9000 && redis-server ./redis.conf &
-            cd 9001 && redis-server ./redis.conf &
-            cd 9002 && redis-server ./redis.conf &
-            cd 9003 && redis-server ./redis.conf &
-            cd 9004 && redis-server ./redis.conf &
-            cd 9005 && redis-server ./redis.conf &
-            sleep 30
-            redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
+      - *attach_workspace
+      - *redis_dep
+      - *redis_cluster_setup
       - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      - *persist_to_workspace
+      - *copy_logs
+      - *copy_test_results
+      - *store_logs
+      - *store_test_results
+
   report_code_coverage:
-    executor: rqueue-executor
-    environment:
-      SPRING_BOOT_VERSION: 2.1.0.RELEASE
-      SPRING_VERSION: 5.1.2.RELEASE
-      SPRING_DATA_VERSION: 2.1.2.RELEASE
-      MICROMETER_VERSION: 1.1.0
+    <<: *default
     steps:
-      - attach_workspace:
-          at: .
-      - run: ls -r build/reports/jacoco/test
-      - run: pwd
+      - *attach_workspace
       - run: ./gradlew coveralls
+      - *copy_logs
+      - *copy_test_results
+      - *store_logs
+      - *store_test_results
 
 workflows:
   main:

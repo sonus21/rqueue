@@ -14,20 +14,18 @@
  *
  */
 
-package com.github.sonus21.rqueue.spring.tests;
+package com.github.sonus21.rqueue.test.middlewares;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
+import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.core.support.Middleware;
+import lombok.extern.slf4j.Slf4j;
 
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Tag("springIntegration")
-@Tag("integration")
-@Tag("spring")
-@ExtendWith(SpringTestTracerExtension.class)
-public @interface SpringIntegrationTest {}
+@Slf4j
+public class LoggingMiddleware implements Middleware {
+
+  @Override
+  public Middleware handle(Job job, Middleware next) {
+    log.info("Job Id {}", job.getId());
+    return next;
+  }
+}

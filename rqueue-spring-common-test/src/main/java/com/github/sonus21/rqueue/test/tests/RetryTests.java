@@ -1,25 +1,29 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.test.tests;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
@@ -114,7 +118,8 @@ public class RetryTests extends SpringTestBase {
     assertEquals(1, getMessageCount(jobQueue));
   }
 
-  public void verifyMessageIsConsumedByDeadLetterQueueListener() throws TimedOutException {
+  public void verifyMessageIsConsumedByDeadLetterQueueListener()
+      throws TimedOutException, JsonProcessingException {
     cleanQueue(reservationRequestQueue);
     cleanQueue(reservationRequestDeadLetterQueue);
     ReservationRequest request = ReservationRequest.newInstance();
@@ -134,10 +139,18 @@ public class RetryTests extends SpringTestBase {
         30000,
         "ReservationRequest to be run");
     ConsumedMessage consumedMessage = consumedMessageStore.getConsumedMessage(request.getId());
-    assertEquals(consumedMessage.getTag(), "reservation-request-dlq");
-    assertEquals(
-        new Long(0), stringRqueueRedisTemplate.getListSize(reservationRequestDeadLetterQueue));
-    assertEquals(0, getMessageCount(reservationQueue));
+    assertNotNull(consumedMessage.getTag());
+    assertNotEquals("", consumedMessage.getTag());
+    RqueueMessage rqueueMessage =
+        objectMapper.readValue(consumedMessage.getTag(), RqueueMessage.class);
+    assertEquals(0, rqueueMessage.getFailureCount());
+    assertEquals(reservationRequestQueueRetryCount, rqueueMessage.getSourceQueueFailureCount());
+    assertEquals(reservationRequestQueue, rqueueMessage.getSourceQueueName());
+    assertEquals(reservationRequestDeadLetterQueue, rqueueMessage.getQueueName());
+    // message should not be added to list
+    assertEquals(0L, stringRqueueRedisTemplate.getListSize(reservationRequestDeadLetterQueue));
+    // no other messages are in queue
+    assertEquals(0, getMessageCount(reservationRequestQueue));
     assertEquals(0, getMessageCount(reservationRequestDeadLetterQueue));
   }
 

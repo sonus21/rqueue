@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.config;
@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
+import com.github.sonus21.rqueue.core.support.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
@@ -80,6 +81,8 @@ public class SimpleRqueueListenerContainerFactory {
   private MessageProcessor postExecutionMessageProcessor;
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
+
+  private List<Middleware> middlewares;
 
   // Any message headers that should be set, only used for message serialization
   private MessageHeaders messageHeaders;
@@ -338,6 +341,9 @@ public class SimpleRqueueListenerContainerFactory {
     if (getPriorityMode() != null) {
       messageListenerContainer.setPriorityMode(getPriorityMode());
     }
+    if (getMiddlewares() != null) {
+      messageListenerContainer.setMiddlewares(getMiddlewares());
+    }
     return messageListenerContainer;
   }
 
@@ -476,7 +482,29 @@ public class SimpleRqueueListenerContainerFactory {
     this.messageHeaders = messageHeaders;
   }
 
+  /**
+   * Rqueue scans all beans to find method annotated with {@link RqueueListener}.
+   *
+   * <p>Scanning all beans can slow the bootstrap process, by default this is enabled, but using
+   * {@link MessageListener} the scanned beans can be limited.
+   *
+   * <p>If you just want to scan specific beans for {@link RqueueListener} annotated methods, than
+   * set {@link #inspectAllBean} to false and annotate your message listener classes with {@link
+   * MessageListener}
+   *
+   * @param inspectAllBean whether all beans should be inspected for {@link RqueueListener} or not
+   * @see MessageListener
+   */
   public void setInspectAllBean(boolean inspectAllBean) {
     this.inspectAllBean = inspectAllBean;
+  }
+
+  public List<Middleware> getMiddlewares() {
+    return middlewares;
+  }
+
+  public void setMiddlewares(List<Middleware> middlewares) {
+    notEmpty(middlewares, "middlewares cannot be empty");
+    this.middlewares = middlewares;
   }
 }

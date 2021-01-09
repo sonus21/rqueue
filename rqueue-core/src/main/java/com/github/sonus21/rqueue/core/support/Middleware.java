@@ -14,20 +14,11 @@
  *
  */
 
-package com.github.sonus21.rqueue.spring.tests;
+package com.github.sonus21.rqueue.core.support;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
+import com.github.sonus21.rqueue.core.Job;
 
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Tag("springIntegration")
-@Tag("integration")
-@Tag("spring")
-@ExtendWith(SpringTestTracerExtension.class)
-public @interface SpringIntegrationTest {}
+public interface Middleware {
+
+  Middleware handle(Job job, Middleware next);
+}

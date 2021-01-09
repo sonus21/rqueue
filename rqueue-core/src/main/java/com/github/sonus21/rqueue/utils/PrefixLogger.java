@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.utils;
@@ -32,17 +32,24 @@ public class PrefixLogger {
     }
   }
 
-  public void log(Level level, String msg, Throwable t, Object... arguments) {
+  private boolean shouldLog(Level level) {
     if (level == Level.DEBUG && !log.isDebugEnabled()) {
-      return;
+      return false;
     }
     if (level == Level.ERROR && !log.isErrorEnabled()) {
-      return;
+      return false;
     }
     if (level == Level.INFO && !log.isInfoEnabled()) {
-      return;
+      return false;
     }
     if (level == Level.WARN && !log.isWarnEnabled()) {
+      return false;
+    }
+    return level != Level.TRACE || log.isTraceEnabled();
+  }
+
+  public void log(Level level, String msg, Throwable t, Object... arguments) {
+    if (!shouldLog(level)) {
       return;
     }
     if (t == null) {

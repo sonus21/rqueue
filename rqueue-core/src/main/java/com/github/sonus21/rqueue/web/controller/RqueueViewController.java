@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.web.controller;
@@ -20,9 +20,9 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
+import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
-import com.github.sonus21.rqueue.models.enums.TaskStatus;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
@@ -35,7 +35,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
@@ -132,7 +131,7 @@ public class RqueueViewController {
     addNonce(model, "indexNonce");
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
-    model.addAttribute("typeSelectors", TaskStatus.getActiveChartStatus());
+    model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
     return rqueueViewResolver.resolveViewName("index", Locale.ENGLISH);
   }
 
@@ -149,7 +148,7 @@ public class RqueueViewController {
     List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
     List<Entry<String, List<Entry<NavTab, RedisDataDetail>>>> queueNameConfigs =
         new ArrayList<>(rqueueQDetailService.getQueueDataStructureDetails(queueConfigs).entrySet());
-    queueNameConfigs.sort(Comparator.comparing(Entry::getKey));
+    queueNameConfigs.sort(Entry.comparingByKey());
     model.addAttribute("queues", queueConfigs);
     model.addAttribute("queueConfigs", queueNameConfigs);
     return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
@@ -176,7 +175,7 @@ public class RqueueViewController {
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
-    model.addAttribute("typeSelectors", TaskStatus.getActiveChartStatus());
+    model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
     model.addAttribute("queueActions", queueActions);
     model.addAttribute("queueRedisDataDetails", queueRedisDataDetail);
     model.addAttribute("config", queueConfig);

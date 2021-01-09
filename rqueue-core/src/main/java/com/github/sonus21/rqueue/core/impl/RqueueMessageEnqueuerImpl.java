@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core.impl;
@@ -54,6 +54,12 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateMessageId(messageId);
     validateMessage(message);
     return pushMessage(queueName, messageId, message, null, null) != null;
+  }
+
+  @Override
+  public boolean enqueueUnique(String queueName, String messageId, Object message) {
+    // TODO? is using monotonic time sufficient for handling uniqueness
+    return enqueue(queueName, messageId, message);
   }
 
   @Override
@@ -118,6 +124,12 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
   }
 
   @Override
+  public boolean enqueueUniqueIn(
+      String queueName, String messageId, Object message, long delayInMillisecond) {
+    return enqueueIn(queueName, messageId, message, delayInMillisecond);
+  }
+
+  @Override
   public String enqueueInWithRetry(
       String queueName, Object message, int retryCount, long delayInMilliSecs) {
     validateQueue(queueName);
@@ -136,37 +148,6 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
     return pushMessage(queueName, messageId, message, retryCount, delayInMilliSecs) != null;
-  }
-
-  @Override
-  public String enqueueInWithPriority(
-      String queueName, String priority, Object message, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validatePriority(priority);
-    validateMessage(message);
-    validateDelay(delayInMilliSecs);
-    return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority),
-        null,
-        message,
-        null,
-        delayInMilliSecs);
-  }
-
-  @Override
-  public boolean enqueueInWithPriority(
-      String queueName, String priority, String messageId, Object message, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validatePriority(priority);
-    validateMessage(message);
-    validateDelay(delayInMilliSecs);
-    return pushMessage(
-            PriorityUtils.getQueueNameForPriority(queueName, priority),
-            messageId,
-            message,
-            null,
-            delayInMilliSecs)
-        != null;
   }
 
   @Override
