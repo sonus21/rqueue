@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -147,5 +148,9 @@ public class QueueDetail extends SerializableBase {
         .concurrency(concurrency)
         .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, priority))
         .build();
+  }
+
+  public Duration visibilityTimeoutDuration() {
+    return Duration.ofMillis(visibilityTimeout);
   }
 }

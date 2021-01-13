@@ -65,8 +65,10 @@ public class RqueueMessage extends SerializableBase {
   // period of this task, if this is a periodic task.
   private long period;
 
-  public void updateReEnqueuedAt() {
+  @JsonIgnore
+  public RqueueMessage updateReEnqueuedAt() {
     reEnqueuedAt = System.currentTimeMillis();
+    return this;
   }
 
   @Override

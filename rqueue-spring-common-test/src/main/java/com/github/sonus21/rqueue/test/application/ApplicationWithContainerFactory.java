@@ -17,10 +17,16 @@
 package com.github.sonus21.rqueue.test.application;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
-import com.github.sonus21.rqueue.core.support.Middleware;
-import com.github.sonus21.rqueue.test.middlewares.LoggingMiddleware;
-import com.github.sonus21.rqueue.test.middlewares.RateLimitingMiddleware;
+import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.core.context.Context;
+import com.github.sonus21.rqueue.core.context.DefaultContext;
+import com.github.sonus21.rqueue.core.middleware.ContextMiddleware;
+import com.github.sonus21.rqueue.core.middleware.LoggingMiddleware;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.core.middleware.PermissionMiddleware;
+import com.github.sonus21.rqueue.core.middleware.RateLimitingMiddleware;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -32,11 +38,37 @@ public abstract class ApplicationWithContainerFactory extends BaseApplication {
   @Value("${middleware:}")
   private List<String> middlewareNames;
 
+  @Value("${roles:}")
+  private List<String> roles;
+
   @Value("${rate.limiter.count:5}")
   private int rateLimiterCount;
 
   @Bean
-  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
+  public RateLimiter rateLimitingMiddleware() {
+    return new RateLimiter(rateLimiterCount);
+  }
+
+  @Bean
+  public PermissionMiddleware permissionMiddleware() {
+    return new TestPermissionMiddleware();
+  }
+
+  @Bean
+  public ContextMiddleware contextMiddleware() {
+    return new ContextMiddleware() {
+      @Override
+      public Context getContext(Job job) {
+        return new DefaultContext(null).setValue("UserType", roles);
+      }
+    };
+  }
+
+  @Bean
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
+      RateLimiter rateLimiter,
+      PermissionMiddleware permissionMiddleware,
+      ContextMiddleware contextMiddleware) {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setInspectAllBean(false);
     if (StringUtils.isEmpty(middlewareNames)) {
@@ -44,15 +76,65 @@ public abstract class ApplicationWithContainerFactory extends BaseApplication {
     }
     List<Middleware> middlewares = new ArrayList<>(middlewareNames.size());
     for (String middleware : middlewareNames) {
-      if (middleware.equals("log")) {
-        middlewares.add(new LoggingMiddleware());
-      } else if (middleware.equals("rate")) {
-        middlewares.add(new RateLimitingMiddleware(rateLimiterCount));
+      switch (middleware) {
+        case "log":
+          middlewares.add(new LoggingMiddleware());
+          break;
+        case "context":
+          middlewares.add(contextMiddleware);
+          break;
+        case "rate":
+          middlewares.add(rateLimiter);
+          break;
+        case "permission":
+          middlewares.add(permissionMiddleware);
+          break;
       }
     }
     if (!CollectionUtils.isEmpty(middlewares)) {
       factory.setMiddlewares(middlewares);
     }
     return factory;
+  }
+
+  public static class RateLimiter extends RateLimitingMiddleware {
+
+    private static final Object monitor = new Object();
+    private final int maxCount;
+    private final List<Job> throttledJobs = new LinkedList<>();
+    private int currentCount = 0;
+
+    RateLimiter(int count) {
+      this.maxCount = count;
+    }
+
+    public List<Job> getThrottledJobs() {
+      return throttledJobs;
+    }
+
+    @Override
+    public boolean isThrottled(Job job) {
+      synchronized (monitor) {
+        if (currentCount == maxCount) {
+          throttledJobs.add(job);
+          return true;
+        }
+        currentCount += 1;
+      }
+      return false;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static class TestPermissionMiddleware extends PermissionMiddleware {
+
+    @Override
+    public boolean hasPermission(Job job) {
+      List<String> roles = (List<String>) job.getContext().getValue("UserRoles");
+      if (CollectionUtils.isEmpty(roles)) {
+        return false;
+      }
+      return roles.contains("Admin");
+    }
   }
 }

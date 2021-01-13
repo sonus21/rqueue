@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.core.support;
+package com.github.sonus21.rqueue.core.middleware;
 
 import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
 
@@ -25,7 +25,7 @@ import com.github.sonus21.rqueue.models.db.Execution;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
-public class HandlerMiddleware implements Middleware {
+public class HandlerMiddleware extends Middleware {
 
   private final RqueueMessageHandler rqueueMessageHandler;
 
@@ -34,7 +34,7 @@ public class HandlerMiddleware implements Middleware {
   }
 
   @Override
-  public Middleware handle(Job job, Middleware next) {
+  public void handle(Job job) {
     Execution execution = job.getLatestExecution();
     RqueueMessage rqueueMessage = job.getRqueueMessage();
     Message<?> message =
@@ -42,6 +42,5 @@ public class HandlerMiddleware implements Middleware {
             rqueueMessage.getMessage(),
             buildMessageHeaders(job.getQueueDetail().getName(), rqueueMessage, job, execution));
     rqueueMessageHandler.handleMessage(message);
-    return next;
   }
 }

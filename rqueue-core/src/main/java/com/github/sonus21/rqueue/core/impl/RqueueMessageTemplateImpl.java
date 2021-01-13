@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core.impl;
@@ -91,7 +91,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public void moveMessage(
       String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay) {
-    RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE);
+    RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE_TO_ZSET);
     Long response =
         scriptExecutor.execute(
             script,
@@ -99,6 +99,17 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
             src,
             tgt,
             System.currentTimeMillis() + delay);
+    if (response == null) {
+      log.error("Duplicate processing for the message {}", src);
+    }
+  }
+
+  @Override
+  public void moveMessage(
+      String srcZsetName, String tgtListName, RqueueMessage src, RqueueMessage tgt) {
+    RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE_TO_LIST);
+    Long response =
+        scriptExecutor.execute(script, Arrays.asList(srcZsetName, tgtListName), src, tgt);
     if (response == null) {
       log.error("Duplicate processing for the message {}", src);
     }

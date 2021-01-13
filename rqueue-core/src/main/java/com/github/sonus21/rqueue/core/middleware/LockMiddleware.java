@@ -14,33 +14,31 @@
  *
  */
 
-package com.github.sonus21.rqueue.test.middlewares;
+package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
-import com.github.sonus21.rqueue.core.support.Middleware;
-import lombok.extern.slf4j.Slf4j;
+import com.github.sonus21.rqueue.models.enums.JobStatus;
 
-@Slf4j
-public class RateLimitingMiddleware implements Middleware {
+public abstract class LockMiddleware extends TimeProviderMiddleware {
 
-  private final Object monitor;
-  private final int count;
-  private int currentCount = 0;
+  public static final String REASON = "Lock could not be acquired";
 
-  public RateLimitingMiddleware(int count) {
-    this.count = count;
-    this.monitor = new Object();
-  }
+  public abstract String acquireLock(Job job);
+
+  public abstract void releaseLock(Job job, String lockIdentifier);
 
   @Override
-  public Middleware handle(Job job, Middleware next) {
-    log.info("{}", job);
-    synchronized (monitor) {
-      if (this.count == currentCount) {
-        return null;
+  public void handle(Job job) {
+    String lockIdentifier = null;
+    try {
+      lockIdentifier = acquireLock(job);
+      if (lockIdentifier != null) {
+        handleNext(job);
+      } else {
+        job.release(JobStatus.FAILED, REASON, releaseIn(job));
       }
-      this.currentCount += 1;
+    } finally {
+      releaseLock(job, lockIdentifier);
     }
-    return next;
   }
 }

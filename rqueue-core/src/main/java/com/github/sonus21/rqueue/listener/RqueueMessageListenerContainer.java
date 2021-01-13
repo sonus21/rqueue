@@ -26,8 +26,9 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.middleware.HandlerMiddleware;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
-import com.github.sonus21.rqueue.core.support.Middleware;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
@@ -67,6 +68,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Container providing asynchronous behaviour for Rqueue message listeners. Handles the low level
@@ -91,10 +93,12 @@ public class RqueueMessageListenerContainer
   private PostProcessingHandler postProcessingHandler;
   private final Map<String, QueueThread> queueThreadMap = new ConcurrentHashMap<>();
   private final Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue =
+      new ConcurrentHashMap<>();
 
   @Autowired(required = false)
   private RqueueMetricsCounter rqueueMetricsCounter;
+
   @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
   @Autowired
@@ -121,6 +125,7 @@ public class RqueueMessageListenerContainer
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
+  private Middleware middleware;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -274,6 +279,19 @@ public class RqueueMessageListenerContainer
     initializeRunningQueueState();
   }
 
+  private void initializeMiddleware() {
+    if (!CollectionUtils.isEmpty(getMiddleWares())) {
+      Middleware prevMiddleware = new HandlerMiddleware(rqueueMessageHandler);
+      for (int i = middlewares.size() - 1; i >= 0; i--) {
+        this.middleware = middlewares.get(i);
+        this.middleware.setNext(prevMiddleware);
+        prevMiddleware = this.middleware;
+      }
+    } else {
+      this.middleware = new HandlerMiddleware(rqueueMessageHandler);
+    }
+  }
+
   private void initialize() {
     initializeQueue();
     this.postProcessingHandler =
@@ -289,6 +307,7 @@ public class RqueueMessageListenerContainer
                 discardMessageProcessor,
                 postExecutionMessageProcessor),
             rqueueSystemConfigDao);
+    initializeMiddleware();
   }
 
   @Override
@@ -667,5 +686,9 @@ public class RqueueMessageListenerContainer
 
   public List<Middleware> getMiddleWares() {
     return middlewares;
+  }
+
+  Middleware getMiddleware() {
+    return middleware;
   }
 }

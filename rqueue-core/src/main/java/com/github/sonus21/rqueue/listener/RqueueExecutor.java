@@ -23,9 +23,6 @@ import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.impl.JobImpl;
-import com.github.sonus21.rqueue.core.support.HandlerMiddleware;
-import com.github.sonus21.rqueue.core.support.Middleware;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -33,7 +30,6 @@ import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +37,6 @@ import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.util.CollectionUtils;
 
 @Slf4j
 class RqueueExecutor extends MessageContainerBase {
@@ -100,7 +95,7 @@ class RqueueExecutor extends MessageContainerBase {
               messageMetadata,
               rqueueMessage,
               userMessage,
-              t);
+              t, postProcessingHandler);
     }
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }
@@ -224,18 +219,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void processMessage() {
-    Middleware next = new HandlerMiddleware(rqueueMessageHandler);
-    List<Middleware> middlewares = Objects.requireNonNull(container.get()).getMiddleWares();
-    if (CollectionUtils.isEmpty(middlewares)) {
-      next.handle(job, null);
-    } else {
-      for (Middleware middleware : middlewares) {
-        next = middleware.handle(job, next);
-        if (next == null) {
-          break;
-        }
-      }
-    }
+    Objects.requireNonNull(container.get()).getMiddleware().handle(job);
     status = ExecutionStatus.SUCCESSFUL;
   }
 

@@ -20,7 +20,6 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.impl.JobImpl;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -31,6 +30,7 @@ import com.github.sonus21.rqueue.utils.PrefixLogger;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
+import java.io.Serializable;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.context.ApplicationEventPublisher;
@@ -202,17 +202,35 @@ class PostProcessingHandler extends PrefixLogger {
     publishEvent(job, newMessage, MessageStatus.MOVED_TO_DLQ);
   }
 
-  private void parkMessageForRetry(JobImpl job, int failureCount, long delay) {
-    log(Level.TRACE, "Message {} will be retried in {}Ms", null, job.getRqueueMessage(), delay);
+  void parkMessageForRetry(JobImpl job, Serializable why, int failureCount, long delay) {
+    if (why == null) {
+      log(Level.TRACE, "Message {} will be retried in {}Ms", null, job.getRqueueMessage(), delay);
+    } else {
+      log(
+          Level.TRACE,
+          "Message {} will be retried in {}Ms, Reason: {}",
+          null,
+          job.getRqueueMessage(),
+          delay,
+          why);
+    }
     RqueueMessage rqueueMessage = job.getRqueueMessage();
-    RqueueMessage newMessage = rqueueMessage.toBuilder().failureCount(failureCount).build();
-    newMessage.updateReEnqueuedAt();
-    rqueueMessageTemplate.moveMessage(
-        job.getQueueDetail().getProcessingQueueName(),
-        job.getQueueDetail().getDelayedQueueName(),
-        rqueueMessage,
-        newMessage,
-        delay);
+    RqueueMessage newMessage =
+        rqueueMessage.toBuilder().failureCount(failureCount).build().updateReEnqueuedAt();
+    if (delay <= 0) {
+      rqueueMessageTemplate.moveMessage(
+          job.getQueueDetail().getProcessingQueueName(),
+          job.getQueueDetail().getQueueName(),
+          rqueueMessage,
+          newMessage);
+    } else {
+      rqueueMessageTemplate.moveMessage(
+          job.getQueueDetail().getProcessingQueueName(),
+          job.getQueueDetail().getDelayedQueueName(),
+          rqueueMessage,
+          newMessage,
+          delay);
+    }
     updateMetadata(job, newMessage, MessageStatus.FAILED);
   }
 
@@ -225,7 +243,7 @@ class PostProcessingHandler extends PrefixLogger {
     deleteMessage(job, MessageStatus.DISCARDED, failureCount);
   }
 
-  private void handleManualDeletion(JobImpl job, int failureCount) {
+  void handleManualDeletion(JobImpl job, int failureCount) {
     log(Level.DEBUG, "Message Deleted {} successfully", null, job.getRqueueMessage());
     deleteMessage(job, MessageStatus.DELETED, failureCount);
   }
@@ -257,7 +275,7 @@ class PostProcessingHandler extends PrefixLogger {
       if (delay == TaskExecutionBackOff.STOP) {
         handleRetryExceededMessage(job, failureCount);
       } else {
-        parkMessageForRetry(job, failureCount, delay);
+        parkMessageForRetry(job, null, failureCount, delay);
       }
     } else {
       handleRetryExceededMessage(job, failureCount);

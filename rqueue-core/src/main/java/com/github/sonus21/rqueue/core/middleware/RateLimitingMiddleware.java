@@ -14,11 +14,23 @@
  *
  */
 
-package com.github.sonus21.rqueue.core.support;
+package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.models.enums.JobStatus;
+import lombok.extern.slf4j.Slf4j;
 
-public interface Middleware {
+@Slf4j
+public abstract class RateLimitingMiddleware extends TimeProviderMiddleware {
 
-  Middleware handle(Job job, Middleware next);
+  public abstract boolean isThrottled(Job job);
+
+  @Override
+  public void handle(Job job) {
+    if (isThrottled(job)) {
+      job.release(JobStatus.FAILED, "Throttled", releaseIn(job));
+    } else {
+      handleNext(job);
+    }
+  }
 }

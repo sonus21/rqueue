@@ -14,13 +14,14 @@
  *
  */
 
-package com.github.sonus21.rqueue.core.impl;
+package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.context.Context;
+import com.github.sonus21.rqueue.core.context.DefaultContext;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
-import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.RqueueJob;
@@ -46,9 +47,11 @@ public class JobImpl implements Job {
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
   private final Object userMessage;
+  private final PostProcessingHandler postProcessingHandler;
   private final boolean isPeriodicJob;
-  private boolean deleted;
-  private boolean released;
+  private Context context = new DefaultContext(null);
+  private Boolean released;
+  private Boolean deleted;
 
   public JobImpl(
       RqueueConfig rqueueConfig,
@@ -58,12 +61,14 @@ public class JobImpl implements Job {
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
       Object userMessage,
-      Throwable exception) {
+      Throwable exception,
+      PostProcessingHandler postProcessingHandler) {
     this.rqueueJobDao = rqueueJobDao;
     this.messageMetadataService = messageMetadataService;
     this.rqueueConfig = rqueueConfig;
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
+    this.postProcessingHandler = postProcessingHandler;
     this.rqueueJob =
         new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
     this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
@@ -118,7 +123,7 @@ public class JobImpl implements Job {
     return rqueueJob.getMessageMetadata();
   }
 
-  public void setMessageMetadata(MessageMetadata m) {
+  void setMessageMetadata(MessageMetadata m) {
     this.rqueueJob.setMessageMetadata(m);
     this.save();
   }
@@ -147,12 +152,86 @@ public class JobImpl implements Job {
     return queueDetail;
   }
 
+  @Override
+  public Execution getLatestExecution() {
+    List<Execution> executions = rqueueJob.getExecutions();
+    if (CollectionUtils.isEmpty(executions)) {
+      return null;
+    }
+    return executions.get(executions.size() - 1);
+  }
+
+  @Override
+  public Context getContext() {
+    return context;
+  }
+
+  @Override
+  public void setContext(Context context) {
+    this.context = context;
+  }
+
+  @Override
+  public void release(JobStatus jobStatus, Serializable why, Duration duration) {
+    this.released = true;
+    postProcessingHandler.parkMessageForRetry(this, why, getFailureCount(), duration.toMillis());
+  }
+
+  @Override
+  public void release(JobStatus jobStatus, Serializable why) {
+    this.release(jobStatus, why, Duration.ZERO);
+  }
+
+  @Override
+  public void delete(JobStatus status, Serializable why) {
+    this.deleted = true;
+    this.postProcessingHandler.handleManualDeletion(this, getFailureCount());
+  }
+
+  @Override
+  public boolean isDeleted() {
+    if (deleted == null) {
+      return getMessageMetadata().getStatus().isTerminalState();
+    }
+    return deleted;
+  }
+
+  @Override
+  public boolean isReleased() {
+    if (released == null) {
+      return MessageStatus.FAILED.equals(getMessageMetadata().getStatus());
+    }
+    return released;
+  }
+
+  @Override
+  public boolean hasMovedToDeadLetterQueue() {
+    return MessageStatus.MOVED_TO_DLQ.equals(getMessageMetadata().getStatus());
+  }
+
+  @Override
+  public boolean isDiscarded() {
+    return MessageStatus.DISCARDED.equals(getMessageMetadata().getStatus());
+  }
+
   private void setMessageStatus(MessageStatus messageStatus) {
     rqueueJob.setStatus(messageStatus.getJobStatus());
     rqueueJob.getMessageMetadata().setStatus(messageStatus);
   }
 
-  public void updateMessageStatus(MessageStatus messageStatus) {
+  @Override
+  public int getFailureCount() {
+    return getFailureCountInternal();
+  }
+
+  private int getFailureCountInternal() {
+    if (isDeleted() || isReleased()) {
+      return getRqueueMessage().getFailureCount() + rqueueJob.getExecutions().size();
+    }
+    return getRqueueMessage().getFailureCount();
+  }
+
+  void updateMessageStatus(MessageStatus messageStatus) {
     Duration messageMetaExpiry;
     if (messageStatus.isTerminalState()) {
       messageMetaExpiry =
@@ -165,54 +244,18 @@ public class JobImpl implements Job {
     save();
   }
 
-  public Execution execute() {
+  Execution execute() {
     Execution execution = rqueueJob.startNewExecution();
     save();
     return execution;
   }
 
-  @Override
-  public Execution getLatestExecution() {
-    List<Execution> executions = rqueueJob.getExecutions();
-    if (CollectionUtils.isEmpty(executions)) {
-      return null;
-    }
-    return executions.get(executions.size() - 1);
-  }
-
-  @Override
-  public void release(JobStatus jobStatus) {
-    this.released = true;
-    // TODO
-  }
-
-  @Override
-  public void release(JobStatus status, Duration duration) {
-    this.released = true;
-    // TODO
-  }
-
-  @Override
-  public void delete(JobStatus status) {
-    this.deleted = true;
-  }
-
-  @Override
-  public boolean isDeleted() {
-    return deleted;
-  }
-
-  @Override
-  public boolean isReleased() {
-    return released;
-  }
-
-  public void updateExecutionStatus(ExecutionStatus status, Throwable e) {
+  void updateExecutionStatus(ExecutionStatus status, Throwable e) {
     rqueueJob.updateExecutionStatus(status, e);
     save();
   }
 
-  public void updateExecutionTime(RqueueMessage rqueueMessage, MessageStatus messageStatus) {
+  void updateExecutionTime(RqueueMessage rqueueMessage, MessageStatus messageStatus) {
     long executionTime = getExecutionTime();
     rqueueJob.getMessageMetadata().setRqueueMessage(rqueueMessage);
     if (getRqueueMessage().isPeriodicTask()) {

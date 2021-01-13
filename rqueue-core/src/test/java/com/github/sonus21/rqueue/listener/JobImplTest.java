@@ -1,20 +1,20 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
-package com.github.sonus21.rqueue.core.impl;
+package com.github.sonus21.rqueue.listener;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -34,7 +34,6 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
-import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
@@ -82,6 +81,7 @@ class JobImplTest extends TestBase {
         messageMetadata,
         rqueueMessage,
         userMessage,
+        null,
         null);
     verify(rqueueJobDao, times(1))
         .createJob(any(), eq(Duration.ofMillis(2 * queueDetail.getVisibilityTimeout())));
@@ -98,6 +98,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     assertNotNull(job.getId());
   }
@@ -113,6 +114,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     assertEquals(rqueueMessage, job.getRqueueMessage());
   }
@@ -128,6 +130,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     job.execute();
     job.checkIn("test..");
@@ -144,6 +147,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     job2.execute();
     try {
@@ -167,6 +171,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     assertEquals(userMessage, job.getMessage());
   }
@@ -182,6 +187,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     assertEquals(messageMetadata, job.getMessageMetadata());
   }
@@ -197,6 +203,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     assertEquals(JobStatus.CREATED, job.getStatus());
   }
@@ -213,7 +220,8 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            exception);
+            exception,
+            null);
     assertEquals(exception, job.getException());
   }
 
@@ -228,6 +236,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     assertEquals(0, job.getExecutionTime());
   }
@@ -243,6 +252,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     assertEquals(queueDetail, job.getQueueDetail());
   }
@@ -260,6 +270,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     job.setMessageMetadata(newMeta);
     assertEquals(newMeta, job.getMessageMetadata());
@@ -278,6 +289,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     job.updateMessageStatus(MessageStatus.PROCESSING);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
@@ -298,6 +310,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     Execution execution = job.execute();
     verify(rqueueJobDao, times(1)).createJob(any(), any());
@@ -319,6 +332,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     Execution execution = job.execute();
     job.updateExecutionStatus(ExecutionStatus.FAILED, exception);
@@ -343,6 +357,7 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
+            null,
             null);
     job.execute();
     job.updateExecutionTime(rqueueMessage, MessageStatus.SUCCESSFUL);

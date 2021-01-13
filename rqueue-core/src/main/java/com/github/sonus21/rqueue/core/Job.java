@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -106,13 +107,23 @@ public interface Job {
 
   Execution getLatestExecution();
 
-  void release(JobStatus status);
+  Context getContext();
 
-  void release(JobStatus status, Duration duration);
+  void setContext(Context context);
 
-  void delete(JobStatus status);
+  void release(JobStatus status, Serializable why, Duration duration);
+
+  void release(JobStatus status, Serializable why);
+
+  void delete(JobStatus status, Serializable why);
 
   boolean isDeleted();
 
   boolean isReleased();
+
+  boolean hasMovedToDeadLetterQueue();
+
+  boolean isDiscarded();
+
+  int getFailureCount();
 }

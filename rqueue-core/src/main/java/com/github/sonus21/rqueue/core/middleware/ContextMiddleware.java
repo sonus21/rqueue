@@ -14,18 +14,18 @@
  *
  */
 
-package com.github.sonus21.rqueue.test.middlewares;
+package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
-import com.github.sonus21.rqueue.core.support.Middleware;
-import lombok.extern.slf4j.Slf4j;
+import com.github.sonus21.rqueue.core.context.Context;
 
-@Slf4j
-public class LoggingMiddleware implements Middleware {
+public abstract class ContextMiddleware extends Middleware {
+
+  public abstract Context getContext(Job job);
 
   @Override
-  public Middleware handle(Job job, Middleware next) {
-    log.info("Job Id {}", job.getId());
-    return next;
+  public void handle(Job job) {
+    job.setContext(getContext(job));
+    handleNext(job);
   }
 }
