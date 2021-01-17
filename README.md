@@ -258,7 +258,7 @@ environment variables for Spring versions.
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
   
-* StackOverflow [https://stackoverflow.com/tags/rqueue]
+* StackOverflow [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
 
 ## License
 
