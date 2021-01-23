@@ -27,7 +27,15 @@ test {
     }
     jacoco {
         if (System.getenv("CIRCLECI") == "true") {
-            destinationFile = file("$buildDir/jacoco/${System.env.CIRCLE_WORKFLOW_JOB_ID}_test.exec")
+            destinationFile = file("$buildDir/reports/jacoco/${System.env.CIRCLE_WORKFLOW_JOB_ID}_test.exec")
+        } else {
+            destinationFile = file("$buildDir/reports/jacoco/test.exec")
         }
+    }
+    reports {
+        junitXml.enabled = System.getenv("CIRCLECI") == "true"
+        junitXml.destination = file("$buildDir/reports/junit/xml")
+        html.enabled = System.getenv("CIRCLECI") != "true"
+        html.destination = file("$buildDir/reports/junit/html")
     }
 }

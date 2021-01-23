@@ -1,25 +1,28 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import java.io.Serializable;
+import java.time.Duration;
 
 /**
  * On each execution Rqueue creates a job to track it's status and execution progress.
@@ -37,6 +40,13 @@ public interface Job {
    * @return string job id
    */
   String getId();
+
+  /**
+   * Get message id corresponding to this job
+   *
+   * @return message id
+   */
+  String getMessageId();
 
   /**
    * RqueueMessage that's consumed by this job
@@ -101,4 +111,26 @@ public interface Job {
    * @return queue detail object
    */
   QueueDetail getQueueDetail();
+
+  Execution getLatestExecution();
+
+  Context getContext();
+
+  void setContext(Context context);
+
+  void release(JobStatus status, Serializable why, Duration duration);
+
+  void release(JobStatus status, Serializable why);
+
+  void delete(JobStatus status, Serializable why);
+
+  boolean isDeleted();
+
+  boolean isReleased();
+
+  boolean hasMovedToDeadLetterQueue();
+
+  boolean isDiscarded();
+
+  int getFailureCount();
 }

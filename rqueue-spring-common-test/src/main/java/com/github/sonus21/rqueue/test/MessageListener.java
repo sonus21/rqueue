@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.test;
@@ -53,9 +53,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
 public class MessageListener {
-  @NonNull private ConsumedMessageStore consumedMessageStore;
-  @NonNull private FailureManager failureManager;
-  @NonNull private RqueueConfig rqueueConfig;
+
+  @NonNull
+  private final ConsumedMessageStore consumedMessageStore;
+  @NonNull
+  private final FailureManager failureManager;
+  @NonNull
+  private final RqueueConfig rqueueConfig;
   private ScheduledExecutorService scheduledExecutorService;
 
   @Value("${job.queue.name}")
@@ -222,11 +226,11 @@ public class MessageListener {
       value = "${reservation.request.dead.letter.queue.name}",
       active = "${reservation.request.dead.letter.consumer.enabled}",
       numRetries = "${reservation.request.dead.letter.queue.retry.count}")
-  public void onMessageReservationRequestDeadLetterQueue(ReservationRequest request)
+  public void onMessageReservationRequestDeadLetterQueue(
+      ReservationRequest request, @Header(RqueueMessageHeaders.MESSAGE) RqueueMessage rqueueMessage)
       throws Exception {
     log.info("ReservationRequest Dead Letter Queue{}", request);
-    consumedMessageStore.save(
-        request, "reservation-request-dlq", reservationRequestDeadLetterQueue);
+    consumedMessageStore.save(request, rqueueMessage, reservationRequestDeadLetterQueue);
   }
 
   @RqueueListener(value = "${list.email.queue.name}", active = "${list.email.queue.enabled}")

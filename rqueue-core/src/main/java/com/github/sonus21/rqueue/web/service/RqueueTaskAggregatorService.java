@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.web.service;
@@ -26,7 +26,7 @@ import com.github.sonus21.rqueue.models.aggregator.QueueEvents;
 import com.github.sonus21.rqueue.models.aggregator.TasksStat;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
-import com.github.sonus21.rqueue.models.enums.TaskStatus;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
@@ -209,17 +209,17 @@ public class RqueueTaskAggregatorService
 
   private class EventAggregator implements Runnable {
     private void aggregate(RqueueExecutionEvent event, TasksStat stat) {
-      TaskStatus taskStatus = event.getJob().getMessageMetadata().getStatus().getTaskStatus();
-      if (TaskStatus.DISCARDED.equals(taskStatus)) {
+      MessageMetadata messageMetadata = event.getJob().getMessageMetadata();
+      RqueueMessage rqueueMessage = event.getJob().getRqueueMessage();
+      MessageStatus messageStatus = messageMetadata.getStatus();
+      if (MessageStatus.DISCARDED.equals(messageStatus)) {
         stat.discarded += 1;
-      } else if (TaskStatus.SUCCESSFUL.equals(taskStatus)) {
+      } else if (MessageStatus.SUCCESSFUL.equals(messageStatus)) {
         stat.success += 1;
-      } else if (TaskStatus.MOVED_TO_DLQ.equals(taskStatus)) {
+      } else if (MessageStatus.MOVED_TO_DLQ.equals(messageStatus)) {
         stat.movedToDlq += 1;
       }
-      RqueueMessage rqueueMessage = event.getJob().getRqueueMessage();
-      MessageMetadata messageMetadata = event.getJob().getMessageMetadata();
-      if (rqueueMessage.getFailureCount() != 0) {
+      if (rqueueMessage.getFailureCount() > 0) {
         stat.retried += 1;
       }
       stat.minExecution = Math.min(stat.minExecution, messageMetadata.getTotalExecutionTime());

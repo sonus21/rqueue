@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.listener;
@@ -22,16 +22,19 @@ import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
 import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.impl.JobImpl;
+import com.github.sonus21.rqueue.core.middleware.HandlerMiddleware;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
-import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +50,6 @@ class RqueueExecutor extends MessageContainerBase {
   private final PostProcessingHandler postProcessingHandler;
   private final Semaphore semaphore;
   private final RqueueConfig rqueueConfig;
-  private Message<String> message;
   private boolean updatedToProcessing;
   private JobImpl job;
   private ExecutionStatus status;
@@ -98,7 +100,8 @@ class RqueueExecutor extends MessageContainerBase {
               messageMetadata,
               rqueueMessage,
               userMessage,
-              t);
+              t,
+              postProcessingHandler);
     }
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }
@@ -144,9 +147,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean shouldIgnore() {
-    return !Objects.requireNonNull(container.get())
-        .getPreExecutionMessageProcessor()
-        .process(job.getMessage(), job.getRqueueMessage());
+    return !Objects.requireNonNull(container.get()).getPreExecutionMessageProcessor().process(job);
   }
 
   private boolean isOldMessage() {
@@ -208,12 +209,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void begin() {
-    Execution execution = job.execute();
-    RqueueMessage rqueueMessage = job.getRqueueMessage();
-    this.message =
-        MessageBuilder.createMessage(
-            rqueueMessage.getMessage(),
-            buildMessageHeaders(job.getQueueDetail().getName(), rqueueMessage, job, execution));
+    job.execute();
     this.error = null;
     this.status = getStatus();
   }
@@ -226,12 +222,37 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
+  private void callMiddlewares(int currentIndex, List<Middleware> middlewares, Job job)
+      throws Exception {
+    if (currentIndex == middlewares.size()) {
+      new HandlerMiddleware(rqueueMessageHandler).handle(job, null);
+    } else {
+      middlewares
+          .get(currentIndex)
+          .handle(
+              job,
+              () -> {
+                callMiddlewares(currentIndex + 1, middlewares, job);
+                return null;
+              });
+    }
+  }
+
+  private void processMessage() throws Exception {
+    List<Middleware> middlewareList = Objects.requireNonNull(container.get()).getMiddleWares();
+    if (middlewareList == null) {
+      callMiddlewares(0, Collections.emptyList(), job);
+    } else {
+      callMiddlewares(0, middlewareList, job);
+    }
+    status = ExecutionStatus.SUCCESSFUL;
+  }
+
   private void execute() {
     try {
       updateToProcessing();
       updateCounter(false);
-      rqueueMessageHandler.handleMessage(message);
-      status = ExecutionStatus.SUCCESSFUL;
+      processMessage();
     } catch (MessagingException e) {
       updateCounter(true);
       failureCount += 1;

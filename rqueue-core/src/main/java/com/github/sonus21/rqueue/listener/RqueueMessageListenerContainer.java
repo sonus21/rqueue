@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.listener;
@@ -19,12 +19,14 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.Constants.DEFAULT_WORKER_COUNT_PER_QUEUE;
 import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForTermination;
 import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForWorkerTermination;
+import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -87,21 +89,30 @@ public class RqueueMessageListenerContainer
   private MessageProcessor preExecutionMessageProcessor;
   private TaskExecutionBackOff taskExecutionBackOff = new FixedTaskExecutionBackOff();
   private PostProcessingHandler postProcessingHandler;
-  @Autowired private ApplicationEventPublisher applicationEventPublisher;
-  @Autowired private RqueueWebConfig rqueueWebConfig;
-  @Autowired private RqueueConfig rqueueConfig;
+  private final Map<String, QueueThread> queueThreadMap = new ConcurrentHashMap<>();
+  private final Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue =
+      new ConcurrentHashMap<>();
 
   @Autowired(required = false)
   private RqueueMetricsCounter rqueueMetricsCounter;
 
-  @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Autowired private RqueueJobDao rqueueJobDao;
-  @Autowired private RqueueStringDao rqueueStringDao;
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
+  @Autowired
+  private RqueueWebConfig rqueueWebConfig;
+  @Autowired
+  private RqueueConfig rqueueConfig;
+  @Autowired
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Autowired
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
   private AsyncTaskExecutor taskExecutor;
-  private Map<String, QueueThread> queueThreadMap = new ConcurrentHashMap<>();
-  private Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
-  private ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue = new ConcurrentHashMap<>();
+  @Autowired
+  private RqueueJobDao rqueueJobDao;
+  @Autowired
+  private RqueueStringDao rqueueStringDao;
+  private List<Middleware> middlewares;
   private Integer maxNumWorkers;
   private String beanName;
   private boolean defaultTaskExecutor = false;
@@ -112,6 +123,7 @@ public class RqueueMessageListenerContainer
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
+  private Middleware middleware;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -635,6 +647,11 @@ public class RqueueMessageListenerContainer
     this.priorityMode = priorityMode;
   }
 
+  public void setMiddlewares(List<Middleware> middlewares) {
+    notEmpty(middlewares, "middlewares cannot be null");
+    this.middlewares = middlewares;
+  }
+
   RqueueMessageMetadataService rqueueMessageMetadataService() {
     return rqueueMessageMetadataService;
   }
@@ -650,4 +667,9 @@ public class RqueueMessageListenerContainer
   RqueueStringDao rqueueStringDao() {
     return rqueueStringDao;
   }
+
+  public List<Middleware> getMiddleWares() {
+    return middlewares;
+  }
+
 }

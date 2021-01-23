@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.listener;
@@ -133,12 +133,12 @@ class RqueueExecutorTest extends TestBase {
         .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doAnswer(i -> defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     new RqueueExecutor(
-            containerWeakReference,
-            rqueueConfig,
-            postProcessingHandler,
-            rqueueMessage,
-            queueDetail,
-            semaphore)
+        containerWeakReference,
+        rqueueConfig,
+        postProcessingHandler,
+        rqueueMessage,
+        queueDetail,
+        semaphore)
         .run();
     assertEquals(1, discardProcessor.getCount());
   }
@@ -152,12 +152,12 @@ class RqueueExecutorTest extends TestBase {
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     new RqueueExecutor(
-            containerWeakReference,
-            rqueueConfig,
-            postProcessingHandler,
-            rqueueMessage,
-            queueDetail,
-            semaphore)
+        containerWeakReference,
+        rqueueConfig,
+        postProcessingHandler,
+        rqueueMessage,
+        queueDetail,
+        semaphore)
         .run();
     assertEquals(1, deadLetterProcessor.getCount());
   }
@@ -171,12 +171,12 @@ class RqueueExecutorTest extends TestBase {
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService).get(anyString());
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-            containerWeakReference,
-            rqueueConfig,
-            postProcessingHandler,
-            rqueueMessage,
-            queueDetail,
-            semaphore)
+        containerWeakReference,
+        rqueueConfig,
+        postProcessingHandler,
+        rqueueMessage,
+        queueDetail,
+        semaphore)
         .run();
     verify(messageTemplate, times(1))
         .moveMessage(
@@ -196,12 +196,12 @@ class RqueueExecutorTest extends TestBase {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(eq(rqueueMessage));
     new RqueueExecutor(
-            containerWeakReference,
-            rqueueConfig,
-            postProcessingHandler,
-            rqueueMessage,
-            queueDetail,
-            semaphore)
+        containerWeakReference,
+        rqueueConfig,
+        postProcessingHandler,
+        rqueueMessage,
+        queueDetail,
+        semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
   }
@@ -227,12 +227,12 @@ class RqueueExecutorTest extends TestBase {
         .get(RqueueMessageUtils.getMessageMetaId(queueName, rqueueMessage.getId()));
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-            containerWeakReference,
-            rqueueConfig,
-            postProcessingHandler,
-            rqueueMessage,
-            queueDetail,
-            semaphore)
+        containerWeakReference,
+        rqueueConfig,
+        postProcessingHandler,
+        rqueueMessage,
+        queueDetail,
+        semaphore)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
   }
@@ -252,12 +252,12 @@ class RqueueExecutorTest extends TestBase {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-            containerWeakReference,
-            rqueueConfig,
-            postProcessingHandler,
-            rqueueMessage,
-            queueDetail,
-            semaphore)
+        containerWeakReference,
+        rqueueConfig,
+        postProcessingHandler,
+        rqueueMessage,
+        queueDetail,
+        semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
     verify(messageTemplate, times(1))
@@ -284,12 +284,12 @@ class RqueueExecutorTest extends TestBase {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-            containerWeakReference,
-            rqueueConfig,
-            postProcessingHandler,
-            message,
-            queueDetail,
-            semaphore)
+        containerWeakReference,
+        rqueueConfig,
+        postProcessingHandler,
+        message,
+        queueDetail,
+        semaphore)
         .run();
     verify(messageTemplate, times(1))
         .scheduleMessage(

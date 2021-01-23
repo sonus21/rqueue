@@ -28,10 +28,10 @@ ext {
     springDataVersion = System.getenv("SPRING_DATA_VERSION")
     microMeterVersion = System.getenv("MICROMETER_VERSION")
 
-//    springBootVersion = '2.1.0.RELEASE'
-//    springVersion = '5.1.2.RELEASE'
-//    springDataVersion = '2.1.2.RELEASE'
-//    microMeterVersion = '1.1.0'
+    springBootVersion = '2.2.0.RELEASE'
+    springVersion = '5.2.0.RELEASE'
+    springDataVersion = '2.2.0.RELEASE'
+    microMeterVersion = '1.3.2'
 
     // logging dependencies
     lombokVersion = '1.18.10'
@@ -110,17 +110,17 @@ def publishedProjects = subprojects.findAll({ subproject ->
 })
 
 task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
-    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/reports/jacoco/*.exec")
 
     publishedProjects.each {
         sourceSets it.sourceSets.main
     }
 
     reports {
-        csv.enabled false
+        csv.enabled = false
         html.enabled = System.getenv("CIRCLECI") != "true"
-        xml.enabled true
-        xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+        xml.enabled = System.getenv("CIRCLECI") == "true"
+        xml.destination = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
     }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {

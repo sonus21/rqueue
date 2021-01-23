@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core;
@@ -32,7 +32,7 @@ public class RedisScriptFactory {
     script.setLocation(resource);
     switch (type) {
       case ENQUEUE_MESSAGE:
-      case MOVE_MESSAGE:
+      case MOVE_MESSAGE_TO_ZSET:
       case MOVE_EXPIRED_MESSAGE:
       case MOVE_MESSAGE_LIST_TO_LIST:
       case MOVE_MESSAGE_LIST_TO_ZSET:
@@ -55,7 +55,8 @@ public class RedisScriptFactory {
   public enum ScriptType {
     ENQUEUE_MESSAGE("scripts/enqueue_message.lua"),
     DEQUEUE_MESSAGE("scripts/dequeue_message.lua"),
-    MOVE_MESSAGE("scripts/move_message.lua"),
+    MOVE_MESSAGE_TO_ZSET("scripts/move_message_zset.lua"),
+    MOVE_MESSAGE_TO_LIST("scripts/move_message_list.lua"),
     MOVE_EXPIRED_MESSAGE("scripts/move_expired_message.lua"),
     MOVE_MESSAGE_LIST_TO_LIST("scripts/move_message_list_to_list.lua"),
     MOVE_MESSAGE_LIST_TO_ZSET("scripts/move_message_list_to_zset.lua"),

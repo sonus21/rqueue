@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core;
@@ -41,8 +41,10 @@ public class RqueueMessage extends SerializableBase {
   private String id;
   // Queue name on which message was enqueued
   private String queueName;
-  // JSON encoded message, this message can be deserialize to actual object with
-  // the help of MessageUtils#convertMessageToObject method.
+  /**
+   * JSON encoded message, this message can be converted to actual object with the help of {@link
+   * com.github.sonus21.rqueue.core.support.RqueueMessageUtils#convertMessageToObject} method
+   */
   private String message;
   // Any retry count used while enqueueing
   private Integer retryCount;
@@ -52,13 +54,21 @@ public class RqueueMessage extends SerializableBase {
   private long processAt;
   // The time when it was re-enqueue due to failure.
   private Long reEnqueuedAt;
-  // Number of times this message has failed.
+  // Number of times this message has failed in this queue
   private int failureCount;
+  // Continuous failure of message listener can land  this message to  dead letter queue
+  // Number of times this message has failed in the source queue
+  private int sourceQueueFailureCount;
+  // Source queue name
+  private String sourceQueueName;
+
   // period of this task, if this is a periodic task.
   private long period;
 
-  public void updateReEnqueuedAt() {
+  @JsonIgnore
+  public RqueueMessage updateReEnqueuedAt() {
     reEnqueuedAt = System.currentTimeMillis();
+    return this;
   }
 
   @Override
