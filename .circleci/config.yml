@@ -62,12 +62,12 @@ aliases:
       when: always
       command: |
         mkdir log || true
-        test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
-        test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
         test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
-        test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
-        test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
         test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
+        test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
+        test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
+        test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
+        test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
 
   copy_test_results: &copy_test_results
     run:

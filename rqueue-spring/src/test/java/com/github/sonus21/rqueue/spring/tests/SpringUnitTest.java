@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.spring.tests;
 
+import com.github.sonus21.junit.TestTracerExtension;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,5 +30,5 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @Tag("spring")
 @Tag("unit")
 @Tag("springUnit")
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, TestTracerExtension.class})
 public @interface SpringUnitTest {}

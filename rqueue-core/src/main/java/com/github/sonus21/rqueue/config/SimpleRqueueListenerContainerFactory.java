@@ -499,10 +499,20 @@ public class SimpleRqueueListenerContainerFactory {
     this.inspectAllBean = inspectAllBean;
   }
 
+  /**
+   * Get configured middlewares
+   *
+   * @return list of middlewares or null
+   */
   public List<Middleware> getMiddlewares() {
     return middlewares;
   }
 
+  /**
+   * Set middlewares those would be used while processing a  message.
+   *
+   * @param middlewares list of middlewares
+   */
   public void setMiddlewares(List<Middleware> middlewares) {
     notEmpty(middlewares, "middlewares cannot be empty");
     this.middlewares = middlewares;

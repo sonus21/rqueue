@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.spring.tests;
 
-import com.github.sonus21.junit.SpringTestTracerExtension;
+import com.github.sonus21.junit.TestTracerExtension;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,5 +29,5 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Tag("springIntegration")
 @Tag("integration")
 @Tag("spring")
-@ExtendWith(SpringTestTracerExtension.class)
+@ExtendWith(TestTracerExtension.class)
 public @interface SpringIntegrationTest {}

@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.core.middleware.LoggingMiddleware;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.middleware.PermissionMiddleware;
 import com.github.sonus21.rqueue.core.middleware.RateLimiterMiddleware;
+import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -83,6 +84,8 @@ public abstract class ApplicationWithContainerFactory extends BaseApplication {
         case "permission":
           middlewares.add(permissionMiddleware);
           break;
+        default:
+          throw new UnknownSwitchCase(middleware);
       }
     }
     if (!CollectionUtils.isEmpty(middlewares)) {

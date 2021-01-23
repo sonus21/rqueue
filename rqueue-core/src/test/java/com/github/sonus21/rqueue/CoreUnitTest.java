@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue;
 
+import com.github.sonus21.junit.TestTracerExtension;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,5 +29,5 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @Retention(RetentionPolicy.RUNTIME)
 @Tag("unit")
 @Tag("core")
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, TestTracerExtension.class})
 public @interface CoreUnitTest {}
