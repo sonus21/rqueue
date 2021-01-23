@@ -18,19 +18,18 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.Callable;
 
-@Slf4j
-public abstract class RateLimitingMiddleware extends TimeProviderMiddleware {
+public interface RateLimiterMiddleware extends TimeProviderMiddleware {
 
-  public abstract boolean isThrottled(Job job);
+  boolean isThrottled(Job job);
 
   @Override
-  public void handle(Job job) {
+  default void handle(Job job, Callable<Void> callable) throws Exception {
     if (isThrottled(job)) {
       job.release(JobStatus.FAILED, "Throttled", releaseIn(job));
     } else {
-      handleNext(job);
+      callable.call();
     }
   }
 }

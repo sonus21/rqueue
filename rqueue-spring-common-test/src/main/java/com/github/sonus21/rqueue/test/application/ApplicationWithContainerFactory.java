@@ -18,13 +18,12 @@ package com.github.sonus21.rqueue.test.application;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.core.Job;
-import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.core.context.DefaultContext;
 import com.github.sonus21.rqueue.core.middleware.ContextMiddleware;
 import com.github.sonus21.rqueue.core.middleware.LoggingMiddleware;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.middleware.PermissionMiddleware;
-import com.github.sonus21.rqueue.core.middleware.RateLimitingMiddleware;
+import com.github.sonus21.rqueue.core.middleware.RateLimiterMiddleware;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,12 +55,7 @@ public abstract class ApplicationWithContainerFactory extends BaseApplication {
 
   @Bean
   public ContextMiddleware contextMiddleware() {
-    return new ContextMiddleware() {
-      @Override
-      public Context getContext(Job job) {
-        return new DefaultContext(null).setValue("UserType", roles);
-      }
-    };
+    return job -> DefaultContext.withValue(DefaultContext.EMPTY, "UserType", roles);
   }
 
   @Bean
@@ -97,7 +91,7 @@ public abstract class ApplicationWithContainerFactory extends BaseApplication {
     return factory;
   }
 
-  public static class RateLimiter extends RateLimitingMiddleware {
+  public static class RateLimiter implements RateLimiterMiddleware {
 
     private static final Object monitor = new Object();
     private final int maxCount;
@@ -126,7 +120,7 @@ public abstract class ApplicationWithContainerFactory extends BaseApplication {
   }
 
   @SuppressWarnings("unchecked")
-  public static class TestPermissionMiddleware extends PermissionMiddleware {
+  public static class TestPermissionMiddleware implements PermissionMiddleware {
 
     @Override
     public boolean hasPermission(Job job) {

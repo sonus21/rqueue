@@ -138,8 +138,7 @@ class RqueueExecutorTest extends TestBase {
         postProcessingHandler,
         rqueueMessage,
         queueDetail,
-        semaphore
-    )
+        semaphore)
         .run();
     assertEquals(1, discardProcessor.getCount());
   }
@@ -158,8 +157,7 @@ class RqueueExecutorTest extends TestBase {
         postProcessingHandler,
         rqueueMessage,
         queueDetail,
-        semaphore
-    )
+        semaphore)
         .run();
     assertEquals(1, deadLetterProcessor.getCount());
   }
@@ -178,8 +176,7 @@ class RqueueExecutorTest extends TestBase {
         postProcessingHandler,
         rqueueMessage,
         queueDetail,
-        semaphore
-    )
+        semaphore)
         .run();
     verify(messageTemplate, times(1))
         .moveMessage(
@@ -204,8 +201,7 @@ class RqueueExecutorTest extends TestBase {
         postProcessingHandler,
         rqueueMessage,
         queueDetail,
-        semaphore
-    )
+        semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
   }
@@ -236,8 +232,7 @@ class RqueueExecutorTest extends TestBase {
         postProcessingHandler,
         rqueueMessage,
         queueDetail,
-        semaphore
-    )
+        semaphore)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
   }
@@ -262,8 +257,7 @@ class RqueueExecutorTest extends TestBase {
         postProcessingHandler,
         rqueueMessage,
         queueDetail,
-        semaphore
-    )
+        semaphore)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
     verify(messageTemplate, times(1))
@@ -295,8 +289,7 @@ class RqueueExecutorTest extends TestBase {
         postProcessingHandler,
         message,
         queueDetail,
-        semaphore
-    )
+        semaphore)
         .run();
     verify(messageTemplate, times(1))
         .scheduleMessage(

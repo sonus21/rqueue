@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.core.context.DefaultContext;
+import com.github.sonus21.rqueue.core.middleware.TimeProviderMiddleware;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -49,7 +50,7 @@ public class JobImpl implements Job {
   private final Object userMessage;
   private final PostProcessingHandler postProcessingHandler;
   private final boolean isPeriodicJob;
-  private Context context = new DefaultContext(null);
+  private Context context = DefaultContext.EMPTY;
   private Boolean released;
   private Boolean deleted;
 
@@ -96,6 +97,11 @@ public class JobImpl implements Job {
   @Override
   public String getId() {
     return rqueueJob.getId();
+  }
+
+  @Override
+  public String getMessageId() {
+    return rqueueJob.getMessageId();
   }
 
   @Override
@@ -168,6 +174,9 @@ public class JobImpl implements Job {
 
   @Override
   public void setContext(Context context) {
+    if (context == null) {
+      throw new IllegalArgumentException("context can not be null");
+    }
     this.context = context;
   }
 
@@ -179,7 +188,7 @@ public class JobImpl implements Job {
 
   @Override
   public void release(JobStatus jobStatus, Serializable why) {
-    this.release(jobStatus, why, Duration.ZERO);
+    this.release(jobStatus, why, TimeProviderMiddleware.ONE_SECOND);
   }
 
   @Override

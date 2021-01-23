@@ -19,6 +19,4 @@ package com.github.sonus21.rqueue.core.context;
 public interface Context {
 
   Object getValue(Object key);
-
-  Context setValue(Object key, Object value);
 }

@@ -22,7 +22,10 @@ import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
 import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.middleware.HandlerMiddleware;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -30,6 +33,8 @@ import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
@@ -95,7 +100,8 @@ class RqueueExecutor extends MessageContainerBase {
               messageMetadata,
               rqueueMessage,
               userMessage,
-              t, postProcessingHandler);
+              t,
+              postProcessingHandler);
     }
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }
@@ -141,9 +147,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean shouldIgnore() {
-    return !Objects.requireNonNull(container.get())
-        .getPreExecutionMessageProcessor()
-        .process(job.getMessage(), job.getRqueueMessage());
+    return !Objects.requireNonNull(container.get()).getPreExecutionMessageProcessor().process(job);
   }
 
   private boolean isOldMessage() {
@@ -218,8 +222,29 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-  private void processMessage() {
-    Objects.requireNonNull(container.get()).getMiddleware().handle(job);
+  private void callMiddlewares(int currentIndex, List<Middleware> middlewares, Job job)
+      throws Exception {
+    if (currentIndex == middlewares.size()) {
+      new HandlerMiddleware(rqueueMessageHandler).handle(job, null);
+    } else {
+      middlewares
+          .get(currentIndex)
+          .handle(
+              job,
+              () -> {
+                callMiddlewares(currentIndex + 1, middlewares, job);
+                return null;
+              });
+    }
+  }
+
+  private void processMessage() throws Exception {
+    List<Middleware> middlewareList = Objects.requireNonNull(container.get()).getMiddleWares();
+    if (middlewareList == null) {
+      callMiddlewares(0, Collections.emptyList(), job);
+    } else {
+      callMiddlewares(0, middlewareList, job);
+    }
     status = ExecutionStatus.SUCCESSFUL;
   }
 

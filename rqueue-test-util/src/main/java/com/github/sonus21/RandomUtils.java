@@ -16,9 +16,32 @@
 
 package com.github.sonus21;
 
+import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class TestBase extends RandomUtils {
+public abstract class RandomUtils {
 
+  public static Random random;
+
+  static {
+    String seed = System.getenv("TEST_SEED");
+    long randomSeed = 0;
+    if (seed != null) {
+      try {
+        randomSeed = Long.parseLong(seed);
+      } catch (NumberFormatException e) {
+        log.error("Invalid number format for log seed {}", seed);
+      }
+    }
+    if (randomSeed == 0) {
+      randomSeed = System.currentTimeMillis();
+    }
+    random = new Random(randomSeed);
+    log.error("Test random seed is {}", randomSeed);
+  }
+
+  public static long randomTime(long min, long max) {
+    return min + random.nextInt((int) (max - min));
+  }
 }

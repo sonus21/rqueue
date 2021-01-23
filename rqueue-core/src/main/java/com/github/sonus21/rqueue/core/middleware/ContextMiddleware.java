@@ -18,14 +18,33 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.context.Context;
+import java.util.concurrent.Callable;
 
-public abstract class ContextMiddleware extends Middleware {
+/**
+ * Context middleware allows us to set context for the running job, context could be any thing like
+ * putting user information for permission check, initiating some transaction.
+ *
+ * <p>Job's context can be updated from any where/middleware, this middleware is just for
+ * consolidation action.
+ */
+public interface ContextMiddleware extends Middleware {
 
-  public abstract Context getContext(Job job);
+  /**
+   * Return non null context for this job. This method can also update MDC {@link org.slf4j.MDC}
+   * context or any other context .
+   *
+   * @param job job object
+   * @return a new context
+   */
+  Context getContext(Job job);
 
   @Override
-  public void handle(Job job) {
-    job.setContext(getContext(job));
-    handleNext(job);
+  default void handle(Job job, Callable<Void> next) throws Exception {
+    Context context = getContext(job);
+    if (context == null) {
+      throw new IllegalStateException("Returned context is null");
+    }
+    job.setContext(context);
+    next.call();
   }
 }

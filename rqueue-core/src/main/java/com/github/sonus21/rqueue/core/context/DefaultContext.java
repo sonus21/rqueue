@@ -16,32 +16,40 @@
 
 package com.github.sonus21.rqueue.core.context;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class DefaultContext implements Context {
 
   private final Context parentContext;
-  private final Map<Object, Object> map = new HashMap<>(3);
+  public static final Context EMPTY = new DefaultContext(null, null, null);
+  private final Object key;
+  private final Object value;
 
-  public DefaultContext(Context parentContext) {
+  private DefaultContext(Context parentContext, Object key, Object value) {
     this.parentContext = parentContext;
+    this.key = key;
+    this.value = value;
+  }
+
+  public static Context withValue(Context parentContext, Object key, Object value) {
+    if (key == null) {
+      throw new IllegalArgumentException("key can not be null");
+    }
+    return new DefaultContext(parentContext, key, value);
   }
 
   @Override
-  public synchronized Object getValue(Object key) {
-    if (map.containsKey(key)) {
-      return map.get(key);
+  public Object getValue(Object key) {
+    if (key == null) {
+      throw new IllegalArgumentException("key can not be null");
+    }
+    if (this == EMPTY) {
+      return null;
+    }
+    if (key.equals(this.key)) {
+      return value;
     }
     if (parentContext != null) {
       return parentContext.getValue(key);
     }
     return null;
-  }
-
-  @Override
-  public synchronized Context setValue(Object key, Object value) {
-    map.put(key, value);
-    return this;
   }
 }

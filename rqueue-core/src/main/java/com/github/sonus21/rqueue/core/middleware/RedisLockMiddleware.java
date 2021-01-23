@@ -24,9 +24,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
-public abstract class RedisLockMiddleware extends LockMiddleware {
+/**
+ * This uses Redis as backend for locking, using <b>SETNX</b> a lock is acquired.
+ *
+ * <p>An implementation of this class must implement getLockIdentifier, that should return lock
+ * identifier for this job.
+ */
+public abstract class RedisLockMiddleware implements LockMiddleware {
 
-  public static final String REASON = "Lock could not be acquired";
   private final RqueueRedisTemplate<String> template;
   private final Set<String> acquiredLocks = ConcurrentHashMap.newKeySet();
 
@@ -34,12 +39,27 @@ public abstract class RedisLockMiddleware extends LockMiddleware {
     template = new RqueueRedisTemplate<>(redisConnectionFactory);
   }
 
+  /**
+   * Returns lock identifier for this job, could be a simple job id, user id or any other depending
+   * on the user case. This method must returns non null value.
+   *
+   * @param job job object
+   * @return lock identifier
+   */
   protected abstract String getLockIdentifier(Job job);
 
+  /**
+   * A lock can be required for forever or 1 second, that's all depends on the use case, bny default
+   * a lock is acquired for visibility time.
+   *
+   * @param job job object
+   * @return duration for this lock
+   */
   protected Duration getLockDuration(Job job) {
     return job.getQueueDetail().visibilityTimeoutDuration();
   }
 
+  @Override
   public void releaseLock(Job job, String lockIdentifier) {
     if (lockIdentifier == null) {
       return;
@@ -50,6 +70,7 @@ public abstract class RedisLockMiddleware extends LockMiddleware {
     }
   }
 
+  @Override
   public String acquireLock(Job job) {
     String lockIdentifier = getLockIdentifier(job);
     if (acquiredLocks.contains(lockIdentifier)) {

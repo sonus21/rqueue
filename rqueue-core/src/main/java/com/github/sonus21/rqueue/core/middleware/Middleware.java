@@ -16,10 +16,14 @@
 
 package com.github.sonus21.rqueue.core.middleware;
 
+import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Middlewares are used in a chain, at the end of chain listener method is called.
@@ -27,9 +31,8 @@ import java.time.Duration;
  * <p>Each middleware is called in the order they have been added to Container/ContainerFactory
  *
  * <p>Any middleware can skip the next middleware call, skipping next middleware call means no
- * other
- * processing of this job would be done, in such case this middleware must either release(put back)
- * or delete this job using one of the methods {@link Job#release(JobStatus, Serializable)}, {@link
+ * further processing of this job, in such case this middleware must either release(put back) or
+ * delete this job using one of the methods {@link Job#release(JobStatus, Serializable)}, {@link
  * Job#release(JobStatus, Serializable, Duration)} {@link Job#delete(JobStatus, Serializable)}.
  *
  * <p>For example three middlewares [m1,m2,m3] are registered than m1 would be called first
@@ -42,29 +45,27 @@ import java.time.Duration;
  * HandlerMiddleware} that would call the listener method, again if m3 is skipping handler call than
  * it should either release or delete this job.
  *
- * @see ContextMiddleware
+ * <p><b>NOTE:</b> Middlewares only called when preprocessor returns true.
+ *
+ * <p>It's recommended to use either preprocessor {@link
+ * SimpleRqueueListenerContainerFactory#setPreExecutionMessageProcessor(MessageProcessor)} or
+ * middlewares feature{@link SimpleRqueueListenerContainerFactory#setMiddlewares(List)}.
+ *
  * @see LoggingMiddleware
+ * @see ProfilerMiddleware
+ * @see ContextMiddleware
  * @see PermissionMiddleware
- * @see RedisLockMiddleware
  * @see LockMiddleware
+ * @see RedisLockMiddleware
  */
-public abstract class Middleware {
+public interface Middleware {
 
-  private Middleware next;
-
-  public void setNext(Middleware middleware) {
-    if (next == null) {
-      this.next = middleware;
-    } else {
-      throw new IllegalStateException("next handler must be null");
-    }
-  }
-
-  public abstract void handle(Job job);
-
-  protected void handleNext(Job job) {
-    if (next != null) {
-      next.handle(job);
-    }
-  }
+  /**
+   * Middleware handles that would be called
+   *
+   * @param job  job object
+   * @param next next middleware in chain
+   * @throws Exception any exception
+   */
+  void handle(Job job, Callable<Void> next) throws Exception;
 }

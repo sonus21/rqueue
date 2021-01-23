@@ -17,13 +17,33 @@
 package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.time.Duration;
 
-public abstract class TimeProviderMiddleware extends Middleware {
+/**
+ * A middleware extension that allows implementation to provide different types of delay in
+ * different case.
+ *
+ * @see TaskExecutionBackOff
+ */
+public interface TimeProviderMiddleware extends Middleware {
 
-  public static final Duration IMMEDIATELY = Duration.ZERO;
+  Duration ONE_SECOND = Duration.ofMillis(Constants.ONE_MILLI);
 
-  protected Duration releaseIn(Job job) {
-    return IMMEDIATELY;
+  /**
+   * A middleware can dispose the current job or put it back to queue. While putting back, a
+   * middleware can decide to put this job in queue immediately or in 5 seconds or so. Releasing job
+   * immediately has side effect when job queue is empty. Job can reappear to the queue as soon as
+   * it is put back in the queue, so the delay should be large enough to handle parallel execution
+   * otherwise it can create loop. By default job is released to queue in one second.
+   *
+   * <p>Another implementation can use {@link TaskExecutionBackOff} to provide this delay
+   *
+   * @param job the current job
+   * @return time duration
+   */
+  default Duration releaseIn(Job job) {
+    return ONE_SECOND;
   }
 }

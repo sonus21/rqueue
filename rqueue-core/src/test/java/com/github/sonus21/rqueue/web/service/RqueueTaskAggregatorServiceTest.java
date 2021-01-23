@@ -106,7 +106,8 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             null,
-            null, null);
+            null,
+            null);
     return new RqueueExecutionEvent(job);
   }
 
@@ -159,13 +160,12 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
     String id = "__rq::q-stat::" + queueName;
     doReturn(id).when(rqueueConfig).getQueueStatisticsKey(queueName);
     doReturn("__rq::lock::" + id).when(rqueueConfig).getLockKey(id);
-    doReturn("broker-id").when(rqueueConfig).getBrokerId();
 
     doReturn(true)
         .when(rqueueLockManager)
         .acquireLock(
             "__rq::lock::" + id,
-            "broker-id",
+            RqueueConfig.getBrokerId(),
             Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS));
     List<QueueStatistics> queueStatistics = new ArrayList<>();
     doAnswer(

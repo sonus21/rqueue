@@ -26,7 +26,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
  * occur about the enqueued tasks.
  *
  * <p>You can set one or more message processor in factory or container. Each message processor is
- * called based upon the status {@link com.github.sonus21.rqueue.models.enums.TaskStatus}.
+ * called based upon the status {@link com.github.sonus21.rqueue.models.enums.MessageStatus}.
  *
  * @see com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory
  * @see com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer

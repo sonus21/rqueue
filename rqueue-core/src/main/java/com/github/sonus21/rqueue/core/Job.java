@@ -42,6 +42,13 @@ public interface Job {
   String getId();
 
   /**
+   * Get message id corresponding to this job
+   *
+   * @return message id
+   */
+  String getMessageId();
+
+  /**
    * RqueueMessage that's consumed by this job
    *
    * @return an object of RqueueMessage

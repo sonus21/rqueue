@@ -26,7 +26,6 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.middleware.HandlerMiddleware;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
@@ -68,7 +67,6 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.CollectionUtils;
 
 /**
  * Container providing asynchronous behaviour for Rqueue message listeners. Handles the low level
@@ -279,19 +277,6 @@ public class RqueueMessageListenerContainer
     initializeRunningQueueState();
   }
 
-  private void initializeMiddleware() {
-    if (!CollectionUtils.isEmpty(getMiddleWares())) {
-      Middleware prevMiddleware = new HandlerMiddleware(rqueueMessageHandler);
-      for (int i = middlewares.size() - 1; i >= 0; i--) {
-        this.middleware = middlewares.get(i);
-        this.middleware.setNext(prevMiddleware);
-        prevMiddleware = this.middleware;
-      }
-    } else {
-      this.middleware = new HandlerMiddleware(rqueueMessageHandler);
-    }
-  }
-
   private void initialize() {
     initializeQueue();
     this.postProcessingHandler =
@@ -307,7 +292,6 @@ public class RqueueMessageListenerContainer
                 discardMessageProcessor,
                 postExecutionMessageProcessor),
             rqueueSystemConfigDao);
-    initializeMiddleware();
   }
 
   @Override
@@ -688,7 +672,4 @@ public class RqueueMessageListenerContainer
     return middlewares;
   }
 
-  Middleware getMiddleware() {
-    return middleware;
-  }
 }

@@ -18,17 +18,34 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
+import java.util.concurrent.Callable;
 
-public abstract class PermissionMiddleware extends TimeProviderMiddleware {
+/**
+ * Permission middleware allows to check whether some permission is there for a given job,
+ *
+ * <p>If the given job does not have the right permission than this job would be released back to
+ * pool for other consumers.
+ *
+ * <p><b>NOTE:</b> User's role was changed between and the said is no longer be able to perform
+ * some
+ * action
+ */
+public interface PermissionMiddleware extends TimeProviderMiddleware {
 
-  public static final String REASON = "PermissionDenied";
+  String REASON = "PermissionDenied";
 
-  public abstract boolean hasPermission(Job job);
+  /**
+   * Checks whether given job has enough permission to execute
+   *
+   * @param job job that's going to be executed
+   * @return true/false
+   */
+  boolean hasPermission(Job job);
 
   @Override
-  public void handle(Job job) {
+  default void handle(Job job, Callable<Void> next) throws Exception {
     if (hasPermission(job)) {
-      handleNext(job);
+      next.call();
     } else {
       job.release(JobStatus.FAILED, REASON, releaseIn(job));
     }

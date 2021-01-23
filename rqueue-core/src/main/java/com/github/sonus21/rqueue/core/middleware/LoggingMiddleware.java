@@ -17,14 +17,18 @@
 package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
+import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A simple logging middleware that logs queue and job id for visibility
+ */
 @Slf4j
-public class LoggingMiddleware extends Middleware {
+public class LoggingMiddleware implements Middleware {
 
   @Override
-  public void handle(Job job) {
+  public void handle(Job job, Callable<Void> next) throws Exception {
     log.info("Queue: {}, JobId: {}", job.getRqueueMessage().getQueueName(), job.getId());
-    handleNext(job);
+    next.call();
   }
 }
