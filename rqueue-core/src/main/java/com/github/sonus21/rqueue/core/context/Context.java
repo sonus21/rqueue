@@ -16,7 +16,21 @@
 
 package com.github.sonus21.rqueue.core.context;
 
+import com.github.sonus21.rqueue.core.middleware.ContextMiddleware;
+
+/**
+ * A context that supports getValue method. Context is used inside job and middleware
+ *
+ * @see DefaultContext
+ * @see ContextMiddleware
+ */
 public interface Context {
 
+  /**
+   * Return value form the context.
+   *
+   * @param key context key to be searched.
+   * @return value or null
+   */
   Object getValue(Object key);
 }

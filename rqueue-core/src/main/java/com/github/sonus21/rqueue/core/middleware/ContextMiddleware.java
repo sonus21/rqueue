@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.context.Context;
+import com.github.sonus21.rqueue.core.context.DefaultContext;
 import java.util.concurrent.Callable;
 
 /**
@@ -26,6 +27,8 @@ import java.util.concurrent.Callable;
  *
  * <p>Job's context can be updated from any where/middleware, this middleware is just for
  * consolidation action.
+ *
+ * @see DefaultContext
  */
 public interface ContextMiddleware extends Middleware {
 
