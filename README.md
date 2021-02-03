@@ -35,6 +35,7 @@ services code is in Spring.
 * **Periodic message** : Process same message at certain interval
 * **Redis connection**: A different redis setup can be used for Rqueue
 * **Long execution job**: Long running jobs can check in periodically.
+* **Middleware**:  Add one or more middleware, middlewares are called before listener method.
 
 ## Getting Started
 
@@ -228,10 +229,11 @@ PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueu
 
 ## Support
 
-* Please report bug,question,feature(s) to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker.
+* Please report bug,question,feature(s)
+  to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker.
 * Ask question on StackOverflow using [rqueue](https://stackoverflow.com/tags/rqueue) tag
 
-## Contribution 
+## Contribution
 
 You are most welcome for any pull requests for any feature/bug/enhancement. You would need Java8 and
 gradle to start with. In root `build.gradle` file comment out spring related versions, or set
@@ -257,7 +259,7 @@ environment variables for Spring versions.
 * Maven Central:
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
-  
+
 * StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
 
 ## License
