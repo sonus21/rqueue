@@ -40,6 +40,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.util.CollectionUtils;
 
 /**
  * A Factory class which can be used to create {@link RqueueMessageListenerContainer} object.
@@ -342,7 +343,7 @@ public class SimpleRqueueListenerContainerFactory {
     if (getPriorityMode() != null) {
       messageListenerContainer.setPriorityMode(getPriorityMode());
     }
-    if (getMiddlewares() != null) {
+    if (!CollectionUtils.isEmpty(middlewares)) {
       messageListenerContainer.setMiddlewares(getMiddlewares());
     }
     return messageListenerContainer;
