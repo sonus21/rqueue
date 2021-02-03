@@ -32,6 +32,7 @@ import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -82,7 +83,7 @@ public class SimpleRqueueListenerContainerFactory {
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
 
-  private List<Middleware> middlewares;
+  private final List<Middleware> middlewares = new LinkedList<>();
 
   // Any message headers that should be set, only used for message serialization
   private MessageHeaders messageHeaders;
@@ -509,12 +510,23 @@ public class SimpleRqueueListenerContainerFactory {
   }
 
   /**
-   * Set middlewares those would be used while processing a  message.
+   * Add middlewares those would be used while processing a message. Middlewares are called in the
+   * order they are added.
    *
    * @param middlewares list of middlewares
    */
   public void setMiddlewares(List<Middleware> middlewares) {
     notEmpty(middlewares, "middlewares cannot be empty");
-    this.middlewares = middlewares;
+    this.middlewares.addAll(middlewares);
+  }
+
+  /**
+   * Add a given middleware in the chain
+   *
+   * @param middleware middleware
+   */
+  public void useMiddleware(Middleware middleware) {
+    notNull(middlewares, "middlewares cannot be null");
+    this.middlewares.add(middleware);
   }
 }

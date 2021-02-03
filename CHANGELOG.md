@@ -1,5 +1,12 @@
 # [Rqueue] New and Notable Changes
 
+## [2.4.0] - 3-Feb-2021
+
+### Added
+
+* Job Middlewares
+* Delay execution of message when it's moved to enqueue instead of consuming it immediately.
+
 ## [2.3.0] - 2-Jan-2021
 
 ### Added
@@ -175,3 +182,5 @@ Fixes:
 [2.2.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.2.0-RELEASE
 
 [2.3.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.3.0-RELEASE
+
+[2.4.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.4.0-RELEASE
