@@ -40,8 +40,12 @@ import org.springframework.util.CollectionUtils;
 @Repository
 @AllArgsConstructor
 public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository {
+
   private final EntityManagerFactory entityManagerFactory;
 
+  // ============================================================
+  // SAVE related method
+  // ==============================================================
   @Override
   public <S extends ConsumedMessage> S save(S entity) {
     EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -49,6 +53,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     Transaction tx = session.beginTransaction();
     session.save(entity);
     tx.commit();
+    entityManager.close();
     return entity;
   }
 
@@ -60,6 +65,10 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     }
     return (Iterable<S>) consumedMessages;
   }
+
+  // ============================================================
+  // FIND related method
+  // ==============================================================
 
   @Override
   public Optional<ConsumedMessage> findById(String s) {
@@ -76,6 +85,18 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     return findById(s).orElse(null) == null;
   }
 
+  private List<ConsumedMessage> executeQuery(
+      EntityManager em,
+      Session session,
+      Root<ConsumedMessage> root,
+      CriteriaQuery<ConsumedMessage> cr) {
+    cr.select(root);
+    Query<ConsumedMessage> query = session.createQuery(cr);
+    List<ConsumedMessage> consumedMessages = query.getResultList();
+    em.close();
+    return consumedMessages;
+  }
+
   @Override
   public Iterable<ConsumedMessage> findAll() {
     EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -83,9 +104,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
     Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.select(root);
-    Query<ConsumedMessage> query = session.createQuery(cr);
-    return query.getResultList();
+    return executeQuery(entityManager, session, root, cr);
   }
 
   @Override
@@ -96,9 +115,55 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
     Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
     cr.where(cb.in(root.get("id").in(strings)));
-    cr.select(root);
-    Query<ConsumedMessage> query = session.createQuery(cr);
-    return query.getResultList();
+    return executeQuery(entityManager, session, root, cr);
+  }
+
+  @Override
+  public List<ConsumedMessage> findByQueueName(String queueName) {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Session session = entityManager.unwrap(Session.class);
+    CriteriaBuilder cb = session.getCriteriaBuilder();
+    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
+    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
+    cr.where(cb.equal(root.get("queue_name"), queueName));
+    return executeQuery(entityManager, session, root, cr);
+  }
+
+  @Override
+  public List<ConsumedMessage> findByMessageId(String messageId) {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Session session = entityManager.unwrap(Session.class);
+    CriteriaBuilder cb = session.getCriteriaBuilder();
+    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
+    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
+    cr.where(cb.equal(root.get("message_id"), messageId));
+    return executeQuery(entityManager, session, root, cr);
+  }
+
+  @Override
+  public List<ConsumedMessage> findByMessageIdIn(Collection<String> messageIds) {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Session session = entityManager.unwrap(Session.class);
+    CriteriaBuilder cb = session.getCriteriaBuilder();
+    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
+    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
+    cr.where(cb.in(root.get("message_id").in(messageIds)));
+    return executeQuery(entityManager, session, root, cr);
+  }
+
+  @Override
+  public ConsumedMessage findByMessageIdAndTag(String messageId, String tag) {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Session session = entityManager.unwrap(Session.class);
+    CriteriaBuilder cb = session.getCriteriaBuilder();
+    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
+    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
+    cr.where(cb.equal(root.get("message_id"), messageId)).where(cb.equal(root.get("tag"), tag));
+    List<ConsumedMessage> consumedMessages = executeQuery(entityManager, session, root, cr);
+    if (CollectionUtils.isEmpty(consumedMessages)) {
+      return null;
+    }
+    return consumedMessages.get(0);
   }
 
   @Override
@@ -110,6 +175,10 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     }
     return total;
   }
+
+  // ============================================================
+  // Delete related method
+  // ==============================================================
 
   @Override
   public void deleteById(String id) {
@@ -136,63 +205,9 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     Session session = entityManager.unwrap(Session.class);
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaDelete<ConsumedMessage> cr = cb.createCriteriaDelete(ConsumedMessage.class);
-    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
     Query<?> query = session.createQuery(cr);
     query.getSingleResult();
-  }
-
-  @Override
-  public List<ConsumedMessage> findByQueueName(String queueName) {
-    EntityManager entityManager = entityManagerFactory.createEntityManager();
-    Session session = entityManager.unwrap(Session.class);
-    CriteriaBuilder cb = session.getCriteriaBuilder();
-    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
-    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.select(root).where(cb.equal(root.get("queue_name"), queueName));
-    Query<ConsumedMessage> query = session.createQuery(cr);
-    return query.getResultList();
-  }
-
-  @Override
-  public List<ConsumedMessage> findByMessageId(String messageId) {
-    EntityManager entityManager = entityManagerFactory.createEntityManager();
-    Session session = entityManager.unwrap(Session.class);
-    CriteriaBuilder cb = session.getCriteriaBuilder();
-    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
-    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.select(root).where(cb.equal(root.get("message_id"), messageId));
-    Query<ConsumedMessage> query = session.createQuery(cr);
-    return query.getResultList();
-  }
-
-  @Override
-  public List<ConsumedMessage> findByMessageIdIn(Collection<String> messageIds) {
-    EntityManager entityManager = entityManagerFactory.createEntityManager();
-    Session session = entityManager.unwrap(Session.class);
-    CriteriaBuilder cb = session.getCriteriaBuilder();
-    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
-    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.select(root).where(cb.in(root.get("message_id").in(messageIds)));
-    Query<ConsumedMessage> query = session.createQuery(cr);
-    return query.getResultList();
-  }
-
-  @Override
-  public ConsumedMessage findByMessageIdAndTag(String messageId, String tag) {
-    EntityManager entityManager = entityManagerFactory.createEntityManager();
-    Session session = entityManager.unwrap(Session.class);
-    CriteriaBuilder cb = session.getCriteriaBuilder();
-    CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
-    Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.select(root)
-        .where(cb.equal(root.get("message_id"), messageId))
-        .where(cb.equal(root.get("tag"), tag));
-    Query<ConsumedMessage> query = session.createQuery(cr);
-    List<ConsumedMessage> consumedMessages = query.getResultList();
-    if (CollectionUtils.isEmpty(consumedMessages)) {
-      return null;
-    }
-    return consumedMessages.get(0);
+    entityManager.close();
   }
 
   @Override
@@ -205,5 +220,6 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     cr.where(root.get("id").in(ids));
     Query<?> query = session.createQuery(cr);
     query.getSingleResult();
+    entityManager.close();
   }
 }
