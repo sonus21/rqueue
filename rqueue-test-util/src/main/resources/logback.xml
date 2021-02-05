@@ -34,8 +34,7 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="MONITOR">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread]
-        %-5level %logger{36} - %msg%n
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n
       </pattern>
     </encoder>
     <file>log/monitor.log</file>
@@ -48,8 +47,7 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="ConsumedMessageStore">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread]
-        %-5level %logger{36} - %msg%n
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n
       </pattern>
     </encoder>
     <file>log/message.log</file>
