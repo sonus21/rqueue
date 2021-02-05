@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.listener;
@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.listener;
 import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.MessageListener;
+import com.github.sonus21.rqueue.annotation.RqueueHandler;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
@@ -26,10 +27,13 @@ import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
+import com.github.sonus21.rqueue.utils.RetryableRunnable;
+import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -37,12 +41,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.MethodIntrospector;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
@@ -58,12 +66,19 @@ import org.springframework.messaging.handler.invocation.AbstractMethodMessageHan
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.HandlerMethodReturnValueHandler;
 import org.springframework.messaging.simp.annotation.support.PrincipalMethodArgumentResolver;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.comparator.ComparableComparator;
 
+@Slf4j
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
+
   private final ConversionService conversionService;
   private final MessageConverter messageConverter;
   private final boolean inspectAllBean;
+  private final AsyncTaskExecutor asyncTaskExecutor;
+  private final MultiValueMap<String, MappingInformation> destinationLookup =
+      new LinkedMultiValueMap<>(64);
 
   public RqueueMessageHandler() {
     this(new DefaultRqueueMessageConverter(), true);
@@ -74,6 +89,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     this.messageConverter = messageConverter;
     this.inspectAllBean = inspectAllBean;
     this.conversionService = new DefaultFormattingConversionService();
+    this.asyncTaskExecutor =
+        ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "rqueueMessageExecutor", -1, -1);
   }
 
   public RqueueMessageHandler(final MessageConverter messageConverter) {
@@ -112,7 +129,120 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     if (inspectAllBean) {
       return true;
     }
-    return AnnotatedElementUtils.hasAnnotation(beanType, MessageListener.class);
+    if (AnnotatedElementUtils.hasAnnotation(beanType, MessageListener.class)) {
+      return true;
+    }
+    RqueueListener rqueueListener = AnnotationUtils.findAnnotation(beanType, RqueueListener.class);
+    if (rqueueListener != null) {
+      MappingInformation information = getMappingInformation(rqueueListener);
+      Map<Method, MappingInformation> methods =
+          MethodIntrospector.selectMethods(
+              beanType,
+              (MethodIntrospector.MetadataLookup<MappingInformation>)
+                  method -> getMappingInformation(method, information));
+      methods.forEach((key, value) -> registerHandlerMethod(beanType, key, value));
+    }
+    return false;
+  }
+
+  private void addMatchesToCollection(
+      Collection<MappingInformation> mappingsToCheck, Message<?> message, List<Match> matches) {
+    for (MappingInformation mapping : mappingsToCheck) {
+      MappingInformation match = getMatchingMapping(mapping, message);
+      if (match != null) {
+        matches.add(new Match(match, getHandlerMethods().get(mapping)));
+      }
+    }
+  }
+
+  @Override
+  protected void registerHandlerMethod(Object handler, Method method, MappingInformation mapping) {
+    super.registerHandlerMethod(handler, method, mapping);
+    for (String pattern : getDirectLookupDestinations(mapping)) {
+      this.destinationLookup.add(pattern, mapping);
+    }
+  }
+
+  @Override
+  protected void handleMessageInternal(Message<?> message, String lookupDestination) {
+    List<MappingInformation> mappings = this.destinationLookup.get(lookupDestination);
+    List<Match> matches = new ArrayList<>();
+    addMatchesToCollection(mappings, message, matches);
+    if (matches.isEmpty()) {
+      handleNoMatch(this.getHandlerMethods().keySet(), lookupDestination, message);
+      return;
+    }
+    executeMatches(matches, message, lookupDestination);
+  }
+
+  private void executeMatches(List<Match> matches, Message<?> message, String lookupDestination) {
+    if (matches.size() == 1) {
+      Match match = matches.get(0);
+      handleMatch(match.information, match.handlerMethod, lookupDestination, message);
+    } else {
+      Match primaryMatch = null;
+      for (Match match : matches) {
+        if (match.information.isPrimary()) {
+          primaryMatch = match;
+        }
+      }
+      if (primaryMatch == null) {
+        throw new IllegalStateException("At least one of them must be primary");
+      }
+      for (Match match : matches) {
+        if (!match.information.isPrimary()) {
+          asyncTaskExecutor.execute(new MultiHandler(match, message, lookupDestination));
+        }
+      }
+      handleMatch(primaryMatch.information, primaryMatch.handlerMethod, lookupDestination, message);
+    }
+  }
+
+  private MappingInformation getMappingInformation(
+      Method method, MappingInformation mappingInformation) {
+    RqueueHandler rqueueHandler = AnnotationUtils.findAnnotation(method, RqueueHandler.class);
+    if (rqueueHandler == null) {
+      return null;
+    }
+    return mappingInformation.toBuilder().primary(rqueueHandler.primary()).build();
+  }
+
+  private MappingInformation getMappingInformation(RqueueListener rqueueListener) {
+    Set<String> queueNames = resolveQueueNames(rqueueListener);
+    String deadLetterQueueName = resolveDeadLetterQueue(rqueueListener);
+    int numRetries = resolveNumRetries(rqueueListener);
+    long visibilityTimeout = resolveVisibilityTimeout(rqueueListener);
+    boolean active = isActive(rqueueListener);
+    boolean consumerEnabled = resolveConsumerEnabled(rqueueListener);
+    Concurrency concurrency = resolveConcurrency(rqueueListener);
+    Map<String, Integer> priorityMap = resolvePriority(rqueueListener);
+    String priorityGroup = resolvePriorityGroup(rqueueListener);
+    MappingInformation mappingInformation =
+        MappingInformation.builder()
+            .active(active)
+            .concurrency(concurrency)
+            .deadLetterQueueName(deadLetterQueueName)
+            .deadLetterConsumerEnabled(consumerEnabled)
+            .numRetry(numRetries)
+            .queueNames(queueNames)
+            .visibilityTimeout(visibilityTimeout)
+            .priorityGroup(priorityGroup)
+            .priority(priorityMap)
+            .build();
+    if (mappingInformation.isValid()) {
+      return mappingInformation;
+    }
+    logger.warn("Invalid Queue '" + mappingInformation + "' configuration");
+    return null;
+  }
+
+  @Override
+  protected MappingInformation getMappingForMethod(Method method, Class<?> handlerType) {
+    RqueueListener rqueueListener = AnnotationUtils.findAnnotation(method, RqueueListener.class);
+    if (rqueueListener != null) {
+      return getMappingInformation(rqueueListener);
+    }
+    return null;
   }
 
   private Concurrency resolveConcurrency(RqueueListener rqueueListener) {
@@ -201,37 +331,30 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return Collections.unmodifiableMap(priorityMap);
   }
 
-  @Override
-  protected MappingInformation getMappingForMethod(Method method, Class<?> handlerType) {
-    RqueueListener rqueueListener = AnnotationUtils.findAnnotation(method, RqueueListener.class);
-    if (rqueueListener != null) {
-      Set<String> queueNames = resolveQueueNames(rqueueListener);
-      String deadLetterQueueName = resolveDeadLetterQueue(rqueueListener);
-      int numRetries = resolveNumRetries(rqueueListener);
-      long visibilityTimeout = resolveVisibilityTimeout(rqueueListener);
-      boolean active = isActive(rqueueListener);
-      boolean consumerEnabled = resolveConsumerEnabled(rqueueListener);
-      Concurrency concurrency = resolveConcurrency(rqueueListener);
-      Map<String, Integer> priorityMap = resolvePriority(rqueueListener);
-      String priorityGroup = resolvePriorityGroup(rqueueListener);
-      MappingInformation mappingInformation =
-          MappingInformation.builder()
-              .active(active)
-              .concurrency(concurrency)
-              .deadLetterQueueName(deadLetterQueueName)
-              .deadLetterConsumerEnabled(consumerEnabled)
-              .numRetry(numRetries)
-              .queueNames(queueNames)
-              .visibilityTimeout(visibilityTimeout)
-              .priorityGroup(priorityGroup)
-              .priority(priorityMap)
-              .build();
-      if (mappingInformation.isValid()) {
-        return mappingInformation;
-      }
-      logger.warn("Invalid Queue '" + mappingInformation + "' configuration");
+  @AllArgsConstructor
+  private class Match {
+
+    private final MappingInformation information;
+    private final HandlerMethod handlerMethod;
+  }
+
+  private class MultiHandler extends RetryableRunnable<Object> {
+
+    private final Match match;
+    private final Message<?> message;
+    private final String lookupDestination;
+
+    protected MultiHandler(Match match, Message<?> message, String lookupDestination) {
+      super(log, "");
+      this.match = match;
+      this.message = message;
+      this.lookupDestination = lookupDestination;
     }
-    return null;
+
+    @Override
+    public void start() {
+      handleMatch(match.information, match.handlerMethod, lookupDestination, message);
+    }
   }
 
   private boolean resolveConsumerEnabled(RqueueListener rqueueListener) {
