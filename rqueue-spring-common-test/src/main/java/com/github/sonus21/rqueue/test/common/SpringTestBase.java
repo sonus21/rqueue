@@ -135,6 +135,9 @@ public abstract class SpringTestBase extends TestBase {
   @Value("${rqueue.retry.per.poll:-1}")
   protected int retryPerPoll;
 
+  @Value("${user.banned.queue.name}")
+  protected String userBannedQueue;
+
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage =
         RqueueMessageUtils.buildMessage(

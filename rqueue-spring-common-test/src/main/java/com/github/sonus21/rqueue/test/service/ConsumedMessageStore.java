@@ -59,6 +59,7 @@ public class ConsumedMessageStore {
       consumedMessage.setMessage(textMessage);
     }
     consumedMessageRepository.save(consumedMessage);
+    log.info("Message saved {}", consumedMessage);
   }
 
   public Collection<ConsumedMessage> getConsumedMessages(Collection<String> messageIds) {

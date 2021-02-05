@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.cloneMessage;
 import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.MessageListener;
@@ -33,15 +34,17 @@ import com.github.sonus21.rqueue.utils.ValueResolver;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -77,7 +80,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   private final MessageConverter messageConverter;
   private final boolean inspectAllBean;
   private final AsyncTaskExecutor asyncTaskExecutor;
-  private final MultiValueMap<String, MappingInformation> destinationLookup =
+  private final Map<String, MappingInformation> destinationLookup = new HashMap<>(64);
+  private final MultiValueMap<MappingInformation, HandlerMethodWithPrimary> handlerMethods =
       new LinkedMultiValueMap<>(64);
 
   public RqueueMessageHandler() {
@@ -90,7 +94,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     this.inspectAllBean = inspectAllBean;
     this.conversionService = new DefaultFormattingConversionService();
     this.asyncTaskExecutor =
-        ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "rqueueMessageExecutor", -1, -1);
+        ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "multiMessageExecutor-", -1, -1);
   }
 
   public RqueueMessageHandler(final MessageConverter messageConverter) {
@@ -125,13 +129,21 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   @Override
-  protected boolean isHandler(Class<?> beanType) {
-    if (inspectAllBean) {
-      return true;
+  public void afterPropertiesSet() {
+    super.afterPropertiesSet();
+    for (Entry<String, MappingInformation> e : destinationLookup.entrySet()) {
+      List<HandlerMethodWithPrimary> handlerMethodWithPrimaries = handlerMethods.get(e.getValue());
+      if (handlerMethodWithPrimaries.size() > 1) {
+        if (handlerMethodWithPrimaries.stream().filter(m -> m.primary).count() != 1) {
+          logger.error(
+              "There must be exactly one primary listener method, queue: '" + e.getKey() + "'");
+          throw new IllegalStateException("There must be exactly one primary listener method");
+        }
+      }
     }
-    if (AnnotatedElementUtils.hasAnnotation(beanType, MessageListener.class)) {
-      return true;
-    }
+  }
+
+  private boolean isMessageHandler(Class<?> beanType) {
     RqueueListener rqueueListener = AnnotationUtils.findAnnotation(beanType, RqueueListener.class);
     if (rqueueListener != null) {
       MappingInformation information = getMappingInformation(rqueueListener);
@@ -140,62 +152,105 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
               beanType,
               (MethodIntrospector.MetadataLookup<MappingInformation>)
                   method -> getMappingInformation(method, information));
-      methods.forEach((key, value) -> registerHandlerMethod(beanType, key, value));
+      Object handler = Objects.requireNonNull(getBeanFactory()).getBean(beanType);
+      methods.forEach((key, value) -> registerHandlerMethod(handler, key, value));
     }
-    return false;
+    return rqueueListener != null;
+  }
+
+  @Override
+  protected boolean isHandler(Class<?> beanType) {
+    if (isMessageHandler(beanType)) {
+      return false;
+    }
+    if (inspectAllBean) {
+      return true;
+    }
+    return AnnotatedElementUtils.hasAnnotation(beanType, MessageListener.class);
+  }
+
+  public MultiValueMap<MappingInformation, HandlerMethodWithPrimary> getHandlerMethodMap() {
+    return handlerMethods;
   }
 
   private void addMatchesToCollection(
-      Collection<MappingInformation> mappingsToCheck, Message<?> message, List<Match> matches) {
-    for (MappingInformation mapping : mappingsToCheck) {
-      MappingInformation match = getMatchingMapping(mapping, message);
-      if (match != null) {
-        matches.add(new Match(match, getHandlerMethods().get(mapping)));
+      MappingInformation mapping, Message<?> message, Set<Match> matches) {
+    MappingInformation match = getMatchingMapping(mapping, message);
+    if (match != null) {
+      for (HandlerMethodWithPrimary method : getHandlerMethodMap().get(mapping)) {
+        matches.add(new Match(match, method));
       }
     }
   }
 
   @Override
   protected void registerHandlerMethod(Object handler, Method method, MappingInformation mapping) {
-    super.registerHandlerMethod(handler, method, mapping);
     for (String pattern : getDirectLookupDestinations(mapping)) {
-      this.destinationLookup.add(pattern, mapping);
+      MappingInformation oldMapping = destinationLookup.get(pattern);
+      if (oldMapping != null && !oldMapping.equals(mapping)) {
+        throw new IllegalStateException(
+            "More than one listeners are registered to same queue\n"
+                + "Existing mapping ["
+                + oldMapping
+                + "] \nNew Mapping: ["
+                + mapping
+                + "]");
+      }
+      this.destinationLookup.put(pattern, mapping);
     }
+    this.handlerMethods.add(
+        mapping,
+        new HandlerMethodWithPrimary(createHandlerMethod(handler, method), mapping.isPrimary()));
   }
 
   @Override
   protected void handleMessageInternal(Message<?> message, String lookupDestination) {
-    List<MappingInformation> mappings = this.destinationLookup.get(lookupDestination);
-    List<Match> matches = new ArrayList<>();
-    addMatchesToCollection(mappings, message, matches);
+    MappingInformation mapping = this.destinationLookup.get(lookupDestination);
+    Set<Match> matches = new HashSet<>();
+    addMatchesToCollection(mapping, message, matches);
     if (matches.isEmpty()) {
-      handleNoMatch(this.getHandlerMethods().keySet(), lookupDestination, message);
+      handleNoMatch(this.getHandlerMethodMap().keySet(), lookupDestination, message);
       return;
     }
     executeMatches(matches, message, lookupDestination);
   }
 
-  private void executeMatches(List<Match> matches, Message<?> message, String lookupDestination) {
+  private void executeMultipleMatch(
+      List<Match> matches, Message<?> message, String lookupDestination) {
+    Match primaryMatch = null;
+    for (Match match : matches) {
+      if (match.handlerMethod.primary) {
+        primaryMatch = match;
+      }
+    }
+    if (primaryMatch == null) {
+      throw new IllegalStateException("At least one of them must be primary");
+    }
+    for (Match match : matches) {
+      if (!match.handlerMethod.primary) {
+        Message<?> clonedMessage = cloneMessage(message);
+        asyncTaskExecutor.execute(new MultiHandler(match, clonedMessage, lookupDestination));
+      }
+    }
+    handleMatch(
+        primaryMatch.information, primaryMatch.handlerMethod.method, lookupDestination, message);
+  }
+
+  private void executeMatches(Set<Match> matchesIn, Message<?> message, String lookupDestination) {
+    List<Match> matches = new ArrayList<>(matchesIn);
     if (matches.size() == 1) {
       Match match = matches.get(0);
-      handleMatch(match.information, match.handlerMethod, lookupDestination, message);
+      handleMatch(match.information, match.handlerMethod.method, lookupDestination, message);
     } else {
-      Match primaryMatch = null;
-      for (Match match : matches) {
-        if (match.information.isPrimary()) {
-          primaryMatch = match;
-        }
-      }
-      if (primaryMatch == null) {
-        throw new IllegalStateException("At least one of them must be primary");
-      }
-      for (Match match : matches) {
-        if (!match.information.isPrimary()) {
-          asyncTaskExecutor.execute(new MultiHandler(match, message, lookupDestination));
-        }
-      }
-      handleMatch(primaryMatch.information, primaryMatch.handlerMethod, lookupDestination, message);
+      executeMultipleMatch(matches, message, lookupDestination);
     }
+  }
+
+  @AllArgsConstructor
+  public static class HandlerMethodWithPrimary {
+
+    HandlerMethod method;
+    boolean primary;
   }
 
   private MappingInformation getMappingInformation(
@@ -332,10 +387,11 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   @AllArgsConstructor
-  private class Match {
+  @EqualsAndHashCode
+  private static class Match {
 
     private final MappingInformation information;
-    private final HandlerMethod handlerMethod;
+    private final HandlerMethodWithPrimary handlerMethod;
   }
 
   private class MultiHandler extends RetryableRunnable<Object> {
@@ -353,7 +409,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
     @Override
     public void start() {
-      handleMatch(match.information, match.handlerMethod, lookupDestination, message);
+      handleMatch(match.information, match.handlerMethod.method, lookupDestination, message);
     }
   }
 

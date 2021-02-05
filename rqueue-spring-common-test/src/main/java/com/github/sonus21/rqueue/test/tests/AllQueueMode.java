@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.test.tests;
@@ -24,10 +24,15 @@ import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.test.dto.Sms;
+import com.github.sonus21.rqueue.test.dto.UserBanned;
+import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.springframework.util.CollectionUtils;
 
 public abstract class AllQueueMode extends SpringTestBase {
   protected void checkGroupConsumer() throws TimedOutException {
@@ -72,5 +77,25 @@ public abstract class AllQueueMode extends SpringTestBase {
         () -> getMessageCount(Arrays.asList(emailQueue, jobQueue)) == 0,
         20 * Constants.ONE_MILLI,
         "simple queues to drain");
+  }
+
+  protected void testMultiMessageConsumer() throws TimedOutException {
+    enqueue(userBannedQueue, UserBanned.newInstance());
+    enqueueIn(userBannedQueue, UserBanned.newInstance(), Duration.ofSeconds(1));
+    TimeoutUtils.waitFor(
+        () -> getMessageCount(userBannedQueue) == 0,
+        20 * Constants.ONE_MILLI,
+        "user banned queues to drain");
+    TimeoutUtils.waitFor(
+        () -> {
+          List<ConsumedMessage> messageList =
+              consumedMessageStore.getConsumedMessagesForQueue(userBannedQueue);
+          if (CollectionUtils.isEmpty(messageList)) {
+            return false;
+          }
+          return messageList.size() == 8;
+        },
+        20 * Constants.ONE_MILLI,
+        "waiting for all message consumer to save");
   }
 }
