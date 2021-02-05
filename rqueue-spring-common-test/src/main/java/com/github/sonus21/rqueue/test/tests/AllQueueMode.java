@@ -24,17 +24,15 @@ import com.github.sonus21.rqueue.test.dto.FeedGeneration;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Reservation;
 import com.github.sonus21.rqueue.test.dto.Sms;
-import com.github.sonus21.rqueue.test.dto.UserBanned;
-import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import java.time.Duration;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.springframework.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class AllQueueMode extends SpringTestBase {
+
   protected void checkGroupConsumer() throws TimedOutException {
     enqueue(chatIndexingQueue, ChatIndexing.newInstance());
     enqueue(feedGenerationQueue, FeedGeneration.newInstance());
@@ -56,12 +54,12 @@ public abstract class AllQueueMode extends SpringTestBase {
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(
-                    Arrays.asList(
-                        smsQueue,
-                        smsQueue + "_critical",
-                        smsQueue + "_high",
-                        smsQueue + "_medium",
-                        smsQueue + "_low"))
+                Arrays.asList(
+                    smsQueue,
+                    smsQueue + "_critical",
+                    smsQueue + "_high",
+                    smsQueue + "_medium",
+                    smsQueue + "_low"))
                 == 0,
         20 * Constants.ONE_MILLI,
         "multi level queues to drain");
@@ -79,23 +77,5 @@ public abstract class AllQueueMode extends SpringTestBase {
         "simple queues to drain");
   }
 
-  protected void testMultiMessageConsumer() throws TimedOutException {
-    enqueue(userBannedQueue, UserBanned.newInstance());
-    enqueueIn(userBannedQueue, UserBanned.newInstance(), Duration.ofSeconds(1));
-    TimeoutUtils.waitFor(
-        () -> getMessageCount(userBannedQueue) == 0,
-        20 * Constants.ONE_MILLI,
-        "user banned queues to drain");
-    TimeoutUtils.waitFor(
-        () -> {
-          List<ConsumedMessage> messageList =
-              consumedMessageStore.getConsumedMessagesForQueue(userBannedQueue);
-          if (CollectionUtils.isEmpty(messageList)) {
-            return false;
-          }
-          return messageList.size() == 8;
-        },
-        20 * Constants.ONE_MILLI,
-        "waiting for all message consumer to save");
-  }
+
 }

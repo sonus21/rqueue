@@ -21,7 +21,6 @@ import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.AllQueueMode;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -32,13 +31,13 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=7015",
-      "mysql.db.name=DefaultListenerGroup",
-      "sms.queue.active=true",
-      "sms.queue.group=sms-test",
-      "notification.queue.active=false",
-      "email.queue.active=true",
-      "job.queue.active=true",
+        "spring.redis.port=7015",
+        "mysql.db.name=DefaultListenerGroup",
+        "sms.queue.active=true",
+        "sms.queue.group=sms-test",
+        "notification.queue.active=false",
+        "email.queue.active=true",
+        "job.queue.active=true",
         "priority.mode=STRICT",
         "reservation.queue.active=true",
         "reservation.queue.group=",
@@ -50,7 +49,6 @@ import org.springframework.test.context.web.WebAppConfiguration;
         "reservation.queue.concurrency=2",
         "feed.generation.queue.concurrency=1-5",
         "chat.indexing.queue.concurrency=3-5",
-        "user.banned.queue.active=true",
     })
 @SpringIntegrationTest
 class DefaultListenerGroup extends AllQueueMode {
@@ -67,11 +65,5 @@ class DefaultListenerGroup extends AllQueueMode {
   @Test
   void verifyGroupConsumer() throws TimedOutException {
     checkGroupConsumer();
-  }
-
-  @Test
-  @Disabled
-  void verifyMultiMessageConsumer() throws TimedOutException {
-    testMultiMessageConsumer();
   }
 }

@@ -39,9 +39,11 @@ import lombok.ToString;
 @Entity
 @Table(
     name = "consumed_messages",
-    uniqueConstraints = {@UniqueConstraint(
-        name = "message_id_and_tag_unique",
-        columnNames = {"message_id", "tag"})})
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "message_id_and_tag_unique",
+            columnNames = {"message_id", "tag"})
+    })
 public class ConsumedMessage {
 
   @Id
@@ -55,7 +57,7 @@ public class ConsumedMessage {
   @Column(name = "tag", length = 1000000)
   private String tag;
 
-  @Column
+  @Column(name = "queue_name")
   private String queueName;
 
   // Around 1 MB of data
