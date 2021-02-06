@@ -20,8 +20,6 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import java.time.Duration;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 /**
@@ -33,10 +31,13 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 public abstract class RedisLockMiddleware implements LockMiddleware {
 
   private final RqueueRedisTemplate<String> template;
-  private final Set<String> acquiredLocks = ConcurrentHashMap.newKeySet();
 
   public RedisLockMiddleware(RedisConnectionFactory redisConnectionFactory) {
-    template = new RqueueRedisTemplate<>(redisConnectionFactory);
+    this(new RqueueRedisTemplate<>(redisConnectionFactory));
+  }
+
+  public RedisLockMiddleware(RqueueRedisTemplate<String> template) {
+    this.template = template;
   }
 
   /**
@@ -56,7 +57,7 @@ public abstract class RedisLockMiddleware implements LockMiddleware {
    * @return duration for this lock
    */
   protected Duration getLockDuration(Job job) {
-    return job.getQueueDetail().visibilityTimeoutDuration();
+    return job.getQueueDetail().visibilityDuration();
   }
 
   @Override
@@ -64,21 +65,15 @@ public abstract class RedisLockMiddleware implements LockMiddleware {
     if (lockIdentifier == null) {
       return;
     }
-    if (acquiredLocks.contains(lockIdentifier)) {
-      template.delete(lockIdentifier);
-      acquiredLocks.remove(lockIdentifier);
-    }
+    template.delete(lockIdentifier);
   }
 
   @Override
   public String acquireLock(Job job) {
     String lockIdentifier = getLockIdentifier(job);
-    if (acquiredLocks.contains(lockIdentifier)) {
-      return null;
-    }
     Duration lockDuration = getLockDuration(job);
-    if (template.setIfAbsent(lockIdentifier, RqueueConfig.getBrokerId(), lockDuration)) {
-      acquiredLocks.add(lockIdentifier);
+    if (Boolean.TRUE.equals(
+        template.setIfAbsent(lockIdentifier, RqueueConfig.getBrokerId(), lockDuration))) {
       return lockIdentifier;
     }
     return null;

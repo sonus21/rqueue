@@ -1,38 +1,44 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.listener;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.annotation.RqueueHandler;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
-import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
+import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -46,20 +52,24 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Component;
 
 @CoreUnitTest
+@SuppressWarnings("unchecked")
 class RqueueMessageHandlerTest extends TestBase {
+
   private static final String testQueue = "test-queue";
   private static final String messagePayloadQueue = "message-queue";
   private static final String smartQueue = "smart-queue";
   private static final String slowQueue = "slow-queue";
   private static final String exceptionQueue = "exception-queue";
-  private String message = "This is a test message.";
-  private GenericMessageConverter messageConverter = new GenericMessageConverter();
-  private MessagePayload messagePayload = new MessagePayload(message, message);
-  private String payloadConvertedMessage =
+  private final String message = "This is a test message.";
+  private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
+  private final MessagePayload messagePayload = new MessagePayload(message, message);
+  private final String payloadConvertedMessage =
       ((Message<String>) messageConverter.toMessage(messagePayload, null)).getPayload();
 
   private Message<String> buildMessage(String queueName, String message) {
@@ -234,7 +244,7 @@ class RqueueMessageHandlerTest extends TestBase {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
+    assertThrows(BeanCreationException.class, applicationContext::refresh);
   }
 
   @Test
@@ -283,7 +293,7 @@ class RqueueMessageHandlerTest extends TestBase {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
+    assertThrows(BeanCreationException.class, applicationContext::refresh);
   }
 
   @Test
@@ -298,7 +308,7 @@ class RqueueMessageHandlerTest extends TestBase {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
+    assertThrows(BeanCreationException.class, applicationContext::refresh);
   }
 
   @Test
@@ -313,7 +323,84 @@ class RqueueMessageHandlerTest extends TestBase {
         .getEnvironment()
         .getPropertySources()
         .addLast(new MapPropertySource("test", map));
-    assertThrows(BeanCreationException.class, () -> applicationContext.refresh());
+    assertThrows(BeanCreationException.class, applicationContext::refresh);
+  }
+
+  @Test
+  void duplicatePrimaryHandler() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton(
+        "messageHandler", MultiMessageWithDuplicatePrimaryHandlerHolders.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
+
+    Map<String, Object> map = Collections.singletonMap("queue.name", "user-ban");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    assertThrows(BeanCreationException.class, applicationContext::refresh);
+  }
+
+  @Test
+  void multipleMessageHandler() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MultiMessageHandlerHolders.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
+    Map<String, Object> map = Collections.singletonMap("queue.name", "user-ban");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+    RqueueMessageHandler rqueueMessageHandler =
+        applicationContext.getBean("rqueueMessageHandler", RqueueMessageHandler.class);
+    List<RqueueMessageHandler.HandlerMethodWithPrimary> handlerMethodWithPrimaries = null;
+    for (Entry<MappingInformation, List<RqueueMessageHandler.HandlerMethodWithPrimary>> informationListEntry :
+        rqueueMessageHandler.getHandlerMethodMap().entrySet()) {
+      handlerMethodWithPrimaries = informationListEntry.getValue();
+    }
+    assertNotNull(handlerMethodWithPrimaries);
+    assertEquals(4, handlerMethodWithPrimaries.size());
+    assertEquals(1, rqueueMessageHandler.getHandlerMethodMap().size());
+  }
+
+  @Test
+  void multipleMessageHandlerMethodCall() throws TimedOutException {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MultiMessageHandlerHolders.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
+    Map<String, Object> map = Collections.singletonMap("queue.name", "user-ban");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    applicationContext.refresh();
+    RqueueMessageHandler rqueueMessageHandler =
+        applicationContext.getBean("rqueueMessageHandler", RqueueMessageHandler.class);
+    MultiMessageHandlerHolders multiMessageHandlerHolders =
+        applicationContext.getBean("messageHandler", MultiMessageHandlerHolders.class);
+
+    rqueueMessageHandler.handleMessage(buildMessage("user-ban", "test-data"));
+    TimeoutUtils.waitFor(
+        () -> 4 == multiMessageHandlerHolders.lastReceivedMessage.size(),
+        "all handlers to be invoked");
+  }
+
+  @Test
+  void multipleMessageHandlerWithDuplicateMapping() throws TimedOutException {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MultiMessageHandlerHolders.class);
+    applicationContext.registerSingleton("messageHandler2", MessageHandlersWithProperty.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", RqueueMessageHandler.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue);
+    map.put("slow.queue.name", slowQueue);
+    map.put("fast.queue.name", smartQueue);
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    assertThrows(BeanCreationException.class, applicationContext::refresh);
   }
 
   @Test
@@ -447,7 +534,64 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @Getter
   @Setter
+  @RqueueListener(value = "${queue.name}")
+  @Component
+  private static class MultiMessageHandlerHolders {
+
+    private Map<String, String> lastReceivedMessage = new ConcurrentHashMap<>();
+
+    @RqueueHandler
+    public void onMessage(String value) {
+      lastReceivedMessage.put("onMessage", value);
+    }
+
+    @RqueueHandler(primary = true)
+    public void onMessage2(String value) {
+      lastReceivedMessage.put("onMessage2", value);
+    }
+
+    @RqueueHandler
+    public void onMessage3(String value) {
+      lastReceivedMessage.put("onMessage3", value);
+    }
+
+    @RqueueHandler
+    public void onMessage4(String value) {
+      lastReceivedMessage.put("onMessage4", value);
+    }
+  }
+
+  @Getter
+  @Setter
+  @RqueueListener(value = "${queue.name}")
+  private static class MultiMessageWithDuplicatePrimaryHandlerHolders {
+
+    private String lastReceivedMessage;
+
+    @RqueueHandler(primary = true)
+    public void onMessage(String value) {
+      lastReceivedMessage = value;
+    }
+
+    @RqueueHandler(primary = true)
+    public void onMessage2(String value) {
+      lastReceivedMessage = value;
+    }
+
+    public void onMessage3(String value) {
+      lastReceivedMessage = value;
+    }
+
+    @RqueueHandler
+    public void onMessage4(String value) {
+      lastReceivedMessage = value;
+    }
+  }
+
+  @Getter
+  @Setter
   private static class MessageHandlerWithConcurrency {
+
     private String lastReceivedMessage;
 
     @RqueueListener(value = "${queue.name}", concurrency = "${queue.concurrency}")

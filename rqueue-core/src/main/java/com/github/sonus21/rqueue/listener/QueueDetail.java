@@ -150,7 +150,7 @@ public class QueueDetail extends SerializableBase {
         .build();
   }
 
-  public Duration visibilityTimeoutDuration() {
+  public Duration visibilityDuration() {
     return Duration.ofMillis(visibilityTimeout);
   }
 }

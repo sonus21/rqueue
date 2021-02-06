@@ -188,12 +188,13 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     for (String pattern : getDirectLookupDestinations(mapping)) {
       MappingInformation oldMapping = destinationLookup.get(pattern);
       if (oldMapping != null && !oldMapping.equals(mapping)) {
+        List<HandlerMethodWithPrimary> methods = handlerMethods.get(oldMapping);
         throw new IllegalStateException(
             "More than one listeners are registered to same queue\n"
-                + "Existing mapping ["
-                + oldMapping
-                + "] \nNew Mapping: ["
-                + mapping
+                + "Existing Methods "
+                + methods
+                + "\nNew Method: ["
+                + method
                 + "]");
       }
       this.destinationLookup.put(pattern, mapping);
@@ -247,10 +248,15 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   @AllArgsConstructor
-  public static class HandlerMethodWithPrimary {
+  static class HandlerMethodWithPrimary {
 
     HandlerMethod method;
     boolean primary;
+
+    @Override
+    public String toString() {
+      return method.toString();
+    }
   }
 
   private MappingInformation getMappingInformation(
