@@ -40,7 +40,7 @@ services code is in Spring.
 * **Redis connection**: A different redis setup can be used for Rqueue
 * **Long execution job**: Long running jobs can check in periodically.
 * **Middleware**:  Add one or more middleware, middlewares are called before listener method.
-* **Message Multiplexing**: Call more than one message listeners on a message.
+* **Message Multicasting**: Call multiple message listeners on very message
 
 
 ## Getting Started
