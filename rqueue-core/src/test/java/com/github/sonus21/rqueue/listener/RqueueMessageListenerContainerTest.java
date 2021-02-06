@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.listener;
@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
@@ -51,6 +52,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.LinkedMultiValueMap;
 
 @CoreUnitTest
 class RqueueMessageListenerContainerTest extends TestBase {
@@ -131,7 +133,10 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Test
   void checkDoStartMethodIsCalledAndIsRunningSet() throws Exception {
-    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
+    doReturn(new LinkedMultiValueMap<>()).when(rqueueMessageHandler).getHandlerMethodMap();
+    StubMessageSchedulerListenerContainer container =
+        new StubMessageSchedulerListenerContainer(rqueueMessageHandler);
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
@@ -145,7 +150,10 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Test
   void checkDoStopMethodIsCalled() throws Exception {
-    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
+    doReturn(new LinkedMultiValueMap<>()).when(rqueueMessageHandler).getHandlerMethodMap();
+    StubMessageSchedulerListenerContainer container =
+        new StubMessageSchedulerListenerContainer(rqueueMessageHandler);
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
@@ -157,7 +165,10 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Test
   void checkDoDestroyMethodIsCalled() throws Exception {
-    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
+    doReturn(new LinkedMultiValueMap<>()).when(rqueueMessageHandler).getHandlerMethodMap();
+    StubMessageSchedulerListenerContainer container =
+        new StubMessageSchedulerListenerContainer(rqueueMessageHandler);
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     FieldUtils.writeField(container, "rqueueConfig", rqueueConfig, true);
@@ -170,7 +181,10 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Test
   void checkDoStopMethodIsCalledWithRunnable() throws Exception {
-    StubMessageSchedulerListenerContainer container = new StubMessageSchedulerListenerContainer();
+    RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
+    doReturn(new LinkedMultiValueMap<>()).when(rqueueMessageHandler).getHandlerMethodMap();
+    StubMessageSchedulerListenerContainer container =
+        new StubMessageSchedulerListenerContainer(rqueueMessageHandler);
     FieldUtils.writeField(
         container, "applicationEventPublisher", mock(ApplicationEventPublisher.class), true);
     CountDownLatch count = new CountDownLatch(1);
@@ -434,12 +448,13 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Getter
   private static class StubMessageSchedulerListenerContainer
       extends RqueueMessageListenerContainer {
+
     private boolean destroyMethodIsCalled = false;
     private boolean doStartMethodIsCalled = false;
     private boolean doStopMethodIsCalled = false;
 
-    StubMessageSchedulerListenerContainer() {
-      super(mock(RqueueMessageHandler.class), mock(RqueueMessageTemplate.class));
+    StubMessageSchedulerListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
+      super(rqueueMessageHandler, mock(RqueueMessageTemplate.class));
     }
 
     @Override

@@ -1,3 +1,19 @@
+<!--
+  ~  Copyright 2021 Sonu Kumar
+  ~
+  ~  Licensed under the Apache License, Version 2.0 (the "License");
+  ~  you may not use this file except in compliance with the License.
+  ~  You may obtain a copy of the License at
+  ~
+  ~         https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  See the License for the specific language governing permissions and limitations under the License.
+  ~
+  -->
+
 <configuration>
   <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
     <encoder>
@@ -18,7 +34,8 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="MONITOR">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
     </encoder>
     <file>log/monitor.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -28,8 +45,25 @@
     </rollingPolicy>
   </appender>
 
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="ConsumedMessageStore">
+    <encoder>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
+    </encoder>
+    <file>log/message.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>log/message.%d{yyyy-MM-dd-HH}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>100MB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
   <logger additivity="false" level="DEBUG" name="com.github.sonus21">
     <appender-ref ref="FILE"/>
+  </logger>
+
+  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.test.service">
+    <appender-ref ref="ConsumedMessageStore"/>
   </logger>
 
   <logger level="DEBUG" name="monitor" additivity="false">

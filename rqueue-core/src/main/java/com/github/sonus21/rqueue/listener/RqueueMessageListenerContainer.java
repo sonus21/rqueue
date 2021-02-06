@@ -257,7 +257,7 @@ public class RqueueMessageListenerContainer
   private void initializeQueue() {
     EndpointRegistry.delete();
     for (MappingInformation mappingInformation :
-        rqueueMessageHandler.getHandlerMethods().keySet()) {
+        rqueueMessageHandler.getHandlerMethodMap().keySet()) {
       for (String queue : mappingInformation.getQueueNames()) {
         for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
           EndpointRegistry.register(queueDetail);
@@ -671,5 +671,4 @@ public class RqueueMessageListenerContainer
   public List<Middleware> getMiddleWares() {
     return middlewares;
   }
-
 }

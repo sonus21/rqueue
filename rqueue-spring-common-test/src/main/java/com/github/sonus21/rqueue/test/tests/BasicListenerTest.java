@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.test.tests;
@@ -24,8 +24,11 @@ import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.test.dto.UserBanned;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public abstract class BasicListenerTest extends SpringTestBase {
@@ -95,5 +99,28 @@ public abstract class BasicListenerTest extends SpringTestBase {
         },
         "message should be present in internal storage");
     waitFor(() -> getMessageCount(jobQueue) == 0, "job to run");
+  }
+
+  protected void testMultiMessageConsumer() throws TimedOutException {
+    enqueue(userBannedQueue, UserBanned.newInstance());
+    enqueueIn(userBannedQueue, UserBanned.newInstance(), Duration.ofSeconds(1));
+    TimeoutUtils.waitFor(
+        () -> getMessageCount(userBannedQueue) == 0,
+        20 * Constants.ONE_MILLI,
+        "user banned queues to drain");
+    TimeoutUtils.waitFor(
+        () -> {
+          List<ConsumedMessage> messageList =
+              consumedMessageStore.getConsumedMessagesForQueue(userBannedQueue);
+          if (CollectionUtils.isEmpty(messageList)) {
+            return false;
+          }
+          if (random.nextBoolean()) {
+            log.info("SIZE {}", messageList.size());
+          }
+          return messageList.size() == 8;
+        },
+        20 * Constants.ONE_MILLI,
+        "waiting for all message consumer to save");
   }
 }

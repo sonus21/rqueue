@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.junit;
@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.RedisNode;
+import org.springframework.util.CollectionUtils;
 import redis.embedded.RedisServer;
 
 @Slf4j
@@ -58,16 +59,13 @@ public abstract class RedisBootstrapperBase {
     if (monitorThreads > 0) {
       executorService = Executors.newFixedThreadPool(monitorThreads);
     }
-    if (bootstrapRedis.monitorRedis()) {
-      monitor(bootstrapRedis.host(), bootstrapRedis.port());
-    }
-    if (bootstrapRedis.systemRedis()) {
-      return;
-    }
-    if (redisServer == null) {
+    if (!bootstrapRedis.systemRedis() && redisServer == null) {
       log.info("Starting Redis at port {}", bootstrapRedis.port());
       redisServer = new RedisServer(bootstrapRedis.port());
       redisServer.start();
+    }
+    if (bootstrapRedis.monitorRedis()) {
+      monitor(bootstrapRedis.host(), bootstrapRedis.port());
     }
   }
 
@@ -76,7 +74,7 @@ public abstract class RedisBootstrapperBase {
       redisServer.stop();
     }
 
-    if (processes != null) {
+    if (!CollectionUtils.isEmpty(processes)) {
       for (MonitorProcess monitorProcess : processes) {
         monitorProcess.process.destroy();
         monitorLogger.info("RedisNode {} ", monitorProcess.redisNode);
@@ -103,11 +101,12 @@ public abstract class RedisBootstrapperBase {
                 new MonitorProcess(process, new RedisNode(host, port), lines);
             processes.add(monitorProcess);
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String s;
-            while ((s = br.readLine()) != null) {
-              lines.add(s);
+            while (process.isAlive()) {
+              String s = br.readLine();
+              if (s != null) {
+                lines.add(s);
+              }
             }
-            process.waitFor();
           } catch (Exception e) {
             monitorLogger.error("Process call failed", e);
           }
