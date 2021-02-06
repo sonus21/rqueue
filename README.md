@@ -38,6 +38,8 @@ services code is in Spring.
 * **Middleware**:  Add one or more middleware, middlewares are called before listener method.
 * **Message Multiplexing**: Call more than one message listeners on a message.
 
+[![Message Flow](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.jpg)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/qrqueue-message-flow.jpg)
+
 ## Getting Started
 
 ### Dependency
