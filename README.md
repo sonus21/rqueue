@@ -13,6 +13,10 @@
 framework's messaging library backed by Redis. It can be used as message broker as well, where all
 services code is in Spring.
 
+<br/>
+
+[![Message Flow](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.jpg)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/qrqueue-message-flow.jpg)
+
 ## Features
 
 * **Message Scheduling** : A message can be scheduled for any arbitrary period
@@ -38,7 +42,6 @@ services code is in Spring.
 * **Middleware**:  Add one or more middleware, middlewares are called before listener method.
 * **Message Multiplexing**: Call more than one message listeners on a message.
 
-[![Message Flow](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.jpg)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/qrqueue-message-flow.jpg)
 
 ## Getting Started
 
