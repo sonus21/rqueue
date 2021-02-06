@@ -125,7 +125,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
     Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.where(cb.equal(root.get("queue_name"), queueName));
+    cr.where(cb.equal(root.get("queueName"), queueName));
     return executeQuery(entityManager, session, root, cr);
   }
 
@@ -136,7 +136,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
     Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.where(cb.equal(root.get("message_id"), messageId));
+    cr.where(cb.equal(root.get("messageId"), messageId));
     return executeQuery(entityManager, session, root, cr);
   }
 
@@ -147,7 +147,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
     Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.where(cb.in(root.get("message_id").in(messageIds)));
+    cr.where(cb.in(root.get("messageId").in(messageIds)));
     return executeQuery(entityManager, session, root, cr);
   }
 
@@ -158,7 +158,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<ConsumedMessage> cr = cb.createQuery(ConsumedMessage.class);
     Root<ConsumedMessage> root = cr.from(ConsumedMessage.class);
-    cr.where(cb.equal(root.get("message_id"), messageId)).where(cb.equal(root.get("tag"), tag));
+    cr.where(cb.equal(root.get("messageId"), messageId)).where(cb.equal(root.get("tag"), tag));
     List<ConsumedMessage> consumedMessages = executeQuery(entityManager, session, root, cr);
     if (CollectionUtils.isEmpty(consumedMessages)) {
       return null;

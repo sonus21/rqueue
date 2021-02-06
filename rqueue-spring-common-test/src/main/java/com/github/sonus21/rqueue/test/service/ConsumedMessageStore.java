@@ -44,7 +44,9 @@ public class ConsumedMessageStore {
       throws JsonProcessingException {
     log.info("Queue '{}' Message: {} Tag: '{}'", queueName, message, tag);
     String tagStr;
-    if (tag instanceof String) {
+    if (tag == null) {
+      tagStr = null;
+    } else if (tag instanceof String) {
       tagStr = (String) tag;
     } else {
       tagStr = objectMapper.writeValueAsString(tag);
