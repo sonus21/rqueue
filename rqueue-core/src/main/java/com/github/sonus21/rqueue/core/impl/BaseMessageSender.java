@@ -1,23 +1,24 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core.impl;
 
 import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildMessage;
 import static com.github.sonus21.rqueue.core.support.RqueueMessageUtils.buildPeriodicMessage;
+import static com.github.sonus21.rqueue.utils.Constants.DEFAULT_PRIORITY_KEY;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static org.springframework.util.Assert.notNull;
@@ -34,6 +35,9 @@ import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.MessageHeaders;
@@ -141,14 +145,19 @@ abstract class BaseMessageSender {
   }
 
   protected Object deleteAllMessages(QueueDetail queueDetail) {
-    return MessageSweeper.getInstance(
-            rqueueConfig, messageTemplate, rqueueMessageMetadataService)
+    return MessageSweeper.getInstance(rqueueConfig, messageTemplate, rqueueMessageMetadataService)
         .deleteMessage(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {
     validateQueue(queueName);
     notNull(priorities, "priorities cannot be null");
+    Map<String, Integer> priorityMap = new HashMap<>();
+    priorityMap.put(DEFAULT_PRIORITY_KEY, 1);
+    for (String priority : priorities) {
+      priorityMap.put(priority, 1);
+    }
+
     QueueDetail queueDetail =
         QueueDetail.builder()
             .name(queueName)
@@ -158,6 +167,7 @@ abstract class BaseMessageSender {
             .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queueName))
             .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
             .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
+            .priority(priorityMap)
             .build();
     EndpointRegistry.register(queueDetail);
     for (String priority : priorities) {
@@ -172,6 +182,7 @@ abstract class BaseMessageSender {
               .processingQueueName(rqueueConfig.getProcessingQueueName(queueName) + suffix)
               .processingQueueChannelName(
                   rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)
+              .priority(Collections.singletonMap(DEFAULT_PRIORITY_KEY, 1))
               .build();
       EndpointRegistry.register(queueDetail);
     }
