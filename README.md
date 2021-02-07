@@ -42,7 +42,6 @@ services code is in Spring.
 * **Middleware**:  Add one or more middleware, middlewares are called before listener method.
 * **Message Multicasting**: Call multiple message listeners on very message
 
-
 ## Getting Started
 
 ### Dependency
@@ -221,7 +220,10 @@ Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 <br/>
 [![Jobs](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/jobs.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/jobs.png)
 
-## In Production
+## Status
+
+Rqueue is stable and production ready, it's processing thousands of messages daily in production
+deployments.
 
 **We would love to add your organization name here, if you're one of the Rqueue users, please raise
 a
@@ -242,17 +244,8 @@ PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueu
 ## Contribution
 
 You are most welcome for any pull requests for any feature/bug/enhancement. You would need Java8 and
-gradle to start with. In root `build.gradle` file comment out spring related versions, or set
-environment variables for Spring versions.
-
+gradle to start with.
 **Please format your code with Google Java formatter.**
-
-```bash
-//    springBootVersion = '2.1.0.RELEASE'
-//    springVersion = '5.1.2.RELEASE'
-//    springDataVersion = '2.1.2.RELEASE'
-//    microMeterVersion = '1.1.0'
-```
 
 ## Links
 
@@ -267,6 +260,8 @@ environment variables for Spring versions.
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
 
 * StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
+* Project
+  Progress: [https://github.com/sonus21/rqueue/projects/3](https://github.com/sonus21/rqueue/projects/3)
 
 ## License
 
