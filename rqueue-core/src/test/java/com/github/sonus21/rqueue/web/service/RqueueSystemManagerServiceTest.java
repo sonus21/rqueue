@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.web.service;
@@ -46,17 +46,19 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class RqueueSystemManagerServiceTest extends TestBase {
-  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
-  private RqueueSystemManagerService rqueueSystemManagerService =
+
+  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
+  private final RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+  private final RqueueSystemManagerService rqueueSystemManagerService =
       new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
-  private String slowQueue = "slow-queue";
-  private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue, 900000L);
-  private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue, 200000L, "fast-dlq");
-  private QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
-  private QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
+  private final String slowQueue = "slow-queue";
+  private final String fastQueue = "fast-queue";
+  private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue, 900000L);
+  private final QueueDetail fastQueueDetail = TestUtils
+      .createQueueDetail(fastQueue, 200000L, "fast-dlq");
+  private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
+  private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private Set<String> queues;
 
   @BeforeEach
@@ -66,7 +68,7 @@ class RqueueSystemManagerServiceTest extends TestBase {
     queues.add(fastQueue);
     doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
     doAnswer(
-            invocation -> {
+        invocation -> {
               String name = invocation.getArgument(0);
               return "__rq::q-config::" + name;
             })

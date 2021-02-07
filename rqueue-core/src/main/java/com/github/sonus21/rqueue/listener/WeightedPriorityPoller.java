@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.listener;
@@ -30,7 +30,7 @@ import org.slf4j.event.Level;
 class WeightedPriorityPoller extends RqueueMessagePoller {
   private final Map<String, QueueThread> queueNameToThread;
   private final Map<String, QueueDetail> queueNameToDetail;
-  private List<QueueDetail> queueDetailList;
+  private final List<QueueDetail> queueDetailList;
   private int[] currentWeight;
   private int[] weight;
   private float[] probability;
@@ -73,7 +73,7 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
   private void reinitializeWeight() {
     currentIndex = 0;
     System.arraycopy(weight, 0, currentWeight, 0, weight.length);
-    log(Level.DEBUG, "reinitialized weight {}", null, (Object) currentWeight);
+    log(Level.DEBUG, "reinitialized weight {}", null, currentWeight);
   }
 
   private int getQueueIndexToPoll() {
@@ -120,7 +120,7 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
         null,
         queues,
         weightStr,
-        (Object) probability);
+        probability);
   }
 
   @Override

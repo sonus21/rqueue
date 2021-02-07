@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.metrics;
@@ -42,15 +42,18 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class RqueueMetricsTest extends TestBase {
-  private RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private MetricsProperties metricsProperties = new MetricsProperties() {};
-  private QueueCounter queueCounter = mock(QueueCounter.class);
-  private String simpleQueue = "simple-queue";
-  private String delayedQueue = "delayed-queue";
-  private String deadLetterQueue = "dlq";
-  private Tags tags = Tags.of("rQueue", "dc1");
-  private QueueDetail simpleQueueDetail = TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
-  private QueueDetail delayedQueueDetail = TestUtils.createQueueDetail(delayedQueue);
+
+  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
+  private final MetricsProperties metricsProperties = new MetricsProperties() {
+  };
+  private final QueueCounter queueCounter = mock(QueueCounter.class);
+  private final String simpleQueue = "simple-queue";
+  private final String delayedQueue = "delayed-queue";
+  private final String deadLetterQueue = "dlq";
+  private final Tags tags = Tags.of("rQueue", "dc1");
+  private final QueueDetail simpleQueueDetail = TestUtils
+      .createQueueDetail(simpleQueue, deadLetterQueue);
+  private final QueueDetail delayedQueueDetail = TestUtils.createQueueDetail(delayedQueue);
 
   @BeforeEach
   public void init() {
@@ -58,9 +61,9 @@ class RqueueMetricsTest extends TestBase {
     EndpointRegistry.register(simpleQueueDetail);
     EndpointRegistry.register(delayedQueueDetail);
     doAnswer(
-            invocation -> {
-              String zsetName = invocation.getArgument(0);
-              if (zsetName.equals(delayedQueueDetail.getDelayedQueueName())) {
+        invocation -> {
+          String zsetName = invocation.getArgument(0);
+          if (zsetName.equals(delayedQueueDetail.getDelayedQueueName())) {
                 return 5L;
               }
               if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {

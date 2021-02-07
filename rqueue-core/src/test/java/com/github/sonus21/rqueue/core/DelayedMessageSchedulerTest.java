@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.github.sonus21.rqueue.core;
@@ -63,17 +63,23 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 @CoreUnitTest
 @SuppressWarnings("unchecked")
 class DelayedMessageSchedulerTest extends TestBase {
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
-  @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
 
-  @InjectMocks private TestMessageScheduler messageScheduler = new TestMessageScheduler();
+  @Mock
+  private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock
+  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  @Mock
+  private RedisMessageListenerContainer redisMessageListenerContainer;
+  @Mock
+  private RedisTemplate<String, Long> redisTemplate;
 
-  private String slowQueue = "slow-queue";
-  private String fastQueue = "fast-queue";
-  private QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
-  private QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
+  @InjectMocks
+  private final TestMessageScheduler messageScheduler = new TestMessageScheduler();
+
+  private final String slowQueue = "slow-queue";
+  private final String fastQueue = "fast-queue";
+  private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
 
   @BeforeEach
   public void init() {
