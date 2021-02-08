@@ -22,6 +22,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * This designated any public method as listener given the containing method is also annotated with
+ * {@link RqueueListener}. In a class there must be exactly one primary one handler.
+ *
+ * <p>Registering more than one primary handler is not allowed.
+ */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

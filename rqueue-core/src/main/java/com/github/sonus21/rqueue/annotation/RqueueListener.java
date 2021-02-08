@@ -24,12 +24,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for mapping a method onto message-handling methods by matching to the message queue.
+ * Annotation for mapping a method/class onto message-handling methods by matching to the message
+ * queue.
  *
  * <p>Any method can be marked as listener with this annotation, different field can be configured
  * in any order as per need.
  *
- * <p>All fields support SpEL(Spring Expression Language) as well property placeholder.
+ * <p>When this is used on a class, listeners methods (public method) must be annotated by {@link
+ * RqueueHandler}
+ *
+ * <p>All fields support SpEL(Spring Expression Language), property placeholder and constants value
  *
  * <pre>
  * &#64;Component
