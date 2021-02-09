@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-## [2.5.0] - 8-Feb-2021
+## [2.5.0] - 9-Feb-2021
 
 ### Added
 
