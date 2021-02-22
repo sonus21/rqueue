@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.web.view.DateTimeFunction;
 import com.github.sonus21.rqueue.web.view.DeadLetterQueuesFunction;
@@ -185,5 +186,11 @@ public abstract class RqueueListenerBaseConfig {
     viewResolver.setPrefix("classpath:/templates/rqueue/");
     viewResolver.setSuffix(".html");
     return viewResolver;
+  }
+
+  @Bean
+  public RqueueQueueMetrics rqueueQueueMetrics(
+      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+    return new RqueueQueueMetrics(stringRqueueRedisTemplate);
   }
 }
