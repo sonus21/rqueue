@@ -57,4 +57,9 @@ class BootMetricsTest extends MetricTest {
   void countStatusTest() throws TimedOutException {
     this.verifyCountStatus();
   }
+
+  @Test
+  void messageCount() throws TimedOutException {
+    verifyQueueMessageCount();
+  }
 }

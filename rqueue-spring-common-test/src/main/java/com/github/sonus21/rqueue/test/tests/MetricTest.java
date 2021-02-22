@@ -19,18 +19,26 @@ package com.github.sonus21.rqueue.test.tests;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static com.google.common.collect.Lists.newArrayList;
 
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class MetricTest extends SpringTestBase {
-  @Autowired protected MeterRegistry meterRegistry;
+
+  @Autowired
+  protected MeterRegistry meterRegistry;
+  @Autowired
+  protected RqueueQueueMetrics rqueueQueueMetrics;
 
   protected void verifyDelayedQueueStatus() throws TimedOutException {
     long maxDelay = 0;
@@ -141,12 +149,25 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                    .get("failure.count")
-                    .tags("rqueue", "test")
-                    .tags("queue", emailQueue)
-                    .counter()
-                    .count()
+                .get("failure.count")
+                .tags("rqueue", "test")
+                .tags("queue", emailQueue)
+                .counter()
+                .count()
                 == 0,
         "stats collection");
+  }
+
+  protected void verifyQueueMessageCount() throws TimedOutException {
+    QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);
+    enqueue(queueDetail.getQueueName(), i -> Notification.newInstance(), 1000);
+    enqueueIn(queueDetail.getDelayedQueueName(), i -> Notification.newInstance(), i -> 30_000L,
+        100);
+    TimeoutUtils.waitFor(() -> rqueueQueueMetrics.getProcessingMessageCount(notificationQueue) > 0,
+        "at least one message in processing");
+    TimeoutUtils.waitFor(() -> rqueueQueueMetrics.getScheduledMessageCount(notificationQueue) > 0,
+        "at least one message in scheduled queue");
+    TimeoutUtils.waitFor(() -> rqueueQueueMetrics.getPendingMessageCount(notificationQueue) > 0,
+        "at least one message in pending queue");
   }
 }
