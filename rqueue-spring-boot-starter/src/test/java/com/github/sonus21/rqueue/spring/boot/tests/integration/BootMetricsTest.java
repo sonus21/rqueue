@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.Application;
+import com.github.sonus21.rqueue.spring.boot.application.BootMetricApplication;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@ContextConfiguration(classes = Application.class)
+@ContextConfiguration(classes = BootMetricApplication.class)
 @Slf4j
 @TestPropertySource(
     properties = {
@@ -38,6 +38,7 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=test4",
       "rqueue.metrics.count.failure=true",
       "rqueue.metrics.count.execution=true",
+        "sms.queue.active=true"
     })
 @SpringBootIntegrationTest
 class BootMetricsTest extends MetricTest {
@@ -59,7 +60,12 @@ class BootMetricsTest extends MetricTest {
   }
 
   @Test
-  void messageCount() throws TimedOutException {
-    verifyQueueMessageCount();
+  void simpleQueueMessageCount() throws TimedOutException {
+    verifyNotificationQueueMessageCount();
+  }
+
+  @Test
+  void priorityQueueMessageCount() throws TimedOutException {
+    verifySmsQueueMessageCount();
   }
 }

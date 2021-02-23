@@ -171,13 +171,16 @@ public @interface RqueueListener {
    * weighted a round robin approach is used, and weight is followed.
    *
    * @return the priority for this listener.
+   * @see #priorityGroup()
    */
   String priority() default "";
 
   /**
-   * Priority group for this listener. More than one priority group can be configured in an
-   * application. Priority groups are useful when inside a group some queue(s) have higher priority
-   * then the queue(s).
+   * Priority group for this listener.
+   *
+   * <p>More than one priority group can be configured in an application. Priority groups are
+   * useful
+   * when inside a group some queue(s) have higher priority than the other queue(s).
    *
    * @return priority group name.
    */

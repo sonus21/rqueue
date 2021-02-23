@@ -59,6 +59,7 @@ class StrictPriorityPoller extends RqueueMessagePoller {
 
   private String getQueueToPoll() {
     long now = System.currentTimeMillis();
+    // starvation
     for (String queue : queues) {
       if (isQueueActive(queue)) {
         if (now - lastFetchedTime.get(queue) > Constants.MILLIS_IN_A_MINUTE) {

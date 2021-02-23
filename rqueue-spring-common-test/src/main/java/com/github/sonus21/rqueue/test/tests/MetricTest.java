@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.dto.Notification;
+import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -158,16 +159,35 @@ public abstract class MetricTest extends SpringTestBase {
         "stats collection");
   }
 
-  protected void verifyQueueMessageCount() throws TimedOutException {
+  protected void verifyNotificationQueueMessageCount() throws TimedOutException {
     QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);
     enqueue(queueDetail.getQueueName(), i -> Notification.newInstance(), 1000);
-    enqueueIn(queueDetail.getDelayedQueueName(), i -> Notification.newInstance(), i -> 30_000L,
-        100);
-    TimeoutUtils.waitFor(() -> rqueueQueueMetrics.getProcessingMessageCount(notificationQueue) > 0,
+    enqueueIn(
+        queueDetail.getDelayedQueueName(), i -> Notification.newInstance(), i -> 30_000L, 100);
+    TimeoutUtils.waitFor(
+        () -> rqueueQueueMetrics.getProcessingMessageCount(notificationQueue) > 0,
         "at least one message in processing");
-    TimeoutUtils.waitFor(() -> rqueueQueueMetrics.getScheduledMessageCount(notificationQueue) > 0,
+    TimeoutUtils.waitFor(
+        () -> rqueueQueueMetrics.getScheduledMessageCount(notificationQueue) > 0,
         "at least one message in scheduled queue");
-    TimeoutUtils.waitFor(() -> rqueueQueueMetrics.getPendingMessageCount(notificationQueue) > 0,
+    TimeoutUtils.waitFor(
+        () -> rqueueQueueMetrics.getPendingMessageCount(notificationQueue) > 0,
+        "at least one message in pending queue");
+  }
+
+  protected void verifySmsQueueMessageCount() throws TimedOutException {
+    String priority = "critical";
+    QueueDetail queueDetail = EndpointRegistry.get(smsQueue, priority);
+    enqueue(queueDetail.getQueueName(), i -> Sms.newInstance(), 1000);
+    enqueueIn(queueDetail.getDelayedQueueName(), i -> Sms.newInstance(), i -> 30_000L, 100);
+    TimeoutUtils.waitFor(
+        () -> rqueueQueueMetrics.getProcessingMessageCount(smsQueue, priority) > 0,
+        "at least one message in processing");
+    TimeoutUtils.waitFor(
+        () -> rqueueQueueMetrics.getScheduledMessageCount(smsQueue, priority) > 0,
+        "at least one message in scheduled queue");
+    TimeoutUtils.waitFor(
+        () -> rqueueQueueMetrics.getPendingMessageCount(smsQueue, priority) > 0,
         "at least one message in pending queue");
   }
 }
