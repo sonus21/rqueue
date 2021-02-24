@@ -30,8 +30,10 @@ import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.utils.RedisUtils;
+import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
 import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
 import com.mitchellbosecke.pebble.PebbleEngine;
+import com.mitchellbosecke.pebble.loader.Loader;
 import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -170,12 +172,16 @@ public abstract class RqueueListenerBaseConfig {
 
   @Bean
   public PebbleViewResolver rqueueViewResolver() {
+    Loader<?> resourceLoader = new ResourceLoader();
     PebbleEngine pebbleEngine =
-        new PebbleEngine.Builder().extension(new RqueuePebbleExtension()).build();
-    PebbleViewResolver viewResolver = new PebbleViewResolver(pebbleEngine);
-    viewResolver.setPrefix("classpath:/templates/rqueue/");
-    viewResolver.setSuffix(".html");
-    return viewResolver;
+        new PebbleEngine.Builder()
+            .extension(new RqueuePebbleExtension())
+            .loader(resourceLoader)
+            .build();
+    PebbleViewResolver resolver = new PebbleViewResolver(pebbleEngine);
+    resolver.setPrefix("classpath:/templates/rqueue/");
+    resolver.setSuffix(".html");
+    return resolver;
   }
 
   @Bean
