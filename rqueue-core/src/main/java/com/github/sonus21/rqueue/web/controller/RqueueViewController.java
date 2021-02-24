@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
+import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import io.seruco.encoding.base62.Base62;
 import java.nio.ByteBuffer;
 import java.time.OffsetDateTime;
@@ -40,7 +41,6 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.jtwig.spring.JtwigViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
@@ -54,7 +54,8 @@ import org.springframework.web.servlet.View;
 @Controller
 @RequestMapping("rqueue")
 public class RqueueViewController {
-  private final JtwigViewResolver rqueueViewResolver;
+
+  private final PebbleViewResolver rqueueViewResolver;
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueQDetailService rqueueQDetailService;
@@ -64,7 +65,7 @@ public class RqueueViewController {
 
   @Autowired
   public RqueueViewController(
-      @Qualifier("rqueueViewResolver") JtwigViewResolver rqueueViewResolver,
+      @Qualifier("rqueueViewResolver") PebbleViewResolver rqueueViewResolver,
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueQDetailService rqueueQDetailService,

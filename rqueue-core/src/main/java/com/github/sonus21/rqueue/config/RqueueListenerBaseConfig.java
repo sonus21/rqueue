@@ -30,12 +30,9 @@ import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.utils.RedisUtils;
-import com.github.sonus21.rqueue.web.view.DateTimeFunction;
-import com.github.sonus21.rqueue.web.view.DeadLetterQueuesFunction;
-import org.jtwig.environment.EnvironmentConfiguration;
-import org.jtwig.environment.EnvironmentConfigurationBuilder;
-import org.jtwig.spring.JtwigViewResolver;
-import org.jtwig.web.servlet.JtwigRenderer;
+import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
+import com.mitchellbosecke.pebble.PebbleEngine;
+import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -172,17 +169,10 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
-  public JtwigViewResolver rqueueViewResolver() {
-    EnvironmentConfiguration configuration =
-        EnvironmentConfigurationBuilder.configuration()
-            .functions()
-            .add(new DateTimeFunction())
-            .add(new DeadLetterQueuesFunction())
-            .and()
-            .build();
-    JtwigRenderer renderer = new JtwigRenderer(configuration);
-    JtwigViewResolver viewResolver = new JtwigViewResolver();
-    viewResolver.setRenderer(renderer);
+  public PebbleViewResolver rqueueViewResolver() {
+    PebbleEngine pebbleEngine =
+        new PebbleEngine.Builder().extension(new RqueuePebbleExtension()).build();
+    PebbleViewResolver viewResolver = new PebbleViewResolver(pebbleEngine);
     viewResolver.setPrefix("classpath:/templates/rqueue/");
     viewResolver.setSuffix(".html");
     return viewResolver;

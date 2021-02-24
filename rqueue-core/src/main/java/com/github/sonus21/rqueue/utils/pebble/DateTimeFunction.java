@@ -14,22 +14,27 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.view;
+package com.github.sonus21.rqueue.utils.pebble;
 
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import org.jtwig.functions.FunctionRequest;
-import org.jtwig.functions.SimpleJtwigFunction;
+import com.mitchellbosecke.pebble.extension.Function;
+import com.mitchellbosecke.pebble.template.EvaluationContext;
+import com.mitchellbosecke.pebble.template.PebbleTemplate;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-public class DateTimeFunction extends SimpleJtwigFunction {
+public class DateTimeFunction implements Function {
 
   @Override
-  public String name() {
-    return "time";
+  public Object execute(
+      Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber) {
+    Long milli = (Long) args.get("milli");
+    return DateTimeUtils.formatMilliToString(milli);
   }
 
   @Override
-  public Object execute(FunctionRequest request) {
-    Long milli = (Long) request.getArguments().get(0);
-    return DateTimeUtils.formatMilliToString(milli);
+  public List<String> getArgumentNames() {
+    return Collections.singletonList("milli");
   }
 }
