@@ -65,7 +65,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/index.html", pebbleView.getUrl());
+    assertEquals("index.html", pebbleView.getUrl());
     verifyBasicData(model, null);
     assertEquals(
         Arrays.asList(AggregationType.DAILY, AggregationType.WEEKLY, AggregationType.MONTHLY),
@@ -84,7 +84,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue/queues")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/queues.html", pebbleView.getUrl());
+    assertEquals("queues.html", pebbleView.getUrl());
     verifyBasicData(model, NavTab.QUEUES);
     assertEquals("Queues", model.get("title"));
     assertNotNull(model.get("queues"));
@@ -96,7 +96,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue/queues/" + jobQueue)).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/queue_detail.html", pebbleView.getUrl());
+    assertEquals("queue_detail.html", pebbleView.getUrl());
     verifyBasicData(model, NavTab.QUEUES);
     assertEquals("Queue: " + jobQueue, model.get("title"));
     assertEquals(jobQueue, model.get("queueName"));
@@ -121,7 +121,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue/running")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/running.html", pebbleView.getUrl());
+    assertEquals("running.html", pebbleView.getUrl());
     verifyBasicData(model, NavTab.RUNNING);
     assertEquals("Running Tasks", model.get("title"));
     assertNotNull(model.get("tasks"));
@@ -133,7 +133,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue/scheduled")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/running.html", pebbleView.getUrl());
+    assertEquals("running.html", pebbleView.getUrl());
     verifyBasicData(model, NavTab.SCHEDULED);
     assertEquals("Scheduled Tasks", model.get("title"));
     assertNotNull(model.get("tasks"));
@@ -145,7 +145,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue/dead")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/running.html", pebbleView.getUrl());
+    assertEquals("running.html", pebbleView.getUrl());
     verifyBasicData(model, NavTab.DEAD);
     assertEquals("Tasks moved to dead letter queue", model.get("title"));
     assertNotNull(model.get("tasks"));
@@ -157,7 +157,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue/pending")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/running.html", pebbleView.getUrl());
+    assertEquals("running.html", pebbleView.getUrl());
     verifyBasicData(model, NavTab.PENDING);
     assertEquals("Tasks waiting for execution", model.get("title"));
     assertNotNull(model.get("tasks"));
@@ -169,7 +169,7 @@ class RqueueViewControllerTest extends SpringWebTestBase {
     MvcResult result = this.mockMvc.perform(get("/rqueue/utility")).andReturn();
     ModelMap model = result.getModelAndView().getModelMap();
     PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("classpath:/templates/rqueue/utility.html", pebbleView.getUrl());
+    assertEquals("utility.html", pebbleView.getUrl());
     verifyBasicData(model, NavTab.UTILITY);
     assertEquals("Utility", model.get("title"));
     assertNotNull(model.get("supportedDataType"));

@@ -33,7 +33,7 @@ import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
 import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
 import com.mitchellbosecke.pebble.PebbleEngine;
-import com.mitchellbosecke.pebble.loader.Loader;
+import com.mitchellbosecke.pebble.spring.extension.SpringExtension;
 import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -172,14 +172,13 @@ public abstract class RqueueListenerBaseConfig {
 
   @Bean
   public PebbleViewResolver rqueueViewResolver() {
-    Loader<?> resourceLoader = new ResourceLoader();
     PebbleEngine pebbleEngine =
         new PebbleEngine.Builder()
-            .extension(new RqueuePebbleExtension())
-            .loader(resourceLoader)
+            .extension(new RqueuePebbleExtension(), new SpringExtension(null))
+            .loader(new ResourceLoader())
             .build();
     PebbleViewResolver resolver = new PebbleViewResolver(pebbleEngine);
-    resolver.setPrefix("classpath:/templates/rqueue/");
+    resolver.setPrefix("templates/rqueue/");
     resolver.setSuffix(".html");
     return resolver;
   }

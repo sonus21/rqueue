@@ -1,4 +1,4 @@
-{% extends 'classpath:/templates/rqueue/base.html' %}
+{% extends 'base' %}
 {% block main %}
 <div class="container">
   <div class="row table-responsive ">
@@ -60,11 +60,11 @@
   </div>
 </div>
 <hr/>
-{% include 'classpath:/templates/rqueue/stats_chart.html' %}
+{% include 'stats_chart' %}
 <hr/>
-{% include 'classpath:/templates/rqueue/latency_chart.html' %}
+{% include 'latency_chart' %}
 
-{% include 'classpath:/templates/rqueue/data_explorer_modal.html' %}
+{% include 'data_explorer_modal' %}
 {% endblock %}
 
 {% block additional_script %}

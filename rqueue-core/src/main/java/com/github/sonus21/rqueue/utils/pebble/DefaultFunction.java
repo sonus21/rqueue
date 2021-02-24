@@ -16,26 +16,30 @@
 
 package com.github.sonus21.rqueue.utils.pebble;
 
-import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.mitchellbosecke.pebble.extension.Function;
 import com.mitchellbosecke.pebble.template.EvaluationContext;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class DateTimeFunction implements Function {
-  public static final String FUNCTION_NAME = "time";
+public class DefaultFunction implements Function {
+
+  public static final String FUNCTION_NAME = "default";
 
   @Override
   public Object execute(
       Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber) {
-    Long milli = (Long) args.get("milli");
-    return DateTimeUtils.formatMilliToString(milli);
+    Object src = args.get("src");
+    Object dst = args.get("dst");
+    if (src == null) {
+      return dst;
+    }
+    return src;
   }
 
   @Override
   public List<String> getArgumentNames() {
-    return Collections.singletonList("milli");
+    return Arrays.asList("src", "dst");
   }
 }
