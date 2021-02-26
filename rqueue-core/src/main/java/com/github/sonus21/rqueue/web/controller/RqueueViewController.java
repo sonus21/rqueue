@@ -103,14 +103,14 @@ public class RqueueViewController {
       prefix = xForwardedPrefix + prefix;
     }
     model.addAttribute("urlPrefix", prefix);
-    addNonce(model, "urlNonce");
+    // addNonce(model, "urlNonce");
   }
 
   @SuppressWarnings("unchecked")
   private void addNonce(Model model, String name) {
     ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
     buffer.putLong(System.nanoTime());
-    String nonce = new String(base62.encode(buffer.array()));
+    String nonce = "nonce-" + new String(base62.encode(buffer.array()));
     List<String> nonces = (List<String>) model.asMap().get("nonces");
     if (nonces == null) {
       nonces = new ArrayList<>();
@@ -129,7 +129,7 @@ public class RqueueViewController {
     }
     addBasicDetails(model, request);
     addNavData(model, null);
-    addNonce(model, "indexNonce");
+    // addNonce(model, "indexNonce");
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
@@ -172,7 +172,7 @@ public class RqueueViewController {
         rqueueQDetailService.getQueueDataStructureDetail(queueConfig);
     addBasicDetails(model, request);
     addNavData(model, NavTab.QUEUES);
-    addNonce(model, "queueDetailNonce");
+    // addNonce(model, "queueDetailNonce");
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
@@ -257,7 +257,7 @@ public class RqueueViewController {
     }
     addBasicDetails(model, request);
     addNavData(model, NavTab.UTILITY);
-    addNonce(model, "utilityNonce");
+    // addNonce(model, "utilityNonce");
     model.addAttribute("title", "Utility");
     model.addAttribute("supportedDataType", DataType.getEnabledDataTypes());
     return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);

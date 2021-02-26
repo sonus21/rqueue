@@ -68,7 +68,7 @@
 {% endblock %}
 
 {% block additional_script %}
-<script type="application/javascript" nonce="{{queueDetailNonce}}">
+<script type="application/javascript">
   queueName = "{{queueName}}"
   dataPageUrl = "rqueue/api/v1/explore";
   var chartParams = {"queue": queueName, "type": "STATS", 'aggregationType': 'DAILY'};

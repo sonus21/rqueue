@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block additional_script %}
-<script type="application/javascript" nonce="{{indexNonce}}">
+<script type="application/javascript">
   var chartParams = {'type': 'STATS', 'aggregationType': 'DAILY'};
   var latencyChartParams = {'type': 'LATENCY', 'aggregationType': 'DAILY'};
   $(document).ready(function () {

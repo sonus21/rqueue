@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' *.gstatic.com *.googleapis.com {% for nonce in nonces %} 'nonce-{{nonce}}' {% endfor %}">
+        content="default-src 'self' *.gstatic.com *.googleapis.com 'unsafe-inline' 'unsafe-eval'">
   <meta content='Rqueue' name="description">
   <meta content='Rqueue, task queue, delayed queue, delayed tasks, asynchronous processor'
         name="keywords">
@@ -150,7 +150,7 @@
 <script type="application/javascript"
         src="{{urlPrefix}}rqueue/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script type="application/javascript" src="{{urlPrefix}}rqueue/js/rqueue.js"></script>
-<script type="application/javascript" nonce="{{urlNonce}}">
+<script type="application/javascript">
   urlPrefix = "{{urlPrefix}}";
 </script>
 {% block additional_script %}{% endblock %}
