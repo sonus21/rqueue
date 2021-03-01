@@ -69,8 +69,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
                 postProcessingHandler,
                 message,
                 queueDetail,
-                queueThread.getSemaphore()
-            ));
+                queueThread.getSemaphore()));
   }
 
   boolean shouldExit() {
@@ -96,7 +95,9 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     }
     if (!acquired) {
       deactivate(index, queue, DeactivateType.SEMAPHORE_UNAVAILABLE);
-    } else if (isQueueActive(queue)) {
+      return;
+    }
+    if (isQueueActive(queue)) {
       try {
         RqueueMessage message = getMessage(queueDetail);
         log(Level.DEBUG, "Queue: {} Fetched Msg {}", null, queue, message);
