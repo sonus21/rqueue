@@ -1,5 +1,12 @@
 # [Rqueue] New and Notable Changes
 
+## [2.6.1] - 1-Marc-2021
+
+### Fixes
+
+* Graph not rendering in firefox due to unsafe csp rule
+* Crash in dashboard due to Twig template, changed it to Pebble template
+
 ## [2.6.0] - 22-Feb-2021
 
 Message counts api
@@ -198,3 +205,5 @@ Fixes:
 [2.5.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.5.0-RELEASE
 
 [2.6.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.6.0-RELEASE
+
+[2.6.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.6.1-RELEASE

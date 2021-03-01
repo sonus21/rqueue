@@ -1,12 +1,12 @@
-{% extends 'classpath:/templates/rqueue/base.html' %}
+{% extends 'base' %}
 {% block main %}
-{% include 'classpath:/templates/rqueue/stats_chart.html' %}
+{% include 'stats_chart' %}
 <hr/>
-{% include 'classpath:/templates/rqueue/latency_chart.html' %}
+{% include 'latency_chart' %}
 {% endblock %}
 
 {% block additional_script %}
-<script type="application/javascript" nonce="{{indexNonce}}">
+<script type="application/javascript">
   var chartParams = {'type': 'STATS', 'aggregationType': 'DAILY'};
   var latencyChartParams = {'type': 'LATENCY', 'aggregationType': 'DAILY'};
   $(document).ready(function () {

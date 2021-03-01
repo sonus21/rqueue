@@ -17,24 +17,14 @@
 package com.github.sonus21.rqueue.example;
 
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthAggregator;
-import org.springframework.boot.actuate.health.HealthEndpoint;
-import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
-import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -42,26 +32,7 @@ import reactor.core.publisher.Mono;
 public class Controller {
 
   private final RqueueMessageSender rqueueMessageSender;
-  private final HealthEndpoint healthEndpoint;
-  private final HealthAggregator healthAggregator;
-  private final HealthIndicatorRegistry healthIndicatorRegistry;
-  private final ReactiveHealthIndicator reactiveHealthIndicator;
   private final RedisTemplate<String, String> redisTemplate;
-
-  @GetMapping("health")
-  public Health health() {
-    Map<String, Health> health = new HashMap<>();
-    for (Entry<String, HealthIndicator> entry : healthIndicatorRegistry.getAll().entrySet()) {
-      health.put(entry.getKey(), entry.getValue().health());
-    }
-
-    return healthAggregator.aggregate(health);
-  }
-
-  @GetMapping("rhealth")
-  public Mono<Health> rhealth() {
-    return reactiveHealthIndicator.health();
-  }
 
   @GetMapping(value = "/push")
   public String push(

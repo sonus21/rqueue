@@ -1,4 +1,4 @@
-{% extends 'classpath:/templates/rqueue/base.html' %}
+{% extends 'base' %}
 {% block main %}
 <div class="container">
   <div class="row">
@@ -78,12 +78,12 @@
     </div>
   </div>
 </div>
-{% include 'classpath:/templates/rqueue/data_explorer_modal.html' %}
+{% include 'data_explorer_modal' %}
 
 {% endblock %}
 
 {% block additional_script %}
-<script type="application/javascript" nonce="{{utilityNonce}}">
+<script type="application/javascript">
   dataPageUrl = "rqueue/api/v1/data";
   var dataKeyEl = $('#data-key');
   var dataNameEl = $('#data-name');

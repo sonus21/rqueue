@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.core;
 import com.github.sonus21.rqueue.exception.OverrideException;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +45,27 @@ public final class EndpointRegistry {
    * @param queueName queue name
    * @return queue detail
    * @throws QueueDoesNotExist this error is thrown when queue is not registered.
+   * @see #get(String, String)
    */
   public static QueueDetail get(String queueName) {
     QueueDetail queueDetail = queueNameToDetail.get(queueName);
+    if (queueDetail == null) {
+      throw new QueueDoesNotExist(queueName);
+    }
+    return queueDetail;
+  }
+
+  /**
+   * Get QueueDetail for the given queue, with priority
+   *
+   * @param queueName queue name
+   * @param priority  priority of this queue like critical, high
+   * @return queue detail
+   * @throws QueueDoesNotExist this error is thrown when queue is not registered.
+   */
+  public static QueueDetail get(String queueName, String priority) {
+    QueueDetail queueDetail =
+        queueNameToDetail.get(PriorityUtils.getQueueNameForPriority(queueName, priority));
     if (queueDetail == null) {
       throw new QueueDoesNotExist(queueName);
     }

@@ -17,13 +17,11 @@
 package com.github.sonus21.rqueue.web.view;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.utils.pebble.DateTimeFunction;
 import java.util.Collections;
-import org.jtwig.functions.FunctionRequest;
 import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
@@ -31,14 +29,14 @@ class DateTimeFunctionTest extends TestBase {
   private final DateTimeFunction function = new DateTimeFunction();
 
   @Test
-  void name() {
-    assertEquals("time", function.name());
+  void getArguments() {
+    assertEquals(Collections.singletonList("milli"), function.getArgumentNames());
   }
 
   @Test
   void execute() {
-    FunctionRequest request = mock(FunctionRequest.class);
-    doReturn(Collections.singletonList(1588335692988L)).when(request).getArguments();
-    assertEquals("01 May 2020 12:21", function.execute(request));
+    assertEquals(
+        "01 May 2020 12:21",
+        function.execute(Collections.singletonMap("milli", 1588335692988L), null, null, -1));
   }
 }

@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
+import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import io.seruco.encoding.base62.Base62;
 import java.nio.ByteBuffer;
 import java.time.OffsetDateTime;
@@ -40,7 +41,6 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.jtwig.spring.JtwigViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
@@ -54,7 +54,8 @@ import org.springframework.web.servlet.View;
 @Controller
 @RequestMapping("rqueue")
 public class RqueueViewController {
-  private final JtwigViewResolver rqueueViewResolver;
+
+  private final PebbleViewResolver rqueueViewResolver;
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueQDetailService rqueueQDetailService;
@@ -64,7 +65,7 @@ public class RqueueViewController {
 
   @Autowired
   public RqueueViewController(
-      @Qualifier("rqueueViewResolver") JtwigViewResolver rqueueViewResolver,
+      @Qualifier("rqueueViewResolver") PebbleViewResolver rqueueViewResolver,
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueQDetailService rqueueQDetailService,
@@ -102,14 +103,14 @@ public class RqueueViewController {
       prefix = xForwardedPrefix + prefix;
     }
     model.addAttribute("urlPrefix", prefix);
-    addNonce(model, "urlNonce");
+    // addNonce(model, "urlNonce");
   }
 
   @SuppressWarnings("unchecked")
   private void addNonce(Model model, String name) {
     ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
     buffer.putLong(System.nanoTime());
-    String nonce = new String(base62.encode(buffer.array()));
+    String nonce = "nonce-" + new String(base62.encode(buffer.array()));
     List<String> nonces = (List<String>) model.asMap().get("nonces");
     if (nonces == null) {
       nonces = new ArrayList<>();
@@ -128,7 +129,7 @@ public class RqueueViewController {
     }
     addBasicDetails(model, request);
     addNavData(model, null);
-    addNonce(model, "indexNonce");
+    // addNonce(model, "indexNonce");
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
@@ -171,7 +172,7 @@ public class RqueueViewController {
         rqueueQDetailService.getQueueDataStructureDetail(queueConfig);
     addBasicDetails(model, request);
     addNavData(model, NavTab.QUEUES);
-    addNonce(model, "queueDetailNonce");
+    // addNonce(model, "queueDetailNonce");
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
@@ -256,7 +257,7 @@ public class RqueueViewController {
     }
     addBasicDetails(model, request);
     addNavData(model, NavTab.UTILITY);
-    addNonce(model, "utilityNonce");
+    // addNonce(model, "utilityNonce");
     model.addAttribute("title", "Utility");
     model.addAttribute("supportedDataType", DataType.getEnabledDataTypes());
     return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);

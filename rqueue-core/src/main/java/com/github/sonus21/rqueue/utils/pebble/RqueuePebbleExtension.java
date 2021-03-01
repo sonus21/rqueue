@@ -14,22 +14,21 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.view;
+package com.github.sonus21.rqueue.utils.pebble;
 
-import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import org.jtwig.functions.FunctionRequest;
-import org.jtwig.functions.SimpleJtwigFunction;
+import com.mitchellbosecke.pebble.extension.AbstractExtension;
+import com.mitchellbosecke.pebble.extension.Function;
+import java.util.HashMap;
+import java.util.Map;
 
-public class DateTimeFunction extends SimpleJtwigFunction {
-
-  @Override
-  public String name() {
-    return "time";
-  }
+public class RqueuePebbleExtension extends AbstractExtension {
 
   @Override
-  public Object execute(FunctionRequest request) {
-    Long milli = (Long) request.getArguments().get(0);
-    return DateTimeUtils.formatMilliToString(milli);
+  public Map<String, Function> getFunctions() {
+    Map<String, Function> map = new HashMap<>();
+    map.put(DeadLetterQueuesFunction.FUNCTION_NAME, new DeadLetterQueuesFunction());
+    map.put(DateTimeFunction.FUNCTION_NAME, new DateTimeFunction());
+    map.put(DefaultFunction.FUNCTION_NAME, new DefaultFunction());
+    return map;
   }
 }

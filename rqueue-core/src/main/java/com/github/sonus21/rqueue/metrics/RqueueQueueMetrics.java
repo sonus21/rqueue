@@ -79,4 +79,53 @@ public class RqueueQueueMetrics {
       return -1;
     }
   }
+
+  /**
+   * Get number of messages waiting for consumption
+   *
+   * @param queue    queue name
+   * @param priority priority of this queue
+   * @return -1 if queue is not registered otherwise message count
+   */
+  public long getPendingMessageCount(String queue, String priority) {
+    try {
+      QueueDetail queueDetail = EndpointRegistry.get(queue, priority);
+      return redisTemplate.getListSize(queueDetail.getQueueName());
+    } catch (QueueDoesNotExist e) {
+      return -1;
+    }
+  }
+
+  /**
+   * Get number of messages waiting in delayed queue, these messages would move to pending queue as
+   * soon as the scheduled time is reach.
+   *
+   * @param queue    queue name
+   * @param priority priority of this queue
+   * @return -1 if queue is not registered otherwise message count
+   */
+  public long getScheduledMessageCount(String queue, String priority) {
+    try {
+      QueueDetail queueDetail = EndpointRegistry.get(queue, priority);
+      return redisTemplate.getZsetSize(queueDetail.getDelayedQueueName());
+    } catch (QueueDoesNotExist e) {
+      return -1;
+    }
+  }
+
+  /**
+   * Get number of messages those are currently being processed
+   *
+   * @param queue    queue name
+   * @param priority priority of this queue
+   * @return -1 if queue is not registered otherwise message count
+   */
+  public long getProcessingMessageCount(String queue, String priority) {
+    try {
+      QueueDetail queueDetail = EndpointRegistry.get(queue, priority);
+      return redisTemplate.getZsetSize(queueDetail.getProcessingQueueName());
+    } catch (QueueDoesNotExist e) {
+      return -1;
+    }
+  }
 }

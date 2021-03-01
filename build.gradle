@@ -53,7 +53,7 @@ ext {
 
     // server
     javaxServletVersion = '4.0.1'
-    twigVersion = '5.87.0.RELEASE'
+    pebbleVersion = '3.1.5'
 
     // database
     lettuceVersion = '5.2.0.RELEASE'
@@ -63,13 +63,15 @@ ext {
 
     // other dependencies
     javaxValidationApiVersion = '2.0.1.Final'
+    
+    guavaVersion = '30.1-jre'
 
 }
 
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '2.6.0-RELEASE'
+    version = '2.6.1-RELEASE'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
@@ -77,8 +79,15 @@ subprojects {
         // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
         compile group: 'org.springframework.data', name: 'spring-data-redis', version: "${springDataVersion}"
 
+        // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+        compile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
+
+        // https://mvnrepository.com/artifact/com.google.guava/guava
+        compile group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
+
         compileOnly "org.projectlombok:lombok:${lombokVersion}"
         annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
         testCompile "org.projectlombok:lombok:${lombokVersion}"
         testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
@@ -93,8 +102,6 @@ subprojects {
         testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: "${mockitoVersion}"
         // https://mvnrepository.com/artifact/org.hamcrest/hamcrest
         testCompile group: 'org.hamcrest', name: 'hamcrest', version: "${hamcrestVersion}"
-        // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-        testCompile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
         testCompile("org.springframework.boot:spring-boot-test:${springBootVersion}")
         testCompile group: 'org.junit-pioneer', name: 'junit-pioneer', version: '0.9.0'
 
