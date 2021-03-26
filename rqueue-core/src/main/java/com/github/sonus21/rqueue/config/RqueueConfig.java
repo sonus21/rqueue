@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @Getter
@@ -35,6 +36,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @Configuration
 public class RqueueConfig {
   private final RedisConnectionFactory connectionFactory;
+  private final ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
   private static final String brokerId = UUID.randomUUID().toString();

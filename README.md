@@ -260,6 +260,7 @@ gradle to start with.
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
 
 * StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
+* Discord: https://discord.gg/2hgQZXS2
 * Project
   Progress: [https://github.com/sonus21/rqueue/projects/3](https://github.com/sonus21/rqueue/projects/3)
 

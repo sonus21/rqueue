@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-## [2.6.1] - 1-Marc-2021
+## [2.6.1] - 1-Mar-2021
 
 ### Fixes
 
