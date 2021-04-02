@@ -38,7 +38,7 @@ public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
 
   public RqueueMessageMetadataDaoImpl(RqueueConfig rqueueConfig) {
     this.template = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
-    if (rqueueConfig.isReactiveRedisEnabled()) {
+    if (rqueueConfig.isReactiveEnabled()) {
       this.reactiveRedisTemplate =
           new ReactiveRqueueRedisTemplate<>(rqueueConfig.getReactiveRedisConnectionFactory());
     } else {

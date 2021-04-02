@@ -1,0 +1,81 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics",
+      "type": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue",
+      "type": "com.github.sonus21.rqueue.config.RqueueConfig"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics.count",
+      "type": "com.github.sonus21.rqueue.config.RqueueMetricsProperties$Count"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics.metric-tags",
+      "type": "io.micrometer.core.instrument.Tags"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name": "rqueue.metrics.tags",
+      "type": "java.util.Map<java.lang.String,java.lang.String>"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.version",
+      "description": "Rqueue version",
+      "type": "java.lang.Integer",
+      "defaultValue": "Integer"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.reactive.enabled",
+      "description": "Reactive Feature is enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.latest.version.check.enabled",
+      "description": "Rqueue Version check is enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.key.prefix",
+      "description": "Rqueue Key prefix",
+      "type": "java.lang.String",
+      "defaultValue": "__rq::"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.del.prefix",
+      "description": "Rqueue Deleted Message Collection Name prefix",
+      "type": "java.lang.String",
+      "defaultValue": "del::"
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.job.enabled",
+      "description": "Rqueue Job Feature is Enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.job.durability.in-terminal-state",
+      "description": "Rqueue Job Feature is Enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true
+    }
+  ]
+}

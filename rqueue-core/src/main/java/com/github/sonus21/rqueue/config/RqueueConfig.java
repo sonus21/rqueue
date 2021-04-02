@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.net.Proxy;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
@@ -35,13 +36,16 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @RequiredArgsConstructor
 @Configuration
 public class RqueueConfig {
+
   private final RedisConnectionFactory connectionFactory;
   private final ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   private final boolean sharedConnection;
-  private final boolean reactiveRedisEnabled;
   private final int dbVersion;
   private static final String brokerId = UUID.randomUUID().toString();
   private static final AtomicLong counter = new AtomicLong(1);
+
+  @Value("${rqueue.reactive.enabled:false}")
+  private boolean reactiveEnabled;
 
   @Value("${rqueue.version:2.1.0}")
   private String version;
@@ -57,6 +61,10 @@ public class RqueueConfig {
 
   @Value("${rqueue.job.enabled:true}")
   private boolean jobEnabled;
+
+  // 30 minutes
+  @Value("${rqueue.job.durability.in-terminal-state:1800}")
+  private long jobDurabilityInTerminalStateInSecond;
 
   @Value("${rqueue.job.key.prefix:job::}")
   private String jobKeyPrefix;
@@ -245,6 +253,10 @@ public class RqueueConfig {
         + brokerId
         + Constants.REDIS_KEY_SEPARATOR
         + counter.incrementAndGet();
+  }
+
+  public Duration getJobDurabilityInTerminalState() {
+    return Duration.ofSeconds(jobDurabilityInTerminalStateInSecond);
   }
 
   public static String getBrokerId() {

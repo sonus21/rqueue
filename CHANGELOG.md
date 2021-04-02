@@ -1,5 +1,14 @@
 # [Rqueue] New and Notable Changes
 
+## [2.7.0] - TBD
+
+### Added
+
+* Support for Reactive Redis and Spring Webflux
+* Delete message metadata when `rqueue.message.durability.in-terminal-state` is less than equal to
+  zero
+* Delete job detail when `rqueue.job.durability.in-terminal-state` is less tha equal to zero
+
 ## [2.6.1] - 1-Mar-2021
 
 ### Fixes

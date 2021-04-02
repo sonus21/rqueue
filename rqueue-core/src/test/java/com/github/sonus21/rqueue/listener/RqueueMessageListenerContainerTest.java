@@ -68,7 +68,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
       new RqueueMessageListenerContainer(rqueueMessageHandler, mock(RqueueMessageTemplate.class));
   private final RedisConnectionFactory redisConnectionFactory = mock(RedisConnectionFactory.class);
   private final RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, true,
-      false, 1);
+      1);
 
   @BeforeEach
   public void init() throws IllegalAccessException {

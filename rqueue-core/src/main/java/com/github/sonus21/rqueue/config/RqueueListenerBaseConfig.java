@@ -111,7 +111,6 @@ public abstract class RqueueListenerBaseConfig {
         connectionFactory,
         simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory(),
         sharedConnection,
-        reactiveEnabled,
         version);
   }
 

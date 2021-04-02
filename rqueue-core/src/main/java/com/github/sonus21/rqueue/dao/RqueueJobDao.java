@@ -34,4 +34,6 @@ public interface RqueueJobDao {
   List<RqueueJob> finByMessageIdIn(List<String> messageIds);
 
   List<RqueueJob> finByMessageId(String messageId);
+
+  void delete(String jobId);
 }

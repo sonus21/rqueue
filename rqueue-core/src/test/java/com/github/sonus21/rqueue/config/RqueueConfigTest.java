@@ -26,10 +26,10 @@ import org.junit.jupiter.api.Test;
 @CoreUnitTest
 class RqueueConfigTest extends TestBase {
 
-  private final RqueueConfig rqueueConfigVersion1 = new RqueueConfig(null, null, false, false, 1);
-  private final RqueueConfig rqueueConfigVersion2 = new RqueueConfig(null, null, false, false, 2);
+  private final RqueueConfig rqueueConfigVersion1 = new RqueueConfig(null, null, false, 1);
+  private final RqueueConfig rqueueConfigVersion2 = new RqueueConfig(null, null, false, 2);
   private final RqueueConfig rqueueConfigVersion2ClusterMode =
-      new RqueueConfig(null, null, false, false, 2);
+      new RqueueConfig(null, null, false, 2);
 
   private void initialize(RqueueConfig rqueueConfig) {
     rqueueConfig.setPrefix("__rq::");
