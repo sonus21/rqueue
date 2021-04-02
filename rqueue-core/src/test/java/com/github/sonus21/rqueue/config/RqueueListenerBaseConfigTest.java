@@ -82,8 +82,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   }
 
   @Test
-  void rqueueConfigSetConnectionFactoryFromBeanFactoryExistingData()
-      throws IllegalAccessException {
+  void rqueueConfigSetConnectionFactoryFromBeanFactoryExistingData() throws IllegalAccessException {
     doReturn(redisConnection).when(redisConnectionFactory).getConnection();
     doReturn(Collections.singletonList(2L)).when(redisConnection).closePipeline();
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
@@ -169,7 +168,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   void getMessageTemplateUseFromFactory() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueListenerConfig = createConfig(factory);
-    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false, 1);
+    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, false, 1);
     factory.setRqueueMessageTemplate(rqueueMessageTemplate);
     assertEquals(rqueueMessageTemplate, rqueueListenerConfig.getMessageTemplate(rqueueConfig));
   }
@@ -178,7 +177,7 @@ class RqueueListenerBaseConfigTest extends TestBase {
   void getMessageTemplateSetTemplateInFactory() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerConfig rqueueListenerConfig = createConfig(factory);
-    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, false, 1);
+    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, false, 1);
     RqueueMessageTemplate template = rqueueListenerConfig.getMessageTemplate(rqueueConfig);
     assertNotNull(template);
     assertEquals(template, factory.getRqueueMessageTemplate());

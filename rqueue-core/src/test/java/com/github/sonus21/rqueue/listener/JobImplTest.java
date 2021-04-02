@@ -51,7 +51,7 @@ import org.springframework.messaging.converter.MessageConverter;
 @CoreUnitTest
 class JobImplTest extends TestBase {
   private final RqueueConfig rqueueConfig =
-      new RqueueConfig(mock(RedisConnectionFactory.class), true, 2);
+      new RqueueConfig(mock(RedisConnectionFactory.class), null, true, false, 2);
   private final RqueueMessageMetadataService messageMetadataService =
       mock(RqueueMessageMetadataService.class);
   private final RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);

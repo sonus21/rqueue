@@ -42,7 +42,7 @@ class RqueueEndpointManagerImplTest {
   private final RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
   private final String queue = "test-queue";
   private final RqueueConfig rqueueConfig =
-      new RqueueConfig(mock(RedisConnectionFactory.class), false, 1);
+      new RqueueConfig(mock(RedisConnectionFactory.class), null, false, false, 1);
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
   private final RqueueEndpointManager rqueueEndpointManager =
