@@ -69,8 +69,8 @@ public class RqueueConfig {
   @Value("${rqueue.job.key.prefix:job::}")
   private String jobKeyPrefix;
 
-  @Value("${rqueue.jobs.key.prefix:jobs::}")
-  private String jobsKeyPrefix;
+  @Value("${rqueue.jobs.collection.name.prefix:jobs::}")
+  private String jobsCollectionNamePrefix;
 
   @Value("${rqueue.cluster.mode:true}")
   private boolean clusterMode;
@@ -244,7 +244,7 @@ public class RqueueConfig {
   }
 
   public String getJobsKey(String messageId) {
-    return prefix + jobsKeyPrefix + messageId;
+    return prefix + jobsCollectionNamePrefix + messageId;
   }
 
   public String getDelDataName() {

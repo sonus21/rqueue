@@ -68,7 +68,7 @@ class JobImplTest extends TestBase {
     FieldUtils.writeField(rqueueConfig, "jobEnabled", true, true);
     FieldUtils.writeField(rqueueConfig, "prefix", "__rq::", true);
     FieldUtils.writeField(rqueueConfig, "jobKeyPrefix", "job::", true);
-    FieldUtils.writeField(rqueueConfig, "jobsKeyPrefix", "jobs::", true);
+    FieldUtils.writeField(rqueueConfig, "jobsCollectionNamePrefix", "jobs::", true);
     FieldUtils.writeField(rqueueConfig, "messageDurabilityInTerminalStateInSecond", 900, true);
     FieldUtils.writeField(rqueueConfig, "messageDurabilityInMinute", 10080, true);
     FieldUtils.writeField(rqueueConfig, "jobDurabilityInTerminalStateInSecond", 10080, true);
