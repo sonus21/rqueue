@@ -29,16 +29,20 @@ import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
+import com.github.sonus21.rqueue.utils.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
 import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.spring.extension.SpringExtension;
+import com.mitchellbosecke.pebble.spring.reactive.PebbleReactiveViewResolver;
 import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -54,7 +58,12 @@ import org.springframework.data.redis.core.RedisTemplate;
  * be very high based on the use case.
  */
 public abstract class RqueueListenerBaseConfig {
+
   public static final int MAX_DB_VERSION = 2;
+  private static final String TEMPLATE_DIR = "templates/rqueue/";
+  private static final String TEMPLATE_SUFFIX = ".html";
+  protected @Value("${rqueue.reactive.enabled:false}")
+  boolean reactiveEnabled;
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
@@ -81,6 +90,11 @@ public abstract class RqueueListenerBaseConfig {
       simpleRqueueListenerContainerFactory.setRedisConnectionFactory(
           beanFactory.getBean(RedisConnectionFactory.class));
     }
+    if (reactiveEnabled
+        && simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory() == null) {
+      simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
+          beanFactory.getBean(ReactiveRedisConnectionFactory.class));
+    }
     RedisConnectionFactory connectionFactory =
         simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
     RqueueRedisTemplate<Integer> rqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
@@ -93,7 +107,12 @@ public abstract class RqueueListenerBaseConfig {
     } else {
       throw new IllegalStateException("Rqueue db version '" + dbVersion + "' is not correct");
     }
-    return new RqueueConfig(connectionFactory, sharedConnection, version);
+    return new RqueueConfig(
+        connectionFactory,
+        simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory(),
+        sharedConnection,
+        reactiveEnabled,
+        version);
   }
 
   @Bean
@@ -119,7 +138,8 @@ public abstract class RqueueListenerBaseConfig {
       return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
     }
     simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(
-        new RqueueMessageTemplateImpl(rqueueConfig.getConnectionFactory()));
+        new RqueueMessageTemplateImpl(
+            rqueueConfig.getConnectionFactory(), rqueueConfig.getReactiveRedisConnectionFactory()));
     return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
   }
 
@@ -170,16 +190,30 @@ public abstract class RqueueListenerBaseConfig {
     return new RqueueLockManagerImpl(rqueueStringDao);
   }
 
+  private PebbleEngine createPebbleEngine() {
+    ResourceLoader loader = new ResourceLoader();
+    loader.setPrefix(TEMPLATE_DIR);
+    loader.setSuffix(TEMPLATE_SUFFIX);
+    return new PebbleEngine.Builder()
+        .extension(new RqueuePebbleExtension(), new SpringExtension(null))
+        .loader(loader)
+        .build();
+  }
+
   @Bean
   public PebbleViewResolver rqueueViewResolver() {
-    PebbleEngine pebbleEngine =
-        new PebbleEngine.Builder()
-            .extension(new RqueuePebbleExtension(), new SpringExtension(null))
-            .loader(new ResourceLoader())
-            .build();
-    PebbleViewResolver resolver = new PebbleViewResolver(pebbleEngine);
-    resolver.setPrefix("templates/rqueue/");
-    resolver.setSuffix(".html");
+    PebbleViewResolver resolver = new PebbleViewResolver(createPebbleEngine());
+    resolver.setPrefix(TEMPLATE_DIR);
+    resolver.setSuffix(TEMPLATE_SUFFIX);
+    return resolver;
+  }
+
+  @Bean
+  @Conditional(ReactiveEnabled.class)
+  public PebbleReactiveViewResolver reactiveRqueueViewResolver() {
+    PebbleReactiveViewResolver resolver = new PebbleReactiveViewResolver(createPebbleEngine());
+    resolver.setPrefix(TEMPLATE_DIR);
+    resolver.setSuffix(TEMPLATE_SUFFIX);
     return resolver;
   }
 

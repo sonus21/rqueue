@@ -113,6 +113,7 @@ class RqueueMiddlewareTest extends TestBase {
         RqueueMessageUtils.buildMessage(
             messageConverter,
             queueName,
+            null,
             payload,
             null,
             null,
@@ -225,6 +226,7 @@ class RqueueMiddlewareTest extends TestBase {
     RqueueMessage rqueueMessage1 =
         RqueueMessageUtils.buildMessage(
             messageConverter,
+            null,
             queueName,
             payload,
             null,
@@ -285,6 +287,7 @@ class RqueueMiddlewareTest extends TestBase {
           RqueueMessageUtils.buildMessage(
               messageConverter,
               queueName,
+              null,
               payload,
               null,
               null,

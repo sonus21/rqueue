@@ -51,29 +51,36 @@ public final class RedisUtils {
       };
 
   @SuppressWarnings({"java:S1104", "java:S1444"})
+  public static RedisSerializationContextProvider redisSerializationContextProvider =
+      () -> {
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
+        RedisSerializationContextBuilder<String, Object> redisSerializationContextBuilder =
+            RedisSerializationContext.newSerializationContext();
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.key(stringRedisSerializer);
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.value(rqueueRedisSerializer);
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.hashKey(stringRedisSerializer);
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.hashValue(rqueueRedisSerializer);
+        return redisSerializationContextBuilder.build();
+      };
+
+  @SuppressWarnings({"java:S1104", "java:S1444"})
   public static ReactiveRedisTemplateProvider reactiveRedisTemplateProvider =
       new ReactiveRedisTemplateProvider() {
         @Override
         public <V> ReactiveRedisTemplate<String, V> getRedisTemplate(
             ReactiveRedisConnectionFactory redisConnectionFactory) {
-          StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-          RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
-          RedisSerializationContextBuilder<String, Object> redisSerializationContextBuilder =
-              RedisSerializationContext.newSerializationContext();
-          redisSerializationContextBuilder =
-              redisSerializationContextBuilder.key(stringRedisSerializer);
-          redisSerializationContextBuilder =
-              redisSerializationContextBuilder.value(rqueueRedisSerializer);
-          redisSerializationContextBuilder =
-              redisSerializationContextBuilder.hashKey(stringRedisSerializer);
-          redisSerializationContextBuilder =
-              redisSerializationContextBuilder.hashValue(rqueueRedisSerializer);
           return new ReactiveRedisTemplate(
-              redisConnectionFactory, redisSerializationContextBuilder.build());
+              redisConnectionFactory, redisSerializationContextProvider.getSerializationContext());
         }
       };
 
-  private RedisUtils() {}
+  private RedisUtils() {
+  }
 
   public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
@@ -139,12 +146,19 @@ public final class RedisUtils {
   }
 
   public interface RedisTemplateProvider {
+
     <V> RedisTemplate<String, V> getRedisTemplate(RedisConnectionFactory redisConnectionFactory);
   }
 
   public interface ReactiveRedisTemplateProvider {
+
     <V> ReactiveRedisTemplate<String, V> getRedisTemplate(
         ReactiveRedisConnectionFactory redisConnectionFactory);
+  }
+
+  public interface RedisSerializationContextProvider {
+
+    RedisSerializationContext<String, Object> getSerializationContext();
   }
 
   public interface RedisPipelineCallback {

@@ -18,23 +18,30 @@ package com.github.sonus21.rqueue.core.impl;
 
 import static com.github.sonus21.rqueue.core.RedisScriptFactory.getScript;
 
+import com.github.sonus21.rqueue.common.ReactiveRqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.RedisUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
+import org.springframework.data.redis.core.script.DefaultReactiveScriptExecutor;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
+import org.springframework.data.redis.core.script.ReactiveScriptExecutor;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * RqueueMessageTemplate is the core of the Rqueue, this deals with Redis calls.
@@ -44,11 +51,27 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage>
     implements RqueueMessageTemplate {
-  private final DefaultScriptExecutor<String> scriptExecutor;
 
-  public RqueueMessageTemplateImpl(RedisConnectionFactory redisConnectionFactory) {
+  private final DefaultScriptExecutor<String> scriptExecutor;
+  private final ReactiveScriptExecutor<String> reactiveScriptExecutor;
+  private final ReactiveRqueueRedisTemplate<RqueueMessage> reactiveRedisTemplate;
+
+  public RqueueMessageTemplateImpl(
+      RedisConnectionFactory redisConnectionFactory,
+      ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
     super(redisConnectionFactory);
-    scriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
+    this.scriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
+    if (reactiveRedisConnectionFactory != null) {
+      this.reactiveRedisTemplate =
+          new ReactiveRqueueRedisTemplate<>(reactiveRedisConnectionFactory);
+      this.reactiveScriptExecutor =
+          new DefaultReactiveScriptExecutor<>(
+              reactiveRedisConnectionFactory,
+              RedisUtils.redisSerializationContextProvider.getSerializationContext());
+    } else {
+      this.reactiveScriptExecutor = null;
+      this.reactiveRedisTemplate = null;
+    }
   }
 
   @Override
@@ -79,8 +102,23 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
+  public Flux<Long> addReactiveMessageWithDelay(
+      String delayedQueueName, String delayedQueueChannelName, RqueueMessage rqueueMessage) {
+    RedisScript<Long> script = getScript(ScriptType.ENQUEUE_MESSAGE);
+    return reactiveScriptExecutor.execute(
+        script,
+        Arrays.asList(delayedQueueName, delayedQueueChannelName),
+        Arrays.asList(rqueueMessage, rqueueMessage.getProcessAt(), System.currentTimeMillis()));
+  }
+
+  @Override
   public Long addMessage(String listName, RqueueMessage rqueueMessage) {
     return rpush(listName, rqueueMessage);
+  }
+
+  @Override
+  public Mono<Long> addReactiveMessage(String listName, RqueueMessage rqueueMessage) {
+    return reactiveRedisTemplate.template().opsForList().rightPush(listName, rqueueMessage);
   }
 
   @Override

@@ -141,7 +141,7 @@ public abstract class SpringTestBase extends TestBase {
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage =
         RqueueMessageUtils.buildMessage(
-            rqueueMessageManager.getMessageConverter(), queueName, message, null, null, null);
+            rqueueMessageManager.getMessageConverter(), queueName, null, message, null, null, null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
   }
 
@@ -150,7 +150,8 @@ public abstract class SpringTestBase extends TestBase {
       Object object = factory.next(i);
       RqueueMessage rqueueMessage =
           RqueueMessageUtils.buildMessage(
-              rqueueMessageManager.getMessageConverter(), queueName, object, null, null, null);
+              rqueueMessageManager.getMessageConverter(), queueName, null, object, null, null,
+              null);
       rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
     }
   }
@@ -161,7 +162,8 @@ public abstract class SpringTestBase extends TestBase {
       long score = delay.getDelay(i);
       RqueueMessage rqueueMessage =
           RqueueMessageUtils.buildMessage(
-              rqueueMessageManager.getMessageConverter(), zsetName, object, null, score, null);
+              rqueueMessageManager.getMessageConverter(), zsetName, null, object, null, score,
+              null);
       rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
     }
   }
@@ -169,7 +171,7 @@ public abstract class SpringTestBase extends TestBase {
   protected void enqueueIn(Object message, String zsetName, long delay) {
     RqueueMessage rqueueMessage =
         RqueueMessageUtils.buildMessage(
-            rqueueMessageManager.getMessageConverter(), zsetName, message, null, delay, null);
+            rqueueMessageManager.getMessageConverter(), zsetName, null, message, null, delay, null);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
   }
 

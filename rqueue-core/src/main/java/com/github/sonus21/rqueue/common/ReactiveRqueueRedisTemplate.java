@@ -22,10 +22,14 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 
 public class ReactiveRqueueRedisTemplate<V extends Serializable> {
+
   protected ReactiveRedisTemplate<String, V> redisTemplate;
 
   public ReactiveRqueueRedisTemplate(ReactiveRedisConnectionFactory redisConnectionFactory) {
     this.redisTemplate = RedisUtils.getReactiveRedisTemplate(redisConnectionFactory);
   }
 
+  public ReactiveRedisTemplate<String, V> template() {
+    return redisTemplate;
+  }
 }

@@ -23,9 +23,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
     compile group: 'org.springframework', name: 'spring-core', version: "${springVersion}"
 
-    // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
-
     // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
     compile group: 'org.springframework.data', name: 'spring-data-redis', version: "${springDataVersion}"
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core

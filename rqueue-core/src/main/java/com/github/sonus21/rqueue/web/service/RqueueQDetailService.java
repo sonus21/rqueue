@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import reactor.core.publisher.Mono;
 
 public interface RqueueQDetailService {
   Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
@@ -46,4 +47,10 @@ public interface RqueueQDetailService {
   List<List<Object>> getScheduledTasks();
 
   List<List<Object>> getDeadLetterTasks();
+
+  Mono<DataViewResponse> getReactiveExplorePageData(String src, String name, DataType type,
+      int pageNumber, int itemPerPage);
+
+  Mono<DataViewResponse> viewReactiveData(String name, DataType type, String key, int pageNumber,
+      int itemPerPage);
 }

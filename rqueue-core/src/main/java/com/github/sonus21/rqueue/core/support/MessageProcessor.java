@@ -43,6 +43,7 @@ public interface MessageProcessor {
    *
    * @param message message
    * @return true/false.
+   * @deprecated use {@link #process(Job)}
    */
   @Deprecated
   default boolean process(Object message) {
@@ -60,6 +61,7 @@ public interface MessageProcessor {
    * @param message       message
    * @param rqueueMessage rqueue message object
    * @return true/false.
+   * @deprecated use {@link #process(Job)}
    */
   @Deprecated
   default boolean process(Object message, RqueueMessage rqueueMessage) {

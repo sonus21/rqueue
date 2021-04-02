@@ -249,7 +249,12 @@ public class JobImpl implements Job {
       messageMetaExpiry = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
     }
     setMessageStatus(messageStatus);
-    this.messageMetadataService.save(rqueueJob.getMessageMetadata(), messageMetaExpiry);
+
+    if (messageMetaExpiry.isNegative() || messageMetaExpiry.isZero()) {
+      this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
+    } else {
+      this.messageMetadataService.save(rqueueJob.getMessageMetadata(), messageMetaExpiry);
+    }
     save();
   }
 

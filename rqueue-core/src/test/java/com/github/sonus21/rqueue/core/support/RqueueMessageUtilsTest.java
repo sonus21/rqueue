@@ -58,7 +58,13 @@ class RqueueMessageUtilsTest extends TestBase {
     long startTime = System.currentTimeMillis();
     RqueueMessage message =
         RqueueMessageUtils.buildPeriodicMessage(
-            messageConverter, queue, email, 10_000L, RqueueMessageHeaders.emptyMessageHeaders());
+            messageConverter,
+            queue,
+            null,
+            email,
+            null,
+            10_000L,
+            RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(10_000L, message.getPeriod());
     long now = System.currentTimeMillis();
     assertTrue(
@@ -82,7 +88,13 @@ class RqueueMessageUtilsTest extends TestBase {
     long startTimeInNano = System.nanoTime();
     RqueueMessage message =
         RqueueMessageUtils.buildMessage(
-            messageConverter, queue, email, null, null, RqueueMessageHeaders.emptyMessageHeaders());
+            messageConverter,
+            queue,
+            null,
+            email,
+            null,
+            null,
+            RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(0, message.getPeriod());
     long now = System.currentTimeMillis();
     long nowNano = System.nanoTime();
@@ -108,7 +120,13 @@ class RqueueMessageUtilsTest extends TestBase {
     long startTimeInNano = System.nanoTime();
     RqueueMessage message =
         RqueueMessageUtils.buildMessage(
-            messageConverter, queue, email, 3, 10_000L, RqueueMessageHeaders.emptyMessageHeaders());
+            messageConverter,
+            queue,
+            null,
+            email,
+            3,
+            10_000L,
+            RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(0, message.getPeriod());
     long now = System.currentTimeMillis();
     long nowNano = System.nanoTime();
@@ -136,6 +154,7 @@ class RqueueMessageUtilsTest extends TestBase {
       RqueueMessageUtils.buildMessage(
           messageConverter,
           queue,
+          null,
           genericClass,
           3,
           10_000L,
@@ -154,7 +173,9 @@ class RqueueMessageUtilsTest extends TestBase {
       RqueueMessageUtils.buildPeriodicMessage(
           messageConverter,
           queue,
+          null,
           genericClass,
+          null,
           10_000L,
           RqueueMessageHeaders.emptyMessageHeaders());
       fail("message conversion should fail");
@@ -171,6 +192,7 @@ class RqueueMessageUtilsTest extends TestBase {
       RqueueMessageUtils.buildMessage(
           messageConverter2,
           queue,
+          null,
           genericClass,
           3,
           10_000L,
@@ -189,7 +211,9 @@ class RqueueMessageUtilsTest extends TestBase {
       RqueueMessageUtils.buildPeriodicMessage(
           messageConverter2,
           queue,
+          null,
           genericClass,
+          null,
           10_000L,
           RqueueMessageHeaders.emptyMessageHeaders());
       fail("message conversion should fail");

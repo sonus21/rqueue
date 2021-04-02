@@ -94,10 +94,18 @@ public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
   }
 
   @Override
-  public long nextBackOff(Object object, RqueueMessage rqueueMessage, int failureCount) {
-    if (failureCount >= getMaxRetries()) {
+  public long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount) {
+    if (failureCount >= getMaxRetries(message, rqueueMessage, failureCount)) {
       return STOP;
     }
+    return getInterval(message, rqueueMessage, failureCount);
+  }
+
+  protected int getMaxRetries(Object message, RqueueMessage rqueueMessage, int failureCount) {
+    return getMaxRetries();
+  }
+
+  protected long getInterval(Object message, RqueueMessage rqueueMessage, int failureCount) {
     return getInterval();
   }
 

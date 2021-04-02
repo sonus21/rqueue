@@ -38,6 +38,7 @@ public class RqueueConfig {
   private final RedisConnectionFactory connectionFactory;
   private final ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   private final boolean sharedConnection;
+  private final boolean reactiveRedisEnabled;
   private final int dbVersion;
   private static final String brokerId = UUID.randomUUID().toString();
   private static final AtomicLong counter = new AtomicLong(1);

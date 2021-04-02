@@ -36,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.CompositeMessageConverter;
@@ -50,6 +51,7 @@ import org.springframework.util.CollectionUtils;
  */
 @SuppressWarnings("WeakerAccess")
 public class SimpleRqueueListenerContainerFactory {
+
   // Provide task executor, this can be used to provide some additional details like some threads
   // name, etc otherwise a default task executor would be created
   private AsyncTaskExecutor taskExecutor;
@@ -57,6 +59,8 @@ public class SimpleRqueueListenerContainerFactory {
   private boolean autoStartup = true;
   // Redis connection factory for the listener container
   private RedisConnectionFactory redisConnectionFactory;
+  // Reactive redis connection factory for the listener
+  private ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   // Custom requeue message handler
   private RqueueMessageHandler rqueueMessageHandler;
   // The message converter to convert messages to/from
@@ -307,7 +311,8 @@ public class SimpleRqueueListenerContainerFactory {
     notNull(getRqueueMessageHandler(), "rqueueMessageHandler must not be null");
     notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
     if (rqueueMessageTemplate == null) {
-      rqueueMessageTemplate = new RqueueMessageTemplateImpl(redisConnectionFactory);
+      rqueueMessageTemplate = new RqueueMessageTemplateImpl(getRedisConnectionFactory(),
+          getReactiveRedisConnectionFactory());
     }
     RqueueMessageListenerContainer messageListenerContainer =
         new RqueueMessageListenerContainer(getRqueueMessageHandler(), rqueueMessageTemplate);
@@ -529,5 +534,20 @@ public class SimpleRqueueListenerContainerFactory {
   public void useMiddleware(Middleware middleware) {
     notNull(middlewares, "middlewares cannot be null");
     this.middlewares.add(middleware);
+  }
+
+  public ReactiveRedisConnectionFactory getReactiveRedisConnectionFactory() {
+    return reactiveRedisConnectionFactory;
+  }
+
+  /**
+   * Set Reactive redis connection factory
+   *
+   * @param reactiveRedisConnectionFactory reactive redis connection factory to be used
+   */
+  public void setReactiveRedisConnectionFactory(
+      ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
+    notNull(reactiveRedisConnectionFactory, "reactiveRedisConnectionFactory can not be null");
+    this.reactiveRedisConnectionFactory = reactiveRedisConnectionFactory;
   }
 }

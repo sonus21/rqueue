@@ -27,17 +27,18 @@ import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.utils.ReactiveDisabled;
+import com.github.sonus21.rqueue.utils.ReactiveEnabled;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
 import com.github.sonus21.rqueue.web.service.RqueueJobService;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,11 +49,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
-@RestController()
+@RestController
+@Conditional(ReactiveEnabled.class)
 @RequestMapping("rqueue/api/v1")
-@Conditional(ReactiveDisabled.class)
-public class RqueueRestController {
+public class ReactiveRqueueRestController {
+
   private final RqueueDashboardChartService rqueueDashboardChartService;
   private final RqueueQDetailService rqueueQDetailService;
   private final RqueueUtilityService rqueueUtilityService;
@@ -61,7 +64,7 @@ public class RqueueRestController {
   private final RqueueJobService rqueueJobService;
 
   @Autowired
-  public RqueueRestController(
+  public ReactiveRqueueRestController(
       RqueueDashboardChartService rqueueDashboardChartService,
       RqueueQDetailService rqueueQDetailService,
       RqueueUtilityService rqueueUtilityService,
@@ -78,114 +81,114 @@ public class RqueueRestController {
 
   @PostMapping("chart")
   @ResponseBody
-  public ChartDataResponse getDashboardData(
-      @RequestBody ChartDataRequest chartDataRequest, HttpServletResponse response) {
+  public Mono<ChartDataResponse> getDashboardData(
+      @RequestBody ChartDataRequest chartDataRequest, ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
+    return rqueueDashboardChartService.getReactiveDashBoardData(chartDataRequest);
   }
 
   @GetMapping("jobs")
   @ResponseBody
-  public DataViewResponse getJobs(
-      @RequestParam(name = "message-id") @NotEmpty String messageId, HttpServletResponse response)
+  public Mono<DataViewResponse> getJobs(
+      @RequestParam(name = "message-id") @NotEmpty String messageId, ServerHttpResponse response)
       throws ProcessingException {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueJobService.getJobs(messageId);
+    return rqueueJobService.getReactiveJobs(messageId);
   }
 
   @GetMapping("explore")
   @ResponseBody
-  public DataViewResponse exploreQueue(
+  public Mono<DataViewResponse> exploreQueue(
       @RequestParam @NotNull DataType type,
       @RequestParam @NotEmpty String name,
       @RequestParam @NotEmpty String src,
       @RequestParam(defaultValue = "0", name = "page") int pageNumber,
       @RequestParam(defaultValue = "20", name = "count") int itemPerPage,
-      HttpServletResponse response) {
+      ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueQDetailService.getExplorePageData(src, name, type, pageNumber, itemPerPage);
+    return rqueueQDetailService.getReactiveExplorePageData(
+        src, name, type, pageNumber, itemPerPage);
   }
 
   @DeleteMapping("data-set/{queueName}/{datasetName}")
   @ResponseBody
-  public BooleanResponse deleteAll(
+  public Mono<BooleanResponse> deleteAll(
       @PathVariable String queueName,
       @PathVariable String datasetName,
-      HttpServletResponse response) {
+      ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.makeEmpty(queueName, datasetName);
+    return rqueueUtilityService.makeEmptyReactive(queueName, datasetName);
   }
 
   @DeleteMapping("data-set/{queueName}/message/{messageId}")
   @ResponseBody
-  public BooleanResponse deleteMessage(
-      @PathVariable String queueName,
-      @PathVariable String messageId,
-      HttpServletResponse response) {
+  public Mono<BooleanResponse> deleteMessage(
+      @PathVariable String queueName, @PathVariable String messageId, ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.deleteMessage(queueName, messageId);
+    return rqueueUtilityService.deleteReactiveMessage(queueName, messageId);
   }
 
   @GetMapping("data-type")
   @ResponseBody
-  public StringResponse dataType(
-      @RequestParam @NotEmpty String name, HttpServletResponse response) {
+  public Mono<StringResponse> dataType(
+      @RequestParam @NotEmpty String name, ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.getDataType(name);
+    return rqueueUtilityService.getReactiveDataType(name);
   }
 
   @PutMapping("move")
   @ResponseBody
-  public MessageMoveResponse dataType(
-      @RequestBody MessageMoveRequest request, HttpServletResponse response) {
+  public Mono<MessageMoveResponse> dataType(
+      @RequestBody MessageMoveRequest request, ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.moveMessage(request);
+    return rqueueUtilityService.moveReactiveMessage(request);
   }
 
   @GetMapping("data")
   @ResponseBody
-  public DataViewResponse viewData(
+  public Mono<DataViewResponse> viewData(
       @RequestParam @NotEmpty String name,
       @RequestParam @NotNull DataType type,
       @RequestParam(required = false) String key,
       @RequestParam(defaultValue = "0", name = "page") int pageNumber,
       @RequestParam(defaultValue = "20", name = "count") int itemPerPage,
-      HttpServletResponse response) {
+      ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueQDetailService.viewData(name, type, key, pageNumber, itemPerPage);
+    return rqueueQDetailService.viewReactiveData(name, type, key, pageNumber, itemPerPage);
   }
 
   @DeleteMapping("queues/{queueName}")
   @ResponseBody
-  public BaseResponse deleteQueue(@PathVariable String queueName, HttpServletResponse response) {
+  public Mono<BaseResponse> deleteQueue(
+      @PathVariable String queueName, ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueQManagerService.deleteQueue(queueName);
+    return rqueueQManagerService.deleteReactiveQueue(queueName);
   }
 }

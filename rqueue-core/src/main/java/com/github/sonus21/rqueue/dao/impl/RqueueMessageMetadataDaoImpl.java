@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.dao.impl;
 
+import com.github.sonus21.rqueue.common.ReactiveRqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
@@ -27,13 +28,22 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Mono;
 
 @Repository
 public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
+
   private final RqueueRedisTemplate<MessageMetadata> template;
+  private final ReactiveRqueueRedisTemplate<MessageMetadata> reactiveRedisTemplate;
 
   public RqueueMessageMetadataDaoImpl(RqueueConfig rqueueConfig) {
     this.template = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
+    if (rqueueConfig.isReactiveRedisEnabled()) {
+      this.reactiveRedisTemplate =
+          new ReactiveRqueueRedisTemplate<>(rqueueConfig.getReactiveRedisConnectionFactory());
+    } else {
+      this.reactiveRedisTemplate = null;
+    }
   }
 
   @Override
@@ -60,5 +70,14 @@ public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
   @Override
   public void deleteAll(Collection<String> ids) {
     template.delete(ids);
+  }
+
+  @Override
+  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration) {
+    Assert.notNull(messageMetadata.getId(), "messageMetadata id cannot be null");
+    return reactiveRedisTemplate
+        .template()
+        .opsForValue()
+        .set(messageMetadata.getId(), messageMetadata, duration);
   }
 }

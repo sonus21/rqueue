@@ -24,14 +24,11 @@ import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
-import com.github.sonus21.rqueue.utils.ReactiveDisabled;
+import com.github.sonus21.rqueue.utils.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
-import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
-import io.seruco.encoding.base62.Base62;
-import java.nio.ByteBuffer;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -40,40 +37,42 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.View;
+import org.springframework.web.reactive.result.view.View;
+import org.springframework.web.reactive.result.view.ViewResolver;
+import reactor.core.publisher.Mono;
 
 @Controller
 @RequestMapping("rqueue")
-@Conditional(ReactiveDisabled.class)
-public class RqueueViewController {
+@Conditional(ReactiveEnabled.class)
+public class ReactiveRqueueViewController {
 
-  private final PebbleViewResolver rqueueViewResolver;
+  private final ViewResolver rqueueViewResolver;
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueQDetailService rqueueQDetailService;
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueSystemManagerService;
-  private final Base62 base62 = Base62.createInstance();
 
   @Autowired
-  public RqueueViewController(
-      @Qualifier("rqueueViewResolver") PebbleViewResolver rqueueViewResolver,
+  public ReactiveRqueueViewController(
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueQDetailService rqueueQDetailService,
       RqueueUtilityService rqueueUtilityService,
-      RqueueSystemManagerService rqueueSystemManagerService) {
+      RqueueSystemManagerService rqueueSystemManagerService,
+      @Qualifier("reactiveRqueueViewResolver") ViewResolver rqueueViewResolver) {
     this.rqueueViewResolver = rqueueViewResolver;
     this.rqueueConfig = rqueueConfig;
     this.rqueueWebConfig = rqueueWebConfig;
@@ -89,7 +88,7 @@ public class RqueueViewController {
     }
   }
 
-  private void addBasicDetails(Model model, HttpServletRequest request) {
+  private void addBasicDetails(Model model, ServerHttpRequest request) {
     Pair<String, String> releaseAndVersion = rqueueUtilityService.getLatestVersion();
     model.addAttribute("releaseLink", releaseAndVersion.getFirst());
     model.addAttribute("latestVersion", releaseAndVersion.getSecond());
@@ -97,7 +96,7 @@ public class RqueueViewController {
         "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     model.addAttribute("timeInMilli", System.currentTimeMillis());
     model.addAttribute("version", rqueueConfig.getVersion());
-    String xForwardedPrefix = request.getHeader("x-forwarded-prefix");
+    String xForwardedPrefix = request.getHeaders().getFirst("x-forwarded-prefix");
     String prefix = "/";
     if (!StringUtils.isEmpty(xForwardedPrefix)) {
       if (xForwardedPrefix.endsWith("/")) {
@@ -106,33 +105,17 @@ public class RqueueViewController {
       prefix = xForwardedPrefix + prefix;
     }
     model.addAttribute("urlPrefix", prefix);
-    // addNonce(model, "urlNonce");
-  }
-
-  @SuppressWarnings("unchecked")
-  private void addNonce(Model model, String name) {
-    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-    buffer.putLong(System.nanoTime());
-    String nonce = "nonce-" + new String(base62.encode(buffer.array()));
-    List<String> nonces = (List<String>) model.asMap().get("nonces");
-    if (nonces == null) {
-      nonces = new ArrayList<>();
-    }
-    nonces.add(nonce);
-    model.addAttribute("nonces", nonces);
-    model.addAttribute(name, nonce);
   }
 
   @GetMapping
-  public View index(Model model, HttpServletRequest request, HttpServletResponse response)
+  public Mono<View> index(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     addBasicDetails(model, request);
     addNavData(model, null);
-    // addNonce(model, "indexNonce");
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
@@ -140,10 +123,10 @@ public class RqueueViewController {
   }
 
   @GetMapping("queues")
-  public View queues(Model model, HttpServletRequest request, HttpServletResponse response)
+  public Mono<View> queues(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     addBasicDetails(model, request);
@@ -159,14 +142,14 @@ public class RqueueViewController {
   }
 
   @GetMapping("queues/{queueName}")
-  public View queueDetail(
+  public Mono<View> queueDetail(
       @PathVariable String queueName,
       Model model,
-      HttpServletRequest request,
-      HttpServletResponse response)
+      ServerHttpRequest request,
+      ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     QueueConfig queueConfig = rqueueSystemManagerService.getQueueConfig(queueName);
@@ -175,7 +158,6 @@ public class RqueueViewController {
         rqueueQDetailService.getQueueDataStructureDetail(queueConfig);
     addBasicDetails(model, request);
     addNavData(model, NavTab.QUEUES);
-    // addNonce(model, "queueDetailNonce");
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
@@ -187,10 +169,10 @@ public class RqueueViewController {
   }
 
   @GetMapping("running")
-  public View running(Model model, HttpServletRequest request, HttpServletResponse response)
+  public Mono<View> running(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     addBasicDetails(model, request);
@@ -203,10 +185,10 @@ public class RqueueViewController {
   }
 
   @GetMapping("scheduled")
-  public View scheduled(Model model, HttpServletRequest request, HttpServletResponse response)
+  public Mono<View> scheduled(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     addBasicDetails(model, request);
@@ -219,10 +201,10 @@ public class RqueueViewController {
   }
 
   @GetMapping("dead")
-  public View dead(Model model, HttpServletRequest request, HttpServletResponse response)
+  public Mono<View> dead(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     addBasicDetails(model, request);
@@ -236,10 +218,10 @@ public class RqueueViewController {
   }
 
   @GetMapping("pending")
-  public View pending(Model model, HttpServletRequest request, HttpServletResponse response)
+  public Mono<View> pending(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     addBasicDetails(model, request);
@@ -252,15 +234,14 @@ public class RqueueViewController {
   }
 
   @GetMapping("utility")
-  public View utility(Model model, HttpServletRequest request, HttpServletResponse response)
+  public Mono<View> utility(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
     addBasicDetails(model, request);
     addNavData(model, NavTab.UTILITY);
-    // addNonce(model, "utilityNonce");
     model.addAttribute("title", "Utility");
     model.addAttribute("supportedDataType", DataType.getEnabledDataTypes());
     return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);

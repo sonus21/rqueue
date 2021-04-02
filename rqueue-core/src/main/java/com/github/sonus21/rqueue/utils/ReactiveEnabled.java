@@ -14,15 +14,18 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service;
+package com.github.sonus21.rqueue.utils;
 
-import com.github.sonus21.rqueue.exception.ProcessingException;
-import com.github.sonus21.rqueue.models.response.DataViewResponse;
-import reactor.core.publisher.Mono;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
-public interface RqueueJobService {
+public class ReactiveEnabled implements Condition {
 
-  DataViewResponse getJobs(String messageId) throws ProcessingException;
-
-  Mono<DataViewResponse> getReactiveJobs(String messageId) throws ProcessingException;
+  @Override
+  public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+    Boolean reactiveEnabled =
+        context.getEnvironment().getProperty("rqueue.reactive.enabled", Boolean.class);
+    return Boolean.TRUE.equals(reactiveEnabled);
+  }
 }

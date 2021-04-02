@@ -18,7 +18,11 @@ package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import reactor.core.publisher.Mono;
 
 public interface RqueueDashboardChartService {
+
   ChartDataResponse getDashboardChartData(ChartDataRequest chartDataRequest);
+
+  Mono<ChartDataResponse> getReactiveDashBoardData(ChartDataRequest chartDataRequest);
 }

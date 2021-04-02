@@ -202,9 +202,8 @@ class RqueueQDetailServiceTest extends TestBase {
           new TableColumn(
               TableColumnType.DISPLAY,
               message.toString(),
-              Collections
-                  .singletonList(
-                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+              Collections.singletonList(
+                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
 
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
@@ -239,9 +238,8 @@ class RqueueQDetailServiceTest extends TestBase {
           new TableColumn(
               TableColumnType.DISPLAY,
               message.toString(),
-              Collections
-                  .singletonList(
-                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+              Collections.singletonList(
+                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
 
       l.add(new TableColumn("Simple"));
       lists.add(new TableRow(l));
@@ -288,9 +286,8 @@ class RqueueQDetailServiceTest extends TestBase {
           new TableColumn(
               TableColumnType.DISPLAY,
               message.toString(),
-              Collections
-                  .singletonList(
-                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+              Collections.singletonList(
+                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
       l.add(new TableColumn("Simple"));
       if (i >= 5) {
         l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
@@ -332,9 +329,8 @@ class RqueueQDetailServiceTest extends TestBase {
           new TableColumn(
               TableColumnType.DISPLAY,
               message.toString(),
-              Collections
-                  .singletonList(
-                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+              Collections.singletonList(
+                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
       lists.add(new TableRow(l));
@@ -376,9 +372,8 @@ class RqueueQDetailServiceTest extends TestBase {
           new TableColumn(
               TableColumnType.DISPLAY,
               message.toString(),
-              Collections
-                  .singletonList(
-                      new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+              Collections.singletonList(
+                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
 
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
@@ -424,7 +419,7 @@ class RqueueQDetailServiceTest extends TestBase {
     objects.add("Test");
     objects.add(
         RqueueMessageUtils.buildMessage(
-            messageConverter, "jobs", "buildMessage", null, null, null));
+            messageConverter, "jobs", null, "buildMessage", null, null, null));
     objects.add(null);
     doReturn(objects).when(stringRqueueRedisTemplate).lrange("jobs", 0, 9);
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.LIST, null, 0, 10);
@@ -445,7 +440,7 @@ class RqueueQDetailServiceTest extends TestBase {
     objects.add(
         new DefaultTypedTuple<>(
             RqueueMessageUtils.buildMessage(
-                messageConverter, "jobs", "buildMessage", null, null, null),
+                messageConverter, "jobs", null, "buildMessage", null, null, null),
             200.0));
 
     List<TableRow> tableRows = new ArrayList<>();
@@ -474,7 +469,8 @@ class RqueueQDetailServiceTest extends TestBase {
     Set<Object> objects = new HashSet<>();
     objects.add("Test");
     objects.add(
-        RqueueMessageUtils.buildMessage(messageConverter, "jobs", "Test object", null, null, null));
+        RqueueMessageUtils.buildMessage(
+            messageConverter, "jobs", null, "Test object", null, null, null));
     List<TableRow> tableRows = new ArrayList<>();
     for (Object object : objects) {
       tableRows.add(new TableRow(new TableColumn(String.valueOf(object))));
