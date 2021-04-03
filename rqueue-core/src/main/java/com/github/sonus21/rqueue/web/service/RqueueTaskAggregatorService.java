@@ -264,7 +264,7 @@ public class RqueueTaskAggregatorService
         try {
           if (rqueueLockManager.acquireLock(
               lockKey,
-              rqueueConfig.getBrokerId(),
+              RqueueConfig.getBrokerId(),
               Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
             locked = true;
             aggregate(events);
@@ -275,7 +275,7 @@ public class RqueueTaskAggregatorService
           }
         } finally {
           if (locked) {
-            rqueueLockManager.releaseLock(lockKey, rqueueConfig.getBrokerId());
+            rqueueLockManager.releaseLock(lockKey, RqueueConfig.getBrokerId());
           }
         }
       }

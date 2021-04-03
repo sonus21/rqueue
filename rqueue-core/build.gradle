@@ -29,3 +29,11 @@ dependencies {
     testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
     testCompile project(":rqueue-test-util")
 }
+
+processResources {
+    doLast {
+        def resourcesDir = sourceSets.main.output.resourcesDir
+        def contents = "Version: $version\n"
+        new File(resourcesDir, "META-INF/RQUEUE.MF").text = contents
+    }
+}

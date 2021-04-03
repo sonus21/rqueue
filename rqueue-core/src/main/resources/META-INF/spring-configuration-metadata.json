@@ -40,12 +40,6 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.version",
-      "description": "Rqueue version",
-      "type": "java.lang.Integer"
-    },
-    {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
       "name": "rqueue.reactive.enabled",
       "description": "Reactive Feature is enabled",
       "type": "java.lang.Boolean",
@@ -213,7 +207,7 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.net.proxy.port",
+      "name": "rqueue.net.proxy.type",
       "description": "Proxy server host address for outgoing connection",
       "type": "java.net.Proxy$Type",
       "defaultValue": "HTTP"

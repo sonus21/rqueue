@@ -95,7 +95,7 @@ public class ReactiveRqueueViewController {
     model.addAttribute(
         "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     model.addAttribute("timeInMilli", System.currentTimeMillis());
-    model.addAttribute("version", rqueueConfig.getVersion());
+    model.addAttribute("version", rqueueConfig.getLibVersion());
     String xForwardedPrefix = request.getHeaders().getFirst("x-forwarded-prefix");
     String prefix = "/";
     if (!StringUtils.isEmpty(xForwardedPrefix)) {

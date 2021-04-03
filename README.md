@@ -41,6 +41,7 @@ services code is in Spring.
 * **Long execution job**: Long running jobs can check in periodically.
 * **Middleware**:  Add one or more middleware, middlewares are called before listener method.
 * **Message Multicasting**: Call multiple message listeners on very message
+* **Reactive Programming**: Supports reactive Redis and spring webflux
 
 ## Getting Started
 

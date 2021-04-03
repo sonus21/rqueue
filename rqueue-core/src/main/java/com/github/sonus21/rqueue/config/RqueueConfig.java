@@ -19,7 +19,12 @@ package com.github.sonus21.rqueue.config;
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import com.google.common.io.CharStreams;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Proxy;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
@@ -47,8 +53,7 @@ public class RqueueConfig {
   @Value("${rqueue.reactive.enabled:false}")
   private boolean reactiveEnabled;
 
-  @Value("${rqueue.version:2.1.0}")
-  private String version;
+  private String version = "";
 
   @Value("${rqueue.latest.version.check.enabled:true}")
   private boolean latestVersionCheckEnabled;
@@ -261,5 +266,26 @@ public class RqueueConfig {
 
   public static String getBrokerId() {
     return brokerId;
+  }
+
+  public String getLibVersion() {
+    if (StringUtils.isEmpty(version)) {
+      ClassPathResource resource =
+          new ClassPathResource("META-INF/RQUEUE.MF", this.getClass().getClassLoader());
+      try {
+        InputStream inputStream = resource.getInputStream();
+        String result =
+            CharStreams.toString(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        for (String line : result.split("\n")) {
+          String[] words = line.trim().split(":");
+          if (2 == words.length && words[0].equals("Version")) {
+            version = words[1].split("-")[0];
+          }
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    return version;
   }
 }

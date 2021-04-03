@@ -12,10 +12,16 @@
 --  See the License for the specific language governing permissions and limitations under the License.
 --
 
-local score = redis.call('ZSCORE', KEYS[1], ARGV[1])
-if score ~= nil then
-    redis.call('RPUSH', KEYS[2], ARGV[3], ARGV[2])
-    redis.call('ZREM', KEYS[1], ARGV[1])
+for i = tonumber(ARGV[1]), 1, -1
+do
+    local msg = redis.call('LRANGE', KEYS[1], 0, 0)[1]
+    if msg ~= nil then
+        redis.call("RPUSH", KEYS[2], msg)
+        redis.call("LPOP", KEYS[1])
+    else
+        break
+    end
 end
-score = tonumber(score)
-return score
+local remainingMessage = redis.call("LLEN", KEYS[1])
+return remainingMessage
+
