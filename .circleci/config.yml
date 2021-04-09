@@ -16,6 +16,14 @@ aliases:
       SPRING_DATA_VERSION: 2.2.0.RELEASE
       MICROMETER_VERSION: 1.3.2
 
+  environment_v0: &environment_v0
+    environment:
+      SPRING_BOOT_VERSION: 2.0.6.RELEASE
+      SPRING_VERSION: 5.0.10.RELEASE
+      SPRING_DATA_VERSION: 2.0.6.RELEASE
+      MICROMETER_VERSION: 1.1.0
+
+
   persist_to_workspace: &persist_to_workspace
     persist_to_workspace:
       root: .
@@ -52,9 +60,6 @@ aliases:
         sleep 30
         redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
 
-  default: &default
-    executor: rqueue-executor
-    <<: *environment
 
   copy_logs: &copy_logs
     run:
@@ -87,6 +92,14 @@ aliases:
       path: test-results
 
 
+  default: &default
+    executor: rqueue-executor
+    <<: *environment
+
+  default_v0: &default_vo
+    executor: rqueue-executor
+    <<: *environment_v0
+
 executors:
   rqueue-executor:
     machine:
@@ -103,86 +116,125 @@ executors:
       USER_NAME: rqueue
       REDIS_RUNNING: "true"
 
+build_steps: &build_steps
+  steps:
+    - checkout
+    - restore_cache:
+        keys:
+          - v1-dependencies-{{ checksum "build.gradle" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+    - run: gradle dependencies
+    - save_cache:
+        paths:
+          - ~/.gradle
+        key: v1-dependencies-{{ checksum "build.gradle" }}
+    - run: ./gradlew compileJava
+    - run: ./gradlew compileTestJava
+    - *persist_to_workspace
+
+unit_test_steps: &unit_test_steps
+  steps:
+    - *attach_workspace
+    - run: ./gradlew codeCoverageReport -DincludeTags=unit
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+producer_test_steps: &producer_test_steps
+  steps:
+    - *attach_workspace
+    - *redis_dep
+    - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+integration_test_steps: &integration_test_steps
+  steps:
+    - *attach_workspace
+    - *redis_dep
+    - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+redis_custer_test_steps: &redis_cluster_test_steps
+  steps:
+    - *attach_workspace
+    - *redis_dep
+    - *redis_cluster_setup
+    - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+report_code_coverage_steps: &report_code_coverage_steps
+  steps:
+    - *attach_workspace
+    - run: ./gradlew coveralls
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
 
 jobs:
   build:
     <<: *default
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "build.gradle" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+    <<: *build_steps
 
-      - run: gradle dependencies
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle" }}
-      - run: ./gradlew compileJava
-      - run: ./gradlew compileTestJava
-      - *persist_to_workspace
+  build_v0:
+    <<: *default_vo
+    <<: *build_steps
 
   unit_test:
     <<: *default
-    steps:
-      - *attach_workspace
-      - run: ./gradlew codeCoverageReport -DincludeTags=unit
-      - *persist_to_workspace
-      - *copy_logs
-      - *copy_test_results
-      - *store_logs
-      - *store_test_results
+    <<: *unit_test_steps
 
+  unit_test_v0:
+    <<: *default_vo
+    <<: *unit_test_steps
 
   producer_only_test:
     <<: *default
-    steps:
-      - *attach_workspace
-      - *redis_dep
-      - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly
-      - *persist_to_workspace
-      - *copy_logs
-      - *copy_test_results
-      - *store_logs
-      - *store_test_results
+    <<: *producer_test_steps
 
+  producer_only_test_v0:
+    <<: *default_vo
+    <<: *producer_test_steps
 
   integration_test:
     <<: *default
-    steps:
-      - *attach_workspace
-      - *redis_dep
-      - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly
-      - *persist_to_workspace
-      - *copy_logs
-      - *copy_test_results
-      - *store_logs
-      - *store_test_results
+    <<: *integration_test_steps
+
+  integration_test_v0:
+    <<: *default_vo
+    <<: *integration_test_steps
 
   redis_custer_test:
     <<: *default
-    steps:
-      - *attach_workspace
-      - *redis_dep
-      - *redis_cluster_setup
-      - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster
-      - *persist_to_workspace
-      - *copy_logs
-      - *copy_test_results
-      - *store_logs
-      - *store_test_results
+    <<: *redis_cluster_test_steps
+
+  redis_custer_test_v0:
+    <<: *default_vo
+    <<: *redis_cluster_test_steps
 
   report_code_coverage:
     <<: *default
-    steps:
-      - *attach_workspace
-      - run: ./gradlew coveralls
-      - *copy_logs
-      - *copy_test_results
-      - *store_logs
-      - *store_test_results
+    <<: *report_code_coverage_steps
+
+  report_code_coverage_v0:
+    <<: *default_vo
+    <<: *report_code_coverage_steps
 
 workflows:
   main:
@@ -203,3 +255,22 @@ workflows:
       - report_code_coverage:
           requires:
             - redis_custer_test
+  main_v0:
+    jobs:
+      - build_v0
+      - unit_test_v0:
+          requires:
+            - build_v0
+      - producer_only_test_v0:
+          requires:
+            - unit_test_v0
+      - integration_test_v0:
+          requires:
+            - producer_only_test_v0
+      - redis_custer_test_v0:
+          requires:
+            - integration_test_v0
+      - report_code_coverage_v0:
+          requires:
+            - redis_custer_test_v0
+
