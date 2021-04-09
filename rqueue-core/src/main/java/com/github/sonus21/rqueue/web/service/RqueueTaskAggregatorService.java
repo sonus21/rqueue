@@ -183,7 +183,24 @@ public class RqueueTaskAggregatorService
     }
   }
 
+  @Override
+  public boolean isAutoStartup() {
+    return true;
+  }
+
+  @Override
+  public void stop(Runnable callback) {
+    stop();
+    callback.run();
+  }
+
+  @Override
+  public int getPhase() {
+    return Integer.MAX_VALUE;
+  }
+
   class SweepJob implements Runnable {
+
     @Override
     public void run() {
       if (log.isDebugEnabled()) {

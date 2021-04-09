@@ -78,7 +78,7 @@ public class RqueueRedisTemplate<V extends Serializable> {
   }
 
   public boolean exist(String key) {
-    return 1L == redisTemplate.countExistingKeys(Collections.singleton(key));
+    return redisTemplate.getExpire(key) != -2L;
   }
 
   public int ttl(String key) {
@@ -94,11 +94,15 @@ public class RqueueRedisTemplate<V extends Serializable> {
   }
 
   public void set(String key, V val, Duration duration) {
-    redisTemplate.opsForValue().set(key, val, duration);
+    redisTemplate.opsForValue().set(key, val, duration.toMillis(), TimeUnit.MILLISECONDS);
   }
 
   public Boolean setIfAbsent(String lockKey, V val, Duration duration) {
-    return redisTemplate.opsForValue().setIfAbsent(lockKey, val, duration);
+    boolean result = redisTemplate.opsForValue().setIfAbsent(lockKey, val);
+    if (result) {
+      redisTemplate.expire(lockKey, duration.toMillis(), TimeUnit.MILLISECONDS);
+    }
+    return result;
   }
 
   public Boolean delete(String key) {

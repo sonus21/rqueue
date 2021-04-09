@@ -16,7 +16,6 @@
 
 package com.github.sonus21.junit;
 
-import io.lettuce.core.ReadFrom;
 import java.util.List;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -45,7 +44,7 @@ public class RedisRunning {
           new LettuceConnectionFactory(redisNode.getHost(), redisNode.getPort());
     } else {
       LettuceClientConfiguration lettuceClientConfiguration =
-          LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER).build();
+          LettuceClientConfiguration.builder().build();
       RedisClusterConfiguration redisClusterConfiguration = new RedisClusterConfiguration();
       redisClusterConfiguration.setClusterNodes(redisNodes);
       lettuceConnectionFactory =

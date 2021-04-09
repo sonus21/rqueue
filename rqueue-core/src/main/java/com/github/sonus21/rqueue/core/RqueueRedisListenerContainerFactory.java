@@ -99,4 +99,20 @@ public class RqueueRedisListenerContainerFactory
     }
     createContainer();
   }
+
+  @Override
+  public boolean isAutoStartup() {
+    return true;
+  }
+
+  @Override
+  public void stop(Runnable callback) {
+    stop();
+    callback.run();
+  }
+
+  @Override
+  public int getPhase() {
+    return Integer.MAX_VALUE;
+  }
 }

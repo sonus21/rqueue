@@ -19,17 +19,35 @@ package com.github.sonus21.rqueue.test.common;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.web.reactive.server.HttpHandlerConnector;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
 
 public abstract class SpringWebTestBase extends SpringTestBase {
-  @Autowired protected WebApplicationContext wac;
+
+  @Autowired(required = false)
+  protected WebApplicationContext wac;
+  protected WebClient webClient;
   protected MockMvc mockMvc;
   protected ObjectMapper mapper = new ObjectMapper();
+  @Autowired
+  ApplicationContext applicationContext;
 
   @BeforeEach
   public void init() {
-    this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+    if (reactiveEnabled) {
+      webClient =
+          WebClient.builder()
+              .clientConnector(
+                  new HttpHandlerConnector(
+                      WebHttpHandlerBuilder.applicationContext(applicationContext).build()))
+              .build();
+    } else {
+      this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+    }
   }
 }
