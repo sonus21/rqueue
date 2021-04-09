@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MetricTest;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -32,7 +33,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @TestPropertySource(properties = {"rqueue.retry.per.poll=20", "spring.redis.port=7005"})
 @SpringIntegrationTest
 class SpringMetricTest extends MetricTest {
+
   @Test
+  @Tag("redisCluster")
   void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }

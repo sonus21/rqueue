@@ -2,6 +2,10 @@
 
 ## [2.7.0] - TBD
 
+### Fixes
+
+* Spring Boot App could not start due to class not found error
+
 ### Added
 
 * Support for Reactive Redis and Spring Webflux

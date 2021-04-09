@@ -245,8 +245,17 @@ PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueu
 ## Contribution
 
 You are most welcome for any pull requests for any feature/bug/enhancement. You would need Java8 and
-gradle to start with.
+gradle to start with. In root `build.gradle` file comment out spring related versions, or set
+environment variables for Spring versions.
+
 **Please format your code with Google Java formatter.**
+
+```bash
+//    springBootVersion = '2.2.0.RELEASE'
+//    springVersion = '5.2.0.RELEASE'
+//    springDataVersion = '2.2.0.RELEASE'
+//    microMeterVersion = '1.3.2'
+```
 
 ## Links
 
