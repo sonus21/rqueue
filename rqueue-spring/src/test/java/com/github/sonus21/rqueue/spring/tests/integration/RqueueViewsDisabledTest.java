@@ -37,6 +37,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -52,6 +53,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
       "rqueue.web.enable=false"
     })
 @SpringIntegrationTest
+@DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class RqueueViewsDisabledTest extends SpringWebTestBase {
   @Test
   void home() throws Exception {
