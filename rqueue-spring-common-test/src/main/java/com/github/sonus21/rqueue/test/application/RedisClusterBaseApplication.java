@@ -21,7 +21,6 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisNode;
@@ -29,8 +28,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 public abstract class RedisClusterBaseApplication extends ApplicationBasicConfiguration {
-  @Value("${rqueue.reactive.enabled:false}")
-  private boolean reactiveEnabled;
 
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
@@ -56,11 +53,8 @@ public abstract class RedisClusterBaseApplication extends ApplicationBasicConfig
     simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
     if (reactiveEnabled) {
-      LettuceConnectionFactory reactiveRedisConnectionFactory =
-          new LettuceConnectionFactory(redisClusterConfiguration);
-      lettuceConnectionFactory.afterPropertiesSet();
       simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
-          reactiveRedisConnectionFactory);
+          lettuceConnectionFactory);
     }
     return simpleRqueueListenerContainerFactory;
   }
