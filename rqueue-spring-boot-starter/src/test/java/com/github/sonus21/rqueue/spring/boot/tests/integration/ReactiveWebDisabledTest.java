@@ -35,8 +35,8 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -65,7 +65,7 @@ import reactor.core.publisher.Mono;
       "rqueue.web.enable=false",
     })
 @SpringBootIntegrationTest
-@Tag("redisCluster")
+@EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class ReactiveWebDisabledTest extends BasicListenerTest {
   @Autowired private WebTestClient webTestClient;
 

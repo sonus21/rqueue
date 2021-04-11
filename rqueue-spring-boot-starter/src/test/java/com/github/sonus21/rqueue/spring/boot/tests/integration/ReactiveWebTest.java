@@ -63,6 +63,7 @@ import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -86,10 +87,10 @@ import reactor.core.publisher.Mono;
       "mysql.db.name=ReactiveWebTest",
       "use.system.redis=false",
       "user.banned.queue.active=true",
-      "spring.main.web-application-type=reactive",
-      "rqueue.reactive.enabled=true"
+      "spring.main.web-application-type=reactive"
     })
 @SpringBootIntegrationTest
+@EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class ReactiveWebTest extends BasicListenerTest {
   @Autowired private WebTestClient webTestClient;
   @Autowired private RqueueConfig rqueueConfig;
