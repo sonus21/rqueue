@@ -59,6 +59,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -257,6 +258,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
   }
 
   @Test
+  @Disabled
   void deleteDataSet() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
     DataDeleteRequest request = new DataDeleteRequest();
