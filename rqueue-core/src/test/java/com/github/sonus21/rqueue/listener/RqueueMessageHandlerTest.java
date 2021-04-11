@@ -355,8 +355,8 @@ class RqueueMessageHandlerTest extends TestBase {
     RqueueMessageHandler rqueueMessageHandler =
         applicationContext.getBean("rqueueMessageHandler", RqueueMessageHandler.class);
     List<RqueueMessageHandler.HandlerMethodWithPrimary> handlerMethodWithPrimaries = null;
-    for (Entry<MappingInformation, List<RqueueMessageHandler.HandlerMethodWithPrimary>> informationListEntry :
-        rqueueMessageHandler.getHandlerMethodMap().entrySet()) {
+    for (Entry<MappingInformation, List<RqueueMessageHandler.HandlerMethodWithPrimary>>
+        informationListEntry : rqueueMessageHandler.getHandlerMethodMap().entrySet()) {
       handlerMethodWithPrimaries = informationListEntry.getValue();
     }
     assertNotNull(handlerMethodWithPrimaries);
@@ -441,6 +441,22 @@ class RqueueMessageHandlerTest extends TestBase {
     assertEquals(
         Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, 100),
         messageHandler.mappingInformation.getPriority());
+  }
+
+  @Test
+  void invalidQueueName() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", MessageHandlerWithPriority.class);
+    applicationContext.registerSingleton("rqueueMessageHandler", DummyMessageHandler.class);
+
+    Map<String, Object> map = new HashMap<>();
+    map.put("queue.name", slowQueue + "{" + smartQueue);
+    map.put("queue.priority", "100");
+    applicationContext
+        .getEnvironment()
+        .getPropertySources()
+        .addLast(new MapPropertySource("test", map));
+    assertThrows(BeanCreationException.class, applicationContext::refresh);
   }
 
   @AllArgsConstructor

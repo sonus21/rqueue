@@ -471,11 +471,15 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       String invalidCharsStr =
           Stream.of(invalidChars)
               .map(e -> String.format("'%c'", e))
-              .collect(Collectors.joining(","));
+              .collect(Collectors.joining(Constants.Comma));
+      String queueNamesStr =
+          invalidNames.stream()
+              .map(e -> String.format("'%s'", e))
+              .collect(Collectors.joining(Constants.Comma));
       String message =
           String.format(
               "Queue name contains invalid char%n Not Allowed Chars [%s] %n Queues: [%s]",
-              invalidCharsStr, String.join(",", invalidNames));
+              invalidCharsStr, queueNamesStr);
       throw new IllegalStateException(message);
     }
   }

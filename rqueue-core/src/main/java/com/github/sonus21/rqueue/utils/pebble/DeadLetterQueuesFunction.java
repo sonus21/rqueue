@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.utils.pebble;
 
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.mitchellbosecke.pebble.extension.Function;
 import com.mitchellbosecke.pebble.template.EvaluationContext;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
@@ -40,7 +41,7 @@ public class DeadLetterQueuesFunction implements Function {
     }
     List<String> queues =
         deadLetterQueues.stream().map(DeadLetterQueue::getName).collect(Collectors.toList());
-    return String.join(",", queues);
+    return String.join(Constants.Comma, queues);
   }
 
   @Override
