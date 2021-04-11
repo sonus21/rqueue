@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication;
+import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import lombok.extern.slf4j.Slf4j;
@@ -27,24 +27,24 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ContextConfiguration(classes = RedisClusterApplication.class)
+@ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.redis.port=8018",
-        "reservation.request.dead.letter.consumer.enabled=true",
-        "reservation.request.active=true",
-        "list.email.queue.enabled=true",
-        "mysql.db.name=ReactiveApplicationTest",
-        "use.system.redis=false",
-        "user.banned.queue.active=true",
-        "rqueue.reactive.enabled=true"
+      "rqueue.retry.per.poll=1000",
+      "spring.redis.port=8018",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=ReactiveApplicationTest",
+      "use.system.redis=false",
+      "user.banned.queue.active=true",
+      "rqueue.reactive.enabled=true"
     })
 @SpringBootIntegrationTest
 @Tag("reactive")
-public class ReactiveApplicationTest extends BasicListenerTest {
+class ReactiveApplicationTest extends BasicListenerTest {
 
   @Test
   void onMessageNotification() throws TimedOutException {
