@@ -291,7 +291,5 @@ workflows:
       - redis_custer_test_v0:
           requires:
             - integration_test_v0
-      - report_code_coverage_v0:
-          requires:
-            - redis_custer_test_v0
+
 

@@ -17,21 +17,30 @@
 package com.github.sonus21.task.executor;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
+import com.github.sonus21.rqueue.utils.Constants;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class RqueueReactiveApplication {
+  @Value("${workers.count:3}")
+  private int workersCount;
 
   public static void main(String[] args) {
     SpringApplication.run(RqueueReactiveApplication.class, args);
   }
 
   @Bean
-  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
-    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    factory.setPollingInterval(1000L);
-    return factory;
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
+      RqueueMessageHandler rqueueMessageHandler) {
+    SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
+        new SimpleRqueueListenerContainerFactory();
+    simpleRqueueListenerContainerFactory.setMaxNumWorkers(workersCount);
+    simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
+    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
+    return simpleRqueueListenerContainerFactory;
   }
 }

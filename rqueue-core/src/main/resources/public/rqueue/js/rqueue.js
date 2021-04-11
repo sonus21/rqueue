@@ -280,27 +280,23 @@ function displayTable(nextOrPrev) {
     'name': dataName,
     'key': dataKey
   };
-  $.ajax({
-    url: getAbsoluteUrl(dataPageUrl),
-    data: data,
-    traditional: true,
-    success: function (response) {
-      currentPage = pageNumber;
-      let displayPageNumberEl = $('#display-page-number');
-      displayHeader(response, displayPageNumberEl, pageSize);
-      let tableBody = $('#table-body');
-      tableBody.empty();
-      let rows = response.rows;
-      for (let i = 0; i < rows.length; i++) {
-        renderRow(rows[i], tableBody);
-      }
-      displayPageNumberEl.append("Page #", pageNumber + 1);
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something wet wrong! Please reload!");
-    }
-  });
+  ajaxRequest(getAbsoluteUrl(dataPageUrl), 'POST', data,
+      function (response) {
+        currentPage = pageNumber;
+        let displayPageNumberEl = $('#display-page-number');
+        displayHeader(response, displayPageNumberEl, pageSize);
+        let tableBody = $('#table-body');
+        tableBody.empty();
+        let rows = response.rows;
+        for (let i = 0; i < rows.length; i++) {
+          renderRow(rows[i], tableBody);
+        }
+        displayPageNumberEl.append("Page #", pageNumber + 1);
+      },
+      function (response) {
+        console.log('failed, ' + response);
+        showError("Something wet wrong! Please reload!");
+      });
 }
 
 function refreshPage() {
@@ -324,28 +320,25 @@ function updateDataType(element, callback) {
   let el = $(element);
   let key = el.val();
   let typeIdEl = $('#' + el.attr('id') + "-type");
-  let url = getAbsoluteUrl('rqueue/api/v1/data-type?name=' + key);
   typeIdEl.empty();
-  $.ajax({
-    url: url,
-    success: function (response) {
-      if (response.code === 0) {
-        if (response.val !== 'NONE') {
-          typeIdEl.text(response.val);
+  ajaxRequest(getAbsoluteUrl('rqueue/api/v1/data-type'), "POST", {'name': key},
+      function (response) {
+        if (response.code === 0) {
+          if (response.val !== 'NONE') {
+            typeIdEl.text(response.val);
+          }
+          if (callback !== undefined) {
+            callback();
+          }
+        } else {
+          alert("Failed:" + response.message + " Please retry!");
+          console.log(response);
         }
-        if (callback !== undefined) {
-          callback();
-        }
-      } else {
-        alert("Failed:" + response.message + " Please retry!");
-        console.log(response);
-      }
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please retry!");
-    }
-  });
+      },
+      function (response) {
+        console.log('failed, ' + response);
+        showError("Something went wrong! Please retry!");
+      });
 }
 
 $('#explore-queue').on('hidden.bs.modal', function () {
@@ -411,8 +404,8 @@ function getDstType() {
 $('#move-button').on("click", function () {
   let messageCount = $('#number-of-messages').val();
   let other = {};
-  let dstType = getSourceType();
-  let srcType = getDstType();
+  let dstType = getDstType();
+  let srcType = getSourceType();
   if (srcType === null) {
     alert("Source cannot be empty.");
     return;
@@ -437,16 +430,15 @@ $('#move-button').on("click", function () {
     } else if (type === 'ABS') {
       other['fixedScore'] = true;
     } else {
+      alert("You must select priority type");
       throw type;
     }
   }
   payload['other'] = other;
-  ajaxRequest(getAbsoluteUrl('rqueue/api/v1/move'), 'PUT', payload,
+  ajaxRequest(getAbsoluteUrl('rqueue/api/v1/move-data'), 'POST', payload,
       function (response) {
         if (response.code === 0) {
-          alert(
-              "Transferred " + response.numberOfMessageTransferred
-              + " messages");
+          alert("Message transfer success");
         } else {
           alert(response.message);
         }
@@ -480,24 +472,23 @@ function updateDeleteModal() {
 
 function deleteMessage() {
   let id = $($($($(this).parent()).parent()).children()[0]).text();
-  let url = getAbsoluteUrl(
-      'rqueue/api/v1/data-set/' + queueName + "/message/" + id);
-  $.ajax({
-    url: url,
-    type: 'DELETE',
-    success: function (response) {
-      if (response.code === 0) {
-        refreshPage();
-      } else {
-        alert("Failed:" + response.message + " Please retry!");
-        console.log(response);
-      }
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please reload!");
-    }
-  });
+  let payload = {
+    "queue": queueName,
+    "message_id": id,
+  }
+  ajaxRequest(getAbsoluteUrl('rqueue/api/v1/delete-message'), 'POST', payload,
+      function (response) {
+        if (response.code === 0) {
+          refreshPage();
+        } else {
+          alert("Failed:" + response.message + " Please retry!");
+          console.log(response);
+        }
+      },
+      function (response) {
+        console.log('failed, ' + response);
+        showError("Something went wrong! Please reload!");
+      });
 }
 
 function deleteAll() {
@@ -512,42 +503,38 @@ $('.delete-queue').on("click", function () {
 });
 
 function makeQueueEmpty() {
-  $.ajax({
-    url: getAbsoluteUrl("rqueue/api/v1/data-set/" + queueName + "/" + dataName),
-    type: 'DELETE',
-    success: function (response) {
-      if (response.code === 0) {
-        currentPage = 0;
-        refreshPage();
-      } else {
-        alert("Failed:" + response.message + " Please retry!");
-        console.log(response);
-      }
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please reload!");
-    }
-  });
+  ajaxRequest(getAbsoluteUrl("rqueue/api/v1/delete-queue-part"), "POST",
+      {'queue': queueName, 'data_set': dataName},
+      function (response) {
+        if (response.code === 0) {
+          currentPage = 0;
+          refreshPage();
+        } else {
+          alert("Failed:" + response.message + " Please retry!");
+          console.log(response);
+        }
+      },
+      function (response) {
+        console.log('failed, ' + response);
+        showError("Something went wrong! Please reload!");
+      });
 }
 
 function deleteQueue() {
-  $.ajax({
-    url: getAbsoluteUrl("rqueue/api/v1/queues/" + queueName),
-    type: 'DELETE',
-    success: function (response) {
-      if (response.code === 0) {
-        window.location.replace(window.location.href);
-      } else {
-        alert("Failed:" + response.message + " Please retry!");
-        console.log(response);
-      }
-    },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please reload!");
-    }
-  })
+  ajaxRequest(getAbsoluteUrl("rqueue/api/v1/delete-queue"), 'POST',
+      {'name': queueName},
+      function (response) {
+        if (response.code === 0) {
+          window.location.replace(window.location.href);
+        } else {
+          alert("Failed:" + response.message + " Please retry!");
+          console.log(response);
+        }
+      },
+      function (response) {
+        console.log('failed, ' + response);
+        showError("Something went wrong! Please reload!");
+      });
 }
 
 $('.delete-btn').on("click", function () {

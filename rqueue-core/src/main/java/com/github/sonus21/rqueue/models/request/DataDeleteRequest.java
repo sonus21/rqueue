@@ -14,17 +14,25 @@
  *
  */
 
-package com.github.sonus21.task.executor;
+package com.github.sonus21.rqueue.models.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.sonus21.rqueue.models.SerializableBase;
+import javax.validation.constraints.NotEmpty;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
-public class Invoice {
-
-  private String id;
-  private String type;
+@ToString
+@EqualsAndHashCode(callSuper = true)
+public class DataDeleteRequest extends SerializableBase {
+  @JsonProperty("queue")
+  @NotEmpty private String queueName;
+  @JsonProperty("data_set")
+  @NotEmpty private String datasetName;
 }

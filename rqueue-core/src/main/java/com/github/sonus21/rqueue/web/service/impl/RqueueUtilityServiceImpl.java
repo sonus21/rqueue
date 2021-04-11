@@ -199,7 +199,8 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public StringResponse getDataType(String name) {
-    return new StringResponse(DataType.convertDataType(rqueueStringDao.type(name)).name());
+    return new StringResponse(
+        DataType.convertDataType(rqueueStringDao.type(StringUtils.clean(name))).name());
   }
 
   @Override

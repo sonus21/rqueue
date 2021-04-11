@@ -4,7 +4,8 @@
 
 ### Fixes
 
-* Spring Boot App could not start due to class not found error
+* Spring Boot App could not start due to class not found error **Boot 2.0**
+* Utility UI message move not working due to invalid data type
 
 ### Added
 

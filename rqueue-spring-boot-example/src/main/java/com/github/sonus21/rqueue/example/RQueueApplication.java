@@ -22,15 +22,9 @@ import com.github.sonus21.rqueue.utils.Constants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
-@EnableRedisRepositories
-@EnableAsync
-@EnableCaching
 public class RQueueApplication {
   @Value("${workers.count:3}")
   private int workersCount;
@@ -48,10 +42,5 @@ public class RQueueApplication {
     simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
     return simpleRqueueListenerContainerFactory;
-  }
-
-  @Bean
-  public MessageListenerProfiler messageListenerProfiler() {
-    return new MessageListenerProfiler();
   }
 }
