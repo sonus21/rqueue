@@ -265,6 +265,9 @@ workflows:
       - integration_test:
           requires:
             - producer_only_test
+      - reactive_integration_test:
+          requires:
+            - integration_test
       - redis_custer_test:
           requires:
             - integration_test
