@@ -23,6 +23,14 @@ aliases:
       SPRING_DATA_VERSION: 2.0.6.RELEASE
       MICROMETER_VERSION: 1.1.0
 
+  reactive_environment: &reactive_environment
+    environment:
+      SPRING_BOOT_VERSION: 2.2.0.RELEASE
+      SPRING_VERSION: 5.2.0.RELEASE
+      SPRING_DATA_VERSION: 2.2.0.RELEASE
+      MICROMETER_VERSION: 1.3.2
+      RQUEUE_REACTIVE_ENABLED: "true"
+
 
   persist_to_workspace: &persist_to_workspace
     persist_to_workspace:
@@ -99,6 +107,10 @@ aliases:
   default_v0: &default_vo
     executor: rqueue-executor
     <<: *environment_v0
+
+  reactive: &reactive
+    executor: rqueue-executor
+    <<: *reactive_environment
 
 executors:
   rqueue-executor:
@@ -214,6 +226,10 @@ jobs:
 
   integration_test:
     <<: *default
+    <<: *integration_test_steps
+
+  reactive_integration_test:
+    <<: *reactive
     <<: *integration_test_steps
 
   integration_test_v0:
