@@ -18,29 +18,12 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
-import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.models.enums.AggregationType;
-import com.github.sonus21.rqueue.models.enums.ChartDataType;
-import com.github.sonus21.rqueue.models.enums.DataType;
-import com.github.sonus21.rqueue.models.enums.NavTab;
-import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.utils.ReactiveEnabled;
-import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
-import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
 import java.util.Locale;
-import java.util.Map.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -59,52 +42,22 @@ import reactor.core.publisher.Mono;
 public class ReactiveRqueueViewController {
 
   private final ViewResolver rqueueViewResolver;
-  private final RqueueConfig rqueueConfig;
+  private final RqueueViewControllerService rqueueViewControllerService;
   private final RqueueWebConfig rqueueWebConfig;
-  private final RqueueQDetailService rqueueQDetailService;
-  private final RqueueUtilityService rqueueUtilityService;
-  private final RqueueSystemManagerService rqueueSystemManagerService;
 
   @Autowired
   public ReactiveRqueueViewController(
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
-      RqueueQDetailService rqueueQDetailService,
-      RqueueUtilityService rqueueUtilityService,
-      RqueueSystemManagerService rqueueSystemManagerService,
+      RqueueViewControllerService rqueueViewControllerService,
       @Qualifier("reactiveRqueueViewResolver") ViewResolver rqueueViewResolver) {
     this.rqueueViewResolver = rqueueViewResolver;
-    this.rqueueConfig = rqueueConfig;
+    this.rqueueViewControllerService = rqueueViewControllerService;
     this.rqueueWebConfig = rqueueWebConfig;
-    this.rqueueQDetailService = rqueueQDetailService;
-    this.rqueueUtilityService = rqueueUtilityService;
-    this.rqueueSystemManagerService = rqueueSystemManagerService;
   }
 
-  private void addNavData(Model model, NavTab tab) {
-    for (NavTab navTab : NavTab.values()) {
-      String name = navTab.name().toLowerCase() + "Active";
-      model.addAttribute(name, tab == navTab);
-    }
-  }
-
-  private void addBasicDetails(Model model, ServerHttpRequest request) {
-    Pair<String, String> releaseAndVersion = rqueueUtilityService.getLatestVersion();
-    model.addAttribute("releaseLink", releaseAndVersion.getFirst());
-    model.addAttribute("latestVersion", releaseAndVersion.getSecond());
-    model.addAttribute(
-        "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-    model.addAttribute("timeInMilli", System.currentTimeMillis());
-    model.addAttribute("version", rqueueConfig.getLibVersion());
-    String xForwardedPrefix = request.getHeaders().getFirst("x-forwarded-prefix");
-    String prefix = "/";
-    if (!StringUtils.isEmpty(xForwardedPrefix)) {
-      if (xForwardedPrefix.endsWith("/")) {
-        xForwardedPrefix = xForwardedPrefix.substring(0, xForwardedPrefix.length() - 1);
-      }
-      prefix = xForwardedPrefix + prefix;
-    }
-    model.addAttribute("urlPrefix", prefix);
+  private String xForwardedPrefix(ServerHttpRequest request) {
+    return request.getHeaders().getFirst("x-forwarded-prefix");
   }
 
   @GetMapping
@@ -114,11 +67,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model, request);
-    addNavData(model, null);
-    model.addAttribute("title", "Rqueue Dashboard");
-    model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
-    model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
+    rqueueViewControllerService.index(model, xForwardedPrefix(request));
     return rqueueViewResolver.resolveViewName("index", Locale.ENGLISH);
   }
 
@@ -129,15 +78,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model, request);
-    addNavData(model, NavTab.QUEUES);
-    model.addAttribute("title", "Queues");
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
-    List<Entry<String, List<Entry<NavTab, RedisDataDetail>>>> queueNameConfigs =
-        new ArrayList<>(rqueueQDetailService.getQueueDataStructureDetails(queueConfigs).entrySet());
-    queueNameConfigs.sort(Entry.comparingByKey());
-    model.addAttribute("queues", queueConfigs);
-    model.addAttribute("queueConfigs", queueNameConfigs);
+    rqueueViewControllerService.queues(model, xForwardedPrefix(request));
     return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
   }
 
@@ -152,19 +93,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    QueueConfig queueConfig = rqueueSystemManagerService.getQueueConfig(queueName);
-    List<NavTab> queueActions = rqueueQDetailService.getNavTabs(queueConfig);
-    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetail =
-        rqueueQDetailService.getQueueDataStructureDetail(queueConfig);
-    addBasicDetails(model, request);
-    addNavData(model, NavTab.QUEUES);
-    model.addAttribute("title", "Queue: " + queueName);
-    model.addAttribute("queueName", queueName);
-    model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
-    model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
-    model.addAttribute("queueActions", queueActions);
-    model.addAttribute("queueRedisDataDetails", queueRedisDataDetail);
-    model.addAttribute("config", queueConfig);
+    rqueueViewControllerService.queueDetail(model, xForwardedPrefix(request), queueName);
     return rqueueViewResolver.resolveViewName("queue_detail", Locale.ENGLISH);
   }
 
@@ -175,12 +104,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model, request);
-    addNavData(model, NavTab.RUNNING);
-    model.addAttribute("title", "Running Tasks");
-    List<List<Object>> l = rqueueQDetailService.getRunningTasks();
-    model.addAttribute("tasks", l.subList(1, l.size()));
-    model.addAttribute("header", l.get(0));
+    rqueueViewControllerService.running(model, xForwardedPrefix(request));
     return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
   }
 
@@ -191,12 +115,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model, request);
-    addNavData(model, NavTab.SCHEDULED);
-    model.addAttribute("title", "Scheduled Tasks");
-    List<List<Object>> l = rqueueQDetailService.getScheduledTasks();
-    model.addAttribute("tasks", l.subList(1, l.size()));
-    model.addAttribute("header", l.get(0));
+    rqueueViewControllerService.scheduled(model, xForwardedPrefix(request));
     return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
   }
 
@@ -207,13 +126,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model, request);
-    addNavData(model, NavTab.DEAD);
-    model.addAttribute("title", "Tasks moved to dead letter queue");
-    List<List<Object>> l = rqueueQDetailService.getDeadLetterTasks();
-
-    model.addAttribute("tasks", l.subList(1, l.size()));
-    model.addAttribute("header", l.get(0));
+    rqueueViewControllerService.dead(model, xForwardedPrefix(request));
     return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
   }
 
@@ -224,12 +137,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model, request);
-    addNavData(model, NavTab.PENDING);
-    model.addAttribute("title", "Tasks waiting for execution");
-    List<List<Object>> l = rqueueQDetailService.getWaitingTasks();
-    model.addAttribute("tasks", l.subList(1, l.size()));
-    model.addAttribute("header", l.get(0));
+    rqueueViewControllerService.pending(model, xForwardedPrefix(request));
     return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
   }
 
@@ -240,10 +148,7 @@ public class ReactiveRqueueViewController {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;
     }
-    addBasicDetails(model, request);
-    addNavData(model, NavTab.UTILITY);
-    model.addAttribute("title", "Utility");
-    model.addAttribute("supportedDataType", DataType.getEnabledDataTypes());
+    rqueueViewControllerService.utility(model, xForwardedPrefix(request));
     return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);
   }
 }

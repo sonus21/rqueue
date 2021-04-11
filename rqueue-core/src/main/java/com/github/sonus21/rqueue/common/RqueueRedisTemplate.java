@@ -78,7 +78,7 @@ public class RqueueRedisTemplate<V extends Serializable> {
   }
 
   public boolean exist(String key) {
-    return redisTemplate.getExpire(key) != -2L;
+    return ttl(key) != -2;
   }
 
   public int ttl(String key) {
