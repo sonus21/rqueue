@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-## [2.7.0] - TBD
+## [2.7.0] - 13-Apr-2021
 
 ### Fixes
 
@@ -221,3 +221,5 @@ Fixes:
 [2.6.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.6.0-RELEASE
 
 [2.6.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.6.1-RELEASE
+
+[2.7.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.7.0-RELEASE
