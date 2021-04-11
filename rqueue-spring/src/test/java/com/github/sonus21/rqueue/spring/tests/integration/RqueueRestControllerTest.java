@@ -20,10 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
@@ -34,7 +32,12 @@ import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.TableColumnType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
+import com.github.sonus21.rqueue.models.request.DataDeleteRequest;
+import com.github.sonus21.rqueue.models.request.DataTypeRequest;
+import com.github.sonus21.rqueue.models.request.DateViewRequest;
+import com.github.sonus21.rqueue.models.request.MessageDeleteRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
@@ -44,8 +47,8 @@ import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
-import com.github.sonus21.rqueue.spring.app.SpringApp.DeleteMessageListener;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
+import com.github.sonus21.rqueue.test.DeleteMessageListener;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
@@ -136,13 +139,17 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   void exploreDataList() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    QueueExploreRequest request = new QueueExploreRequest();
+    request.setType(DataType.LIST);
+    request.setSrc(emailQueue);
+    request.setName(emailDeadLetterQueue);
+
     MvcResult result =
         this.mockMvc
             .perform(
-                get("/rqueue/api/v1/explore")
-                    .param("type", "LIST")
-                    .param("src", emailQueue)
-                    .param("name", emailDeadLetterQueue))
+                post("/rqueue/api/v1/queue-data")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andReturn();
 
     DataViewResponse dataViewResponse =
@@ -164,13 +171,17 @@ class RqueueRestControllerTest extends SpringWebTestBase {
       enqueueIn(
           emailQueue, Email.newInstance(), Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
     }
+    QueueExploreRequest request = new QueueExploreRequest();
+    request.setType(DataType.ZSET);
+    request.setSrc(emailQueue);
+    request.setName(rqueueConfig.getDelayedQueueName(emailQueue));
+
     MvcResult result =
         this.mockMvc
             .perform(
-                get("/rqueue/api/v1/explore")
-                    .param("type", "ZSET")
-                    .param("src", emailQueue)
-                    .param("name", rqueueConfig.getDelayedQueueName(emailQueue)))
+                post("/rqueue/api/v1/queue-data")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andReturn();
 
     DataViewResponse dataViewResponse =
@@ -189,13 +200,17 @@ class RqueueRestControllerTest extends SpringWebTestBase {
       enqueueIn(
           Email.newInstance(), processingSet, Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
     }
+    QueueExploreRequest request = new QueueExploreRequest();
+    request.setType(DataType.ZSET);
+    request.setSrc(emailQueue);
+    request.setName(processingSet);
+
     MvcResult result =
         this.mockMvc
             .perform(
-                get("/rqueue/api/v1/explore")
-                    .param("type", "ZSET")
-                    .param("src", emailQueue)
-                    .param("name", processingSet))
+                post("/rqueue/api/v1/queue-data")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andReturn();
 
     DataViewResponse dataViewResponse =
@@ -210,9 +225,15 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   void deleteDataSet() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    DataDeleteRequest request = new DataDeleteRequest();
+    request.setQueueName(emailQueue);
+    request.setDatasetName(emailDeadLetterQueue);
     MvcResult result =
         this.mockMvc
-            .perform(delete("/rqueue/api/v1/data-set/" + emailQueue + "/" + emailDeadLetterQueue))
+            .perform(
+                post("/rqueue/api/v1/delete-queue-part")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andReturn();
     BooleanResponse booleanResponse =
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
@@ -227,9 +248,14 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   void dataType() throws Exception {
     enqueue(Email.newInstance(), emailDeadLetterQueue);
+    DataTypeRequest request = new DataTypeRequest();
+    request.setName(emailDeadLetterQueue);
     MvcResult result =
         this.mockMvc
-            .perform(get("/rqueue/api/v1/data-type").param("name", emailDeadLetterQueue))
+            .perform(
+                post("/rqueue/api/v1/data-type")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andReturn();
     StringResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), StringResponse.class);
@@ -246,9 +272,9 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     MvcResult result =
         this.mockMvc
             .perform(
-                put("/rqueue/api/v1/move")
+                post("/rqueue/api/v1/move-data")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request)))
+                    .content(mapper.writeValueAsBytes(request)))
             .andReturn();
     MessageMoveResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), MessageMoveResponse.class);
@@ -261,12 +287,14 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   @Test
   void viewData() throws Exception {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    DateViewRequest dateViewRequest = new DateViewRequest();
+    dateViewRequest.setName(emailDeadLetterQueue);
+    dateViewRequest.setType(DataType.LIST);
     MvcResult result =
         this.mockMvc
             .perform(
-                get("/rqueue/api/v1/data")
-                    .param("name", emailDeadLetterQueue)
-                    .param("type", DataType.LIST.name())
+                post("/rqueue/api/v1/view-data")
+                    .content(mapper.writeValueAsBytes(dateViewRequest))
                     .contentType(MediaType.APPLICATION_JSON))
             .andReturn();
     DataViewResponse dataViewResponse =
@@ -281,10 +309,15 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     for (int i = 0; i < 30; i++) {
       enqueue(jobQueue, Job.newInstance());
     }
+    DataTypeRequest request = new DataTypeRequest();
+    request.setName(jobQueue);
+    System.out.println(new String(mapper.writeValueAsBytes(request)));
     MvcResult result =
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/queues/" + jobQueue).contentType(MediaType.APPLICATION_JSON))
+                post("/rqueue/api/v1/delete-queue")
+                    .content(mapper.writeValueAsBytes(request))
+                    .contentType(MediaType.APPLICATION_JSON))
             .andReturn();
     BaseResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), BaseResponse.class);
@@ -301,10 +334,14 @@ class RqueueRestControllerTest extends SpringWebTestBase {
         rqueueMessageTemplate
             .readFromZset(rqueueConfig.getDelayedQueueName(emailQueue), 0, -1)
             .get(0);
+    MessageDeleteRequest request = new MessageDeleteRequest();
+    request.setMessageId(message.getId());
+    request.setQueueName(emailQueue);
     MvcResult result =
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/data-set/" + emailQueue + "/message/" + message.getId())
+                post("/rqueue/api/v1/delete-message")
+                    .content(mapper.writeValueAsBytes(request))
                     .contentType(MediaType.APPLICATION_JSON))
             .andReturn();
     BooleanResponse response =

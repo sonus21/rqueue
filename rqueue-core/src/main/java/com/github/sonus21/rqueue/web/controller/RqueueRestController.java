@@ -49,7 +49,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController()
 @RequestMapping("rqueue/api/v1")
@@ -80,36 +79,36 @@ public class RqueueRestController {
 
   @PostMapping("chart")
   @ResponseBody
-  public Mono<ChartDataResponse> getDashboardData(
+  public ChartDataResponse getDashboardData(
       @RequestBody @Valid ChartDataRequest chartDataRequest, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueDashboardChartService.getReactiveDashBoardData(chartDataRequest);
+    return rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
   }
 
   @GetMapping("jobs")
   @ResponseBody
-  public Mono<DataViewResponse> getJobs(
+  public DataViewResponse getJobs(
       @RequestParam(name = "message-id") @NotEmpty String messageId, HttpServletResponse response)
       throws ProcessingException {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueJobService.getReactiveJobs(messageId);
+    return rqueueJobService.getJobs(messageId);
   }
 
   @PostMapping("queue-data")
   @ResponseBody
-  public Mono<DataViewResponse> exploreQueue(
+  public DataViewResponse exploreQueue(
       @Valid @RequestBody QueueExploreRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueQDetailService.getReactiveExplorePageData(
+    return rqueueQDetailService.getExplorePageData(
         request.getSrc(),
         request.getName(),
         request.getType(),
@@ -119,13 +118,13 @@ public class RqueueRestController {
 
   @PostMapping("view-data")
   @ResponseBody
-  public Mono<DataViewResponse> viewData(
+  public DataViewResponse viewData(
       @RequestBody @Valid DateViewRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueQDetailService.viewReactiveData(
+    return rqueueQDetailService.viewData(
         request.getName(),
         request.getType(),
         request.getKey(),

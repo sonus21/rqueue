@@ -18,17 +18,20 @@ package com.github.sonus21.rqueue.spring.tests.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
+import com.github.sonus21.rqueue.models.request.DataDeleteRequest;
+import com.github.sonus21.rqueue.models.request.DataTypeRequest;
+import com.github.sonus21.rqueue.models.request.DateViewRequest;
+import com.github.sonus21.rqueue.models.request.MessageDeleteRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
@@ -154,14 +157,17 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
 
   @Test
   void exploreData() throws Exception {
+    QueueExploreRequest request = new QueueExploreRequest();
+    request.setType(DataType.LIST);
+    request.setSrc(emailQueue);
+    request.setName(emailDeadLetterQueue);
     assertEquals(
         "",
         this.mockMvc
             .perform(
-                get("/rqueue/api/v1/explore")
-                    .param("type", "LIST")
-                    .param("src", emailQueue)
-                    .param("name", emailDeadLetterQueue))
+                post("/rqueue/api/v1/queue-data")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -170,10 +176,16 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
 
   @Test
   void deleteDataSet() throws Exception {
+    DataDeleteRequest request = new DataDeleteRequest();
+    request.setQueueName(emailQueue);
+    request.setDatasetName(emailDeadLetterQueue);
     assertEquals(
         "",
         this.mockMvc
-            .perform(delete("/rqueue/api/v1/data-set/" + emailQueue + "/" + emailDeadLetterQueue))
+            .perform(
+                post("/rqueue/api/v1/delete-queue-part")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -182,10 +194,15 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
 
   @Test
   void dataType() throws Exception {
+    DataTypeRequest request = new DataTypeRequest();
+    request.setName(emailDeadLetterQueue);
     assertEquals(
         "",
         this.mockMvc
-            .perform(get("/rqueue/api/v1/data-type").param("name", emailDeadLetterQueue))
+            .perform(
+                post("/rqueue/api/v1/data-type")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -196,12 +213,11 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
   void moveMessage() throws Exception {
     MessageMoveRequest request =
         new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
-
     assertEquals(
         "",
         this.mockMvc
             .perform(
-                put("/rqueue/api/v1/move")
+                post("/rqueue/api/v1/move-data")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(mapper.writeValueAsString(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
@@ -212,13 +228,15 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
 
   @Test
   void viewData() throws Exception {
+    DateViewRequest dateViewRequest = new DateViewRequest();
+    dateViewRequest.setName(emailDeadLetterQueue);
+    dateViewRequest.setType(DataType.LIST);
     assertEquals(
         "",
         this.mockMvc
             .perform(
-                get("/rqueue/api/v1/data")
-                    .param("name", emailDeadLetterQueue)
-                    .param("type", DataType.LIST.name())
+                post("/rqueue/api/v1/view-data")
+                    .content(mapper.writeValueAsBytes(dateViewRequest))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
@@ -228,11 +246,15 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
 
   @Test
   void deleteQueue() throws Exception {
+    DataTypeRequest request = new DataTypeRequest();
+    request.setName(jobQueue);
     assertEquals(
         "",
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/queues/" + jobQueue).contentType(MediaType.APPLICATION_JSON))
+                post("/rqueue/api/v1/delete-queue")
+                    .content(mapper.writeValueAsBytes(request))
+                    .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -242,11 +264,15 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
   @Test
   void deleteMessage() throws Exception {
     Job job = Job.newInstance();
+    MessageDeleteRequest request = new MessageDeleteRequest();
+    request.setMessageId(job.getId());
+    request.setQueueName(emailQueue);
     assertEquals(
         "",
         this.mockMvc
             .perform(
-                delete("/rqueue/api/v1/data-set/" + jobQueue + "/" + job.getId())
+                post("/rqueue/api/v1/delete-message")
+                    .content(mapper.writeValueAsBytes(request))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
