@@ -18,8 +18,11 @@ package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
+import reactor.core.publisher.Mono;
 
 public interface RqueueJobService {
 
   DataViewResponse getJobs(String messageId) throws ProcessingException;
+
+  Mono<DataViewResponse> getReactiveJobs(String messageId) throws ProcessingException;
 }

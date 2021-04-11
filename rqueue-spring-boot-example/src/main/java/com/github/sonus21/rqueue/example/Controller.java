@@ -21,7 +21,6 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class Controller {
 
   private final RqueueMessageSender rqueueMessageSender;
-  private final RedisTemplate<String, String> redisTemplate;
 
   @GetMapping(value = "/push")
   public String push(

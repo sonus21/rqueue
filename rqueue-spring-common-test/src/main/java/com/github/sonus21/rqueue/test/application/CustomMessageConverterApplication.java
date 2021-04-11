@@ -21,7 +21,6 @@ import java.util.Collections;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -45,10 +44,14 @@ public abstract class CustomMessageConverterApplication extends ApplicationBasic
 
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
-      RedisConnectionFactory redisConnectionFactory) {
+      LettuceConnectionFactory redisConnectionFactory) {
     SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
         new SimpleRqueueListenerContainerFactory();
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(redisConnectionFactory);
+    if (reactiveEnabled) {
+      simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
+          redisConnectionFactory);
+    }
     simpleRqueueListenerContainerFactory.setMessageConverters(
         Collections.singletonList(new MappingJackson2MessageConverter()));
     MessageHeaders messageHeaders =

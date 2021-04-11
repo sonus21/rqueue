@@ -51,7 +51,7 @@ import org.springframework.messaging.converter.MessageConverter;
 @CoreUnitTest
 class JobImplTest extends TestBase {
   private final RqueueConfig rqueueConfig =
-      new RqueueConfig(mock(RedisConnectionFactory.class), true, 2);
+      new RqueueConfig(mock(RedisConnectionFactory.class), null, true, 2);
   private final RqueueMessageMetadataService messageMetadataService =
       mock(RqueueMessageMetadataService.class);
   private final RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);
@@ -68,7 +68,10 @@ class JobImplTest extends TestBase {
     FieldUtils.writeField(rqueueConfig, "jobEnabled", true, true);
     FieldUtils.writeField(rqueueConfig, "prefix", "__rq::", true);
     FieldUtils.writeField(rqueueConfig, "jobKeyPrefix", "job::", true);
-    FieldUtils.writeField(rqueueConfig, "jobsKeyPrefix", "jobs::", true);
+    FieldUtils.writeField(rqueueConfig, "jobsCollectionNamePrefix", "jobs::", true);
+    FieldUtils.writeField(rqueueConfig, "messageDurabilityInTerminalStateInSecond", 900, true);
+    FieldUtils.writeField(rqueueConfig, "messageDurabilityInMinute", 10080, true);
+    FieldUtils.writeField(rqueueConfig, "jobDurabilityInTerminalStateInSecond", 10080, true);
   }
 
   @Test

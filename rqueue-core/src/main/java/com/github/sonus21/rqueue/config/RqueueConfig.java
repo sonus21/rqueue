@@ -19,7 +19,13 @@ package com.github.sonus21.rqueue.config;
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import com.google.common.io.CharStreams;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Proxy;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
@@ -27,6 +33,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @Getter
@@ -34,14 +42,18 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @RequiredArgsConstructor
 @Configuration
 public class RqueueConfig {
+
   private final RedisConnectionFactory connectionFactory;
+  private final ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
   private static final String brokerId = UUID.randomUUID().toString();
   private static final AtomicLong counter = new AtomicLong(1);
 
-  @Value("${rqueue.version:2.1.0}")
-  private String version;
+  @Value("${rqueue.reactive.enabled:false}")
+  private boolean reactiveEnabled;
+
+  private String version = "";
 
   @Value("${rqueue.latest.version.check.enabled:true}")
   private boolean latestVersionCheckEnabled;
@@ -55,11 +67,15 @@ public class RqueueConfig {
   @Value("${rqueue.job.enabled:true}")
   private boolean jobEnabled;
 
+  // 30 minutes
+  @Value("${rqueue.job.durability.in-terminal-state:1800}")
+  private long jobDurabilityInTerminalStateInSecond;
+
   @Value("${rqueue.job.key.prefix:job::}")
   private String jobKeyPrefix;
 
-  @Value("${rqueue.jobs.key.prefix:jobs::}")
-  private String jobsKeyPrefix;
+  @Value("${rqueue.jobs.collection.name.prefix:jobs::}")
+  private String jobsCollectionNamePrefix;
 
   @Value("${rqueue.cluster.mode:true}")
   private boolean clusterMode;
@@ -233,7 +249,7 @@ public class RqueueConfig {
   }
 
   public String getJobsKey(String messageId) {
-    return prefix + jobsKeyPrefix + messageId;
+    return prefix + jobsCollectionNamePrefix + messageId;
   }
 
   public String getDelDataName() {
@@ -244,7 +260,32 @@ public class RqueueConfig {
         + counter.incrementAndGet();
   }
 
+  public Duration getJobDurabilityInTerminalState() {
+    return Duration.ofSeconds(jobDurabilityInTerminalStateInSecond);
+  }
+
   public static String getBrokerId() {
     return brokerId;
+  }
+
+  public String getLibVersion() {
+    if (StringUtils.isEmpty(version)) {
+      ClassPathResource resource =
+          new ClassPathResource("META-INF/RQUEUE.MF", this.getClass().getClassLoader());
+      try {
+        InputStream inputStream = resource.getInputStream();
+        String result =
+            CharStreams.toString(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        for (String line : result.split("\n")) {
+          String[] words = line.trim().split(":");
+          if (2 == words.length && words[0].equals("Version")) {
+            version = words[1].split("-")[0];
+          }
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    return version;
   }
 }

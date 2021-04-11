@@ -51,7 +51,7 @@ public class ApplicationWithCustomConfiguration extends BaseApplication {
   @Bean
   public RqueueMessageTemplate rqueueMessageTemplate(
       RedisConnectionFactory redisConnectionFactory) {
-    return new RqueueMessageTemplateImpl(redisConnectionFactory);
+    return new RqueueMessageTemplateImpl(redisConnectionFactory, null);
   }
 
   @Bean

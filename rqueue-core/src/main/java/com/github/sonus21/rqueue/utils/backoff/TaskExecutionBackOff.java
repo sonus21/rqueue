@@ -28,12 +28,13 @@ public interface TaskExecutionBackOff {
 
   /**
    * Return the number of milliseconds to wait for the same message to be consumed by other
-   * consumers. ({@value #STOP}) to indicate that no further enqueue should be made for the message.
+   * consumers. ({@value #STOP}) to indicate that no further enqueue should be made for the
+   * message.
    *
-   * @param object message that's fetched
+   * @param message       message that's fetched
    * @param rqueueMessage raw message
-   * @param failureCount number of times this message has failed.
+   * @param failureCount  number of times this message has failed.
    * @return backoff in the millisecond.
    */
-  long nextBackOff(Object object, RqueueMessage rqueueMessage, int failureCount);
+  long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount);
 }

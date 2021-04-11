@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.models.response.BaseResponse;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.context.ApplicationListener;
+import reactor.core.publisher.Mono;
 
 public interface RqueueSystemManagerService extends ApplicationListener<RqueueBootstrapEvent> {
   BaseResponse deleteQueue(String queueName);
@@ -35,4 +36,6 @@ public interface RqueueSystemManagerService extends ApplicationListener<RqueueBo
   List<QueueConfig> getSortedQueueConfigs();
 
   QueueConfig getQueueConfig(String queueName);
+
+  Mono<BaseResponse> deleteReactiveQueue(String queueName);
 }

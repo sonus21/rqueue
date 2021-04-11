@@ -41,6 +41,7 @@ services code is in Spring.
 * **Long execution job**: Long running jobs can check in periodically.
 * **Middleware**:  Add one or more middleware, middlewares are called before listener method.
 * **Message Multicasting**: Call multiple message listeners on very message
+* **Reactive Programming**: Supports reactive Redis and spring webflux
 
 ## Getting Started
 
@@ -244,8 +245,17 @@ PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueu
 ## Contribution
 
 You are most welcome for any pull requests for any feature/bug/enhancement. You would need Java8 and
-gradle to start with.
+gradle to start with. In root `build.gradle` file comment out spring related versions, or set
+environment variables for Spring versions.
+
 **Please format your code with Google Java formatter.**
+
+```bash
+//    springBootVersion = '2.2.0.RELEASE'
+//    springVersion = '5.2.0.RELEASE'
+//    springDataVersion = '2.2.0.RELEASE'
+//    microMeterVersion = '1.3.2'
+```
 
 ## Links
 
@@ -260,6 +270,7 @@ gradle to start with.
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
 
 * StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
+* Discord: https://discord.gg/2hgQZXS2
 * Project
   Progress: [https://github.com/sonus21/rqueue/projects/3](https://github.com/sonus21/rqueue/projects/3)
 

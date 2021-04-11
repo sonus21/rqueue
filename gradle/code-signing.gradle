@@ -14,9 +14,9 @@ artifacts {
     archives javadocJar
 }
 
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT") && !"rqueue".equals(System.getenv("USER_NAME"))
+ext.isNotCi = !"true".equals(System.getenv("CI"))
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+    required { isNotCi && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
 }
 
@@ -132,5 +132,5 @@ model {
 }
 
 tasks.withType(Sign) {
-    onlyIf { isReleaseVersion }
+    onlyIf { isNotCi }
 }

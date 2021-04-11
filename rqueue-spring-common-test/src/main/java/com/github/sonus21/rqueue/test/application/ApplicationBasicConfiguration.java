@@ -51,6 +51,9 @@ public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBas
   @Value("${monitor.enabled:false}")
   protected boolean monitoringEnabled;
 
+  @Value("${rqueue.reactive.enabled:false}")
+  protected boolean reactiveEnabled;
+
   protected void init() {
     final BootstrapRedis bootstrapRedis =
         Javanna.createAnnotation(

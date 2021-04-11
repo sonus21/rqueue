@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
 
 @Service
 public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerService {
@@ -198,5 +199,10 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
       return null;
     }
     return queueConfigs.get(0);
+  }
+
+  @Override
+  public Mono<BaseResponse> deleteReactiveQueue(String queueName) {
+    return Mono.just(deleteQueue(queueName));
   }
 }

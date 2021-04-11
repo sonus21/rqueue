@@ -82,14 +82,20 @@ public class JobImpl implements Job {
   }
 
   private void save() {
-    if (rqueueConfig.isJobEnabled()) {
-      if (!isPeriodicJob) {
-        try {
+    if (rqueueConfig.isJobEnabled() && !isPeriodicJob) {
+      Duration ttl = expiry;
+      if (getMessageMetadata().getStatus().isTerminalState()) {
+        ttl = rqueueConfig.getJobDurabilityInTerminalState();
+      }
+      try {
+        if (ttl.isNegative() || ttl.isZero()) {
+          rqueueJobDao.delete(rqueueJob.getId());
+        } else {
           rqueueJob.setUpdatedAt(System.currentTimeMillis());
-          rqueueJobDao.save(rqueueJob, expiry);
-        } catch (RedisSystemException e) {
-          // No op
+          rqueueJobDao.save(rqueueJob, ttl);
         }
+      } catch (RedisSystemException e) {
+        // No op
       }
     }
   }
@@ -242,14 +248,22 @@ public class JobImpl implements Job {
 
   void updateMessageStatus(MessageStatus messageStatus) {
     Duration messageMetaExpiry;
+    boolean deleteMessage = false;
     if (messageStatus.isTerminalState()) {
       messageMetaExpiry =
           Duration.ofSeconds(rqueueConfig.getMessageDurabilityInTerminalStateInSecond());
+      if (messageMetaExpiry.isZero() || messageMetaExpiry.isNegative()) {
+        deleteMessage = true;
+      }
     } else {
       messageMetaExpiry = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
     }
     setMessageStatus(messageStatus);
-    this.messageMetadataService.save(rqueueJob.getMessageMetadata(), messageMetaExpiry);
+    if (deleteMessage) {
+      this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
+    } else {
+      this.messageMetadataService.save(rqueueJob.getMessageMetadata(), messageMetaExpiry);
+    }
     save();
   }
 

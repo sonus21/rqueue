@@ -26,11 +26,13 @@ import com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
 import io.micrometer.core.instrument.Tags;
 import java.util.Collections;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
 
 @SpringBootUnitTest
+@Slf4j
 class RqueueMetricsAutoConfigTest extends TestBase {
 
   @Test
@@ -60,6 +62,12 @@ class RqueueMetricsAutoConfigTest extends TestBase {
   void rqueueMetricsRegistryMergedTags() throws IllegalAccessException {
     RqueueMetricsAutoConfig rqueueMetricsAutoConfig = new RqueueMetricsAutoConfig();
     MetricsProperties metricsProperties = new MetricsProperties();
+    try {
+      MetricsProperties.class.getMethod("getTags");
+    } catch (Exception e) {
+      log.info("This test is not applicable");
+      return;
+    }
     RqueueMetricsProperties rqueueMetricsProperties = new RqueueMetricsProperties();
     rqueueMetricsProperties.setTags(Collections.singletonMap("dc", "test"));
     FieldUtils.writeField(

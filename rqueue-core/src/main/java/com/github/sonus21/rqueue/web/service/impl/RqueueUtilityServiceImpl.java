@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
@@ -198,6 +199,27 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public StringResponse getDataType(String name) {
-    return new StringResponse(DataType.convertDataType(rqueueStringDao.type(name)).name());
+    return new StringResponse(
+        DataType.convertDataType(rqueueStringDao.type(StringUtils.clean(name))).name());
+  }
+
+  @Override
+  public Mono<BooleanResponse> makeEmptyReactive(String queueName, String datasetName) {
+    return Mono.just(makeEmpty(queueName, datasetName));
+  }
+
+  @Override
+  public Mono<BooleanResponse> deleteReactiveMessage(String queueName, String messageId) {
+    return Mono.just(deleteMessage(queueName, messageId));
+  }
+
+  @Override
+  public Mono<StringResponse> getReactiveDataType(String name) {
+    return Mono.just(getDataType(name));
+  }
+
+  @Override
+  public Mono<MessageMoveResponse> moveReactiveMessage(MessageMoveRequest request) {
+    return Mono.just(moveMessage(request));
   }
 }

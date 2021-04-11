@@ -18,11 +18,13 @@ package com.github.sonus21.rqueue.spring;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueListenerBaseConfig;
+import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
@@ -34,6 +36,7 @@ import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsRegistry;
+import com.github.sonus21.rqueue.utils.ReactiveEnabled;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Conditional;
@@ -106,5 +109,15 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   @Conditional(MetricsEnabled.class)
   public RqueueMetricsCounter rqueueMetricsCounter(RqueueMetricsRegistry rqueueMetricsRegistry) {
     return new RqueueCounter(rqueueMetricsRegistry.getQueueCounter());
+  }
+
+  @Bean
+  @Conditional(ReactiveEnabled.class)
+  public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
+      RqueueMessageTemplate rqueueMessageTemplate) {
+    return new ReactiveRqueueMessageEnqueuerImpl(
+        rqueueMessageTemplate,
+        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        simpleRqueueListenerContainerFactory.getMessageHeaders());
   }
 }

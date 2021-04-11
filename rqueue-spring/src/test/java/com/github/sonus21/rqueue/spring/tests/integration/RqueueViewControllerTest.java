@@ -30,6 +30,7 @@ import com.mitchellbosecke.pebble.spring.servlet.PebbleView;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -48,6 +49,7 @@ import org.springframework.ui.ModelMap;
       "rqueue.web.statistic.history.day=180",
     })
 @SpringIntegrationTest
+@DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class RqueueViewControllerTest extends SpringWebTestBase {
   private void verifyBasicData(ModelMap model, NavTab navTab) {
     assertNotNull(model.get("latestVersion"));

@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import reactor.core.publisher.Mono;
 
 public interface RqueueMessageMetadataDao {
 
@@ -32,4 +33,6 @@ public interface RqueueMessageMetadataDao {
   void delete(String id);
 
   void deleteAll(Collection<String> ids);
+
+  Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration);
 }

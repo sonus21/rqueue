@@ -94,6 +94,7 @@ class RqueueExecutorTest extends TestBase {
         RqueueMessageUtils.buildMessage(
             messageConverter,
             queueName,
+            null,
             payload,
             null,
             null,

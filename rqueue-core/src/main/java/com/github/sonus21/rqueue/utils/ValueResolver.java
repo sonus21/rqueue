@@ -108,7 +108,7 @@ public final class ValueResolver {
     if (result instanceof String[]) {
       values = (String[]) result;
     } else {
-      values = ((String) result).split(",");
+      values = ((String) result).split(Constants.Comma);
     }
     String[] cleanedStrings = new String[values.length];
     for (int i = 0; i < values.length; i++) {

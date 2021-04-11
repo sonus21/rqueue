@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import org.springframework.data.util.Pair;
+import reactor.core.publisher.Mono;
 
 public interface RqueueUtilityService {
 
@@ -33,4 +34,12 @@ public interface RqueueUtilityService {
   Pair<String, String> getLatestVersion();
 
   StringResponse getDataType(String name);
+
+  Mono<BooleanResponse> makeEmptyReactive(String queueName, String datasetName);
+
+  Mono<BooleanResponse> deleteReactiveMessage(String queueName, String messageId);
+
+  Mono<StringResponse> getReactiveDataType(String name);
+
+  Mono<MessageMoveResponse> moveReactiveMessage(MessageMoveRequest request);
 }

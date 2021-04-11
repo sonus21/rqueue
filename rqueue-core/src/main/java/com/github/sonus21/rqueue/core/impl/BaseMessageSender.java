@@ -64,7 +64,8 @@ abstract class BaseMessageSender {
     this.messageHeaders = messageHeaders;
   }
 
-  protected void storeMessageMetadata(RqueueMessage rqueueMessage, Long delayInMillis) {
+  protected Object storeMessageMetadata(
+      RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive) {
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration;
     if (delayInMillis != null) {
@@ -76,34 +77,39 @@ abstract class BaseMessageSender {
     } else {
       duration = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
     }
-    rqueueMessageMetadataService.save(messageMetadata, duration);
-  }
-
-  private RqueueMessage constructMessage(
-      String queueName,
-      String messageId,
-      Object message,
-      Integer retryCount,
-      Long delayInMilliSecs) {
-    RqueueMessage rqueueMessage =
-        buildMessage(
-            messageConverter, queueName, message, retryCount, delayInMilliSecs, messageHeaders);
-    if (messageId != null) {
-      rqueueMessage.setId(messageId);
-    }
-    return rqueueMessage;
-  }
-
-  protected void enqueue(
-      QueueDetail queueDetail, RqueueMessage rqueueMessage, Long delayInMilliSecs) {
-    if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
-      messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
+    if (reactive) {
+      return rqueueMessageMetadataService.saveReactive(messageMetadata, duration);
     } else {
-      messageTemplate.addMessageWithDelay(
-          queueDetail.getDelayedQueueName(),
-          queueDetail.getDelayedQueueChannelName(),
-          rqueueMessage);
+      rqueueMessageMetadataService.save(messageMetadata, duration);
     }
+    return null;
+  }
+
+  protected Object enqueue(
+      QueueDetail queueDetail,
+      RqueueMessage rqueueMessage,
+      Long delayInMilliSecs,
+      boolean reactive) {
+    if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
+      if (reactive) {
+        return messageTemplate.addReactiveMessage(queueDetail.getQueueName(), rqueueMessage);
+      } else {
+        messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
+      }
+    } else {
+      if (reactive) {
+        return messageTemplate.addReactiveMessageWithDelay(
+            queueDetail.getDelayedQueueName(),
+            queueDetail.getDelayedQueueChannelName(),
+            rqueueMessage);
+      } else {
+        messageTemplate.addMessageWithDelay(
+            queueDetail.getDelayedQueueName(),
+            queueDetail.getDelayedQueueChannelName(),
+            rqueueMessage);
+      }
+    }
+    return null;
   }
 
   protected String pushMessage(
@@ -114,10 +120,17 @@ abstract class BaseMessageSender {
       Long delayInMilliSecs) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
-        constructMessage(queueName, messageId, message, retryCount, delayInMilliSecs);
+        buildMessage(
+            messageConverter,
+            queueName,
+            messageId,
+            message,
+            retryCount,
+            delayInMilliSecs,
+            messageHeaders);
     try {
-      enqueue(queueDetail, rqueueMessage, delayInMilliSecs);
-      storeMessageMetadata(rqueueMessage, delayInMilliSecs);
+      enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
+      storeMessageMetadata(rqueueMessage, delayInMilliSecs, false);
     } catch (Exception e) {
       log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
       return null;
@@ -130,13 +143,16 @@ abstract class BaseMessageSender {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
         buildPeriodicMessage(
-            messageConverter, queueName, message, periodInMilliSeconds, messageHeaders);
-    if (messageId != null) {
-      rqueueMessage.setId(messageId);
-    }
+            messageConverter,
+            queueName,
+            messageId,
+            message,
+            null,
+            periodInMilliSeconds,
+            messageHeaders);
     try {
-      enqueue(queueDetail, rqueueMessage, periodInMilliSeconds);
-      storeMessageMetadata(rqueueMessage, periodInMilliSeconds);
+      enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);
+      storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false);
     } catch (Exception e) {
       log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
       return null;

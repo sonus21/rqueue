@@ -4,5 +4,5 @@ dependencies {
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
     compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
-
+    compile 'io.projectreactor:reactor-test:3.2.5.RELEASE'
 }

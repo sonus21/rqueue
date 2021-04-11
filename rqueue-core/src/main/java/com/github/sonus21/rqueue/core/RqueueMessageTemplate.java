@@ -20,6 +20,8 @@ import com.github.sonus21.rqueue.models.MessageMoveResult;
 import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Rqueue message template is used to send messages
@@ -79,4 +81,9 @@ public interface RqueueMessageTemplate {
   boolean renameCollections(List<String> srcNames, List<String> tgtNames);
 
   void deleteCollection(String name);
+
+  Mono<Long> addReactiveMessage(String queueName, RqueueMessage rqueueMessage);
+
+  Flux<Long> addReactiveMessageWithDelay(
+      String delayedQueueName, String delayedQueueChannelName, RqueueMessage rqueueMessage);
 }

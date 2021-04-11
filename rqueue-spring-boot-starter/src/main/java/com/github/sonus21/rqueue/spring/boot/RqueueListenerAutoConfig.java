@@ -18,22 +18,26 @@ package com.github.sonus21.rqueue.spring.boot;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueListenerBaseConfig;
+import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.utils.ReactiveEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 
@@ -94,6 +98,17 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @ConditionalOnMissingBean
   public RqueueMessageEnqueuer rqueueMessageEnqueuer(RqueueMessageTemplate rqueueMessageTemplate) {
     return new RqueueMessageEnqueuerImpl(
+        rqueueMessageTemplate,
+        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        simpleRqueueListenerContainerFactory.getMessageHeaders());
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  @Conditional(ReactiveEnabled.class)
+  public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
+      RqueueMessageTemplate rqueueMessageTemplate) {
+    return new ReactiveRqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
         simpleRqueueListenerContainerFactory.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders());

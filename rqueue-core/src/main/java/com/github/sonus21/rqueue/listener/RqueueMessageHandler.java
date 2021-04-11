@@ -38,11 +38,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -448,6 +451,39 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return ValueResolver.resolveToBoolean(getApplicationContext(), rqueueListener.active());
   }
 
+  private void checkInvalidQueueName(Set<String> queueNames) {
+    List<String> invalidNames = new LinkedList<>();
+    Character[] invalidChars =
+        new Character[] {
+          '{', '}', ' ', '<', '>',
+        };
+    for (String queue : queueNames) {
+      for (int i = 0; i < queue.length(); i++) {
+        for (char invalidChar : invalidChars) {
+          if (queue.charAt(i) == invalidChar) {
+            invalidNames.add(queue);
+            break;
+          }
+        }
+      }
+    }
+    if (!invalidNames.isEmpty()) {
+      String invalidCharsStr =
+          Stream.of(invalidChars)
+              .map(e -> String.format("'%c'", e))
+              .collect(Collectors.joining(Constants.Comma));
+      String queueNamesStr =
+          invalidNames.stream()
+              .map(e -> String.format("'%s'", e))
+              .collect(Collectors.joining(Constants.Comma));
+      String message =
+          String.format(
+              "Queue name contains invalid char%n Not Allowed Chars [%s] %n Queues: [%s]",
+              invalidCharsStr, queueNamesStr);
+      throw new IllegalStateException(message);
+    }
+  }
+
   private Set<String> resolveQueueNames(RqueueListener rqueueListener) {
     String[] queueNames = rqueueListener.value();
     Set<String> result = new HashSet<>(queueNames.length);
@@ -456,6 +492,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
           Arrays.asList(
               ValueResolver.resolveKeyToArrayOfStrings(getApplicationContext(), queueName)));
     }
+    checkInvalidQueueName(result);
     return Collections.unmodifiableSet(result);
   }
 

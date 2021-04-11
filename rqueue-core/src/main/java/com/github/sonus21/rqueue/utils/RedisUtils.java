@@ -19,11 +19,15 @@ package com.github.sonus21.rqueue.utils;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
 import java.util.List;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.ReturnType;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializationContext.RedisSerializationContextBuilder;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -46,11 +50,46 @@ public final class RedisUtils {
         }
       };
 
-  private RedisUtils() {}
+  @SuppressWarnings({"java:S1104", "java:S1444"})
+  public static RedisSerializationContextProvider redisSerializationContextProvider =
+      () -> {
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
+        RedisSerializationContextBuilder<String, Object> redisSerializationContextBuilder =
+            RedisSerializationContext.newSerializationContext();
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.key(stringRedisSerializer);
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.value(rqueueRedisSerializer);
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.hashKey(stringRedisSerializer);
+        redisSerializationContextBuilder =
+            redisSerializationContextBuilder.hashValue(rqueueRedisSerializer);
+        return redisSerializationContextBuilder.build();
+      };
+
+  @SuppressWarnings({"java:S1104", "java:S1444"})
+  public static ReactiveRedisTemplateProvider reactiveRedisTemplateProvider =
+      new ReactiveRedisTemplateProvider() {
+        @Override
+        public <V> ReactiveRedisTemplate<String, V> getRedisTemplate(
+            ReactiveRedisConnectionFactory redisConnectionFactory) {
+          return new ReactiveRedisTemplate(
+              redisConnectionFactory, redisSerializationContextProvider.getSerializationContext());
+        }
+      };
+
+  private RedisUtils() {
+  }
 
   public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
     return redisTemplateProvider.getRedisTemplate(redisConnectionFactory);
+  }
+
+  public static <V> ReactiveRedisTemplate<String, V> getReactiveRedisTemplate(
+      ReactiveRedisConnectionFactory redisConnectionFactory) {
+    return reactiveRedisTemplateProvider.getRedisTemplate(redisConnectionFactory);
   }
 
   @SuppressWarnings("unchecked")
@@ -107,7 +146,19 @@ public final class RedisUtils {
   }
 
   public interface RedisTemplateProvider {
+
     <V> RedisTemplate<String, V> getRedisTemplate(RedisConnectionFactory redisConnectionFactory);
+  }
+
+  public interface ReactiveRedisTemplateProvider {
+
+    <V> ReactiveRedisTemplate<String, V> getRedisTemplate(
+        ReactiveRedisConnectionFactory redisConnectionFactory);
+  }
+
+  public interface RedisSerializationContextProvider {
+
+    RedisSerializationContext<String, Object> getSerializationContext();
   }
 
   public interface RedisPipelineCallback {

@@ -11,9 +11,11 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: "${springBootVersion}", optional
+
     testCompile project(":rqueue-spring-common-test")
     testCompile "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa
-    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: "${springBootVersion}"
-    testCompile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: "${springBootVersion}"
+    testCompile "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
+    testCompile "org.springframework.boot:spring-boot-starter-data-redis-reactive:${springBootVersion}"
+    testCompile "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    testCompile "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
 }

@@ -46,6 +46,5 @@ public final class Constants {
   public static final String DEFAULT_PRIORITY_GROUP = "Default";
   public static final String REDIS_KEY_SEPARATOR = "::";
   public static final int MAX_STACKTRACE_LENGTH = 3000;
-
-  private Constants() {}
+  public static final String Comma = ",";
 }

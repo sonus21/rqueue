@@ -95,4 +95,9 @@ public class RqueueJobDaoImpl implements RqueueJobDao {
   public List<RqueueJob> finByMessageId(String messageId) {
     return finByMessageIdIn(Collections.singletonList(messageId));
   }
+
+  @Override
+  public void delete(String jobId) {
+    redisTemplate.delete(jobId);
+  }
 }

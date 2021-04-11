@@ -53,17 +53,17 @@ public class RedisScriptFactory {
   }
 
   public enum ScriptType {
-    ENQUEUE_MESSAGE("scripts/enqueue_message.lua"),
-    DEQUEUE_MESSAGE("scripts/dequeue_message.lua"),
-    MOVE_MESSAGE_TO_ZSET("scripts/move_message_zset.lua"),
-    MOVE_MESSAGE_TO_LIST("scripts/move_message_list.lua"),
-    MOVE_EXPIRED_MESSAGE("scripts/move_expired_message.lua"),
-    MOVE_MESSAGE_LIST_TO_LIST("scripts/move_message_list_to_list.lua"),
-    MOVE_MESSAGE_LIST_TO_ZSET("scripts/move_message_list_to_zset.lua"),
-    MOVE_MESSAGE_ZSET_TO_ZSET("scripts/move_message_zset_to_zset.lua"),
-    MOVE_MESSAGE_ZSET_TO_LIST("scripts/move_message_zset_to_list.lua"),
-    SCHEDULE_MESSAGE("scripts/schedule_message.lua"),
-    DELETE_IF_SAME("scripts/delete_if_same.lua");
+    ENQUEUE_MESSAGE("rqueue/scripts/enqueue_message.lua"),
+    DEQUEUE_MESSAGE("rqueue/scripts/dequeue_message.lua"),
+    MOVE_MESSAGE_TO_ZSET("rqueue/scripts/move_message_zset.lua"),
+    MOVE_MESSAGE_TO_LIST("rqueue/scripts/move_message_list.lua"),
+    MOVE_EXPIRED_MESSAGE("rqueue/scripts/move_expired_message.lua"),
+    MOVE_MESSAGE_LIST_TO_LIST("rqueue/scripts/move_message_list_to_list.lua"),
+    MOVE_MESSAGE_LIST_TO_ZSET("rqueue/scripts/move_message_list_to_zset.lua"),
+    MOVE_MESSAGE_ZSET_TO_ZSET("rqueue/scripts/move_message_zset_to_zset.lua"),
+    MOVE_MESSAGE_ZSET_TO_LIST("rqueue/scripts/move_message_zset_to_list.lua"),
+    SCHEDULE_MESSAGE("rqueue/scripts/schedule_message.lua"),
+    DELETE_IF_SAME("rqueue/scripts/delete_if_same.lua");
     private final String path;
 
     ScriptType(String path) {

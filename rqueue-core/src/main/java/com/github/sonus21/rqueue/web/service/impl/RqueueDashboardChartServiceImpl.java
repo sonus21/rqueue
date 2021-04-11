@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
 
 @Service
 public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartService {
@@ -396,7 +397,14 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
     }
   }
 
+  @Override
+  public Mono<ChartDataResponse> getReactiveDashBoardData(ChartDataRequest chartDataRequest) {
+    ChartDataResponse response = getDashboardChartData(chartDataRequest);
+    return Mono.just(response);
+  }
+
   private interface IdGenerator {
+
     int getId(String date, LocalDate today);
   }
 }

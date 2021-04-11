@@ -35,6 +35,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
 
 @Service
 public class RqueueJobServiceImpl implements RqueueJobService {
@@ -110,5 +111,10 @@ public class RqueueJobServiceImpl implements RqueueJobService {
       }
     }
     return response;
+  }
+
+  @Override
+  public Mono<DataViewResponse> getReactiveJobs(String messageId) throws ProcessingException {
+    return Mono.just(getJobs(messageId));
   }
 }

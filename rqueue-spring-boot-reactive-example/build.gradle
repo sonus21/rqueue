@@ -1,0 +1,16 @@
+plugins {
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'war'
+}
+dependencies {
+    compile project(":rqueue-spring-boot-starter")
+    compile 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+    compile 'org.springframework.boot:spring-boot-starter-webflux'
+    compile 'io.lettuce:lettuce-core'
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
+    compile group: 'ch.qos.logback', name: 'logback-core', version: "${logbackVersion}"
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: "${logbackVersion}"
+
+}

@@ -44,7 +44,7 @@ class RedisScriptFactoryTest extends TestBase {
 
   RedisScriptFactoryTest(RedisConnectionFactory redisConnectionFactory) {
     this.redisConnectionFactory = redisConnectionFactory;
-    this.rqueueMessageTemplate = new RqueueMessageTemplateImpl(redisConnectionFactory);
+    this.rqueueMessageTemplate = new RqueueMessageTemplateImpl(redisConnectionFactory, null);
   }
 
   @Test
@@ -119,7 +119,7 @@ class RedisScriptFactoryTest extends TestBase {
     RqueueMessage rqueueMessage2 = RqueueMessage.builder().message("Test message 2").build();
     RedisScript<Boolean> script = RedisScriptFactory.getScript(ScriptType.DELETE_IF_SAME);
     RqueueRedisTemplate<RqueueMessage> template =
-        new RqueueMessageTemplateImpl(redisConnectionFactory);
+        new RqueueMessageTemplateImpl(redisConnectionFactory, null);
     template.set(key, rqueueMessage);
     ScriptExecutor<String> scriptExecutor =
         new DefaultScriptExecutor<>(template.getRedisTemplate());

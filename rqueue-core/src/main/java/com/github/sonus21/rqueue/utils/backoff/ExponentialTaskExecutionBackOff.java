@@ -180,12 +180,22 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
     this.maxInterval = maxInterval;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public long nextBackOff(Object object, RqueueMessage rqueueMessage, int failureCount) {
-    if (failureCount >= getMaxRetries()) {
+  public long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount) {
+    if (failureCount >= getMaxRetries(message, rqueueMessage, failureCount)) {
       return STOP;
     }
+    return getDelay(message, rqueueMessage, failureCount);
+  }
+
+  protected int getMaxRetries(Object message, RqueueMessage rqueueMessage, int failureCount) {
+    return getMaxRetries();
+  }
+
+  protected long getDelay(Object message, RqueueMessage rqueueMessage, int failureCount) {
     return getDelay(failureCount);
   }
 

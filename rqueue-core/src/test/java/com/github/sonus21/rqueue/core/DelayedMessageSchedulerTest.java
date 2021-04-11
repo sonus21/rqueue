@@ -103,7 +103,7 @@ class DelayedMessageSchedulerTest extends TestBase {
   @Test
   void getNextScheduleTime() {
     long currentTime = System.currentTimeMillis();
-    doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+    doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     assertThat(
         messageScheduler.getNextScheduleTime(slowQueue, null),
         greaterThanOrEqualTo(currentTime + 5000L));
@@ -128,7 +128,7 @@ class DelayedMessageSchedulerTest extends TestBase {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
@@ -147,7 +147,7 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void startAddsChannelToMessageListener() throws Exception {
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
@@ -172,7 +172,7 @@ class DelayedMessageSchedulerTest extends TestBase {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
@@ -195,7 +195,7 @@ class DelayedMessageSchedulerTest extends TestBase {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
@@ -242,7 +242,7 @@ class DelayedMessageSchedulerTest extends TestBase {
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     doReturn(redisMessageListenerContainer)
         .when(rqueueRedisListenerContainerFactory)
         .getContainer();
@@ -265,7 +265,7 @@ class DelayedMessageSchedulerTest extends TestBase {
       doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
       doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
       doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-      doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+      doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
       doReturn(redisMessageListenerContainer)
           .when(rqueueRedisListenerContainerFactory)
           .getContainer();
@@ -291,7 +291,7 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void onMessageListenerTest() throws Exception {
-    doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeInterval();
+    doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();

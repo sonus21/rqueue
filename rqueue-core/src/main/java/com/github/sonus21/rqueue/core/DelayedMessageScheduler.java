@@ -31,12 +31,12 @@ public class DelayedMessageScheduler extends MessageScheduler {
   protected long getNextScheduleTime(String queueName, Long value) {
     long currentTime = System.currentTimeMillis();
     if (value == null) {
-      return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeInterval();
+      return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeIntervalInMilli();
     }
     if (value < currentTime) {
       return currentTime;
     }
-    return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeInterval();
+    return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeIntervalInMilli();
   }
 
   @Override

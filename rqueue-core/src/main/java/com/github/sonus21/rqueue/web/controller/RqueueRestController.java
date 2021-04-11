@@ -18,29 +18,32 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.exception.ProcessingException;
-import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
+import com.github.sonus21.rqueue.models.request.DataDeleteRequest;
+import com.github.sonus21.rqueue.models.request.DataTypeRequest;
+import com.github.sonus21.rqueue.models.request.DateViewRequest;
+import com.github.sonus21.rqueue.models.request.MessageDeleteRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
+import com.github.sonus21.rqueue.utils.ReactiveDisabled;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
 import com.github.sonus21.rqueue.web.service.RqueueJobService;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,6 +52,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController()
 @RequestMapping("rqueue/api/v1")
+@Conditional(ReactiveDisabled.class)
 public class RqueueRestController {
   private final RqueueDashboardChartService rqueueDashboardChartService;
   private final RqueueQDetailService rqueueQDetailService;
@@ -76,7 +80,7 @@ public class RqueueRestController {
   @PostMapping("chart")
   @ResponseBody
   public ChartDataResponse getDashboardData(
-      @RequestBody ChartDataRequest chartDataRequest, HttpServletResponse response) {
+      @RequestBody @Valid ChartDataRequest chartDataRequest, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
@@ -96,93 +100,90 @@ public class RqueueRestController {
     return rqueueJobService.getJobs(messageId);
   }
 
-  @GetMapping("explore")
+  @PostMapping("queue-data")
   @ResponseBody
   public DataViewResponse exploreQueue(
-      @RequestParam @NotNull DataType type,
-      @RequestParam @NotEmpty String name,
-      @RequestParam @NotEmpty String src,
-      @RequestParam(defaultValue = "0", name = "page") int pageNumber,
-      @RequestParam(defaultValue = "20", name = "count") int itemPerPage,
-      HttpServletResponse response) {
+      @Valid @RequestBody QueueExploreRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueQDetailService.getExplorePageData(src, name, type, pageNumber, itemPerPage);
+    return rqueueQDetailService.getExplorePageData(
+        request.getSrc(),
+        request.getName(),
+        request.getType(),
+        request.getPageNumber(),
+        request.getItemPerPage());
   }
 
-  @DeleteMapping("data-set/{queueName}/{datasetName}")
+  @PostMapping("view-data")
   @ResponseBody
-  public BooleanResponse deleteAll(
-      @PathVariable String queueName,
-      @PathVariable String datasetName,
-      HttpServletResponse response) {
+  public DataViewResponse viewData(
+      @RequestBody @Valid DateViewRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.makeEmpty(queueName, datasetName);
+    return rqueueQDetailService.viewData(
+        request.getName(),
+        request.getType(),
+        request.getKey(),
+        request.getPageNumber(),
+        request.getItemPerPage());
   }
 
-  @DeleteMapping("data-set/{queueName}/message/{messageId}")
+  @PostMapping("delete-message")
   @ResponseBody
   public BooleanResponse deleteMessage(
-      @PathVariable String queueName,
-      @PathVariable String messageId,
-      HttpServletResponse response) {
+      @Valid @RequestBody MessageDeleteRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.deleteMessage(queueName, messageId);
+    return rqueueUtilityService.deleteMessage(request.getQueueName(), request.getMessageId());
   }
 
-  @GetMapping("data-type")
+  @PostMapping("delete-queue")
+  @ResponseBody
+  public BaseResponse deleteQueue(
+      @Valid @RequestBody DataTypeRequest request, HttpServletResponse response) {
+    if (!rqueueWebConfig.isEnable()) {
+      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      return null;
+    }
+    return rqueueQManagerService.deleteQueue(request.getName());
+  }
+
+  @PostMapping("delete-queue-part")
+  @ResponseBody
+  public BooleanResponse deleteAll(
+      @RequestBody @Valid DataDeleteRequest request, HttpServletResponse response) {
+    if (!rqueueWebConfig.isEnable()) {
+      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+      return null;
+    }
+    return rqueueUtilityService.makeEmpty(request.getQueueName(), request.getDatasetName());
+  }
+
+  @PostMapping("data-type")
   @ResponseBody
   public StringResponse dataType(
-      @RequestParam @NotEmpty String name, HttpServletResponse response) {
+      @RequestBody @Valid DataTypeRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
-    return rqueueUtilityService.getDataType(name);
+    return rqueueUtilityService.getDataType(request.getName());
   }
 
-  @PutMapping("move")
+  @PostMapping("move-data")
   @ResponseBody
   public MessageMoveResponse dataType(
-      @RequestBody MessageMoveRequest request, HttpServletResponse response) {
+      @RequestBody @Valid MessageMoveRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
     return rqueueUtilityService.moveMessage(request);
-  }
-
-  @GetMapping("data")
-  @ResponseBody
-  public DataViewResponse viewData(
-      @RequestParam @NotEmpty String name,
-      @RequestParam @NotNull DataType type,
-      @RequestParam(required = false) String key,
-      @RequestParam(defaultValue = "0", name = "page") int pageNumber,
-      @RequestParam(defaultValue = "20", name = "count") int itemPerPage,
-      HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
-    }
-    return rqueueQDetailService.viewData(name, type, key, pageNumber, itemPerPage);
-  }
-
-  @DeleteMapping("queues/{queueName}")
-  @ResponseBody
-  public BaseResponse deleteQueue(@PathVariable String queueName, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
-    }
-    return rqueueQManagerService.deleteQueue(queueName);
   }
 }

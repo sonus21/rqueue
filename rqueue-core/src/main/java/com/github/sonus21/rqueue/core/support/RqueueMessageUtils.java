@@ -51,7 +51,9 @@ public final class RqueueMessageUtils {
   public static RqueueMessage buildPeriodicMessage(
       MessageConverter converter,
       String queueName,
+      String messageId,
       Object message,
+      Integer retryCount,
       long period,
       MessageHeaders messageHeaders) {
     Message<?> msg = converter.toMessage(message, messageHeaders);
@@ -68,18 +70,25 @@ public final class RqueueMessageUtils {
     } else {
       throw new MessageConversionException("Message payload is neither String nor byte[]");
     }
-    return RqueueMessage.builder()
-        .id(UUID.randomUUID().toString())
-        .queueName(queueName)
-        .message(strMessage)
-        .processAt(processAt)
-        .period(period)
-        .build();
+    RqueueMessage rqueueMessage =
+        RqueueMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(strMessage)
+            .processAt(processAt)
+            .retryCount(retryCount)
+            .period(period)
+            .build();
+    if (messageId != null) {
+      rqueueMessage.setId(messageId);
+    }
+    return rqueueMessage;
   }
 
   public static RqueueMessage buildMessage(
       MessageConverter converter,
       String queueName,
+      String messageId,
       Object message,
       Integer retryCount,
       Long delay,
@@ -102,14 +111,19 @@ public final class RqueueMessageUtils {
     } else {
       throw new MessageConversionException("Message payload is neither String nor byte[]");
     }
-    return RqueueMessage.builder()
-        .retryCount(retryCount)
-        .queuedTime(queuedTime)
-        .id(UUID.randomUUID().toString())
-        .queueName(queueName)
-        .message(strMessage)
-        .processAt(processAt)
-        .build();
+    RqueueMessage rqueueMessage =
+        RqueueMessage.builder()
+            .retryCount(retryCount)
+            .queuedTime(queuedTime)
+            .id(UUID.randomUUID().toString())
+            .queueName(queueName)
+            .message(strMessage)
+            .processAt(processAt)
+            .build();
+    if (messageId != null) {
+      rqueueMessage.setId(messageId);
+    }
+    return rqueueMessage;
   }
 
   public static List<RqueueMessage> generateMessages(
@@ -135,7 +149,7 @@ public final class RqueueMessageUtils {
       int count) {
     List<RqueueMessage> messages = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      messages.add(buildMessage(converter, queueName, object, retryCount, delay, null));
+      messages.add(buildMessage(converter, queueName, null, object, retryCount, delay, null));
     }
     return messages;
   }

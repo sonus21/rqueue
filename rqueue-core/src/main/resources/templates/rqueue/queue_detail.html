@@ -70,7 +70,7 @@
 {% block additional_script %}
 <script type="application/javascript">
   queueName = "{{queueName}}"
-  dataPageUrl = "rqueue/api/v1/explore";
+  dataPageUrl = "rqueue/api/v1/queue-data";
   var chartParams = {"queue": queueName, "type": "STATS", 'aggregationType': 'DAILY'};
   var latencyChartParams = {"queue": queueName, "type": "LATENCY", 'aggregationType': 'DAILY'};
   $(document).ready(function () {

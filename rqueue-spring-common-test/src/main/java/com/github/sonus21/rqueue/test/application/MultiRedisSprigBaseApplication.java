@@ -82,6 +82,9 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
     LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory(redisConfiguration);
     connectionFactory.afterPropertiesSet();
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(connectionFactory);
+    if(reactiveEnabled){
+      simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(connectionFactory);
+    }
     return simpleRqueueListenerContainerFactory;
   }
 }

@@ -46,7 +46,7 @@ class RqueueMessageTemplateTest extends TestBase {
   private final ListOperations<String, RqueueMessage> listOperations = mock(ListOperations.class);
   private final DefaultScriptExecutor<String> scriptExecutor = mock(DefaultScriptExecutor.class);
   private final RqueueMessageTemplate rqueueMessageTemplate =
-      new RqueueMessageTemplateImpl(redisConnectionFactory);
+      new RqueueMessageTemplateImpl(redisConnectionFactory, null);
   private final String queueName = "test-queue";
   private final RqueueMessage message =
       RqueueMessage.builder()

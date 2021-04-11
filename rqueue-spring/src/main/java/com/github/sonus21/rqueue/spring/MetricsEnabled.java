@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.spring;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.util.ClassUtils;
 
 /**
  * Checks whether MeterRegistry bean is present it or not. if MeterRegistry bean is founds then it's
@@ -29,11 +30,7 @@ public class MetricsEnabled implements Condition {
 
   @Override
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-    try {
-      Class.forName("io.micrometer.core.instrument.MeterRegistry");
-      return true;
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
+    return ClassUtils.isPresent(
+        "io.micrometer.core.instrument.MeterRegistry", context.getClassLoader());
   }
 }

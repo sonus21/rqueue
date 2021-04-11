@@ -59,6 +59,7 @@ import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
 
 @Service
 public class RqueueQDetailServiceImpl implements RqueueQDetailService {
@@ -471,6 +472,18 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     rows.add(Arrays.asList("Queue", "Dead Letter Queue [LIST]", "Size"));
     addRows(result, rows, queueConfigAndDlq);
     return rows;
+  }
+
+  @Override
+  public Mono<DataViewResponse> getReactiveExplorePageData(
+      String src, String name, DataType type, int pageNumber, int itemPerPage) {
+    return Mono.just(getExplorePageData(src, name, type, pageNumber, itemPerPage));
+  }
+
+  @Override
+  public Mono<DataViewResponse> viewReactiveData(
+      String name, DataType type, String key, int pageNumber, int itemPerPage) {
+    return Mono.just(viewData(name, type, key, pageNumber, itemPerPage));
   }
 
   private interface RowBuilder {
