@@ -9,7 +9,7 @@
 [![Javadoc](https://javadoc.io/badge2/com.github.sonus21/rqueue-core/javadoc.svg)](https://javadoc.io/doc/com.github.sonus21/rqueue-core)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**Rqueue** is an asynchronous task executor(worker) built for spring framework based on the spring
+**Rqueue** is an asynchronous task executor(worker) built for spring(boot) framework based on the spring
 framework's messaging library backed by Redis. It can be used as message broker as well, where all
 services code is in Spring.
 
@@ -24,9 +24,9 @@ services code is in Spring.
 * **Message delivery**: It's guaranteed that a message is consumed **at least once**.  (Message
   would be consumed by a worker more than once due to the failure in the underlying
   worker/restart-process etc, otherwise exactly one delivery)
-* **Redis cluster** : Redis cluster can be used with driver.
+* **Redis cluster** : Redis cluster can be used with Lettuce client.
 * **Metrics** : In flight messages, waiting for consumption and delayed messages
-* **Web Dashboard**:  a web dashboard to manage a queue and queue insights including latency
+* **Web Dashboard**:  Web dashboard to manage a queue and queue insights including latency
 * **Automatic message serialization and deserialization**
 * **Concurrency**: Concurrency of any queue can be configured
 * **Queue Priority** :
@@ -43,9 +43,19 @@ services code is in Spring.
 * **Message Multicasting**: Call multiple message listeners on very message
 * **Reactive Programming**: Supports reactive Redis and spring webflux
 
+### Requirements
+
+* Spring 5+
+* Spring boot 2+
+* Lettuce client for Redis cluster
+* Read master preference for Redis cluster
+
 ## Getting Started
 
 ### Dependency
+
+Snapshot Version: https://s01.oss.sonatype.org/content/repositories/snapshots
+Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.sonus21)
 
 #### Spring-boot
 
@@ -54,14 +64,14 @@ services code is in Spring.
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.6.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.7.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.6.1-RELEASE</version>
+        <version>2.7.0-RELEASE</version>
     </dependency>
     ```
 
@@ -72,14 +82,14 @@ services code is in Spring.
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.6.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.7.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.6.1-RELEASE</version>
+       <version>2.7.0-RELEASE</version>
      </dependency>
     ```
 
