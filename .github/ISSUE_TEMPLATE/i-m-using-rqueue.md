@@ -11,7 +11,7 @@ assignees: sonus21
 
 # Organisation link
 
-# How many messages do Rqueue process daily?  (optional)
+# How many messages does Rqueue process daily?  (optional)
 
 # How are you using Rqueue? (optional)
 
