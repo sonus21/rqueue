@@ -69,14 +69,8 @@ public class SimpleRqueueListenerContainerFactory {
   private long pollingInterval = 200L;
   // In case of failure how much time, we should wait for next job
   private long backOffTime = 5 * Constants.ONE_MILLI;
-
-  // Thread pool size for listener method invocation
-  // maxNumWorkers = min(50, number of cpu * 10, 2 * number of queues)
+  // Number of workers requires for execution
   private Integer maxNumWorkers;
-  // Thread pool size of message poller, Rqueue submits a task to a thread pool executor that polls
-  // the Redis at polling interval.  default value is calculated as
-  // maxNumPollers = min(10, number of cpu * 5, number of queues)
-  private Integer maxNumPollers;
 
   // This message processor would be called before a task can start execution.
   // It needs to be noted that this message processor would be called multiple time
@@ -317,9 +311,8 @@ public class SimpleRqueueListenerContainerFactory {
     notNull(getRqueueMessageHandler(), "rqueueMessageHandler must not be null");
     notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
     if (rqueueMessageTemplate == null) {
-      rqueueMessageTemplate =
-          new RqueueMessageTemplateImpl(
-              getRedisConnectionFactory(), getReactiveRedisConnectionFactory());
+      rqueueMessageTemplate = new RqueueMessageTemplateImpl(getRedisConnectionFactory(),
+          getReactiveRedisConnectionFactory());
     }
     RqueueMessageListenerContainer messageListenerContainer =
         new RqueueMessageListenerContainer(getRqueueMessageHandler(), rqueueMessageTemplate);
@@ -329,9 +322,6 @@ public class SimpleRqueueListenerContainerFactory {
     }
     if (maxNumWorkers != null) {
       messageListenerContainer.setMaxNumWorkers(maxNumWorkers);
-    }
-    if (getMaxNumPollers() != null) {
-      messageListenerContainer.setMaxNumPollers(maxNumPollers);
     }
     messageListenerContainer.setBackOffTime(getBackOffTime());
     messageListenerContainer.setPollingInterval(getPollingInterval());
@@ -559,26 +549,5 @@ public class SimpleRqueueListenerContainerFactory {
       ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
     notNull(reactiveRedisConnectionFactory, "reactiveRedisConnectionFactory can not be null");
     this.reactiveRedisConnectionFactory = reactiveRedisConnectionFactory;
-  }
-
-  /**
-   * The configured message poller thread pool size
-   *
-   * @return thread pool size
-   */
-  public Integer getMaxNumPollers() {
-    return maxNumPollers;
-  }
-
-  /**
-   * Set thread pool size for message poller.
-   *
-   * @param maxNumPollers message poller thread pool size
-   */
-  public void setMaxNumPollers(int maxNumPollers) {
-    if (maxNumPollers < 1) {
-      throw new IllegalArgumentException("maxNumPollers must be greater than equal to 1");
-    }
-    this.maxNumPollers = maxNumPollers;
   }
 }

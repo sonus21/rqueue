@@ -16,14 +16,9 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.Constants.CPU_MULTIPLICATION_FACTOR_FOR_POLLER_POOL_SIZE;
-import static com.github.sonus21.rqueue.utils.Constants.CPU_MULTIPLICATION_FACTOR_FOR_WORKER_POOL_SIZE;
 import static com.github.sonus21.rqueue.utils.Constants.DEFAULT_WORKER_COUNT_PER_QUEUE;
-import static com.github.sonus21.rqueue.utils.Constants.MAX_POLLER_POOL_SIZE;
-import static com.github.sonus21.rqueue.utils.Constants.MAX_WORKER_POOL_SIZE;
 import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForTermination;
 import static com.github.sonus21.rqueue.utils.ThreadUtils.waitForWorkerTermination;
-import static java.lang.Math.min;
 import static org.springframework.util.Assert.notEmpty;
 import static org.springframework.util.Assert.notNull;
 
@@ -43,7 +38,6 @@ import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.utils.SystemUtil;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
@@ -103,17 +97,23 @@ public class RqueueMessageListenerContainer
   @Autowired(required = false)
   private RqueueMetricsCounter rqueueMetricsCounter;
 
-  @Autowired private ApplicationEventPublisher applicationEventPublisher;
-  @Autowired private RqueueWebConfig rqueueWebConfig;
-  @Autowired private RqueueConfig rqueueConfig;
-  @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
+  @Autowired
+  private RqueueWebConfig rqueueWebConfig;
+  @Autowired
+  private RqueueConfig rqueueConfig;
+  @Autowired
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Autowired
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
   private AsyncTaskExecutor taskExecutor;
-  @Autowired private RqueueJobDao rqueueJobDao;
-  @Autowired private RqueueStringDao rqueueStringDao;
+  @Autowired
+  private RqueueJobDao rqueueJobDao;
+  @Autowired
+  private RqueueStringDao rqueueStringDao;
   private List<Middleware> middlewares;
   private Integer maxNumWorkers;
-  private Integer maxNumPollers;
   private String beanName;
   private boolean defaultTaskExecutor = false;
   private boolean autoStartup = true;
@@ -171,17 +171,6 @@ public class RqueueMessageListenerContainer
       throw new IllegalArgumentException("maxNumWorkers must be greater than zero");
     }
     this.maxNumWorkers = maxNumWorkers;
-  }
-
-  public Integer getMaxNumPollers() {
-    return maxNumPollers;
-  }
-
-  public void setMaxNumPollers(int maxNumPollers) {
-    if (maxNumPollers < 1) {
-      throw new IllegalArgumentException("maxNumPollers must be greater than zero");
-    }
-    this.maxNumPollers = maxNumPollers;
   }
 
   public long getBackOffTime() {
@@ -339,15 +328,7 @@ public class RqueueMessageListenerContainer
   }
 
   private int getWorkersCount(int queueCount) {
-    if (queueCount == 0) {
-      return 0;
-    }
-    if (maxNumWorkers != null) {
-      return maxNumWorkers;
-    }
-    int cpuBasedMaxWorkerCount = SystemUtil.cpuCount() * CPU_MULTIPLICATION_FACTOR_FOR_WORKER_POOL_SIZE;
-    int count = min(cpuBasedMaxWorkerCount, queueCount * DEFAULT_WORKER_COUNT_PER_QUEUE);
-    return min(count, MAX_WORKER_POOL_SIZE);
+    return (maxNumWorkers == null ? queueCount * DEFAULT_WORKER_COUNT_PER_QUEUE : maxNumWorkers);
   }
 
   private AsyncTaskExecutor createTaskExecutor(int corePoolSize, int maxPoolSize) {
@@ -357,36 +338,15 @@ public class RqueueMessageListenerContainer
         DEFAULT_THREAD_NAME_PREFIX, prefix, corePoolSize, maxPoolSize);
   }
 
-  private int getCorePoolSize(int queueCount) {
-    return getPollerCount(queueCount);
-  }
-
-  private int getMaxPoolSize(int workerJobCount, int queueCount) {
-    // one job is enqueued for each poller so we need queueCount poller threads
-    // otherwise job would be rejected
-    return queueCount + workerJobCount;
-  }
-
   private AsyncTaskExecutor createNonConcurrencyBasedExecutor(
-      List<QueueDetail> queueDetails, int queueCount) {
+      List<QueueDetail> queueDetails, int pollerCount) {
     int workersCount = getWorkersCount(queueDetails.size());
-    int corePoolSize = getCorePoolSize(queueCount);
-    int maxPoolSize = getMaxPoolSize(workersCount, queueCount);
+    int maxPoolSize = workersCount + pollerCount;
+    // one thread for message poller and one for executor
+    int corePoolSize = queueDetails.size() + pollerCount;
     AsyncTaskExecutor executor = createTaskExecutor(corePoolSize, maxPoolSize);
     initializeThreadMap(queueDetails, executor, true, workersCount);
     return executor;
-  }
-
-  private int getPollerCount(int queueCount) {
-    if (queueCount == 0) {
-      return 0;
-    }
-    if (maxNumPollers != null) {
-      return maxNumPollers;
-    }
-    int count =
-        min(queueCount, SystemUtil.cpuCount() * CPU_MULTIPLICATION_FACTOR_FOR_POLLER_POOL_SIZE);
-    return min(count, MAX_POLLER_POOL_SIZE);
   }
 
   private void createExecutor(QueueDetail queueDetail) {

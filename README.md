@@ -1,6 +1,6 @@
 <div>
    <img  align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue-core/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
-   <h1 style="float:left">Rqueue: Redis Queue,Task Queue, Delayed Queue for Spring and Spring Boot</h1>
+   <h1 style="float:left">Rqueue: Redis Queue, Task Queue, Delayed Queue for Spring and Spring Boot</h1>
 </div>
 
 [![Build Status](https://circleci.com/gh/sonus21/rqueue/tree/master.svg?style=shield)](https://circleci.com/gh/sonus21/rqueue/tree/master)
@@ -9,9 +9,9 @@
 [![Javadoc](https://javadoc.io/badge2/com.github.sonus21/rqueue-core/javadoc.svg)](https://javadoc.io/doc/com.github.sonus21/rqueue-core)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**Rqueue** is an asynchronous task executor(worker) built for spring(boot) framework based on the spring
-framework's messaging library backed by Redis. It can be used as message broker as well, where all
-services code is in Spring.
+**Rqueue** is an asynchronous task executor(worker) built for spring and spring-boot framework based
+on the spring framework's messaging library backed by Redis. It can be used as message broker as
+well, where all services code is in Spring.
 
 <br/>
 
@@ -20,28 +20,32 @@ services code is in Spring.
 ## Features
 
 * **Message Scheduling** : A message can be scheduled for any arbitrary period
-* **Competing Consumers** multiple messages can be consumed in parallel by different workers.
+* **Unique message** : Unique message processing for a queue based on the message id
+* **Periodic message** : Process same message at certain interval
 * **Message delivery**: It's guaranteed that a message is consumed **at least once**.  (Message
   would be consumed by a worker more than once due to the failure in the underlying
   worker/restart-process etc, otherwise exactly one delivery)
-* **Redis cluster** : Redis cluster can be used with Lettuce client.
-* **Metrics** : In flight messages, waiting for consumption and delayed messages
-* **Web Dashboard**:  Web dashboard to manage a queue and queue insights including latency
+* **Message retry**: Message would be retried automatically on application crash/failure/restart
+  etc.
 * **Automatic message serialization and deserialization**
-* **Concurrency**: Concurrency of any queue can be configured
-* **Queue Priority** :
+* **Message Multicasting**: Call multiple message listeners on every message
+* **Metrics** : In flight messages, waiting for consumption and delayed messages
+* **Competing Consumers** multiple messages can be consumed in parallel by different
+  workers/listeners.
+* **Concurrency**: Concurrency of any listener can be configured
+* **Queue Priority**:
   * Group level queue priority(weighted and strict)
   * Sub queue priority(weighted and strict)
+* **Long execution job**: Long running jobs can check in periodically.
 * **Execution Backoff** : Exponential and fixed back off (default fixed back off)
+* **Middleware**:  Add one or more middleware, middlewares are called before listener method.
 * **Callbacks** : Callbacks for dead letter queue, discard etc
 * **Events** 1. Bootstrap event 2. Task execution event.
-* **Unique message** : Unique message processing for a queue based on the message id
-* **Periodic message** : Process same message at certain interval
 * **Redis connection**: A different redis setup can be used for Rqueue
-* **Long execution job**: Long running jobs can check in periodically.
-* **Middleware**:  Add one or more middleware, middlewares are called before listener method.
-* **Message Multicasting**: Call multiple message listeners on very message
+* **Redis cluster** : Redis cluster can be used with Lettuce client.
+* **Redis Sentinel** : Redis sentinel can be used with Rqueue.
 * **Reactive Programming**: Supports reactive Redis and spring webflux
+* **Web Dashboard**:  Web dashboard to manage a queue and queue insights including latency
 
 ### Requirements
 
@@ -216,25 +220,30 @@ public class MessageListener {
 
 ## Queue Statistics
 
+Micrometer based dashboard for queue
+
 [![Grafana Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)
 
-## Dashboard
+## Web
 
 Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
-[![Execution Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
-<br/>
-<br/>
+#### Dashboard
+
+[![Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
+
+#### Message Waiting For Execution
+
 [![Explore Queue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
 
+#### Recent jobs details
 
-<br/>
 [![Jobs](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/jobs.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/jobs.png)
 
 ## Status
 
 Rqueue is stable and production ready, it's processing thousands of messages daily in production
-deployments.
+environment.
 
 **We would love to add your organization name here, if you're one of the Rqueue users, please raise
 a
@@ -260,11 +269,11 @@ environment variables for Spring versions.
 
 **Please format your code with Google Java formatter.**
 
-```bash
-//    springBootVersion = '2.2.0.RELEASE'
-//    springVersion = '5.2.0.RELEASE'
-//    springDataVersion = '2.2.0.RELEASE'
-//    microMeterVersion = '1.3.2'
+```groovy
+// springBootVersion = '2.0.6.RELEASE'
+// springVersion = '5.0.10.RELEASE'
+// springDataVersion = '2.0.6.RELEASE'
+// microMeterVersion = '1.1.0'
 ```
 
 ## Links

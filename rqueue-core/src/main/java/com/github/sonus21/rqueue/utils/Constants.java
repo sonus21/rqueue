@@ -47,8 +47,4 @@ public final class Constants {
   public static final String REDIS_KEY_SEPARATOR = "::";
   public static final int MAX_STACKTRACE_LENGTH = 3000;
   public static final String Comma = ",";
-  public static final int CPU_MULTIPLICATION_FACTOR_FOR_WORKER_POOL_SIZE = 10;
-  public static final int MAX_WORKER_POOL_SIZE = 50;
-  public static final int CPU_MULTIPLICATION_FACTOR_FOR_POLLER_POOL_SIZE = 5;
-  public static final int MAX_POLLER_POOL_SIZE = 10;
 }

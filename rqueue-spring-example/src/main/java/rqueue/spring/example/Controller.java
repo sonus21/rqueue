@@ -16,7 +16,7 @@
 
 package rqueue.spring.example;
 
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class Controller {
 
-  private final RqueueMessageSender rqueueMessageSender;
+  private final RqueueMessageEnqueuer rqueueMessageEnqueuer;
   private final PrometheusMeterRegistry meterRegistry;
 
   @GetMapping("metric")
@@ -44,11 +44,11 @@ public class Controller {
       @RequestParam(required = false) Integer numRetries,
       @RequestParam(required = false) Long delay) {
     if (numRetries == null && delay == null) {
-      rqueueMessageSender.enqueue(q, msg);
+      rqueueMessageEnqueuer.enqueue(q, msg);
     } else if (numRetries == null) {
-      rqueueMessageSender.enqueueIn(q, msg, delay);
+      rqueueMessageEnqueuer.enqueueIn(q, msg, delay);
     } else {
-      rqueueMessageSender.enqueueInWithRetry(q, msg, numRetries.intValue(), delay.longValue());
+      rqueueMessageEnqueuer.enqueueInWithRetry(q, msg, numRetries, delay);
     }
     return "Message sent successfully";
   }
@@ -58,7 +58,7 @@ public class Controller {
     Job job = new Job();
     job.setId(UUID.randomUUID().toString());
     job.setMessage("Hi this is " + job.getId());
-    rqueueMessageSender.enqueue("job-queue", job);
+    rqueueMessageEnqueuer.enqueue("job-queue", job);
     return job.toString();
   }
 
@@ -67,7 +67,7 @@ public class Controller {
     Job job = new Job();
     job.setId(UUID.randomUUID().toString());
     job.setMessage("Hi this is " + job.getId());
-    rqueueMessageSender.enqueueIn("job-queue", job, 2000L);
+    rqueueMessageEnqueuer.enqueueIn("job-queue", job, 2000L);
     return job.toString();
   }
 }
