@@ -1,7 +1,7 @@
 ---
 name: I'm using Rqueue
 about: 'Add my organisation in Rqueue Users '
-title: 'Add my organisation in Rqueue Users '
+title: Add my organisation in Rqueue user list
 labels: rqueue-user
 assignees: sonus21
 
@@ -11,8 +11,11 @@ assignees: sonus21
 
 # Organisation link
 
-# How are you using Rqueue?
+# How many messages do Rqueue process daily?  (optional)
 
-# How many messages do Rqueue process daily?
+# How are you using Rqueue? (optional)
 
-# Any Icon
+
+# Testimonials (optionals)
+
+# Icon/Logo
