@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.example;
 
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class Controller {
 
-  private final RqueueMessageSender rqueueMessageSender;
+  private final RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @GetMapping(value = "/push")
   public String push(
@@ -39,32 +39,39 @@ public class Controller {
       @RequestParam(required = false) Integer numRetries,
       @RequestParam(required = false) Long delay) {
     if (numRetries == null && delay == null) {
-      rqueueMessageSender.enqueue(q, msg);
+      rqueueMessageEnqueuer.enqueue(q, msg);
     } else if (numRetries == null) {
-      rqueueMessageSender.enqueueIn(q, msg, delay);
+      rqueueMessageEnqueuer.enqueueIn(q, msg, delay);
     } else {
-      rqueueMessageSender.enqueueInWithRetry(q, msg, numRetries, delay);
+      rqueueMessageEnqueuer.enqueueInWithRetry(q, msg, numRetries, delay);
     }
     log.info("Message {}", msg);
     return "Message sent successfully";
   }
 
+  private String getQueue(String queue) {
+    if (queue == null) {
+      return "job-queue";
+    }
+    return queue;
+  }
+
   @GetMapping("job")
-  public String sendJobNotification() {
+  public String sendJobNotification(@RequestParam(required = false) String queue) {
     Job job = new Job();
     job.setId(UUID.randomUUID().toString());
     job.setMessage("Hi this is " + job.getId());
-    rqueueMessageSender.enqueue("job-queue", job);
+    rqueueMessageEnqueuer.enqueue(getQueue(queue), job);
     log.info("{}", job);
     return job.toString();
   }
 
   @GetMapping("job-delay")
-  public String sendJobNotificationWithDelay() {
+  public String sendJobNotificationWithDelay(@RequestParam(required = false) String queue) {
     Job job = new Job();
     job.setId(UUID.randomUUID().toString());
     job.setMessage("Hi this is " + job.getId());
-    rqueueMessageSender.enqueueIn("job-queue", job, 2000L);
+    rqueueMessageEnqueuer.enqueueIn(getQueue(queue), job, 2000L);
     return job.toString();
   }
 }

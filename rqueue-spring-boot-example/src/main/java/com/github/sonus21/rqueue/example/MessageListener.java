@@ -26,12 +26,13 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class MessageListener {
+
   private static final Random random = new Random();
 
   @Value("${delay.queue.fail.percentage:0}")
   private int percentageFailure;
 
-  private boolean shouldFail() {
+  protected boolean shouldFail() {
     if (percentageFailure == 0) {
       return false;
     }
@@ -41,7 +42,7 @@ public class MessageListener {
     return random.nextInt(100) < percentageFailure;
   }
 
-  private void execute(String msg, Object any) {
+  protected void execute(String msg, Object any) {
     log.info(msg, any);
     TimeoutUtils.sleep(random.nextInt(2000));
   }

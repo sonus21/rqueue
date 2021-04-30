@@ -123,7 +123,6 @@ public class RqueueMessageListenerContainer
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
-  private Middleware middleware;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -168,6 +167,9 @@ public class RqueueMessageListenerContainer
   }
 
   public void setMaxNumWorkers(int maxNumWorkers) {
+    if (maxNumWorkers < 1) {
+      throw new IllegalArgumentException("maxNumWorkers must be greater than zero");
+    }
     this.maxNumWorkers = maxNumWorkers;
   }
 
