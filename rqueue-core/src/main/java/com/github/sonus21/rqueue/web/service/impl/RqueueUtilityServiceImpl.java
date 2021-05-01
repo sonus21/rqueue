@@ -29,7 +29,9 @@ import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
+import com.github.sonus21.rqueue.models.request.DataTypeRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
@@ -77,9 +79,8 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public BooleanResponse deleteMessage(String queueName, String id) {
-    String queueConfigKey = rqueueConfig.getQueueConfigKey(queueName);
-    QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey, true);
     BooleanResponse booleanResponse = new BooleanResponse();
+    QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(queueName, true);
     if (queueConfig == null) {
       booleanResponse.setCode(1);
       booleanResponse.setMessage("Queue config not found!");
@@ -221,5 +222,24 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   @Override
   public Mono<MessageMoveResponse> moveReactiveMessage(MessageMoveRequest request) {
     return Mono.just(moveMessage(request));
+  }
+
+  @Override
+  public Mono<BaseResponse> reactivePauseUnpauseQueue(DataTypeRequest request) {
+    return Mono.just(pauseUnpauseQueue(request));
+  }
+
+  @Override
+  public BaseResponse pauseUnpauseQueue(DataTypeRequest request) {
+    QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(request.getName(), true);
+    BaseResponse response = new BaseResponse();
+    if (queueConfig == null) {
+      response.setMessage("Queue does not exist");
+      response.setCode(404);
+    } else {
+      queueConfig.setPaused(!queueConfig.isPaused());
+      rqueueSystemConfigDao.saveQConfig(queueConfig);
+    }
+    return response;
   }
 }

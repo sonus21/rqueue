@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.impl.RqueueSystemConfigDaoImpl;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -39,10 +40,12 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class RqueueSystemConfigDaoTest extends TestBase {
+
   private final RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate =
       mock(RqueueRedisTemplate.class);
+  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
   private final RqueueSystemConfigDao rqueueSystemConfigDao =
-      new RqueueSystemConfigDaoImpl(rqueueRedisTemplate);
+      new RqueueSystemConfigDaoImpl(rqueueRedisTemplate, rqueueConfig);
 
   @Test
   void getQConfig() {

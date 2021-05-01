@@ -190,4 +190,15 @@ public class ReactiveRqueueRestController {
     }
     return rqueueUtilityService.moveReactiveMessage(request);
   }
+
+  @PostMapping("pause-unpause-queue")
+  @ResponseBody
+  public Mono<BaseResponse> pauseUnpauseQueue(
+      @RequestBody @Valid DataTypeRequest request, ServerHttpResponse response) {
+    if (!rqueueWebConfig.isEnable()) {
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
+      return null;
+    }
+    return rqueueUtilityService.reactivePauseUnpauseQueue(request);
+  }
 }

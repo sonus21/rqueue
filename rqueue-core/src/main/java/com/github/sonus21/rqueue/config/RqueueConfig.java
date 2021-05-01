@@ -136,6 +136,9 @@ public class RqueueConfig {
   @Value("${rqueue.system.mode:BOTH}")
   private RqueueMode mode;
 
+  @Value("${rqueue.internal.communication.channel.name.prefix:i-channel}")
+  private String internalChannelNamePrefix;
+
   public String getQueuesKey() {
     return prefix + queuesKeySuffix;
   }

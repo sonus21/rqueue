@@ -21,9 +21,14 @@ import java.util.Collection;
 import java.util.List;
 
 public interface RqueueSystemConfigDao {
-  QueueConfig getQConfig(String key);
 
-  QueueConfig getQConfig(String key, boolean cache);
+  QueueConfig getQConfig(String id);
+
+  QueueConfig getConfigByName(String name);
+
+  QueueConfig getConfigByName(String name, boolean cached);
+
+  QueueConfig getQConfig(String id, boolean cached);
 
   List<QueueConfig> findAllQConfig(Collection<String> ids);
 

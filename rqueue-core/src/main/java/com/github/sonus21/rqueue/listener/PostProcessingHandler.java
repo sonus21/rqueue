@@ -170,8 +170,8 @@ class PostProcessingHandler extends PrefixLogger {
     Object userMessage = job.getMessage();
     messageProcessorHandler.handleMessage(newMessage, userMessage, MessageStatus.MOVED_TO_DLQ);
     if (queueDetail.isDeadLetterConsumerEnabled()) {
-      String configKey = rqueueConfig.getQueueConfigKey(queueDetail.getDeadLetterQueueName());
-      QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(configKey, true);
+      QueueConfig queueConfig =
+          rqueueSystemConfigDao.getConfigByName(queueDetail.getDeadLetterQueueName(), true);
       if (queueConfig == null) {
         log(
             Level.ERROR,

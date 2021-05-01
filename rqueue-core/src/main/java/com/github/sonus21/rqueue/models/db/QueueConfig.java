@@ -52,6 +52,7 @@ public class QueueConfig extends SerializableBase {
   private String delayedQueueName;
   private int numRetry;
   private long visibilityTimeout;
+  private boolean paused;
   private MinMax<Integer> concurrency;
 
   @JsonProperty("deadLetterQueuesV2")
