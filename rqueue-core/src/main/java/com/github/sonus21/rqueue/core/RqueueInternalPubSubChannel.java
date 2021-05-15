@@ -28,27 +28,33 @@ import com.github.sonus21.rqueue.utils.SerializationUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.listener.ChannelTopic;
 
 @Slf4j
 public class RqueueInternalPubSubChannel implements InitializingBean {
-  @Autowired private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
-  @Autowired private RqueueMessageListenerContainer rqueueMessageListenerContainer;
-  @Autowired private RqueueConfig rqueueConfig;
-
-  @Autowired
-  @Qualifier("stringRqueueRedisTemplate")
-  private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  private final RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  private final RqueueMessageListenerContainer rqueueMessageListenerContainer;
+  private final RqueueConfig rqueueConfig;
+  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
 
   private SmartMessageSerDes smartMessageSerDes;
 
+  public RqueueInternalPubSubChannel(
+      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+      RqueueMessageListenerContainer rqueueMessageListenerContainer,
+      RqueueConfig rqueueConfig,
+      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+    this.rqueueRedisListenerContainerFactory = rqueueRedisListenerContainerFactory;
+    this.rqueueMessageListenerContainer = rqueueMessageListenerContainer;
+    this.rqueueConfig = rqueueConfig;
+    this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
+  }
+
   @Override
   public void afterPropertiesSet() throws Exception {
-    String channel = rqueueConfig.getInternalChannelNamePrefix();
+    String channel = rqueueConfig.getInternalCommChannelName();
     InternalMessageListener messageListener = new InternalMessageListener();
     rqueueRedisListenerContainerFactory.addMessageListener(
         messageListener, new ChannelTopic(channel));

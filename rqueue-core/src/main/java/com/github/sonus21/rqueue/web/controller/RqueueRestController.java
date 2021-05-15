@@ -42,8 +42,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -192,9 +190,9 @@ public class RqueueRestController {
   @PostMapping("pause-unpause-queue")
   @ResponseBody
   public BaseResponse pauseUnpauseQueue(
-      @RequestBody @Valid DataTypeRequest request, ServerHttpResponse response) {
+      @RequestBody @Valid DataTypeRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
+      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
     }
     return rqueueUtilityService.pauseUnpauseQueue(request);

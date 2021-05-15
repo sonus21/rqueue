@@ -32,7 +32,15 @@ abstract class MessageContainerBase extends RetryableRunnable<Object> {
     return queueStateMgr.isQueueActive(queueName);
   }
 
-  boolean isQueueEligibleForPoll(String queueName) {
-    return queueStateMgr.isQueueEligibleForPoll(queueName);
+  boolean eligibleForPolling(String queueName){
+    return  isQueueNotPaused(queueName) && isQueueActive(queueName);
+  }
+
+  boolean isQueueNotPaused(String queueName) {
+    return !isQueuePaused(queueName);
+  }
+
+  boolean isQueuePaused(String queueName) {
+    return queueStateMgr.isQueuePaused(queueName);
   }
 }

@@ -38,6 +38,9 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
   private float[] probability;
   private int currentIndex = 0;
 
+  private static final int ALL_QUEUES_ARE_INELIGIBLE = -1;
+  private static final int ALL_QUEUES_ARE_INACTIVE = -2;
+
   WeightedPriorityPoller(
       String groupName,
       final List<QueueDetail> queueDetails,
@@ -92,23 +95,23 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
     int tmpIndex = (currentIndex + 1) % queues.size();
     while (tmpIndex != currentIndex) {
       String queue = queues.get(tmpIndex);
-      if (currentWeight[tmpIndex] > 0 && isQueueActive(queue)) {
+      if (currentWeight[tmpIndex] > 0 && eligibleForPolling(queue)) {
         currentWeight[tmpIndex] -= 1;
         currentIndex = tmpIndex;
         return currentIndex;
       }
       tmpIndex = (tmpIndex + 1) % queues.size();
     }
-    return -1;
+    return ALL_QUEUES_ARE_INELIGIBLE;
   }
 
   private int getQueueToPollOrWait() {
     int index = getQueueIndexToPoll();
-    if (index == -1) {
+    if (index == ALL_QUEUES_ARE_INELIGIBLE) {
       if (shouldExit()) {
-        return -1;
+        return ALL_QUEUES_ARE_INACTIVE;
       }
-      index = -2;
+      index = ALL_QUEUES_ARE_INELIGIBLE;
     }
     if (isDebugEnabled()) {
       if (index >= 0) {
@@ -142,10 +145,10 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
     while (true) {
       try {
         int index = getQueueToPollOrWait();
-        if (index == -1) {
+        if (index == ALL_QUEUES_ARE_INACTIVE) {
           return;
         }
-        if (index == -2) {
+        if (index == ALL_QUEUES_ARE_INELIGIBLE) {
           TimeoutUtils.sleepLog(pollingInterval, false);
           reinitializeWeight();
         } else {

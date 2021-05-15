@@ -554,8 +554,8 @@ public class RqueueMessageListenerContainer
       return queueRunningState.getOrDefault(queueName, false);
     }
 
-    boolean isQueueEligibleForPoll(String queueName) {
-      return isQueueActive(queueName) && !pausedQueues.contains(queueName);
+    boolean isQueuePaused(String queueName){
+      return pausedQueues.contains(queueName);
     }
 
     void pauseUnpauseQueue(String queue) {

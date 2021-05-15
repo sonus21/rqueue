@@ -31,6 +31,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
@@ -62,6 +63,7 @@ class RqueueUtilityServiceTest extends TestBase {
   @Mock private RqueueMessageMetadataService messageMetadataService;
   @Mock private RqueueConfig rqueueConfig;
   @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
   private RqueueUtilityService rqueueUtilityService;
 
   @BeforeEach
@@ -74,7 +76,8 @@ class RqueueUtilityServiceTest extends TestBase {
             rqueueStringDao,
             rqueueSystemConfigDao,
             rqueueMessageTemplate,
-            messageMetadataService);
+            messageMetadataService,
+            rqueueInternalPubSubChannel);
   }
 
   @Test

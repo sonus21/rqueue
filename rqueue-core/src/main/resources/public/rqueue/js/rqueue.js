@@ -550,5 +550,5 @@ $(document).on('click', '#view-data', exploreData);
 $(document).on('click', '.data-explorer', exploreData);
 $(document).on('click', '.jobs-btn', jobsButton);
 $(document).on('click', '.jobs-closer-btn', jobsCloseButton);
-$(document).on('click', '.pause-queue', pauseQueueBtn);
+$(document).on('click', '.pause-queue-btn', pauseQueueBtn);
 

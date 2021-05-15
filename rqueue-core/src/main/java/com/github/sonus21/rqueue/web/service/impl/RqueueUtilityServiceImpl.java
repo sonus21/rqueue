@@ -20,6 +20,7 @@ import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
@@ -56,6 +57,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageMetadataService messageMetadataService;
+  private final RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
   private final RqueueConfig rqueueConfig;
   private String latestVersion = "NA";
   private String releaseLink = "#";
@@ -68,13 +70,15 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       RqueueStringDao rqueueStringDao,
       RqueueSystemConfigDao rqueueSystemConfigDao,
       RqueueMessageTemplate rqueueMessageTemplate,
-      RqueueMessageMetadataService messageMetadataService) {
+      RqueueMessageMetadataService messageMetadataService,
+      RqueueInternalPubSubChannel rqueueInternalPubSubChannel) {
     this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueConfig = rqueueConfig;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.messageMetadataService = messageMetadataService;
+    this.rqueueInternalPubSubChannel = rqueueInternalPubSubChannel;
   }
 
   @Override
@@ -238,6 +242,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       response.setCode(404);
     } else {
       queueConfig.setPaused(!queueConfig.isPaused());
+      rqueueInternalPubSubChannel.emitPauseUnpauseQueueEvent(request.getName());
       rqueueSystemConfigDao.saveQConfig(queueConfig);
     }
     return response;

@@ -34,7 +34,7 @@ public final class QueueThreadPool {
     this.taskExecutor = taskExecutor;
     this.defaultExecutor = defaultExecutor;
     this.maxThreadsCount = maxThreadsCount;
-    this.semaphore = new Semaphore(maxThreadsCount);
+    this.semaphore = new Semaphore(maxThreadsCount );
   }
 
   public void release() {
@@ -46,6 +46,10 @@ public final class QueueThreadPool {
   }
 
   public boolean acquire(int n, long timeout) throws InterruptedException {
+    if (taskExecutor instanceof ThreadPoolTaskExecutor) {
+      ThreadPoolTaskExecutor executor = ((ThreadPoolTaskExecutor) taskExecutor);
+      log.info("Current active threads {}", executor.getActiveCount());
+    }
     return semaphore.tryAcquire(n, timeout, TimeUnit.MILLISECONDS);
   }
 
@@ -69,8 +73,11 @@ public final class QueueThreadPool {
     if (!defaultExecutor) {
       return null;
     }
-    ThreadPoolTaskExecutor executor = ((ThreadPoolTaskExecutor) taskExecutor);
-    executor.destroy();
-    return executor.getThreadNamePrefix();
+    if (taskExecutor instanceof ThreadPoolTaskExecutor) {
+      ThreadPoolTaskExecutor executor = ((ThreadPoolTaskExecutor) taskExecutor);
+      executor.destroy();
+      return executor.getThreadNamePrefix();
+    }
+    return null;
   }
 }

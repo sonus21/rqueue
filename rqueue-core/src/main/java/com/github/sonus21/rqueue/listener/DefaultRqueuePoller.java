@@ -69,8 +69,19 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
   @Override
   public void start() {
     log(Level.DEBUG, "Running Queue {}", null, queueDetail.getName());
-    while (!shouldExit()) {
-      poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+    while (true) {
+      try {
+        if (eligibleForPolling(queueDetail.getName())) {
+          poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+        } else {
+          deactivate(-1, queueDetail.getName(), DeactivateType.NO_MESSAGE);
+        }
+      } catch (Exception e) {
+        log(Level.ERROR, "Error in poller", e);
+        if (shouldExit()) {
+          return;
+        }
+      }
     }
   }
 }

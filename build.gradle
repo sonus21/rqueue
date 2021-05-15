@@ -27,11 +27,11 @@ ext {
     springVersion = System.getenv("SPRING_VERSION")
     springDataVersion = System.getenv("SPRING_DATA_VERSION")
     microMeterVersion = System.getenv("MICROMETER_VERSION")
-//
-//    springBootVersion = '2.0.6.RELEASE'
-//    springVersion = '5.0.10.RELEASE'
-//    springDataVersion = '2.0.6.RELEASE'
-//    microMeterVersion = '1.1.0'
+
+    springBootVersion = '2.0.6.RELEASE'
+    springVersion = '5.0.10.RELEASE'
+    springDataVersion = '2.0.6.RELEASE'
+    microMeterVersion = '1.1.0'
 
     // logging dependencies
     lombokVersion = '1.18.10'
@@ -71,7 +71,7 @@ ext {
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '2.7.0-RELEASE'
+    version = '2.7.1-SNAPSHOT'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging

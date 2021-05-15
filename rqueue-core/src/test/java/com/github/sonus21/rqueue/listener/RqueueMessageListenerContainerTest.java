@@ -245,10 +245,8 @@ class RqueueMessageListenerContainerTest extends TestBase {
             .queuedTime(System.nanoTime())
             .build();
     StaticApplicationContext applicationContext = new StaticApplicationContext();
-    applicationContext.registerSingleton("rqueueConfig", RqueueConfig.class);
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
-
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);

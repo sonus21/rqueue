@@ -58,11 +58,11 @@
     </rollingPolicy>
   </appender>
 
-  <logger additivity="false" level="DEBUG" name="com.github.sonus21">
+  <logger additivity="false" level="INFO" name="com.github.sonus21">
     <appender-ref ref="FILE"/>
   </logger>
 
-  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.test.service">
+  <logger additivity="false" level="INFO" name="com.github.sonus21.rqueue.test.service">
     <appender-ref ref="ConsumedMessageStore"/>
   </logger>
 

@@ -86,13 +86,15 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
         return false;
       }
     }
-    log(Level.INFO, "Shutting down all queues are inactive {}", null, queues);
+    log(Level.INFO, "Shutting down all queues {} are inactive", null, queues);
     return true;
   }
 
-  int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
+  protected int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     int batchSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
-    return Math.max(batchSize, Constants.MIN_BATCH_SIZE);
+    batchSize = Math.max(batchSize, Constants.MIN_BATCH_SIZE);
+    log(Level.INFO, "Batch size {}", null, batchSize);
+    return batchSize;
   }
 
   private void sendMessagesToExecutor(

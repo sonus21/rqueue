@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.Constants.BLANK;
-
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
@@ -37,6 +35,9 @@ class StrictPriorityPoller extends RqueueMessagePoller {
   private final Map<String, QueueThreadPool> queueNameToThread;
   private final Map<String, Long> queueDeactivationTime = new HashMap<>();
   private final Map<String, Long> lastFetchedTime = new HashMap<>();
+
+  private static final String ALL_QUEUES_ARE_INELIGIBLE = "\uD83D\uDE1F";
+  private static final String ALL_QUEUES_ARE_INACTIVE = "\uD83D\uDC4B";
 
   StrictPriorityPoller(
       String groupName,
@@ -73,14 +74,14 @@ class StrictPriorityPoller extends RqueueMessagePoller {
     long now = System.currentTimeMillis();
     // starvation
     for (String queue : queues) {
-      if (isQueueActive(queue)) {
+      if (eligibleForPolling(queue)) {
         if (now - lastFetchedTime.get(queue) > Constants.MILLIS_IN_A_MINUTE) {
           return queue;
         }
       }
     }
     for (String queue : queues) {
-      if (isQueueActive(queue)) {
+      if (eligibleForPolling(queue)) {
         Long deactivationTime = queueDeactivationTime.get(queue);
         if (deactivationTime == null) {
           return queue;
@@ -90,16 +91,15 @@ class StrictPriorityPoller extends RqueueMessagePoller {
         }
       }
     }
-    return null;
+    return ALL_QUEUES_ARE_INELIGIBLE;
   }
 
   private String getQueueToPollOrWait() {
     String queueToPoll = getQueueToPoll();
-    if (queueToPoll == null) {
+    if (queueToPoll.equals(ALL_QUEUES_ARE_INELIGIBLE)) {
       if (shouldExit()) {
-        return null;
+        return ALL_QUEUES_ARE_INACTIVE;
       }
-      queueToPoll = BLANK;
     }
     log(Level.DEBUG, "Queue to be poll : {}", null, queueToPoll);
     return queueToPoll;
@@ -111,10 +111,10 @@ class StrictPriorityPoller extends RqueueMessagePoller {
     while (true) {
       try {
         String queue = getQueueToPollOrWait();
-        if (queue == null) {
+        if (queue.equals(ALL_QUEUES_ARE_INACTIVE)) {
           return;
         }
-        if (queue.equals(BLANK)) {
+        if (queue.equals(ALL_QUEUES_ARE_INELIGIBLE)) {
           TimeoutUtils.sleepLog(pollingInterval, false);
         } else {
           lastFetchedTime.put(queue, System.currentTimeMillis());

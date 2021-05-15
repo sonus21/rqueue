@@ -30,24 +30,25 @@ import java.util.function.BooleanSupplier;
  */
 public final class TimeoutUtils {
 
-  private TimeoutUtils() {
-  }
+  public static final long EXECUTION_TIME = 10_000L;
+  public static final long SLEEP_TIME = 100L;
+
+  private TimeoutUtils() {}
 
   public static void waitFor(
       BooleanSupplier callback, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
-    waitFor(callback, waitTimeInMilliSeconds, description, () -> {
-    });
+    waitFor(callback, waitTimeInMilliSeconds, description, () -> {});
   }
 
   public static void waitFor(BooleanSupplier callback, String description)
       throws TimedOutException {
-    waitFor(callback, 10000L, description);
+    waitFor(callback, EXECUTION_TIME, description);
   }
 
   public static void waitFor(BooleanSupplier callback, String description, Runnable postmortem)
       throws TimedOutException {
-    waitFor(callback, 10000L, description, postmortem);
+    waitFor(callback, EXECUTION_TIME, description, postmortem);
   }
 
   public static void waitFor(
@@ -57,12 +58,11 @@ public final class TimeoutUtils {
       Runnable postmortem)
       throws TimedOutException {
     long endTime = System.currentTimeMillis() + waitTimeInMilliSeconds;
-    long sleepTime = 100;
     do {
       if (Boolean.TRUE.equals(callback.getAsBoolean())) {
         return;
       }
-      sleep(sleepTime);
+      sleep(SLEEP_TIME);
     } while (System.currentTimeMillis() < endTime);
     try {
       postmortem.run();

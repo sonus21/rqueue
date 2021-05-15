@@ -26,7 +26,8 @@
           {{ dlq(meta.deadLetterQueues) }}
         </td>
         <td class="text-center">
-          <i class="bx pause-button {% if meta.paused %} bx-play-circle  {% else %} bx-pause-circle {% endif %}"
+          <i data-toggle="tooltip" data-placement="top" title="{% if meta.paused %}Unpause{% else %}Pause{% endif %}"
+             class="bx pause-queue-btn {% if meta.paused %} bx-play-circle  {% else %} bx-pause-circle {% endif %}"
              data-queue="{{meta.name}}"></i>
         </td>
         <td>{{ time(meta.createdOn) }}</td>
