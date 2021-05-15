@@ -1,33 +1,35 @@
 ---
 name: Bug Report
 about: What's not working?
-title: What's not working?
+title: ''
 labels: ''
 assignees: sonus21
 
 ---
 
-**Describe the bug**
+<!--
+Please answer these questions before submitting your issue. Thanks!
+-->
+
+**What's not working?**
 
 A clear and concise description of what the bug is.
 
-**How to Reproduce**
 
-* Steps to reproduce the behavior
-* A sample reproducable code if possible.
-
-**Screenshots**
-
-If applicable, add screenshots to help explain your problem.
-
-**Library Dependencies**
- - Spring Boot: 
- - Spring Messaging:
- - Spring Data Redis: 
- - Any other Spring library dependencies
+**What're application dependencies ?**
+- Rqueue Version: 
+ - Spring Boot  Version: 
+ - Spring Messaging Version
+ - Spring Data Redis Version
+ - Any other spring library dependencies and their version
 
 
+**How to Reproduce (optional)?**
 
-**Additional Details**
+* Steps to reproduce the behaviour
+* A sample reproducible code if possible.
+
+
+**Additional Details (optional)**
 
 Add any other context about the problem that would be helpful like OS, Redis, Docker etc

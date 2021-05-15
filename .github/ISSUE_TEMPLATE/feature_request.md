@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an idea for this project
 title: Suggest an idea for this project
 labels: ''
-assignees: ''
+assignees: sonus21
 
 ---
 
