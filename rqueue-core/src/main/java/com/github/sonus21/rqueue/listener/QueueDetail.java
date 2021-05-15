@@ -50,8 +50,7 @@ public class QueueDetail extends SerializableBase {
   private static final long serialVersionUID = 9153752084449974622L;
   private final String name;
   private final int numRetry;
-  @Builder.Default
-  private final QueueType type = QueueType.QUEUE;
+  @Builder.Default private final QueueType type = QueueType.QUEUE;
   private final String queueName;
   private final String deadLetterQueueName;
   private final boolean deadLetterConsumerEnabled;
@@ -62,6 +61,7 @@ public class QueueDetail extends SerializableBase {
   private final boolean active;
   private final Concurrency concurrency;
   private final boolean systemGenerated;
+  private final int batchSize;
 
   public enum QueueType {
     QUEUE,
@@ -143,6 +143,7 @@ public class QueueDetail extends SerializableBase {
         .delayedQueueName(delayedQueueName + suffix)
         .delayedQueueChannelName(delayedQueueChannelName + suffix)
         .active(active)
+        .batchSize(batchSize)
         .systemGenerated(systemGenerated)
         .priorityGroup(priorityGroup)
         .concurrency(concurrency)

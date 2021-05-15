@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -36,16 +35,22 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueSystemConfigDaoTest extends TestBase {
+  @Mock private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
+  @Mock private RqueueConfig rqueueConfig;
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
 
-  private final RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate =
-      mock(RqueueRedisTemplate.class);
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private final RqueueSystemConfigDao rqueueSystemConfigDao =
-      new RqueueSystemConfigDaoImpl(rqueueRedisTemplate, rqueueConfig);
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueSystemConfigDao = new RqueueSystemConfigDaoImpl(rqueueRedisTemplate, rqueueConfig);
+  }
 
   @Test
   void getQConfig() {

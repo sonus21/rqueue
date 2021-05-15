@@ -29,8 +29,11 @@ public class MessageListener {
 
   private static final Random random = new Random();
 
-  @Value("${delay.queue.fail.percentage:0}")
+  @Value("${job.fail.percentage:0}")
   private int percentageFailure;
+
+  @Value("${job.execution.interval:100}")
+  private int jobExecutionTime;
 
   protected boolean shouldFail() {
     if (percentageFailure == 0) {
@@ -42,26 +45,25 @@ public class MessageListener {
     return random.nextInt(100) < percentageFailure;
   }
 
-  protected void execute(String msg, Object any) {
+  protected void execute(String msg, Object any, boolean failingEnabled) {
     log.info(msg, any);
-    TimeoutUtils.sleep(random.nextInt(2000));
+    TimeoutUtils.sleep(random.nextInt(jobExecutionTime));
+    if (failingEnabled && shouldFail()) {
+      throw new IllegalArgumentException("Failing On Purpose " + any);
+    }
   }
 
-  @RqueueListener(value = "${rqueue.simple.queue}", active = "true")
-  public void consumeMessage(String message) {
-    execute("simple: {}", message);
+  @RqueueListener(value = "${rqueue.simple.queue}")
+  public void onSimpleMessage(String message) {
+    execute("simple: {}", message, false);
   }
 
   @RqueueListener(
       value = {"${rqueue.delay.queue}", "${rqueue.delay2.queue}"},
       numRetries = "${rqueue.delay.queue.retries}",
-      visibilityTimeout = "60*60*1000",
-      active = "true")
+      visibilityTimeout = "60*60*1000")
   public void onMessage(String message) {
-    execute("delay: {}", message);
-    if (shouldFail()) {
-      throw new NullPointerException("Failing On Purpose " + message);
-    }
+    execute("delay: {}", message, true);
   }
 
   @RqueueListener(
@@ -69,20 +71,13 @@ public class MessageListener {
       deadLetterQueue = "job-morgue",
       numRetries = "2",
       deadLetterQueueListenerEnabled = "false",
-      concurrency = "1-3",
-      active = "true")
-  public void onMessage(Job job) {
-    execute("job-queue: {}", job);
-    if (shouldFail()) {
-      throw new IllegalStateException("OMG!" + job);
-    }
+      concurrency = "10-20")
+  public void onJobMessage(Job job) {
+    execute("job-queue: {}", job, true);
   }
 
   @RqueueListener(value = "job-morgue", numRetries = "1", concurrency = "1-3")
-  public void onMessageJobDlq(Job job) {
-    execute("job-morgue: {}", job);
-    if (shouldFail()) {
-      throw new IllegalStateException("OMG!" + job);
-    }
+  public void onJobDlqMessage(Job job) {
+    execute("job-morgue: {}", job, true);
   }
 }

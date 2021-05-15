@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -27,17 +26,22 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueEndpointManagerTest extends TestBase {
-
-  private final RqueueEndpointManager rqueueEndpointManager =
-      new RqueueEndpointManagerImpl(
-          mock(RqueueMessageTemplate.class), new DefaultRqueueMessageConverter(), null);
-  RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueConfig rqueueConfig;
+  private RqueueEndpointManager rqueueEndpointManager;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+    rqueueEndpointManager =
+        new RqueueEndpointManagerImpl(
+            rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
+
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     EndpointRegistry.delete();
   }

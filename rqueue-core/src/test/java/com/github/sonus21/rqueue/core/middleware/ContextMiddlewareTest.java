@@ -18,23 +18,30 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.context.DefaultContext;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class ContextMiddlewareTest extends TestBase {
+  @Mock private Job job;
+
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+  }
 
   @Test
   void handleReturnNullContext() {
     ContextMiddleware contextMiddleware = job -> null;
-    assertThrows(
-        IllegalStateException.class, () -> contextMiddleware.handle(mock(Job.class), null));
+    assertThrows(IllegalStateException.class, () -> contextMiddleware.handle(job, null));
   }
 
   @Test
@@ -42,7 +49,7 @@ class ContextMiddlewareTest extends TestBase {
     ContextMiddleware contextMiddleware = job -> DefaultContext.EMPTY;
     AtomicInteger atomicInteger = new AtomicInteger();
     contextMiddleware.handle(
-        mock(Job.class),
+        job,
         () -> {
           atomicInteger.incrementAndGet();
           return null;

@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -45,16 +44,17 @@ import java.time.Duration;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class JobImplTest extends TestBase {
-  private final RqueueConfig rqueueConfig =
-      new RqueueConfig(mock(RedisConnectionFactory.class), null, true, 2);
-  private final RqueueMessageMetadataService messageMetadataService =
-      mock(RqueueMessageMetadataService.class);
-  private final RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);
+  @Mock RedisConnectionFactory redisConnectionFactory;
+  @Mock private RqueueMessageMetadataService messageMetadataService;
+  @Mock private RqueueJobDao rqueueJobDao;
+  private RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   RqueueMessage rqueueMessage =
@@ -65,6 +65,8 @@ class JobImplTest extends TestBase {
 
   @BeforeEach
   public void init() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+    rqueueConfig = new RqueueConfig(redisConnectionFactory, null, true, 2);
     FieldUtils.writeField(rqueueConfig, "jobEnabled", true, true);
     FieldUtils.writeField(rqueueConfig, "prefix", "__rq::", true);
     FieldUtils.writeField(rqueueConfig, "jobKeyPrefix", "job::", true);

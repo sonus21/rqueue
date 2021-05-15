@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -42,29 +41,31 @@ import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class RqueueMessageManagerImplTest extends TestBase {
 
-  private final RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
-  private final RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
+  @Mock private RqueueMessageTemplate messageTemplate;
+  @Mock private RqueueLockManager rqueueLockManager;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   private final String messageId = UUID.randomUUID().toString();
   private final String queue = "test-queue";
-  private final RqueueMessageMetadataService rqueueMessageMetadataService =
-      mock(RqueueMessageMetadataService.class);
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
-  private final RqueueMessageManager rqueueMessageManager =
-      new RqueueMessageManagerImpl(messageTemplate, messageConverter, messageHeaders);
+  private RqueueMessageManager rqueueMessageManager;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+    rqueueMessageManager =
+        new RqueueMessageManagerImpl(messageTemplate, messageConverter, messageHeaders);
     FieldUtils.writeField(
         rqueueMessageManager, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
-    FieldUtils.writeField(
-        rqueueMessageManager, "rqueueLockManager", rqueueLockManager, true);
+    FieldUtils.writeField(rqueueMessageManager, "rqueueLockManager", rqueueLockManager, true);
   }
 
   @Test

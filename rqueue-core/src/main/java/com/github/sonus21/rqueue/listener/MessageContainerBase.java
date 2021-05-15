@@ -16,30 +16,23 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.RetryableRunnable;
-import java.lang.ref.WeakReference;
-import java.util.Objects;
 import org.slf4j.Logger;
 
 abstract class MessageContainerBase extends RetryableRunnable<Object> {
-  protected final WeakReference<RqueueMessageListenerContainer> container;
+  protected final QueueStateMgr queueStateMgr;
 
-  MessageContainerBase(Logger log, String groupName, RqueueMessageListenerContainer container) {
-    this(log, groupName, new WeakReference<>(container));
-  }
-
-  MessageContainerBase(
-      Logger log, String groupName, WeakReference<RqueueMessageListenerContainer> container) {
+  MessageContainerBase(Logger log, String groupName, QueueStateMgr queueStateMgr) {
     super(log, groupName);
-    this.container = container;
-  }
-
-  protected RqueueMessageTemplate getRqueueMessageTemplate() {
-    return Objects.requireNonNull(container.get()).getRqueueMessageTemplate();
+    this.queueStateMgr = queueStateMgr;
   }
 
   boolean isQueueActive(String queueName) {
-    return Objects.requireNonNull(container.get()).isQueueActive(queueName);
+    return queueStateMgr.isQueueActive(queueName);
+  }
+
+  boolean isQueueEligibleForPoll(String queueName) {
+    return queueStateMgr.isQueueEligibleForPoll(queueName);
   }
 }

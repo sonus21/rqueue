@@ -18,9 +18,11 @@ package com.github.sonus21.rqueue.listener;
 
 import static com.github.sonus21.rqueue.utils.Constants.BLANK;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
+import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,18 +34,28 @@ import org.slf4j.event.Level;
 
 class StrictPriorityPoller extends RqueueMessagePoller {
   private final Map<String, QueueDetail> queueNameToDetail;
-  private final Map<String, QueueThread> queueNameToThread;
+  private final Map<String, QueueThreadPool> queueNameToThread;
   private final Map<String, Long> queueDeactivationTime = new HashMap<>();
   private final Map<String, Long> lastFetchedTime = new HashMap<>();
 
   StrictPriorityPoller(
       String groupName,
-      RqueueMessageListenerContainer container,
       final List<QueueDetail> queueDetails,
-      final Map<String, QueueThread> queueNameToThread,
-      PostProcessingHandler postProcessingHandler,
-      RqueueConfig rqueueConfig) {
-    super("Strict-" + groupName, container, postProcessingHandler, rqueueConfig);
+      final Map<String, QueueThreadPool> queueNameToThread,
+      RqueueBeanProvider rqueueBeanProvider,
+      QueueStateMgr queueStateMgr,
+      List<Middleware> middlewares,
+      long pollingInterval,
+      long backoffTime,
+      PostProcessingHandler postProcessingHandler) {
+    super(
+        "Strict-" + groupName,
+        rqueueBeanProvider,
+        queueStateMgr,
+        middlewares,
+        pollingInterval,
+        backoffTime,
+        postProcessingHandler);
     List<QueueDetail> queueDetailList = new ArrayList<>(queueDetails);
     queueDetailList.sort(
         (o1, o2) ->
@@ -73,7 +85,7 @@ class StrictPriorityPoller extends RqueueMessagePoller {
         if (deactivationTime == null) {
           return queue;
         }
-        if (now - deactivationTime > getPollingInterval()) {
+        if (now - deactivationTime > pollingInterval) {
           return queue;
         }
       }
@@ -103,12 +115,12 @@ class StrictPriorityPoller extends RqueueMessagePoller {
           return;
         }
         if (queue.equals(BLANK)) {
-          TimeoutUtils.sleepLog(getPollingInterval(), false);
+          TimeoutUtils.sleepLog(pollingInterval, false);
         } else {
           lastFetchedTime.put(queue, System.currentTimeMillis());
-          QueueThread queueThread = queueNameToThread.get(queue);
+          QueueThreadPool queueThreadPool = queueNameToThread.get(queue);
           QueueDetail queueDetail = queueNameToDetail.get(queue);
-          poll(-1, queue, queueDetail, queueThread);
+          poll(-1, queue, queueDetail, queueThreadPool);
         }
       } catch (Exception e) {
         log(Level.ERROR, "Exception in the poller {}", e, e.getMessage());
@@ -120,14 +132,14 @@ class StrictPriorityPoller extends RqueueMessagePoller {
   }
 
   @Override
-  long getSemaphoreWaiTime() {
+  long getSemaphoreWaitTime() {
     return 20L;
   }
 
   @Override
   void deactivate(int index, String queue, DeactivateType deactivateType) {
     if (deactivateType == DeactivateType.POLL_FAILED) {
-      TimeoutUtils.sleepLog(getBackOffTime(), false);
+      TimeoutUtils.sleepLog(backoffTime, false);
     } else {
       queueDeactivationTime.put(queue, System.currentTimeMillis());
     }

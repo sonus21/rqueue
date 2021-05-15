@@ -178,11 +178,19 @@ public @interface RqueueListener {
   /**
    * Priority group for this listener.
    *
-   * <p>More than one priority group can be configured in an application. Priority groups are
-   * useful
+   * <p>More than one priority group can be configured in an application. Priority groups are useful
    * when inside a group some queue(s) have higher priority than the other queue(s).
    *
    * @return priority group name.
    */
   String priorityGroup() default "";
+
+  /**
+   * The message batch size, Rqueue will try to pull batchSize message in one Redis call. By default
+   * it will try to pull one message but if concurrency is not reached then it will try to pull more
+   * than one messages.
+   *
+   * @return batch size
+   */
+  String batchSize() default "-1";
 }

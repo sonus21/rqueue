@@ -24,7 +24,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -38,16 +37,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 
 @CoreUnitTest
 class RqueueMessageMetadataServiceTest extends TestBase {
-
-  private final RqueueMessageMetadataDao rqueueMessageMetadataDao = mock(
-      RqueueMessageMetadataDao.class);
-  private final RqueueMessageMetadataService rqueueMessageMetadataService =
-      new RqueueMessageMetadataServiceImpl(rqueueMessageMetadataDao);
+  @Mock private RqueueMessageMetadataDao rqueueMessageMetadataDao;
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
   private final String queueName = "test-queue";
+
+  @BeforeEach
+  public void init() {
+    rqueueMessageMetadataService = new RqueueMessageMetadataServiceImpl(rqueueMessageMetadataDao);
+  }
 
   @Test
   void get() {

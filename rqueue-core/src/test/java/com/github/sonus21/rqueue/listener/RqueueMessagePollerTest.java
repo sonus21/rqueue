@@ -14,27 +14,16 @@
  *
  */
 
-package com.github.sonus21.rqueue.dao;
+package com.github.sonus21.rqueue.listener;
 
-import com.github.sonus21.rqueue.models.db.QueueConfig;
-import java.util.Collection;
-import java.util.List;
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
+import org.junit.jupiter.api.BeforeEach;
 
-public interface RqueueSystemConfigDao {
+@CoreUnitTest
+class RqueueMessagePollerTest extends TestBase {
+  // DefaultRqueuePoller poller = new DefaultRqueuePoller();
 
-  QueueConfig getQConfig(String id);
-
-  QueueConfig getConfigByName(String name);
-
-  List<QueueConfig> getConfigByNames(Collection<String> names);
-
-  QueueConfig getConfigByName(String name, boolean cached);
-
-  QueueConfig getQConfig(String id, boolean cached);
-
-  List<QueueConfig> findAllQConfig(Collection<String> ids);
-
-  void saveQConfig(QueueConfig queueConfig);
-
-  void saveAllQConfig(List<QueueConfig> newConfigs);
+  @BeforeEach
+  void setUp() {}
 }

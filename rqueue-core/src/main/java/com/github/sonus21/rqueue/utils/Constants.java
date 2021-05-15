@@ -47,4 +47,7 @@ public final class Constants {
   public static final String REDIS_KEY_SEPARATOR = "::";
   public static final int MAX_STACKTRACE_LENGTH = 3000;
   public static final String Comma = ",";
+  public static final int MIN_BATCH_SIZE = 1;
+  public static final int BATCH_SIZE_FOR_CONCURRENCY_BASED_LISTENER = 10;
+  public static final long QUEUE_ACTIVE_CHECK_INTERVAL_IN_MS = 2 * MILLIS_IN_A_MINUTE;
 }

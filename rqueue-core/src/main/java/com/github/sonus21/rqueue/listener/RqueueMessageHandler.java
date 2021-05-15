@@ -281,6 +281,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     Concurrency concurrency = resolveConcurrency(rqueueListener);
     Map<String, Integer> priorityMap = resolvePriority(rqueueListener);
     String priorityGroup = resolvePriorityGroup(rqueueListener);
+    int batchSize = getBatchSize(rqueueListener, concurrency);
     MappingInformation mappingInformation =
         MappingInformation.builder()
             .active(active)
@@ -292,12 +293,28 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
             .visibilityTimeout(visibilityTimeout)
             .priorityGroup(priorityGroup)
             .priority(priorityMap)
+            .batchSize(batchSize)
             .build();
     if (mappingInformation.isValid()) {
       return mappingInformation;
     }
     logger.warn("Invalid Queue '" + mappingInformation + "' configuration");
     return null;
+  }
+
+  private int getBatchSize(RqueueListener rqueueListener, Concurrency concurrency) {
+    int val =
+        ValueResolver.resolveKeyToInteger(getApplicationContext(), rqueueListener.numRetries());
+    // batch size is not set
+    if (val < Constants.MIN_BATCH_SIZE) {
+      // concurrency is set but batch size is not set, use default batch size
+      if (concurrency.isValid()) {
+        val = Constants.BATCH_SIZE_FOR_CONCURRENCY_BASED_LISTENER;
+      } else {
+        val = Constants.MIN_BATCH_SIZE;
+      }
+    }
+    return val;
   }
 
   @Override

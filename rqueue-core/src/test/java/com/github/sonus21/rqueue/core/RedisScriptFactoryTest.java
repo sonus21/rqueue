@@ -29,7 +29,9 @@ import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
@@ -138,5 +140,41 @@ class RedisScriptFactoryTest extends TestBase {
     assertTrue(scriptExecutor.execute(script, Collections.singletonList(key), rqueueMessage2));
 
     assertTrue(scriptExecutor.execute(script, Collections.singletonList(key), rqueueMessage));
+  }
+
+  @Test
+  @TestQueue(value = {"testDequeue", "testDequeue::processing"})
+  void testDequeue() {
+    String queue = "testDequeue";
+    String processingQueueName = queue + "::processing";
+    String processingChannel = queue + "::p-channel";
+    RqueueMessageTemplate template = new RqueueMessageTemplateImpl(redisConnectionFactory, null);
+    LinkedList<RqueueMessage> rqueueMessageList = new LinkedList<>();
+    for (int i = 0; i < 55; i++) {
+      RqueueMessage rqueueMessage = RqueueMessage.builder().message("Test message " + i).build();
+      rqueueMessage.setId(UUID.randomUUID().toString());
+      template.addMessage(queue, rqueueMessage);
+      rqueueMessageList.add(rqueueMessage);
+    }
+    List<RqueueMessage> rqueueMessages =
+        template.popN(queue, processingQueueName, processingChannel, 5_000L, 20);
+    List<RqueueMessage> rqueueMessages2 =
+        template.popN(queue, processingQueueName, processingChannel, 5_000L, 20);
+    List<RqueueMessage> rqueueMessages3 =
+        template.popN(queue, processingQueueName, processingChannel, 5_000L, 20);
+    assertEquals(20, rqueueMessages.size());
+    assertTrue(rqueueMessages.containsAll(rqueueMessageList.subList(0, 20)));
+    assertEquals(20, rqueueMessages2.size());
+    assertTrue(rqueueMessageList.subList(20, 40).containsAll(rqueueMessages2));
+    assertEquals(15, rqueueMessages3.size());
+    assertTrue(rqueueMessageList.subList(40, 55).containsAll(rqueueMessages3));
+
+    assertEquals(0, rqueueMessageTemplate.getTemplate().opsForList().size(queue));
+    assertEquals(55, rqueueMessageTemplate.getTemplate().opsForZSet().size(processingQueueName));
+
+    // non exist queue
+    rqueueMessages =
+        template.popN(queue + "404", processingQueueName, processingChannel, 5_000L, 20);
+    assertEquals(0, rqueueMessages.size());
   }
 }

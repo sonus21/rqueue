@@ -14,17 +14,25 @@
  *
  */
 
-package com.github.sonus21.rqueue.models;
+package com.github.sonus21.rqueue.models.event;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import java.io.Serializable;
+import com.github.sonus21.rqueue.models.SerializableBase;
+import com.github.sonus21.rqueue.models.enums.PubSubType;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
-@JsonInclude(Include.NON_NULL)
-public abstract class SerializableBase implements Serializable {}
+public class RqueuePubSubEvent extends SerializableBase {
+  private PubSubType type;
+  private String senderId;
+  private String message;
+}

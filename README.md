@@ -19,33 +19,35 @@ well, where all services code is in Spring.
 
 ## Features
 
-* **Message Scheduling** : A message can be scheduled for any arbitrary period
+* **Instant delivery** : Instant execute this message
+* **Message scheduling** : A message can be scheduled for any arbitrary period
 * **Unique message** : Unique message processing for a queue based on the message id
 * **Periodic message** : Process same message at certain interval
-* **Message delivery**: It's guaranteed that a message is consumed **at least once**.  (Message
+* **Priority tasks** : task having some special priority like high, low, medium
+* **Message delivery** : It's guaranteed that a message is consumed **at least once**.  (Message
   would be consumed by a worker more than once due to the failure in the underlying
   worker/restart-process etc, otherwise exactly one delivery)
-* **Message retry**: Message would be retried automatically on application crash/failure/restart
+* **Message retry** : Message would be retried automatically on application crash/failure/restart
   etc.
 * **Automatic message serialization and deserialization**
-* **Message Multicasting**: Call multiple message listeners on every message
+* **Message Multicasting** : Call multiple message listeners on every message
 * **Metrics** : In flight messages, waiting for consumption and delayed messages
-* **Competing Consumers** multiple messages can be consumed in parallel by different
+* **Competing Consumers** : multiple messages can be consumed in parallel by different
   workers/listeners.
-* **Concurrency**: Concurrency of any listener can be configured
-* **Queue Priority**:
-  * Group level queue priority(weighted and strict)
-  * Sub queue priority(weighted and strict)
-* **Long execution job**: Long running jobs can check in periodically.
+* **Concurrency** : Concurrency of any listener can be configured
+* **Queue Priority** :
+    * Group level queue priority(weighted and strict)
+    * Sub queue priority(weighted and strict)
+* **Long execution job** : Long running jobs can check in periodically.
 * **Execution Backoff** : Exponential and fixed back off (default fixed back off)
-* **Middleware**:  Add one or more middleware, middlewares are called before listener method.
+* **Middleware** :  Add one or more middleware, middlewares are called before listener method.
 * **Callbacks** : Callbacks for dead letter queue, discard etc
-* **Events** 1. Bootstrap event 2. Task execution event.
-* **Redis connection**: A different redis setup can be used for Rqueue
+* **Events** : 1. Bootstrap event 2. Task execution event.
+* **Redis connection** : A different redis setup can be used for Rqueue
 * **Redis cluster** : Redis cluster can be used with Lettuce client.
 * **Redis Sentinel** : Redis sentinel can be used with Rqueue.
-* **Reactive Programming**: Supports reactive Redis and spring webflux
-* **Web Dashboard**:  Web dashboard to manage a queue and queue insights including latency
+* **Reactive Programming** : Supports reactive Redis and spring webflux
+* **Web Dashboard** :  Web dashboard to manage a queue and queue insights including latency
 
 ### Requirements
 
@@ -66,36 +68,36 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 * Get the latest one
   from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
 * Add dependency
-  * Gradle
-    ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.7.0-RELEASE'
-    ```
-  * Maven
-    ```xml
-     <dependency>
-        <groupId>com.github.sonus21</groupId>
-        <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.7.0-RELEASE</version>
-    </dependency>
-    ```
+    * Gradle
+      ```groovy
+          implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.7.0-RELEASE'
+      ```
+    * Maven
+      ```xml
+       <dependency>
+          <groupId>com.github.sonus21</groupId>
+          <artifactId>rqueue-spring-boot-starter</artifactId>
+          <version>2.7.0-RELEASE</version>
+      </dependency>
+      ```
 
 #### Spring framework
 
 * Get the latest one
   from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
 * Add Dependency
-  * Gradle
-    ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.7.0-RELEASE'
-    ```
-  * Maven
-    ```xml
-     <dependency>
-       <groupId>com.github.sonus21</groupId>
-       <artifactId>rqueue-spring</artifactId>
-       <version>2.7.0-RELEASE</version>
-     </dependency>
-    ```
+    * Gradle
+      ```groovy
+          implementation 'com.github.sonus21:rqueue-spring:2.7.0-RELEASE'
+      ```
+    * Maven
+      ```xml
+       <dependency>
+         <groupId>com.github.sonus21</groupId>
+         <artifactId>rqueue-spring</artifactId>
+         <version>2.7.0-RELEASE</version>
+       </dependency>
+      ```
 
 2. Add annotation `EnableRqueue` on application config class
 3. Provide a RedisConnectionFactory bean
@@ -242,7 +244,7 @@ Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
 ## Status
 
-Rqueue is stable and production ready, it's processing thousands of messages daily in production
+Rqueue is stable and production ready, it's processing 100K+ messages daily in production
 environment.
 
 **We would love to add your organization name here, if you're one of the Rqueue users, please raise
@@ -253,6 +255,8 @@ PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueu
 <a href="https://tuneyou.com/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>
 &nbsp;&nbsp;
 <a href="https://www.pokerstarssports.eu"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/pokerstars.png" width="250" align="middle"/></a>
+&nbsp;&nbsp;
+<a href="https://bitbot.plus/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/bitbot.png" width="250" align="middle"/></a>
 &nbsp;&nbsp;
 
 ## Support
@@ -285,8 +289,8 @@ environment variables for Spring versions.
 * Issue tracker:
   [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues)
 * Maven Central:
-  * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
-  * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
+    * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
+    * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
 
 * StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
 * Discord: https://discord.gg/2hgQZXS2

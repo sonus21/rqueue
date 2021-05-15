@@ -16,60 +16,68 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import org.springframework.util.CollectionUtils;
 
-@Slf4j
 abstract class RqueueMessagePoller extends MessageContainerBase {
   private final PostProcessingHandler postProcessingHandler;
-  private final RqueueConfig rqueueConfig;
+  final List<Middleware> middlewares;
+  final long pollingInterval;
+  final long backoffTime;
+  private final RqueueBeanProvider rqueueBeanProvider;
   List<String> queues;
 
   RqueueMessagePoller(
       String groupName,
-      RqueueMessageListenerContainer container,
-      PostProcessingHandler postProcessingHandler,
-      RqueueConfig rqueueConfig) {
-    super(log, groupName, container);
+      RqueueBeanProvider rqueueBeanProvider,
+      QueueStateMgr queueStateMgr,
+      List<Middleware> middlewares,
+      long pollingInterval,
+      long backoffTime,
+      PostProcessingHandler postProcessingHandler) {
+    super(LoggerFactory.getLogger(RqueueMessagePoller.class), groupName, queueStateMgr);
     this.postProcessingHandler = postProcessingHandler;
-    this.rqueueConfig = rqueueConfig;
+    this.middlewares = middlewares;
+    this.rqueueBeanProvider = rqueueBeanProvider;
+    this.pollingInterval = pollingInterval;
+    this.backoffTime = backoffTime;
   }
 
-  private RqueueMessage getMessage(QueueDetail queueDetail) {
-    return getRqueueMessageTemplate()
-        .pop(
+  private List<RqueueMessage> getMessages(QueueDetail queueDetail, int count) {
+    return rqueueBeanProvider
+        .getRqueueMessageTemplate()
+        .popN(
             queueDetail.getQueueName(),
             queueDetail.getProcessingQueueName(),
             queueDetail.getProcessingQueueChannelName(),
-            queueDetail.getVisibilityTimeout());
+            queueDetail.getVisibilityTimeout(),
+            count);
   }
 
-  long getPollingInterval() {
-    return Objects.requireNonNull(container.get()).getPollingInterval();
-  }
-
-  long getBackOffTime() {
-    return Objects.requireNonNull(container.get()).getBackOffTime();
-  }
-
-  private void execute(QueueThread queueThread, QueueDetail queueDetail, RqueueMessage message) {
-    queueThread
-        .getTaskExecutor()
-        .execute(
-            new RqueueExecutor(
-                container,
-                rqueueConfig,
-                postProcessingHandler,
-                message,
-                queueDetail,
-                queueThread.getSemaphore()));
+  private void execute(
+      QueueThreadPool queueThreadPool, QueueDetail queueDetail, RqueueMessage message) {
+    try {
+      queueThreadPool.execute(
+          new RqueueExecutor(
+              rqueueBeanProvider,
+              queueStateMgr,
+              middlewares,
+              postProcessingHandler,
+              message,
+              queueDetail,
+              queueThreadPool));
+    } catch (Exception e) {
+      log(Level.WARN, "Execution failed Msg: {}", e, message);
+      queueThreadPool.release();
+    }
   }
 
   boolean shouldExit() {
@@ -82,12 +90,52 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     return true;
   }
 
-  void poll(int index, String queue, QueueDetail queueDetail, QueueThread queueThread) {
+  int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
+    int batchSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
+    return Math.max(batchSize, Constants.MIN_BATCH_SIZE);
+  }
+
+  private void sendMessagesToExecutor(
+      QueueDetail queueDetail,
+      QueueThreadPool queueThreadPool,
+      List<RqueueMessage> rqueueMessages) {
+    for (RqueueMessage rqueueMessage : rqueueMessages) {
+      execute(queueThreadPool, queueDetail, rqueueMessage);
+    }
+  }
+
+  private void pollAndExecute(
+      int index,
+      String queue,
+      QueueDetail queueDetail,
+      QueueThreadPool queueThreadPool,
+      int batchSize) {
+    if (isQueueActive(queue)) {
+      try {
+        List<RqueueMessage> messages = getMessages(queueDetail, batchSize);
+        log(Level.DEBUG, "Queue: {} Fetched Msgs {}", null, queue, messages);
+        int messageCount = CollectionUtils.isEmpty(messages) ? 0 : messages.size();
+        if (messageCount == 0) {
+          deactivate(index, queue, DeactivateType.NO_MESSAGE);
+        }
+        queueThreadPool.release(batchSize - messageCount);
+        if (messageCount > 0) {
+          sendMessagesToExecutor(queueDetail, queueThreadPool, messages);
+        }
+      } catch (Exception e) {
+        queueThreadPool.release(batchSize);
+        log(Level.WARN, "Listener failed for the queue {}", e, queue);
+        deactivate(index, queue, DeactivateType.POLL_FAILED);
+      }
+    }
+  }
+
+  void poll(int index, String queue, QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     log(Level.DEBUG, "Polling queue {}", null, queue);
-    Semaphore semaphore = queueThread.getSemaphore();
+    int batchSize = getBatchSize(queueDetail, queueThreadPool);
     boolean acquired;
     try {
-      acquired = semaphore.tryAcquire(getSemaphoreWaiTime(), TimeUnit.MILLISECONDS);
+      acquired = queueThreadPool.acquire(batchSize, getSemaphoreWaitTime());
     } catch (Exception e) {
       log(Level.WARN, "Exception {}", e, e.getMessage());
       deactivate(index, queue, DeactivateType.SEMAPHORE_EXCEPTION);
@@ -97,25 +145,10 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
       deactivate(index, queue, DeactivateType.SEMAPHORE_UNAVAILABLE);
       return;
     }
-    if (isQueueActive(queue)) {
-      try {
-        RqueueMessage message = getMessage(queueDetail);
-        log(Level.DEBUG, "Queue: {} Fetched Msg {}", null, queue, message);
-        if (message != null) {
-          execute(queueThread, queueDetail, message);
-        } else {
-          semaphore.release();
-          deactivate(index, queue, DeactivateType.NO_MESSAGE);
-        }
-      } catch (Exception e) {
-        semaphore.release();
-        log(Level.WARN, "Listener failed for the queue {}", e, queue);
-        deactivate(index, queue, DeactivateType.POLL_FAILED);
-      }
-    }
+    pollAndExecute(index, queue, queueDetail, queueThreadPool, batchSize);
   }
 
-  abstract long getSemaphoreWaiTime();
+  abstract long getSemaphoreWaitTime();
 
   abstract void deactivate(int index, String queue, DeactivateType deactivateType);
 

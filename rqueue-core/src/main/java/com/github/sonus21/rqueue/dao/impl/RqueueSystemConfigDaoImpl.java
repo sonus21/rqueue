@@ -61,6 +61,12 @@ public class RqueueSystemConfigDaoImpl implements RqueueSystemConfigDao {
   }
 
   @Override
+  public List<QueueConfig> getConfigByNames(Collection<String> names) {
+    return findAllQConfig(
+        names.stream().map(rqueueConfig::getQueueConfigKey).collect(Collectors.toList()));
+  }
+
+  @Override
   public QueueConfig getConfigByName(String name, boolean cached) {
     String queueConfigKey = rqueueConfig.getQueueConfigKey(name);
     return getQConfig(queueConfigKey, cached);

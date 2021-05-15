@@ -24,17 +24,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.context.Context;
@@ -47,19 +46,19 @@ import com.github.sonus21.rqueue.core.middleware.RateLimiterMiddleware;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.google.common.util.concurrent.RateLimiter;
-import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,35 +69,29 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class RqueueMiddlewareTest extends TestBase {
-
-  private final RqueueMessageListenerContainer container =
-      mock(RqueueMessageListenerContainer.class);
-  private final WeakReference<RqueueMessageListenerContainer> containerWeakReference =
-      new WeakReference<>(container);
+  private final QueueThreadPool queueThreadPool = new QueueThreadPool(null, true, 100);
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock private RqueueBeanProvider rqueueBeanProvider;
+  @Mock private QueueStateMgr queueStateMgr;
+  @Mock private RqueueJobDao rqueueJobDao;
+  @Mock private RqueueMessageTemplate messageTemplate;
+  @Mock private RqueueMessageHandler messageHandler;
+  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private final RqueueMessageMetadataService rqueueMessageMetadataService =
-      mock(RqueueMessageMetadataService.class);
-  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate =
-      mock(RqueueRedisTemplate.class);
-  private final RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);
-  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private final RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
-  private final RqueueMessageHandler messageHandler = mock(RqueueMessageHandler.class);
-  private final Semaphore semaphore = new Semaphore(100);
+  @Mock private ApplicationEventPublisher applicationEventPublisher;
   private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
-  private final ApplicationEventPublisher applicationEventPublisher =
-      mock(ApplicationEventPublisher.class);
-  private final RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
+
   private final String queueName = "test-queue";
   private final Object payload = "test message";
   private final MessageConverter messageConverter = new GenericMessageConverter();
@@ -108,7 +101,7 @@ class RqueueMiddlewareTest extends TestBase {
 
   @BeforeEach
   public void init() throws IllegalAccessException {
-
+    MockitoAnnotations.openMocks(this);
     rqueueMessage =
         RqueueMessageUtils.buildMessage(
             messageConverter,
@@ -121,45 +114,24 @@ class RqueueMiddlewareTest extends TestBase {
     defaultMessageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     MessageProcessorHandler messageProcessorHandler =
         new MessageProcessorHandler(
-            null,
-            new MessageProcessor() {
-              @Override
-              public boolean process(Job job) {
-                return false;
-              }
-            },
-            new MessageProcessor() {
-              @Override
-              public boolean process(Job job) {
-                return false;
-              }
-            },
-            null);
+            null, new MessageProcessor() {}, new MessageProcessor() {}, null);
     postProcessingHandler =
         new PostProcessingHandler(
-            rqueueConfig,
             rqueueWebConfig,
             applicationEventPublisher,
             messageTemplate,
             taskBackOff,
             messageProcessorHandler,
             rqueueSystemConfigDao);
-    doReturn(rqueueMessageMetadataService).when(container).rqueueMessageMetadataService();
-    doReturn(true).when(container).isQueueActive(anyString());
-    doReturn(
-        new MessageProcessor() {
-          @Override
-          public boolean process(Job job) {
-            return true;
-          }
-        })
-        .when(container)
-        .getPreExecutionMessageProcessor();
-    doReturn(messageHandler).when(container).getRqueueMessageHandler();
+    doReturn(rqueueMessageMetadataService)
+        .when(rqueueBeanProvider)
+        .getRqueueMessageMetadataService();
+    doReturn(true).when(queueStateMgr).isQueueActive(anyString());
+    doReturn(new MessageProcessor() {}).when(rqueueBeanProvider).getPreExecutionMessageProcessor();
+    doReturn(messageHandler).when(rqueueBeanProvider).getRqueueMessageHandler();
     doReturn(messageConverter).when(messageHandler).getMessageConverter();
-    doReturn(rqueueJobDao).when(container).rqueueJobDao();
-    doReturn(messageTemplate).when(container).getRqueueMessageTemplate();
-    doReturn(rqueueStringDao).when(container).rqueueStringDao();
+    doReturn(rqueueJobDao).when(rqueueBeanProvider).getRqueueJobDao();
+    doReturn(rqueueConfig).when(rqueueBeanProvider).getRqueueConfig();
     doReturn(1).when(rqueueConfig).getRetryPerPoll();
     doReturn("test-job::" + UUID.randomUUID().toString()).when(rqueueConfig).getJobId();
   }
@@ -167,18 +139,18 @@ class RqueueMiddlewareTest extends TestBase {
   @Test
   void logMiddleware() {
     TestLogMiddleware logMiddleware = new TestLogMiddleware();
-    doReturn(newArrayList(logMiddleware)).when(container).getMiddleWares();
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-        containerWeakReference,
-        rqueueConfig,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        semaphore)
+            rqueueBeanProvider,
+            queueStateMgr,
+            Collections.singletonList(logMiddleware),
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
     verify(messageTemplate, times(1))
@@ -190,18 +162,18 @@ class RqueueMiddlewareTest extends TestBase {
   void logAndContextMiddleware() {
     TestLogMiddleware logMiddleware = new TestLogMiddleware();
     TestContextMiddleware contextMiddleware = new TestContextMiddleware();
-    doReturn(newArrayList(logMiddleware, contextMiddleware)).when(container).getMiddleWares();
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-        containerWeakReference,
-        rqueueConfig,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        semaphore)
+            rqueueBeanProvider,
+            queueStateMgr,
+            newArrayList(logMiddleware, contextMiddleware),
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
     verify(messageTemplate, times(1))
@@ -219,9 +191,6 @@ class RqueueMiddlewareTest extends TestBase {
     TestLogMiddleware logMiddleware = new TestLogMiddleware();
     TestContextMiddleware contextMiddleware = new TestContextMiddleware();
     TestPermissionMiddleware permissionMiddleware = new TestPermissionMiddleware();
-    doReturn(newArrayList(logMiddleware, contextMiddleware, permissionMiddleware))
-        .when(container)
-        .getMiddleWares();
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     RqueueMessage rqueueMessage1 =
         RqueueMessageUtils.buildMessage(
@@ -235,31 +204,33 @@ class RqueueMiddlewareTest extends TestBase {
     permissionMiddleware.allowedMessageIds.add(rqueueMessage.getId());
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage1, MessageStatus.ENQUEUED);
     doAnswer(
-        invocation -> {
-          RqueueMessage message = invocation.getArgument(0);
-          if (message.getId().equals(defaultMessageMetadata.getRqueueMessage().getId())) {
-            return defaultMessageMetadata;
-          }
-          return messageMetadata;
-        })
+            invocation -> {
+              RqueueMessage message = invocation.getArgument(0);
+              if (message.getId().equals(defaultMessageMetadata.getRqueueMessage().getId())) {
+                return defaultMessageMetadata;
+              }
+              return messageMetadata;
+            })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-        containerWeakReference,
-        rqueueConfig,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        semaphore)
+            rqueueBeanProvider,
+            queueStateMgr,
+            newArrayList(logMiddleware, contextMiddleware, permissionMiddleware),
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
 
     new RqueueExecutor(
-        containerWeakReference,
-        rqueueConfig,
-        postProcessingHandler,
-        rqueueMessage1,
-        queueDetail,
-        semaphore)
+            rqueueBeanProvider,
+            queueStateMgr,
+            newArrayList(logMiddleware, contextMiddleware, permissionMiddleware),
+            postProcessingHandler,
+            rqueueMessage1,
+            queueDetail,
+            queueThreadPool)
         .run();
 
     verify(messageHandler, times(1)).handleMessage(any());
@@ -296,19 +267,18 @@ class RqueueMiddlewareTest extends TestBase {
       messages.add(message);
       map.put(message.getId(), messageMetadata);
     }
-    doReturn(newArrayList(logMiddleware, testRateLimiter)).when(container).getMiddleWares();
     doAnswer(
-        invocation -> {
-          RqueueMessage message = invocation.getArgument(0);
-          return map.get(message.getId());
-        })
+            invocation -> {
+              RqueueMessage message = invocation.getArgument(0);
+              return map.get(message.getId());
+            })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     doAnswer(
-        invocation -> {
-          TimeoutUtils.sleep(randomTime(20, 100));
-          return null;
-        })
+            invocation -> {
+              TimeoutUtils.sleep(randomTime(20, 100));
+              return null;
+            })
         .when(messageHandler)
         .handleMessage(any());
     Executor executor = Executors.newSingleThreadExecutor();
@@ -316,12 +286,13 @@ class RqueueMiddlewareTest extends TestBase {
     for (RqueueMessage message : messages) {
       executor.execute(
           new RqueueExecutor(
-              containerWeakReference,
-              rqueueConfig,
+              rqueueBeanProvider,
+              queueStateMgr,
+              newArrayList(logMiddleware, testRateLimiter),
               postProcessingHandler,
               message,
               queueDetail,
-              semaphore));
+              queueThreadPool));
     }
     TimeoutUtils.waitFor(() -> testRateLimiter.jobs.size() == jobCount, "all jobs to proceed");
     long endTime = System.currentTimeMillis();
@@ -339,18 +310,18 @@ class RqueueMiddlewareTest extends TestBase {
   void logAndProfilerMiddleware() {
     TestLogMiddleware logMiddleware = new TestLogMiddleware();
     TestProfilerMiddleware profilerMiddleware = new TestProfilerMiddleware();
-    doReturn(newArrayList(logMiddleware, profilerMiddleware)).when(container).getMiddleWares();
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-        containerWeakReference,
-        rqueueConfig,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        semaphore)
+            rqueueBeanProvider,
+            queueStateMgr,
+            newArrayList(logMiddleware, profilerMiddleware),
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
     verify(messageTemplate, times(1))
@@ -415,7 +386,6 @@ class RqueueMiddlewareTest extends TestBase {
   }
 
   static class TestRateLimiter implements RateLimiterMiddleware {
-
     final RateLimiter rateLimiter;
     List<Job> jobs = Collections.synchronizedList(new ArrayList<>());
     List<Job> throttled = Collections.synchronizedList(new ArrayList<>());

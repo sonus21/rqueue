@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.core.DelayedMessageScheduler;
 import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
@@ -62,8 +63,7 @@ public abstract class RqueueListenerBaseConfig {
   public static final int MAX_DB_VERSION = 2;
   private static final String TEMPLATE_DIR = "templates/rqueue/";
   private static final String TEMPLATE_SUFFIX = ".html";
-  protected @Value("${rqueue.reactive.enabled:false}")
-  boolean reactiveEnabled;
+  protected @Value("${rqueue.reactive.enabled:false}") boolean reactiveEnabled;
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
@@ -92,6 +92,7 @@ public abstract class RqueueListenerBaseConfig {
     }
     if (reactiveEnabled
         && simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory() == null) {
+      sharedConnection = true;
       simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
           beanFactory.getBean(ReactiveRedisConnectionFactory.class));
     }
@@ -220,5 +221,10 @@ public abstract class RqueueListenerBaseConfig {
   public RqueueQueueMetrics rqueueQueueMetrics(
       RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueQueueMetrics(stringRqueueRedisTemplate);
+  }
+
+  @Bean
+  public RqueueBeanProvider rqueueBeanProvider() {
+    return new RqueueBeanProvider();
   }
 }

@@ -18,22 +18,30 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class LoggingMiddlewareTest extends TestBase {
 
+  @Mock private Job job;
+
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+  }
+
   @Test
   void handle() throws Exception {
     LoggingMiddleware loggingMiddleware = new LoggingMiddleware();
-    Job job = mock(Job.class);
     doReturn(TestUtils.createMessage("test-queue")).when(job).getRqueueMessage();
     AtomicInteger atomicInteger = new AtomicInteger();
     loggingMiddleware.handle(

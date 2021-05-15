@@ -80,13 +80,29 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       String processingQueueName,
       String processingChannelName,
       long visibilityTimeout) {
+    List<RqueueMessage> rqueueMessages =
+        popN(queueName, processingQueueName, processingChannelName, visibilityTimeout, 1);
+    if (CollectionUtils.isEmpty(rqueueMessages)) {
+      return null;
+    }
+    return rqueueMessages.get(0);
+  }
+
+  @Override
+  public List<RqueueMessage> popN(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout,
+      int count) {
     long currentTime = System.currentTimeMillis();
-    RedisScript<RqueueMessage> script = getScript(ScriptType.DEQUEUE_MESSAGE);
+    RedisScript<List<RqueueMessage>> script = getScript(ScriptType.DEQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(queueName, processingQueueName, processingChannelName),
         currentTime,
-        currentTime + visibilityTimeout);
+        currentTime + visibilityTimeout,
+        count);
   }
 
   @Override

@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -38,17 +37,24 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 @Slf4j
 class RqueueQStatsDaoTest extends TestBase {
-  private final RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate =
-      mock(RqueueRedisTemplate.class);
-  private final RqueueQStatsDao rqueueQStatsDao = new RqueueQStatsDaoImpl(rqueueRedisTemplate);
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
+  @Mock private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
+  @Mock private RqueueConfig rqueueConfig;
+  private RqueueQStatsDao rqueueQStatsDao;
 
   @BeforeEach
   public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueQStatsDao = new RqueueQStatsDaoImpl(rqueueRedisTemplate);
+  }
+
+  @Test
+  void findById() {
     doAnswer(
             invocation -> {
               String name = invocation.getArgument(0);
@@ -56,10 +62,6 @@ class RqueueQStatsDaoTest extends TestBase {
             })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
-  }
-
-  @Test
-  void findById() {
     String id = rqueueConfig.getQueueStatisticsKey("job");
     assertNull(rqueueQStatsDao.findById(id));
     QueueStatistics queueStatistics = new QueueStatistics();
@@ -70,6 +72,13 @@ class RqueueQStatsDaoTest extends TestBase {
 
   @Test
   void findAll() {
+    doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(0);
+              return "__rq::q-stat::" + name;
+            })
+        .when(rqueueConfig)
+        .getQueueStatisticsKey(anyString());
     List<String> keys =
         Arrays.asList(
             rqueueConfig.getQueueStatisticsKey("job"),
@@ -92,6 +101,13 @@ class RqueueQStatsDaoTest extends TestBase {
 
   @Test
   void save() {
+    doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(0);
+              return "__rq::q-stat::" + name;
+            })
+        .when(rqueueConfig)
+        .getQueueStatisticsKey(anyString());
     QueueStatistics queueStatistics =
         new QueueStatistics(rqueueConfig.getQueueStatisticsKey("job"));
     rqueueQStatsDao.save(queueStatistics);

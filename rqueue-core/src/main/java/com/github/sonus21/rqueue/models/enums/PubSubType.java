@@ -14,27 +14,8 @@
  *
  */
 
-package com.github.sonus21.rqueue.dao;
+package com.github.sonus21.rqueue.models.enums;
 
-import com.github.sonus21.rqueue.models.db.QueueConfig;
-import java.util.Collection;
-import java.util.List;
-
-public interface RqueueSystemConfigDao {
-
-  QueueConfig getQConfig(String id);
-
-  QueueConfig getConfigByName(String name);
-
-  List<QueueConfig> getConfigByNames(Collection<String> names);
-
-  QueueConfig getConfigByName(String name, boolean cached);
-
-  QueueConfig getQConfig(String id, boolean cached);
-
-  List<QueueConfig> findAllQConfig(Collection<String> ids);
-
-  void saveQConfig(QueueConfig queueConfig);
-
-  void saveAllQConfig(List<QueueConfig> newConfigs);
+public enum PubSubType {
+  PAUSE_QUEUE;
 }

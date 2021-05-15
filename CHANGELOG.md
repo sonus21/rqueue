@@ -1,5 +1,19 @@
 # [Rqueue] New and Notable Changes
 
+### [2.7.1] - TBD
+
+### Fixes
+
+* Producer mode is not honored in Message scheduler
+* Message scheduler disable flag is not honored
+* Aggregator should not be running in producer mode
+* Listener concurrency is not reached, even though messages are in queue
+
+### Added
+
+* Pause/Unpause queue
+* Batch message fetching
+
 ## [2.7.0] - 13-Apr-2021
 
 ### Fixes

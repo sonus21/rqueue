@@ -19,9 +19,9 @@ package com.github.sonus21.rqueue.core.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
-import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
@@ -32,24 +32,27 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
-class RqueueEndpointManagerImplTest {
-
-  private final RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
-  private final RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
+@CoreUnitTest
+class RqueueEndpointManagerImplTest extends TestBase {
+  private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
+  private final MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
   private final String queue = "test-queue";
-  private final RqueueConfig rqueueConfig =
-      new RqueueConfig(mock(RedisConnectionFactory.class), null, false, 1);
-  MessageConverter messageConverter = new DefaultRqueueMessageConverter();
-  MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
-  private final RqueueEndpointManager rqueueEndpointManager =
-      new RqueueEndpointManagerImpl(messageTemplate, messageConverter, messageHeaders);
+  @Mock private RqueueMessageTemplate messageTemplate;
+  @Mock private RedisConnectionFactory redisConnectionFactory;
+  private RqueueEndpointManager rqueueEndpointManager;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+    rqueueEndpointManager =
+        new RqueueEndpointManagerImpl(messageTemplate, messageConverter, messageHeaders);
+    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, 1);
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     EndpointRegistry.delete();
   }

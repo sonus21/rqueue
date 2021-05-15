@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -55,22 +54,27 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @Slf4j
 @CoreUnitTest
 class RqueueTaskAggregatorServiceTest extends TestBase {
-
-  private final RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
-  private final RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
-  private final RqueueLockManager rqueueLockManager = mock(RqueueLockManager.class);
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private final RqueueTaskAggregatorService rqueueTaskAggregatorService =
-      new RqueueTaskAggregatorService(
-          rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
+  @Mock private RqueueQStatsDao rqueueQStatsDao;
+  @Mock private RqueueWebConfig rqueueWebConfig;
+  @Mock private RqueueLockManager rqueueLockManager;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock private RqueueJobDao rqueueJobDao;
+  private RqueueTaskAggregatorService rqueueTaskAggregatorService;
   private final String queueName = "test-queue";
 
   @BeforeEach
   public void initService() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+    rqueueTaskAggregatorService =
+        new RqueueTaskAggregatorService(
+            rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();
     doReturn(100).when(rqueueWebConfig).getAggregateEventWaitTime();
@@ -100,8 +104,8 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
     Job job =
         new JobImpl(
             rqueueConfig,
-            mock(RqueueMessageMetadataService.class),
-            mock(RqueueJobDao.class),
+            rqueueMessageMetadataService,
+            rqueueJobDao,
             queueDetail,
             messageMetadata,
             rqueueMessage,

@@ -25,7 +25,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -39,24 +38,27 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMessageSenderTest extends TestBase {
-
-  private final RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  private final RqueueMessageSender rqueueMessageSender =
-      new RqueueMessageSenderImpl(rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  private RqueueMessageSender rqueueMessageSender;
   private final String queueName = "test-queue";
   private final QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
   private final String slowQueue = "slow-queue";
   private final String deadLetterQueueName = "dead-test-queue";
   private final String message = "Test Message";
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private final RqueueMessageMetadataService rqueueMessageMetadataService =
-      mock(RqueueMessageMetadataService.class);
 
   @BeforeEach
   public void init() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+    rqueueMessageSender =
+        new RqueueMessageSenderImpl(
+            rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
     EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
     writeField(rqueueMessageSender, "rqueueConfig", rqueueConfig, true);

@@ -41,6 +41,7 @@ class MappingInformation implements Comparable<MappingInformation> {
   private final String priorityGroup;
   private final Map<String, Integer> priority;
   private final boolean primary;
+  private final int batchSize;
 
   @Override
   public String toString() {

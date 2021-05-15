@@ -46,11 +46,11 @@ public interface LockMiddleware extends TimeProviderMiddleware {
   String acquireLock(Job job);
 
   /**
-   * This method id called to release lock acquired using {@link #acquireLock(Job)}.
+   * This method is called to release lock acquired using {@link #acquireLock(Job)}.
    *
    * <p><b> This method is always called </b>
    *
-   * @param job            the running job
+   * @param job the running job
    * @param lockIdentifier lock identifier
    */
   void releaseLock(Job job, String lockIdentifier);

@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -39,24 +38,27 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RedisLockMiddlewareTest extends TestBase {
 
-  private final Job job = mock(Job.class);
-  private final RqueueRedisTemplate<String> redisTemplate = mock(RqueueRedisTemplate.class);
+  @Mock private Job job;
+  @Mock private RqueueRedisTemplate<String> redisTemplate;
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final String key = "job-xxx";
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
   @BeforeEach
   public void init() {
+    MockitoAnnotations.openMocks(this);
     doReturn(key).when(job).getId();
-    doReturn(queueDetail).when(job).getQueueDetail();
   }
 
   @Test
   void handleLockCouldNotAcquireLock() throws Exception {
+    doReturn(queueDetail).when(job).getQueueDetail();
     RedisLockMiddleware lockMiddleware =
         new RedisLockMiddleware(redisTemplate) {
           @Override
@@ -78,6 +80,7 @@ class RedisLockMiddlewareTest extends TestBase {
 
   @Test
   void handleAcquireLock() throws Exception {
+    doReturn(queueDetail).when(job).getQueueDetail();
     RedisLockMiddleware lockMiddleware =
         new RedisLockMiddleware(redisTemplate) {
           @Override
@@ -132,6 +135,8 @@ class RedisLockMiddlewareTest extends TestBase {
     AtomicInteger atomicInteger = new AtomicInteger();
     AtomicInteger terminationCounter = new AtomicInteger();
     AtomicInteger lockCounter = new AtomicInteger();
+    doReturn(queueDetail).when(job).getQueueDetail();
+
     RedisLockMiddleware lockMiddleware =
         new RedisLockMiddleware(redisTemplate) {
           @Override
@@ -140,13 +145,13 @@ class RedisLockMiddlewareTest extends TestBase {
           }
         };
     doAnswer(
-        invocation -> {
-          int val = lockCounter.incrementAndGet();
-          if (val == 1) {
-            return Boolean.TRUE;
-          }
-          return Boolean.FALSE;
-        })
+            invocation -> {
+              int val = lockCounter.incrementAndGet();
+              if (val == 1) {
+                return Boolean.TRUE;
+              }
+              return Boolean.FALSE;
+            })
         .when(redisTemplate)
         .setIfAbsent(key, RqueueConfig.getBrokerId(), queueDetail.visibilityDuration());
     lockMiddleware.handle(

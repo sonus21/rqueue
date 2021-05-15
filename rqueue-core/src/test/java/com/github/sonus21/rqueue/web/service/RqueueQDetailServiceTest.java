@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -61,6 +60,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -68,24 +69,14 @@ import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
-@SuppressWarnings("unchecked")
 class RqueueQDetailServiceTest extends TestBase {
-  private final RedisTemplate<?, ?> redisTemplate = mock(RedisTemplate.class);
-  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate =
-      mock(RqueueRedisTemplate.class);
-  private final RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  private final RqueueSystemManagerService rqueueSystemManagerService =
-      mock(RqueueSystemManagerService.class);
-  private final RqueueMessageMetadataService rqueueMessageMetadataService =
-      mock(RqueueMessageMetadataService.class);
-  private final RqueueQDetailService rqueueQDetailService =
-      new RqueueQDetailServiceImpl(
-          stringRqueueRedisTemplate,
-          rqueueMessageTemplate,
-          rqueueSystemManagerService,
-          rqueueMessageMetadataService);
+  @Mock private RedisTemplate<?, ?> redisTemplate;
+  @Mock private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueSystemManagerService rqueueSystemManagerService;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  private RqueueQDetailService rqueueQDetailService;
   private final MessageConverter messageConverter = new GenericMessageConverter();
-
   private QueueConfig queueConfig;
   private QueueConfig queueConfig2;
   private List<QueueConfig> queueConfigList;
@@ -93,6 +84,13 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @BeforeEach
   public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueQDetailService =
+        new RqueueQDetailServiceImpl(
+            stringRqueueRedisTemplate,
+            rqueueMessageTemplate,
+            rqueueSystemManagerService,
+            rqueueMessageMetadataService);
     queueConfig = createQueueConfig("test", 10, 10000L, "test-dlq");
     queueConfig2 = createQueueConfig("test2", 10, 10000L, null);
     queueConfigList = Arrays.asList(queueConfig, queueConfig2);

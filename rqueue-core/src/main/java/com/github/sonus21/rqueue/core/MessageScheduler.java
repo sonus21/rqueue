@@ -21,6 +21,7 @@ import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -55,6 +56,8 @@ import org.springframework.util.CollectionUtils;
 public abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
   @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
+  private final Object monitor = new Object();
+  @Autowired protected RqueueConfig rqueueConfig;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
@@ -93,9 +96,8 @@ public abstract class MessageScheduler
     if (isRedisEnabled()) {
       String channelName = getChannelName(queueName);
       getLogger().debug("Queue {} subscribe to channel {}", queueName, channelName);
-      this.rqueueRedisListenerContainerFactory
-          .getContainer()
-          .addMessageListener(messageSchedulerListener, new ChannelTopic(channelName));
+      this.rqueueRedisListenerContainerFactory.addMessageListener(
+          messageSchedulerListener, new ChannelTopic(channelName));
       channelNameToQueueName.put(channelName, queueName);
     }
   }
@@ -156,9 +158,12 @@ public abstract class MessageScheduler
 
   @Override
   public void destroy() throws Exception {
-    doStop();
-    if (scheduler != null) {
-      scheduler.destroy();
+    synchronized (monitor) {
+      doStop();
+      if (scheduler != null) {
+        scheduler.destroy();
+      }
+      monitor.notifyAll();
     }
   }
 
@@ -271,14 +276,25 @@ public abstract class MessageScheduler
   @Override
   @Async
   public void onApplicationEvent(RqueueBootstrapEvent event) {
-    doStop();
-    if (event.isStartup()) {
-      if (EndpointRegistry.getActiveQueueCount() == 0) {
-        getLogger().warn("No queues are configured");
+    synchronized (monitor) {
+      doStop();
+      if (!rqueueSchedulerConfig.isEnabled()) {
+        getLogger().debug("Scheduler is not enabled");
         return;
       }
-      initialize();
-      doStart();
+      if (rqueueConfig.isProducer()) {
+        getLogger().debug("Producer mode");
+        return;
+      }
+      if (event.isStartup()) {
+        if (EndpointRegistry.getActiveQueueCount() == 0) {
+          getLogger().warn("No queues are configured");
+          return;
+        }
+        initialize();
+        doStart();
+      }
+      monitor.notifyAll();
     }
   }
 

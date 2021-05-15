@@ -16,15 +16,18 @@
 
 package com.github.sonus21.rqueue.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.io.Serializable;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
 @NoArgsConstructor
-@EqualsAndHashCode
-@JsonInclude(Include.NON_NULL)
-public abstract class SerializableBase implements Serializable {}
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class PubSubMessage extends SerializableBase {
+  private static final long serialVersionUID = 780914041036616260L;
+  private String senderId;
+  private Serializable data;
+}
