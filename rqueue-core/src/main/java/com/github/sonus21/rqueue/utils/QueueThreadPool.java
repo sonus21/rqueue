@@ -46,9 +46,9 @@ public final class QueueThreadPool {
   }
 
   public boolean acquire(int n, long timeout) throws InterruptedException {
-    if (taskExecutor instanceof ThreadPoolTaskExecutor) {
+    if (log.isDebugEnabled() && taskExecutor instanceof ThreadPoolTaskExecutor) {
       ThreadPoolTaskExecutor executor = ((ThreadPoolTaskExecutor) taskExecutor);
-      log.info("Current active threads {}", executor.getActiveCount());
+      log.debug("Current active threads {}", executor.getActiveCount());
     }
     return semaphore.tryAcquire(n, timeout, TimeUnit.MILLISECONDS);
   }

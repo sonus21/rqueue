@@ -97,7 +97,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
   protected int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     int batchSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
     batchSize = Math.max(batchSize, Constants.MIN_BATCH_SIZE);
-    log(Level.INFO, "Batch size {}", null, batchSize);
+    log(Level.DEBUG, "Batch size {}", null, batchSize);
     return batchSize;
   }
 

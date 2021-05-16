@@ -95,6 +95,10 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       String processingChannelName,
       long visibilityTimeout,
       int count) {
+    if (count < Constants.MIN_BATCH_SIZE) {
+      throw new IllegalArgumentException(
+          "Count must be greater than or equal to " + Constants.MIN_BATCH_SIZE);
+    }
     long currentTime = System.currentTimeMillis();
     RedisScript<List<RqueueMessage>> script = getScript(ScriptType.DEQUEUE_MESSAGE);
     return scriptExecutor.execute(
