@@ -136,6 +136,7 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
                             'com/github/sonus21/rqueue/models/response',
                             'com/github/sonus21/rqueue/core/RqueueMessageSender*',
                             'com/github/sonus21/rqueue/utils/PrefixLogger*',
+                            'com/github/sonus21/rqueue/core/ScheduledTaskDetail*',
                     ]
             )
         }))

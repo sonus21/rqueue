@@ -62,6 +62,18 @@
     <appender-ref ref="FILE"/>
   </logger>
 
+  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.listener.RqueueMessagePoller">
+    <appender-ref ref="FILE"/>
+  </logger>
+
+  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.core.DelayedMessageScheduler">
+    <appender-ref ref="FILE"/>
+  </logger>
+
+  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.ProcessingMessageScheduler">
+    <appender-ref ref="FILE"/>
+  </logger>
+
   <logger additivity="false" level="INFO" name="com.github.sonus21.rqueue.test.service">
     <appender-ref ref="ConsumedMessageStore"/>
   </logger>

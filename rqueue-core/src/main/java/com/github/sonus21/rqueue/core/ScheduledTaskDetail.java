@@ -40,7 +40,7 @@ class ScheduledTaskDetail {
     StringBuilder sb = new StringBuilder();
     if (future instanceof ScheduledFuture) {
       sb.append("ScheduledFuture(delay=");
-      sb.append(((ScheduledFuture) future).getDelay(TimeUnit.MILLISECONDS));
+      sb.append(((ScheduledFuture<?>) future).getDelay(TimeUnit.MILLISECONDS));
       sb.append("Ms, ");
     } else {
       sb.append("Future(");
