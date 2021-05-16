@@ -350,10 +350,8 @@ class RqueueExecutor extends MessageContainerBase {
     try {
       init();
     } catch (Exception e) {
-      log(Level.ERROR, "Executor init failed Msg: {}", e, rqueueMessage);
-      queueThreadPool.release();
-      postProcessingHandler.parkMessageForRetry(
-          rqueueMessage, rqueueMessage.getFailureCount(), -1, queueDetail);
+      log(Level.WARN, "Executor init failed Msg: {}", e, rqueueMessage);
+      release(postProcessingHandler, queueThreadPool, queueDetail, rqueueMessage);
       return;
     }
     // TODO could it leak semaphore here?

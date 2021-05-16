@@ -21,9 +21,6 @@ import java.util.Collection;
 import java.util.List;
 
 public interface RqueueSystemConfigDao {
-
-  QueueConfig getQConfig(String id);
-
   QueueConfig getConfigByName(String name);
 
   List<QueueConfig> getConfigByNames(Collection<String> names);

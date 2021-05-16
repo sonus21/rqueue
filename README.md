@@ -31,6 +31,7 @@ well, where all services code is in Spring.
   etc.
 * **Automatic message serialization and deserialization**
 * **Message Multicasting** : Call multiple message listeners on every message
+* **Batch Message Polling** : Fetch multiple messages from Redis at once
 * **Metrics** : In flight messages, waiting for consumption and delayed messages
 * **Competing Consumers** : multiple messages can be consumed in parallel by different
   workers/listeners.

@@ -37,7 +37,7 @@ import org.springframework.util.CollectionUtils;
 @Getter
 @Setter
 @ToString
-@Builder
+@Builder(toBuilder = true)
 @EqualsAndHashCode(
     callSuper = false,
     exclude = {"createdOn", "updatedOn"})

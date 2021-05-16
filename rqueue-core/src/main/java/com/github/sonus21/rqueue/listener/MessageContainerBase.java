@@ -16,7 +16,9 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
+import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.RetryableRunnable;
 import org.slf4j.Logger;
 
@@ -32,8 +34,8 @@ abstract class MessageContainerBase extends RetryableRunnable<Object> {
     return queueStateMgr.isQueueActive(queueName);
   }
 
-  boolean eligibleForPolling(String queueName){
-    return  isQueueNotPaused(queueName) && isQueueActive(queueName);
+  boolean eligibleForPolling(String queueName) {
+    return isQueueNotPaused(queueName) && isQueueActive(queueName);
   }
 
   boolean isQueueNotPaused(String queueName) {
@@ -42,5 +44,14 @@ abstract class MessageContainerBase extends RetryableRunnable<Object> {
 
   boolean isQueuePaused(String queueName) {
     return queueStateMgr.isQueuePaused(queueName);
+  }
+
+  protected void release(
+      PostProcessingHandler postProcessingHandler,
+      QueueThreadPool queueThreadPool,
+      QueueDetail queueDetail,
+      RqueueMessage message) {
+    queueThreadPool.release();
+    postProcessingHandler.parkMessageForRetry(message, message.getFailureCount(), -1, queueDetail);
   }
 }

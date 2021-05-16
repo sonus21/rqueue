@@ -51,11 +51,6 @@ public class RqueueSystemConfigDaoImpl implements RqueueSystemConfigDao {
   }
 
   @Override
-  public QueueConfig getQConfig(String id) {
-    return getQConfig(id, false);
-  }
-
-  @Override
   public QueueConfig getConfigByName(String name) {
     return getConfigByName(name, false);
   }
