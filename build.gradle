@@ -134,7 +134,6 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
                     exclude: [
                             'com/github/sonus21/rqueue/exception',
                             'com/github/sonus21/rqueue/models/response',
-                            'com/github/sonus21/rqueue/models/response',
                             'com/github/sonus21/rqueue/core/RqueueMessageSender*',
                             'com/github/sonus21/rqueue/utils/PrefixLogger*',
                     ]
