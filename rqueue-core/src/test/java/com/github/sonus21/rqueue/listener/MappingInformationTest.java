@@ -30,7 +30,7 @@ class MappingInformationTest extends TestBase {
   @Test
   void builderToString() {
     MappingInformation.MappingInformationBuilder builder =
-        MappingInformation.builder().active(true);
+        MappingInformation.builder().queueNames(Collections.singleton("test-queue")).active(true);
     System.out.println(builder.toString());
   }
 

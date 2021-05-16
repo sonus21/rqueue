@@ -294,28 +294,25 @@ public abstract class SpringTestBase extends TestBase {
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, delay) != null;
   }
 
-  protected void enqueueIn(String queueName, Object message, long delay) {
+  protected boolean enqueueIn(String queueName, Object message, long delay) {
     if (reactiveEnabled) {
-      reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay).block();
-    } else {
-      if (random.nextBoolean()) {
-        rqueueMessageSender.enqueueIn(queueName, message, delay);
-      } else {
-        rqueueMessageEnqueuer.enqueueIn(queueName, message, delay);
-      }
+      return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay).block() != null;
     }
+    if (random.nextBoolean()) {
+      return rqueueMessageSender.enqueueIn(queueName, message, delay);
+    }
+    return rqueueMessageEnqueuer.enqueueIn(queueName, message, delay) != null;
   }
 
-  protected void enqueueIn(String queueName, Object message, long delay, TimeUnit timeUnit) {
+  protected boolean enqueueIn(String queueName, Object message, long delay, TimeUnit timeUnit) {
     if (reactiveEnabled) {
-      reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit).block();
-    } else {
-      if (random.nextBoolean()) {
-        rqueueMessageSender.enqueueIn(queueName, message, delay, timeUnit);
-      } else {
-        rqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit);
-      }
+      return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit).block()
+          != null;
     }
+    if (random.nextBoolean()) {
+      return rqueueMessageSender.enqueueIn(queueName, message, delay, timeUnit);
+    }
+    return rqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit) != null;
   }
 
   protected boolean enqueueIn(String queueName, Object message, Duration duration) {
@@ -339,46 +336,48 @@ public abstract class SpringTestBase extends TestBase {
     return rqueueMessageEnqueuer.enqueueWithPriority(queueName, priority, message) != null;
   }
 
-  protected void enqueueInWithPriority(
+  protected boolean enqueueInWithPriority(
       String queueName, String priority, Object message, long delay) {
     if (reactiveEnabled) {
-      reactiveRqueueMessageEnqueuer
-          .enqueueInWithPriority(queueName, priority, message, delay)
-          .block();
-    } else {
-      if (random.nextBoolean()) {
-        rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, delay);
-      } else {
-        rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay);
-      }
+      return reactiveRqueueMessageEnqueuer
+              .enqueueInWithPriority(queueName, priority, message, delay)
+              .block()
+          != null;
     }
+    if (random.nextBoolean()) {
+      return rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, delay);
+    }
+    return rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay) != null;
   }
 
-  protected void enqueueInWithPriority(
+  protected boolean enqueueInWithPriority(
       String queueName, String priority, Object message, long delay, TimeUnit unit) {
     if (reactiveEnabled) {
-      reactiveRqueueMessageEnqueuer.enqueueInWithPriority(
-          queueName, priority, message, delay, unit);
-    } else {
-      if (random.nextBoolean()) {
-        rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, delay, unit);
-      } else {
-        rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay, unit);
-      }
+      return reactiveRqueueMessageEnqueuer
+              .enqueueInWithPriority(queueName, priority, message, delay, unit)
+              .block()
+          != null;
     }
+    if (random.nextBoolean()) {
+      return rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, delay, unit);
+    }
+    return rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay, unit)
+        != null;
   }
 
-  protected void enqueueInWithPriority(
+  protected boolean enqueueInWithPriority(
       String queueName, String priority, Object message, Duration duration) {
     if (reactiveEnabled) {
-      reactiveRqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, duration);
-    } else {
-      if (random.nextBoolean()) {
-        rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, duration);
-      } else {
-        rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, duration);
-      }
+      return reactiveRqueueMessageEnqueuer
+              .enqueueInWithPriority(queueName, priority, message, duration)
+              .block()
+          != null;
     }
+    if (random.nextBoolean()) {
+      return rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, duration);
+    }
+    return rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, duration)
+        != null;
   }
 
   protected boolean enqueueAtWithPriority(

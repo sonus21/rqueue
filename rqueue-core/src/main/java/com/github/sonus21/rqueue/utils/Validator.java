@@ -57,8 +57,11 @@ public final class Validator {
   }
 
   public static void validatePeriod(long period) {
-    if (period < Constants.ONE_MILLI) {
-      throw new IllegalArgumentException("period must be greater than or equal to one second.");
+    if (period < Constants.MINIMUM_JOB_PERIOD) {
+      throw new IllegalArgumentException(
+          "period must be greater than or equal to "
+              + Constants.MINIMUM_JOB_PERIOD
+              + " Milliseconds");
     }
   }
 }

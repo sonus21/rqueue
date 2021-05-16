@@ -16,33 +16,33 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import com.github.sonus21.AtomicValueHolder;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
-import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainerTest.BootstrapEventListener;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainerTest.TestEventBroadcaster;
+import com.github.sonus21.rqueue.models.db.QueueConfig;
+import com.github.sonus21.rqueue.models.enums.PriorityMode;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import com.github.sonus21.test.TestTaskExecutor;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -52,22 +52,22 @@ import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @CoreUnitTest
-@Slf4j
-class ConcurrentListenerTest extends TestBase {
+class PriorityGroupListenerTest extends TestBase {
+  private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
+  private static final String slowProcessingQueue = "rqueue-processing::" + slowQueue;
+  private static final String slowProcessingChannel = "rqueue-processing-channel::" + slowQueue;
   private static final String fastProcessingQueue = "rqueue-processing::" + fastQueue;
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
+  private static final long VISIBILITY_TIMEOUT = 900000L;
   @Mock private RqueueMessageHandler rqueueMessageHandler;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @Mock private ApplicationEventPublisher applicationEventPublisher;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Mock private RqueueWebConfig rqueueWebConfig;
   private RqueueBeanProvider beanProvider;
-
-  private static final long executionTime = 2L;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
@@ -80,105 +80,86 @@ class ConcurrentListenerTest extends TestBase {
     beanProvider.setApplicationEventPublisher(applicationEventPublisher);
     beanProvider.setRqueueMessageTemplate(rqueueMessageTemplate);
     beanProvider.setRqueueMessageMetadataService(rqueueMessageMetadataService);
-    beanProvider.setRqueueWebConfig(rqueueWebConfig);
   }
 
   @Test
-  void validateConcurrency() throws Exception {
+  void priorityGroupListener() throws Exception {
+    BootstrapEventListener listener = new BootstrapEventListener();
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton(
-        "fastMessageListener", ConcurrentListenerTest.FastMessageListener.class);
-
+        "slowMessageListener", SlowMessageListenerWithPriority.class);
+    applicationContext.registerSingleton(
+        "fastMessageListener", FastMessageListenerWithPriority.class);
+    applicationContext.registerSingleton("applicationEventPublisher", TestEventBroadcaster.class);
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
-    FastMessageListener fastMessageListener =
-        applicationContext.getBean("fastMessageListener", FastMessageListener.class);
+    TestEventBroadcaster eventBroadcaster =
+        applicationContext.getBean("applicationEventPublisher", TestEventBroadcaster.class);
+    eventBroadcaster.subscribe(listener);
+
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
+    QueueConfig queueConfig = TestUtils.createQueueConfig(slowQueue);
+    queueConfig.setPaused(true);
+    QueueConfig queueConfig2 = TestUtils.createQueueConfig(fastQueue);
+    doReturn(Arrays.asList(queueConfig, queueConfig2))
+        .when(rqueueSystemConfigDao)
+        .getConfigByNames(any());
 
+    beanProvider.setApplicationEventPublisher(eventBroadcaster);
     beanProvider.setRqueueMessageHandler(messageHandler);
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
-    AtomicValueHolder<Long> lastCalledAt = new AtomicValueHolder<>();
-    AtomicValueHolder<Long> firstCallAt = new AtomicValueHolder<>();
-    AtomicInteger producerMessageCounter = new AtomicInteger(0);
-    AtomicInteger pollCounter = new AtomicInteger(0);
 
-    doAnswer(
-            i -> {
-              RqueueMessage rqueueMessage = i.getArgument(0);
-              return new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
-            })
-        .when(rqueueMessageMetadataService)
-        .getOrCreateMessageMetadata(any());
+    TestTaskExecutor taskExecutor = new TestTaskExecutor();
+    taskExecutor.afterPropertiesSet();
+    AtomicInteger fastQueueCounter = new AtomicInteger(0);
     doAnswer(
             invocation -> {
-              if (1 == pollCounter.incrementAndGet()) {
-                firstCallAt.set(System.currentTimeMillis());
-              }
-              int count = invocation.getArgument(4);
-              List<RqueueMessage> rqueueMessageList = new LinkedList<>();
-              for (int i = 0; i < count; i++) {
-                int id = producerMessageCounter.incrementAndGet();
-                RqueueMessage rqueueMessage =
-                    RqueueMessage.builder()
-                        .message("Message ::" + id + "::" + i)
-                        .id(UUID.randomUUID().toString())
-                        .queueName(fastQueue)
-                        .processAt(System.currentTimeMillis())
-                        .queuedTime(System.currentTimeMillis())
-                        .build();
-                rqueueMessageList.add(rqueueMessage);
-              }
-              lastCalledAt.set(System.currentTimeMillis());
-              return rqueueMessageList;
+              fastQueueCounter.incrementAndGet();
+              return Collections.singletonList(
+                  RqueueMessage.builder()
+                      .queueName(fastQueue)
+                      .message("fastQueueMessage")
+                      .processAt(System.currentTimeMillis())
+                      .queuedTime(System.nanoTime())
+                      .id(UUID.randomUUID().toString())
+                      .build());
             })
         .when(rqueueMessageTemplate)
-        .popN(
-            eq(fastQueue),
-            eq(fastProcessingQueue),
-            eq(fastProcessingQueueChannel),
-            eq(900000L),
-            anyInt());
-    container.afterPropertiesSet();
-    // 40 * 20 => 800
-    long start = System.currentTimeMillis();
-    container.start();
+        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
 
-    long end = System.currentTimeMillis() + TimeoutUtils.EXECUTION_TIME;
-    long aboutToEnd = end - 3 * TimeoutUtils.SLEEP_TIME;
-    AtomicInteger consumedMessageCounter = fastMessageListener.totalMessages;
-    waitFor(
-        () -> {
-          int count = producerMessageCounter.get();
-          int consumed = consumedMessageCounter.get();
-          long now = System.currentTimeMillis();
-          log.info("Now: {}, Produced Messages: {}, Consumed Messages: {}", now, count, consumed);
-          return now >= aboutToEnd;
-        },
-        "fastQueue message call");
+    container.setPriorityMode(PriorityMode.STRICT);
+    container.setTaskExecutor(taskExecutor);
+    container.afterPropertiesSet();
+    container.start();
+    TimeoutUtils.waitFor(listener::isStartEventReceived, "start event");
+    TimeoutUtils.waitFor(() -> fastQueueCounter.get() > 1, "fast queue message poll");
+
     container.stop();
-    log.info("Consumed Messages {}", consumedMessageCounter.get());
-    log.info("Produced Messages {}", producerMessageCounter.get());
-    log.info("Time elapsed {}", lastCalledAt.get() - firstCallAt.get());
+    TimeoutUtils.waitFor(listener::isStopEventReceived, "stop event");
     container.doDestroy();
+    verify(rqueueMessageTemplate, times(0))
+        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
   }
 
   @Getter
-  @Slf4j
-  private static class FastMessageListener {
-    private final AtomicInteger totalMessages = new AtomicInteger(0);
-    private final AtomicValueHolder<Long> holder = new AtomicValueHolder<>();
-    private final Random random = new Random(System.currentTimeMillis());
+  private static class SlowMessageListenerWithPriority {
+    private String lastMessage;
 
-    @RqueueListener(value = fastQueue, concurrency = "20-40", batchSize = "20")
+    @RqueueListener(value = slowQueue, priority = "10", priorityGroup = "pg")
     public void onMessage(String message) {
-      long start = System.currentTimeMillis();
-      totalMessages.incrementAndGet();
-      holder.set(System.currentTimeMillis());
-      TimeoutUtils.sleep(executionTime);
-      long end = System.currentTimeMillis();
-      log.info("Message: {} Execution time {}", message, end - start);
+      lastMessage = message;
+    }
+  }
+
+  @Getter
+  private static class FastMessageListenerWithPriority {
+    private String lastMessage;
+
+    @RqueueListener(value = fastQueue, priority = "100", priorityGroup = "pg")
+    public void onMessage(String message) {
+      lastMessage = message;
     }
   }
 

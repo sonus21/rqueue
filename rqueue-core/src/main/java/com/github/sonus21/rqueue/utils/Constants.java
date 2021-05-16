@@ -50,4 +50,5 @@ public final class Constants {
   public static final int MIN_BATCH_SIZE = 1;
   public static final int BATCH_SIZE_FOR_CONCURRENCY_BASED_LISTENER = 10;
   public static final int MIN_CONCURRENCY = 1;
+  public static final long MINIMUM_JOB_PERIOD = 1000L;
 }

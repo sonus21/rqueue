@@ -36,7 +36,7 @@ public class Sms extends BaseQueueMessage {
   private String sms;
 
   public static Sms newInstance() {
-    String txt = "Dear , Version 2.0 of Rqueue is released.";
+    String txt = "Dear Dev, Version 2.0 of Rqueue is released.";
     Sms sms = new Sms("+91" + RandomStringUtils.randomNumeric(10), txt);
     sms.setId(UUID.randomUUID().toString());
     return sms;

@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -34,11 +35,18 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.test.TestTaskExecutor;
 import io.lettuce.core.RedisCommandExecutionException;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,7 +57,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -64,6 +74,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   private static final String fastProcessingQueue = "rqueue-processing::" + fastQueue;
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
+  private static final long VISIBILITY_TIMEOUT = 900000L;
   @Mock private RqueueMessageHandler rqueueMessageHandler;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @Mock private ApplicationEventPublisher applicationEventPublisher;
@@ -200,6 +211,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
     applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
+
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     messageHandler.setApplicationContext(applicationContext);
@@ -215,7 +227,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, 900000L, 1);
+        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
 
     doAnswer(
             invocation -> {
@@ -223,7 +235,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, 900000L, 1);
+        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> fastQueueCounter.get() > 1, "fastQueue message call");
@@ -277,7 +289,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, 900000L, 1);
+        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
     FastMessageListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageListener.class);
     container.afterPropertiesSet();
@@ -337,7 +349,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, 900000L, 1);
+        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
 
     doAnswer(
             invocation -> {
@@ -355,7 +367,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, 900000L, 1);
+        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> slowQueueCounter.get() == 1, "slowQueue message fetch");
@@ -392,6 +404,45 @@ class RqueueMessageListenerContainerTest extends TestBase {
     assertEquals(1, taskExecutor.getSubmittedTaskCount());
     container.stop();
     container.doDestroy();
+  }
+
+  @Test
+  void pausedQueueShouldNotBePolled() throws Exception {
+    BootstrapEventListener listener = new BootstrapEventListener();
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
+    applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
+    applicationContext.registerSingleton("applicationEventPublisher", TestEventBroadcaster.class);
+
+    RqueueMessageHandler messageHandler =
+        applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
+    TestEventBroadcaster eventBroadcaster =
+        applicationContext.getBean("applicationEventPublisher", TestEventBroadcaster.class);
+    eventBroadcaster.subscribe(listener);
+
+    messageHandler.setApplicationContext(applicationContext);
+    messageHandler.afterPropertiesSet();
+    QueueConfig queueConfig = TestUtils.createQueueConfig(slowQueue);
+    queueConfig.setPaused(true);
+    doReturn(queueConfig).when(rqueueSystemConfigDao).getConfigByName(slowQueue);
+
+    beanProvider.setApplicationEventPublisher(eventBroadcaster);
+    beanProvider.setRqueueMessageHandler(messageHandler);
+    RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
+
+    TestTaskExecutor taskExecutor = new TestTaskExecutor();
+    taskExecutor.afterPropertiesSet();
+
+    container.setTaskExecutor(taskExecutor);
+    container.afterPropertiesSet();
+    container.start();
+
+    TimeoutUtils.waitFor(listener::isStartEventReceived, "start event");
+    TimeoutUtils.sleep(Constants.ONE_MILLI);
+    container.stop();
+    TimeoutUtils.waitFor(listener::isStopEventReceived, "stop event");
+    container.doDestroy();
+    verifyNoInteractions(rqueueMessageTemplate);
   }
 
   private class TestListenerContainer extends RqueueMessageListenerContainer {
@@ -446,5 +497,39 @@ class RqueueMessageListenerContainerTest extends TestBase {
     public void onMessage(String message) {
       lastMessage = message;
     }
+  }
+
+  @Getter
+  static class BootstrapEventListener implements ApplicationListener<RqueueBootstrapEvent> {
+    private boolean startEventReceived;
+    private boolean stopEventReceived;
+
+    @Override
+    public void onApplicationEvent(RqueueBootstrapEvent event) {
+      if (event.isStart()) {
+        startEventReceived = true;
+      } else {
+        stopEventReceived = true;
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  static class TestEventBroadcaster implements ApplicationEventPublisher {
+    List<ApplicationListener> listenerList = new LinkedList<>();
+
+    void subscribe(ApplicationListener listener) {
+      listenerList.add(listener);
+    }
+
+    @Override
+    public void publishEvent(ApplicationEvent event) {
+      for (ApplicationListener listener : listenerList) {
+        listener.onApplicationEvent(event);
+      }
+    }
+
+    @Override
+    public void publishEvent(Object event) {}
   }
 }

@@ -311,8 +311,9 @@ public class SimpleRqueueListenerContainerFactory {
     notNull(getRqueueMessageHandler(), "rqueueMessageHandler must not be null");
     notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
     if (rqueueMessageTemplate == null) {
-      rqueueMessageTemplate = new RqueueMessageTemplateImpl(getRedisConnectionFactory(),
-          getReactiveRedisConnectionFactory());
+      rqueueMessageTemplate =
+          new RqueueMessageTemplateImpl(
+              getRedisConnectionFactory(), getReactiveRedisConnectionFactory());
     }
     RqueueMessageListenerContainer messageListenerContainer =
         new RqueueMessageListenerContainer(getRqueueMessageHandler(), rqueueMessageTemplate);
@@ -348,7 +349,7 @@ public class SimpleRqueueListenerContainerFactory {
     if (getPriorityMode() != null) {
       messageListenerContainer.setPriorityMode(getPriorityMode());
     }
-    if (!CollectionUtils.isEmpty(middlewares)) {
+    if (!CollectionUtils.isEmpty(getMiddlewares())) {
       messageListenerContainer.setMiddlewares(getMiddlewares());
     }
     return messageListenerContainer;
