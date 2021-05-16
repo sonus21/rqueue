@@ -52,11 +52,9 @@ import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @CoreUnitTest
+@Slf4j
 class ConcurrentListenerTest extends TestBase {
-  private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
-  private static final String slowProcessingQueue = "rqueue-processing::" + slowQueue;
-  private static final String slowProcessingChannel = "rqueue-processing-channel::" + slowQueue;
   private static final String fastProcessingQueue = "rqueue-processing::" + fastQueue;
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
@@ -103,7 +101,7 @@ class ConcurrentListenerTest extends TestBase {
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
     AtomicValueHolder<Long> lastCalledAt = new AtomicValueHolder<>();
     AtomicValueHolder<Long> firstCallAt = new AtomicValueHolder<>();
-    AtomicInteger fetchedMessageCounter = new AtomicInteger(0);
+    AtomicInteger producerMessageCounter = new AtomicInteger(0);
     AtomicInteger pollCounter = new AtomicInteger(0);
 
     doAnswer(
@@ -121,7 +119,7 @@ class ConcurrentListenerTest extends TestBase {
               int count = invocation.getArgument(4);
               List<RqueueMessage> rqueueMessageList = new LinkedList<>();
               for (int i = 0; i < count; i++) {
-                int id = fetchedMessageCounter.incrementAndGet();
+                int id = producerMessageCounter.incrementAndGet();
                 RqueueMessage rqueueMessage =
                     RqueueMessage.builder()
                         .message("Message ::" + id + "::" + i)
@@ -148,23 +146,21 @@ class ConcurrentListenerTest extends TestBase {
     container.start();
 
     long end = System.currentTimeMillis() + TimeoutUtils.EXECUTION_TIME;
-    long aboutToEnd = end - 2 * TimeoutUtils.SLEEP_TIME;
+    long aboutToEnd = end - 3 * TimeoutUtils.SLEEP_TIME;
     AtomicInteger consumedMessageCounter = fastMessageListener.totalMessages;
     waitFor(
         () -> {
-          int count = fetchedMessageCounter.get();
+          int count = producerMessageCounter.get();
           int consumed = consumedMessageCounter.get();
           long now = System.currentTimeMillis();
-          System.out.printf(
-              "Now: %d, Produced Messages: %d, Consumed Messages: %d\n", now, count, consumed);
+          log.info("Now: {}, Produced Messages: {}, Consumed Messages: {}", now, count, consumed);
           return now >= aboutToEnd;
         },
         "fastQueue message call");
     container.stop();
-    System.out.println(consumedMessageCounter.get());
-    System.out.println(fetchedMessageCounter.get());
-    System.out.println(lastCalledAt.get() - firstCallAt.get());
-    System.out.println();
+    log.info("Consumed Messages {}", consumedMessageCounter.get());
+    log.info("Produced Messages {}", producerMessageCounter.get());
+    log.info("Time elapsed {}", lastCalledAt.get() - firstCallAt.get());
     container.doDestroy();
   }
 
