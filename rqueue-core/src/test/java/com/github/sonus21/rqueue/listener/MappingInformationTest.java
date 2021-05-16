@@ -28,10 +28,13 @@ import org.junit.jupiter.api.Test;
 @CoreUnitTest
 class MappingInformationTest extends TestBase {
   @Test
-  void builderToString() {
-    MappingInformation.MappingInformationBuilder builder =
-        MappingInformation.builder().queueNames(Collections.singleton("test-queue")).active(true);
-    System.out.println(builder.toString());
+  void testToString() {
+    MappingInformation mappingInformation =
+        MappingInformation.builder()
+            .queueNames(Collections.singleton("test-queue"))
+            .active(true)
+            .build();
+    assertEquals("test-queue", mappingInformation.toString());
   }
 
   @Test
