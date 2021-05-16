@@ -51,7 +51,7 @@ import org.springframework.test.context.TestPropertySource;
       "use.system.redis=false",
     })
 @SpringBootIntegrationTest
-@Tag("producerOnly")
+@Tag("redisCluster")
 class PauseUnpauseTest extends SpringTestBase {
   @Autowired private PauseUnpauseEventListener eventListener;
   @Autowired private RqueueUtilityService rqueueUtilityService;
