@@ -45,14 +45,15 @@ public final class ThreadUtils {
   }
 
   public static ThreadPoolTaskExecutor createTaskExecutor(
-      String beanName, String threadPrefix, int corePoolSize, int maxPoolSize) {
+      String beanName, String threadPrefix, int corePoolSize, int maxPoolSize, int queueCapacity) {
     ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
     threadPoolTaskExecutor.setThreadNamePrefix(threadPrefix);
     threadPoolTaskExecutor.setBeanName(beanName);
     if (corePoolSize > 0) {
       threadPoolTaskExecutor.setCorePoolSize(corePoolSize);
+      threadPoolTaskExecutor.setAllowCoreThreadTimeOut(true);
       threadPoolTaskExecutor.setMaxPoolSize(Math.max(corePoolSize, maxPoolSize));
-      threadPoolTaskExecutor.setQueueCapacity(0);
+      threadPoolTaskExecutor.setQueueCapacity(queueCapacity);
     }
     threadPoolTaskExecutor.afterPropertiesSet();
     return threadPoolTaskExecutor;

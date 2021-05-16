@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.util.CollectionUtils;
 
 abstract class RqueueMessagePoller extends MessageContainerBase {
@@ -75,6 +76,9 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
               queueDetail,
               queueThreadPool));
     } catch (Exception e) {
+      if (e instanceof TaskRejectedException) {
+        queueThreadPool.taskRejected();
+      }
       log(Level.WARN, "Execution failed Msg: {}", e, message);
       queueThreadPool.release();
     }

@@ -97,7 +97,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     this.inspectAllBean = inspectAllBean;
     this.conversionService = new DefaultFormattingConversionService();
     this.asyncTaskExecutor =
-        ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "multiMessageExecutor-", -1, -1);
+        ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "multiMessageExecutor-", -1, -1, 0);
   }
 
   public RqueueMessageHandler(final MessageConverter messageConverter) {
@@ -347,6 +347,11 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
             vals[0],
             "Concurrency lower limit is not a number",
             "Concurrency lower limit must be non-zero");
+    if (lowerLimit < Constants.MIN_CONCURRENCY) {
+      throw new IllegalStateException(
+          "lower limit of concurrency must be greater than or equal to "
+              + Constants.MIN_CONCURRENCY);
+    }
     int upperLimit =
         parseInt(
             vals[1],

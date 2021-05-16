@@ -175,7 +175,7 @@ class ConcurrentListenerTest extends TestBase {
     private AtomicValueHolder<Long> holder = new AtomicValueHolder<>();
     private final Random random = new Random(System.currentTimeMillis());
 
-    @RqueueListener(value = fastQueue, concurrency = "20-40", batchSize = "10")
+    @RqueueListener(value = fastQueue, concurrency = "20-40", batchSize = "20")
     public void onMessage(String message) {
       long start = System.currentTimeMillis();
       totalMessages.incrementAndGet();

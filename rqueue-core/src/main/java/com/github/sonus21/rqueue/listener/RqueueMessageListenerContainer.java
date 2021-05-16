@@ -303,11 +303,12 @@ public class RqueueMessageListenerContainer
     return (maxNumWorkers == null ? queueCount * DEFAULT_WORKER_COUNT_PER_QUEUE : maxNumWorkers);
   }
 
-  private AsyncTaskExecutor createTaskExecutor(int corePoolSize, int maxPoolSize) {
+  private AsyncTaskExecutor createTaskExecutor(
+      int corePoolSize, int maxPoolSize, int queueCapacity) {
     String name = getBeanName();
     String prefix = name != null ? name + "-" : DEFAULT_THREAD_NAME_PREFIX;
     return ThreadUtils.createTaskExecutor(
-        DEFAULT_THREAD_NAME_PREFIX, prefix, corePoolSize, maxPoolSize);
+        DEFAULT_THREAD_NAME_PREFIX, prefix, corePoolSize, maxPoolSize, queueCapacity);
   }
 
   private AsyncTaskExecutor createNonConcurrencyBasedExecutor(
@@ -316,17 +317,22 @@ public class RqueueMessageListenerContainer
     int maxPoolSize = workersCount + pollerCount;
     // one thread for message poller and one for executor
     int corePoolSize = queueDetails.size() + pollerCount;
-    AsyncTaskExecutor executor = createTaskExecutor(corePoolSize, maxPoolSize);
+    int queueCapacity = 0;
+    AsyncTaskExecutor executor = createTaskExecutor(corePoolSize, maxPoolSize, queueCapacity);
     initializeThreadMap(queueDetails, executor, true, workersCount);
     return executor;
   }
 
   private void createExecutor(QueueDetail queueDetail) {
     Concurrency concurrency = queueDetail.getConcurrency();
+    int queueCapacity = 0;
+    int maxJobs = concurrency.getMax();
+    int corePoolSize = concurrency.getMin();
+    int maxPoolSize = concurrency.getMax();
     AsyncTaskExecutor executor =
-        createTaskExecutor(queueDetail, concurrency.getMin(), concurrency.getMax());
-    queueThreadMap.put(
-        queueDetail.getName(), new QueueThreadPool(executor, true, concurrency.getMax()));
+        createTaskExecutor(queueDetail, corePoolSize, maxPoolSize, queueCapacity);
+    QueueThreadPool threadPool = new QueueThreadPool(executor, true, maxJobs);
+    queueThreadMap.put(queueDetail.getName(), threadPool);
   }
 
   public AsyncTaskExecutor createDefaultTaskExecutor(
@@ -347,9 +353,10 @@ public class RqueueMessageListenerContainer
   }
 
   private AsyncTaskExecutor createTaskExecutor(
-      QueueDetail queueDetail, int corePoolSize, int maxPoolSize) {
+      QueueDetail queueDetail, int corePoolSize, int maxPoolSize, int queueCapacity) {
     String name = ThreadUtils.getWorkerName(queueDetail.getName());
-    return ThreadUtils.createTaskExecutor(name, name + "-", corePoolSize, maxPoolSize);
+    return ThreadUtils.createTaskExecutor(
+        name, name + "-", corePoolSize, maxPoolSize, queueCapacity);
   }
 
   private List<QueueDetail> getQueueDetail(String queue, MappingInformation mappingInformation) {
@@ -554,7 +561,7 @@ public class RqueueMessageListenerContainer
       return queueRunningState.getOrDefault(queueName, false);
     }
 
-    boolean isQueuePaused(String queueName){
+    boolean isQueuePaused(String queueName) {
       return pausedQueues.contains(queueName);
     }
 

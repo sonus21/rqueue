@@ -27,14 +27,14 @@ public final class QueueThreadPool {
   private final AsyncTaskExecutor taskExecutor;
   private final boolean defaultExecutor;
   private final Semaphore semaphore;
-  private final int maxThreadsCount;
+  private final int maxJobsCount;
 
   public QueueThreadPool(
-      AsyncTaskExecutor taskExecutor, boolean defaultExecutor, int maxThreadsCount) {
+      AsyncTaskExecutor taskExecutor, boolean defaultExecutor, int maxJobsCount) {
     this.taskExecutor = taskExecutor;
     this.defaultExecutor = defaultExecutor;
-    this.maxThreadsCount = maxThreadsCount;
-    this.semaphore = new Semaphore(maxThreadsCount );
+    this.maxJobsCount = maxJobsCount;
+    this.semaphore = new Semaphore(maxJobsCount);
   }
 
   public void release() {
@@ -63,10 +63,10 @@ public final class QueueThreadPool {
 
   public boolean allTasksCompleted() {
     int permits = availableThreads();
-    if (permits > maxThreadsCount) {
+    if (permits > maxJobsCount) {
       log.error("More number of release is called");
     }
-    return permits >= maxThreadsCount;
+    return permits >= maxJobsCount;
   }
 
   public String destroy() {
@@ -79,5 +79,9 @@ public final class QueueThreadPool {
       return executor.getThreadNamePrefix();
     }
     return null;
+  }
+
+  public void taskRejected() {
+    log.warn("Task rejected by executor");
   }
 }
