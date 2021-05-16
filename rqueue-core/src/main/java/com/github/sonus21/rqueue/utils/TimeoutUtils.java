@@ -20,13 +20,13 @@ import com.github.sonus21.rqueue.exception.TimedOutException;
 import java.util.function.BooleanSupplier;
 
 /**
- * WaitForUtil method wait for some event to occur. It accepts a callback as well that can be
- * invoked on successive failure of the method. That can be used to diagnosis the test. A callback
- * method is used to identify the outcome of some event, if the specified method returns true then
- * call is stopped otherwise every 100Ms the callback would be called to get the outcome. It tries
- * for continuously over 10seconds If callback does not return true within 10 seconds then it will
- * throw TimeOutException. If postmortem method is provided then it will call that method before
- * throwing exception.
+ * waitFor method wait for some event to occur. It accepts a callback as well that can be invoked on
+ * successive failure of the method. That can be used to diagnosis the test. A callback method is
+ * used to identify the outcome of some event, if the specified method returns true then call is
+ * stopped otherwise every 100Ms the callback would be called to get the outcome. It tries for
+ * continuously over 10seconds If callback does not return true within 10 seconds then it will throw
+ * TimeOutException. If postmortem method is provided then it will call that method before throwing
+ * exception.
  */
 public final class TimeoutUtils {
 

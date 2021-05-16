@@ -19,7 +19,6 @@ allprojects {
 
     repositories {
         mavenCentral()
-        jcenter()
     }
 }
 ext {
@@ -63,7 +62,7 @@ ext {
 
     // other dependencies
     javaxValidationApiVersion = '2.0.1.Final'
-    
+
     guavaVersion = '30.1-jre'
 
 }
@@ -135,6 +134,9 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
                     exclude: [
                             'com/github/sonus21/rqueue/exception',
                             'com/github/sonus21/rqueue/models/response',
+                            'com/github/sonus21/rqueue/models/response',
+                            'com/github/sonus21/rqueue/core/RqueueMessageSender*',
+                            'com/github/sonus21/rqueue/utils/PrefixLogger*',
                     ]
             )
         }))
