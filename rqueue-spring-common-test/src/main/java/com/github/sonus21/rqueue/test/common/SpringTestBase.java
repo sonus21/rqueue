@@ -56,38 +56,24 @@ import org.springframework.beans.factory.annotation.Value;
 @Slf4j
 public abstract class SpringTestBase extends TestBase {
 
-  @Autowired
-  protected RqueueMessageSender rqueueMessageSender;
-  @Autowired
-  protected RqueueMessageTemplate rqueueMessageTemplate;
-  @Autowired
-  protected RqueueConfig rqueueConfig;
-  @Autowired
-  protected RqueueWebConfig rqueueWebConfig;
-  @Autowired
-  protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  @Autowired
-  protected ConsumedMessageStore consumedMessageStore;
-  @Autowired
-  protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
-  @Autowired
-  protected FailureManager failureManager;
-  @Autowired
-  protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
+  @Autowired protected RqueueMessageSender rqueueMessageSender;
+  @Autowired protected RqueueMessageTemplate rqueueMessageTemplate;
+  @Autowired protected RqueueConfig rqueueConfig;
+  @Autowired protected RqueueWebConfig rqueueWebConfig;
+  @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Autowired protected ConsumedMessageStore consumedMessageStore;
+  @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
+  @Autowired protected FailureManager failureManager;
+  @Autowired protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @Autowired(required = false)
   protected ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer;
 
-  @Autowired
-  protected RqueueEndpointManager rqueueEndpointManager;
-  @Autowired
-  protected RqueueMessageManager rqueueMessageManager;
-  @Autowired
-  protected RqueueJobDao rqueueJobDao;
-  @Autowired
-  protected RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Autowired
-  protected ObjectMapper objectMapper;
+  @Autowired protected RqueueEndpointManager rqueueEndpointManager;
+  @Autowired protected RqueueMessageManager rqueueMessageManager;
+  @Autowired protected RqueueJobDao rqueueJobDao;
+  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Autowired protected ObjectMapper objectMapper;
 
   @Value("${email.queue.name}")
   protected String emailQueue;
@@ -153,36 +139,45 @@ public abstract class SpringTestBase extends TestBase {
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
   }
 
-  protected void enqueue(String queueName, Factory factory, int n) {
+  protected void enqueue(String queueName, Factory factory, int n, boolean useMessageTemplate) {
     for (int i = 0; i < n; i++) {
-      Object object = factory.next(i);
-      RqueueMessage rqueueMessage =
-          RqueueMessageUtils.buildMessage(
-              rqueueMessageManager.getMessageConverter(),
-              queueName,
-              null,
-              object,
-              null,
-              null,
-              null);
-      rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
+      Object message = factory.next(i);
+      if (useMessageTemplate) {
+        RqueueMessage rqueueMessage =
+            RqueueMessageUtils.buildMessage(
+                rqueueMessageManager.getMessageConverter(),
+                queueName,
+                null,
+                message,
+                null,
+                null,
+                null);
+        rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
+      } else {
+        enqueue(queueName, message);
+      }
     }
   }
 
-  protected void enqueueIn(String zsetName, Factory factory, Delay delay, int n) {
+  protected void enqueueIn(
+      String queueName, Factory factory, Delay delayFunc, int n, boolean useMessageTemplate) {
     for (int i = 0; i < n; i++) {
-      Object object = factory.next(i);
-      long score = delay.getDelay(i);
-      RqueueMessage rqueueMessage =
-          RqueueMessageUtils.buildMessage(
-              rqueueMessageManager.getMessageConverter(),
-              zsetName,
-              null,
-              object,
-              null,
-              score,
-              null);
-      rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
+      Object message = factory.next(i);
+      long delay = delayFunc.getDelay(i);
+      if (useMessageTemplate) {
+        RqueueMessage rqueueMessage =
+            RqueueMessageUtils.buildMessage(
+                rqueueMessageManager.getMessageConverter(),
+                queueName,
+                null,
+                message,
+                null,
+                delay,
+                null);
+        rqueueMessageTemplate.addToZset(queueName, rqueueMessage, rqueueMessage.getProcessAt());
+      } else {
+        enqueueIn(queueName, message, delay);
+      }
     }
   }
 
@@ -390,8 +385,8 @@ public abstract class SpringTestBase extends TestBase {
       String queueName, String priority, Object message, Date date) {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer
-          .enqueueAtWithPriority(queueName, priority, message, date)
-          .block()
+              .enqueueAtWithPriority(queueName, priority, message, date)
+              .block()
           != null;
     }
     if (random.nextBoolean()) {
@@ -404,8 +399,8 @@ public abstract class SpringTestBase extends TestBase {
       String queueName, String priority, Object message, Instant date) {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer
-          .enqueueAtWithPriority(queueName, priority, message, date)
-          .block()
+              .enqueueAtWithPriority(queueName, priority, message, date)
+              .block()
           != null;
     }
     if (random.nextBoolean()) {
@@ -418,8 +413,8 @@ public abstract class SpringTestBase extends TestBase {
       String queueName, String priority, Object message, long instant) {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer
-          .enqueueAtWithPriority(queueName, priority, message, instant)
-          .block()
+              .enqueueAtWithPriority(queueName, priority, message, instant)
+              .block()
           != null;
     }
     if (random.nextBoolean()) {
@@ -485,12 +480,10 @@ public abstract class SpringTestBase extends TestBase {
   }
 
   public interface Factory {
-
     Object next(int i);
   }
 
   public interface Delay {
-
     long getDelay(int i);
   }
 }

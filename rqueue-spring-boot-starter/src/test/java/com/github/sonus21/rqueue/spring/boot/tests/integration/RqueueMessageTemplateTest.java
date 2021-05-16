@@ -38,7 +38,7 @@ import org.springframework.test.context.TestPropertySource;
 class RqueueMessageTemplateTest extends SpringTestBase {
   @Test
   void moveMessageFromDeadLetterQueueToOriginalQueue() {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10, true);
     rqueueMessageSender.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
     assertEquals(10, stringRqueueRedisTemplate.getListSize(emailQueue).intValue());
     assertEquals(0, stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue).intValue());
@@ -48,7 +48,7 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void moveMessageFromOneQueueToAnother() {
     String queue1 = emailDeadLetterQueue + "t";
     String queue2 = emailQueue + "t";
-    enqueue(queue1, i -> Email.newInstance(), 10);
+    enqueue(queue1, i -> Email.newInstance(), 10, true);
     rqueueMessageTemplate.moveMessageListToList(queue1, queue2, 10);
     assertEquals(10, stringRqueueRedisTemplate.getListSize(queue2).intValue());
     assertEquals(0, stringRqueueRedisTemplate.getListSize(queue1).intValue());
@@ -61,7 +61,7 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void moveMessageListToZset() {
     String queue = "moveMessageListToZset";
     String tgtZset = "moveMessageListToZsetTgt";
-    enqueue(queue, i -> Email.newInstance(), 10);
+    enqueue(queue, i -> Email.newInstance(), 10, true);
     long score = System.currentTimeMillis() - 10000;
     rqueueMessageTemplate.moveMessageListToZset(queue, tgtZset, 10, score);
     assertEquals(0, stringRqueueRedisTemplate.getListSize(queue).intValue());
@@ -72,7 +72,7 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void moveMessageZsetToList() {
     String zset = notificationQueue + "zset";
     String list = notificationQueue + "list";
-    enqueueIn(zset, i -> Notification.newInstance(), i -> 50000L, 10);
+    enqueueIn(zset, i -> Notification.newInstance(), i -> 50000L, 10, true);
     rqueueMessageTemplate.moveMessageZsetToList(zset, list, 10);
     assertEquals(10, stringRqueueRedisTemplate.getListSize(list).intValue());
     assertEquals(0, stringRqueueRedisTemplate.getZsetSize(zset).intValue());
@@ -82,7 +82,7 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void moveMessageZsetToZset() {
     String srcZset = jobQueue + "src";
     String tgtZset = jobQueue + "tgt";
-    enqueueIn(srcZset, i -> Job.newInstance(), i -> 5000L, 10);
+    enqueueIn(srcZset, i -> Job.newInstance(), i -> 5000L, 10, true);
     rqueueMessageTemplate.moveMessageZsetToZset(srcZset, tgtZset, 10, 0, false);
     assertEquals(10, stringRqueueRedisTemplate.getZsetSize(tgtZset).intValue());
     assertEquals(0, stringRqueueRedisTemplate.getZsetSize(srcZset).intValue());

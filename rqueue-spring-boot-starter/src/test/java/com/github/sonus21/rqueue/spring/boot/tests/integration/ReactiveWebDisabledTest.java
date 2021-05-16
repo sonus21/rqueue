@@ -174,7 +174,7 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
 
   @Test
   void exploreData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.LIST);
     request.setSrc(emailQueue);
@@ -238,7 +238,7 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
 
   @Test
   void viewData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     DateViewRequest dateViewRequest = new DateViewRequest();
     dateViewRequest.setName(emailDeadLetterQueue);
     dateViewRequest.setType(DataType.LIST);

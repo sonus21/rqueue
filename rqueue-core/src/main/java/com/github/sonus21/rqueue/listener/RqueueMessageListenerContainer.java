@@ -32,6 +32,7 @@ import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
+import com.github.sonus21.rqueue.models.event.RqueueQueuePauseEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.StringUtils;
@@ -70,6 +71,7 @@ import org.springframework.util.ClassUtils;
 @Slf4j
 public class RqueueMessageListenerContainer
     implements InitializingBean, DisposableBean, SmartLifecycle, BeanNameAware {
+  public static final String EVENT_SOURCE = "RqueueMessageListenerContainer";
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
   private final Object lifecycleMgr = new Object();
@@ -409,7 +411,7 @@ public class RqueueMessageListenerContainer
       doStart();
       rqueueBeanProvider
           .getApplicationEventPublisher()
-          .publishEvent(new RqueueBootstrapEvent("Container", true));
+          .publishEvent(new RqueueBootstrapEvent(EVENT_SOURCE, true));
       lifecycleMgr.notifyAll();
     }
   }
@@ -526,7 +528,7 @@ public class RqueueMessageListenerContainer
       running = false;
       rqueueBeanProvider
           .getApplicationEventPublisher()
-          .publishEvent(new RqueueBootstrapEvent("Container", false));
+          .publishEvent(new RqueueBootstrapEvent(EVENT_SOURCE, false));
       doStop();
       lifecycleMgr.notifyAll();
     }
@@ -566,15 +568,14 @@ public class RqueueMessageListenerContainer
     }
 
     void pauseUnpauseQueue(String queue) {
-      RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
-      if (rqueueConfig.isProducer()) {
-        return;
-      }
       if (pausedQueues.contains(queue)) {
         pausedQueues.remove(queue);
       } else {
         pauseQueue(queue);
       }
+      RqueueQueuePauseEvent event =
+          new RqueueQueuePauseEvent(EVENT_SOURCE, queue, isQueuePaused(queue));
+      rqueueBeanProvider.getApplicationEventPublisher().publishEvent(event);
     }
 
     private void pauseQueue(String queue) {

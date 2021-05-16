@@ -14,21 +14,22 @@
  *
  */
 
-package com.github.sonus21;
+package com.github.sonus21.rqueue.test;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import com.github.sonus21.rqueue.models.event.RqueueQueuePauseEvent;
+import java.util.LinkedList;
+import java.util.List;
+import lombok.Getter;
+import org.springframework.context.ApplicationListener;
+import org.springframework.stereotype.Component;
 
-@AllArgsConstructor
-@NoArgsConstructor
-public class AtomicValueHolder<T> {
-  private T t;
+@Component
+@Getter
+public class PauseUnpauseEventListener implements ApplicationListener<RqueueQueuePauseEvent> {
+  private final List<RqueueQueuePauseEvent> eventList = new LinkedList<>();
 
-  public synchronized void set(T t) {
-    this.t = t;
-  }
-
-  public T get() {
-    return t;
+  @Override
+  public void onApplicationEvent(RqueueQueuePauseEvent event) {
+    eventList.add(event);
   }
 }
