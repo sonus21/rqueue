@@ -35,6 +35,8 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
+      "rqueue.job.durability.in-terminal-state=0",
+      "rqueue.job.enabled=false",
       "rqueue.retry.per.poll=1",
       "spring.redis.port=8007",
       "job.queue.active=false",
