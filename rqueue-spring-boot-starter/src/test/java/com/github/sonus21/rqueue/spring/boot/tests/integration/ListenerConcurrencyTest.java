@@ -16,21 +16,20 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.github.sonus21.junit.RedisAvailable;
-import com.github.sonus21.rqueue.spring.boot.application.RedisClusterApplication;
+import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ContextConfiguration(classes = RedisClusterApplication.class)
+@ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(
@@ -38,16 +37,15 @@ import org.springframework.test.context.TestPropertySource;
       "rqueue.job.durability.in-terminal-state=0",
       "rqueue.job.enabled=false",
       "rqueue.retry.per.poll=1",
-      "spring.redis.port=8007",
+      "spring.redis.port=8022",
       "job.queue.active=false",
       "notification.queue.active=false",
       "email.queue.active=false",
       "sms.queue.concurrency=20-40",
       "sms.queue.active=true",
     })
-@RedisAvailable(nodes = {":9000", ":9001", ":9002", ":9003", ":9004", ":9005"})
 @SpringBootIntegrationTest
-@Tag("redisCluster")
+@DisabledIfEnvironmentVariable(matches = "true", named = "CI")
 class ListenerConcurrencyTest extends SpringTestBase {
 
   @Test

@@ -304,7 +304,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   private int getBatchSize(RqueueListener rqueueListener, Concurrency concurrency) {
     int val =
-        ValueResolver.resolveKeyToInteger(getApplicationContext(), rqueueListener.numRetries());
+        ValueResolver.resolveKeyToInteger(getApplicationContext(), rqueueListener.batchSize());
     // batch size is not set
     if (val < Constants.MIN_BATCH_SIZE) {
       // concurrency is set but batch size is not set, use default batch size

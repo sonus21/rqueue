@@ -54,12 +54,9 @@ import org.springframework.messaging.handler.annotation.Payload;
 @Slf4j
 public class MessageListener {
 
-  @NonNull
-  private final ConsumedMessageStore consumedMessageStore;
-  @NonNull
-  private final FailureManager failureManager;
-  @NonNull
-  private final RqueueConfig rqueueConfig;
+  @NonNull private final ConsumedMessageStore consumedMessageStore;
+  @NonNull private final FailureManager failureManager;
+  @NonNull private final RqueueConfig rqueueConfig;
   private ScheduledExecutorService scheduledExecutorService;
 
   @Value("${job.queue.name}")
@@ -157,7 +154,8 @@ public class MessageListener {
       active = "${sms.queue.active}",
       priority = "${sms.queue.priority}",
       priorityGroup = "${sms.queue.group}",
-      concurrency = "${sms.queue.concurrency}")
+      concurrency = "${sms.queue.concurrency}",
+      batchSize = "40")
   public void onMessage(Sms sms) throws Exception {
     log.info("SmsListener: {}", sms);
     if (failureManager.shouldFail(sms.getId())) {

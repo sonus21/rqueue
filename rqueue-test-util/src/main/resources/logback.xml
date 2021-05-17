@@ -62,9 +62,13 @@
     <appender-ref ref="FILE"/>
   </logger>
 
-  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.listener.RqueueMessagePoller">
-    <appender-ref ref="FILE"/>
-  </logger>
+<!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.listener.RqueueMessagePoller">-->
+<!--    <appender-ref ref="FILE"/>-->
+<!--  </logger>-->
+
+<!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.utils.QueueThreadPool">-->
+<!--    <appender-ref ref="FILE"/>-->
+<!--  </logger>-->
 
   <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.core.DelayedMessageScheduler">
     <appender-ref ref="FILE"/>
