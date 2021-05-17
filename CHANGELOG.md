@@ -13,6 +13,7 @@
 
 * Pause/Unpause queue
 * Batch message fetching
+* Default queue priority to WEIGHTED
 
 ## [2.7.0] - 13-Apr-2021
 

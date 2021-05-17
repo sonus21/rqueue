@@ -94,7 +94,7 @@ public class SimpleRqueueListenerContainerFactory {
   private MessageHeaders messageHeaders;
 
   // Set priority mode for the pollers
-  private PriorityMode priorityMode;
+  private PriorityMode priorityMode = PriorityMode.WEIGHTED;
 
   /**
    * Whether all beans of spring application should be inspected to find methods annotated with
