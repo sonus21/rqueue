@@ -236,7 +236,7 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
 
   @Test
   void getPriorityMode() {
-    assertNull(simpleRqueueListenerContainerFactory.getPriorityMode());
+    assertEquals(PriorityMode.WEIGHTED, simpleRqueueListenerContainerFactory.getPriorityMode());
   }
 
   @Test
