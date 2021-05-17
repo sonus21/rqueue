@@ -30,6 +30,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -81,6 +82,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock private RqueueWebConfig rqueueWebConfig;
   private RqueueMessageListenerContainer container;
   private RqueueBeanProvider beanProvider;
 
@@ -95,6 +97,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     beanProvider.setApplicationEventPublisher(applicationEventPublisher);
     beanProvider.setRqueueMessageTemplate(rqueueMessageTemplate);
     beanProvider.setRqueueMessageMetadataService(rqueueMessageMetadataService);
+    beanProvider.setRqueueWebConfig(rqueueWebConfig);
     container = new TestListenerContainer(rqueueMessageHandler);
   }
 

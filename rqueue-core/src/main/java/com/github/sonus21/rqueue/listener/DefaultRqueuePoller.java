@@ -73,6 +73,8 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
       try {
         if (eligibleForPolling(queueDetail.getName())) {
           poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+        } else if (shouldExit()) {
+          return;
         } else {
           deactivate(-1, queueDetail.getName(), DeactivateType.NO_MESSAGE);
         }
