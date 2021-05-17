@@ -34,6 +34,7 @@ import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
@@ -74,6 +75,7 @@ public abstract class SpringTestBase extends TestBase {
   @Autowired protected RqueueJobDao rqueueJobDao;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
   @Autowired protected ObjectMapper objectMapper;
+  @Autowired protected RqueueQueueMetrics rqueueQueueMetrics;
 
   @Value("${email.queue.name}")
   protected String emailQueue;
@@ -208,9 +210,9 @@ public abstract class SpringTestBase extends TestBase {
   protected int getMessageCount(List<String> queueNames) {
     int count = 0;
     for (String queueName : queueNames) {
-      for (Entry<String, List<RqueueMessage>> entry : getMessageMap(queueName).entrySet()) {
-        count += entry.getValue().size();
-      }
+      count += rqueueQueueMetrics.getPendingMessageCount(queueName);
+      count += rqueueQueueMetrics.getProcessingMessageCount(queueName);
+      count += rqueueQueueMetrics.getScheduledMessageCount(queueName);
     }
     return count;
   }
