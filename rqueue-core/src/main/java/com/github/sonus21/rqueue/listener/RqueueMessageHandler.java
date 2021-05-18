@@ -450,8 +450,13 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   private long resolveVisibilityTimeout(RqueueListener rqueueListener) {
-    return ValueResolver.resolveKeyToLong(
-        getApplicationContext(), rqueueListener.visibilityTimeout());
+    long value =
+        ValueResolver.resolveKeyToLong(getApplicationContext(), rqueueListener.visibilityTimeout());
+    if (value < Constants.MIN_VISIBILITY) {
+      throw new IllegalStateException(
+          "Visibility  must be greater than or equal to " + Constants.MIN_VISIBILITY);
+    }
+    return value;
   }
 
   private int resolveNumRetries(RqueueListener rqueueListener) {
