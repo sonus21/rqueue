@@ -96,6 +96,7 @@ subprojects {
         testCompile group: 'ch.qos.logback', name: 'logback-classic', version: "${logbackVersion}"
         testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: "${jupiterVersion}"
         testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
+        testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
         // https://mvnrepository.com/artifact/org.mockito/mockito-inline
         testCompile group: 'org.mockito', name: 'mockito-inline', version: "${mockitoVersion}"
         testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: "${mockitoVersion}"
