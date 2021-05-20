@@ -418,9 +418,10 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "\"slowQueue,smartQueue1\",-3",
-    "\"slowQueue,smartQueue2\",1,1,1", // multiple priority is used
-    "\"slowQueue,smartQueue3\",critical=10,high=high", // number format error
+    "\"slowQueue,smartQueue1\",-3", // < 0
+    "\"slowQueue,smartQueue2\",high", // number format error
+    "\"slowQueue,smartQueue3\",1,1,1", // multiple priority is used
+    "\"slowQueue,smartQueue4\",critical=10,high=high", // number format error
   })
   void priorityResolverInvalidValue(String queue, String priority) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();

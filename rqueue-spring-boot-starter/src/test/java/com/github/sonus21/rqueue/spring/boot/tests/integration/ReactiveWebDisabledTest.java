@@ -57,7 +57,7 @@ import reactor.core.publisher.Mono;
       "reservation.request.dead.letter.consumer.enabled=true",
       "reservation.request.active=true",
       "list.email.queue.enabled=true",
-      "mysql.db.name=ReactiveWebTest",
+      "mysql.db.name=ReactiveWebDisabledTest",
       "use.system.redis=false",
       "user.banned.queue.active=true",
       "spring.main.web-application-type=reactive",

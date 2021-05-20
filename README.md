@@ -37,8 +37,8 @@ well, where all services code is in Spring.
   workers/listeners.
 * **Concurrency** : Concurrency of any listener can be configured
 * **Queue Priority** :
-    * Group level queue priority(weighted and strict)
-    * Sub queue priority(weighted and strict)
+  * Group level queue priority(weighted and strict)
+  * Sub queue priority(weighted and strict)
 * **Long execution job** : Long running jobs can check in periodically.
 * **Execution Backoff** : Exponential and fixed back off (default fixed back off)
 * **Middleware** :  Add one or more middleware, middlewares are called before listener method.
@@ -69,41 +69,43 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 * Get the latest one
   from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
 * Add dependency
-    * Gradle
-      ```groovy
-          implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.7.0-RELEASE'
-      ```
-    * Maven
-      ```xml
-       <dependency>
-          <groupId>com.github.sonus21</groupId>
-          <artifactId>rqueue-spring-boot-starter</artifactId>
-          <version>2.7.0-RELEASE</version>
-      </dependency>
-      ```
+  * Gradle
+    ```groovy
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.7.1-RELEASE'
+    ```
+  * Maven
+    ```xml
+     <dependency>
+        <groupId>com.github.sonus21</groupId>
+        <artifactId>rqueue-spring-boot-starter</artifactId>
+        <version>2.7.1-RELEASE</version>
+    </dependency>
+    ```
+
+  No additional configurations are required, only dependency is required.
 
 #### Spring framework
 
 * Get the latest one
   from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
 * Add Dependency
-    * Gradle
-      ```groovy
-          implementation 'com.github.sonus21:rqueue-spring:2.7.0-RELEASE'
-      ```
-    * Maven
-      ```xml
-       <dependency>
-         <groupId>com.github.sonus21</groupId>
-         <artifactId>rqueue-spring</artifactId>
-         <version>2.7.0-RELEASE</version>
-       </dependency>
-      ```
+  * Gradle
+    ```groovy
+        implementation 'com.github.sonus21:rqueue-spring:2.7.1-RELEASE'
+    ```
+  * Maven
+    ```xml
+     <dependency>
+       <groupId>com.github.sonus21</groupId>
+       <artifactId>rqueue-spring</artifactId>
+       <version>2.7.1-RELEASE</version>
+     </dependency>
+    ```
 
 2. Add annotation `EnableRqueue` on application config class
 3. Provide a RedisConnectionFactory bean
 
-### A Simple Spring Configuration
+###### Configuration
 
 ```java
 
@@ -168,7 +170,7 @@ public class MessageService {
 }
 ```
 
-### Worker/Consumer/Task executor/Listener
+### Worker/Consumer/Task Executor/Listener
 
 Any method that's part of spring bean, can be marked as worker/message listener
 using `RqueueListener` annotation
@@ -290,8 +292,8 @@ environment variables for Spring versions.
 * Issue tracker:
   [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues)
 * Maven Central:
-    * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
-    * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
+  * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
+  * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
 
 * StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
 * Discord: https://discord.gg/2hgQZXS2
