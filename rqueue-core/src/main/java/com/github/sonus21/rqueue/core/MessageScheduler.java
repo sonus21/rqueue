@@ -392,7 +392,6 @@ public abstract class MessageScheduler
       long lastSeenTime = getLastScheduleTime(queueName);
       long currentTime = System.currentTimeMillis();
       if (currentTime - lastSeenTime < getMinDelay()) {
-        getLogger().debug("Too frequent event");
         return;
       }
       schedule(queueName, startTime, false);
@@ -405,7 +404,7 @@ public abstract class MessageScheduler
       }
       String body = new String(message.getBody());
       String channel = new String(message.getChannel());
-      getLogger().debug("Body: {} Channel: {}", body, channel);
+      getLogger().trace("Body: {} Channel: {}", body, channel);
       try {
         Long startTime = Long.parseLong(body);
         String queueName = channelNameToQueueName.get(channel);
