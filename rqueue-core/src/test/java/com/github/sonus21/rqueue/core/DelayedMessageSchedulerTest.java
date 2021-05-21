@@ -38,6 +38,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.TestTaskScheduler;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,8 @@ class DelayedMessageSchedulerTest extends TestBase {
     assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true));
     assertNull(FieldUtils.readField(messageScheduler, "channelNameToQueueName", true));
-    assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageSeenTime", true));
+    assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageScheduleTime", true));
+    assertNull(FieldUtils.readField(messageScheduler, "queueSchedulers", true));
   }
 
   @Test
@@ -130,7 +132,8 @@ class DelayedMessageSchedulerTest extends TestBase {
         2, ((Map) FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true)).size());
     assertEquals(
         2, ((Map) FieldUtils.readField(messageScheduler, "channelNameToQueueName", true)).size());
-    Thread.sleep(500L);
+    assertEquals(2, ((Map) FieldUtils.readField(messageScheduler, "queueSchedulers", true)).size());
+    TimeoutUtils.sleep(500L);
     messageScheduler.destroy();
   }
 
@@ -150,7 +153,7 @@ class DelayedMessageSchedulerTest extends TestBase {
         .addMessageListener(
             any(), eq(new ChannelTopic(fastQueueDetail.getDelayedQueueChannelName())));
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-    Thread.sleep(500L);
+    TimeoutUtils.sleep(500L);
     messageScheduler.destroy();
   }
 
@@ -162,7 +165,7 @@ class DelayedMessageSchedulerTest extends TestBase {
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-    Thread.sleep(500L);
+    TimeoutUtils.sleep(500L);
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", false));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
@@ -188,7 +191,7 @@ class DelayedMessageSchedulerTest extends TestBase {
           .when(() -> ThreadUtils.createTaskScheduler(1, "delayedMessageScheduler-", 60))
           .thenReturn(scheduler);
       messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-      Thread.sleep(500L);
+      TimeoutUtils.sleep(500L);
       messageScheduler.destroy();
       Map<String, Boolean> queueRunningState =
           (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
@@ -279,7 +282,7 @@ class DelayedMessageSchedulerTest extends TestBase {
         (MessageListener) FieldUtils.readField(messageScheduler, "messageSchedulerListener", true);
     // invalid channel
     messageListener.onMessage(new DefaultMessage(slowQueue.getBytes(), "312".getBytes()), null);
-    Thread.sleep(50);
+    TimeoutUtils.sleep(50);
     assertEquals(2, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
     // invalid body
@@ -287,16 +290,17 @@ class DelayedMessageSchedulerTest extends TestBase {
         new DefaultMessage(
             slowQueueDetail.getDelayedQueueChannelName().getBytes(), "sss".getBytes()),
         null);
-    Thread.sleep(50);
+    TimeoutUtils.sleep(50);
     assertEquals(2, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
+    TimeoutUtils.sleep(100);
     // both are correct
     messageListener.onMessage(
         new DefaultMessage(
             slowQueueDetail.getDelayedQueueChannelName().getBytes(),
             String.valueOf(System.currentTimeMillis()).getBytes()),
         null);
-    Thread.sleep(50);
+
     assertEquals(3, messageScheduler.scheduleList.stream().filter(e -> !e).count());
     messageScheduler.destroy();
   }

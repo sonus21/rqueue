@@ -85,7 +85,7 @@ class MessageSchedulerDisabledTest extends TestBase {
     assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true));
     assertNull(FieldUtils.readField(messageScheduler, "channelNameToQueueName", true));
-    assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageSeenTime", true));
+    assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageScheduleTime", true));
   }
 
   @Test
@@ -111,6 +111,6 @@ class MessageSchedulerDisabledTest extends TestBase {
     assertNull(FieldUtils.readField(messageScheduler, "queueRunningState", true));
     assertNull(FieldUtils.readField(messageScheduler, "queueNameToScheduledTask", true));
     assertNull(FieldUtils.readField(messageScheduler, "channelNameToQueueName", true));
-    assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageSeenTime", true));
+    assertNull(FieldUtils.readField(messageScheduler, "queueNameToLastMessageScheduleTime", true));
   }
 }
