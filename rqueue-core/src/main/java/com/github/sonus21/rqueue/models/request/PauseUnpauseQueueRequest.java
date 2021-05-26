@@ -14,34 +14,24 @@
  *
  */
 
-package com.github.sonus21.rqueue.models.response;
+package com.github.sonus21.rqueue.models.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.sonus21.rqueue.models.SerializableBase;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-@ToString
-@EqualsAndHashCode(callSuper = false)
-@Builder
-public class BaseResponse extends SerializableBase {
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
+public class PauseUnpauseQueueRequest extends DataTypeRequest {
+  private boolean pause;
 
-  private static final long serialVersionUID = 4830863373464370840L;
-  private int code;
-  private String message;
-
-  @JsonIgnore
-  public void set(int code, String message) {
-    this.code = code;
-    this.message = message;
+  @Override
+  public String toString() {
+    return "PauseUnpauseQueueRequest{" + "queue=" + getName() + ", pause=" + pause + '}';
   }
 }

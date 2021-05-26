@@ -34,4 +34,6 @@ public interface RqueueSystemConfigDao {
   void saveQConfig(QueueConfig queueConfig);
 
   void saveAllQConfig(List<QueueConfig> newConfigs);
+
+  void clearCacheByName(String name);
 }

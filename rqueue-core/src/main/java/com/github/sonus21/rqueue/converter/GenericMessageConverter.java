@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.converter;
 import static org.springframework.util.Assert.notNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
@@ -46,8 +45,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
   private final SmartMessageSerDes smartMessageSerDes;
 
   public GenericMessageConverter() {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    ObjectMapper mapper = SerializationUtils.createObjectMapper();
     this.smartMessageSerDes = new SmartMessageSerDes(mapper);
   }
 

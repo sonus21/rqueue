@@ -30,8 +30,8 @@ import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
-import com.github.sonus21.rqueue.models.request.DataTypeRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
@@ -229,12 +229,12 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   }
 
   @Override
-  public Mono<BaseResponse> reactivePauseUnpauseQueue(DataTypeRequest request) {
+  public Mono<BaseResponse> reactivePauseUnpauseQueue(PauseUnpauseQueueRequest request) {
     return Mono.just(pauseUnpauseQueue(request));
   }
 
   @Override
-  public BaseResponse pauseUnpauseQueue(DataTypeRequest request) {
+  public BaseResponse pauseUnpauseQueue(PauseUnpauseQueueRequest request) {
     QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(request.getName(), true);
     BaseResponse response = new BaseResponse();
     if (queueConfig == null) {
@@ -242,9 +242,11 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       response.setCode(404);
     } else {
       queueConfig.setPaused(!queueConfig.isPaused());
-      rqueueInternalPubSubChannel.emitPauseUnpauseQueueEvent(request.getName());
+      rqueueInternalPubSubChannel.emitPauseUnpauseQueueEvent(request);
+      rqueueInternalPubSubChannel.emitQueueConfigUpdateEvent(request);
       rqueueSystemConfigDao.saveQConfig(queueConfig);
     }
     return response;
   }
+
 }

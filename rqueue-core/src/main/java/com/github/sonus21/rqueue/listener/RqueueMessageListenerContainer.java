@@ -517,8 +517,8 @@ public class RqueueMessageListenerContainer
     scheduledFutureByQueue.put(queueName, future);
   }
 
-  public void pauseUnpauseQueue(String queue) {
-    this.queueStateMgr.pauseUnpauseQueue(queue);
+  public void pauseUnpauseQueue(String queue, boolean pause) {
+    this.queueStateMgr.pauseUnpauseQueue(queue, pause);
   }
 
   @Override
@@ -567,28 +567,39 @@ public class RqueueMessageListenerContainer
       return pausedQueues.contains(queueName);
     }
 
-    void pauseUnpauseQueue(String queue) {
-      if (pausedQueues.contains(queue)) {
-        pausedQueues.remove(queue);
-      } else {
-        pauseQueue(queue);
+    void pauseUnpauseQueue(String queue, boolean pause) {
+      if (pause && pausedQueues.contains(queue)) {
+        log.error("Duplicate pause called {}", queue);
+        return;
       }
-      RqueueQueuePauseEvent event =
-          new RqueueQueuePauseEvent(EVENT_SOURCE, queue, isQueuePaused(queue));
+      if (!pause && !pausedQueues.contains(queue)) {
+        log.error("Queue is not paused but unpause is requested {}", queue);
+        return;
+      }
+      if (pause) {
+        pause(queue);
+      } else {
+        unpause(queue);
+      }
+      RqueueQueuePauseEvent event = new RqueueQueuePauseEvent(EVENT_SOURCE, queue, pause);
       rqueueBeanProvider.getApplicationEventPublisher().publishEvent(event);
     }
 
-    private void pauseQueue(String queue) {
+    private void unpause(String queue) {
+      pausedQueues.remove(queue);
+    }
+
+    private void pause(String queue) {
       pausedQueues.add(queue);
     }
 
-    public void pauseQueueIfRequired(QueueConfig config) {
+    void pauseQueueIfRequired(QueueConfig config) {
       if (config == null) {
         // new queue
         return;
       }
       if (config.isPaused()) {
-        pauseQueue(config.getName());
+        pause(config.getName());
       }
     }
   }

@@ -16,8 +16,8 @@
 
 package com.github.sonus21.rqueue.web.service;
 
-import com.github.sonus21.rqueue.models.request.DataTypeRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
@@ -45,7 +45,8 @@ public interface RqueueUtilityService {
 
   Mono<MessageMoveResponse> moveReactiveMessage(MessageMoveRequest request);
 
-  Mono<BaseResponse> reactivePauseUnpauseQueue(DataTypeRequest request);
+  Mono<BaseResponse> reactivePauseUnpauseQueue(PauseUnpauseQueueRequest request);
 
-  BaseResponse pauseUnpauseQueue(DataTypeRequest request);
+  BaseResponse pauseUnpauseQueue(PauseUnpauseQueueRequest request);
+
 }

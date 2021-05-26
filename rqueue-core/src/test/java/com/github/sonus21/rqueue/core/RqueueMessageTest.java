@@ -25,13 +25,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.utils.SerializationUtils;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class RqueueMessageTest extends TestBase {
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = SerializationUtils.createObjectMapper();
   private final String queueName = "test-queue";
   private final String queueMessage = "This is a test message";
   private final Integer retryCount = 3;

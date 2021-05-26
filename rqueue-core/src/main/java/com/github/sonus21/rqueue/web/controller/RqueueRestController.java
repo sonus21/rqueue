@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.request.DataTypeRequest;
 import com.github.sonus21.rqueue.models.request.DateViewRequest;
 import com.github.sonus21.rqueue.models.request.MessageDeleteRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
@@ -190,7 +191,7 @@ public class RqueueRestController {
   @PostMapping("pause-unpause-queue")
   @ResponseBody
   public BaseResponse pauseUnpauseQueue(
-      @RequestBody @Valid DataTypeRequest request, HttpServletResponse response) {
+      @RequestBody PauseUnpauseQueueRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;

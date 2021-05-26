@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.AtomicValueHolder;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.models.request.DataTypeRequest;
+import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.PauseUnpauseEventListener;
@@ -62,7 +62,10 @@ class PauseUnpauseTest extends SpringTestBase {
     TimeoutUtils.waitFor(
         () -> consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size() > 10,
         "10 messages to be consumed");
-    DataTypeRequest pauseRequest = new DataTypeRequest(notificationQueue);
+
+    log.info("Requesting to pause queue {}", notificationQueue);
+    PauseUnpauseQueueRequest pauseRequest = new PauseUnpauseQueueRequest(true);
+    pauseRequest.setName(notificationQueue);
     rqueueUtilityService.pauseUnpauseQueue(pauseRequest);
     TimeoutUtils.waitFor(() -> eventListener.getEventList().size() == 1, "pause event");
     TimeoutUtils.sleep(Constants.ONE_MILLI);
@@ -79,7 +82,17 @@ class PauseUnpauseTest extends SpringTestBase {
     TimeoutUtils.sleep(Constants.ONE_MILLI);
     messageCount = consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size();
     assertEquals(holder.get(), messageCount);
+
+    log.info("Re-request to pause queue {}", pauseRequest);
     rqueueUtilityService.pauseUnpauseQueue(pauseRequest);
+    TimeoutUtils.sleep(Constants.MIN_DELAY);
+    TimeoutUtils.waitFor(
+        () -> eventListener.getEventList().size() == 1, "pause event should not emit");
+
+    pauseRequest.setPause(false);
+    log.info("Unpause request {}", pauseRequest);
+    rqueueUtilityService.pauseUnpauseQueue(pauseRequest);
+    TimeoutUtils.sleep(Constants.MIN_DELAY);
     TimeoutUtils.waitFor(() -> eventListener.getEventList().size() == 2, "unpause event");
 
     TimeoutUtils.waitFor(
@@ -95,6 +108,11 @@ class PauseUnpauseTest extends SpringTestBase {
     assertEquals(notificationQueue, eventListener.getEventList().get(0).getQueue());
     assertFalse(eventListener.getEventList().get(1).isPaused());
     assertEquals(notificationQueue, eventListener.getEventList().get(1).getQueue());
+
+    log.info("Duplicate unpause request {}", pauseRequest);
+    rqueueUtilityService.pauseUnpauseQueue(pauseRequest);
+    TimeoutUtils.sleep(Constants.MIN_DELAY);
+    TimeoutUtils.waitFor(() -> eventListener.getEventList().size() == 2, "duplicate unpause event");
     System.out.println("Test has finished");
   }
 }

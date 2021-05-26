@@ -113,4 +113,10 @@ public class RqueueSystemConfigDaoImpl implements RqueueSystemConfigDao {
       }
     }
   }
+
+  @Override
+  public void clearCacheByName(String name) {
+    String key = rqueueConfig.getQueueConfigKey(name);
+    queueConfigMap.remove(key);
+  }
 }

@@ -236,11 +236,14 @@ public abstract class RqueueListenerBaseConfig {
       RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
       RqueueMessageListenerContainer rqueueMessageListenerContainer,
       RqueueConfig rqueueConfig,
-     @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+      RqueueBeanProvider rqueueBeanProvider,
+      @Qualifier("stringRqueueRedisTemplate")
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueInternalPubSubChannel(
         rqueueRedisListenerContainerFactory,
         rqueueMessageListenerContainer,
         rqueueConfig,
-        stringRqueueRedisTemplate);
+        stringRqueueRedisTemplate,
+        rqueueBeanProvider);
   }
 }

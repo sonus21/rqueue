@@ -63,4 +63,40 @@ public interface RqueueEndpointManager {
    * @return list of queue detail
    */
   List<QueueDetail> getQueueConfig(String queueName);
+
+  /**
+   * Pause or unpause queue
+   *
+   * @param queueName queue that needs to be paused or unpause
+   * @param pause boolean flags that indicates whether we need to pause or unpause
+   * @return success/fail
+   */
+  boolean pauseUnpauseQueue(String queueName, boolean pause);
+
+  /**
+   * Pause or unpause queue with said priority
+   *
+   * @param queueName queue that needs to be paused or unpause
+   * @param priority priority of this queue
+   * @param pause boolean flags that indicates whether we need to pause or unpause
+   * @return success/fail
+   */
+  boolean pauseUnpauseQueue(String queueName, String priority, boolean pause);
+
+  /**
+   * Check whether a queue is paused or not
+   *
+   * @param queueName queue name that needs to be checked
+   * @return true/false
+   */
+  boolean isQueuePaused(String queueName);
+
+  /**
+   * Check whether a queue with given priority is paused or not
+   *
+   * @param queueName queue name that needs to be checked
+   * @param priority priority of that queue
+   * @return true/false
+   */
+  boolean isQueuePaused(String queueName, String priority);
 }

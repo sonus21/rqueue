@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public final class SerializationUtils {
 
   public static final byte[] EMPTY_ARRAY = new byte[0];
@@ -30,5 +33,11 @@ public final class SerializationUtils {
     return !StringUtils.isEmpty(data)
         && data.charAt(0) == '{'
         && data.charAt(data.length() - 1) == '}';
+  }
+
+  public static ObjectMapper createObjectMapper() {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    return mapper;
   }
 }

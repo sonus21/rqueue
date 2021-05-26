@@ -17,5 +17,6 @@
 package com.github.sonus21.rqueue.models.enums;
 
 public enum PubSubType {
-  PAUSE_QUEUE;
+  PAUSE_QUEUE,
+  QUEUE_CRUD;
 }

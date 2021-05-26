@@ -16,16 +16,18 @@
 
 package com.github.sonus21.rqueue.core;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter.SmartMessageSerDes;
+import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.enums.PubSubType;
 import com.github.sonus21.rqueue.models.event.RqueuePubSubEvent;
+import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.redis.connection.Message;
@@ -38,18 +40,22 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
   private final RqueueMessageListenerContainer rqueueMessageListenerContainer;
   private final RqueueConfig rqueueConfig;
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-
+  private final RqueueRedisSerializer rqueueRedisSerializer;
+  private final RqueueBeanProvider rqueueBeanProvider;
   private SmartMessageSerDes smartMessageSerDes;
 
   public RqueueInternalPubSubChannel(
       RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
       RqueueMessageListenerContainer rqueueMessageListenerContainer,
       RqueueConfig rqueueConfig,
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+      RqueueRedisTemplate<String> stringRqueueRedisTemplate,
+      RqueueBeanProvider rqueueBeanProvider) {
     this.rqueueRedisListenerContainerFactory = rqueueRedisListenerContainerFactory;
     this.rqueueMessageListenerContainer = rqueueMessageListenerContainer;
     this.rqueueConfig = rqueueConfig;
     this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
+    this.rqueueBeanProvider = rqueueBeanProvider;
+    this.rqueueRedisSerializer = new RqueueRedisSerializer();
   }
 
   @Override
@@ -58,19 +64,24 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
     InternalMessageListener messageListener = new InternalMessageListener();
     rqueueRedisListenerContainerFactory.addMessageListener(
         messageListener, new ChannelTopic(channel));
-    ObjectMapper mapper = new ObjectMapper();
-    mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    this.smartMessageSerDes = new SmartMessageSerDes(mapper);
+    this.smartMessageSerDes = new SmartMessageSerDes(SerializationUtils.createObjectMapper());
   }
 
-  public void emitPauseUnpauseQueueEvent(String queueName) {
-    publish(new RqueuePubSubEvent(PubSubType.PAUSE_QUEUE, RqueueConfig.getBrokerId(), queueName));
+  public void emitPauseUnpauseQueueEvent(PauseUnpauseQueueRequest pauseUnpauseQueueRequest) {
+    publish(PubSubType.PAUSE_QUEUE, pauseUnpauseQueueRequest);
   }
 
-  private void publish(RqueuePubSubEvent rqueuePubSubEvent) {
+  private void publish(PubSubType type, Object message) {
+    byte[] data = rqueueRedisSerializer.serialize(message);
+    RqueuePubSubEvent event =
+        new RqueuePubSubEvent(type, RqueueConfig.getBrokerId(), new String(data));
     stringRqueueRedisTemplate
         .getRedisTemplate()
-        .convertAndSend(rqueueConfig.getInternalCommChannelName(), rqueuePubSubEvent);
+        .convertAndSend(rqueueConfig.getInternalCommChannelName(), event);
+  }
+
+  public void emitQueueConfigUpdateEvent(PauseUnpauseQueueRequest request) {
+    publish(PubSubType.QUEUE_CRUD, request.getName());
   }
 
   class InternalMessageListener implements MessageListener {
@@ -88,6 +99,7 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
     }
 
     private void processEvent(byte[] body) {
+      log.debug("Message on internal channel {}", new String(body));
       RqueuePubSubEvent rqueuePubSubEvent =
           smartMessageSerDes.deserialize(body, RqueuePubSubEvent.class);
       if (rqueuePubSubEvent == null) {
@@ -96,19 +108,41 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
       }
       switch (rqueuePubSubEvent.getType()) {
         case PAUSE_QUEUE:
-          handlePauseEvent(rqueuePubSubEvent);
+          PauseUnpauseQueueRequest request =
+              rqueuePubSubEvent.messageAs(smartMessageSerDes, PauseUnpauseQueueRequest.class);
+          handlePauseEvent(request);
+          break;
+        case QUEUE_CRUD:
+          String queue = rqueuePubSubEvent.messageAs(smartMessageSerDes, String.class);
+          rqueueBeanProvider.getRqueueSystemConfigDao().clearCacheByName(queue);
           break;
         default:
           log.error("Unknown event type {}", rqueuePubSubEvent);
       }
     }
 
-    private void handlePauseEvent(RqueuePubSubEvent rqueuePubSubEvent) {
-      if (StringUtils.isEmpty(rqueuePubSubEvent.getMessage())) {
-        log.error("Invalid message payload {}", rqueuePubSubEvent);
+    private void handlePauseEvent(PauseUnpauseQueueRequest request) {
+      if (request == null || StringUtils.isEmpty(request.getName())) {
+        log.error("Invalid message payload {}", request);
         return;
       }
-      rqueueMessageListenerContainer.pauseUnpauseQueue(rqueuePubSubEvent.getMessage());
+      String lockKey = Constants.getQueueCrudLockKey(rqueueConfig, request.getName());
+      boolean acquired = false;
+      try {
+        acquired =
+            rqueueBeanProvider
+                .getRqueueLockManager()
+                .acquireLock(lockKey, RqueueConfig.getBrokerId(), Duration.ofMillis(100));
+        if (acquired) {
+          rqueueMessageListenerContainer.pauseUnpauseQueue(request.getName(), request.isPause());
+        }
+      } finally {
+        if (acquired) {
+          rqueueBeanProvider
+              .getRqueueLockManager()
+              .releaseLock(lockKey, RqueueConfig.getBrokerId());
+        }
+      }
     }
   }
 }

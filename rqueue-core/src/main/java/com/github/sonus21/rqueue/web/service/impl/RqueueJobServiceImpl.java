@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
+import com.github.sonus21.rqueue.utils.SerializationUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueJobService;
 import java.util.Arrays;
@@ -46,7 +47,7 @@ public class RqueueJobServiceImpl implements RqueueJobService {
   @Autowired
   public RqueueJobServiceImpl(RqueueJobDao rqueueJobDao) {
     this.rqueueJobDao = rqueueJobDao;
-    this.objectMapper = new ObjectMapper();
+    this.objectMapper = SerializationUtils.createObjectMapper();
   }
 
   private TableRow getTableRow(RqueueJob job) throws ProcessingException {

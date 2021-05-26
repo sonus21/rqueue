@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
@@ -37,6 +38,7 @@ public class RqueueBeanProvider {
   @Autowired private RqueueJobDao rqueueJobDao;
   @Autowired private RqueueWebConfig rqueueWebConfig;
   @Autowired private ApplicationEventPublisher applicationEventPublisher;
+  @Autowired private RqueueLockManager rqueueLockManager;
 
   @Autowired(required = false)
   private RqueueMetricsCounter rqueueMetricsCounter;
