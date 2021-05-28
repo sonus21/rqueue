@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.listener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.core.context.DefaultContext;
 import com.github.sonus21.rqueue.core.middleware.TimeProviderMiddleware;
@@ -44,6 +45,7 @@ public class JobImpl implements Job {
   public final Duration expiry;
   private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
+  private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
@@ -58,6 +60,7 @@ public class JobImpl implements Job {
       RqueueConfig rqueueConfig,
       RqueueMessageMetadataService messageMetadataService,
       RqueueJobDao rqueueJobDao,
+      RqueueMessageTemplate rqueueMessageTemplate,
       QueueDetail queueDetail,
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
@@ -67,6 +70,7 @@ public class JobImpl implements Job {
     this.rqueueJobDao = rqueueJobDao;
     this.messageMetadataService = messageMetadataService;
     this.rqueueConfig = rqueueConfig;
+    this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
     this.postProcessingHandler = postProcessingHandler;
@@ -123,6 +127,26 @@ public class JobImpl implements Job {
     log.debug("Checkin {} Message: {}", rqueueJob.getId(), message);
     this.rqueueJob.checkIn(message);
     this.save();
+  }
+
+  @Override
+  public Duration getVisibilityTimeout() {
+    Long score =
+        rqueueMessageTemplate.getScore(
+            queueDetail.getProcessingQueueName(), rqueueJob.getRqueueMessage());
+    if (score == null || score <= 0) {
+      return Duration.ZERO;
+    }
+    long remainingTime = score - System.currentTimeMillis();
+    return Duration.ofMillis(remainingTime);
+  }
+
+  @Override
+  public boolean updateVisibilityTimeout(Duration deltaDuration) {
+    return rqueueMessageTemplate.addScore(
+        queueDetail.getProcessingQueueName(),
+        rqueueJob.getRqueueMessage(),
+        deltaDuration.toMillis());
   }
 
   @Override

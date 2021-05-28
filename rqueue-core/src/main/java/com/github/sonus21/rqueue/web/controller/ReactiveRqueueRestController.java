@@ -195,7 +195,7 @@ public class ReactiveRqueueRestController {
   @PostMapping("pause-unpause-queue")
   @ResponseBody
   public Mono<BaseResponse> pauseUnpauseQueue(
-      @RequestBody PauseUnpauseQueueRequest request, ServerHttpResponse response) {
+      @RequestBody @Valid PauseUnpauseQueueRequest request, ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
       return null;

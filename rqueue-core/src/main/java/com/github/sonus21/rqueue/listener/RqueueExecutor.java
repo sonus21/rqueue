@@ -94,6 +94,7 @@ class RqueueExecutor extends MessageContainerBase {
               beanProvider.getRqueueConfig(),
               beanProvider.getRqueueMessageMetadataService(),
               beanProvider.getRqueueJobDao(),
+              beanProvider.getRqueueMessageTemplate(),
               queueDetail,
               messageMetadata,
               rqueueMessage,

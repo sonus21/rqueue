@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -191,6 +192,21 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       }
     }
     return messages;
+  }
+
+  @Override
+  public Long getScore(String zsetName, RqueueMessage message) {
+    Double score = redisTemplate.opsForZSet().score(zsetName, message);
+    if (score == null) {
+      return null;
+    }
+    return score.longValue();
+  }
+
+  @Override
+  public boolean addScore(String zsetName, RqueueMessage message, long delta) {
+    return scriptExecutor.execute(
+        getScript(ScriptType.SCORE_UPDATER), Collections.singletonList(zsetName), message, delta);
   }
 
   private MessageMoveResult moveMessageToList(

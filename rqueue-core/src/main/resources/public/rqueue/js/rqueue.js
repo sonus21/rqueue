@@ -60,6 +60,7 @@ function json(data) {
 
 function reloadHandler(response) {
   if (response.code === 0) {
+    alert("Success!")
     window.location.replace(window.location.href);
   } else {
     alert("Failed:" + response.message + " Please retry!");
@@ -532,8 +533,9 @@ $('.delete-btn').on("click", function () {
 
 function pauseQueueBtn() {
   let queueName = $(this).data("queue");
+  let pause = !$(this).hasClass('bx-play-circle');
   ajaxRequest(getAbsoluteUrl("rqueue/api/v1/pause-unpause-queue"), 'POST',
-      {'name': queueName},
+      {'name': queueName, 'pause': pause},
       reloadHandler,
       errorHandler);
 }

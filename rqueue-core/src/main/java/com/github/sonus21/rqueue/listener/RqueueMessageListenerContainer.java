@@ -586,10 +586,12 @@ public class RqueueMessageListenerContainer
     }
 
     private void unpause(String queue) {
+      log.info("Queue '{}' action unpause", queue);
       pausedQueues.remove(queue);
     }
 
     private void pause(String queue) {
+      log.info("Queue '{}' action pause", queue);
       pausedQueues.add(queue);
     }
 

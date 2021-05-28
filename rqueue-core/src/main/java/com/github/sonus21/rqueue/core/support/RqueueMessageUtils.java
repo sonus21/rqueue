@@ -128,16 +128,17 @@ public final class RqueueMessageUtils {
 
   public static List<RqueueMessage> generateMessages(
       MessageConverter converter, String queueName, int count) {
-    return generateMessages(converter, "Test Object", queueName, null, null, count);
+    return generateMessages(converter, UUID.randomUUID().toString(), queueName, null, null, count);
   }
 
   public static RqueueMessage generateMessage(MessageConverter converter, String queueName) {
-    return generateMessages(converter, "Test Object", queueName, null, null, 1).get(0);
+    return generateMessages(converter, UUID.randomUUID().toString(), queueName, null, null, 1)
+        .get(0);
   }
 
   public static List<RqueueMessage> generateMessages(
       MessageConverter converter, String queueName, long delay, int count) {
-    return generateMessages(converter, "Test object", queueName, null, delay, count);
+    return generateMessages(converter, UUID.randomUUID().toString(), queueName, null, delay, count);
   }
 
   public static List<RqueueMessage> generateMessages(

@@ -235,6 +235,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   @Override
   public BaseResponse pauseUnpauseQueue(PauseUnpauseQueueRequest request) {
+    log.info("Queue PauseUnpause request {}", request);
     QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(request.getName(), true);
     BaseResponse response = new BaseResponse();
     if (queueConfig == null) {
@@ -248,5 +249,4 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     }
     return response;
   }
-
 }

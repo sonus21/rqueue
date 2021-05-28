@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.test;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -35,6 +37,7 @@ import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.lang.ref.WeakReference;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
@@ -310,7 +313,17 @@ public class MessageListener {
 
     @Override
     public void run() {
+      if (endCheckInTime < System.currentTimeMillis()) {
+        return;
+      }
       this.job.checkIn("Running ..." + checkInId);
+      long startedAt = System.currentTimeMillis();
+      Duration visibilityTimout = this.job.getVisibilityTimeout(); // 1000
+      assertTrue(this.job.updateVisibilityTimeout(Duration.ofMillis(1000))); // 2000+
+      Duration newVisibilityTimeout = this.job.getVisibilityTimeout(); // 2000+
+      long delta = newVisibilityTimeout.minus(visibilityTimout).toMillis();
+      long now = System.currentTimeMillis();
+      assertTrue(delta >= (1000 - now - startedAt) && delta <= 1000);
       checkInId += 1;
       if (endCheckInTime > System.currentTimeMillis() + this.checkinInterval) {
         this.serviceWeakReference.get().schedule(this, this.checkinInterval, TimeUnit.MILLISECONDS);

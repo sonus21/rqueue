@@ -70,6 +70,25 @@ public interface Job {
   void checkIn(Serializable message);
 
   /**
+   * Get current visibility timeout of this job, if visibility timeout has already elapsed than
+   * return zero value
+   *
+   * @return remaining duration that this job can take, otherwise other listener will consume this
+   *     message
+   */
+  Duration getVisibilityTimeout();
+
+  /**
+   * Update the visibility timeout of this job, the delta duration would be added in the current
+   * visibility timeout. For example to add 10 seconds call this with {@value
+   * Duration.ofSeconds(10)}, to subtract 10 seconds call this with {@value *
+   * Duration.ofSeconds(-10)}.
+   *
+   * @param deltaDuration the delta time that needs to added to the existing visibility timeout
+   */
+  boolean updateVisibilityTimeout(Duration deltaDuration);
+
+  /**
    * A message that was enqueued
    *
    * @return an object could be null if deserialization fail.

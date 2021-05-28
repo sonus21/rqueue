@@ -191,7 +191,7 @@ public class RqueueRestController {
   @PostMapping("pause-unpause-queue")
   @ResponseBody
   public BaseResponse pauseUnpauseQueue(
-      @RequestBody PauseUnpauseQueueRequest request, HttpServletResponse response) {
+      @RequestBody @Valid PauseUnpauseQueueRequest request, HttpServletResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
       return null;
