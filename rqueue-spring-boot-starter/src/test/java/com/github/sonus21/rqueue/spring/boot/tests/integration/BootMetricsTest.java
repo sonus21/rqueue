@@ -39,14 +39,14 @@ import org.springframework.test.context.TestPropertySource;
       "mysql.db.name=test4",
       "rqueue.metrics.count.failure=true",
       "rqueue.metrics.count.execution=true",
-        "sms.queue.active=true"
+      "sms.queue.active=true"
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "CI", matches = "true")
+@Tag("redisCluster")
 class BootMetricsTest extends MetricTest {
 
   @Test
-  @Tag("redisCluster")
   void delayedQueueStatus() throws TimedOutException {
     this.verifyDelayedQueueStatus();
   }
