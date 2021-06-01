@@ -231,7 +231,8 @@ public class RqueueMessageListenerContainer
     }
   }
 
-  private void initializeQueue() {
+  private void initializeQueueRegistry() {
+    log.info("Initializing queue registry");
     EndpointRegistry.delete();
     for (MappingInformation mappingInformation :
         rqueueMessageHandler.getHandlerMethodMap().keySet()) {
@@ -241,6 +242,9 @@ public class RqueueMessageListenerContainer
         }
       }
     }
+  }
+
+  private void initializeQueue() {
     List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
     if (queueDetails.isEmpty()) {
       return;
@@ -275,6 +279,7 @@ public class RqueueMessageListenerContainer
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
       RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
+      initializeQueueRegistry();
       if (rqueueConfig.isProducer()) {
         log.info("Producer mode nothing to do...");
       } else {
