@@ -47,8 +47,8 @@ import org.springframework.messaging.converter.MessageConverter;
 @SuppressWarnings("WeakerAccess")
 abstract class BaseMessageSender {
   protected final MessageHeaders messageHeaders;
-  protected MessageConverter messageConverter;
-  protected RqueueMessageTemplate messageTemplate;
+  protected final MessageConverter messageConverter;
+  protected final RqueueMessageTemplate messageTemplate;
   @Autowired protected RqueueStringDao rqueueStringDao;
   @Autowired protected RqueueConfig rqueueConfig;
   @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;

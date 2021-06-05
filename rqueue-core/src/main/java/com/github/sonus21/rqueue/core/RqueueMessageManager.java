@@ -179,7 +179,7 @@ public interface RqueueMessageManager {
   }
 
   /**
-   * Get currently used message converter
+   * Get currently configured message converter
    *
    * @return message converter that's used for message (de)serialization
    */

@@ -39,6 +39,7 @@ import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -48,12 +49,12 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @SpringBootIntegrationTest
 @Tag("producerOnly")
-// @EnabledIfEnvironmentVariable(named = "CI", matches = "true")
+@EnabledIfEnvironmentVariable(named = "CI", matches = "true")
 @TestPropertySource(properties = {"rqueue.system.mode=PRODUCER"})
 class ProducerOnlyTest extends BasicListenerTest {
 
   private void validateQueue(Object message, String queue) {
-    EndpointRegistry.get(notificationQueue);
+    EndpointRegistry.get(queue);
     enqueue(message, queue);
   }
 
@@ -64,10 +65,11 @@ class ProducerOnlyTest extends BasicListenerTest {
     for (int i = 0; i < 10; i++) {
       String queueName = "new_queue_" + i;
       // no listeners are attached so enqueue any thing
-      enqueue(Email.newInstance(), queueName);
+      validateQueue(Email.newInstance(), queueName);
       if (i % 3 == 0) {
-        enqueue(Email.newInstance(), PriorityUtils.getQueueNameForPriority(queueName, "high"));
-        enqueue(Email.newInstance(), PriorityUtils.getQueueNameForPriority(queueName, "low"));
+        validateQueue(
+            Email.newInstance(), PriorityUtils.getQueueNameForPriority(queueName, "high"));
+        validateQueue(Email.newInstance(), PriorityUtils.getQueueNameForPriority(queueName, "low"));
       }
     }
     validateQueue(Notification.newInstance(), notificationQueue);
