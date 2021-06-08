@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.request.DataTypeRequest;
 import com.github.sonus21.rqueue.models.request.DateViewRequest;
 import com.github.sonus21.rqueue.models.request.MessageDeleteRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
@@ -189,5 +190,16 @@ public class ReactiveRqueueRestController {
       return null;
     }
     return rqueueUtilityService.moveReactiveMessage(request);
+  }
+
+  @PostMapping("pause-unpause-queue")
+  @ResponseBody
+  public Mono<BaseResponse> pauseUnpauseQueue(
+      @RequestBody @Valid PauseUnpauseQueueRequest request, ServerHttpResponse response) {
+    if (!rqueueWebConfig.isEnable()) {
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
+      return null;
+    }
+    return rqueueUtilityService.reactivePauseUnpauseQueue(request);
   }
 }

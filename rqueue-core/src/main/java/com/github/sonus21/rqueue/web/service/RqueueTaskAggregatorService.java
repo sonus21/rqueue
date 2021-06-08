@@ -99,6 +99,9 @@ public class RqueueTaskAggregatorService
       if (!rqueueWebConfig.isCollectListenerStats()) {
         return;
       }
+      if (rqueueConfig.isProducer()) {
+        return;
+      }
       this.eventAggregatorTasks = new ArrayList<>();
       this.queueNameToEvents = new ConcurrentHashMap<>();
       this.queue = new LinkedBlockingQueue<>();

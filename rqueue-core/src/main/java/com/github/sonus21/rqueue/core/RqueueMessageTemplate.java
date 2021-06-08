@@ -36,6 +36,13 @@ public interface RqueueMessageTemplate {
       String processingChannelName,
       long visibilityTimeout);
 
+  List<RqueueMessage> popN(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout,
+      int count);
+
   Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage);
 
@@ -50,6 +57,10 @@ public interface RqueueMessageTemplate {
 
   List<RqueueMessage> getAllMessages(
       String queueName, String processingQueueName, String delayQueueName);
+
+  Long getScore(String zsetName, RqueueMessage message);
+
+  boolean addScore(String zsetName, RqueueMessage message, long delta);
 
   MessageMoveResult moveMessageListToList(
       String srcQueueName, String dstQueueName, int numberOfMessage);

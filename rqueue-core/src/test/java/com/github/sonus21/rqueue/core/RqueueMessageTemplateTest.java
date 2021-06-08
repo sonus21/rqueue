@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.core;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -33,20 +32,20 @@ import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 
 @CoreUnitTest
-@SuppressWarnings("unchecked")
 class RqueueMessageTemplateTest extends TestBase {
-  private final RedisConnectionFactory redisConnectionFactory = mock(RedisConnectionFactory.class);
-  private final RedisTemplate<String, RqueueMessage> redisTemplate = mock(RedisTemplate.class);
-  private final ListOperations<String, RqueueMessage> listOperations = mock(ListOperations.class);
-  private final DefaultScriptExecutor<String> scriptExecutor = mock(DefaultScriptExecutor.class);
-  private final RqueueMessageTemplate rqueueMessageTemplate =
-      new RqueueMessageTemplateImpl(redisConnectionFactory, null);
+  @Mock private RedisConnectionFactory redisConnectionFactory;
+  @Mock private RedisTemplate<String, RqueueMessage> redisTemplate;
+  @Mock private ListOperations<String, RqueueMessage> listOperations;
+  @Mock private DefaultScriptExecutor<String> scriptExecutor;
+  private RqueueMessageTemplate rqueueMessageTemplate;
   private final String queueName = "test-queue";
   private final RqueueMessage message =
       RqueueMessage.builder()
@@ -59,6 +58,8 @@ class RqueueMessageTemplateTest extends TestBase {
 
   @BeforeEach
   public void init() throws Exception {
+    MockitoAnnotations.openMocks(this);
+    rqueueMessageTemplate = new RqueueMessageTemplateImpl(redisConnectionFactory, null);
     FieldUtils.writeField(rqueueMessageTemplate, "redisTemplate", redisTemplate, true);
     FieldUtils.writeField(rqueueMessageTemplate, "scriptExecutor", scriptExecutor, true);
   }

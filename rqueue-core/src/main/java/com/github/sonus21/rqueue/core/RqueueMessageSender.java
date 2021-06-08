@@ -30,7 +30,7 @@ import org.springframework.messaging.converter.MessageConverter;
  * from this interface to send message over any queue. Queue must exist, if a queue does not exist
  * then it will throw an error of the {@link com.github.sonus21.rqueue.exception.QueueDoesNotExist}.
  *
- * <p>There're three types of interfaces in this 1. enqueueXYZ 2. enqueueInXYZ 3. enqueueAtXYZ
+ * <p>There are three types of interfaces in this 1. enqueueXYZ 2. enqueueInXYZ 3. enqueueAtXYZ
  *
  * <p>Messages send using enqueueXYZ shall be consume as soon as possible
  *
@@ -40,6 +40,8 @@ import org.springframework.messaging.converter.MessageConverter;
  * <p>Messages send using enqueueAtXYZ shall be consumed as soon as the given time is reached for
  * example 3PM tomorrow.
  *
+ * @deprecated migrate code to {@link RqueueMessageEnqueuer}, {@link RqueueMessageManager} and
+ *     {@link RqueueEndpointManager}
  * @see RqueueMessageEnqueuer
  * @see RqueueMessageManager
  * @see RqueueEndpointManager
@@ -50,12 +52,10 @@ public interface RqueueMessageSender {
   /**
    * Enqueue a message on given queue without any delay, consume as soon as possible.
    *
-   * @deprecated migrate to {@link #enqueue(String, Object)}
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
    * @return message was submitted successfully or failed.
    */
-  @Deprecated
   default boolean put(String queueName, Object message) {
     return enqueue(queueName, message);
   }
@@ -78,7 +78,6 @@ public interface RqueueMessageSender {
    * @param delayInMilliSecs delay in milli seconds
    * @return message was submitted successfully or failed.
    */
-  @Deprecated
   default boolean put(String queueName, Object message, long delayInMilliSecs) {
     return enqueueIn(queueName, message, delayInMilliSecs);
   }
@@ -164,14 +163,12 @@ public interface RqueueMessageSender {
    * Enqueue a message on the given queue with the given retry count. This message would not be
    * consumed more than the specified time due to failure in underlying systems.
    *
-   * @deprecated migrate to {@link #enqueueWithPriority(String, String, Object)}
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or send
    *     to dead letter queue configured using {@link RqueueListener#numRetries()}
    * @return message was submitted successfully or failed.
    */
-  @Deprecated
   default boolean put(String queueName, Object message, int retryCount) {
     return enqueueWithRetry(queueName, message, retryCount);
   }
@@ -192,7 +189,6 @@ public interface RqueueMessageSender {
    * Enqueue a message on the given queue that would be scheduled to run in the specified milli
    * seconds.
    *
-   * @deprecated migrate to {@link #enqueueInWithRetry(String, Object, int, long)}
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or sent
@@ -201,7 +197,6 @@ public interface RqueueMessageSender {
    *     listener when number of millisecond has elapsed.
    * @return message was submitted successfully or failed.
    */
-  @Deprecated
   default boolean put(String queueName, Object message, int retryCount, long delayInMilliSecs) {
     return enqueueInWithRetry(queueName, message, retryCount, delayInMilliSecs);
   }

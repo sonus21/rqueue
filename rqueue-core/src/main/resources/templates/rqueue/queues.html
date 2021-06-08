@@ -10,10 +10,9 @@
         <th>Retry Count</th>
         <th>Visibility Timeout</th>
         <th>Dead Letter queues</th>
+        <th>Pause/Unpause</th>
         <th>Created On</th>
         <th>Updated On</th>
-<!--        <th>Deleted</th>-->
-<!--        <th>Deleted On</th>-->
       </tr>
       </thead>
       <tbody>
@@ -26,16 +25,13 @@
         <td>
           {{ dlq(meta.deadLetterQueues) }}
         </td>
+        <td class="text-center">
+          <i data-toggle="tooltip" data-placement="top" title="{% if meta.paused %}Unpause{% else %}Pause{% endif %}"
+             class="bx pause-queue-btn {% if meta.paused %} bx-play-circle  {% else %} bx-pause-circle {% endif %}"
+             data-queue="{{meta.name}}"></i>
+        </td>
         <td>{{ time(meta.createdOn) }}</td>
         <td>{{ time(meta.updatedOn) }}</td>
-<!--        <td>{% if meta.deleted %} Yes {% else %} No {% endif %}</td>-->
-<!--        <td>-->
-<!--          {% if meta.deleted %}-->
-<!--          {{ time(meta.deletedOn) }}-->
-<!--          {% else %}-->
-<!--          <button class="btn btn-danger delete-queue btn-sm" data-name="{{meta.name}}">Delete</button>-->
-<!--          {% endif %}-->
-<!--        </td>-->
       </tr>
       {% endfor %}
       </tbody>

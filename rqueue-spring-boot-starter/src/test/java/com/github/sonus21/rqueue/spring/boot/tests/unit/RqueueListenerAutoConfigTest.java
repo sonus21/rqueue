@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.spring.boot.tests.unit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
@@ -44,6 +43,8 @@ import org.springframework.messaging.converter.MessageConverter;
 class RqueueListenerAutoConfigTest extends TestBase {
   @Mock private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
   @Mock private BeanFactory beanFactory;
+  @Mock private RqueueMessageTemplate messageTemplate;
+  @Mock private RqueueMessageHandler rqueueMessageHandler;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @InjectMocks private RqueueListenerAutoConfig rqueueMessageAutoConfig;
 
@@ -59,7 +60,6 @@ class RqueueListenerAutoConfigTest extends TestBase {
 
   @Test
   void rqueueMessageHandlerReused() throws IllegalAccessException {
-    RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
@@ -74,15 +74,13 @@ class RqueueListenerAutoConfigTest extends TestBase {
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    RqueueMessageHandler messageHandler = mock(RqueueMessageHandler.class);
-    messageAutoConfig.rqueueMessageListenerContainer(messageHandler);
-    assertEquals(factory.getRqueueMessageHandler().hashCode(), messageHandler.hashCode());
+    messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
+    assertEquals(factory.getRqueueMessageHandler().hashCode(), rqueueMessageHandler.hashCode());
   }
 
   @Test
   void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
     factory.setRqueueMessageTemplate(messageTemplate);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
@@ -96,7 +94,6 @@ class RqueueListenerAutoConfigTest extends TestBase {
     MessageConverter messageConverter = new GenericMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     factory.setMessageConverters(Collections.singletonList(messageConverter));
-    RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));

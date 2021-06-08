@@ -27,7 +27,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode
 @JsonInclude(Include.NON_NULL)
-public abstract class SerializableBase implements Serializable {
-
-  private static final long serialVersionUID = -824188858192360018L;
-}
+public abstract class SerializableBase implements Serializable {}

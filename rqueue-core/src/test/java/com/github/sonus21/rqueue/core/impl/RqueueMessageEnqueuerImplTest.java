@@ -17,8 +17,9 @@
 package com.github.sonus21.rqueue.core.impl;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
@@ -30,24 +31,33 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
-class RqueueMessageEnqueuerImplTest {
+@CoreUnitTest
+class RqueueMessageEnqueuerImplTest extends TestBase {
 
   private static final String queue = "test-queue";
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
-  private final RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
-  private final String messageId = UUID.randomUUID().toString();
+  @Mock private RqueueMessageTemplate messageTemplate;
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
-  private final RqueueMessageEnqueuer rqueueMessageEnqueuer =
-      new RqueueMessageEnqueuerImpl(messageTemplate, messageConverter, messageHeaders);
+  private RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @BeforeAll
-  public static void init() {
+  public static void init0() {
     EndpointRegistry.register(queueDetail);
+  }
+
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueMessageEnqueuer =
+        new RqueueMessageEnqueuerImpl(messageTemplate, messageConverter, messageHeaders);
   }
 
   @AfterAll

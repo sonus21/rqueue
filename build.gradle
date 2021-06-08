@@ -19,7 +19,6 @@ allprojects {
 
     repositories {
         mavenCentral()
-        jcenter()
     }
 }
 ext {
@@ -27,7 +26,7 @@ ext {
     springVersion = System.getenv("SPRING_VERSION")
     springDataVersion = System.getenv("SPRING_DATA_VERSION")
     microMeterVersion = System.getenv("MICROMETER_VERSION")
-//
+
 //    springBootVersion = '2.0.6.RELEASE'
 //    springVersion = '5.0.10.RELEASE'
 //    springDataVersion = '2.0.6.RELEASE'
@@ -63,7 +62,7 @@ ext {
 
     // other dependencies
     javaxValidationApiVersion = '2.0.1.Final'
-    
+
     guavaVersion = '30.1-jre'
 
 }
@@ -71,7 +70,7 @@ ext {
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '2.7.0-RELEASE'
+    version = '2.8.0-RELEASE'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
@@ -97,6 +96,7 @@ subprojects {
         testCompile group: 'ch.qos.logback', name: 'logback-classic', version: "${logbackVersion}"
         testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: "${jupiterVersion}"
         testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
+        testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
         // https://mvnrepository.com/artifact/org.mockito/mockito-inline
         testCompile group: 'org.mockito', name: 'mockito-inline', version: "${mockitoVersion}"
         testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: "${mockitoVersion}"
@@ -135,6 +135,9 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
                     exclude: [
                             'com/github/sonus21/rqueue/exception',
                             'com/github/sonus21/rqueue/models/response',
+                            'com/github/sonus21/rqueue/core/RqueueMessageSender*',
+                            'com/github/sonus21/rqueue/utils/PrefixLogger*',
+                            'com/github/sonus21/rqueue/core/ScheduledTaskDetail*',
                     ]
             )
         }))

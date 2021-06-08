@@ -21,13 +21,19 @@ import java.util.Collection;
 import java.util.List;
 
 public interface RqueueSystemConfigDao {
-  QueueConfig getQConfig(String key);
+  QueueConfig getConfigByName(String name);
 
-  QueueConfig getQConfig(String key, boolean cache);
+  List<QueueConfig> getConfigByNames(Collection<String> names);
+
+  QueueConfig getConfigByName(String name, boolean cached);
+
+  QueueConfig getQConfig(String id, boolean cached);
 
   List<QueueConfig> findAllQConfig(Collection<String> ids);
 
   void saveQConfig(QueueConfig queueConfig);
 
   void saveAllQConfig(List<QueueConfig> newConfigs);
+
+  void clearCacheByName(String name);
 }

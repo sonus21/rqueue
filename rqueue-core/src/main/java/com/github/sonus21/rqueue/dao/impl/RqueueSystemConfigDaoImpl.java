@@ -37,31 +37,44 @@ public class RqueueSystemConfigDaoImpl implements RqueueSystemConfigDao {
 
   private final RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
   private final Map<String, QueueConfig> queueConfigMap = new ConcurrentHashMap<>();
+  private final RqueueConfig rqueueConfig;
 
   @Autowired
   public RqueueSystemConfigDaoImpl(RqueueConfig rqueueConfig) {
-    this(new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory()));
+    this(new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory()), rqueueConfig);
   }
 
-  public RqueueSystemConfigDaoImpl(RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate) {
+  public RqueueSystemConfigDaoImpl(
+      RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate, RqueueConfig rqueueConfig) {
     this.rqueueRedisTemplate = rqueueRedisTemplate;
+    this.rqueueConfig = rqueueConfig;
   }
 
   @Override
-  public QueueConfig getQConfig(String key) {
-    return getQConfig(key, false);
+  public QueueConfig getConfigByName(String name) {
+    return getConfigByName(name, false);
   }
 
   @Override
-  public QueueConfig getQConfig(String key, boolean cache) {
-    if (queueConfigMap.containsKey(key)) {
-      return queueConfigMap.get(key);
+  public List<QueueConfig> getConfigByNames(Collection<String> names) {
+    return findAllQConfig(
+        names.stream().map(rqueueConfig::getQueueConfigKey).collect(Collectors.toList()));
+  }
+
+  @Override
+  public QueueConfig getConfigByName(String name, boolean cached) {
+    String queueConfigKey = rqueueConfig.getQueueConfigKey(name);
+    return getQConfig(queueConfigKey, cached);
+  }
+
+  @Override
+  public QueueConfig getQConfig(String id, boolean cached) {
+    if (cached && queueConfigMap.containsKey(id)) {
+      return queueConfigMap.get(id);
     }
-    QueueConfig queueConfig = rqueueRedisTemplate.get(key);
+    QueueConfig queueConfig = rqueueRedisTemplate.get(id);
     if (queueConfig != null) {
-      if (cache) {
-        queueConfigMap.put(key, queueConfig);
-      }
+      queueConfigMap.put(id, queueConfig);
     }
     return queueConfig;
   }
@@ -91,7 +104,19 @@ public class RqueueSystemConfigDaoImpl implements RqueueSystemConfigDao {
         }
         idToQueueConfig.put(queueConfig.getId(), queueConfig);
       }
+      for (String key : idToQueueConfig.keySet()) {
+        queueConfigMap.remove(key);
+      }
       rqueueRedisTemplate.mset(idToQueueConfig);
+      for (String key : idToQueueConfig.keySet()) {
+        queueConfigMap.remove(key);
+      }
     }
+  }
+
+  @Override
+  public void clearCacheByName(String name) {
+    String key = rqueueConfig.getQueueConfigKey(name);
+    queueConfigMap.remove(key);
   }
 }

@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -32,6 +31,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
@@ -50,36 +50,45 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueUtilityServiceTest extends TestBase {
-  private final RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
-  private final RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
-  private final RqueueMessageTemplate rqueueMessageTemplate = mock(RqueueMessageTemplate.class);
-  private final RqueueMessageMetadataService messageMetadataService =
-      mock(RqueueMessageMetadataService.class);
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private final RqueueUtilityService rqueueUtilityService =
-      new RqueueUtilityServiceImpl(
-          rqueueConfig,
-          rqueueWebConfig,
-          rqueueStringDao,
-          rqueueSystemConfigDao,
-          rqueueMessageTemplate,
-          messageMetadataService);
+  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock private RqueueWebConfig rqueueWebConfig;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueMessageMetadataService messageMetadataService;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
+  private RqueueUtilityService rqueueUtilityService;
+
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueUtilityService =
+        new RqueueUtilityServiceImpl(
+            rqueueConfig,
+            rqueueWebConfig,
+            rqueueStringDao,
+            rqueueSystemConfigDao,
+            rqueueMessageTemplate,
+            messageMetadataService,
+            rqueueInternalPubSubChannel);
+  }
 
   @Test
   void deleteMessage() {
-    doReturn("__rq::q-config::notification").when(rqueueConfig).getQueueConfigKey("notification");
     String id = UUID.randomUUID().toString();
     BaseResponse response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(1, response.getCode());
     assertEquals("Queue config not found!", response.getMessage());
 
     QueueConfig queueConfig = createQueueConfig("notification", 3, 10000L, null);
-    doReturn(queueConfig).when(rqueueSystemConfigDao).getQConfig(queueConfig.getId(), true);
+    doReturn(queueConfig).when(rqueueSystemConfigDao).getConfigByName("notification", true);
     response = rqueueUtilityService.deleteMessage("notification", id);
     assertEquals(0, response.getCode());
     assertNull(response.getMessage());

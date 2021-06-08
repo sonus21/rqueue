@@ -36,10 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class MetricTest extends SpringTestBase {
 
-  @Autowired
-  protected MeterRegistry meterRegistry;
-  @Autowired
-  protected RqueueQueueMetrics rqueueQueueMetrics;
+  @Autowired protected MeterRegistry meterRegistry;
+  @Autowired protected RqueueQueueMetrics rqueueQueueMetrics;
 
   protected void verifyDelayedQueueStatus() throws TimedOutException {
     long maxDelay = 0;
@@ -89,7 +87,7 @@ public abstract class MetricTest extends SpringTestBase {
   }
 
   protected void verifyMetricStatus() throws TimedOutException {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10, true);
 
     Job job = Job.newInstance();
     failureManager.createFailureDetail(job.getId(), -1, 0);
@@ -150,20 +148,24 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                .get("failure.count")
-                .tags("rqueue", "test")
-                .tags("queue", emailQueue)
-                .counter()
-                .count()
+                    .get("failure.count")
+                    .tags("rqueue", "test")
+                    .tags("queue", emailQueue)
+                    .counter()
+                    .count()
                 == 0,
         "stats collection");
   }
 
   protected void verifyNotificationQueueMessageCount() throws TimedOutException {
     QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);
-    enqueue(queueDetail.getQueueName(), i -> Notification.newInstance(), 1000);
+    enqueue(queueDetail.getQueueName(), i -> Notification.newInstance(), 1000, true);
     enqueueIn(
-        queueDetail.getDelayedQueueName(), i -> Notification.newInstance(), i -> 30_000L, 100);
+        queueDetail.getDelayedQueueName(),
+        i -> Notification.newInstance(),
+        i -> 30_000L,
+        100,
+        true);
     TimeoutUtils.waitFor(
         () -> rqueueQueueMetrics.getProcessingMessageCount(notificationQueue) > 0,
         "at least one message in processing");
@@ -178,8 +180,8 @@ public abstract class MetricTest extends SpringTestBase {
   protected void verifySmsQueueMessageCount() throws TimedOutException {
     String priority = "critical";
     QueueDetail queueDetail = EndpointRegistry.get(smsQueue, priority);
-    enqueue(queueDetail.getQueueName(), i -> Sms.newInstance(), 1000);
-    enqueueIn(queueDetail.getDelayedQueueName(), i -> Sms.newInstance(), i -> 30_000L, 100);
+    enqueue(queueDetail.getQueueName(), i -> Sms.newInstance(), 1000, true);
+    enqueueIn(queueDetail.getDelayedQueueName(), i -> Sms.newInstance(), i -> 30_000L, 100, true);
     TimeoutUtils.waitFor(
         () -> rqueueQueueMetrics.getProcessingMessageCount(smsQueue, priority) > 0,
         "at least one message in processing");

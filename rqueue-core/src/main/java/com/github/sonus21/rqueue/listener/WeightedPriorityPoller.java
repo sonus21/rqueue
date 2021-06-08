@@ -16,9 +16,11 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
+import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +30,7 @@ import java.util.stream.Collectors;
 import org.slf4j.event.Level;
 
 class WeightedPriorityPoller extends RqueueMessagePoller {
-  private final Map<String, QueueThread> queueNameToThread;
+  private final Map<String, QueueThreadPool> queueNameToThread;
   private final Map<String, QueueDetail> queueNameToDetail;
   private final List<QueueDetail> queueDetailList;
   private int[] currentWeight;
@@ -36,14 +38,27 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
   private float[] probability;
   private int currentIndex = 0;
 
+  private static final int ALL_QUEUES_ARE_INELIGIBLE = -1;
+  private static final int ALL_QUEUES_ARE_INACTIVE = -2;
+
   WeightedPriorityPoller(
       String groupName,
-      RqueueMessageListenerContainer container,
       final List<QueueDetail> queueDetails,
-      final Map<String, QueueThread> queueNameToThread,
-      PostProcessingHandler postProcessingHandler,
-      RqueueConfig rqueueConfig) {
-    super("Weighted-" + groupName, container, postProcessingHandler, rqueueConfig);
+      final Map<String, QueueThreadPool> queueNameToThread,
+      RqueueBeanProvider rqueueBeanProvider,
+      QueueStateMgr queueStateMgr,
+      List<Middleware> middlewares,
+      long pollingInterval,
+      long backoffTime,
+      PostProcessingHandler postProcessingHandler) {
+    super(
+        "Weighted-" + groupName,
+        rqueueBeanProvider,
+        queueStateMgr,
+        middlewares,
+        pollingInterval,
+        backoffTime,
+        postProcessingHandler);
     this.queueDetailList = queueDetails;
     this.queues = queueDetails.stream().map(QueueDetail::getName).collect(Collectors.toList());
     this.queueNameToDetail =
@@ -80,23 +95,23 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
     int tmpIndex = (currentIndex + 1) % queues.size();
     while (tmpIndex != currentIndex) {
       String queue = queues.get(tmpIndex);
-      if (currentWeight[tmpIndex] > 0 && isQueueActive(queue)) {
+      if (currentWeight[tmpIndex] > 0 && eligibleForPolling(queue)) {
         currentWeight[tmpIndex] -= 1;
         currentIndex = tmpIndex;
         return currentIndex;
       }
       tmpIndex = (tmpIndex + 1) % queues.size();
     }
-    return -1;
+    return ALL_QUEUES_ARE_INELIGIBLE;
   }
 
   private int getQueueToPollOrWait() {
     int index = getQueueIndexToPoll();
-    if (index == -1) {
+    if (index == ALL_QUEUES_ARE_INELIGIBLE) {
       if (shouldExit()) {
-        return -1;
+        return ALL_QUEUES_ARE_INACTIVE;
       }
-      index = -2;
+      index = ALL_QUEUES_ARE_INELIGIBLE;
     }
     if (isDebugEnabled()) {
       if (index >= 0) {
@@ -130,17 +145,17 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
     while (true) {
       try {
         int index = getQueueToPollOrWait();
-        if (index == -1) {
+        if (index == ALL_QUEUES_ARE_INACTIVE) {
           return;
         }
-        if (index == -2) {
-          TimeoutUtils.sleepLog(getPollingInterval(), false);
+        if (index == ALL_QUEUES_ARE_INELIGIBLE) {
+          TimeoutUtils.sleepLog(pollingInterval, false);
           reinitializeWeight();
         } else {
           String queue = queues.get(index);
-          QueueThread queueThread = queueNameToThread.get(queue);
+          QueueThreadPool queueThreadPool = queueNameToThread.get(queue);
           QueueDetail queueDetail = queueNameToDetail.get(queue);
-          poll(index, queue, queueDetail, queueThread);
+          poll(index, queue, queueDetail, queueThreadPool);
         }
       } catch (Exception e) {
         log(Level.ERROR, "Error in poller", e);
@@ -152,14 +167,14 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
   }
 
   @Override
-  long getSemaphoreWaiTime() {
+  long getSemaphoreWaitTime() {
     return 25L;
   }
 
   @Override
   void deactivate(int index, String queue, DeactivateType deactivateType) {
     if (deactivateType == DeactivateType.POLL_FAILED) {
-      TimeoutUtils.sleepLog(getBackOffTime(), false);
+      TimeoutUtils.sleepLog(backoffTime, false);
     } else {
       currentWeight[index] -= currentWeight[index] * (1 - probability[index]);
     }

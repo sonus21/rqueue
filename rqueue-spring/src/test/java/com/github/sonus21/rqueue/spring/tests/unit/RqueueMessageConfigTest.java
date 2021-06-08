@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.spring.tests.unit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
@@ -46,14 +45,12 @@ import org.springframework.messaging.converter.MessageConverter;
 @SpringUnitTest
 class RqueueMessageConfigTest extends TestBase {
 
-  @Mock
-  private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
-  @Mock
-  private BeanFactory beanFactory;
-  @Mock
-  private RqueueMessageTemplate rqueueMessageTemplate;
-  @InjectMocks
-  private RqueueListenerConfig rqueueMessageConfig;
+  @Mock RqueueMessageHandler rqueueMessageHandler;
+  @Mock private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
+  @Mock private BeanFactory beanFactory;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RedisConnectionFactory redisConnectionFactory;
+  @InjectMocks private RqueueListenerConfig rqueueMessageConfig;
   private final List<MessageConverter> messageConverterList = new ArrayList<>();
 
   @BeforeEach
@@ -70,7 +67,6 @@ class RqueueMessageConfigTest extends TestBase {
 
   @Test
   void rqueueMessageHandlerReused() throws IllegalAccessException {
-    RqueueMessageHandler rqueueMessageHandler = mock(RqueueMessageHandler.class);
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
@@ -81,23 +77,21 @@ class RqueueMessageConfigTest extends TestBase {
   @Test
   void rqueueMessageListenerContainer() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    factory.setRedisConnectionFactory(mock(RedisConnectionFactory.class));
+    factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    RqueueMessageHandler messageHandler = mock(RqueueMessageHandler.class);
-    messageConfig.rqueueMessageListenerContainer(messageHandler);
-    assertEquals(factory.getRqueueMessageHandler().hashCode(), messageHandler.hashCode());
+    messageConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
+    assertEquals(factory.getRqueueMessageHandler().hashCode(), rqueueMessageHandler.hashCode());
   }
 
   @Test
   void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    RqueueMessageTemplate messageTemplate = mock(RqueueMessageTemplate.class);
-    factory.setRqueueMessageTemplate(messageTemplate);
+    factory.setRqueueMessageTemplate(rqueueMessageTemplate);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageConfig.rqueueMessageSender(messageTemplate));
-    assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
+    assertNotNull(messageConfig.rqueueMessageSender(rqueueMessageTemplate));
+    assertEquals(factory.getRqueueMessageTemplate().hashCode(), rqueueMessageTemplate.hashCode());
   }
 
   @Test
@@ -107,7 +101,7 @@ class RqueueMessageConfigTest extends TestBase {
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     factory.setMessageConverters(Collections.singletonList(messageConverter));
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    factory.setRedisConnectionFactory(mock(RedisConnectionFactory.class));
+    factory.setRedisConnectionFactory(redisConnectionFactory);
     assertNotNull(messageConfig.rqueueMessageSender(rqueueMessageTemplate));
     RqueueMessageSender messageSender = messageConfig.rqueueMessageSender(rqueueMessageTemplate);
     boolean messageConverterIsConfigured = false;

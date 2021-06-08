@@ -16,20 +16,27 @@
 
 package com.github.sonus21.rqueue.metrics;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueCounterTest extends TestBase {
-
-  private final QueueCounter queueCounter = mock(QueueCounter.class);
-  private final RqueueCounter rqueueCounter = new RqueueCounter(queueCounter);
+  @Mock private QueueCounter queueCounter;
+  private RqueueCounter rqueueCounter;
   private final String queueName = "test";
+
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueCounter = new RqueueCounter(queueCounter);
+  }
 
   @Test
   void updateFailureCount() {

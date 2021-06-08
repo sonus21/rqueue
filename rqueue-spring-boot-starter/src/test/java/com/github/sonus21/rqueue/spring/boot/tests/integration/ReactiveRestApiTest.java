@@ -160,7 +160,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
 
   @Test
   void exploreDataList() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.LIST);
     request.setSrc(emailQueue);
@@ -260,7 +260,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
   @Test
   @Disabled
   void deleteDataSet() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     DataDeleteRequest request = new DataDeleteRequest();
     request.setQueueName(emailQueue);
     request.setDatasetName(emailDeadLetterQueue);
@@ -314,7 +314,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
 
   @Test
   void moveMessage() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     MessageMoveRequest request =
         new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
     MessageMoveResponse response =
@@ -340,7 +340,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
 
   @Test
   void viewData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     DateViewRequest dateViewRequest = new DateViewRequest();
     dateViewRequest.setName(emailDeadLetterQueue);
     dateViewRequest.setType(DataType.LIST);

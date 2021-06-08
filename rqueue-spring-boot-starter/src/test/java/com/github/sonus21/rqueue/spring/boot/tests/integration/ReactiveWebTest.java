@@ -65,7 +65,8 @@ class ReactiveWebTest extends BasicListenerTest {
         rqueueConfig.getDelayedQueueName(emailQueue),
         (i) -> Email.newInstance(),
         (i) -> 30_000L,
-        10);
+        10,
+        true);
   }
 
   @Test

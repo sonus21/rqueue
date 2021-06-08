@@ -19,21 +19,29 @@ package com.github.sonus21.rqueue.common;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueLockManagerImplTest extends TestBase {
-  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private final RqueueLockManager rqueueLockManager = new RqueueLockManagerImpl(rqueueStringDao);
+  @Mock private RqueueStringDao rqueueStringDao;
+  private RqueueLockManager rqueueLockManager;
   private final String lockKey = "test-key";
   private final String lockValue = "test-value";
+
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueLockManager = new RqueueLockManagerImpl(rqueueStringDao);
+  }
 
   @Test
   void acquireLock() {

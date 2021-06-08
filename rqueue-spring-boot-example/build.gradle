@@ -5,26 +5,12 @@ plugins {
 }
 dependencies {
     compile project(":rqueue-spring-boot-starter")
-    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools
-    compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.1.0.RELEASE'
-
-    // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-sleuth
-    compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth', version: '2.1.0.RELEASE'
     compile 'org.springframework.boot:spring-boot-starter-data-redis'
     compile 'org.springframework.boot:spring-boot-starter-web'
-    compile 'org.springframework.boot:spring-boot-starter-web-services'
-    compile "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-    compile 'io.micrometer:micrometer-registry-prometheus'
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
     compile group: 'ch.qos.logback', name: 'logback-core', version: "${logbackVersion}"
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     compile group: 'ch.qos.logback', name: 'logback-classic', version: "${logbackVersion}"
-
-    // https://mvnrepository.com/artifact/org.aspectj/aspectjweaver
-    compile group: 'org.aspectj', name: 'aspectjweaver', version: '1.9.5'
-
-    // https://mvnrepository.com/artifact/org.aspectj/aspectjrt
-    compile group: 'org.aspectj', name: 'aspectjrt', version: '1.9.5'
 
     compile 'io.lettuce:lettuce-core'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'

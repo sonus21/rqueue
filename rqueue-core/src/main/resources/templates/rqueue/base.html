@@ -16,9 +16,7 @@
   <link rel="stylesheet"
         href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i">
   <link href="{{urlPrefix}}rqueue/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="{{urlPrefix}}rqueue/vendor/icofont/icofont.min.css" rel="stylesheet">
   <link href="{{urlPrefix}}rqueue/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-  <link href="{{urlPrefix}}rqueue/vendor/line-awesome/css/line-awesome.min.css" rel="stylesheet">
   <link href="{{urlPrefix}}rqueue/css/rqueue.css" rel="stylesheet">
 </head>
 <body>
@@ -37,31 +35,31 @@
         </li>
         <li class="{% if runningActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/running">
-            <i class="las la-sync"></i>
+            <i class='bx bx-sync'></i>
             <span>Running</span>
           </a>
         </li>
         <li class="{% if scheduledActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/scheduled">
-            <i class="las la-hourglass-half"></i>
+            <i class='bx bxs-hourglass'></i>
             <span>Scheduled</span>
           </a>
         </li>
         <li class="{% if pendingActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/pending">
-            <i class="icofont-tasks"></i></i>
+            <i class='bx bx-spreadsheet'></i>
             <span>Pending</span>
           </a>
         </li>
         <li class="{% if deadActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/dead">
-            <i class="las la-book-dead"></i>
+            <i class='bx bx-ghost'></i>
             <span>Dead</span>
           </a>
         </li>
         <li class="{% if utilityActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/utility">
-            <i class="las la-wrench"></i>
+            <i class='bx bxs-wrench'></i>
             <span>Utility</span>
           </a>
         </li>

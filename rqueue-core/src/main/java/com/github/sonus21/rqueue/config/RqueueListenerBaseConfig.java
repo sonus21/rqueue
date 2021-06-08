@@ -23,11 +23,14 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.core.DelayedMessageScheduler;
 import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
+import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.utils.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.RedisUtils;
@@ -38,6 +41,7 @@ import com.mitchellbosecke.pebble.spring.extension.SpringExtension;
 import com.mitchellbosecke.pebble.spring.reactive.PebbleReactiveViewResolver;
 import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
@@ -62,8 +66,7 @@ public abstract class RqueueListenerBaseConfig {
   public static final int MAX_DB_VERSION = 2;
   private static final String TEMPLATE_DIR = "templates/rqueue/";
   private static final String TEMPLATE_SUFFIX = ".html";
-  protected @Value("${rqueue.reactive.enabled:false}")
-  boolean reactiveEnabled;
+  protected @Value("${rqueue.reactive.enabled:false}") boolean reactiveEnabled;
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
@@ -92,6 +95,7 @@ public abstract class RqueueListenerBaseConfig {
     }
     if (reactiveEnabled
         && simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory() == null) {
+      sharedConnection = true;
       simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
           beanFactory.getBean(ReactiveRedisConnectionFactory.class));
     }
@@ -220,5 +224,26 @@ public abstract class RqueueListenerBaseConfig {
   public RqueueQueueMetrics rqueueQueueMetrics(
       RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueQueueMetrics(stringRqueueRedisTemplate);
+  }
+
+  @Bean
+  public RqueueBeanProvider rqueueBeanProvider() {
+    return new RqueueBeanProvider();
+  }
+
+  @Bean
+  public RqueueInternalPubSubChannel rqueueInternalPubSubChannel(
+      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+      RqueueMessageListenerContainer rqueueMessageListenerContainer,
+      RqueueConfig rqueueConfig,
+      RqueueBeanProvider rqueueBeanProvider,
+      @Qualifier("stringRqueueRedisTemplate")
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+    return new RqueueInternalPubSubChannel(
+        rqueueRedisListenerContainerFactory,
+        rqueueMessageListenerContainer,
+        rqueueConfig,
+        stringRqueueRedisTemplate,
+        rqueueBeanProvider);
   }
 }

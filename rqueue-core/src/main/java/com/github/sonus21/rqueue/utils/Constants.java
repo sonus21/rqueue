@@ -16,7 +16,10 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
+
 public final class Constants {
+  private Constants() {}
 
   public static final String BLANK = "";
   public static final long ONE_MILLI = 1000;
@@ -43,8 +46,18 @@ public final class Constants {
   public static final String GITHUB_API_FOR_LATEST_RELEASE =
       "https://api.github.com/repos/sonus21/rqueue/releases/latest";
   public static final String DEFAULT_PRIORITY_KEY = "DEFAULT_PRIORITY";
-  public static final String DEFAULT_PRIORITY_GROUP = "Default";
+  public static final String DEFAULT_PRIORITY_GROUP = "\uD83D\uDCAF";
   public static final String REDIS_KEY_SEPARATOR = "::";
   public static final int MAX_STACKTRACE_LENGTH = 3000;
   public static final String Comma = ",";
+  public static final int MIN_BATCH_SIZE = 1;
+  public static final long MIN_VISIBILITY = 10;
+  public static final int BATCH_SIZE_FOR_CONCURRENCY_BASED_LISTENER = 10;
+  public static final int MIN_CONCURRENCY = 1;
+  public static final long MINIMUM_JOB_PERIOD = 1000L;
+  public static final String QUEUE_CRUD_LOCK_KEY_PREFIX = "q-crud::";
+
+  public static String getQueueCrudLockKey(RqueueConfig rqueueConfig, String queueName) {
+    return rqueueConfig.getLockKey(QUEUE_CRUD_LOCK_KEY_PREFIX + queueName);
+  }
 }

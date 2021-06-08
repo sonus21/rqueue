@@ -20,6 +20,8 @@ import com.github.sonus21.rqueue.exception.OverrideException;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +61,7 @@ public final class EndpointRegistry {
    * Get QueueDetail for the given queue, with priority
    *
    * @param queueName queue name
-   * @param priority  priority of this queue like critical, high
+   * @param priority priority of this queue like critical, high
    * @return queue detail
    * @throws QueueDoesNotExist this error is thrown when queue is not registered.
    */
@@ -121,6 +123,20 @@ public final class EndpointRegistry {
       lock.notifyAll();
       return queueDetails;
     }
+  }
+
+  public static String toStr() {
+    StringBuilder builder = new StringBuilder();
+    synchronized (lock) {
+      List<QueueDetail> queueDetails = new ArrayList<>(queueNameToDetail.values());
+      queueDetails.sort(Comparator.comparing(QueueDetail::getName));
+      for (QueueDetail q : queueDetails) {
+        builder.append(q.toString());
+        builder.append("\n");
+      }
+      lock.notifyAll();
+    }
+    return builder.toString();
   }
 
   public static int getActiveQueueCount() {

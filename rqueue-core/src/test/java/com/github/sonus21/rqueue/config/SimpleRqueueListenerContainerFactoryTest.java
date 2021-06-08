@@ -32,9 +32,8 @@ import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
+import com.github.sonus21.test.TestTaskExecutor;
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -237,7 +236,7 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
 
   @Test
   void getPriorityMode() {
-    assertNull(simpleRqueueListenerContainerFactory.getPriorityMode());
+    assertEquals(PriorityMode.WEIGHTED, simpleRqueueListenerContainerFactory.getPriorityMode());
   }
 
   @Test
@@ -292,7 +291,7 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
     MessageProcessor deletion = new MessageProcessor() {};
     MessageProcessor discardMessageProcessor = new MessageProcessor() {};
     TaskExecutionBackOff backOff = new FixedTaskExecutionBackOff(1000L, 4);
-    AsyncTaskExecutor executor = new TestAsyncTaskExecutor();
+    AsyncTaskExecutor executor = new TestTaskExecutor(false);
     simpleRqueueListenerContainerFactory.setPostExecutionMessageProcessor(post);
     simpleRqueueListenerContainerFactory.setPreExecutionMessageProcessor(pre);
     simpleRqueueListenerContainerFactory.setDeadLetterQueueMessageProcessor(deadLetter);
@@ -316,24 +315,5 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
     assertEquals(deadLetter, container.getDeadLetterQueueMessageProcessor());
     assertEquals(deletion, container.getManualDeletionMessageProcessor());
     assertEquals(discardMessageProcessor, container.getDiscardMessageProcessor());
-  }
-
-  private class TestAsyncTaskExecutor implements AsyncTaskExecutor {
-
-    @Override
-    public void execute(Runnable task, long startTimeout) {}
-
-    @Override
-    public Future<?> submit(Runnable task) {
-      return null;
-    }
-
-    @Override
-    public <T> Future<T> submit(Callable<T> task) {
-      return null;
-    }
-
-    @Override
-    public void execute(Runnable task) {}
   }
 }

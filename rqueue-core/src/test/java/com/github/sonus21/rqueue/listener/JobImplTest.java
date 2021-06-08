@@ -17,13 +17,15 @@
 package com.github.sonus21.rqueue.listener;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -32,6 +34,7 @@ import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.Execution;
@@ -45,16 +48,18 @@ import java.time.Duration;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class JobImplTest extends TestBase {
-  private final RqueueConfig rqueueConfig =
-      new RqueueConfig(mock(RedisConnectionFactory.class), null, true, 2);
-  private final RqueueMessageMetadataService messageMetadataService =
-      mock(RqueueMessageMetadataService.class);
-  private final RqueueJobDao rqueueJobDao = mock(RqueueJobDao.class);
+  @Mock RedisConnectionFactory redisConnectionFactory;
+  @Mock private RqueueMessageMetadataService messageMetadataService;
+  @Mock private RqueueJobDao rqueueJobDao;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  private RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   RqueueMessage rqueueMessage =
@@ -65,6 +70,8 @@ class JobImplTest extends TestBase {
 
   @BeforeEach
   public void init() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+    rqueueConfig = new RqueueConfig(redisConnectionFactory, null, true, 2);
     FieldUtils.writeField(rqueueConfig, "jobEnabled", true, true);
     FieldUtils.writeField(rqueueConfig, "prefix", "__rq::", true);
     FieldUtils.writeField(rqueueConfig, "jobKeyPrefix", "job::", true);
@@ -80,6 +87,7 @@ class JobImplTest extends TestBase {
         rqueueConfig,
         messageMetadataService,
         rqueueJobDao,
+        rqueueMessageTemplate,
         queueDetail,
         messageMetadata,
         rqueueMessage,
@@ -97,6 +105,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -113,6 +122,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -129,6 +139,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -146,6 +157,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -170,6 +182,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -186,6 +199,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -202,6 +216,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -219,6 +234,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -235,6 +251,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -251,6 +268,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -269,6 +287,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -288,6 +307,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -309,6 +329,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -331,6 +352,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -356,6 +378,7 @@ class JobImplTest extends TestBase {
             rqueueConfig,
             messageMetadataService,
             rqueueJobDao,
+            rqueueMessageTemplate,
             queueDetail,
             messageMetadata,
             rqueueMessage,
@@ -367,5 +390,62 @@ class JobImplTest extends TestBase {
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(2)).save(any(), any());
     verify(messageMetadataService, times(1)).save(any(), any());
+  }
+
+  @Test
+  void getVisibilityTimeout() {
+    JobImpl job =
+        new JobImpl(
+            rqueueConfig,
+            messageMetadataService,
+            rqueueJobDao,
+            rqueueMessageTemplate,
+            queueDetail,
+            messageMetadata,
+            rqueueMessage,
+            userMessage,
+            null,
+            null);
+    job.execute();
+    doReturn(-10L)
+        .when(rqueueMessageTemplate)
+        .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
+    assertEquals(job.getVisibilityTimeout(), Duration.ZERO);
+
+    doReturn(System.currentTimeMillis() + 10_000L)
+        .when(rqueueMessageTemplate)
+        .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
+    Duration timeout = job.getVisibilityTimeout();
+    assertTrue(timeout.toMillis() <= 10_000 && timeout.toMillis() >= 9_000);
+
+    doReturn(0L)
+        .when(rqueueMessageTemplate)
+        .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
+    assertEquals(job.getVisibilityTimeout(), Duration.ZERO);
+  }
+
+  @Test
+  void updateVisibilityTimeout() {
+    JobImpl job =
+        new JobImpl(
+            rqueueConfig,
+            messageMetadataService,
+            rqueueJobDao,
+            rqueueMessageTemplate,
+            queueDetail,
+            messageMetadata,
+            rqueueMessage,
+            userMessage,
+            null,
+            null);
+    job.execute();
+    doReturn(true)
+        .when(rqueueMessageTemplate)
+        .addScore(queueDetail.getProcessingQueueName(), rqueueMessage, 5_000L);
+    assertTrue(job.updateVisibilityTimeout(Duration.ofSeconds(5)));
+    doReturn(false)
+        .when(rqueueMessageTemplate)
+        .addScore(queueDetail.getProcessingQueueName(), rqueueMessage, 5_000L);
+    assertFalse(job.updateVisibilityTimeout(Duration.ofSeconds(5)));
   }
 }

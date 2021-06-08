@@ -41,7 +41,7 @@ public abstract class MessageChannelTests extends SpringTestBase {
    */
   protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
-    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, 200);
+    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, 200, true);
     Email email = Email.newInstance();
     log.info("adding new message {}", email);
     enqueueIn(emailQueue, email, Duration.ofMillis(1000));

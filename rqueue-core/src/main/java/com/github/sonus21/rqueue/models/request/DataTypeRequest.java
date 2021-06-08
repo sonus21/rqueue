@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.models.request;
 
 import com.github.sonus21.rqueue.models.SerializableBase;
 import javax.validation.constraints.NotEmpty;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,6 +30,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
 public class DataTypeRequest extends SerializableBase {
   @NotEmpty private String name;
 }

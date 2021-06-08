@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -39,60 +38,28 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMetricsTest extends TestBase {
-
-  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private final MetricsProperties metricsProperties = new MetricsProperties() {
-  };
-  private final QueueCounter queueCounter = mock(QueueCounter.class);
+  @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private QueueCounter queueCounter;
+  private final MetricsProperties metricsProperties = new MetricsProperties() {};
   private final String simpleQueue = "simple-queue";
   private final String delayedQueue = "delayed-queue";
   private final String deadLetterQueue = "dlq";
   private final Tags tags = Tags.of("rQueue", "dc1");
-  private final QueueDetail simpleQueueDetail = TestUtils
-      .createQueueDetail(simpleQueue, deadLetterQueue);
   private final QueueDetail delayedQueueDetail = TestUtils.createQueueDetail(delayedQueue);
+  private final QueueDetail simpleQueueDetail =
+      TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
 
   @BeforeEach
   public void init() {
+    MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
     EndpointRegistry.register(simpleQueueDetail);
     EndpointRegistry.register(delayedQueueDetail);
-    doAnswer(
-        invocation -> {
-          String zsetName = invocation.getArgument(0);
-          if (zsetName.equals(delayedQueueDetail.getDelayedQueueName())) {
-                return 5L;
-              }
-              if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {
-                return 10L;
-              }
-              if (zsetName.equals(delayedQueueDetail.getProcessingQueueName())) {
-                return 15L;
-              }
-              return null;
-            })
-        .when(rqueueStringDao)
-        .getSortedSetSize(anyString());
-
-    doAnswer(
-            invocation -> {
-              String listName = invocation.getArgument(0);
-              if (listName.equals(simpleQueueDetail.getQueueName())) {
-                return 100L;
-              }
-              if (listName.equals(delayedQueueDetail.getQueueName())) {
-                return 200L;
-              }
-              if (listName.equals(deadLetterQueue)) {
-                return 300L;
-              }
-              return null;
-            })
-        .when(rqueueStringDao)
-        .getListSize(anyString());
   }
 
   private void verifyQueueStatistics(
@@ -151,6 +118,39 @@ class RqueueMetricsTest extends TestBase {
 
   @Test
   void queueStatistics() throws IllegalAccessException {
+    doAnswer(
+            invocation -> {
+              String zsetName = invocation.getArgument(0);
+              if (zsetName.equals(delayedQueueDetail.getDelayedQueueName())) {
+                return 5L;
+              }
+              if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {
+                return 10L;
+              }
+              if (zsetName.equals(delayedQueueDetail.getProcessingQueueName())) {
+                return 15L;
+              }
+              return null;
+            })
+        .when(rqueueStringDao)
+        .getSortedSetSize(anyString());
+
+    doAnswer(
+            invocation -> {
+              String listName = invocation.getArgument(0);
+              if (listName.equals(simpleQueueDetail.getQueueName())) {
+                return 100L;
+              }
+              if (listName.equals(delayedQueueDetail.getQueueName())) {
+                return 200L;
+              }
+              if (listName.equals(deadLetterQueue)) {
+                return 300L;
+              }
+              return null;
+            })
+        .when(rqueueStringDao)
+        .getListSize(anyString());
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
     FieldUtils.writeField(metrics, "rqueueStringDao", rqueueStringDao, true);

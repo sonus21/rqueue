@@ -70,6 +70,26 @@ public interface Job {
   void checkIn(Serializable message);
 
   /**
+   * Get current visibility timeout of this job, if visibility timeout has already elapsed than
+   * return zero value
+   *
+   * @return remaining duration that this job can take, otherwise other listener will consume this
+   *     message
+   */
+  Duration getVisibilityTimeout();
+
+  /**
+   * Update the visibility timeout of this job, the delta duration would be added in the current
+   * visibility timeout. For example to add 10 seconds call this with Duration.ofSeconds(10), to
+   * subtract 10 seconds call this with Duration.ofSeconds(-10). This method returns when message
+   * exist in the processing queue, if message is already processed then it would return false.
+   *
+   * @param deltaDuration the delta time that needs to added to the existing visibility timeout
+   * @return true/false whether this operation was success or not
+   */
+  boolean updateVisibilityTimeout(Duration deltaDuration);
+
+  /**
    * A message that was enqueued
    *
    * @return an object could be null if deserialization fail.
@@ -112,25 +132,95 @@ public interface Job {
    */
   QueueDetail getQueueDetail();
 
+  /**
+   * Return latest execution data
+   *
+   * @return an execution object
+   */
   Execution getLatestExecution();
 
+  /**
+   * Return job context
+   *
+   * @return job context
+   */
   Context getContext();
 
+  /**
+   * Set job context
+   *
+   * @param context context object
+   */
   void setContext(Context context);
 
+  /**
+   * Release this job back to the queue, the released job would be available for re-execution after
+   * the duration time.
+   *
+   * @param status job status
+   * @param why why do want to release this job
+   * @param duration any positive duration
+   */
   void release(JobStatus status, Serializable why, Duration duration);
 
+  /**
+   * Release this job back to queue, this job available for execution after one second.
+   *
+   * @param status what should be the job status
+   * @param why why do you want to delete this job
+   */
   void release(JobStatus status, Serializable why);
 
+  /**
+   * Delete this job
+   *
+   * @param status what should be the job status
+   * @param why why do you want to delete this job
+   */
   void delete(JobStatus status, Serializable why);
 
+  /**
+   * Return whether this job was deleted, this returns true in two cases
+   *
+   * <p>1. when message is deleted using {@link #delete(JobStatus, Serializable)} method
+   *
+   * <p>2. Job's status is terminal status.
+   *
+   * @return true/false
+   */
   boolean isDeleted();
 
+  /**
+   * Whether this job is released back to the queue or not in two cases
+   *
+   * <p>When message was released using {@link #release(JobStatus, Serializable)} or {@link
+   * #release(JobStatus, Serializable, Duration)}
+   *
+   * <p>job is failed, so it will be retried later
+   *
+   * @return true/false
+   */
   boolean isReleased();
 
+  /**
+   * Reports true when this job is moved to dead letter queue
+   *
+   * @return true/false
+   */
   boolean hasMovedToDeadLetterQueue();
 
+  /**
+   * Whether this job is discarded or not, a message is discarded when it's all retries are over and
+   * no dead letter queue is configured.
+   *
+   * @return true/false
+   */
   boolean isDiscarded();
 
+  /**
+   * Number of times this job has failed
+   *
+   * @return failure count
+   */
   int getFailureCount();
 }

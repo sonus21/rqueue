@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.converter;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -68,10 +67,9 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
     private ObjectMapper mapper;
 
     RqueueRedisSerDes() {
-      this.mapper = new ObjectMapper();
+      this.mapper = SerializationUtils.createObjectMapper();
       this.mapper =
           mapper.registerModule(new SimpleModule().addSerializer(new NullValueSerializer()));
-      this.mapper = mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       this.mapper = mapper.enableDefaultTyping(DefaultTyping.NON_FINAL, As.PROPERTY);
     }
 

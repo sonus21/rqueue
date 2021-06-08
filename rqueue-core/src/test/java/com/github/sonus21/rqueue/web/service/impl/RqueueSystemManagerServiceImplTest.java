@@ -28,7 +28,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.github.sonus21.TestBase;
@@ -45,14 +44,15 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueSystemManagerServiceImplTest extends TestBase {
-  private final RqueueStringDao rqueueStringDao = mock(RqueueStringDao.class);
-  private final RqueueSystemConfigDao rqueueSystemConfigDao = mock(RqueueSystemConfigDao.class);
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private final RqueueSystemManagerServiceImpl rqueueSystemManagerService =
-      new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
+  @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock private RqueueConfig rqueueConfig;
+  private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final String normalQueue = "normal-queue";
@@ -66,7 +66,10 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
 
   @BeforeEach
   public void init() {
+    MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
+    rqueueSystemManagerService =
+        new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
     fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
     EndpointRegistry.register(slowQueueDetail);

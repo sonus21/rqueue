@@ -31,11 +31,11 @@ public abstract class SpringWebTestBase extends SpringTestBase {
 
   @Autowired(required = false)
   protected WebApplicationContext wac;
+
   protected WebClient webClient;
   protected MockMvc mockMvc;
-  protected ObjectMapper mapper = new ObjectMapper();
-  @Autowired
-  ApplicationContext applicationContext;
+  @Autowired protected ObjectMapper mapper;
+  @Autowired ApplicationContext applicationContext;
 
   @BeforeEach
   public void init() {

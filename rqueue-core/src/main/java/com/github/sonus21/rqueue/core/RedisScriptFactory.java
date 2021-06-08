@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
+import java.util.List;
 import lombok.ToString;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -39,13 +40,15 @@ public class RedisScriptFactory {
       case MOVE_MESSAGE_ZSET_TO_ZSET:
       case MOVE_MESSAGE_ZSET_TO_LIST:
       case SCHEDULE_MESSAGE:
+      case MOVE_MESSAGE_TO_LIST:
         script.setResultType((Class<T>) Long.class);
         return script;
       case DELETE_IF_SAME:
+      case SCORE_UPDATER:
         script.setResultType((Class<T>) Boolean.class);
         return script;
       case DEQUEUE_MESSAGE:
-        script.setResultType((Class<T>) RqueueMessage.class);
+        script.setResultType((Class<T>) List.class);
         return script;
       default:
         throw new UnknownSwitchCase(type.toString());
@@ -63,7 +66,8 @@ public class RedisScriptFactory {
     MOVE_MESSAGE_ZSET_TO_ZSET("rqueue/scripts/move_message_zset_to_zset.lua"),
     MOVE_MESSAGE_ZSET_TO_LIST("rqueue/scripts/move_message_zset_to_list.lua"),
     SCHEDULE_MESSAGE("rqueue/scripts/schedule_message.lua"),
-    DELETE_IF_SAME("rqueue/scripts/delete_if_same.lua");
+    DELETE_IF_SAME("rqueue/scripts/delete_if_same.lua"),
+    SCORE_UPDATER("rqueue/scripts/score_updater.lua");
     private final String path;
 
     ScriptType(String path) {

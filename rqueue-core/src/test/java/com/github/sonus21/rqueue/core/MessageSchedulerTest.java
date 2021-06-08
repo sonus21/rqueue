@@ -21,12 +21,13 @@ import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestMessageScheduler;
-import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestThreadPoolScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.test.TestTaskScheduler;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -41,15 +42,13 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 @CoreUnitTest
 class MessageSchedulerTest extends TestBase {
 
-  @Mock
-  private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock
-  private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
-  @Mock
-  private RedisTemplate<String, Long> redisTemplate;
+  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
 
-  @InjectMocks
-  private TestMessageScheduler messageScheduler;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
+  @Mock private RedisTemplate<String, Long> redisTemplate;
+
+  @InjectMocks private TestMessageScheduler messageScheduler;
 
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
@@ -77,11 +76,12 @@ class MessageSchedulerTest extends TestBase {
     EndpointRegistry.delete();
     EndpointRegistry.register(slowQueueDetail);
     EndpointRegistry.register(fastQueueDetail);
+    doReturn(true).when(rqueueSchedulerConfig).isEnabled();
     doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
-    TestThreadPoolScheduler scheduler = new TestThreadPoolScheduler();
+    TestTaskScheduler scheduler = new TestTaskScheduler();
     FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-    assertEquals(0, scheduler.tasks.size());
+    assertEquals(0, scheduler.submittedTasks());
     messageScheduler.destroy();
   }
 }

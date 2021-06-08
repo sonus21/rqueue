@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -29,10 +28,19 @@ import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class LockMiddlewareTest extends TestBase {
+  @Mock private Job job;
+
+  @BeforeEach
+  public void init() {
+    MockitoAnnotations.openMocks(this);
+  }
 
   @Test
   void handleLockIsNotAcquired() throws Exception {
@@ -50,7 +58,6 @@ class LockMiddlewareTest extends TestBase {
             releaseLockCounter.incrementAndGet();
           }
         };
-    Job job = mock(Job.class);
 
     lockMiddleware.handle(
         job,
@@ -81,7 +88,6 @@ class LockMiddlewareTest extends TestBase {
             assertEquals(lockIdentifier, "test-lock");
           }
         };
-    Job job = mock(Job.class);
 
     lockMiddleware.handle(
         job,
@@ -116,7 +122,6 @@ class LockMiddlewareTest extends TestBase {
             return Duration.ofMinutes(10);
           }
         };
-    Job job = mock(Job.class);
 
     lockMiddleware.handle(
         job,

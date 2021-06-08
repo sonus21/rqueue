@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -80,13 +81,33 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       String processingQueueName,
       String processingChannelName,
       long visibilityTimeout) {
+    List<RqueueMessage> rqueueMessages =
+        popN(queueName, processingQueueName, processingChannelName, visibilityTimeout, 1);
+    if (CollectionUtils.isEmpty(rqueueMessages)) {
+      return null;
+    }
+    return rqueueMessages.get(0);
+  }
+
+  @Override
+  public List<RqueueMessage> popN(
+      String queueName,
+      String processingQueueName,
+      String processingChannelName,
+      long visibilityTimeout,
+      int count) {
+    if (count < Constants.MIN_BATCH_SIZE) {
+      throw new IllegalArgumentException(
+          "Count must be greater than or equal to " + Constants.MIN_BATCH_SIZE);
+    }
     long currentTime = System.currentTimeMillis();
-    RedisScript<RqueueMessage> script = getScript(ScriptType.DEQUEUE_MESSAGE);
+    RedisScript<List<RqueueMessage>> script = getScript(ScriptType.DEQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
         Arrays.asList(queueName, processingQueueName, processingChannelName),
         currentTime,
-        currentTime + visibilityTimeout);
+        currentTime + visibilityTimeout,
+        count);
   }
 
   @Override
@@ -171,6 +192,21 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       }
     }
     return messages;
+  }
+
+  @Override
+  public Long getScore(String zsetName, RqueueMessage message) {
+    Double score = redisTemplate.opsForZSet().score(zsetName, message);
+    if (score == null) {
+      return null;
+    }
+    return score.longValue();
+  }
+
+  @Override
+  public boolean addScore(String zsetName, RqueueMessage message, long delta) {
+    return scriptExecutor.execute(
+        getScript(ScriptType.SCORE_UPDATER), Collections.singletonList(zsetName), message, delta);
   }
 
   private MessageMoveResult moveMessageToList(

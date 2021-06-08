@@ -20,34 +20,35 @@ import com.github.sonus21.rqueue.exception.TimedOutException;
 import java.util.function.BooleanSupplier;
 
 /**
- * WaitForUtil method wait for some event to occur. It accepts a callback as well that can be
- * invoked on successive failure of the method. That can be used to diagnosis the test. A callback
- * method is used to identify the outcome of some event, if the specified method returns true then
- * call is stopped otherwise every 100Ms the callback would be called to get the outcome. It tries
- * for continuously over 10seconds If callback does not return true within 10 seconds then it will
- * throw TimeOutException. If postmortem method is provided then it will call that method before
- * throwing exception.
+ * waitFor method wait for some event to occur. It accepts a callback as well that can be invoked on
+ * successive failure of the method. That can be used to diagnosis the test. A callback method is
+ * used to identify the outcome of some event, if the specified method returns true then call is
+ * stopped otherwise every 100Ms the callback would be called to get the outcome. It tries for
+ * continuously over 10seconds If callback does not return true within 10 seconds then it will throw
+ * TimeOutException. If postmortem method is provided then it will call that method before throwing
+ * exception.
  */
 public final class TimeoutUtils {
 
-  private TimeoutUtils() {
-  }
+  public static final long EXECUTION_TIME = 10_000L;
+  public static final long SLEEP_TIME = 100L;
+
+  private TimeoutUtils() {}
 
   public static void waitFor(
       BooleanSupplier callback, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
-    waitFor(callback, waitTimeInMilliSeconds, description, () -> {
-    });
+    waitFor(callback, waitTimeInMilliSeconds, description, () -> {});
   }
 
   public static void waitFor(BooleanSupplier callback, String description)
       throws TimedOutException {
-    waitFor(callback, 10000L, description);
+    waitFor(callback, EXECUTION_TIME, description);
   }
 
   public static void waitFor(BooleanSupplier callback, String description, Runnable postmortem)
       throws TimedOutException {
-    waitFor(callback, 10000L, description, postmortem);
+    waitFor(callback, EXECUTION_TIME, description, postmortem);
   }
 
   public static void waitFor(
@@ -57,12 +58,11 @@ public final class TimeoutUtils {
       Runnable postmortem)
       throws TimedOutException {
     long endTime = System.currentTimeMillis() + waitTimeInMilliSeconds;
-    long sleepTime = 100;
     do {
       if (Boolean.TRUE.equals(callback.getAsBoolean())) {
         return;
       }
-      sleep(sleepTime);
+      sleep(SLEEP_TIME);
     } while (System.currentTimeMillis() < endTime);
     try {
       postmortem.run();

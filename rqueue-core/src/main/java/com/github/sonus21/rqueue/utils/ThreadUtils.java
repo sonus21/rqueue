@@ -23,13 +23,9 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.slf4j.Logger;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
@@ -49,14 +45,15 @@ public final class ThreadUtils {
   }
 
   public static ThreadPoolTaskExecutor createTaskExecutor(
-      String beanName, String threadPrefix, int corePoolSize, int maxPoolSize) {
+      String beanName, String threadPrefix, int corePoolSize, int maxPoolSize, int queueCapacity) {
     ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
     threadPoolTaskExecutor.setThreadNamePrefix(threadPrefix);
     threadPoolTaskExecutor.setBeanName(beanName);
     if (corePoolSize > 0) {
       threadPoolTaskExecutor.setCorePoolSize(corePoolSize);
+      threadPoolTaskExecutor.setAllowCoreThreadTimeOut(true);
       threadPoolTaskExecutor.setMaxPoolSize(Math.max(corePoolSize, maxPoolSize));
-      threadPoolTaskExecutor.setQueueCapacity(0);
+      threadPoolTaskExecutor.setQueueCapacity(queueCapacity);
     }
     threadPoolTaskExecutor.afterPropertiesSet();
     return threadPoolTaskExecutor;
@@ -85,7 +82,7 @@ public final class ThreadUtils {
     boolean completedOrCancelled = future.isCancelled() || future.isDone();
     if (!completedOrCancelled) {
       if (future instanceof ScheduledFuture) {
-        ScheduledFuture f = (ScheduledFuture) future;
+        ScheduledFuture<?> f = (ScheduledFuture<?>) future;
         if (f.getDelay(TimeUnit.MILLISECONDS) > Constants.MIN_DELAY) {
           return;
         }
@@ -95,14 +92,14 @@ public final class ThreadUtils {
   }
 
   public static boolean waitForWorkerTermination(
-      final Collection<QueueThread> queueThreads, long waitTime) {
-    long maxTime = System.currentTimeMillis() + waitTime;
-    List<QueueThread> remaining = new ArrayList<>(queueThreads);
-    while (System.currentTimeMillis() < maxTime && !remaining.isEmpty()) {
-      List<QueueThread> newRemaining = new ArrayList<>();
-      for (QueueThread queueThread : remaining) {
-        if (queueThread.semaphore.availablePermits() < queueThread.getSize()) {
-          newRemaining.add(queueThread);
+      final Collection<QueueThreadPool> queueThreadPools, long waitTime) {
+    long endTime = System.currentTimeMillis() + waitTime;
+    List<QueueThreadPool> remaining = new ArrayList<>(queueThreadPools);
+    while (System.currentTimeMillis() < endTime && !remaining.isEmpty()) {
+      List<QueueThreadPool> newRemaining = new ArrayList<>();
+      for (QueueThreadPool queueThreadPool : remaining) {
+        if (!queueThreadPool.allTasksCompleted()) {
+          newRemaining.add(queueThreadPool);
         }
       }
       if (!newRemaining.isEmpty()) {
@@ -115,15 +112,6 @@ public final class ThreadUtils {
 
   public static String getWorkerName(String name) {
     String camelCase = StringUtils.getBeanName(name);
-    return camelCase + "Consumer";
-  }
-
-  @AllArgsConstructor
-  @Getter
-  public static class QueueThread {
-    private final boolean defaultExecutor;
-    private final AsyncTaskExecutor taskExecutor;
-    private final Semaphore semaphore;
-    private final int size;
+    return camelCase + "Listener";
   }
 }

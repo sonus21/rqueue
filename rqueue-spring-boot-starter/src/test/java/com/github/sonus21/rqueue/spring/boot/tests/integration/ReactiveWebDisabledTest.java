@@ -57,7 +57,7 @@ import reactor.core.publisher.Mono;
       "reservation.request.dead.letter.consumer.enabled=true",
       "reservation.request.active=true",
       "list.email.queue.enabled=true",
-      "mysql.db.name=ReactiveWebTest",
+      "mysql.db.name=ReactiveWebDisabledTest",
       "use.system.redis=false",
       "user.banned.queue.active=true",
       "spring.main.web-application-type=reactive",
@@ -174,7 +174,7 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
 
   @Test
   void exploreData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.LIST);
     request.setSrc(emailQueue);
@@ -238,7 +238,7 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
 
   @Test
   void viewData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     DateViewRequest dateViewRequest = new DateViewRequest();
     dateViewRequest.setName(emailDeadLetterQueue);
     dateViewRequest.setType(DataType.LIST);

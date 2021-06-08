@@ -1,17 +1,17 @@
 /*
- * Copyright 2020 Sonu Kumar
+ *  Copyright 2021 Sonu Kumar
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       https://www.apache.org/licenses/LICENSE-2.0
+ *         https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 var queueName = null;
@@ -58,6 +58,21 @@ function json(data) {
   return JSON.stringify(data);
 }
 
+function reloadHandler(response) {
+  if (response.code === 0) {
+    alert("Success!")
+    window.location.replace(window.location.href);
+  } else {
+    alert("Failed:" + response.message + " Please retry!");
+    console.log(response);
+  }
+}
+
+function errorHandler(response) {
+  console.log('Response', response);
+  showError("Something went wrong! Please retry!");
+}
+
 //====================================================
 // Queue Charts
 //====================================================
@@ -85,10 +100,7 @@ function drawChart(payload, div_id) {
         };
         drawChartElement(data, options, div_id);
       },
-      function (response) {
-        console.log('failed, ' + response);
-        showError("Something wet wrong! Please reload!");
-      });
+      errorHandler);
 }
 
 function refreshStatsChart(chartParams, div_id) {
@@ -213,10 +225,7 @@ function jobsButton() {
         console.log(response);
       }
     },
-    fail: function (response) {
-      console.log('failed, ' + response);
-      showError("Something went wrong! Please retry!");
-    }
+    fail: errorHandler
   });
 }
 
@@ -293,10 +302,7 @@ function displayTable(nextOrPrev) {
         }
         displayPageNumberEl.append("Page #", pageNumber + 1);
       },
-      function (response) {
-        console.log('failed, ' + response);
-        showError("Something wet wrong! Please reload!");
-      });
+      errorHandler);
 }
 
 function refreshPage() {
@@ -335,10 +341,7 @@ function updateDataType(element, callback) {
           console.log(response);
         }
       },
-      function (response) {
-        console.log('failed, ' + response);
-        showError("Something went wrong! Please retry!");
-      });
+      errorHandler);
 }
 
 $('#explore-queue').on('hidden.bs.modal', function () {
@@ -443,10 +446,7 @@ $('#move-button').on("click", function () {
           alert(response.message);
         }
       },
-      function (response) {
-        console.log('failed, ' + response);
-        showError("Something wet wrong! Please retry!");
-      });
+      errorHandler);
 });
 
 //================================================
@@ -485,10 +485,7 @@ function deleteMessage() {
           console.log(response);
         }
       },
-      function (response) {
-        console.log('failed, ' + response);
-        showError("Something went wrong! Please reload!");
-      });
+      errorHandler);
 }
 
 function deleteAll() {
@@ -513,28 +510,14 @@ function makeQueueEmpty() {
           alert("Failed:" + response.message + " Please retry!");
           console.log(response);
         }
-      },
-      function (response) {
-        console.log('failed, ' + response);
-        showError("Something went wrong! Please reload!");
-      });
+      }, errorHandler);
 }
 
 function deleteQueue() {
   ajaxRequest(getAbsoluteUrl("rqueue/api/v1/delete-queue"), 'POST',
       {'name': queueName},
-      function (response) {
-        if (response.code === 0) {
-          window.location.replace(window.location.href);
-        } else {
-          alert("Failed:" + response.message + " Please retry!");
-          console.log(response);
-        }
-      },
-      function (response) {
-        console.log('failed, ' + response);
-        showError("Something went wrong! Please reload!");
-      });
+      reloadHandler,
+      errorHandler);
 }
 
 $('.delete-btn').on("click", function () {
@@ -547,6 +530,16 @@ $('.delete-btn').on("click", function () {
     throw deleteButtonId;
   }
 });
+
+function pauseQueueBtn() {
+  let queueName = $(this).data("queue");
+  let pause = !$(this).hasClass('bx-play-circle');
+  ajaxRequest(getAbsoluteUrl("rqueue/api/v1/pause-unpause-queue"), 'POST',
+      {'name': queueName, 'pause': pause},
+      reloadHandler,
+      errorHandler);
+}
+
 //=======================================================================
 // Attach events to avoid CSP issue
 //=======================================================================
@@ -559,3 +552,5 @@ $(document).on('click', '#view-data', exploreData);
 $(document).on('click', '.data-explorer', exploreData);
 $(document).on('click', '.jobs-btn', jobsButton);
 $(document).on('click', '.jobs-closer-btn', jobsCloseButton);
+$(document).on('click', '.pause-queue-btn', pauseQueueBtn);
+

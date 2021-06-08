@@ -97,7 +97,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     this.inspectAllBean = inspectAllBean;
     this.conversionService = new DefaultFormattingConversionService();
     this.asyncTaskExecutor =
-        ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "multiMessageExecutor-", -1, -1);
+        ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "multiMessageExecutor-", -1, -1, 0);
   }
 
   public RqueueMessageHandler(final MessageConverter messageConverter) {
@@ -281,6 +281,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     Concurrency concurrency = resolveConcurrency(rqueueListener);
     Map<String, Integer> priorityMap = resolvePriority(rqueueListener);
     String priorityGroup = resolvePriorityGroup(rqueueListener);
+    int batchSize = getBatchSize(rqueueListener, concurrency);
     MappingInformation mappingInformation =
         MappingInformation.builder()
             .active(active)
@@ -292,12 +293,28 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
             .visibilityTimeout(visibilityTimeout)
             .priorityGroup(priorityGroup)
             .priority(priorityMap)
+            .batchSize(batchSize)
             .build();
     if (mappingInformation.isValid()) {
       return mappingInformation;
     }
     logger.warn("Invalid Queue '" + mappingInformation + "' configuration");
     return null;
+  }
+
+  private int getBatchSize(RqueueListener rqueueListener, Concurrency concurrency) {
+    int val =
+        ValueResolver.resolveKeyToInteger(getApplicationContext(), rqueueListener.batchSize());
+    // batch size is not set
+    if (val < Constants.MIN_BATCH_SIZE) {
+      // concurrency is set but batch size is not set, use default batch size
+      if (concurrency.isValid()) {
+        val = Constants.BATCH_SIZE_FOR_CONCURRENCY_BASED_LISTENER;
+      } else {
+        val = Constants.MIN_BATCH_SIZE;
+      }
+    }
+    return val;
   }
 
   @Override
@@ -330,6 +347,11 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
             vals[0],
             "Concurrency lower limit is not a number",
             "Concurrency lower limit must be non-zero");
+    if (lowerLimit < Constants.MIN_CONCURRENCY) {
+      throw new IllegalStateException(
+          "lower limit of concurrency must be greater than or equal to "
+              + Constants.MIN_CONCURRENCY);
+    }
     int upperLimit =
         parseInt(
             vals[1],
@@ -428,8 +450,13 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   }
 
   private long resolveVisibilityTimeout(RqueueListener rqueueListener) {
-    return ValueResolver.resolveKeyToLong(
-        getApplicationContext(), rqueueListener.visibilityTimeout());
+    long value =
+        ValueResolver.resolveKeyToLong(getApplicationContext(), rqueueListener.visibilityTimeout());
+    if (value < Constants.MIN_VISIBILITY) {
+      throw new IllegalStateException(
+          "Visibility  must be greater than or equal to " + Constants.MIN_VISIBILITY);
+    }
+    return value;
   }
 
   private int resolveNumRetries(RqueueListener rqueueListener) {

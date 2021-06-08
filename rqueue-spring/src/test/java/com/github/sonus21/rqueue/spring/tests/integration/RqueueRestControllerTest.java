@@ -138,7 +138,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
 
   @Test
   void exploreDataList() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.LIST);
     request.setSrc(emailQueue);
@@ -224,7 +224,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
 
   @Test
   void deleteDataSet() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     DataDeleteRequest request = new DataDeleteRequest();
     request.setQueueName(emailQueue);
     request.setDatasetName(emailDeadLetterQueue);
@@ -266,7 +266,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
 
   @Test
   void moveMessage() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     MessageMoveRequest request =
         new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
     MvcResult result =
@@ -286,7 +286,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
 
   @Test
   void viewData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30);
+    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     DateViewRequest dateViewRequest = new DateViewRequest();
     dateViewRequest.setName(emailDeadLetterQueue);
     dateViewRequest.setType(DataType.LIST);

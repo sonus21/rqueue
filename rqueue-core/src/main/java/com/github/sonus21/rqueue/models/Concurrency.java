@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,5 +32,10 @@ public class Concurrency extends SerializableBase {
 
   public MinMax<Integer> toMinMax() {
     return new MinMax<>(min, max);
+  }
+
+  @JsonIgnore
+  public boolean isValid() {
+    return min > 0;
   }
 }

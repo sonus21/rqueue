@@ -20,6 +20,7 @@ import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
@@ -30,6 +31,8 @@ import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
+import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
+import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
@@ -54,6 +57,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageMetadataService messageMetadataService;
+  private final RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
   private final RqueueConfig rqueueConfig;
   private String latestVersion = "NA";
   private String releaseLink = "#";
@@ -66,20 +70,21 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       RqueueStringDao rqueueStringDao,
       RqueueSystemConfigDao rqueueSystemConfigDao,
       RqueueMessageTemplate rqueueMessageTemplate,
-      RqueueMessageMetadataService messageMetadataService) {
+      RqueueMessageMetadataService messageMetadataService,
+      RqueueInternalPubSubChannel rqueueInternalPubSubChannel) {
     this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueConfig = rqueueConfig;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.messageMetadataService = messageMetadataService;
+    this.rqueueInternalPubSubChannel = rqueueInternalPubSubChannel;
   }
 
   @Override
   public BooleanResponse deleteMessage(String queueName, String id) {
-    String queueConfigKey = rqueueConfig.getQueueConfigKey(queueName);
-    QueueConfig queueConfig = rqueueSystemConfigDao.getQConfig(queueConfigKey, true);
     BooleanResponse booleanResponse = new BooleanResponse();
+    QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(queueName, true);
     if (queueConfig == null) {
       booleanResponse.setCode(1);
       booleanResponse.setMessage("Queue config not found!");
@@ -221,5 +226,27 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   @Override
   public Mono<MessageMoveResponse> moveReactiveMessage(MessageMoveRequest request) {
     return Mono.just(moveMessage(request));
+  }
+
+  @Override
+  public Mono<BaseResponse> reactivePauseUnpauseQueue(PauseUnpauseQueueRequest request) {
+    return Mono.just(pauseUnpauseQueue(request));
+  }
+
+  @Override
+  public BaseResponse pauseUnpauseQueue(PauseUnpauseQueueRequest request) {
+    log.info("Queue PauseUnpause request {}", request);
+    QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(request.getName(), true);
+    BaseResponse response = new BaseResponse();
+    if (queueConfig == null) {
+      response.setMessage("Queue does not exist");
+      response.setCode(404);
+    } else {
+      queueConfig.setPaused(!queueConfig.isPaused());
+      rqueueInternalPubSubChannel.emitPauseUnpauseQueueEvent(request);
+      rqueueInternalPubSubChannel.emitQueueConfigUpdateEvent(request);
+      rqueueSystemConfigDao.saveQConfig(queueConfig);
+    }
+    return response;
   }
 }

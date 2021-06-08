@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -49,23 +48,26 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @Slf4j
 @CoreUnitTest
 class RqueueDashboardChartServiceTest extends TestBase {
 
-  private final RqueueQStatsDao rqueueQStatsDao = mock(RqueueQStatsDao.class);
-  private final RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
-  private final RqueueConfig rqueueConfig = mock(RqueueConfig.class);
-  private final RqueueSystemManagerService rqueueSystemManagerService =
-      mock(RqueueSystemManagerService.class);
-  private final RqueueDashboardChartService rqueueDashboardChartService =
-      new RqueueDashboardChartServiceImpl(
-          rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
+  @Mock private RqueueQStatsDao rqueueQStatsDao;
+  @Mock private RqueueWebConfig rqueueWebConfig;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueSystemManagerService rqueueSystemManagerService;
+  private RqueueDashboardChartService rqueueDashboardChartService;
   private final List<String> queues = new ArrayList<>();
 
   @BeforeEach
   public void init() {
+    MockitoAnnotations.openMocks(this);
+    rqueueDashboardChartService =
+        new RqueueDashboardChartServiceImpl(
+            rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
     doAnswer(
             invocation -> {

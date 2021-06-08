@@ -23,7 +23,9 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.Topic;
 
 @Slf4j
 public class RqueueRedisListenerContainerFactory
@@ -67,8 +69,12 @@ public class RqueueRedisListenerContainerFactory
     return false;
   }
 
-  public RedisMessageListenerContainer getContainer() {
+  private RedisMessageListenerContainer getContainer() {
     return this.container;
+  }
+
+  public void addMessageListener(MessageListener listener, Topic topic) {
+    getContainer().addMessageListener(listener, topic);
   }
 
   private boolean notSharedContainer() {
@@ -83,9 +89,6 @@ public class RqueueRedisListenerContainerFactory
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    if (!rqueueSchedulerConfig.isRedisEnabled()) {
-      return;
-    }
     if (!rqueueConfig.isSharedConnection()) {
       createContainer();
       return;

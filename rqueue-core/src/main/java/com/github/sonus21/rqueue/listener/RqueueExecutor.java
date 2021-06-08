@@ -21,71 +21,69 @@ import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE
 import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
 import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.middleware.HandlerMiddleware;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import java.lang.ref.WeakReference;
+import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Semaphore;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
 
-@Slf4j
 class RqueueExecutor extends MessageContainerBase {
-  private final RqueueMessageHandler rqueueMessageHandler;
-  private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final PostProcessingHandler postProcessingHandler;
-  private final Semaphore semaphore;
-  private final RqueueConfig rqueueConfig;
+  private final QueueThreadPool queueThreadPool;
+  private final RqueueMessage rqueueMessage;
+  private final RqueueBeanProvider beanProvider;
+  private final QueueDetail queueDetail;
   private boolean updatedToProcessing;
   private JobImpl job;
   private ExecutionStatus status;
   private Throwable error;
   private int failureCount;
+  private final List<Middleware> middlewareList;
 
   RqueueExecutor(
-      WeakReference<RqueueMessageListenerContainer> container,
-      RqueueConfig rqueueConfig,
+      RqueueBeanProvider rqueueBeanProvider,
+      QueueStateMgr queueStateMgr,
+      List<Middleware> middlewares,
       PostProcessingHandler postProcessingHandler,
       RqueueMessage rqueueMessage,
       QueueDetail queueDetail,
-      Semaphore semaphore) {
-    super(log, queueDetail.getName(), container);
-    this.rqueueConfig = rqueueConfig;
+      QueueThreadPool queueThreadPool) {
+    super(LoggerFactory.getLogger(RqueueExecutor.class), queueDetail.getName(), queueStateMgr);
+    this.middlewareList = middlewares;
     this.postProcessingHandler = postProcessingHandler;
-    this.rqueueMessageMetadataService =
-        Objects.requireNonNull(container.get()).rqueueMessageMetadataService();
-    this.rqueueMessageHandler = Objects.requireNonNull(container.get()).getRqueueMessageHandler();
-    this.semaphore = semaphore;
-    init(rqueueMessage, queueDetail);
+    this.beanProvider = rqueueBeanProvider;
+    this.queueThreadPool = queueThreadPool;
+    this.rqueueMessage = rqueueMessage;
+    this.queueDetail = queueDetail;
   }
 
-  private void init(RqueueMessage rqueueMessage, QueueDetail queueDetail) {
+  private void init() {
     Message<String> tmpMessage =
         MessageBuilder.createMessage(
             rqueueMessage.getMessage(),
             buildMessageHeaders(queueDetail.getName(), rqueueMessage, null, null));
     MessageMetadata messageMetadata =
-        rqueueMessageMetadataService.getOrCreateMessageMetadata(rqueueMessage);
+        beanProvider.getRqueueMessageMetadataService().getOrCreateMessageMetadata(rqueueMessage);
     Throwable t = null;
     Object userMessage = null;
     try {
       userMessage =
           RqueueMessageUtils.convertMessageToObject(
-              tmpMessage, rqueueMessageHandler.getMessageConverter());
+              tmpMessage, beanProvider.getRqueueMessageHandler().getMessageConverter());
     } catch (Exception e) {
       log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
       t = e;
@@ -93,9 +91,10 @@ class RqueueExecutor extends MessageContainerBase {
     } finally {
       this.job =
           new JobImpl(
-              rqueueConfig,
-              Objects.requireNonNull(container.get()).rqueueMessageMetadataService(),
-              Objects.requireNonNull(container.get()).rqueueJobDao(),
+              beanProvider.getRqueueConfig(),
+              beanProvider.getRqueueMessageMetadataService(),
+              beanProvider.getRqueueJobDao(),
+              beanProvider.getRqueueMessageTemplate(),
               queueDetail,
               messageMetadata,
               rqueueMessage,
@@ -113,8 +112,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void updateCounter(boolean fail) {
-    RqueueMetricsCounter counter =
-        Objects.requireNonNull(container.get()).getRqueueMetricsCounter();
+    RqueueMetricsCounter counter = beanProvider.getRqueueMetricsCounter();
     if (counter == null) {
       return;
     }
@@ -138,7 +136,9 @@ class RqueueExecutor extends MessageContainerBase {
       return true;
     }
     MessageMetadata newMessageMetadata =
-        rqueueMessageMetadataService.getOrCreateMessageMetadata(job.getRqueueMessage());
+        beanProvider
+            .getRqueueMessageMetadataService()
+            .getOrCreateMessageMetadata(job.getRqueueMessage());
     if (!newMessageMetadata.equals(job.getMessageMetadata())) {
       // TODO what happens to the current execution data
       job.setMessageMetadata(newMessageMetadata);
@@ -147,7 +147,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean shouldIgnore() {
-    return !Objects.requireNonNull(container.get()).getPreExecutionMessageProcessor().process(job);
+    return !beanProvider.getPreExecutionMessageProcessor().process(job);
   }
 
   private boolean isOldMessage() {
@@ -158,18 +158,18 @@ class RqueueExecutor extends MessageContainerBase {
 
   private int getRetryCount() {
     int maxRetry = getMaxRetryCount();
-    if (rqueueConfig.getRetryPerPoll() == -1) {
+    if (beanProvider.getRqueueConfig().getRetryPerPoll() == -1) {
       return maxRetry;
     }
-    return Math.min(rqueueConfig.getRetryPerPoll(), maxRetry);
+    return Math.min(beanProvider.getRqueueConfig().getRetryPerPoll(), maxRetry);
   }
 
-  private boolean queueInActive() {
+  private boolean queueInactive() {
     return !isQueueActive(job.getQueueDetail().getName());
   }
 
   private ExecutionStatus getStatus() {
-    if (queueInActive()) {
+    if (queueInactive()) {
       return ExecutionStatus.QUEUE_INACTIVE;
     }
     if (shouldIgnore()) {
@@ -225,7 +225,7 @@ class RqueueExecutor extends MessageContainerBase {
   private void callMiddlewares(int currentIndex, List<Middleware> middlewares, Job job)
       throws Exception {
     if (currentIndex == middlewares.size()) {
-      new HandlerMiddleware(rqueueMessageHandler).handle(job, null);
+      new HandlerMiddleware(beanProvider.getRqueueMessageHandler()).handle(job, null);
     } else {
       middlewares
           .get(currentIndex)
@@ -239,7 +239,6 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void processMessage() throws Exception {
-    List<Middleware> middlewareList = Objects.requireNonNull(container.get()).getMiddleWares();
     if (middlewareList == null) {
       callMiddlewares(0, Collections.emptyList(), job);
     } else {
@@ -270,23 +269,19 @@ class RqueueExecutor extends MessageContainerBase {
     long startTime = System.currentTimeMillis();
     int retryCount = getRetryCount();
     int attempt = 1;
-    try {
-      do {
-        log(Level.DEBUG, "Attempt {} message: {}", null, attempt, job.getMessage());
-        begin();
-        if (status == null) {
-          execute();
-        }
-        retryCount -= 1;
-        attempt += 1;
-        end();
-      } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
-      postProcessingHandler.handle(
-          job, (status == null ? ExecutionStatus.FAILED : status), failureCount);
-      logExecutionTimeWarning(maxProcessingTime, startTime, status);
-    } finally {
-      semaphore.release();
-    }
+    do {
+      log(Level.DEBUG, "Attempt {} message: {}", null, attempt, job.getMessage());
+      begin();
+      if (status == null) {
+        execute();
+      }
+      retryCount -= 1;
+      attempt += 1;
+      end();
+    } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
+    postProcessingHandler.handle(
+        job, (status == null ? ExecutionStatus.FAILED : status), failureCount);
+    logExecutionTimeWarning(maxProcessingTime, startTime, status);
   }
 
   private long getTtlForScheduledMessageKey(RqueueMessage message) {
@@ -324,10 +319,13 @@ class RqueueExecutor extends MessageContainerBase {
             .build();
     String messageKey = getScheduledMessageKey(newMessage);
     long expiryInSeconds = getTtlForScheduledMessageKey(newMessage);
-    log.debug(
+    log(
+        Level.DEBUG,
         "Schedule periodic message: {} Status: {}",
+        null,
         job.getRqueueMessage(),
-        getRqueueMessageTemplate()
+        beanProvider
+            .getRqueueMessageTemplate()
             .scheduleMessage(
                 job.getQueueDetail().getDelayedQueueName(),
                 messageKey,
@@ -336,12 +334,28 @@ class RqueueExecutor extends MessageContainerBase {
     handleMessage();
   }
 
+  private void handle() {
+    try {
+      if (job.getRqueueMessage().isPeriodicTask()) {
+        processPeriodicMessage();
+      } else {
+        handleMessage();
+      }
+    } finally {
+      queueThreadPool.release();
+    }
+  }
+
   @Override
   public void start() {
-    if (job.getRqueueMessage().isPeriodicTask()) {
-      processPeriodicMessage();
-    } else {
-      handleMessage();
+    try {
+      init();
+    } catch (Exception e) {
+      log(Level.WARN, "Executor init failed Msg: {}", e, rqueueMessage);
+      release(postProcessingHandler, queueThreadPool, queueDetail, rqueueMessage);
+      return;
     }
+    // TODO could it leak semaphore here?
+    handle();
   }
 }

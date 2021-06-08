@@ -20,6 +20,7 @@ import com.athaydes.javanna.Javanna;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.junit.BootstrapRedis;
 import com.github.sonus21.junit.RedisBootstrapperBase;
+import com.github.sonus21.rqueue.utils.SerializationUtils;
 import java.util.HashMap;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +91,6 @@ public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBas
 
   @Bean
   public ObjectMapper objectMapper() {
-    return new ObjectMapper();
+    return SerializationUtils.createObjectMapper();
   }
 }

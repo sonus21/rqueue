@@ -16,48 +16,74 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.utils.ThreadUtils.QueueThread;
+import com.github.sonus21.rqueue.core.RqueueBeanProvider;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
+import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Collections;
+import java.util.List;
 import org.slf4j.event.Level;
 
 class DefaultRqueuePoller extends RqueueMessagePoller {
   private final QueueDetail queueDetail;
-  private final QueueThread queueThread;
+  private final QueueThreadPool queueThreadPool;
 
   DefaultRqueuePoller(
-      QueueThread queueThread,
       QueueDetail queueDetail,
-      RqueueMessageListenerContainer container,
-      PostProcessingHandler postProcessingHandler,
-      RqueueConfig rqueueConfig) {
-    super(queueDetail.getName(), container, postProcessingHandler, rqueueConfig);
+      QueueThreadPool queueThreadPool,
+      RqueueBeanProvider rqueueBeanProvider,
+      QueueStateMgr queueStateMgr,
+      List<Middleware> middlewares,
+      long pollingInterval,
+      long backoffTime,
+      PostProcessingHandler postProcessingHandler) {
+    super(
+        queueDetail.getName(),
+        rqueueBeanProvider,
+        queueStateMgr,
+        middlewares,
+        pollingInterval,
+        backoffTime,
+        postProcessingHandler);
     this.queueDetail = queueDetail;
-    this.queueThread = queueThread;
+    this.queueThreadPool = queueThreadPool;
     this.queues = Collections.singletonList(queueDetail.getName());
   }
 
   @Override
-  long getSemaphoreWaiTime() {
-    return getPollingInterval();
+  long getSemaphoreWaitTime() {
+    return pollingInterval;
   }
 
   @Override
   void deactivate(int index, String queue, DeactivateType deactivateType) {
     if (deactivateType == DeactivateType.SEMAPHORE_UNAVAILABLE
         || deactivateType == DeactivateType.NO_MESSAGE) {
-      TimeoutUtils.sleepLog(getPollingInterval(), false);
+      TimeoutUtils.sleepLog(pollingInterval, false);
     } else if (deactivateType == DeactivateType.POLL_FAILED) {
-      TimeoutUtils.sleepLog(getBackOffTime(), false);
+      TimeoutUtils.sleepLog(backoffTime, false);
     }
   }
 
   @Override
   public void start() {
     log(Level.DEBUG, "Running Queue {}", null, queueDetail.getName());
-    while (!shouldExit()) {
-      poll(-1, queueDetail.getName(), queueDetail, queueThread);
+    while (true) {
+      try {
+        if (eligibleForPolling(queueDetail.getName())) {
+          poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+        } else if (shouldExit()) {
+          return;
+        } else {
+          deactivate(-1, queueDetail.getName(), DeactivateType.NO_MESSAGE);
+        }
+      } catch (Exception e) {
+        log(Level.ERROR, "Error in poller", e);
+        if (shouldExit()) {
+          return;
+        }
+      }
     }
   }
 }

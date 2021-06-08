@@ -1,5 +1,22 @@
 # [Rqueue] New and Notable Changes
 
+### [2.8.0] - TBD
+
+### Fixes
+
+* Producer mode is not honored in Message scheduler
+* Message scheduler disable flag is not honored
+* Aggregator should not be running in producer mode
+* Listener concurrency is not reached, even though messages are in queue
+* Register queue in producer mode for all listener methods
+
+### Added
+
+* Pause/Unpause queue
+* Batch message fetching
+* Default queue priority to WEIGHTED
+* Added an API to update the visibility timeout of running job
+
 ## [2.7.0] - 13-Apr-2021
 
 ### Fixes
@@ -223,3 +240,5 @@ Fixes:
 [2.6.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.6.1-RELEASE
 
 [2.7.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.7.0-RELEASE
+
+[2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.0-RELEASE
