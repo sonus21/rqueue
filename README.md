@@ -61,7 +61,7 @@ well, where all services code is in Spring.
 
 ### Dependency
 
-Snapshot Version: https://s01.oss.sonatype.org/content/repositories/snapshots
+Snapshot Version: [https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/](https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/)
 Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.sonus21)
 
 #### Spring-boot
