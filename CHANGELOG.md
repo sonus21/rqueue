@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-### [2.8.0] - TBD
+### [2.8.0] - 08-Jun-2021
 
 ### Fixes
 
@@ -12,10 +12,12 @@
 
 ### Added
 
-* Pause/Unpause queue
+* Pause/Unpause queue from dashboard
+* Pause/Unpause queue programatically 
 * Batch message fetching
 * Default queue priority to WEIGHTED
 * Added an API to update the visibility timeout of running job
+
 
 ## [2.7.0] - 13-Apr-2021
 
