@@ -251,4 +251,4 @@ Fixes:
 
 [2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.0-RELEASE
 
-[2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.1-RELEASE
+[2.8.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.1-RELEASE
