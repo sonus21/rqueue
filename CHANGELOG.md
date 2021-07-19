@@ -1,5 +1,12 @@
 # [Rqueue] New and Notable Changes
 
+### [2.8.1] - 19-Jul-2021
+
+Option to add rqueue web url prefix, the prefix is configured from application.properties file using
+`rqueue.web.url.prefix=my-application`, now rqueue dashboard would be served
+at  `my-application/rquque` instead of `/rqueue`, the configuration has higher priority than the
+HTTP request header `x-forwarded-prefix`.
+
 ### [2.8.0] - 08-Jun-2021
 
 ### Fixes
@@ -13,11 +20,10 @@
 ### Added
 
 * Pause/Unpause queue from dashboard
-* Pause/Unpause queue programatically 
+* Pause/Unpause queue programatically
 * Batch message fetching
 * Default queue priority to WEIGHTED
 * Added an API to update the visibility timeout of running job
-
 
 ## [2.7.0] - 13-Apr-2021
 
@@ -244,3 +250,5 @@ Fixes:
 [2.7.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.7.0-RELEASE
 
 [2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.0-RELEASE
+
+[2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.1-RELEASE
