@@ -291,6 +291,13 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name": "rqueue.web.url.prefix",
+      "description": "Rqueue web url path prefix",
+      "type": "java.lang.String",
+      "defaultValue": null
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.max.message.move.count",
       "description": "Maximum number of messages that should be moved when move message is trigger",
       "type": "java.lang.Integer",
