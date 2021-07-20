@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.example;
 
+import com.github.sonus21.rqueue.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -24,6 +26,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
+  @Value("${rqueue.web.url.prefix:}")
+  private String rqueueWebUrlPrefix;
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -31,6 +35,11 @@ public class MvcConfig implements WebMvcConfigurer {
       registry
           .addResourceHandler("/webjars/**")
           .addResourceLocations("classpath:/META-INF/resources/webjars/");
+    }
+    if (!StringUtils.isEmpty(rqueueWebUrlPrefix)) {
+      registry
+          .addResourceHandler(rqueueWebUrlPrefix + "/**")
+          .addResourceLocations("classpath:/public/");
     }
     if (!registry.hasMappingForPattern("/**")) {
       registry.addResourceHandler("/**").addResourceLocations("classpath:/public/");

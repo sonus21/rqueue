@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-### [2.8.1] - 19-Jul-2021
+### [2.8.2] - 20-Jul-2021
 
 Option to add rqueue web url prefix, the prefix is configured from application.properties file using
 `rqueue.web.url.prefix=my-application`, now rqueue dashboard would be served
@@ -251,4 +251,4 @@ Fixes:
 
 [2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.0-RELEASE
 
-[2.8.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.1-RELEASE
+[2.8.2]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.2-RELEASE
