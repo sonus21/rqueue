@@ -410,7 +410,7 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void start() {
-    log.info("Starting Rqueue Message container");
+    log.info("Starting Rqueue Message container {}", RqueueConfig.getBrokerId());
     synchronized (lifecycleMgr) {
       running = true;
       doStart();
@@ -528,7 +528,7 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void stop() {
-    log.info("Stopping Rqueue Message container");
+    log.info("Stopping Rqueue Message container {}", RqueueConfig.getBrokerId());
     synchronized (lifecycleMgr) {
       running = false;
       rqueueBeanProvider

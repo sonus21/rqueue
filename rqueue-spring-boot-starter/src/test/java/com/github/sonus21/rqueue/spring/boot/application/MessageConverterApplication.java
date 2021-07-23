@@ -16,12 +16,16 @@
 
 package com.github.sonus21.rqueue.spring.boot.application;
 
+import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.test.application.CustomMessageConverterApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @PropertySource("classpath:application.properties")
@@ -31,6 +35,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class MessageConverterApplication extends CustomMessageConverterApplication {
   public static void main(String[] args) {
+    SimpleRqueueListenerContainerFactory.setMessageConverterProvider(
+        new MessageConverterProvider() {
+          @Override
+          public MessageConverter getConverter() {
+            return new MappingJackson2MessageConverter();
+          }
+        });
     SpringApplication.run(MessageConverterApplication.class, args);
   }
 }

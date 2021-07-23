@@ -79,7 +79,7 @@ public class RqueueControllerBeanPostProcessor
           attributes.put("path", values);
           RequestMapping target =
               AnnotationUtils.synthesizeAnnotation(attributes, RequestMapping.class, null);
-          changeAnnotationValue(bean.getClass(), RequestMapping.class, target);
+          changeAnnotationValue(bean.getClass(), target);
         }
       }
     }
@@ -87,17 +87,14 @@ public class RqueueControllerBeanPostProcessor
   }
 
   @SuppressWarnings("unchecked")
-  private static void changeAnnotationValue(
-      Class<?> targetClass, Class<? extends Annotation> targetAnnotation, Annotation targetValue) {
+  private static void changeAnnotationValue(Class<?> targetClass, Annotation targetValue) {
     try {
       Method method = Class.class.getDeclaredMethod(ANNOTATION_METHOD);
-      method.setAccessible(true);
       Object annotationData = method.invoke(targetClass);
       Field annotations = annotationData.getClass().getDeclaredField(DECLARED_ANNOTATIONS);
-      annotations.setAccessible(true);
       Map<Class<? extends Annotation>, Annotation> map =
           (Map<Class<? extends Annotation>, Annotation>) annotations.get(annotationData);
-      map.put(targetAnnotation, targetValue);
+      map.put(RequestMapping.class, targetValue);
     } catch (Exception e) {
       log.error("Error changing annotation", e);
     }

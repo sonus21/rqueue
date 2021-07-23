@@ -80,7 +80,7 @@ import org.springframework.util.comparator.ComparableComparator;
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
 
   private final ConversionService conversionService;
-  private final MessageConverter messageConverter;
+  private MessageConverter messageConverter;
   private final boolean inspectAllBean;
   private final AsyncTaskExecutor asyncTaskExecutor;
   private final Map<String, MappingInformation> destinationLookup = new HashMap<>(64);
@@ -573,6 +573,11 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
       HandlerMethod handlerMethod, Exception ex, Message<?> message) {
     super.processHandlerMethodException(handlerMethod, ex, message);
     throw new MessagingException("An exception occurred while invoking the handler method", ex);
+  }
+
+  public void setMessageConverter(MessageConverter messageConverter) {
+    notNull(messageConverter, "messageConverter cannot be null");
+    this.messageConverter = messageConverter;
   }
 
   public MessageConverter getMessageConverter() {

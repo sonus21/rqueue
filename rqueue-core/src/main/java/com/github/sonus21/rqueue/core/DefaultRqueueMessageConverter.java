@@ -29,7 +29,7 @@ import org.springframework.messaging.converter.StringMessageConverter;
 public final class DefaultRqueueMessageConverter extends CompositeMessageConverter {
 
   public DefaultRqueueMessageConverter() {
-    super(ImmutableList.of(new GenericMessageConverter(), new StringMessageConverter()));
+    super(ImmutableList.of(new StringMessageConverter(), new GenericMessageConverter()));
   }
 
   public DefaultRqueueMessageConverter(Collection<MessageConverter> converters) {

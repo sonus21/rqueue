@@ -42,7 +42,6 @@ public final class Constants {
   public static final int DEFAULT_RETRY_DEAD_LETTER_QUEUE = 3;
   public static final int MAX_MESSAGES = 100;
   public static final int DEFAULT_WORKER_COUNT_PER_QUEUE = 2;
-  public static final int AGGREGATION_LOCK_DURATION_IN_SECONDS = 5;
   public static final String GITHUB_API_FOR_LATEST_RELEASE =
       "https://api.github.com/repos/sonus21/rqueue/releases/latest";
   public static final String DEFAULT_PRIORITY_KEY = "DEFAULT_PRIORITY";

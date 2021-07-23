@@ -56,7 +56,7 @@ import org.springframework.util.CollectionUtils;
 
 @Service
 @Slf4j
-public class RqueueTaskAggregatorService
+public class RqueueTaskMetricsAggregatorService
     implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
@@ -71,7 +71,7 @@ public class RqueueTaskAggregatorService
   private List<Future<?>> eventAggregatorTasks;
 
   @Autowired
-  public RqueueTaskAggregatorService(
+  public RqueueTaskMetricsAggregatorService(
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueLockManager rqueueLockManager,
@@ -93,7 +93,7 @@ public class RqueueTaskAggregatorService
 
   @Override
   public void start() {
-    log.info("Starting task aggregation");
+    log.info("Starting task aggregation {}", RqueueConfig.getBrokerId());
     synchronized (lifecycleMgr) {
       running = true;
       if (!rqueueWebConfig.isCollectListenerStats()) {
@@ -112,14 +112,15 @@ public class RqueueTaskAggregatorService
         eventAggregatorTasks.add(this.taskExecutor.submit(eventAggregator));
       }
       this.taskExecutor.scheduleAtFixedRate(
-          new SweepJob(), Duration.ofSeconds(rqueueWebConfig.getAggregateEventWaitTime()));
+          new SweepJob(), Duration.ofSeconds(rqueueWebConfig.getAggregateEventWaitTimeInSecond()));
       lifecycleMgr.notifyAll();
     }
   }
 
   private boolean processingRequired(QueueEvents queueEvents) {
     return queueEvents.processingRequired(
-        rqueueWebConfig.getAggregateEventWaitTime(), rqueueWebConfig.getAggregateEventCount());
+        rqueueWebConfig.getAggregateEventWaitTimeInSecond(),
+        rqueueWebConfig.getAggregateEventCount());
   }
 
   private void waitForRunningTaskToStop() {
@@ -136,7 +137,7 @@ public class RqueueTaskAggregatorService
 
   @Override
   public void stop() {
-    log.info("Stopping task aggregation");
+    log.info("Stopping task aggregation {}", RqueueConfig.getBrokerId());
     synchronized (lifecycleMgr) {
       synchronized (aggregatorLock) {
         if (!CollectionUtils.isEmpty(queueNameToEvents)) {
@@ -248,18 +249,8 @@ public class RqueueTaskAggregatorService
       stat.totalExecutionTime += messageMetadata.getTotalExecutionTime();
     }
 
-    private void aggregate(QueueEvents events) {
-      List<RqueueExecutionEvent> queueRqueueExecutionEvents = events.rqueueExecutionEvents;
-      RqueueExecutionEvent queueRqueueExecutionEvent = queueRqueueExecutionEvents.get(0);
-      Map<LocalDate, TasksStat> localDateTasksStatMap = new HashMap<>();
-      for (RqueueExecutionEvent event : queueRqueueExecutionEvents) {
-        LocalDate date = DateTimeUtils.localDateFromMilli(queueRqueueExecutionEvent.getTimestamp());
-        TasksStat stat = localDateTasksStatMap.getOrDefault(date, new TasksStat());
-        aggregate(event, stat);
-        localDateTasksStatMap.put(date, stat);
-      }
-      QueueDetail queueDetail = (QueueDetail) queueRqueueExecutionEvent.getSource();
-      String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueDetail.getName());
+    private void saveAggregateData(
+        Map<LocalDate, TasksStat> localDateTasksStatMap, String queueStatKey) {
       QueueStatistics queueStatistics = rqueueQStatsDao.findById(queueStatKey);
       if (queueStatistics == null) {
         queueStatistics = new QueueStatistics(queueStatKey);
@@ -273,6 +264,19 @@ public class RqueueTaskAggregatorService
       rqueueQStatsDao.save(queueStatistics);
     }
 
+    private Map<LocalDate, TasksStat> aggregate(QueueEvents events) {
+      List<RqueueExecutionEvent> queueRqueueExecutionEvents = events.rqueueExecutionEvents;
+      RqueueExecutionEvent queueRqueueExecutionEvent = queueRqueueExecutionEvents.get(0);
+      Map<LocalDate, TasksStat> localDateTasksStatMap = new HashMap<>();
+      for (RqueueExecutionEvent event : queueRqueueExecutionEvents) {
+        LocalDate date = DateTimeUtils.localDateFromMilli(queueRqueueExecutionEvent.getTimestamp());
+        TasksStat stat = localDateTasksStatMap.getOrDefault(date, new TasksStat());
+        aggregate(event, stat);
+        localDateTasksStatMap.put(date, stat);
+      }
+      return localDateTasksStatMap;
+    }
+
     private void processEvents(QueueEvents events) {
       List<RqueueExecutionEvent> queueRqueueExecutionEvents = events.rqueueExecutionEvents;
       if (!CollectionUtils.isEmpty(queueRqueueExecutionEvents)) {
@@ -281,15 +285,17 @@ public class RqueueTaskAggregatorService
         String queueStatKey = rqueueConfig.getQueueStatisticsKey(queueDetail.getName());
         String lockKey = rqueueConfig.getLockKey(queueStatKey);
         boolean locked = false;
+        Map<LocalDate, TasksStat> localDateTasksStatMap = aggregate(events);
         try {
           if (rqueueLockManager.acquireLock(
               lockKey,
               RqueueConfig.getBrokerId(),
-              Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS))) {
+              Duration.ofMillis(rqueueWebConfig.getAggregateEventLockDurationInMs()))) {
             locked = true;
-            aggregate(events);
+            saveAggregateData(localDateTasksStatMap, queueStatKey);
           } else {
-            log.warn("Unable to acquire lock, will retry later");
+            log.debug(
+                "queue:{}, aggregate job is unable to acquire lock", queueDetail.getQueueName());
             TimeoutUtils.sleep(Constants.ONE_MILLI);
             queue.add(events);
           }

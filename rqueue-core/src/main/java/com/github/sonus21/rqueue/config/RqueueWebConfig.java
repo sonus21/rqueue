@@ -53,12 +53,19 @@ public class RqueueWebConfig {
   @Value("${rqueue.web.statistic.history.day:90}")
   private int historyDay;
 
+  // number of jobs that should be aggregated at once
   @Value("${rqueue.web.collect.statistic.aggregate.event.count:500}")
   private int aggregateEventCount;
 
+  // controls how to long to wait before doping aggregation
   @Value("${rqueue.web.collect.statistic.aggregate.event.wait.time:60}")
-  private int aggregateEventWaitTime;
+  private int aggregateEventWaitTimeInSecond;
 
+  // controls how long to wait for the running threads to complete the execution
   @Value("${rqueue.web.collect.statistic.aggregate.shutdown.wait.time:500}")
   private int aggregateShutdownWaitTime;
+
+  // how long  we should wait for the lock duration
+  @Value("${rqueue.web.collect.statistic.aggregate.event.lock.duration:500}")
+  private int aggregateEventLockDurationInMs;
 }
