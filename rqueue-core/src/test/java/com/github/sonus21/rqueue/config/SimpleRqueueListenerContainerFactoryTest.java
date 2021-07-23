@@ -33,7 +33,6 @@ import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import com.github.sonus21.test.TestTaskExecutor;
-import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -103,20 +102,6 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
     Integer maxWorkers = 10;
     simpleRqueueListenerContainerFactory.setMaxNumWorkers(maxWorkers);
     assertEquals(maxWorkers, simpleRqueueListenerContainerFactory.getMaxNumWorkers());
-  }
-
-  @Test
-  void setMessageConverters() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> simpleRqueueListenerContainerFactory.setMessageConverters(null));
-  }
-
-  @Test
-  void setMessageConverters1() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> simpleRqueueListenerContainerFactory.setMessageConverters(new ArrayList<>()));
   }
 
   @Test

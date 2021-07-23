@@ -78,16 +78,14 @@ class RqueueExecutor extends MessageContainerBase {
             buildMessageHeaders(queueDetail.getName(), rqueueMessage, null, null));
     MessageMetadata messageMetadata =
         beanProvider.getRqueueMessageMetadataService().getOrCreateMessageMetadata(rqueueMessage);
-    Throwable t = null;
     Object userMessage = null;
+    // here error can occur when message can not be deserialized without target class information
     try {
       userMessage =
           RqueueMessageUtils.convertMessageToObject(
               tmpMessage, beanProvider.getRqueueMessageHandler().getMessageConverter());
     } catch (Exception e) {
-      log(Level.ERROR, "Unable to convert message {}", e, rqueueMessage.getMessage());
-      t = e;
-      throw e;
+      log(Level.DEBUG, "Unable to convert message {}", e, rqueueMessage.getMessage());
     } finally {
       this.job =
           new JobImpl(
@@ -99,7 +97,7 @@ class RqueueExecutor extends MessageContainerBase {
               messageMetadata,
               rqueueMessage,
               userMessage,
-              t,
+              null,
               postProcessingHandler);
     }
     this.failureCount = job.getRqueueMessage().getFailureCount();

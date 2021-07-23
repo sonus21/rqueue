@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.View;
 
 @Controller
-@RequestMapping("rqueue")
+@RequestMapping(path = "${rqueue.web.url.prefix:}rqueue")
 @Conditional(ReactiveDisabled.class)
 public class RqueueViewController {
 

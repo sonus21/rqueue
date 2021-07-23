@@ -23,12 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
-import java.util.Collections;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,10 +90,17 @@ class RqueueListenerAutoConfigTest extends TestBase {
 
   @Test
   void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
-    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     MessageConverter messageConverter = new GenericMessageConverter();
+    MessageConverterProvider messageConverterProvider =
+        new MessageConverterProvider() {
+          @Override
+          public MessageConverter getConverter() {
+            return messageConverter;
+          }
+        };
+    SimpleRqueueListenerContainerFactory.setMessageConverterProvider(messageConverterProvider);
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
-    factory.setMessageConverters(Collections.singletonList(messageConverter));
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));

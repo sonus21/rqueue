@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
@@ -75,12 +76,15 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
         "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     model.addAttribute("timeInMilli", System.currentTimeMillis());
     model.addAttribute("version", rqueueConfig.getLibVersion());
-    String prefix = "/";
+    String prefix = Constants.FORWARD_SLASH;
     if (!StringUtils.isEmpty(xForwardedPrefix)) {
-      if (xForwardedPrefix.endsWith("/")) {
+      if (xForwardedPrefix.endsWith(Constants.FORWARD_SLASH)) {
         xForwardedPrefix = xForwardedPrefix.substring(0, xForwardedPrefix.length() - 1);
       }
       prefix = xForwardedPrefix + prefix;
+    }
+    if (!prefix.startsWith(Constants.FORWARD_SLASH)) {
+      prefix = Constants.FORWARD_SLASH + prefix;
     }
     model.addAttribute("urlPrefix", prefix);
   }

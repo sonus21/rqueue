@@ -89,7 +89,7 @@ class RqueueMessageManagerImplTest extends TestBase {
   }
 
   @Test
-  void existLockCanNotBeAquired() {
+  void existLockCanNotBeAcquired() {
     doReturn(false).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     assertThrows(LockCanNotBeAcquired.class, () -> rqueueMessageManager.exist(queue, messageId));
   }

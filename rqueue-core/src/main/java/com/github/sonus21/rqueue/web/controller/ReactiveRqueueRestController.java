@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @Conditional(ReactiveEnabled.class)
-@RequestMapping("rqueue/api/v1")
+@RequestMapping(path = "${rqueue.web.url.prefix:}rqueue/api/v1")
 public class ReactiveRqueueRestController {
 
   private final RqueueDashboardChartService rqueueDashboardChartService;
