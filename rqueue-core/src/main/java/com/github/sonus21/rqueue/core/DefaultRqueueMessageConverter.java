@@ -24,12 +24,17 @@ import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 
-/** Default Message Converter for Rqueue messages. */
+/**
+ * Rqueue message converter
+ *
+ * <p>Default Message Converter for Rqueue messages.
+ */
 @EqualsAndHashCode(callSuper = true)
 public final class DefaultRqueueMessageConverter extends CompositeMessageConverter {
 
   public DefaultRqueueMessageConverter() {
-    super(ImmutableList.of(new StringMessageConverter(), new GenericMessageConverter()));
+    // do not change order
+    super(ImmutableList.of(new GenericMessageConverter(), new StringMessageConverter()));
   }
 
   public DefaultRqueueMessageConverter(Collection<MessageConverter> converters) {

@@ -79,7 +79,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
             rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();
-    doReturn(100).when(rqueueWebConfig).getAggregateEventLockDurationInMs();
+    doReturn(100).when(rqueueWebConfig).getAggregateEventWaitTimeInSecond();
     doReturn(100).when(rqueueWebConfig).getAggregateShutdownWaitTime();
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
     doReturn(500).when(rqueueWebConfig).getAggregateEventCount();
@@ -166,7 +166,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
       return;
     }
     String id = "__rq::q-stat::" + queueName;
-    doReturn(500L).when(rqueueWebConfig).getAggregateEventLockDurationInMs();
+    doReturn(500).when(rqueueWebConfig).getAggregateEventLockDurationInMs();
     doReturn(id).when(rqueueConfig).getQueueStatisticsKey(queueName);
     doReturn("__rq::lock::" + id).when(rqueueConfig).getLockKey(id);
 
