@@ -1,11 +1,14 @@
 # [Rqueue] New and Notable Changes
 
-### [2.8.2] - 20-Jul-2021
-
-Option to add rqueue web url prefix, the prefix is configured from application.properties file using
-`rqueue.web.url.prefix=my-application`, now rqueue dashboard would be served
-at  `my-application/rquque` instead of `/rqueue`, the configuration has higher priority than the
+### [2.9.0] - TBD
+### Fixes
+* Option to add rqueue web url prefix, the prefix is configured from application.properties file using
+`rqueue.web.url.prefix=/my-application/`, now rqueue dashboard would be served
+at  `/my-application/rquque` instead of `/rqueue`, the configuration has higher priority than the
 HTTP request header `x-forwarded-prefix`.
+  
+* Custom message converter is not working
+* RedisCommandExecutionException : command arguments must be strings or integers
 
 ### [2.8.0] - 08-Jun-2021
 
@@ -251,4 +254,4 @@ Fixes:
 
 [2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.0-RELEASE
 
-[2.8.2]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.2-RELEASE
+[2.9.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.9.0-RELEASE

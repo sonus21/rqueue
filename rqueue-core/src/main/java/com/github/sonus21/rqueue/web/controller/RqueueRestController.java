@@ -49,9 +49,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@RRestController
-@RequestMapping(path = "rqueue/api/v1")
+@RestController
+@RequestMapping(path = "${rqueue.web.url.prefix:}rqueue/api/v1")
 @Conditional(ReactiveDisabled.class)
 public class RqueueRestController {
   private final RqueueDashboardChartService rqueueDashboardChartService;
