@@ -21,8 +21,8 @@ import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.MessageListener;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
-import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
@@ -236,20 +236,26 @@ public class SimpleRqueueListenerContainerFactory {
     this.maxNumWorkers = maxNumWorkers;
   }
 
-  /** @return the message converter */
-  public MessageConverter getMessageConverter() {
+  /**
+   * Message converter must be configured before calling this method.
+   *
+   * @return the message converter object
+   */
+  public MessageConverter getMessageConverter() throws IllegalAccessException {
+    if (messageConverterProvider == null) {
+      throw new IllegalAccessException("messageConverterProvider is not configured");
+    }
     return messageConverterProvider.getConverter();
   }
 
   /**
-   * A default message converter {@link DefaultRqueueMessageConverter} is added that can handle all
-   * type of data serialization/deserialization and all data is serialized to and from JSON. You can
-   * use other mechanism to serialize/deserialize class object like MessagePack or any other format.
+   * Rqueue configures a default message converter that can convert message to/from for any object.
    *
-   * @param messageConverterProvider the message converter
+   * @see DefaultMessageConverterProvider
+   * @param messageConverterProvider the message converter provider
    */
   public void setMessageConverterProvider(MessageConverterProvider messageConverterProvider) {
-    notNull(messageConverterProvider, "message converter provider must not be null");
+    notNull(messageConverterProvider, "messageConverterProvider must not be null");
     this.messageConverterProvider = messageConverterProvider;
   }
 

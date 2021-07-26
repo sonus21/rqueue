@@ -351,6 +351,13 @@
       "description": "How long Rqueue should wait for aggregate job to complete o shutdown (mili seconds)",
       "type": "java.lang.Integer",
       "defaultValue": 500
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name": "rqueue.web.collect.statistic.aggregate.event.lock.duration",
+      "description": "How long Rqueue should wait for Redis lock when aggregation data is being saved(mili seconds)",
+      "type": "java.lang.Integer",
+      "defaultValue": 500
     }
   ]
 }
