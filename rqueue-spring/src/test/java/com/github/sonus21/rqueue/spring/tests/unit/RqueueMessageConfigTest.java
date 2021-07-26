@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -59,8 +60,7 @@ class RqueueMessageConfigTest extends TestBase {
   }
 
   @Test
-  void rqueueMessageHandlerDefaultCreation()
-      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+  void rqueueMessageHandlerDefaultCreation() throws IllegalAccessException {
     FieldUtils.writeField(
         rqueueMessageConfig,
         "messageConverterProviderClass",
@@ -70,8 +70,7 @@ class RqueueMessageConfigTest extends TestBase {
   }
 
   @Test
-  void rqueueMessageHandlerReused()
-      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
+  void rqueueMessageHandlerReused() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
@@ -85,9 +84,9 @@ class RqueueMessageConfigTest extends TestBase {
   }
 
   @Test
-  void rqueueMessageListenerContainer()
-      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
+  void rqueueMessageListenerContainer() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
