@@ -23,6 +23,7 @@ import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
@@ -86,6 +87,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
   void rqueueMessageListenerContainer()
       throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(
@@ -101,6 +103,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
   @Test
   void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRqueueMessageTemplate(messageTemplate);
     doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
@@ -118,7 +121,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
+    doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
     assertNotNull(messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate));
     RqueueMessageSender messageSender =
         messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate);
