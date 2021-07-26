@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.test.application;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -54,7 +55,8 @@ public abstract class CustomMessageConverterApplication extends ApplicationBasic
     MessageHeaders messageHeaders =
         new MessageHeaders(
             Collections.singletonMap(
-                MessageHeaders.CONTENT_TYPE, new MimeType("application", "json")));
+                MessageHeaders.CONTENT_TYPE,
+                new MimeType("application", "json", StandardCharsets.UTF_8)));
     simpleRqueueListenerContainerFactory.setMessageHeaders(messageHeaders);
     return simpleRqueueListenerContainerFactory;
   }

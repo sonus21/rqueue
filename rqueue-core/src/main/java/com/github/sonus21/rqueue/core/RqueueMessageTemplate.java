@@ -30,13 +30,8 @@ import reactor.core.publisher.Mono;
  * change as new and new features are added to Rqueue.
  */
 public interface RqueueMessageTemplate {
-  RqueueMessage pop(
-      String queueName,
-      String processingQueueName,
-      String processingChannelName,
-      long visibilityTimeout);
 
-  List<RqueueMessage> popN(
+  List<RqueueMessage> pop(
       String queueName,
       String processingQueueName,
       String processingChannelName,
@@ -46,7 +41,7 @@ public interface RqueueMessageTemplate {
   Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage);
 
-  void moveMessage(
+  void moveMessageWithDelay(
       String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay);
 
   void moveMessage(String srcZsetName, String tgtListName, RqueueMessage src, RqueueMessage tgt);

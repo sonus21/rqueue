@@ -181,7 +181,7 @@ class RqueueExecutorTest extends TestBase {
             queueThreadPool)
         .run();
     verify(messageTemplate, times(1))
-        .moveMessage(
+        .moveMessageWithDelay(
             eq(queueDetail.getProcessingQueueName()),
             eq(queueDetail.getDelayedQueueName()),
             eq(rqueueMessage),

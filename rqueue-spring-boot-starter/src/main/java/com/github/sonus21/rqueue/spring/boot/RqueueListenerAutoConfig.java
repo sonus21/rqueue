@@ -48,8 +48,7 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageHandler rqueueMessageHandler()
-      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+  public RqueueMessageHandler rqueueMessageHandler() {
     return simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
         getMessageConverterProvider());
   }
@@ -58,52 +57,55 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @DependsOn("rqueueConfig")
   @ConditionalOnMissingBean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
-      RqueueMessageHandler rqueueMessageHandler)
-      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+      RqueueMessageHandler rqueueMessageHandler) {
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
-    simpleRqueueListenerContainerFactory.setMessageConverterProvider(getMessageConverterProvider());
     return simpleRqueueListenerContainerFactory.createMessageListenerContainer();
   }
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageTemplate rqueueMessageTemplate(RqueueConfig rqueueConfig) {
+  public RqueueMessageTemplate rqueueMessageTemplate(
+      RqueueConfig rqueueConfig, RqueueMessageHandler rqueueMessageHandler) {
     return getMessageTemplate(rqueueConfig);
   }
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageSender rqueueMessageSender(RqueueMessageTemplate rqueueMessageTemplate) {
+  public RqueueMessageSender rqueueMessageSender(
+      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
     return new RqueueMessageSenderImpl(
         rqueueMessageTemplate,
-        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders());
   }
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageManager rqueueMessageManager(RqueueMessageTemplate rqueueMessageTemplate) {
+  public RqueueMessageManager rqueueMessageManager(
+      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
     return new RqueueMessageManagerImpl(
         rqueueMessageTemplate,
-        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders());
   }
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueEndpointManager rqueueEndpointManager(RqueueMessageTemplate rqueueMessageTemplate) {
+  public RqueueEndpointManager rqueueEndpointManager(
+      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
     return new RqueueEndpointManagerImpl(
         rqueueMessageTemplate,
-        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders());
   }
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageEnqueuer rqueueMessageEnqueuer(RqueueMessageTemplate rqueueMessageTemplate) {
+  public RqueueMessageEnqueuer rqueueMessageEnqueuer(
+      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
     return new RqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
-        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders());
   }
 
@@ -111,10 +113,10 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @ConditionalOnMissingBean
   @Conditional(ReactiveEnabled.class)
   public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
-      RqueueMessageTemplate rqueueMessageTemplate) {
+      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
     return new ReactiveRqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
-        simpleRqueueListenerContainerFactory.getMessageConverter(),
+        rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders());
   }
 }

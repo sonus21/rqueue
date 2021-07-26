@@ -72,9 +72,9 @@ class RqueueMessageTemplateTest extends TestBase {
   }
 
   @Test
-  void pop() {
+  void popN() {
     rqueueMessageTemplate.pop(
-        queueName, queueName + "rq", queueName + "dq", Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME);
+        queueName, queueName + "rq", queueName + "dq", Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME, 3);
     verify(scriptExecutor, times(1)).execute(any(), any(), any());
   }
 

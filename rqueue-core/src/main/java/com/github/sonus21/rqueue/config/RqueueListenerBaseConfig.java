@@ -75,18 +75,24 @@ public abstract class RqueueListenerBaseConfig {
       "${rqueue.message.converter.provider.class:com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider}")
   private String messageConverterProviderClass;
 
-  protected MessageConverterProvider getMessageConverterProvider()
-      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-    Class<?> c =
-        Thread.currentThread().getContextClassLoader().loadClass(messageConverterProviderClass);
-    Object messageProvider = c.newInstance();
-    if (messageProvider instanceof MessageConverterProvider) {
-      return (MessageConverterProvider) messageProvider;
+  protected MessageConverterProvider getMessageConverterProvider() {
+    try {
+      Class<?> c =
+          Thread.currentThread().getContextClassLoader().loadClass(messageConverterProviderClass);
+      Object messageProvider = c.newInstance();
+      if (messageProvider instanceof MessageConverterProvider) {
+        return (MessageConverterProvider) messageProvider;
+      }
+      throw new IllegalStateException(
+          "configured message converter is not of type MessageConverterProvider, type: '"
+              + messageConverterProviderClass
+              + "'",
+          new Exception());
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      throw new IllegalStateException(
+          "MessageConverterProvider class '" + messageConverterProviderClass + "' loading failed ",
+          e);
     }
-    throw new IllegalStateException(
-        "configured message converter is not of type MessageConverterProvider, type: '"
-            + messageConverterProviderClass
-            + "'");
   }
 
   @Autowired(required = false)

@@ -78,6 +78,10 @@
     <appender-ref ref="FILE"/>
   </logger>
 
+  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl">
+    <appender-ref ref="FILE"/>
+  </logger>
+
   <logger additivity="false" level="INFO" name="com.github.sonus21.rqueue.test.service">
     <appender-ref ref="ConsumedMessageStore"/>
   </logger>

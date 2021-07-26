@@ -230,7 +230,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
+        .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
 
     doAnswer(
             invocation -> {
@@ -238,7 +238,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
+        .pop(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> fastQueueCounter.get() > 1, "fastQueue message call");
@@ -292,7 +292,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
+        .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
     FastMessageListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageListener.class);
     container.afterPropertiesSet();
@@ -352,7 +352,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
+        .pop(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
 
     doAnswer(
             invocation -> {
@@ -370,7 +370,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
               return null;
             })
         .when(rqueueMessageTemplate)
-        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
+        .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
     container.afterPropertiesSet();
     container.start();
     waitFor(() -> slowQueueCounter.get() == 1, "slowQueue message fetch");

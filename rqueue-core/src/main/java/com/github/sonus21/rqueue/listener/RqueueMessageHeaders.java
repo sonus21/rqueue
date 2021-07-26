@@ -75,10 +75,9 @@ public final class RqueueMessageHeaders {
     if (execution != null) {
       headers.put(EXECUTION, execution);
     }
-    MessageHeaders newHeaders = new MessageHeaders(headers);
     if (messageHeaders != null && !messageHeaders.isEmpty()) {
-      newHeaders.putAll(messageHeaders);
+      headers.putAll(messageHeaders);
     }
-    return newHeaders;
+    return new MessageHeaders(headers);
   }
 }

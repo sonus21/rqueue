@@ -115,7 +115,16 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
   }
 
   @Test
+  void getMessageConverterNPE() {
+    assertThrows(
+        NullPointerException.class,
+        () -> simpleRqueueListenerContainerFactory.getMessageConverter());
+  }
+
+  @Test
   void getMessageConverter() {
+    simpleRqueueListenerContainerFactory.setMessageConverterProvider(
+        new DefaultMessageConverterProvider());
     assertNotNull(simpleRqueueListenerContainerFactory.getMessageConverter());
   }
 
@@ -164,6 +173,7 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(
         new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
+    simpleRqueueListenerContainerFactory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
@@ -182,6 +192,7 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(
         new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
+    simpleRqueueListenerContainerFactory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
@@ -204,6 +215,7 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(new LettuceConnectionFactory());
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(
         new RqueueMessageHandler(new DefaultRqueueMessageConverter()));
+    simpleRqueueListenerContainerFactory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();
     assertNotNull(container);
@@ -298,6 +310,7 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
     simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(backOff);
     simpleRqueueListenerContainerFactory.setTaskExecutor(executor);
     simpleRqueueListenerContainerFactory.setPriorityMode(PriorityMode.WEIGHTED);
+    simpleRqueueListenerContainerFactory.setMessageConverterProvider(new DefaultMessageConverterProvider());
 
     RqueueMessageListenerContainer container =
         simpleRqueueListenerContainerFactory.createMessageListenerContainer();

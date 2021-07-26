@@ -21,7 +21,6 @@ import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.MessageListener;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
-import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -53,7 +52,7 @@ import org.springframework.util.CollectionUtils;
 public class SimpleRqueueListenerContainerFactory {
 
   // The message converter provider that will return a message converter to convert messages to/from
-  private MessageConverterProvider messageConverterProvider = new DefaultMessageConverterProvider();
+  private MessageConverterProvider messageConverterProvider;
 
   // Provide task executor, this can be used to provide some additional details like some threads
   // name, etc otherwise a default task executor would be created
@@ -167,6 +166,7 @@ public class SimpleRqueueListenerContainerFactory {
       MessageConverterProvider messageConverterProvider) {
     if (rqueueMessageHandler == null) {
       notNull(messageConverterProvider, "messageConverterProvider can not be null");
+      this.messageConverterProvider = messageConverterProvider;
       rqueueMessageHandler =
           new RqueueMessageHandler(messageConverterProvider.getConverter(), inspectAllBean);
     }
@@ -289,6 +289,7 @@ public class SimpleRqueueListenerContainerFactory {
    */
   public RqueueMessageListenerContainer createMessageListenerContainer() {
     notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
+    notNull(messageConverterProvider, "messageConverterProvider must not be null");
     if (rqueueMessageTemplate == null) {
       rqueueMessageTemplate =
           new RqueueMessageTemplateImpl(

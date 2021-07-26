@@ -26,6 +26,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -86,6 +87,7 @@ class PriorityGroupListenerTest extends TestBase {
   void priorityGroupListener() throws Exception {
     BootstrapEventListener listener = new BootstrapEventListener();
     StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.registerSingleton("messageConverter",  DefaultRqueueMessageConverter.class);
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton(
         "slowMessageListener", SlowMessageListenerWithPriority.class);
@@ -127,7 +129,7 @@ class PriorityGroupListenerTest extends TestBase {
                       .build());
             })
         .when(rqueueMessageTemplate)
-        .popN(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
+        .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
 
     container.setPriorityMode(PriorityMode.STRICT);
     container.setTaskExecutor(taskExecutor);
@@ -140,7 +142,7 @@ class PriorityGroupListenerTest extends TestBase {
     TimeoutUtils.waitFor(listener::isStopEventReceived, "stop event");
     container.doDestroy();
     verify(rqueueMessageTemplate, times(0))
-        .popN(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
+        .pop(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
   }
 
   @Getter

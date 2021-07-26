@@ -18,10 +18,12 @@ package com.github.sonus21.rqueue.spring.tests.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.RqueueListenerConfig;
@@ -102,9 +104,10 @@ class RqueueMessageConfigTest extends TestBase {
   void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageTemplate(rqueueMessageTemplate);
+    doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageConfig.rqueueMessageSender(rqueueMessageTemplate));
+    assertNotNull(messageConfig.rqueueMessageSender(rqueueMessageHandler, rqueueMessageTemplate));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), rqueueMessageTemplate.hashCode());
   }
 }
