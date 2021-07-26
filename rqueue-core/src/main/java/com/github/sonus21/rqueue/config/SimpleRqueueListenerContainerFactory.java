@@ -160,13 +160,17 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Return configured message handler
    *
+   * @param messageConverterProvider message converter that will be used to serialize/deserialize
+   *     message
    * @return RqueueMessageHandler object
    */
   public RqueueMessageHandler getRqueueMessageHandler(
       MessageConverterProvider messageConverterProvider) {
-    if (rqueueMessageHandler == null) {
-      notNull(messageConverterProvider, "messageConverterProvider can not be null");
+    if (this.messageConverterProvider == null) {
       this.messageConverterProvider = messageConverterProvider;
+    }
+    notNull(this.messageConverterProvider, "messageConverterProvider can not be null");
+    if (rqueueMessageHandler == null) {
       rqueueMessageHandler =
           new RqueueMessageHandler(messageConverterProvider.getConverter(), inspectAllBean);
     }
