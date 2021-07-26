@@ -66,7 +66,7 @@ public class RqueueMessage extends SerializableBase {
   // period of this task, if this is a periodic task.
   private long period;
 
-  @JsonIgnore private MessageHeaders messageHeaders;
+  @ToString.Exclude @JsonIgnore private MessageHeaders messageHeaders;
 
   @JsonIgnore
   public RqueueMessage updateReEnqueuedAt() {
