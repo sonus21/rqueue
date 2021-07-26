@@ -21,6 +21,7 @@ import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
+import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.DelayedMessageScheduler;
 import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
@@ -66,7 +67,27 @@ public abstract class RqueueListenerBaseConfig {
   public static final int MAX_DB_VERSION = 2;
   private static final String TEMPLATE_DIR = "templates/rqueue/";
   private static final String TEMPLATE_SUFFIX = ".html";
-  protected @Value("${rqueue.reactive.enabled:false}") boolean reactiveEnabled;
+
+  @Value("${rqueue.reactive.enabled:false}")
+  protected boolean reactiveEnabled;
+
+  @Value(
+      "${rqueue.message.converter.provider.class:com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider}")
+  private String messageConverterProviderClass;
+
+  protected MessageConverterProvider getMessageConverterProvider()
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    Class<?> c =
+        Thread.currentThread().getContextClassLoader().loadClass(messageConverterProviderClass);
+    Object messageProvider = c.newInstance();
+    if (messageProvider instanceof MessageConverterProvider) {
+      return (MessageConverterProvider) messageProvider;
+    }
+    throw new IllegalStateException(
+        "configured message converter is not of type MessageConverterProvider, type: '"
+            + messageConverterProviderClass
+            + "'");
+  }
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =

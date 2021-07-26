@@ -51,31 +51,49 @@ class RqueueListenerAutoConfigTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
+    FieldUtils.writeField(
+        rqueueMessageAutoConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
   }
 
   @Test
-  void rqueueMessageHandlerDefaultCreation() {
+  void rqueueMessageHandlerDefaultCreation()
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
     assertNotNull(rqueueMessageAutoConfig.rqueueMessageHandler());
   }
 
   @Test
-  void rqueueMessageHandlerReused() throws IllegalAccessException {
+  void rqueueMessageHandlerReused()
+      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
+    FieldUtils.writeField(
+        messageAutoConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertEquals(
         rqueueMessageHandler.hashCode(), messageAutoConfig.rqueueMessageHandler().hashCode());
   }
 
   @Test
-  void rqueueMessageListenerContainer() throws IllegalAccessException {
+  void rqueueMessageListenerContainer()
+      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
+    FieldUtils.writeField(
+        messageAutoConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
-    assertEquals(factory.getRqueueMessageHandler().hashCode(), rqueueMessageHandler.hashCode());
+    assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
   }
 
   @Test
@@ -91,15 +109,9 @@ class RqueueListenerAutoConfigTest extends TestBase {
   @Test
   void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
     MessageConverter messageConverter = new GenericMessageConverter();
-    MessageConverterProvider messageConverterProvider =
-        new MessageConverterProvider() {
-          @Override
-          public MessageConverter getConverter() {
-            return messageConverter;
-          }
-        };
-    SimpleRqueueListenerContainerFactory.setMessageConverterProvider(messageConverterProvider);
+    MessageConverterProvider messageConverterProvider = () -> messageConverter;
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(messageConverterProvider);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);

@@ -60,8 +60,12 @@ public final class RqueueMessageHeaders {
   }
 
   public static MessageHeaders buildMessageHeaders(
-      String destination, RqueueMessage rqueueMessage, Job job, Execution execution) {
-    Map<String, Object> headers = new HashMap<>(5);
+      String destination,
+      RqueueMessage rqueueMessage,
+      Job job,
+      Execution execution,
+      MessageHeaders messageHeaders) {
+    Map<String, Object> headers = new HashMap<>(9);
     headers.put(DESTINATION, destination);
     headers.put(ID, rqueueMessage.getId());
     headers.put(MESSAGE, rqueueMessage);
@@ -71,6 +75,10 @@ public final class RqueueMessageHeaders {
     if (execution != null) {
       headers.put(EXECUTION, execution);
     }
-    return new MessageHeaders(headers);
+    MessageHeaders newHeaders = new MessageHeaders(headers);
+    if (messageHeaders != null && !messageHeaders.isEmpty()) {
+      newHeaders.putAll(messageHeaders);
+    }
+    return newHeaders;
   }
 }

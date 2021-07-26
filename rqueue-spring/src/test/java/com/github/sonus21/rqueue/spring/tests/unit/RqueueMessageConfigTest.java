@@ -57,27 +57,45 @@ class RqueueMessageConfigTest extends TestBase {
   }
 
   @Test
-  void rqueueMessageHandlerDefaultCreation() {
+  void rqueueMessageHandlerDefaultCreation()
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    FieldUtils.writeField(
+        rqueueMessageConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     assertNotNull(rqueueMessageConfig.rqueueMessageHandler());
   }
 
   @Test
-  void rqueueMessageHandlerReused() throws IllegalAccessException {
+  void rqueueMessageHandlerReused()
+      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
+    FieldUtils.writeField(
+        messageConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertEquals(rqueueMessageHandler.hashCode(), messageConfig.rqueueMessageHandler().hashCode());
   }
 
   @Test
-  void rqueueMessageListenerContainer() throws IllegalAccessException {
+  void rqueueMessageListenerContainer()
+      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
+    FieldUtils.writeField(
+        messageConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     messageConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
-    assertEquals(factory.getRqueueMessageHandler().hashCode(), rqueueMessageHandler.hashCode());
+    assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
   }
 
   @Test

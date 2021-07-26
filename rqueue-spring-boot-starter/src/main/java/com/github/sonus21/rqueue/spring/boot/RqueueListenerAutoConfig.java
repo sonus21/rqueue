@@ -48,16 +48,20 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageHandler rqueueMessageHandler() {
-    return simpleRqueueListenerContainerFactory.getRqueueMessageHandler();
+  public RqueueMessageHandler rqueueMessageHandler()
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    return simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
+        getMessageConverterProvider());
   }
 
   @Bean
   @DependsOn("rqueueConfig")
   @ConditionalOnMissingBean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
-      RqueueMessageHandler rqueueMessageHandler) {
+      RqueueMessageHandler rqueueMessageHandler)
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
+    simpleRqueueListenerContainerFactory.setMessageConverterProvider(getMessageConverterProvider());
     return simpleRqueueListenerContainerFactory.createMessageListenerContainer();
   }
 

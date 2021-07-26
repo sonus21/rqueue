@@ -36,6 +36,8 @@ import org.springframework.test.context.TestPropertySource;
       "reservation.request.active=true",
       "mysql.db.name=CustomMessageConverterTest",
       "use.system.redis=false",
+      "monitor.enabled=true",
+      "rqueue.message.converter.provider.class=com.github.sonus21.rqueue.test.util.TestMessageConverterProvider",
     })
 @SpringBootIntegrationTest
 class CustomMessageConverterTest extends BasicListenerTest {

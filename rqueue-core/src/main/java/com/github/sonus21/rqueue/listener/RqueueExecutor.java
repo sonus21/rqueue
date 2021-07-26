@@ -75,7 +75,12 @@ class RqueueExecutor extends MessageContainerBase {
     Message<String> tmpMessage =
         MessageBuilder.createMessage(
             rqueueMessage.getMessage(),
-            buildMessageHeaders(queueDetail.getName(), rqueueMessage, null, null));
+            buildMessageHeaders(
+                queueDetail.getName(),
+                rqueueMessage,
+                null,
+                null,
+                rqueueMessage.getMessageHeaders()));
     MessageMetadata messageMetadata =
         beanProvider.getRqueueMessageMetadataService().getOrCreateMessageMetadata(rqueueMessage);
     Object userMessage = null;
@@ -97,7 +102,6 @@ class RqueueExecutor extends MessageContainerBase {
               messageMetadata,
               rqueueMessage,
               userMessage,
-              null,
               postProcessingHandler);
     }
     this.failureCount = job.getRqueueMessage().getFailureCount();

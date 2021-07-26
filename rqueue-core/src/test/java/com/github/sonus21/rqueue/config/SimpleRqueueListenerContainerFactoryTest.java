@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
@@ -82,7 +83,16 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
 
   @Test
   void getRqueueMessageHandler() {
-    assertNotNull(simpleRqueueListenerContainerFactory.getRqueueMessageHandler());
+    assertNotNull(
+        simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
+            new DefaultMessageConverterProvider()));
+  }
+
+  @Test
+  void getRqueueMessageHandlerNull() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> simpleRqueueListenerContainerFactory.getRqueueMessageHandler(null));
   }
 
   @Test

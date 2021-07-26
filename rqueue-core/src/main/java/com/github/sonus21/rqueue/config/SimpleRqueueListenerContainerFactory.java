@@ -21,6 +21,7 @@ import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.annotation.MessageListener;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -32,7 +33,6 @@ import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -53,8 +53,7 @@ import org.springframework.util.CollectionUtils;
 public class SimpleRqueueListenerContainerFactory {
 
   // The message converter provider that will return a message converter to convert messages to/from
-  private static MessageConverterProvider messageConverterProvider =
-      new MessageConverterProvider() {};
+  private MessageConverterProvider messageConverterProvider = new DefaultMessageConverterProvider();
 
   // Provide task executor, this can be used to provide some additional details like some threads
   // name, etc otherwise a default task executor would be created
@@ -93,7 +92,8 @@ public class SimpleRqueueListenerContainerFactory {
 
   private final List<Middleware> middlewares = new LinkedList<>();
 
-  // Any message headers that should be set, only used for message serialization
+  // Any message headers that should be set, headers are NOT STORED in db so it should not be
+  // changed, same header is used in serialized and deserialization process.
   private MessageHeaders messageHeaders;
 
   // Set priority mode for the pollers
@@ -163,9 +163,12 @@ public class SimpleRqueueListenerContainerFactory {
    *
    * @return RqueueMessageHandler object
    */
-  public RqueueMessageHandler getRqueueMessageHandler() {
+  public RqueueMessageHandler getRqueueMessageHandler(
+      MessageConverterProvider messageConverterProvider) {
     if (rqueueMessageHandler == null) {
-      rqueueMessageHandler = new RqueueMessageHandler(getMessageConverter(), inspectAllBean);
+      notNull(messageConverterProvider, "messageConverterProvider can not be null");
+      rqueueMessageHandler =
+          new RqueueMessageHandler(messageConverterProvider.getConverter(), inspectAllBean);
     }
     return rqueueMessageHandler;
   }
@@ -229,15 +232,6 @@ public class SimpleRqueueListenerContainerFactory {
     this.maxNumWorkers = maxNumWorkers;
   }
 
-  /**
-   * @return the message converters
-   * @deprecated use {@link #getMessageConverter()}
-   */
-  @Deprecated
-  public List<MessageConverter> getMessageConverters() {
-    return Collections.singletonList(getMessageConverter());
-  }
-
   /** @return the message converter */
   public MessageConverter getMessageConverter() {
     return messageConverterProvider.getConverter();
@@ -250,10 +244,9 @@ public class SimpleRqueueListenerContainerFactory {
    *
    * @param messageConverterProvider the message converter
    */
-  public static void setMessageConverterProvider(
-      MessageConverterProvider messageConverterProvider) {
+  public void setMessageConverterProvider(MessageConverterProvider messageConverterProvider) {
     notNull(messageConverterProvider, "message converter provider must not be null");
-    SimpleRqueueListenerContainerFactory.messageConverterProvider = messageConverterProvider;
+    this.messageConverterProvider = messageConverterProvider;
   }
 
   /** @return get Redis connection factor */
@@ -295,7 +288,6 @@ public class SimpleRqueueListenerContainerFactory {
    * @return an object of {@link RqueueMessageListenerContainer} object
    */
   public RqueueMessageListenerContainer createMessageListenerContainer() {
-    notNull(getRqueueMessageHandler(), "rqueueMessageHandler must not be null");
     notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
     if (rqueueMessageTemplate == null) {
       rqueueMessageTemplate =
@@ -303,7 +295,8 @@ public class SimpleRqueueListenerContainerFactory {
               getRedisConnectionFactory(), getReactiveRedisConnectionFactory());
     }
     RqueueMessageListenerContainer messageListenerContainer =
-        new RqueueMessageListenerContainer(getRqueueMessageHandler(), rqueueMessageTemplate);
+        new RqueueMessageListenerContainer(
+            getRqueueMessageHandler(messageConverterProvider), rqueueMessageTemplate);
     messageListenerContainer.setAutoStartup(autoStartup);
     if (taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(taskExecutor);
@@ -338,6 +331,9 @@ public class SimpleRqueueListenerContainerFactory {
     }
     if (!CollectionUtils.isEmpty(getMiddlewares())) {
       messageListenerContainer.setMiddlewares(getMiddlewares());
+    }
+    if (messageHeaders != null) {
+      messageListenerContainer.setMessageHeaders(messageHeaders);
     }
     return messageListenerContainer;
   }

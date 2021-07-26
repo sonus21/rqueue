@@ -114,7 +114,6 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             null,
-            null,
             null);
     return new RqueueExecutionEvent(job);
   }

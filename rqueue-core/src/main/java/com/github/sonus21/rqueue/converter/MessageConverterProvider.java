@@ -49,7 +49,5 @@ public interface MessageConverterProvider {
    *
    * @return MessageConverter object
    */
-  default MessageConverter getConverter() {
-    return new DefaultRqueueMessageConverter();
-  }
+  MessageConverter getConverter();
 }

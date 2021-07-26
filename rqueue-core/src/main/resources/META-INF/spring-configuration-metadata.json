@@ -234,6 +234,13 @@
       "defaultValue": "BOTH"
     },
     {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.message.converter.provider.class",
+      "description": "Rqueue Message Converter Provider",
+      "type": "java.lang.String",
+      "defaultValue": "com.github.sonus21.rqueue.converter.MessageConverterProvider"
+    },
+    {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
       "name": "rqueue.scheduler.enabled",
       "description": "Scheduler is enabled or not",

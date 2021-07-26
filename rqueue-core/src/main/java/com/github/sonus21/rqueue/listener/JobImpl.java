@@ -65,7 +65,6 @@ public class JobImpl implements Job {
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
       Object userMessage,
-      Throwable exception,
       PostProcessingHandler postProcessingHandler) {
     this.rqueueJobDao = rqueueJobDao;
     this.messageMetadataService = messageMetadataService;
@@ -74,8 +73,7 @@ public class JobImpl implements Job {
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
     this.postProcessingHandler = postProcessingHandler;
-    this.rqueueJob =
-        new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
+    this.rqueueJob = new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, null);
     this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
     this.isPeriodicJob = rqueueMessage.isPeriodicTask();
     if (rqueueConfig.isJobEnabled()) {

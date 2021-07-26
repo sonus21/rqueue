@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.event.Level;
+import org.springframework.messaging.MessageHeaders;
 
 class StrictPriorityPoller extends RqueueMessagePoller {
   private final Map<String, QueueDetail> queueNameToDetail;
@@ -48,7 +49,8 @@ class StrictPriorityPoller extends RqueueMessagePoller {
       List<Middleware> middlewares,
       long pollingInterval,
       long backoffTime,
-      PostProcessingHandler postProcessingHandler) {
+      PostProcessingHandler postProcessingHandler,
+      MessageHeaders messageHeaders) {
     super(
         "Strict-" + groupName,
         rqueueBeanProvider,
@@ -56,7 +58,8 @@ class StrictPriorityPoller extends RqueueMessagePoller {
         middlewares,
         pollingInterval,
         backoffTime,
-        postProcessingHandler);
+        postProcessingHandler,
+        messageHeaders);
     List<QueueDetail> queueDetailList = new ArrayList<>(queueDetails);
     queueDetailList.sort(
         (o1, o2) ->
