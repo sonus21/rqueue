@@ -32,7 +32,7 @@ import org.springframework.messaging.support.GenericMessage;
  * JsonMessageConverter tries to convert to JSON and from JSON to object.
  *
  * <p>Message converter relies on target class information to deserialize JSON to object. If it
- * finds target class is null then it returns the JSON it self.
+ * finds target class is null then it returns the null.
  *
  * <p>Target class is null till the time method arguments are not resolved, once method arguments
  * are resolved then it will become non-null.
@@ -54,31 +54,30 @@ public class JsonMessageConverter implements MessageConverter {
 
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass) {
-    log.info("Message: {} TargetClass: {}", message.getPayload(), targetClass);
+    log.trace("Message: {} TargetClass: {}", message.getPayload(), targetClass);
     try {
       String payload = (String) message.getPayload();
       if (targetClass == null) {
-        return payload;
+        return null;
       }
       if (SerializationUtils.isJson(payload)) {
         return objectMapper.readValue(payload, targetClass);
       }
       return null;
     } catch (JsonProcessingException | ClassCastException e) {
-      log.warn("Deserialization of message {} failed", message, e);
+      log.debug("Deserialization of message {} failed", message, e);
       return null;
     }
   }
 
   @Override
   public Message<?> toMessage(Object payload, MessageHeaders headers) {
-    log.debug("Payload: {} Headers: {}", payload, headers);
+    log.trace("Payload: {} Headers: {}", payload, headers);
     try {
       String msg = objectMapper.writeValueAsString(payload);
-      log.info("Serialized data {}", msg);
       return new GenericMessage<>(msg);
     } catch (JsonProcessingException e) {
-      log.warn("Serialisation failed, Payload: {}", payload, e);
+      log.debug("Serialisation failed, Payload: {}", payload, e);
       return null;
     }
   }

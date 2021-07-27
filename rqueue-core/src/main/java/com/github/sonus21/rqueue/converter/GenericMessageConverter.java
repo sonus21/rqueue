@@ -66,7 +66,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
    */
   @Override
   public Message<?> toMessage(Object payload, MessageHeaders headers) {
-    log.debug("Payload: {} headers: {}", payload, headers);
+    log.trace("Payload: {} headers: {}", payload, headers);
     String message = smartMessageSerDes.serialize(payload);
     if (message == null) {
       return null;
@@ -76,13 +76,13 @@ public class GenericMessageConverter implements SmartMessageConverter {
 
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass, Object conversionHint) {
-    log.debug("Message: {} class: {} hint: {}", message, targetClass, conversionHint);
+    log.trace("Message: {} class: {} hint: {}", message, targetClass, conversionHint);
     return fromMessage(message, targetClass);
   }
 
   @Override
   public Message<?> toMessage(Object payload, MessageHeaders headers, Object conversionHint) {
-    log.debug("Payload: {} headers: {} hint: {}", payload, headers, conversionHint);
+    log.trace("Payload: {} headers: {} hint: {}", payload, headers, conversionHint);
     return toMessage(payload, headers);
   }
   /**
@@ -98,7 +98,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
    */
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass) {
-    log.debug("Message: {} class: {}", message, targetClass);
+    log.trace("Message: {} class: {}", message, targetClass);
     String payload;
     try {
       payload = (String) message.getPayload();
@@ -182,7 +182,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
           return objectMapper.readValue(msg.msg, type);
         }
       } catch (Exception e) {
-        log.warn("Deserialization of message {} failed", payload, e);
+        log.debug("Deserialization of message {} failed", payload, e);
       }
       return null;
     }
@@ -194,7 +194,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
       try {
         return objectMapper.readValue(payload, clazz);
       } catch (Exception e) {
-        log.warn("Deserialization of message {} failed", new String(payload), e);
+        log.debug("Deserialization of message {} failed", new String(payload), e);
       }
       return null;
     }
@@ -209,7 +209,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
         Msg message = new Msg(msg, name);
         return objectMapper.writeValueAsString(message);
       } catch (JsonProcessingException e) {
-        log.warn("Serialisation failed", e);
+        log.debug("Serialisation failed", e);
         return null;
       }
     }
