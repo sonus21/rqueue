@@ -16,10 +16,21 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.MessageConverterApplication;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
+import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.SerializationUtils;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,5 +55,39 @@ class CustomMessageConverterTest extends BasicListenerTest {
   @Test
   void verifyListenerIsWorking() throws TimedOutException {
     verifySimpleTaskExecution();
+  }
+
+  @Test
+  void verifyMessageStoredInDb() throws TimedOutException, JsonProcessingException {
+    rqueueEndpointManager.pauseUnpauseQueue(jobQueue, true);
+    TimeoutUtils.sleep(Constants.ONE_MILLI);
+    List<Job> jobs = new ArrayList<>();
+    enqueue(
+        jobQueue,
+        (i) -> {
+          Job job = Job.newInstance();
+          jobs.add(job);
+          return job;
+        },
+        10,
+        false);
+    List<RqueueMessage> rqueueMessageList = rqueueMessageManager.getAllRqueueMessage(jobQueue);
+    assertEquals(jobs.size(), rqueueMessageList.size());
+    for (RqueueMessage message : rqueueMessageList) {
+      String rawMessage = message.getMessage();
+      assertTrue(SerializationUtils.isJson(rawMessage));
+      Job job = objectMapper.readValue(rawMessage, Job.class);
+      assertTrue(job.isValid());
+      boolean found = false;
+      for (Job j : jobs) {
+        if (j.equals(job)) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue(found);
+    }
+    rqueueEndpointManager.pauseUnpauseQueue(jobQueue, false);
+    deleteAllMessages(jobQueue);
   }
 }

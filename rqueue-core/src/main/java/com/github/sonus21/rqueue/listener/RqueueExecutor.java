@@ -71,7 +71,7 @@ class RqueueExecutor extends MessageContainerBase {
     this.queueDetail = queueDetail;
   }
 
-  private void init() {
+  private Object getUserMessage() {
     Message<String> tmpMessage =
         MessageBuilder.createMessage(
             rqueueMessage.getMessage(),
@@ -81,29 +81,30 @@ class RqueueExecutor extends MessageContainerBase {
                 null,
                 null,
                 rqueueMessage.getMessageHeaders()));
-    MessageMetadata messageMetadata =
-        beanProvider.getRqueueMessageMetadataService().getOrCreateMessageMetadata(rqueueMessage);
-    Object userMessage = null;
     // here error can occur when message can not be deserialized without target class information
     try {
-      userMessage =
-          RqueueMessageUtils.convertMessageToObject(
-              tmpMessage, beanProvider.getRqueueMessageHandler().getMessageConverter());
+      return RqueueMessageUtils.convertMessageToObject(
+          tmpMessage, beanProvider.getRqueueMessageHandler().getMessageConverter());
     } catch (Exception e) {
       log(Level.DEBUG, "Unable to convert message {}", e, rqueueMessage.getMessage());
-    } finally {
-      this.job =
-          new JobImpl(
-              beanProvider.getRqueueConfig(),
-              beanProvider.getRqueueMessageMetadataService(),
-              beanProvider.getRqueueJobDao(),
-              beanProvider.getRqueueMessageTemplate(),
-              queueDetail,
-              messageMetadata,
-              rqueueMessage,
-              userMessage,
-              postProcessingHandler);
     }
+    return rqueueMessage.getMessage();
+  }
+
+  private void init() {
+    MessageMetadata messageMetadata =
+        beanProvider.getRqueueMessageMetadataService().getOrCreateMessageMetadata(rqueueMessage);
+    this.job =
+        new JobImpl(
+            beanProvider.getRqueueConfig(),
+            beanProvider.getRqueueMessageMetadataService(),
+            beanProvider.getRqueueJobDao(),
+            beanProvider.getRqueueMessageTemplate(),
+            queueDetail,
+            messageMetadata,
+            rqueueMessage,
+            getUserMessage(),
+            postProcessingHandler);
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }
 
