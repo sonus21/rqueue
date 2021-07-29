@@ -40,8 +40,7 @@ public class RqueueWebConfig {
 
   /**
    * Whether queue stats should be collected or not. When this flag is disabled, metric data won't
-   * be available in the dashboard. This consumes heavy CPU resources as well due to statistics
-   * aggregation and computations.
+   * be available in the dashboard.
    */
   @Value("${rqueue.web.collect.listener.stats:true}")
   private boolean collectListenerStats;
@@ -57,15 +56,15 @@ public class RqueueWebConfig {
   @Value("${rqueue.web.collect.statistic.aggregate.event.count:500}")
   private int aggregateEventCount;
 
-  // controls how to long to wait before doping aggregation
+  // controls how long to wait before doing aggregation
   @Value("${rqueue.web.collect.statistic.aggregate.event.wait.time:60}")
   private int aggregateEventWaitTimeInSecond;
 
-  // controls how long to wait for the running threads to complete the execution
+  // controls how long, application should wait for the running threads to complete the execution
   @Value("${rqueue.web.collect.statistic.aggregate.shutdown.wait.time:500}")
   private int aggregateShutdownWaitTime;
 
-  // how long  we should wait for the lock duration
+  // lock duration for aggregate job, acquired  per queue
   @Value("${rqueue.web.collect.statistic.aggregate.event.lock.duration:500}")
   private int aggregateEventLockDurationInMs;
 }

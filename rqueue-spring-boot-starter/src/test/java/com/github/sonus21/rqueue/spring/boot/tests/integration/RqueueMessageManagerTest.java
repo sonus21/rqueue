@@ -29,11 +29,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.CollectionUtils;
 
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:8014"})
+@TestPropertySource(
+    properties = {
+      "use.system.redis=false",
+      "spring.redis.port=8014",
+      "monitor.enabled=true",
+    })
 @SpringBootIntegrationTest
 class RqueueMessageManagerTest extends SpringTestBase {
   @Test
@@ -44,9 +50,15 @@ class RqueueMessageManagerTest extends SpringTestBase {
     enqueueIn(Notification.newInstance(), queueDetail.getProcessingQueueName(), 1000_000);
     rqueueMessageManager.deleteAllMessages(notificationQueue);
     TimeoutUtils.waitFor(
-        () -> getMessageCount(notificationQueue) == 0, 15_000L, "all messages to be deleted");
+        () -> getMessageCount(notificationQueue) == 0,
+        30_000L,
+        500L,
+        "all messages to be deleted",
+        () -> {});
     TimeoutUtils.waitFor(
-        () -> stringRqueueRedisTemplate.getRedisTemplate().keys("__rq::m-mdata::*").isEmpty(),
+        () ->
+            CollectionUtils.isEmpty(
+                stringRqueueRedisTemplate.getRedisTemplate().keys("__rq::m-mdata::*")),
         15_000L,
         "metadata deletion");
   }
