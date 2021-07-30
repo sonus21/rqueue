@@ -173,7 +173,7 @@ integration_test_steps: &integration_test_steps
   steps:
     - *attach_workspace
     - *redis_dep
-    - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly
+    - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
     - *persist_to_workspace
     - *copy_logs
     - *copy_test_results
