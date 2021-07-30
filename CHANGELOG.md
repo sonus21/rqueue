@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-### [2.9.0] - TBD
+### [2.9.0] - 30-Jul-2021
 ### Fixes
 * Option to add rqueue web url prefix, the prefix is configured from application.properties file using
 `rqueue.web.url.prefix=/my-application/`, now rqueue dashboard would be served
