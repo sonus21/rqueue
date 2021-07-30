@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -43,6 +44,7 @@ import org.springframework.util.CollectionUtils;
 @SpringBootIntegrationTest
 class RqueueMessageManagerTest extends SpringTestBase {
   @Test
+  @Tag("redisCluster")
   void deleteAll() throws TimedOutException {
     QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);
     enqueue(notificationQueue, Notification.newInstance());
