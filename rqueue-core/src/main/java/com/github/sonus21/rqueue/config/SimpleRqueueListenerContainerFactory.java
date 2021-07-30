@@ -239,6 +239,7 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Message converter must be configured before calling this method.
    *
+   * @throws IllegalAccessException when messageConverterProvider is null
    * @return the message converter object
    */
   public MessageConverter getMessageConverter() throws IllegalAccessException {

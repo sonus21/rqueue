@@ -101,10 +101,15 @@ public interface Job {
    * when class information is missing. In such cases only raw message is available but application
    * can add a middleware to deserialize such messages and set in this so that other middleware(s)
    * can use the correct message object. Some use cases could be
-   * <li>Message was serialized to JSON without class information
-   * <li>Message was serialized to XML without class information
-   * <li>Message was serialized to Protobuf
-   * <li>Message was serialized to MessagePack
+   *
+   * <ul>
+   *   <li>Message was serialized to JSON without class information
+   *   <li>Message was serialized to XML without class information
+   *   <li>Message was serialized to Protobuf
+   *   <li>Message was serialized to MessagePack
+   * </ul>
+   *
+   * @param message message object
    */
   void setMessage(Object message);
   /**
