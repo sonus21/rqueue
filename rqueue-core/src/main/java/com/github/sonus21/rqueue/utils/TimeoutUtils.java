@@ -38,7 +38,7 @@ public final class TimeoutUtils {
   public static void waitFor(
       BooleanSupplier callback, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
-    waitFor(callback, waitTimeInMilliSeconds, description, () -> {});
+    waitFor(callback, waitTimeInMilliSeconds, SLEEP_TIME, description, () -> {});
   }
 
   public static void waitFor(BooleanSupplier callback, String description)
@@ -48,7 +48,7 @@ public final class TimeoutUtils {
 
   public static void waitFor(BooleanSupplier callback, String description, Runnable postmortem)
       throws TimedOutException {
-    waitFor(callback, EXECUTION_TIME, description, postmortem);
+    waitFor(callback, EXECUTION_TIME, SLEEP_TIME, description, postmortem);
   }
 
   public static void waitFor(
@@ -57,12 +57,22 @@ public final class TimeoutUtils {
       String description,
       Runnable postmortem)
       throws TimedOutException {
+    waitFor(callback, waitTimeInMilliSeconds, SLEEP_TIME, description, postmortem);
+  }
+
+  public static void waitFor(
+      BooleanSupplier callback,
+      long waitTimeInMilliSeconds,
+      long sleepDuration,
+      String description,
+      Runnable postmortem)
+      throws TimedOutException {
     long endTime = System.currentTimeMillis() + waitTimeInMilliSeconds;
     do {
       if (Boolean.TRUE.equals(callback.getAsBoolean())) {
         return;
       }
-      sleep(SLEEP_TIME);
+      sleep(sleepDuration);
     } while (System.currentTimeMillis() < endTime);
     try {
       postmortem.run();

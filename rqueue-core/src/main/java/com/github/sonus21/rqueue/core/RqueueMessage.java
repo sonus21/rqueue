@@ -25,6 +25,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.messaging.MessageHeaders;
 
 /** Internal message for Rqueue */
 @Getter
@@ -64,6 +65,8 @@ public class RqueueMessage extends SerializableBase {
 
   // period of this task, if this is a periodic task.
   private long period;
+
+  @ToString.Exclude @JsonIgnore private MessageHeaders messageHeaders;
 
   @JsonIgnore
   public RqueueMessage updateReEnqueuedAt() {

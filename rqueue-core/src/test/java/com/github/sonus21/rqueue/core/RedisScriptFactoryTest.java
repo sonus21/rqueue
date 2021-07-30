@@ -157,11 +157,11 @@ class RedisScriptFactoryTest extends TestBase {
       rqueueMessageList.add(rqueueMessage);
     }
     List<RqueueMessage> rqueueMessages =
-        template.popN(queue, processingQueueName, processingChannel, 5_000L, 20);
+        template.pop(queue, processingQueueName, processingChannel, 5_000L, 20);
     List<RqueueMessage> rqueueMessages2 =
-        template.popN(queue, processingQueueName, processingChannel, 5_000L, 20);
+        template.pop(queue, processingQueueName, processingChannel, 5_000L, 20);
     List<RqueueMessage> rqueueMessages3 =
-        template.popN(queue, processingQueueName, processingChannel, 5_000L, 20);
+        template.pop(queue, processingQueueName, processingChannel, 5_000L, 20);
     assertEquals(20, rqueueMessages.size());
     assertTrue(rqueueMessages.containsAll(rqueueMessageList.subList(0, 20)));
     assertEquals(20, rqueueMessages2.size());
@@ -174,7 +174,7 @@ class RedisScriptFactoryTest extends TestBase {
 
     // non exist queue
     rqueueMessages =
-        template.popN(queue + "404", processingQueueName, processingChannel, 5_000L, 20);
+        template.pop(queue + "404", processingQueueName, processingChannel, 5_000L, 20);
     assertEquals(0, rqueueMessages.size());
   }
 }

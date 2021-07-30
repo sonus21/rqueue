@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Collections;
 import java.util.List;
 import org.slf4j.event.Level;
+import org.springframework.messaging.MessageHeaders;
 
 class DefaultRqueuePoller extends RqueueMessagePoller {
   private final QueueDetail queueDetail;
@@ -37,7 +38,8 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
       List<Middleware> middlewares,
       long pollingInterval,
       long backoffTime,
-      PostProcessingHandler postProcessingHandler) {
+      PostProcessingHandler postProcessingHandler,
+      MessageHeaders messageHeaders) {
     super(
         queueDetail.getName(),
         rqueueBeanProvider,
@@ -45,7 +47,8 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
         middlewares,
         pollingInterval,
         backoffTime,
-        postProcessingHandler);
+        postProcessingHandler,
+        messageHeaders);
     this.queueDetail = queueDetail;
     this.queueThreadPool = queueThreadPool;
     this.queues = Collections.singletonList(queueDetail.getName());

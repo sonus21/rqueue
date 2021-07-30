@@ -19,16 +19,19 @@ package com.github.sonus21.rqueue.spring.boot.tests.unit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.converter.MessageConverterProvider;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
-import java.util.Collections;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,53 +54,77 @@ class RqueueListenerAutoConfigTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
+    FieldUtils.writeField(
+        rqueueMessageAutoConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
   }
 
   @Test
-  void rqueueMessageHandlerDefaultCreation() {
+  void rqueueMessageHandlerDefaultCreation()
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
     assertNotNull(rqueueMessageAutoConfig.rqueueMessageHandler());
   }
 
   @Test
-  void rqueueMessageHandlerReused() throws IllegalAccessException {
+  void rqueueMessageHandlerReused()
+      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
+    FieldUtils.writeField(
+        messageAutoConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertEquals(
         rqueueMessageHandler.hashCode(), messageAutoConfig.rqueueMessageHandler().hashCode());
   }
 
   @Test
-  void rqueueMessageListenerContainer() throws IllegalAccessException {
+  void rqueueMessageListenerContainer()
+      throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
+    FieldUtils.writeField(
+        messageAutoConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
-    assertEquals(factory.getRqueueMessageHandler().hashCode(), rqueueMessageHandler.hashCode());
+    assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
   }
 
   @Test
   void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRqueueMessageTemplate(messageTemplate);
+    doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));
+    assertNotNull(messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
   }
 
   @Test
   void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
-    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     MessageConverter messageConverter = new GenericMessageConverter();
+    MessageConverterProvider messageConverterProvider = () -> messageConverter;
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(messageConverterProvider);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
-    factory.setMessageConverters(Collections.singletonList(messageConverter));
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageSender(messageTemplate));
-    RqueueMessageSender messageSender = messageAutoConfig.rqueueMessageSender(messageTemplate);
+    doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
+    assertNotNull(messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate));
+    RqueueMessageSender messageSender =
+        messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate);
     boolean messageConverterIsConfigured = false;
     for (MessageConverter converter : messageSender.getMessageConverters()) {
       messageConverterIsConfigured =

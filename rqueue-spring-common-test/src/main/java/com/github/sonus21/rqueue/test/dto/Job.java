@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.test.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.UUID;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
@@ -43,6 +45,11 @@ public class Job extends BaseQueueMessage {
     String id = UUID.randomUUID().toString();
     String type = types[typeId].name();
     return new Job(id, type);
+  }
+
+  @JsonIgnore
+  public boolean isValid() {
+    return !StringUtils.isEmpty(getId()) && !StringUtils.isEmpty(getType());
   }
 
   enum Type {

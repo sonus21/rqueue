@@ -92,7 +92,6 @@ class JobImplTest extends TestBase {
         messageMetadata,
         rqueueMessage,
         userMessage,
-        null,
         null);
     verify(rqueueJobDao, times(1))
         .createJob(any(), eq(Duration.ofMillis(2 * queueDetail.getVisibilityTimeout())));
@@ -110,7 +109,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     assertNotNull(job.getId());
   }
@@ -127,7 +125,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     assertEquals(rqueueMessage, job.getRqueueMessage());
   }
@@ -144,7 +141,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     job.execute();
     job.checkIn("test..");
@@ -162,7 +158,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     job2.execute();
     try {
@@ -187,7 +182,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     assertEquals(userMessage, job.getMessage());
   }
@@ -204,7 +198,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     assertEquals(messageMetadata, job.getMessageMetadata());
   }
@@ -221,27 +214,8 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     assertEquals(JobStatus.CREATED, job.getStatus());
-  }
-
-  @Test
-  void getException() {
-    Exception exception = new Exception("Message");
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            exception,
-            null);
-    assertEquals(exception, job.getException());
   }
 
   @Test
@@ -256,7 +230,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     assertEquals(0, job.getExecutionTime());
   }
@@ -273,7 +246,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     assertEquals(queueDetail, job.getQueueDetail());
   }
@@ -292,7 +264,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     job.setMessageMetadata(newMeta);
     assertEquals(newMeta, job.getMessageMetadata());
@@ -312,7 +283,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     job.updateMessageStatus(MessageStatus.PROCESSING);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
@@ -334,7 +304,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     Execution execution = job.execute();
     verify(rqueueJobDao, times(1)).createJob(any(), any());
@@ -357,7 +326,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     Execution execution = job.execute();
     job.updateExecutionStatus(ExecutionStatus.FAILED, exception);
@@ -383,7 +351,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     job.execute();
     job.updateExecutionTime(rqueueMessage, MessageStatus.SUCCESSFUL);
@@ -404,7 +371,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     job.execute();
     doReturn(-10L)
@@ -436,7 +402,6 @@ class JobImplTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             userMessage,
-            null,
             null);
     job.execute();
     doReturn(true)

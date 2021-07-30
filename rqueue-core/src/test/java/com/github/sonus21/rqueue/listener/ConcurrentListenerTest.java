@@ -134,7 +134,7 @@ class ConcurrentListenerTest extends TestBase {
               return rqueueMessageList;
             })
         .when(rqueueMessageTemplate)
-        .popN(
+        .pop(
             eq(fastQueue),
             eq(fastProcessingQueue),
             eq(fastProcessingQueueChannel),

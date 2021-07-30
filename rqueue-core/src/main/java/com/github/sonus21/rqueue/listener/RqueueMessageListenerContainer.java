@@ -58,6 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.Lifecycle;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -102,6 +103,7 @@ public class RqueueMessageListenerContainer
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
   List<Middleware> middlewares;
+  private MessageHeaders messageHeaders;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -410,7 +412,7 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void start() {
-    log.info("Starting Rqueue Message container");
+    log.info("Starting Rqueue Message container {}", RqueueConfig.getBrokerId());
     synchronized (lifecycleMgr) {
       running = true;
       doStart();
@@ -482,7 +484,8 @@ public class RqueueMessageListenerContainer
                   getMiddleWares(),
                   pollingInterval,
                   backOffTime,
-                  postProcessingHandler));
+                  postProcessingHandler,
+                  getMessageHeaders()));
     } else {
       future =
           taskExecutor.submit(
@@ -495,7 +498,8 @@ public class RqueueMessageListenerContainer
                   getMiddleWares(),
                   pollingInterval,
                   backOffTime,
-                  postProcessingHandler));
+                  postProcessingHandler,
+                  getMessageHeaders()));
     }
     scheduledFutureByQueue.put(groupName, future);
   }
@@ -517,7 +521,8 @@ public class RqueueMessageListenerContainer
             getMiddleWares(),
             pollingInterval,
             backOffTime,
-            postProcessingHandler);
+            postProcessingHandler,
+            getMessageHeaders());
     Future<?> future = getTaskExecutor().submit(messagePoller);
     scheduledFutureByQueue.put(queueName, future);
   }
@@ -528,7 +533,7 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void stop() {
-    log.info("Stopping Rqueue Message container");
+    log.info("Stopping Rqueue Message container {}", RqueueConfig.getBrokerId());
     synchronized (lifecycleMgr) {
       running = false;
       rqueueBeanProvider
@@ -718,5 +723,13 @@ public class RqueueMessageListenerContainer
 
   public List<Middleware> getMiddleWares() {
     return middlewares;
+  }
+
+  public void setMessageHeaders(MessageHeaders messageHeaders) {
+    this.messageHeaders = messageHeaders;
+  }
+
+  public MessageHeaders getMessageHeaders() {
+    return messageHeaders;
   }
 }

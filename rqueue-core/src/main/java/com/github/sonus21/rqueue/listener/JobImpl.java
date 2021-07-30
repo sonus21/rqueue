@@ -49,7 +49,7 @@ public class JobImpl implements Job {
   private final RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
-  private final Object userMessage;
+  private Object userMessage;
   private final PostProcessingHandler postProcessingHandler;
   private final boolean isPeriodicJob;
   private Context context = DefaultContext.EMPTY;
@@ -65,7 +65,6 @@ public class JobImpl implements Job {
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
       Object userMessage,
-      Throwable exception,
       PostProcessingHandler postProcessingHandler) {
     this.rqueueJobDao = rqueueJobDao;
     this.messageMetadataService = messageMetadataService;
@@ -74,8 +73,7 @@ public class JobImpl implements Job {
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
     this.postProcessingHandler = postProcessingHandler;
-    this.rqueueJob =
-        new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, exception);
+    this.rqueueJob = new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, null);
     this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
     this.isPeriodicJob = rqueueMessage.isPeriodicTask();
     if (rqueueConfig.isJobEnabled()) {
@@ -120,6 +118,11 @@ public class JobImpl implements Job {
   }
 
   @Override
+  public String getRawMessage() {
+    return getRqueueMessage().getMessage();
+  }
+
+  @Override
   public void checkIn(Serializable message) {
     if (isPeriodicJob) {
       throw new UnsupportedOperationException("CheckIn is not supported for periodic job");
@@ -147,6 +150,11 @@ public class JobImpl implements Job {
         queueDetail.getProcessingQueueName(),
         rqueueJob.getRqueueMessage(),
         deltaDuration.toMillis());
+  }
+
+  @Override
+  public void setMessage(Object message) {
+    this.userMessage = message;
   }
 
   @Override

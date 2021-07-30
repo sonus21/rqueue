@@ -41,7 +41,12 @@ public class HandlerMiddleware implements Middleware {
     Message<?> message =
         MessageBuilder.createMessage(
             rqueueMessage.getMessage(),
-            buildMessageHeaders(job.getQueueDetail().getName(), rqueueMessage, job, execution));
+            buildMessageHeaders(
+                job.getQueueDetail().getName(),
+                rqueueMessage,
+                job,
+                execution,
+                rqueueMessage.getMessageHeaders()));
     rqueueMessageHandler.handleMessage(message);
   }
 }

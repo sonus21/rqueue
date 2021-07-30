@@ -18,19 +18,18 @@ package com.github.sonus21.rqueue.spring.tests.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.RqueueListenerConfig;
 import com.github.sonus21.rqueue.spring.tests.SpringUnitTest;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +60,12 @@ class RqueueMessageConfigTest extends TestBase {
   }
 
   @Test
-  void rqueueMessageHandlerDefaultCreation() {
+  void rqueueMessageHandlerDefaultCreation() throws IllegalAccessException {
+    FieldUtils.writeField(
+        rqueueMessageConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     assertNotNull(rqueueMessageConfig.rqueueMessageHandler());
   }
 
@@ -70,6 +74,11 @@ class RqueueMessageConfigTest extends TestBase {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageHandler(rqueueMessageHandler);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
+    FieldUtils.writeField(
+        messageConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertEquals(rqueueMessageHandler.hashCode(), messageConfig.rqueueMessageHandler().hashCode());
   }
@@ -77,38 +86,27 @@ class RqueueMessageConfigTest extends TestBase {
   @Test
   void rqueueMessageListenerContainer() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRedisConnectionFactory(redisConnectionFactory);
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
+    FieldUtils.writeField(
+        messageConfig,
+        "messageConverterProviderClass",
+        "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
+        true);
     messageConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
-    assertEquals(factory.getRqueueMessageHandler().hashCode(), rqueueMessageHandler.hashCode());
+    assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
   }
 
   @Test
   void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRqueueMessageTemplate(rqueueMessageTemplate);
+    doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageConfig.rqueueMessageSender(rqueueMessageTemplate));
+    assertNotNull(messageConfig.rqueueMessageSender(rqueueMessageHandler, rqueueMessageTemplate));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), rqueueMessageTemplate.hashCode());
-  }
-
-  @Test
-  void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
-    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
-    MessageConverter messageConverter = new DefaultRqueueMessageConverter();
-    RqueueListenerConfig messageConfig = new RqueueListenerConfig();
-    factory.setMessageConverters(Collections.singletonList(messageConverter));
-    FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    factory.setRedisConnectionFactory(redisConnectionFactory);
-    assertNotNull(messageConfig.rqueueMessageSender(rqueueMessageTemplate));
-    RqueueMessageSender messageSender = messageConfig.rqueueMessageSender(rqueueMessageTemplate);
-    boolean messageConverterIsConfigured = false;
-    for (MessageConverter converter : messageSender.getMessageConverters()) {
-      messageConverterIsConfigured =
-          messageConverterIsConfigured || converter.hashCode() == messageConverter.hashCode();
-    }
-    assertTrue(messageConverterIsConfigured);
   }
 }

@@ -56,6 +56,13 @@ public interface Job {
   RqueueMessage getRqueueMessage();
 
   /**
+   * Get raw message that was enqueued, it's serialized string of the enqueued object
+   *
+   * @return string never null
+   */
+  String getRawMessage();
+
+  /**
    * Checkin allows you to display a message for long running tasks, so that you can see the
    * progress.
    *
@@ -89,6 +96,22 @@ public interface Job {
    */
   boolean updateVisibilityTimeout(Duration deltaDuration);
 
+  /**
+   * There are times when message can not be deserialized from the string to Object, this can happen
+   * when class information is missing. In such cases only raw message is available but application
+   * can add a middleware to deserialize such messages and set in this so that other middleware(s)
+   * can use the correct message object. Some use cases could be
+   *
+   * <ul>
+   *   <li>Message was serialized to JSON without class information
+   *   <li>Message was serialized to XML without class information
+   *   <li>Message was serialized to Protobuf
+   *   <li>Message was serialized to MessagePack
+   * </ul>
+   *
+   * @param message message object
+   */
+  void setMessage(Object message);
   /**
    * A message that was enqueued
    *

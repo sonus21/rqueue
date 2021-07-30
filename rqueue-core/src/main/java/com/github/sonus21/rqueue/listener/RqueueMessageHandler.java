@@ -31,6 +31,7 @@ import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.RetryableRunnable;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
+import com.google.common.annotations.VisibleForTesting;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,10 +88,6 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   private final MultiValueMap<MappingInformation, HandlerMethodWithPrimary> handlerMethods =
       new LinkedMultiValueMap<>(64);
 
-  public RqueueMessageHandler() {
-    this(new DefaultRqueueMessageConverter(), true);
-  }
-
   public RqueueMessageHandler(final MessageConverter messageConverter, boolean inspectAllBean) {
     notNull(messageConverter, "messageConverter cannot be null");
     this.messageConverter = messageConverter;
@@ -98,6 +95,17 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     this.conversionService = new DefaultFormattingConversionService();
     this.asyncTaskExecutor =
         ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "multiMessageExecutor-", -1, -1, 0);
+  }
+
+  /**
+   * This constructor is only used for testing purpose. Do not use in application code
+   *
+   * @deprecated consider using constructor with args
+   */
+  @Deprecated
+  @VisibleForTesting
+  public RqueueMessageHandler() {
+    this(new DefaultRqueueMessageConverter());
   }
 
   public RqueueMessageHandler(final MessageConverter messageConverter) {

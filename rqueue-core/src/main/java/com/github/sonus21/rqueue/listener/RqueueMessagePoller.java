@@ -26,6 +26,7 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.core.task.TaskRejectedException;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.CollectionUtils;
 
 abstract class RqueueMessagePoller extends MessageContainerBase {
@@ -34,6 +35,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
   final long pollingInterval;
   final long backoffTime;
   private final RqueueBeanProvider rqueueBeanProvider;
+  private final MessageHeaders messageHeaders;
   List<String> queues;
 
   RqueueMessagePoller(
@@ -43,19 +45,21 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
       List<Middleware> middlewares,
       long pollingInterval,
       long backoffTime,
-      PostProcessingHandler postProcessingHandler) {
+      PostProcessingHandler postProcessingHandler,
+      MessageHeaders messageHeaders) {
     super(LoggerFactory.getLogger(RqueueMessagePoller.class), groupName, queueStateMgr);
     this.postProcessingHandler = postProcessingHandler;
     this.middlewares = middlewares;
     this.rqueueBeanProvider = rqueueBeanProvider;
     this.pollingInterval = pollingInterval;
     this.backoffTime = backoffTime;
+    this.messageHeaders = messageHeaders;
   }
 
   private List<RqueueMessage> getMessages(QueueDetail queueDetail, int count) {
     return rqueueBeanProvider
         .getRqueueMessageTemplate()
-        .popN(
+        .pop(
             queueDetail.getQueueName(),
             queueDetail.getProcessingQueueName(),
             queueDetail.getProcessingQueueChannelName(),
@@ -65,6 +69,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
 
   private void execute(
       QueueThreadPool queueThreadPool, QueueDetail queueDetail, RqueueMessage message) {
+    message.setMessageHeaders(messageHeaders);
     try {
       queueThreadPool.execute(
           new RqueueExecutor(

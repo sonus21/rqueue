@@ -76,21 +76,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
-  public RqueueMessage pop(
-      String queueName,
-      String processingQueueName,
-      String processingChannelName,
-      long visibilityTimeout) {
-    List<RqueueMessage> rqueueMessages =
-        popN(queueName, processingQueueName, processingChannelName, visibilityTimeout, 1);
-    if (CollectionUtils.isEmpty(rqueueMessages)) {
-      return null;
-    }
-    return rqueueMessages.get(0);
-  }
-
-  @Override
-  public List<RqueueMessage> popN(
+  public List<RqueueMessage> pop(
       String queueName,
       String processingQueueName,
       String processingChannelName,
@@ -102,17 +88,21 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
     }
     long currentTime = System.currentTimeMillis();
     RedisScript<List<RqueueMessage>> script = getScript(ScriptType.DEQUEUE_MESSAGE);
-    return scriptExecutor.execute(
-        script,
-        Arrays.asList(queueName, processingQueueName, processingChannelName),
-        currentTime,
-        currentTime + visibilityTimeout,
-        count);
+    List<RqueueMessage> messages =
+        scriptExecutor.execute(
+            script,
+            Arrays.asList(queueName, processingQueueName, processingChannelName),
+            currentTime,
+            currentTime + visibilityTimeout,
+            count);
+    log.debug("Pop Queue: {}, N: {}, Messages: {}", queueName, count, messages);
+    return messages;
   }
 
   @Override
   public Long addMessageWithDelay(
       String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage) {
+    log.debug("AddMessageWithDelay Queue: {}, Message: {}", delayQueueName, rqueueMessage);
     RedisScript<Long> script = getScript(ScriptType.ENQUEUE_MESSAGE);
     return scriptExecutor.execute(
         script,
@@ -125,6 +115,8 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public Flux<Long> addReactiveMessageWithDelay(
       String delayedQueueName, String delayedQueueChannelName, RqueueMessage rqueueMessage) {
+    log.debug(
+        "AddReactiveMessageWithDelay Queue: {}, Message: {}", delayedQueueName, rqueueMessage);
     RedisScript<Long> script = getScript(ScriptType.ENQUEUE_MESSAGE);
     return reactiveScriptExecutor.execute(
         script,
@@ -134,22 +126,31 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
 
   @Override
   public Long addMessage(String listName, RqueueMessage rqueueMessage) {
+    log.debug("AddMessage Queue: {}, Message: {}", listName, rqueueMessage);
     return rpush(listName, rqueueMessage);
   }
 
   @Override
   public Mono<Long> addReactiveMessage(String listName, RqueueMessage rqueueMessage) {
+    log.debug("AddReactiveMessage Queue: {}, Message: {}", listName, rqueueMessage);
     return reactiveRedisTemplate.template().opsForList().rightPush(listName, rqueueMessage);
   }
 
   @Override
   public Boolean addToZset(String zsetName, RqueueMessage rqueueMessage, long score) {
+    log.debug("AddToZset Queue: {}, Message: {}", zsetName, rqueueMessage);
     return zadd(zsetName, rqueueMessage, score);
   }
 
   @Override
-  public void moveMessage(
+  public void moveMessageWithDelay(
       String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay) {
+    log.debug(
+        "MoveMessageWithDelay Src:[Q={},M={}], Dst:[Q={},M={}]",
+        srcZsetName,
+        src,
+        tgtZsetName,
+        tgt);
     RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE_TO_ZSET);
     Long response =
         scriptExecutor.execute(
@@ -166,6 +167,7 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public void moveMessage(
       String srcZsetName, String tgtListName, RqueueMessage src, RqueueMessage tgt) {
+    log.debug("MoveMessage Src:[Q={},M={}], Dst:[Q={},M={}]", srcZsetName, src, tgtListName, tgt);
     RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE_TO_LIST);
     Long response =
         scriptExecutor.execute(script, Arrays.asList(srcZsetName, tgtListName), src, tgt);

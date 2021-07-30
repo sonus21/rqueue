@@ -234,6 +234,13 @@
       "defaultValue": "BOTH"
     },
     {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.message.converter.provider.class",
+      "description": "Rqueue Message Converter Provider",
+      "type": "java.lang.String",
+      "defaultValue": "com.github.sonus21.rqueue.converter.MessageConverterProvider"
+    },
+    {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
       "name": "rqueue.scheduler.enabled",
       "description": "Scheduler is enabled or not",
@@ -342,6 +349,13 @@
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.collect.statistic.aggregate.shutdown.wait.time",
       "description": "How long Rqueue should wait for aggregate job to complete o shutdown (mili seconds)",
+      "type": "java.lang.Integer",
+      "defaultValue": 500
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name": "rqueue.web.collect.statistic.aggregate.event.lock.duration",
+      "description": "How long Rqueue should wait for Redis lock when aggregation data is being saved(mili seconds)",
       "type": "java.lang.Integer",
       "defaultValue": 500
     }

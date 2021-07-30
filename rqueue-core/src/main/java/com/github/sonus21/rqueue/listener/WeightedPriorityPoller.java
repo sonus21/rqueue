@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.event.Level;
+import org.springframework.messaging.MessageHeaders;
 
 class WeightedPriorityPoller extends RqueueMessagePoller {
   private final Map<String, QueueThreadPool> queueNameToThread;
@@ -50,7 +51,8 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
       List<Middleware> middlewares,
       long pollingInterval,
       long backoffTime,
-      PostProcessingHandler postProcessingHandler) {
+      PostProcessingHandler postProcessingHandler,
+      MessageHeaders messageHeaders) {
     super(
         "Weighted-" + groupName,
         rqueueBeanProvider,
@@ -58,7 +60,8 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
         middlewares,
         pollingInterval,
         backoffTime,
-        postProcessingHandler);
+        postProcessingHandler,
+        messageHeaders);
     this.queueDetailList = queueDetails;
     this.queues = queueDetails.stream().map(QueueDetail::getName).collect(Collectors.toList());
     this.queueNameToDetail =

@@ -209,7 +209,7 @@ class PostProcessingHandler extends PrefixLogger {
           rqueueMessage,
           newMessage);
     } else {
-      rqueueMessageTemplate.moveMessage(
+      rqueueMessageTemplate.moveMessageWithDelay(
           queueDetail.getProcessingQueueName(),
           queueDetail.getDelayedQueueName(),
           rqueueMessage,

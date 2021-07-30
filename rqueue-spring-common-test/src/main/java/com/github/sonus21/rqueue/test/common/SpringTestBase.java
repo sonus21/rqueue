@@ -153,7 +153,7 @@ public abstract class SpringTestBase extends TestBase {
                 message,
                 null,
                 null,
-                null);
+                rqueueMessageListenerContainer.getMessageHeaders());
         rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
       } else {
         enqueue(queueName, message);

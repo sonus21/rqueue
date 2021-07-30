@@ -38,7 +38,7 @@ import org.springframework.web.reactive.result.view.ViewResolver;
 import reactor.core.publisher.Mono;
 
 @Controller
-@RequestMapping("rqueue")
+@RequestMapping(path = "${rqueue.web.url.prefix:}rqueue")
 @Conditional(ReactiveEnabled.class)
 public class ReactiveRqueueViewController {
 

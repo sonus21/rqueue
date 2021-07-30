@@ -60,7 +60,7 @@ import org.mockito.MockitoAnnotations;
 
 @Slf4j
 @CoreUnitTest
-class RqueueTaskAggregatorServiceTest extends TestBase {
+class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
   @Mock private RqueueQStatsDao rqueueQStatsDao;
   @Mock private RqueueWebConfig rqueueWebConfig;
   @Mock private RqueueLockManager rqueueLockManager;
@@ -68,26 +68,27 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Mock private RqueueJobDao rqueueJobDao;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  private RqueueTaskAggregatorService rqueueTaskAggregatorService;
+  private RqueueTaskMetricsAggregatorService rqueueTaskMetricsAggregatorService;
   private final String queueName = "test-queue";
 
   @BeforeEach
   public void initService() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueTaskAggregatorService =
-        new RqueueTaskAggregatorService(
+    rqueueTaskMetricsAggregatorService =
+        new RqueueTaskMetricsAggregatorService(
             rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();
-    doReturn(100).when(rqueueWebConfig).getAggregateEventWaitTime();
+    doReturn(100).when(rqueueWebConfig).getAggregateEventWaitTimeInSecond();
     doReturn(100).when(rqueueWebConfig).getAggregateShutdownWaitTime();
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
     doReturn(500).when(rqueueWebConfig).getAggregateEventCount();
-    this.rqueueTaskAggregatorService.start();
+    this.rqueueTaskMetricsAggregatorService.start();
     assertNotNull(
-        FieldUtils.readField(this.rqueueTaskAggregatorService, "queueNameToEvents", true));
-    assertNotNull(FieldUtils.readField(this.rqueueTaskAggregatorService, "queue", true));
-    assertNotNull(FieldUtils.readField(this.rqueueTaskAggregatorService, "taskExecutor", true));
+        FieldUtils.readField(this.rqueueTaskMetricsAggregatorService, "queueNameToEvents", true));
+    assertNotNull(FieldUtils.readField(this.rqueueTaskMetricsAggregatorService, "queue", true));
+    assertNotNull(
+        FieldUtils.readField(this.rqueueTaskMetricsAggregatorService, "taskExecutor", true));
   }
 
   private RqueueExecutionEvent generateTaskEventWithStatus(MessageStatus status) {
@@ -113,7 +114,6 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
             messageMetadata,
             rqueueMessage,
             null,
-            null,
             null);
     return new RqueueExecutionEvent(job);
   }
@@ -132,7 +132,7 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
   }
 
   private void addEvent(RqueueExecutionEvent event, TasksStat stats, boolean updateTaskStat) {
-    rqueueTaskAggregatorService.onApplicationEvent(event);
+    rqueueTaskMetricsAggregatorService.onApplicationEvent(event);
     if (!updateTaskStat) {
       return;
     }
@@ -165,15 +165,13 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
       return;
     }
     String id = "__rq::q-stat::" + queueName;
+    doReturn(500).when(rqueueWebConfig).getAggregateEventLockDurationInMs();
     doReturn(id).when(rqueueConfig).getQueueStatisticsKey(queueName);
     doReturn("__rq::lock::" + id).when(rqueueConfig).getLockKey(id);
 
     doReturn(true)
         .when(rqueueLockManager)
-        .acquireLock(
-            "__rq::lock::" + id,
-            RqueueConfig.getBrokerId(),
-            Duration.ofSeconds(Constants.AGGREGATION_LOCK_DURATION_IN_SECONDS));
+        .acquireLock("__rq::lock::" + id, RqueueConfig.getBrokerId(), Duration.ofMillis(500L));
     List<QueueStatistics> queueStatistics = new ArrayList<>();
     doAnswer(
             invocation -> {
@@ -232,6 +230,6 @@ class RqueueTaskAggregatorServiceTest extends TestBase {
 
   @AfterEach
   public void clean() throws Exception {
-    rqueueTaskAggregatorService.destroy();
+    rqueueTaskMetricsAggregatorService.destroy();
   }
 }
