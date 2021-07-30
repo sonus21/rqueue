@@ -42,9 +42,9 @@ import org.springframework.util.CollectionUtils;
       "monitor.enabled=true",
     })
 @SpringBootIntegrationTest
+@Tag("local")
 class RqueueMessageManagerTest extends SpringTestBase {
   @Test
-  @Tag("redisCluster")
   void deleteAll() throws TimedOutException {
     QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);
     enqueue(notificationQueue, Notification.newInstance());

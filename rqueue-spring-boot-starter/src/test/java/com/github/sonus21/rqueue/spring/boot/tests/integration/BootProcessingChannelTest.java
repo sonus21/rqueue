@@ -16,14 +16,13 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import com.github.sonus21.junit.LocalTest;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationListenerDisabled;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.tests.MessageChannelTests;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -41,9 +40,8 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootTest
 @Slf4j
-@Tag("redisCluster")
 @SpringBootIntegrationTest
-@DisabledIfEnvironmentVariable(named = "CI", matches = "true")
+@LocalTest
 class BootProcessingChannelTest extends MessageChannelTests {
   @Test
   void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
