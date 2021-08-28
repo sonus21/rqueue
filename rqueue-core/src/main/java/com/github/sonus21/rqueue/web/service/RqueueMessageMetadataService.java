@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import reactor.core.publisher.Mono;
 
 public interface RqueueMessageMetadataService {
@@ -32,13 +33,21 @@ public interface RqueueMessageMetadataService {
 
   List<MessageMetadata> findAll(Collection<String> ids);
 
-  void save(MessageMetadata messageMetadata, Duration duration);
+  void save(MessageMetadata messageMetadata, Duration ttl);
 
   MessageMetadata getByMessageId(String queueName, String messageId);
 
-  void deleteMessage(String queueName, String messageId, Duration duration);
+  void deleteMessage(String queueName, String messageId, Duration ttl);
 
   MessageMetadata getOrCreateMessageMetadata(RqueueMessage rqueueMessage);
 
-  Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration);
+  Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration ttl);
+
+  List<TypedTuple<MessageMetadata>> readMessageMetadataForQueue(
+      String queueName, long start, long end);
+
+  void saveMessageMetadataForQueue(
+      String queueName, MessageMetadata messageMetadata, Long ttlInMillisecond);
+
+  void deleteQueueMessages(String queueName, long before);
 }

@@ -33,7 +33,7 @@ import org.springframework.test.context.TestPropertySource;
     properties = {
       "rqueue.scheduler.auto.start=false",
       "spring.redis.port=8002",
-      "mysql.db.name=BootDelayedChannelTest",
+      "mysql.db.name=BootScheduledChannelTest",
       "max.workers.count=120",
       "use.system.redis=false",
       "monitor.enabled=true"
@@ -42,7 +42,7 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @LocalTest
 @SpringBootIntegrationTest
-class BootDelayedChannelTest extends MessageChannelTests {
+class BootScheduledChannelTest extends MessageChannelTests {
 
   @Test
   void publishMessageIsTriggeredOnMessageAddition() throws Exception {

@@ -43,6 +43,7 @@ public class MessageMetadata extends SerializableBase {
   private RqueueMessage rqueueMessage;
   // Rqueue message current status
   private MessageStatus status;
+  private long updatedOn;
 
   public MessageMetadata(String id, MessageStatus messageStatus) {
     this.id = id;

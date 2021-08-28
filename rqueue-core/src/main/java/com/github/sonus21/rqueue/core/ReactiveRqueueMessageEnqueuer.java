@@ -200,7 +200,7 @@ public interface ReactiveRqueueMessageEnqueuer {
   }
 
   /**
-   * Enqueue a message on given queue with delay, consume as soon as the delayed is expired.
+   * Enqueue a message on given queue with delay, consume as soon as the scheduled is expired.
    *
    * @param queueName on which queue message has to be send
    * @param messageId the message id for uniqueness

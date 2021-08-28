@@ -49,8 +49,8 @@ class ApplicationTest extends BasicListenerTest {
   }
 
   @Test
-  void delayedEnqueue() throws TimedOutException {
-    verifyDelayedTaskExecution();
+  void scheduledEnqueue() throws TimedOutException {
+    verifyScheduledTaskExecution();
   }
 
   @Test

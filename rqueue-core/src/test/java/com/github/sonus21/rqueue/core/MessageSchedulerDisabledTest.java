@@ -48,7 +48,7 @@ class MessageSchedulerDisabledTest extends TestBase {
   @Mock private RedisTemplate<String, Long> redisTemplate;
 
   @InjectMocks
-  private final DelayedMessageScheduler messageScheduler = new DelayedMessageScheduler();
+  private final ScheduledQueueMessageScheduler messageScheduler = new ScheduledQueueMessageScheduler();
 
   private final String slowQueue = "slow-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
@@ -62,12 +62,12 @@ class MessageSchedulerDisabledTest extends TestBase {
 
   @Test
   void startShouldSubmitsTaskWhenRedisIsDisabled() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
       threadUtils
-          .when(() -> ThreadUtils.createTaskScheduler(1, "delayedMessageScheduler-", 60))
+          .when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
           .thenReturn(scheduler);
       messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
       assertEquals(1, scheduler.submittedTasks());

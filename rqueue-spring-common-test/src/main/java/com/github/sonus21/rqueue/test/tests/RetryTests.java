@@ -154,7 +154,7 @@ public class RetryTests extends SpringTestBase {
     assertEquals(0, getMessageCount(reservationRequestDeadLetterQueue));
   }
 
-  // this test verifies whether messages are moved from delayed queue to main queue
+  // this test verifies whether messages are moved from scheduled queue to main queue
   protected void verifyMultipleJobExecution() throws TimedOutException {
     assertEquals(1, retryPerPoll, "Retry per poll must be 1 to run this test");
     cleanQueue(emailQueue);

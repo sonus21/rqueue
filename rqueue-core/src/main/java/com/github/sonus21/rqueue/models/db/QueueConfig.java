@@ -48,8 +48,9 @@ public class QueueConfig extends SerializableBase {
   private String id;
   private String name;
   private String queueName;
+  private String completedQueueName;
   private String processingQueueName;
-  private String delayedQueueName;
+  private String scheduledQueueName;
   private int numRetry;
   private long visibilityTimeout;
   private boolean paused;

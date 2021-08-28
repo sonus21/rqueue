@@ -30,14 +30,14 @@ import org.springframework.scheduling.annotation.Async;
 
 /**
  * RqueueMetrics register metrics related to queue. A queue can have 4 types of metrics like
- * queue.size, processing.queue.size and other two depends on the queue configurations. For delayed
- * queue messages can be in delayed queue because time has not reached. Some messages can be in dead
+ * queue.size, processing.queue.size and other two depends on the queue configurations. For scheduled
+ * queue messages can be in scheduled queue because time has not reached. Some messages can be in dead
  * letter queue if dead letter queue is configured.
  */
 public class RqueueMetrics implements RqueueMetricsRegistry {
   static final String QUEUE_KEY = "key";
   private static final String QUEUE_SIZE = "queue.size";
-  private static final String DELAYED_QUEUE_SIZE = "delayed.queue.size";
+  private static final String DELAYED_QUEUE_SIZE = "scheduled.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
   private final QueueCounter queueCounter;
@@ -78,9 +78,9 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
           .description("The number of entries in the processing queue")
           .register(meterRegistry);
       Gauge.builder(
-              DELAYED_QUEUE_SIZE, queueDetail, c -> size(queueDetail.getDelayedQueueName(), true))
-          .tags(queueTags.and(QUEUE_KEY, queueDetail.getDelayedQueueName()))
-          .description("The number of entries waiting in the delayed queue")
+              DELAYED_QUEUE_SIZE, queueDetail, c -> size(queueDetail.getScheduledQueueName(), true))
+          .tags(queueTags.and(QUEUE_KEY, queueDetail.getScheduledQueueName()))
+          .description("The number of entries waiting in the scheduled queue")
           .register(meterRegistry);
       if (queueDetail.isDlqSet()) {
         Builder<QueueDetail> builder =

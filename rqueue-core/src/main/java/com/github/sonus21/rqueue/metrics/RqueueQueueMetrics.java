@@ -50,7 +50,7 @@ public class RqueueQueueMetrics {
   }
 
   /**
-   * Get number of messages waiting in delayed queue, these messages would move to pending queue as
+   * Get number of messages waiting in scheduled queue, these messages would move to pending queue as
    * soon as the scheduled time is reach.
    *
    * @param queue queue name
@@ -59,7 +59,7 @@ public class RqueueQueueMetrics {
   public long getScheduledMessageCount(String queue) {
     try {
       QueueDetail queueDetail = EndpointRegistry.get(queue);
-      return redisTemplate.getZsetSize(queueDetail.getDelayedQueueName());
+      return redisTemplate.getZsetSize(queueDetail.getScheduledQueueName());
     } catch (QueueDoesNotExist e) {
       return -1;
     }
@@ -97,7 +97,7 @@ public class RqueueQueueMetrics {
   }
 
   /**
-   * Get number of messages waiting in delayed queue, these messages would move to pending queue as
+   * Get number of messages waiting in scheduled queue, these messages would move to pending queue as
    * soon as the scheduled time is reach.
    *
    * @param queue    queue name
@@ -107,7 +107,7 @@ public class RqueueQueueMetrics {
   public long getScheduledMessageCount(String queue, String priority) {
     try {
       QueueDetail queueDetail = EndpointRegistry.get(queue, priority);
-      return redisTemplate.getZsetSize(queueDetail.getDelayedQueueName());
+      return redisTemplate.getZsetSize(queueDetail.getScheduledQueueName());
     } catch (QueueDoesNotExist e) {
       return -1;
     }

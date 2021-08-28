@@ -183,7 +183,7 @@ class RqueueExecutorTest extends TestBase {
     verify(messageTemplate, times(1))
         .moveMessageWithDelay(
             eq(queueDetail.getProcessingQueueName()),
-            eq(queueDetail.getDelayedQueueName()),
+            eq(queueDetail.getScheduledQueueName()),
             eq(rqueueMessage),
             any(),
             eq(5000L));
@@ -305,7 +305,7 @@ class RqueueExecutorTest extends TestBase {
         .run();
     verify(messageTemplate, times(1))
         .scheduleMessage(
-            eq(queueDetail.getDelayedQueueName()), eq(messageKey), eq(newMessage), any());
+            eq(queueDetail.getScheduledQueueName()), eq(messageKey), eq(newMessage), any());
     verify(messageHandler, times(1)).handleMessage(any());
   }
 

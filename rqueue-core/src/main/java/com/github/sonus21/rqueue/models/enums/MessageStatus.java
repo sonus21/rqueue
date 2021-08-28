@@ -25,22 +25,23 @@ import lombok.Getter;
 public enum MessageStatus {
   // Message is just enqueued
   ENQUEUED(false, JobStatus.UNKNOWN),
-  // Currently this message is being processed
+  //  this message is being processed
   PROCESSING(false, JobStatus.PROCESSING),
   // Message was deleted
   DELETED(true, JobStatus.SUCCESS),
-  // Message was ignored by pre processor
+  // Message was ignored by pre-processor
   IGNORED(true, JobStatus.SUCCESS),
   // Message was successful consumed
   SUCCESSFUL(true, JobStatus.SUCCESS),
   // Message moved to dead letter queue
   MOVED_TO_DLQ(true, JobStatus.SUCCESS),
   /**
-   * Message was discarded due to retry limit or {@link com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff#STOP}
-   * was returned by task execution backoff method.
+   * Message was discarded due to retry limit exceeded or {@link
+   * com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff#STOP} was returned by task
+   * execution backoff method.
    */
   DISCARDED(true, JobStatus.SUCCESS),
-  // Execution has failed, it will retry later
+  // Execution has failed, it will be retried later
   FAILED(false, JobStatus.FAILED);
   private final boolean terminalState;
   private final JobStatus jobStatus;

@@ -49,7 +49,7 @@ class WeightedMultiLevelQueueListener extends MultiLevelQueueTest {
   }
 
   @Test
-  void delayed() throws TimedOutException {
+  void scheduled() throws TimedOutException {
     checkQueueLevelConsumerWithDelay();
   }
 }

@@ -36,8 +36,8 @@ class SpringMetricTest extends MetricTest {
 
   @Test
   @Tag("redisCluster")
-  void delayedQueueStatus() throws TimedOutException {
-    this.verifyDelayedQueueStatus();
+  void scheduledQueueStatus() throws TimedOutException {
+    this.verifyScheduledQueueStatus();
   }
 
   @Test

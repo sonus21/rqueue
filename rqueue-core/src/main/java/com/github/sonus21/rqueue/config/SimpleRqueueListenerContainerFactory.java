@@ -106,7 +106,7 @@ public class SimpleRqueueListenerContainerFactory {
   private boolean inspectAllBean = true;
 
   /**
-   * Whenever a consumer fails then the consumed message can be delayed for further consumption. The
+   * Whenever a consumer fails then the consumed message can be scheduled for further consumption. The
    * delay of that can be configured, by default same message would be retried in 5 seconds and this
    * will continue due to default task interval. {@link
    * com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff#DEFAULT_INTERVAL}

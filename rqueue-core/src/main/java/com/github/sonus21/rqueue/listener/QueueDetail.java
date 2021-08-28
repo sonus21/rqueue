@@ -54,10 +54,11 @@ public class QueueDetail extends SerializableBase {
   private final String queueName;
   private final String deadLetterQueueName;
   private final boolean deadLetterConsumerEnabled;
+  private final String completedQueueName;
   private final String processingQueueName;
   private final String processingQueueChannelName;
-  private final String delayedQueueName;
-  private final String delayedQueueChannelName;
+  private final String scheduledQueueName;
+  private final String scheduledQueueChannelName;
   private final boolean active;
   private final Concurrency concurrency;
   private final boolean systemGenerated;
@@ -86,8 +87,9 @@ public class QueueDetail extends SerializableBase {
             .name(name)
             .numRetry(numRetry)
             .queueName(queueName)
-            .delayedQueueName(delayedQueueName)
+            .scheduledQueueName(scheduledQueueName)
             .processingQueueName(processingQueueName)
+            .completedQueueName(completedQueueName)
             .visibilityTimeout(visibilityTimeout)
             .createdOn(System.currentTimeMillis())
             .updatedOn(System.currentTimeMillis())
@@ -140,8 +142,9 @@ public class QueueDetail extends SerializableBase {
         .queueName(queueName + suffix)
         .processingQueueName(processingQueueName + suffix)
         .processingQueueChannelName(processingQueueChannelName + suffix)
-        .delayedQueueName(delayedQueueName + suffix)
-        .delayedQueueChannelName(delayedQueueChannelName + suffix)
+        .scheduledQueueName(scheduledQueueName + suffix)
+        .scheduledQueueChannelName(scheduledQueueChannelName + suffix)
+        .completedQueueName(completedQueueName + suffix)
         .active(active)
         .batchSize(batchSize)
         .systemGenerated(systemGenerated)

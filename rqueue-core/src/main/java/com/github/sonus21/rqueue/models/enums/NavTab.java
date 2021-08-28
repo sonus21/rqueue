@@ -28,6 +28,7 @@ public enum NavTab {
   RUNNING("Running"),
   PENDING("Pending"),
   SCHEDULED("Scheduled"),
+  COMPLETED("Completed"),
   UTILITY("Utility");
   private final String description;
 }

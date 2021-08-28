@@ -279,23 +279,20 @@ public class JobImpl implements Job {
   }
 
   void updateMessageStatus(MessageStatus messageStatus) {
-    Duration messageMetaExpiry;
-    boolean deleteMessage = false;
     if (messageStatus.isTerminalState()) {
-      messageMetaExpiry =
-          Duration.ofSeconds(rqueueConfig.getMessageDurabilityInTerminalStateInSecond());
-      if (messageMetaExpiry.isZero() || messageMetaExpiry.isNegative()) {
-        deleteMessage = true;
+      if (rqueueConfig.messageInTerminalStateShouldBeStored()) {
+        this.messageMetadataService.saveMessageMetadataForQueue(
+            queueDetail.getCompletedQueueName(),
+            getMessageMetadata(),
+            rqueueConfig.messageDurabilityInTerminalStateInMillisecond());
+      } else {
+        this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
       }
     } else {
-      messageMetaExpiry = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
+      this.messageMetadataService.save(
+          getMessageMetadata(), Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
     }
     setMessageStatus(messageStatus);
-    if (deleteMessage) {
-      this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
-    } else {
-      this.messageMetadataService.save(rqueueJob.getMessageMetadata(), messageMetaExpiry);
-    }
     save();
   }
 

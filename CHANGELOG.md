@@ -196,7 +196,7 @@ Fixes:
 ### Fixed
 
 * An issue in the scheduler that's always scheduling job at the delay of 5 seconds. (this leads to
-  messages are not copied from delayed queue to main queue on high load)
+  messages are not copied from scheduled queue to main queue on high load)
 
 ## [1.2] - 03-Nov-2019
 

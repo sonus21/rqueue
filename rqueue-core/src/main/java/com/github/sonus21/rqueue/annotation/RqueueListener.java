@@ -40,7 +40,7 @@ import java.lang.annotation.Target;
  * public class MessageListener {
  * &#64;RqueueListener(
  *       value="${job.queue}",
- *      delayedQueue="true",
+ *      scheduledQueue="true",
  *      numRetries="3",
  *      deadLetterQueue="#{job.dead.letter.queue}",
  *      visibilityTimeout="30*60*1000")
@@ -61,16 +61,6 @@ public @interface RqueueListener {
    * @return list of queues.
    */
   String[] value() default {};
-
-  /**
-   * All queues are considered delayed for fast recovery, it can not be disabled even by setting
-   * this to false.
-   *
-   * @deprecated since 2.0
-   * @return whether it's delayed queue or not.
-   */
-  @Deprecated
-  String delayedQueue() default "true";
 
   /**
    * Number of times a message should be retried before it can be discarded or send it to dead

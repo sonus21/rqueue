@@ -51,10 +51,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-@Service
+@Component
 @Slf4j
 public class RqueueTaskMetricsAggregatorService
     implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
@@ -265,10 +265,10 @@ public class RqueueTaskMetricsAggregatorService
     }
 
     private Map<LocalDate, TasksStat> aggregate(QueueEvents events) {
-      List<RqueueExecutionEvent> queueRqueueExecutionEvents = events.rqueueExecutionEvents;
-      RqueueExecutionEvent queueRqueueExecutionEvent = queueRqueueExecutionEvents.get(0);
+      List<RqueueExecutionEvent> executionEvents = events.rqueueExecutionEvents;
+      RqueueExecutionEvent queueRqueueExecutionEvent = executionEvents.get(0);
       Map<LocalDate, TasksStat> localDateTasksStatMap = new HashMap<>();
-      for (RqueueExecutionEvent event : queueRqueueExecutionEvents) {
+      for (RqueueExecutionEvent event : executionEvents) {
         LocalDate date = DateTimeUtils.localDateFromMilli(queueRqueueExecutionEvent.getTimestamp());
         TasksStat stat = localDateTasksStatMap.getOrDefault(date, new TasksStat());
         aggregate(event, stat);

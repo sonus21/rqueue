@@ -200,7 +200,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.ZSET);
     request.setSrc(emailQueue);
-    request.setName(rqueueConfig.getDelayedQueueName(emailQueue));
+    request.setName(rqueueConfig.getScheduledQueueName(emailQueue));
     DataViewResponse dataViewResponse =
         this.webTestClient
             .post()
@@ -398,7 +398,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
     enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
     RqueueMessage message =
         rqueueMessageTemplate
-            .readFromZset(rqueueConfig.getDelayedQueueName(emailQueue), 0, -1)
+            .readFromZset(rqueueConfig.getScheduledQueueName(emailQueue), 0, -1)
             .get(0);
     MessageDeleteRequest request = new MessageDeleteRequest();
     request.setMessageId(message.getId());

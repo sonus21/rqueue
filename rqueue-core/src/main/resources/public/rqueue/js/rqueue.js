@@ -420,7 +420,7 @@ $('#move-button').on("click", function () {
     'dstType': dstType
   };
   if (messageCount !== '') {
-    other['messageCount'] = parseInt(messageCount);
+    other['maxMessages'] = parseInt(messageCount);
   }
   if ($('#priority-controller-form').is(":visible")) {
     let val = $('#priority-val').val();

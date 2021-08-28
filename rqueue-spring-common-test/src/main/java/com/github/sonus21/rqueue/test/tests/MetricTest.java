@@ -39,7 +39,7 @@ public abstract class MetricTest extends SpringTestBase {
   @Autowired protected MeterRegistry meterRegistry;
   @Autowired protected RqueueQueueMetrics rqueueQueueMetrics;
 
-  protected void verifyDelayedQueueStatus() throws TimedOutException {
+  protected void verifyScheduledQueueStatus() throws TimedOutException {
     long maxDelay = 0;
     int maxMessages = 100;
     for (int i = 0; i < maxMessages; i++) {
@@ -49,7 +49,7 @@ public abstract class MetricTest extends SpringTestBase {
       }
       Notification notification = Notification.newInstance();
       if (i < maxMessages / 2) {
-        enqueueIn(notification, rqueueConfig.getDelayedQueueName(notificationQueue), -delay);
+        enqueueIn(notification, rqueueConfig.getScheduledQueueName(notificationQueue), -delay);
       } else {
         enqueueAt(notificationQueue, notification, Instant.now().plusMillis(delay));
       }
@@ -63,7 +63,7 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                    .get("delayed.queue.size")
+                    .get("scheduled.queue.size")
                     .tag("rqueue", "test")
                     .tag("queue", notificationQueue)
                     .gauge()
@@ -161,7 +161,7 @@ public abstract class MetricTest extends SpringTestBase {
     QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);
     enqueue(queueDetail.getQueueName(), i -> Notification.newInstance(), 1000, true);
     enqueueIn(
-        queueDetail.getDelayedQueueName(),
+        queueDetail.getScheduledQueueName(),
         i -> Notification.newInstance(),
         i -> 30_000L,
         100,
@@ -181,7 +181,7 @@ public abstract class MetricTest extends SpringTestBase {
     String priority = "critical";
     QueueDetail queueDetail = EndpointRegistry.get(smsQueue, priority);
     enqueue(queueDetail.getQueueName(), i -> Sms.newInstance(), 1000, true);
-    enqueueIn(queueDetail.getDelayedQueueName(), i -> Sms.newInstance(), i -> 30_000L, 100, true);
+    enqueueIn(queueDetail.getScheduledQueueName(), i -> Sms.newInstance(), i -> 30_000L, 100, true);
     TimeoutUtils.waitFor(
         () -> rqueueQueueMetrics.getProcessingMessageCount(smsQueue, priority) > 0,
         "at least one message in processing");

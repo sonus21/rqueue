@@ -98,8 +98,8 @@ class RqueueMessageSenderTest extends TestBase {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
-            eq(queueDetail.getDelayedQueueName()),
-            eq(queueDetail.getDelayedQueueChannelName()),
+            eq(queueDetail.getScheduledQueueName()),
+            eq(queueDetail.getScheduledQueueChannelName()),
             any(RqueueMessage.class));
     assertTrue(rqueueMessageSender.enqueueIn(queueName, message, 1000L));
   }
@@ -109,8 +109,8 @@ class RqueueMessageSenderTest extends TestBase {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
-            eq(queueDetail.getDelayedQueueName()),
-            eq(queueDetail.getDelayedQueueChannelName()),
+            eq(queueDetail.getScheduledQueueName()),
+            eq(queueDetail.getScheduledQueueChannelName()),
             any(RqueueMessage.class));
     assertTrue(rqueueMessageSender.enqueueInWithRetry(queueName, message, 3, 1000L));
   }

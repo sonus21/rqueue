@@ -47,8 +47,8 @@ import org.springframework.test.context.TestPropertySource;
 class BootMetricsTest extends MetricTest {
 
   @Test
-  void delayedQueueStatus() throws TimedOutException {
-    this.verifyDelayedQueueStatus();
+  void scheduledQueueStatus() throws TimedOutException {
+    this.verifyScheduledQueueStatus();
   }
 
   @Test

@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 @Slf4j
-public class ProcessingMessageScheduler extends MessageScheduler {
+public class ProcessingQueueMessageScheduler extends MessageScheduler {
   private Map<String, Long> queueNameToDelay;
 
   @Override
@@ -66,7 +66,7 @@ public class ProcessingMessageScheduler extends MessageScheduler {
 
   @Override
   protected String getThreadNamePrefix() {
-    return "processingMessageScheduler-";
+    return "processingQueueMsgScheduler-";
   }
 
   @Override

@@ -96,7 +96,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
     return messageTemplate.getAllMessages(
         queueDetail.getQueueName(),
         queueDetail.getProcessingQueueName(),
-        queueDetail.getDelayedQueueName());
+        queueDetail.getScheduledQueueName());
   }
 
   @Override

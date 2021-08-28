@@ -174,7 +174,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.ZSET);
     request.setSrc(emailQueue);
-    request.setName(rqueueConfig.getDelayedQueueName(emailQueue));
+    request.setName(rqueueConfig.getScheduledQueueName(emailQueue));
 
     MvcResult result =
         this.mockMvc
@@ -219,6 +219,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertEquals(0, dataViewResponse.getCode());
     assertEquals(0, dataViewResponse.getActions().size());
     assertEquals(20, dataViewResponse.getRows().size());
+    assertEquals(5, dataViewResponse.getHeaders().size());
     assertEquals(5, dataViewResponse.getRows().get(0).getColumns().size());
   }
 
@@ -332,7 +333,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
     RqueueMessage message =
         rqueueMessageTemplate
-            .readFromZset(rqueueConfig.getDelayedQueueName(emailQueue), 0, -1)
+            .readFromZset(rqueueConfig.getScheduledQueueName(emailQueue), 0, -1)
             .get(0);
     MessageDeleteRequest request = new MessageDeleteRequest();
     request.setMessageId(message.getId());

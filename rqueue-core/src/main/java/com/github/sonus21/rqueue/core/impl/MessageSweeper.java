@@ -86,14 +86,14 @@ public class MessageSweeper {
     QueueDetail detail = request.queueDetail;
     if (detail != null) {
       String newQueueName = rqueueConfig.getDelDataName();
-      String newDelayedZsetName = rqueueConfig.getDelDataName();
+      String newScheduledZsetName = rqueueConfig.getDelDataName();
       String newProcessingZsetName = rqueueConfig.getDelDataName();
       messageTemplate.renameCollections(
           Arrays.asList(
-              detail.getQueueName(), detail.getDelayedQueueName(), detail.getProcessingQueueName()),
-          Arrays.asList(newQueueName, newDelayedZsetName, newProcessingZsetName));
+              detail.getQueueName(), detail.getScheduledQueueName(), detail.getProcessingQueueName()),
+          Arrays.asList(newQueueName, newScheduledZsetName, newProcessingZsetName));
       deleteJobData.add(new DeleteJobData(newQueueName, DataType.LIST));
-      deleteJobData.add(new DeleteJobData(newDelayedZsetName, DataType.ZSET));
+      deleteJobData.add(new DeleteJobData(newScheduledZsetName, DataType.ZSET));
       deleteJobData.add(new DeleteJobData(newProcessingZsetName, DataType.ZSET));
     } else {
       switch (request.dataType) {

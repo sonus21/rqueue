@@ -330,7 +330,7 @@ class RqueueExecutor extends MessageContainerBase {
         beanProvider
             .getRqueueMessageTemplate()
             .scheduleMessage(
-                job.getQueueDetail().getDelayedQueueName(),
+                job.getQueueDetail().getScheduledQueueName(),
                 messageKey,
                 newMessage,
                 expiryInSeconds));

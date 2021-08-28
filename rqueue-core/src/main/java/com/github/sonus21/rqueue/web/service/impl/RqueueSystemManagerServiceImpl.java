@@ -63,7 +63,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
             queueConfig.getQueueName(),
             queueConfig.getProcessingQueueName(),
             rqueueConfig.getQueueStatisticsKey(queueConfig.getName()));
-    keys.add(queueConfig.getDelayedQueueName());
+    keys.add(queueConfig.getScheduledQueueName());
     if (queueConfig.hasDeadLetterQueue()) {
       for (DeadLetterQueue queue : queueConfig.getDeadLetterQueues()) {
         keys.add(queue.getName());

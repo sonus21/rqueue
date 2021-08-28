@@ -353,8 +353,8 @@ public interface RqueueMessageSender {
   Iterable<? extends MessageConverter> getMessageConverters();
 
   /**
-   * Find all messages stored on a given queue, it considers all the messages including delayed and
-   * non-delayed.
+   * Find all messages stored on a given queue, it considers all the messages including scheduled and
+   * non-scheduled.
    *
    * @param queueName queue name to be query for
    * @return list of messages.

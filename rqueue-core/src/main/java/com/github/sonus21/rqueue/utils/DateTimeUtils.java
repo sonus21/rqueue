@@ -26,8 +26,7 @@ public final class DateTimeUtils {
 
   private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
 
-  DateTimeUtils() {
-  }
+  DateTimeUtils() {}
 
   private static String hourString(long hour) {
     if (hour > 1) {
@@ -83,7 +82,13 @@ public final class DateTimeUtils {
         "%s, %s, %s", hourString(hours), minuteString(minutes), secondString(seconds));
   }
 
-  public static String milliToHumanRepresentation(long millis) {
+  public static String milliToHumanRepresentation(long millisecond) {
+    long millis = millisecond;
+    String prefix = "";
+    if (millis < 0) {
+      prefix = "-";
+      millis = -1 * millis;
+    }
     long seconds = millis / Constants.ONE_MILLI;
     long minutes = seconds / Constants.SECONDS_IN_A_MINUTE;
     seconds = seconds % Constants.SECONDS_IN_A_MINUTE; // remaining seconds
@@ -92,18 +97,18 @@ public final class DateTimeUtils {
     long days = hours / Constants.HOURS_IN_A_DAY;
     hours = hours % Constants.HOURS_IN_A_DAY; // remaining hours
     if (days != 0) {
-      return formatDay(days, hours, minutes, seconds);
+      return prefix + formatDay(days, hours, minutes, seconds);
     }
     if (hours != 0) {
-      return formatHour(hours, minutes, seconds);
+      return prefix + formatHour(hours, minutes, seconds);
     }
     if (minutes != 0) {
       if (seconds == 0) {
-        return minuteString(minutes);
+        return prefix + minuteString(minutes);
       }
-      return String.format("%s, %s", minuteString(minutes), secondString(seconds));
+      return prefix + String.format("%s, %s", minuteString(minutes), secondString(seconds));
     }
-    return secondString(seconds);
+    return prefix + secondString(seconds);
   }
 
   public static String formatMilliToString(Long milli) {

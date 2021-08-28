@@ -60,9 +60,9 @@ class ReactiveWebTest extends BasicListenerTest {
   public void init() throws TimedOutException {
     verifyListMessageListener(); // list email queue
     verifySimpleTaskExecution(); // notification queue
-    verifyDelayedTaskExecution(); // job queue
+    verifyScheduledTaskExecution(); // job queue
     enqueueIn(
-        rqueueConfig.getDelayedQueueName(emailQueue),
+        rqueueConfig.getScheduledQueueName(emailQueue),
         (i) -> Email.newInstance(),
         (i) -> 30_000L,
         10,

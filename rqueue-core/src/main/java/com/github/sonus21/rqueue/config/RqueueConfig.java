@@ -83,11 +83,14 @@ public class RqueueConfig {
   @Value("${rqueue.simple.queue.prefix:}")
   private String simpleQueuePrefix;
 
-  @Value("${rqueue.delayed.queue.prefix:}")
-  private String delayedQueuePrefix;
+  @Value("${rqueue.scheduled.queue.prefix:}")
+  private String scheduledQueuePrefix;
 
-  @Value("${rqueue.delayed.queue.channel.prefix:}")
-  private String delayedQueueChannelPrefix;
+  @Value("${rqueue.completed.queue.prefix:}")
+  private String completedQueuePrefix;
+
+  @Value("${rqueue.scheduled.queue.channel.prefix:}")
+  private String scheduledQueueChannelPrefix;
 
   @Value("${rqueue.processing.queue.name.prefix:}")
   private String processingQueuePrefix;
@@ -133,6 +136,14 @@ public class RqueueConfig {
   @Value("${rqueue.message.durability.in-terminal-state:1800}")
   private long messageDurabilityInTerminalStateInSecond;
 
+  public boolean messageInTerminalStateShouldBeStored() {
+    return messageDurabilityInTerminalStateInSecond > 0;
+  }
+
+  public long messageDurabilityInTerminalStateInMillisecond() {
+    return messageDurabilityInTerminalStateInSecond * Constants.ONE_MILLI;
+  }
+
   @Value("${rqueue.system.mode:BOTH}")
   private RqueueMode mode;
 
@@ -157,9 +168,9 @@ public class RqueueConfig {
     return "queue-v2::";
   }
 
-  private String getDelayedQueueSuffix() {
-    if (!StringUtils.isEmpty(delayedQueuePrefix)) {
-      return delayedQueuePrefix;
+  private String getScheduledQueueSuffix() {
+    if (!StringUtils.isEmpty(scheduledQueuePrefix)) {
+      return scheduledQueuePrefix;
     }
     if (dbVersion == 2) {
       return "d-queue::";
@@ -167,9 +178,16 @@ public class RqueueConfig {
     return "d-queue-v2::";
   }
 
-  private String getDelayedQueueChannelSuffix() {
-    if (!StringUtils.isEmpty(delayedQueueChannelPrefix)) {
-      return delayedQueueChannelPrefix;
+  private String getCompletedQueueSuffix() {
+    if (!StringUtils.isEmpty(completedQueuePrefix)) {
+      return completedQueuePrefix;
+    }
+    return "c-queue::";
+  }
+
+  private String getScheduledQueueChannelSuffix() {
+    if (!StringUtils.isEmpty(scheduledQueueChannelPrefix)) {
+      return scheduledQueueChannelPrefix;
     }
     if (dbVersion == 2) {
       return "d-channel::";
@@ -204,18 +222,22 @@ public class RqueueConfig {
     return prefix + getSimpleQueueSuffix() + getTaggedName(queueName);
   }
 
-  public String getDelayedQueueName(String queueName) {
+  public String getCompletedQueueName(String queueName) {
+    return prefix + getCompletedQueueSuffix() + getTaggedName(queueName);
+  }
+
+  public String getScheduledQueueName(String queueName) {
     if (dbVersion == 1) {
       return "rqueue-delay::" + queueName;
     }
-    return prefix + getDelayedQueueSuffix() + getTaggedName(queueName);
+    return prefix + getScheduledQueueSuffix() + getTaggedName(queueName);
   }
 
-  public String getDelayedQueueChannelName(String queueName) {
+  public String getScheduledQueueChannelName(String queueName) {
     if (dbVersion == 1) {
       return "rqueue-channel::" + queueName;
     }
-    return prefix + getDelayedQueueChannelSuffix() + getTaggedName(queueName);
+    return prefix + getScheduledQueueChannelSuffix() + getTaggedName(queueName);
   }
 
   public String getProcessingQueueName(String queueName) {

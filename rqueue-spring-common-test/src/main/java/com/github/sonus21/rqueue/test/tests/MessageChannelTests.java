@@ -34,19 +34,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class MessageChannelTests extends SpringTestBase {
   /**
-   * This test verifies whether any pending message in the delayed queue are moved or not whenever a
-   * delayed message is pushed. During enqueue of delayed message we check whether there are any
-   * pending messages on the delay queue, if expired delayed messages are found on the head then a
-   * message is published on delayed channel.
+   * This test verifies whether any pending message in the scheduled queue are moved or not whenever a
+   * scheduled message is pushed. During enqueue of scheduled message we check whether there are any
+   * pending messages on the delay queue, if expired scheduled messages are found on the head then a
+   * message is published on scheduled channel.
    */
   protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
-    String delayedQueueName = rqueueConfig.getDelayedQueueName(emailQueue);
-    enqueueIn(delayedQueueName, i -> Email.newInstance(), i -> -1000L, 200, true);
+    String scheduledQueueName = rqueueConfig.getScheduledQueueName(emailQueue);
+    enqueueIn(scheduledQueueName, i -> Email.newInstance(), i -> -1000L, 200, true);
     Email email = Email.newInstance();
     log.info("adding new message {}", email);
     enqueueIn(emailQueue, email, Duration.ofMillis(1000));
     waitFor(
-        () -> stringRqueueRedisTemplate.getZsetSize(delayedQueueName) <= 1,
+        () -> stringRqueueRedisTemplate.getZsetSize(scheduledQueueName) <= 1,
         "one or zero messages in zset");
     assertTrue(
         stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue)) >= 200,

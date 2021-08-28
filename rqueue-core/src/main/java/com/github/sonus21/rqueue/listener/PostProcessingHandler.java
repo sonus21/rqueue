@@ -189,7 +189,7 @@ class PostProcessingHandler extends PrefixLogger {
                 ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
                 : backOff;
         moveMessageToQueue(
-            queueDetail, queueConfig.getDelayedQueueName(), rqueueMessage, newMessage, backOff);
+            queueDetail, queueConfig.getScheduledQueueName(), rqueueMessage, newMessage, backOff);
       }
     } else {
       moveMessageToQueue(
@@ -211,7 +211,7 @@ class PostProcessingHandler extends PrefixLogger {
     } else {
       rqueueMessageTemplate.moveMessageWithDelay(
           queueDetail.getProcessingQueueName(),
-          queueDetail.getDelayedQueueName(),
+          queueDetail.getScheduledQueueName(),
           rqueueMessage,
           newMessage,
           delay);

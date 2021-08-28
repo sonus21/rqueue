@@ -1,6 +1,6 @@
 <div>
    <img  align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue-core/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
-   <h1 style="float:left">Rqueue: Redis Queue, Task Queue, Delayed Queue for Spring and Spring Boot</h1>
+   <h1 style="float:left">Rqueue: Redis Queue, Task Queue, Scheduled Queue for Spring and Spring Boot</h1>
 </div>
 
 [![Build Status](https://circleci.com/gh/sonus21/rqueue/tree/master.svg?style=shield)](https://circleci.com/gh/sonus21/rqueue/tree/master)
@@ -32,7 +32,7 @@ well, where all services code is in Spring.
 * **Automatic message serialization and deserialization**
 * **Message Multicasting** : Call multiple message listeners on every message
 * **Batch Message Polling** : Fetch multiple messages from Redis at once
-* **Metrics** : In flight messages, waiting for consumption and delayed messages
+* **Metrics** : In flight messages, waiting for consumption and scheduled messages
 * **Competing Consumers** : multiple messages can be consumed in parallel by different
   workers/listeners.
 * **Concurrency** : Concurrency of any listener can be configured

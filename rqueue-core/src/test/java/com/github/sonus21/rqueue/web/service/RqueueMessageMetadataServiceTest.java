@@ -29,6 +29,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.impl.RqueueMessageMetadataServiceImpl;
@@ -40,16 +41,20 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMessageMetadataServiceTest extends TestBase {
   @Mock private RqueueMessageMetadataDao rqueueMessageMetadataDao;
+  @Mock private RqueueStringDao rqueueStringDao;
   private RqueueMessageMetadataService rqueueMessageMetadataService;
   private final String queueName = "test-queue";
 
   @BeforeEach
   public void init() {
-    rqueueMessageMetadataService = new RqueueMessageMetadataServiceImpl(rqueueMessageMetadataDao);
+    MockitoAnnotations.openMocks(this);
+    rqueueMessageMetadataService =
+        new RqueueMessageMetadataServiceImpl(rqueueMessageMetadataDao, rqueueStringDao);
   }
 
   @Test

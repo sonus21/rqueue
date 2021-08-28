@@ -91,5 +91,5 @@ public interface RqueueMessageTemplate {
   Mono<Long> addReactiveMessage(String queueName, RqueueMessage rqueueMessage);
 
   Flux<Long> addReactiveMessageWithDelay(
-      String delayedQueueName, String delayedQueueChannelName, RqueueMessage rqueueMessage);
+      String scheduledQueueName, String scheduledQueueChannelName, RqueueMessage rqueueMessage);
 }

@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -356,7 +358,8 @@ class JobImplTest extends TestBase {
     job.updateExecutionTime(rqueueMessage, MessageStatus.SUCCESSFUL);
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(2)).save(any(), any());
-    verify(messageMetadataService, times(1)).save(any(), any());
+    verify(messageMetadataService, times(1))
+        .saveMessageMetadataForQueue(anyString(), any(MessageMetadata.class), anyLong());
   }
 
   @Test
