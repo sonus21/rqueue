@@ -43,15 +43,15 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMessageSenderTest extends TestBase {
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
-  private RqueueMessageSender rqueueMessageSender;
   private final String queueName = "test-queue";
   private final QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
   private final String slowQueue = "slow-queue";
   private final String deadLetterQueueName = "dead-test-queue";
   private final String message = "Test Message";
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  private RqueueMessageSender rqueueMessageSender;
 
   @BeforeEach
   public void init() throws IllegalAccessException {

@@ -97,6 +97,13 @@ public interface Job {
   boolean updateVisibilityTimeout(Duration deltaDuration);
 
   /**
+   * A message that was enqueued
+   *
+   * @return an object could be null if deserialization fail.
+   */
+  Object getMessage();
+
+  /**
    * There are times when message can not be deserialized from the string to Object, this can happen
    * when class information is missing. In such cases only raw message is available but application
    * can add a middleware to deserialize such messages and set in this so that other middleware(s)
@@ -112,12 +119,6 @@ public interface Job {
    * @param message message object
    */
   void setMessage(Object message);
-  /**
-   * A message that was enqueued
-   *
-   * @return an object could be null if deserialization fail.
-   */
-  Object getMessage();
 
   /**
    * MessageMetadata corresponding the enqueued message

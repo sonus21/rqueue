@@ -62,15 +62,14 @@ import org.springframework.data.redis.listener.ChannelTopic;
 @SuppressWarnings("unchecked")
 class ScheduledQueueMessageSchedulerTest extends TestBase {
   @InjectMocks private final TestMessageScheduler messageScheduler = new TestMessageScheduler();
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-  @Mock private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
-
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
+  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RedisTemplate<String, Long> redisTemplate;
+  @Mock private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
   @BeforeEach
   public void init() {

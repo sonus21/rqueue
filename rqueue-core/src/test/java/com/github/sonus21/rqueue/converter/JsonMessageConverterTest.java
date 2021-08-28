@@ -39,36 +39,6 @@ class JsonMessageConverterTest extends TestBase {
   private final MessageConverter messageConverter = new JsonMessageConverter();
   private final MessageConverter messageConverter2 = new JsonMessageConverter(objectMapper);
 
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  @EqualsAndHashCode
-  public static class TestData {
-    private String id;
-    private String message;
-
-    public static TestData getInstance() {
-      return new TestData(UUID.randomUUID().toString(), RandomStringUtils.randomAlphabetic(100));
-    }
-  }
-
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  @EqualsAndHashCode
-  public static class TestDataX {
-    private String id;
-    private String message;
-    private String x;
-
-    public static TestDataX getInstance() {
-      return new TestDataX(
-          UUID.randomUUID().toString(),
-          RandomStringUtils.randomAlphabetic(100),
-          RandomStringUtils.randomAlphabetic(100));
-    }
-  }
-
   @Test
   void fromMessage() {
     TestData testData = TestData.getInstance();
@@ -99,5 +69,35 @@ class JsonMessageConverterTest extends TestBase {
     assertNotNull(messageConverter.toMessage(TestDataX.getInstance(), null));
     assertNotNull(messageConverter2.toMessage(TestData.getInstance(), null));
     assertNotNull(messageConverter2.toMessage(TestDataX.getInstance(), null));
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @EqualsAndHashCode
+  public static class TestData {
+    private String id;
+    private String message;
+
+    public static TestData getInstance() {
+      return new TestData(UUID.randomUUID().toString(), RandomStringUtils.randomAlphabetic(100));
+    }
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @EqualsAndHashCode
+  public static class TestDataX {
+    private String id;
+    private String message;
+    private String x;
+
+    public static TestDataX getInstance() {
+      return new TestDataX(
+          UUID.randomUUID().toString(),
+          RandomStringUtils.randomAlphabetic(100),
+          RandomStringUtils.randomAlphabetic(100));
+    }
   }
 }

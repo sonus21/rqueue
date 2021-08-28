@@ -34,12 +34,37 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class RqueueSystemCleaner implements ApplicationListener<RqueueBootstrapEvent> {
-  private ScheduledExecutorService executorService;
   private final RqueueBeanProvider rqueueBeanProvider;
+  private ScheduledExecutorService executorService;
 
   @Autowired
   public RqueueSystemCleaner(RqueueBeanProvider rqueueBeanProvider) {
     this.rqueueBeanProvider = rqueueBeanProvider;
+  }
+
+  @Override
+  public void onApplicationEvent(RqueueBootstrapEvent event) {
+    if (executorService != null) {
+      executorService.shutdown();
+    }
+    if (rqueueBeanProvider.getRqueueConfig().isProducer()) {
+      return;
+    }
+    if (event.isStartup()
+        && rqueueBeanProvider.getRqueueConfig().messageInTerminalStateShouldBeStored()) {
+      executorService = Executors.newSingleThreadScheduledExecutor();
+      List<QueueConfig> queueConfigList =
+          rqueueBeanProvider
+              .getRqueueSystemConfigDao()
+              .getConfigByNames(EndpointRegistry.getActiveQueues());
+      int i = 0;
+      for (QueueConfig queueConfig : queueConfigList) {
+        CleanCompletedJobs completedJobs =
+            new CleanCompletedJobs(queueConfig.getName(), queueConfig.getCompletedQueueName());
+        executorService.scheduleAtFixedRate(
+            completedJobs, i, 5 * Constants.ONE_MILLI, TimeUnit.MILLISECONDS);
+      }
+    }
   }
 
   private class CleanCompletedJobs extends RetryableRunnable<Object> {
@@ -74,28 +99,6 @@ public class RqueueSystemCleaner implements ApplicationListener<RqueueBootstrapE
       rqueueBeanProvider
           .getRqueueMessageMetadataService()
           .deleteQueueMessages(completedQueueName, endTime);
-    }
-  }
-
-  @Override
-  public void onApplicationEvent(RqueueBootstrapEvent event) {
-    if (executorService != null) {
-      executorService.shutdown();
-    }
-    if (event.isStartup()
-        && rqueueBeanProvider.getRqueueConfig().messageInTerminalStateShouldBeStored()) {
-      executorService = Executors.newSingleThreadScheduledExecutor();
-      List<QueueConfig> queueConfigList =
-          rqueueBeanProvider
-              .getRqueueSystemConfigDao()
-              .getConfigByNames(EndpointRegistry.getActiveQueues());
-      int i = 0;
-      for (QueueConfig queueConfig : queueConfigList) {
-        CleanCompletedJobs completedJobs =
-            new CleanCompletedJobs(queueConfig.getName(), queueConfig.getCompletedQueueName());
-        executorService.scheduleAtFixedRate(
-            completedJobs, i, 5 * Constants.ONE_MILLI, TimeUnit.MILLISECONDS);
-      }
     }
   }
 }

@@ -49,9 +49,9 @@ public class JobImpl implements Job {
   private final RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
-  private Object userMessage;
   private final PostProcessingHandler postProcessingHandler;
   private final boolean isPeriodicJob;
+  private Object userMessage;
   private Context context = DefaultContext.EMPTY;
   private Boolean released;
   private Boolean deleted;
@@ -153,13 +153,13 @@ public class JobImpl implements Job {
   }
 
   @Override
-  public void setMessage(Object message) {
-    this.userMessage = message;
+  public Object getMessage() {
+    return userMessage;
   }
 
   @Override
-  public Object getMessage() {
-    return userMessage;
+  public void setMessage(Object message) {
+    this.userMessage = message;
   }
 
   @Override

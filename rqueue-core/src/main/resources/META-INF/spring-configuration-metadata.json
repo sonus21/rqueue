@@ -348,14 +348,14 @@
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.collect.statistic.aggregate.shutdown.wait.time",
-      "description": "How long Rqueue should wait for aggregate job to complete o shutdown (mili seconds)",
+      "description": "How long Rqueue should wait for aggregate job to complete o shutdown (milliseconds)",
       "type": "java.lang.Integer",
       "defaultValue": 500
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.collect.statistic.aggregate.event.lock.duration",
-      "description": "How long Rqueue should wait for Redis lock when aggregation data is being saved(mili seconds)",
+      "description": "How long Rqueue should wait for Redis lock when aggregation data is being saved(milliseconds)",
       "type": "java.lang.Integer",
       "defaultValue": 500
     }

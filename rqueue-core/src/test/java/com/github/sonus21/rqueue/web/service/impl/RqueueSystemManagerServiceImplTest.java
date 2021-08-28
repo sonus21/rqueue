@@ -49,20 +49,20 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueSystemManagerServiceImplTest extends TestBase {
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueConfig rqueueConfig;
-  private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final String normalQueue = "normal-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
   private final QueueDetail fastQueueDetail =
       TestUtils.createQueueDetail(fastQueue, 3, 200000L, "fast-dlq");
+  private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private final QueueDetail normalQueueDetail =
       TestUtils.createQueueDetail(normalQueue, 3, 100000L, "normal-dlq");
-  private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
-  private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
+  @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock private RqueueConfig rqueueConfig;
+  private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
 
   @BeforeEach
   public void init() {

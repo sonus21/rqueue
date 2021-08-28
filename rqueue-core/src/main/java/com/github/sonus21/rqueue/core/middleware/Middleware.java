@@ -35,8 +35,7 @@ import java.util.concurrent.Callable;
  * delete this job using one of the methods {@link Job#release(JobStatus, Serializable)}, {@link
  * Job#release(JobStatus, Serializable, Duration)} {@link Job#delete(JobStatus, Serializable)}.
  *
- * <p>For example three middlewares [m1,m2,m3] are registered than m1 would be called first
- * followed
+ * <p>For example three middlewares [m1,m2,m3] are registered than m1 would be called first followed
  * by m2, m3 and message handler {@link HandlerMiddleware}. Middleware m1 can either call m2 or skip
  * it, skipping call of m2 means this job will not be processed by either m2 or m3 and this job must
  * be either released or deleted. If m2 is called from m1 than m2 can either call m3 or skip it, if
@@ -63,7 +62,7 @@ public interface Middleware {
   /**
    * Middleware handles that would be called
    *
-   * @param job  job object
+   * @param job job object
    * @param next next middleware in chain
    * @throws Exception any exception
    */

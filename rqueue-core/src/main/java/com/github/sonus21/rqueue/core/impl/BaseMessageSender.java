@@ -194,7 +194,8 @@ abstract class BaseMessageSender {
               .active(false)
               .queueName(rqueueConfig.getQueueName(queueName) + suffix)
               .scheduledQueueName(rqueueConfig.getScheduledQueueName(queueName) + suffix)
-              .scheduledQueueChannelName(rqueueConfig.getScheduledQueueChannelName(queueName) + suffix)
+              .scheduledQueueChannelName(
+                  rqueueConfig.getScheduledQueueChannelName(queueName) + suffix)
               .processingQueueName(rqueueConfig.getProcessingQueueName(queueName) + suffix)
               .processingQueueChannelName(
                   rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)

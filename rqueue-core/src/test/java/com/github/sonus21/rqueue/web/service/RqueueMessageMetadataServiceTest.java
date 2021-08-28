@@ -45,10 +45,10 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMessageMetadataServiceTest extends TestBase {
+  private final String queueName = "test-queue";
   @Mock private RqueueMessageMetadataDao rqueueMessageMetadataDao;
   @Mock private RqueueStringDao rqueueStringDao;
   private RqueueMessageMetadataService rqueueMessageMetadataService;
-  private final String queueName = "test-queue";
 
   @BeforeEach
   public void init() {

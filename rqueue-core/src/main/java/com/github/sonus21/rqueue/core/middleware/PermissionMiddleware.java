@@ -26,8 +26,7 @@ import java.util.concurrent.Callable;
  * <p>If the given job does not have the right permission than this job would be released back to
  * pool for other consumers.
  *
- * <p><b>NOTE:</b> User's role was changed between and the said is no longer be able to perform
- * some
+ * <p><b>NOTE:</b> User's role was changed between and the said is no longer be able to perform some
  * action
  */
 public interface PermissionMiddleware extends TimeProviderMiddleware {

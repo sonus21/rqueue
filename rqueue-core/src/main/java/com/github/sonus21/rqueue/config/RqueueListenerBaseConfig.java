@@ -68,6 +68,10 @@ public abstract class RqueueListenerBaseConfig {
   private static final String TEMPLATE_DIR = "templates/rqueue/";
   private static final String TEMPLATE_SUFFIX = ".html";
 
+  @Autowired(required = false)
+  protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
+      new SimpleRqueueListenerContainerFactory();
+
   @Value("${rqueue.reactive.enabled:false}")
   protected boolean reactiveEnabled;
 
@@ -94,10 +98,6 @@ public abstract class RqueueListenerBaseConfig {
           e);
     }
   }
-
-  @Autowired(required = false)
-  protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
-      new SimpleRqueueListenerContainerFactory();
 
   /**
    * Create Rqueue configuration bean either from listener container factory or from bean factory.

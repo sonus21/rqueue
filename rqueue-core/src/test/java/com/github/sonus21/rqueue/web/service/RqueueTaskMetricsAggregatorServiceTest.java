@@ -61,6 +61,7 @@ import org.mockito.MockitoAnnotations;
 @Slf4j
 @CoreUnitTest
 class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
+  private final String queueName = "test-queue";
   @Mock private RqueueQStatsDao rqueueQStatsDao;
   @Mock private RqueueWebConfig rqueueWebConfig;
   @Mock private RqueueLockManager rqueueLockManager;
@@ -69,7 +70,6 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
   @Mock private RqueueJobDao rqueueJobDao;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   private RqueueTaskMetricsAggregatorService rqueueTaskMetricsAggregatorService;
-  private final String queueName = "test-queue";
 
   @BeforeEach
   public void initService() throws IllegalAccessException {

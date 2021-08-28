@@ -41,11 +41,6 @@ import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 
 @CoreUnitTest
 class RqueueMessageTemplateTest extends TestBase {
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private RedisTemplate<String, RqueueMessage> redisTemplate;
-  @Mock private ListOperations<String, RqueueMessage> listOperations;
-  @Mock private DefaultScriptExecutor<String> scriptExecutor;
-  private RqueueMessageTemplate rqueueMessageTemplate;
   private final String queueName = "test-queue";
   private final RqueueMessage message =
       RqueueMessage.builder()
@@ -55,6 +50,11 @@ class RqueueMessageTemplateTest extends TestBase {
           .message("This is a test message")
           .processAt(System.currentTimeMillis())
           .build();
+  @Mock private RedisConnectionFactory redisConnectionFactory;
+  @Mock private RedisTemplate<String, RqueueMessage> redisTemplate;
+  @Mock private ListOperations<String, RqueueMessage> listOperations;
+  @Mock private DefaultScriptExecutor<String> scriptExecutor;
+  private RqueueMessageTemplate rqueueMessageTemplate;
 
   @BeforeEach
   public void init() throws Exception {

@@ -44,10 +44,9 @@ import lombok.ToString;
 @ToString
 public class QueueDetail extends SerializableBase {
 
+  private static final long serialVersionUID = 9153752084449974622L;
   // visibility timeout in milliseconds
   private final long visibilityTimeout;
-
-  private static final long serialVersionUID = 9153752084449974622L;
   private final String name;
   private final int numRetry;
   @Builder.Default private final QueueType type = QueueType.QUEUE;
@@ -63,12 +62,6 @@ public class QueueDetail extends SerializableBase {
   private final Concurrency concurrency;
   private final boolean systemGenerated;
   private final int batchSize;
-
-  public enum QueueType {
-    QUEUE,
-    STREAM
-  }
-
   private Map<String, Integer> priority;
   private String priorityGroup;
 
@@ -156,5 +149,10 @@ public class QueueDetail extends SerializableBase {
 
   public Duration visibilityDuration() {
     return Duration.ofMillis(visibilityTimeout);
+  }
+
+  public enum QueueType {
+    QUEUE,
+    STREAM
   }
 }

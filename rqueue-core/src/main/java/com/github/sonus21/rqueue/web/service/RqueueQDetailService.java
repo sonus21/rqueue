@@ -48,9 +48,9 @@ public interface RqueueQDetailService {
 
   List<List<Object>> getDeadLetterTasks();
 
-  Mono<DataViewResponse> getReactiveExplorePageData(String src, String name, DataType type,
-      int pageNumber, int itemPerPage);
+  Mono<DataViewResponse> getReactiveExplorePageData(
+      String src, String name, DataType type, int pageNumber, int itemPerPage);
 
-  Mono<DataViewResponse> viewReactiveData(String name, DataType type, String key, int pageNumber,
-      int itemPerPage);
+  Mono<DataViewResponse> viewReactiveData(
+      String name, DataType type, String key, int pageNumber, int itemPerPage);
 }

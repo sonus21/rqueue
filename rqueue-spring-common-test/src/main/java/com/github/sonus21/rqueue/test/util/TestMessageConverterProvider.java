@@ -20,7 +20,7 @@ import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
-public class TestMessageConverterProvider  implements MessageConverterProvider {
+public class TestMessageConverterProvider implements MessageConverterProvider {
 
   @Override
   public MessageConverter getConverter() {

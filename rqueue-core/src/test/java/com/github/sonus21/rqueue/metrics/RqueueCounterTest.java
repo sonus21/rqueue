@@ -28,9 +28,9 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueCounterTest extends TestBase {
+  private final String queueName = "test";
   @Mock private QueueCounter queueCounter;
   private RqueueCounter rqueueCounter;
-  private final String queueName = "test";
 
   @BeforeEach
   public void init() {

@@ -57,18 +57,18 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class JobImplTest extends TestBase {
-  @Mock RedisConnectionFactory redisConnectionFactory;
-  @Mock private RqueueMessageMetadataService messageMetadataService;
-  @Mock private RqueueJobDao rqueueJobDao;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  private RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
+  @Mock RedisConnectionFactory redisConnectionFactory;
   RqueueMessage rqueueMessage =
       RqueueMessageUtils.generateMessage(messageConverter, queueDetail.getName());
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
   Object userMessage = "Test Object";
+  @Mock private RqueueMessageMetadataService messageMetadataService;
+  @Mock private RqueueJobDao rqueueJobDao;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  private RqueueConfig rqueueConfig;
 
   @BeforeEach
   public void init() throws IllegalAccessException {

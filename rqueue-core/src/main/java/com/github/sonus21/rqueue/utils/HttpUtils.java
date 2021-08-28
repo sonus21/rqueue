@@ -26,8 +26,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public final class HttpUtils {
 
-  private HttpUtils() {
-  }
+  private HttpUtils() {}
 
   private static SimpleClientHttpRequestFactory getRequestFactory(RqueueConfig rqueueConfig) {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();

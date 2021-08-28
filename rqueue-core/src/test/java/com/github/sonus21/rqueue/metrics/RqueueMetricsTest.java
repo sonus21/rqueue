@@ -43,8 +43,6 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMetricsTest extends TestBase {
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private QueueCounter queueCounter;
   private final MetricsProperties metricsProperties = new MetricsProperties() {};
   private final String simpleQueue = "simple-queue";
   private final String scheduledQueue = "scheduled-queue";
@@ -53,6 +51,8 @@ class RqueueMetricsTest extends TestBase {
   private final QueueDetail scheduledQueueDetail = TestUtils.createQueueDetail(scheduledQueue);
   private final QueueDetail simpleQueueDetail =
       TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
+  @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private QueueCounter queueCounter;
 
   @BeforeEach
   public void init() {

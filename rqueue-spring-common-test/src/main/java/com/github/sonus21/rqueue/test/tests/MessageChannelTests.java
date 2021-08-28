@@ -34,10 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class MessageChannelTests extends SpringTestBase {
   /**
-   * This test verifies whether any pending message in the scheduled queue are moved or not whenever a
-   * scheduled message is pushed. During enqueue of scheduled message we check whether there are any
-   * pending messages on the delay queue, if expired scheduled messages are found on the head then a
-   * message is published on scheduled channel.
+   * This test verifies whether any pending message in the scheduled queue are moved or not whenever
+   * a scheduled message is pushed. During enqueue of scheduled message we check whether there are
+   * any pending messages on the delay queue, if expired scheduled messages are found on the head
+   * then a message is published on scheduled channel.
    */
   protected void verifyPublishMessageIsTriggeredOnMessageAddition() throws TimedOutException {
     String scheduledQueueName = rqueueConfig.getScheduledQueueName(emailQueue);

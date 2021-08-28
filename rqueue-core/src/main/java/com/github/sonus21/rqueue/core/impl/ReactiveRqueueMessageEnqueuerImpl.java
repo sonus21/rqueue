@@ -306,8 +306,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
 
   private static class BoolMonoConverter implements MonoConverter<Boolean> {
 
-    private BoolMonoConverter(RqueueMessage message) {
-    }
+    private BoolMonoConverter(RqueueMessage message) {}
 
     @Override
     public Boolean call(Long a, Boolean b) {

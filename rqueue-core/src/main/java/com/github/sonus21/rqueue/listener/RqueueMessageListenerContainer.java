@@ -75,9 +75,16 @@ public class RqueueMessageListenerContainer
   public static final String EVENT_SOURCE = "RqueueMessageListenerContainer";
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
+  final QueueStateMgr queueStateMgr = new QueueStateMgr();
   private final Object lifecycleMgr = new Object();
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueMessageHandler rqueueMessageHandler;
+  private final Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue =
+      new ConcurrentHashMap<>();
+  private final Map<String, QueueThreadPool> queueThreadMap = new ConcurrentHashMap<>();
+  @Autowired protected RqueueBeanProvider rqueueBeanProvider;
+  List<Middleware> middlewares;
   private MessageProcessor discardMessageProcessor;
   private MessageProcessor deadLetterQueueMessageProcessor;
   private MessageProcessor manualDeletionMessageProcessor;
@@ -85,13 +92,7 @@ public class RqueueMessageListenerContainer
   private MessageProcessor preExecutionMessageProcessor;
   private TaskExecutionBackOff taskExecutionBackOff = new FixedTaskExecutionBackOff();
   private PostProcessingHandler postProcessingHandler;
-  final QueueStateMgr queueStateMgr = new QueueStateMgr();
-  private final Map<String, Boolean> queueRunningState = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue =
-      new ConcurrentHashMap<>();
-  private final Map<String, QueueThreadPool> queueThreadMap = new ConcurrentHashMap<>();
   private AsyncTaskExecutor taskExecutor;
-  @Autowired protected RqueueBeanProvider rqueueBeanProvider;
   private Integer maxNumWorkers;
   private String beanName;
   private boolean defaultTaskExecutor = false;
@@ -102,7 +103,6 @@ public class RqueueMessageListenerContainer
   private long pollingInterval = 200L;
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
-  List<Middleware> middlewares;
   private MessageHeaders messageHeaders;
 
   public RqueueMessageListenerContainer(
@@ -567,56 +567,6 @@ public class RqueueMessageListenerContainer
     waitForRunningQueuesToStop();
   }
 
-  class QueueStateMgr {
-    Set<String> pausedQueues = ConcurrentHashMap.newKeySet();
-
-    boolean isQueueActive(String queueName) {
-      return queueRunningState.getOrDefault(queueName, false);
-    }
-
-    boolean isQueuePaused(String queueName) {
-      return pausedQueues.contains(queueName);
-    }
-
-    void pauseUnpauseQueue(String queue, boolean pause) {
-      if (pause && pausedQueues.contains(queue)) {
-        log.error("Duplicate pause called {}", queue);
-        return;
-      }
-      if (!pause && !pausedQueues.contains(queue)) {
-        log.error("Queue is not paused but unpause is requested {}", queue);
-        return;
-      }
-      if (pause) {
-        pause(queue);
-      } else {
-        unpause(queue);
-      }
-      RqueueQueuePauseEvent event = new RqueueQueuePauseEvent(EVENT_SOURCE, queue, pause);
-      rqueueBeanProvider.getApplicationEventPublisher().publishEvent(event);
-    }
-
-    private void unpause(String queue) {
-      log.info("Queue '{}' action unpause", queue);
-      pausedQueues.remove(queue);
-    }
-
-    private void pause(String queue) {
-      log.info("Queue '{}' action pause", queue);
-      pausedQueues.add(queue);
-    }
-
-    void pauseQueueIfRequired(QueueConfig config) {
-      if (config == null) {
-        // new queue
-        return;
-      }
-      if (config.isPaused()) {
-        pause(config.getName());
-      }
-    }
-  }
-
   private void waitForRunningQueuesToStop() {
     for (Map.Entry<String, Boolean> entry : queueRunningState.entrySet()) {
       String queueName = entry.getKey();
@@ -726,11 +676,61 @@ public class RqueueMessageListenerContainer
     return middlewares;
   }
 
+  public MessageHeaders getMessageHeaders() {
+    return messageHeaders;
+  }
+
   public void setMessageHeaders(MessageHeaders messageHeaders) {
     this.messageHeaders = messageHeaders;
   }
 
-  public MessageHeaders getMessageHeaders() {
-    return messageHeaders;
+  class QueueStateMgr {
+    Set<String> pausedQueues = ConcurrentHashMap.newKeySet();
+
+    boolean isQueueActive(String queueName) {
+      return queueRunningState.getOrDefault(queueName, false);
+    }
+
+    boolean isQueuePaused(String queueName) {
+      return pausedQueues.contains(queueName);
+    }
+
+    void pauseUnpauseQueue(String queue, boolean pause) {
+      if (pause && pausedQueues.contains(queue)) {
+        log.error("Duplicate pause called {}", queue);
+        return;
+      }
+      if (!pause && !pausedQueues.contains(queue)) {
+        log.error("Queue is not paused but unpause is requested {}", queue);
+        return;
+      }
+      if (pause) {
+        pause(queue);
+      } else {
+        unpause(queue);
+      }
+      RqueueQueuePauseEvent event = new RqueueQueuePauseEvent(EVENT_SOURCE, queue, pause);
+      rqueueBeanProvider.getApplicationEventPublisher().publishEvent(event);
+    }
+
+    private void unpause(String queue) {
+      log.info("Queue '{}' action unpause", queue);
+      pausedQueues.remove(queue);
+    }
+
+    private void pause(String queue) {
+      log.info("Queue '{}' action pause", queue);
+      pausedQueues.add(queue);
+    }
+
+    void pauseQueueIfRequired(QueueConfig config) {
+      if (config == null) {
+        // new queue
+        return;
+      }
+      if (config.isPaused()) {
+        pause(config.getName());
+      }
+    }
   }
 }

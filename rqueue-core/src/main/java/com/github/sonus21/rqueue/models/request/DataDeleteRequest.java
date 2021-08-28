@@ -32,7 +32,10 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class DataDeleteRequest extends SerializableBase {
   @JsonProperty("queue")
-  @NotEmpty private String queueName;
+  @NotEmpty
+  private String queueName;
+
   @JsonProperty("data_set")
-  @NotEmpty private String datasetName;
+  @NotEmpty
+  private String datasetName;
 }

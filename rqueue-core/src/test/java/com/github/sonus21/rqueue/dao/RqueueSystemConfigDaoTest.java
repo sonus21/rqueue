@@ -45,12 +45,12 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueSystemConfigDaoTest extends TestBase {
-  @Mock private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
-  @Mock private RqueueConfig rqueueConfig;
-  private RqueueSystemConfigDao rqueueSystemConfigDao;
   private final String queueName = "job";
   private final String configKey = TestUtils.getQueueConfigKey(queueName);
   private final QueueConfig queueConfig = TestUtils.createQueueConfig(queueName);
+  @Mock private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
+  @Mock private RqueueConfig rqueueConfig;
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
 
   @BeforeEach
   public void init() {

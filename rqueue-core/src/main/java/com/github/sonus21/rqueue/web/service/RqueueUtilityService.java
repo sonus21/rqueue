@@ -48,5 +48,4 @@ public interface RqueueUtilityService {
   Mono<BaseResponse> reactivePauseUnpauseQueue(PauseUnpauseQueueRequest request);
 
   BaseResponse pauseUnpauseQueue(PauseUnpauseQueueRequest request);
-
 }

@@ -40,7 +40,6 @@ import java.lang.annotation.Target;
  * public class MessageListener {
  * &#64;RqueueListener(
  *       value="${job.queue}",
- *      scheduledQueue="true",
  *      numRetries="3",
  *      deadLetterQueue="#{job.dead.letter.queue}",
  *      visibilityTimeout="30*60*1000")
@@ -118,7 +117,7 @@ public @interface RqueueListener {
    * listeners, that will violate exactly once processing. On the other hand if provided time is too
    * high then the message would be hidden from other consumers for a longer period.
    *
-   * <p><b>NOTE:</b> This time is in milli seconds
+   * <p><b>NOTE:</b> This time is in milliseconds
    *
    * @return visibilityTimeout visibility timeout
    */

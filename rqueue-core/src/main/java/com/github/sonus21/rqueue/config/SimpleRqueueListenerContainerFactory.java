@@ -51,9 +51,9 @@ import org.springframework.util.CollectionUtils;
 @SuppressWarnings("WeakerAccess")
 public class SimpleRqueueListenerContainerFactory {
 
+  private final List<Middleware> middlewares = new LinkedList<>();
   // The message converter provider that will return a message converter to convert messages to/from
   private MessageConverterProvider messageConverterProvider;
-
   // Provide task executor, this can be used to provide some additional details like some threads
   // name, etc otherwise a default task executor would be created
   private AsyncTaskExecutor taskExecutor;
@@ -65,14 +65,12 @@ public class SimpleRqueueListenerContainerFactory {
   private ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   // Custom requeue message handler
   private RqueueMessageHandler rqueueMessageHandler;
-
   // Send message poll time when no messages are available
   private long pollingInterval = 200L;
   // In case of failure how much time, we should wait for next job
   private long backOffTime = 5 * Constants.ONE_MILLI;
   // Number of workers requires for execution
   private Integer maxNumWorkers;
-
   // This message processor would be called before a task can start execution.
   // It needs to be noted that this message processor would be called multiple time
   // In case of retry, so application should be able to handle that.
@@ -88,9 +86,6 @@ public class SimpleRqueueListenerContainerFactory {
   private MessageProcessor postExecutionMessageProcessor;
   // Any custom message requeue message template.
   private RqueueMessageTemplate rqueueMessageTemplate;
-
-  private final List<Middleware> middlewares = new LinkedList<>();
-
   // Any message headers that should be set, headers are NOT STORED in db so it should not be
   // changed, same header is used in serialized and deserialization process.
   private MessageHeaders messageHeaders;
@@ -106,9 +101,9 @@ public class SimpleRqueueListenerContainerFactory {
   private boolean inspectAllBean = true;
 
   /**
-   * Whenever a consumer fails then the consumed message can be scheduled for further consumption. The
-   * delay of that can be configured, by default same message would be retried in 5 seconds and this
-   * will continue due to default task interval. {@link
+   * Whenever a consumer fails then the consumed message can be scheduled for further consumption.
+   * The delay of that can be configured, by default same message would be retried in 5 seconds and
+   * this will continue due to default task interval. {@link
    * com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff#DEFAULT_INTERVAL}
    *
    * @see com.github.sonus21.rqueue.utils.backoff.ExponentialTaskExecutionBackOff
@@ -429,7 +424,7 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Get configured polling interval
    *
-   * @return the time in milli seconds
+   * @return the time in milliseconds
    */
   public long getPollingInterval() {
     return pollingInterval;
@@ -438,7 +433,7 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Set polling time interval, this controls the listener polling interval
    *
-   * @param pollingInterval time in milli seconds
+   * @param pollingInterval time in milliseconds
    */
   public void setPollingInterval(long pollingInterval) {
     this.pollingInterval = pollingInterval;

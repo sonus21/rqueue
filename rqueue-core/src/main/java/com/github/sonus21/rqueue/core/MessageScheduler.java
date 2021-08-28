@@ -54,8 +54,8 @@ import org.springframework.util.CollectionUtils;
 
 public abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
-  @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
   private final Object monitor = new Object();
+  @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
   @Autowired protected RqueueConfig rqueueConfig;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
@@ -276,25 +276,6 @@ public abstract class MessageScheduler
     return queueNameToScheduledTask.get(queueName);
   }
 
-  private class QueueScheduler {
-    protected synchronized void schedule(String queueName, Long startTime, boolean forceSchedule) {
-      if (shouldNotSchedule(queueName, forceSchedule)) {
-        return;
-      }
-      long currentTime = System.currentTimeMillis();
-      updateLastScheduleTime(queueName, currentTime);
-      ScheduledTaskDetail scheduledTaskDetail = getScheduledTask(queueName);
-      QueueDetail queueDetail = EndpointRegistry.get(queueName);
-      String zsetName = getZsetName(queueName);
-      if (scheduledTaskDetail == null || forceSchedule) {
-        scheduleTask(startTime, currentTime, queueDetail, zsetName);
-        return;
-      }
-      checkExistingTask(scheduledTaskDetail, currentTime, queueDetail, zsetName);
-      scheduleNewTask(queueDetail, queueName, zsetName, startTime);
-    }
-  }
-
   protected void schedule(String queueName, Long startTime, boolean forceSchedule) {
     this.queueSchedulers.get(queueName).schedule(queueName, startTime, forceSchedule);
   }
@@ -347,6 +328,29 @@ public abstract class MessageScheduler
     }
   }
 
+  protected long getMinDelay() {
+    return MIN_DELAY;
+  }
+
+  private class QueueScheduler {
+    protected synchronized void schedule(String queueName, Long startTime, boolean forceSchedule) {
+      if (shouldNotSchedule(queueName, forceSchedule)) {
+        return;
+      }
+      long currentTime = System.currentTimeMillis();
+      updateLastScheduleTime(queueName, currentTime);
+      ScheduledTaskDetail scheduledTaskDetail = getScheduledTask(queueName);
+      QueueDetail queueDetail = EndpointRegistry.get(queueName);
+      String zsetName = getZsetName(queueName);
+      if (scheduledTaskDetail == null || forceSchedule) {
+        scheduleTask(startTime, currentTime, queueDetail, zsetName);
+        return;
+      }
+      checkExistingTask(scheduledTaskDetail, currentTime, queueDetail, zsetName);
+      scheduleNewTask(queueDetail, queueName, zsetName, startTime);
+    }
+  }
+
   @ToString
   @AllArgsConstructor
   private class MessageMoverTask implements Runnable {
@@ -381,10 +385,6 @@ public abstract class MessageScheduler
     public String getName() {
       return this.name;
     }
-  }
-
-  protected long getMinDelay() {
-    return MIN_DELAY;
   }
 
   private class MessageSchedulerListener implements MessageListener {

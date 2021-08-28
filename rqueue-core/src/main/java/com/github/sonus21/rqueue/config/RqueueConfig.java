@@ -43,12 +43,12 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @Configuration
 public class RqueueConfig {
 
+  private static final String brokerId = UUID.randomUUID().toString();
+  private static final AtomicLong counter = new AtomicLong(1);
   private final RedisConnectionFactory connectionFactory;
   private final ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
-  private static final String brokerId = UUID.randomUUID().toString();
-  private static final AtomicLong counter = new AtomicLong(1);
 
   @Value("${rqueue.reactive.enabled:false}")
   private boolean reactiveEnabled;
@@ -136,6 +136,16 @@ public class RqueueConfig {
   @Value("${rqueue.message.durability.in-terminal-state:1800}")
   private long messageDurabilityInTerminalStateInSecond;
 
+  @Value("${rqueue.system.mode:BOTH}")
+  private RqueueMode mode;
+
+  @Value("${rqueue.internal.communication.channel.name.prefix:i-channel}")
+  private String internalChannelNamePrefix;
+
+  public static String getBrokerId() {
+    return brokerId;
+  }
+
   public boolean messageInTerminalStateShouldBeStored() {
     return messageDurabilityInTerminalStateInSecond > 0;
   }
@@ -143,12 +153,6 @@ public class RqueueConfig {
   public long messageDurabilityInTerminalStateInMillisecond() {
     return messageDurabilityInTerminalStateInSecond * Constants.ONE_MILLI;
   }
-
-  @Value("${rqueue.system.mode:BOTH}")
-  private RqueueMode mode;
-
-  @Value("${rqueue.internal.communication.channel.name.prefix:i-channel}")
-  private String internalChannelNamePrefix;
 
   public String getInternalCommChannelName() {
     return prefix + internalChannelNamePrefix;
@@ -291,10 +295,6 @@ public class RqueueConfig {
 
   public Duration getJobDurabilityInTerminalState() {
     return Duration.ofSeconds(jobDurabilityInTerminalStateInSecond);
-  }
-
-  public static String getBrokerId() {
-    return brokerId;
   }
 
   public String getLibVersion() {

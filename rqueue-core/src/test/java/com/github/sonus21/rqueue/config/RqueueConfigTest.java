@@ -69,7 +69,8 @@ class RqueueConfigTest extends TestBase {
   @Test
   void getScheduledQueueChannelName() {
     assertEquals("rqueue-channel::test", rqueueConfigVersion1.getScheduledQueueChannelName("test"));
-    assertEquals("__rq::d-channel::test", rqueueConfigVersion2.getScheduledQueueChannelName("test"));
+    assertEquals(
+        "__rq::d-channel::test", rqueueConfigVersion2.getScheduledQueueChannelName("test"));
     assertEquals(
         "__rq::d-channel::{test}",
         rqueueConfigVersion2ClusterMode.getScheduledQueueChannelName("test"));

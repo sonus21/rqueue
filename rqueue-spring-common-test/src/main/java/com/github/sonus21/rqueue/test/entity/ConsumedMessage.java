@@ -40,15 +40,13 @@ import lombok.ToString;
 @Table(
     name = "consumed_messages",
     uniqueConstraints = {
-        @UniqueConstraint(
-            name = "message_id_and_tag_unique",
-            columnNames = {"message_id", "tag"})
+      @UniqueConstraint(
+          name = "message_id_and_tag_unique",
+          columnNames = {"message_id", "tag"})
     })
 public class ConsumedMessage {
 
-  @Id
-  @Column
-  private String id;
+  @Id @Column private String id;
 
   @Column(name = "message_id")
   private String messageId;
@@ -64,14 +62,11 @@ public class ConsumedMessage {
   @Column(length = 1000000)
   private String message;
 
-  @Column
-  private Long createdAt;
+  @Column private Long createdAt;
 
-  @Column
-  private Long updatedAt;
+  @Column private Long updatedAt;
 
-  @Column
-  private int count;
+  @Column private int count;
 
   public ConsumedMessage(String messageId, String tag, String queueName, String message) {
     this(

@@ -123,7 +123,7 @@ public interface ReactiveRqueueMessageEnqueuer {
    *
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
-   * @param delayInMilliSecs delay in milli seconds
+   * @param delayInMilliSecs delay in milliseconds
    * @return message id on successful enqueue otherwise null.
    */
   Mono<String> enqueueIn(String queueName, Object message, long delayInMilliSecs);
@@ -135,7 +135,7 @@ public interface ReactiveRqueueMessageEnqueuer {
    * @param queueName on which queue message has to be send
    * @param messageId the message id, using which this message will be identified
    * @param message message object it could be any arbitrary object.
-   * @param delayInMilliSecs delay in milli seconds
+   * @param delayInMilliSecs delay in milliseconds
    * @return message was enqueue successfully or failed.
    */
   Mono<Boolean> enqueueIn(
@@ -200,9 +200,9 @@ public interface ReactiveRqueueMessageEnqueuer {
   }
 
   /**
-   * Enqueue a message on given queue with delay, consume as soon as the scheduled is expired.
+   * Enqueue a message on given queue with delay, consume as soon as the delay is expired.
    *
-   * @param queueName on which queue message has to be send
+   * @param queueName on which queue message has to be sent
    * @param messageId the message id for uniqueness
    * @param message message object it could be any arbitrary object.
    * @param delayInMillisecond total execution delay
@@ -212,13 +212,13 @@ public interface ReactiveRqueueMessageEnqueuer {
       String queueName, String messageId, Object message, long delayInMillisecond);
 
   /**
-   * Enqueue a task that would be scheduled to run in the specified milli seconds.
+   * Enqueue a task that would be scheduled to run in the specified milliseconds.
    *
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or sent
    *     to dead letter queue configured using {@link RqueueListener#numRetries()} ()}
-   * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
+   * @param delayInMilliSecs delay in milliseconds, this message would be only visible to the
    *     listener when number of millisecond has elapsed.
    * @return message id on successful enqueue otherwise {@literal null}
    */
@@ -226,14 +226,14 @@ public interface ReactiveRqueueMessageEnqueuer {
       String queueName, Object message, int retryCount, long delayInMilliSecs);
 
   /**
-   * Enqueue a task that would be scheduled to run in the specified milli seconds.
+   * Enqueue a task that would be scheduled to run in the specified milliseconds.
    *
-   * @param queueName on which queue message has to be send
+   * @param queueName on which queue message has to be sent
    * @param messageId the message identifier
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or sent
    *     to dead letter queue configured using {@link RqueueListener#numRetries()} ()}
-   * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
+   * @param delayInMilliSecs delay in milliseconds, this message would be only visible to the
    *     listener when number of millisecond has elapsed.
    * @return message was enqueue successfully or failed.
    */
@@ -247,7 +247,7 @@ public interface ReactiveRqueueMessageEnqueuer {
    * @param queueName on which queue message has to be send
    * @param priority the name of the priority level
    * @param message message object it could be any arbitrary object.
-   * @param delayInMilliSecs delay in milli seconds
+   * @param delayInMilliSecs delay in milliseconds
    * @return message id on successful enqueue otherwise {@literal null}.
    */
   default Mono<String> enqueueInWithPriority(
@@ -264,7 +264,7 @@ public interface ReactiveRqueueMessageEnqueuer {
    * @param priority the name of the priority level
    * @param messageId the message id
    * @param message message object it could be any arbitrary object.
-   * @param delayInMilliSecs delay in milli seconds
+   * @param delayInMilliSecs delay in milliseconds
    * @return message was enqueue successfully or failed.
    */
   default Mono<Boolean> enqueueInWithPriority(

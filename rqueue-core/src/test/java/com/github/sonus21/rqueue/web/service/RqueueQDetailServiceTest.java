@@ -72,13 +72,13 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class RqueueQDetailServiceTest extends TestBase {
+  private final MessageConverter messageConverter = new GenericMessageConverter();
   @Mock private RedisTemplate<?, ?> redisTemplate;
   @Mock private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RqueueSystemManagerService rqueueSystemManagerService;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   private RqueueQDetailService rqueueQDetailService;
-  private final MessageConverter messageConverter = new GenericMessageConverter();
   private QueueConfig queueConfig;
   private QueueConfig queueConfig2;
   private List<QueueConfig> queueConfigList;
@@ -338,7 +338,8 @@ class RqueueQDetailServiceTest extends TestBase {
       lists.add(new TableRow(l));
     }
     expectedResponse.setRows(lists);
-    expectedResponse.addAction(new Action(ActionType.DELETE, "scheduled messages for queue 'test'"));
+    expectedResponse.addAction(
+        new Action(ActionType.DELETE, "scheduled messages for queue 'test'"));
 
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromZset("__rq::d-queue::test", 0, 9);

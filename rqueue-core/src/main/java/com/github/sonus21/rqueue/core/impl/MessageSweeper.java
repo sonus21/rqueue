@@ -90,7 +90,9 @@ public class MessageSweeper {
       String newProcessingZsetName = rqueueConfig.getDelDataName();
       messageTemplate.renameCollections(
           Arrays.asList(
-              detail.getQueueName(), detail.getScheduledQueueName(), detail.getProcessingQueueName()),
+              detail.getQueueName(),
+              detail.getScheduledQueueName(),
+              detail.getProcessingQueueName()),
           Arrays.asList(newQueueName, newScheduledZsetName, newProcessingZsetName));
       deleteJobData.add(new DeleteJobData(newQueueName, DataType.LIST));
       deleteJobData.add(new DeleteJobData(newScheduledZsetName, DataType.ZSET));

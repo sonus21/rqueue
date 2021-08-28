@@ -42,16 +42,15 @@ import org.springframework.data.redis.core.RedisTemplate;
 @CoreUnitTest
 class MessageSchedulerDisabledTest extends TestBase {
 
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-
   @InjectMocks
-  private final ScheduledQueueMessageScheduler messageScheduler = new ScheduledQueueMessageScheduler();
+  private final ScheduledQueueMessageScheduler messageScheduler =
+      new ScheduledQueueMessageScheduler();
 
   private final String slowQueue = "slow-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RedisTemplate<String, Long> redisTemplate;
 
   @BeforeEach
   public void init() {

@@ -44,13 +44,13 @@ import org.springframework.messaging.converter.MessageConverter;
 @SpringUnitTest
 class RqueueMessageConfigTest extends TestBase {
 
+  private final List<MessageConverter> messageConverterList = new ArrayList<>();
   @Mock RqueueMessageHandler rqueueMessageHandler;
   @Mock private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
   @Mock private BeanFactory beanFactory;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @InjectMocks private RqueueListenerConfig rqueueMessageConfig;
-  private final List<MessageConverter> messageConverterList = new ArrayList<>();
 
   @BeforeEach
   public void init() {
