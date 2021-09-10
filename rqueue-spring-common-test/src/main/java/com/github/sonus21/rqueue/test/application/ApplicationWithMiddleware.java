@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-public abstract class ApplicationWithContainerFactory extends BaseApplication {
+public abstract class ApplicationWithMiddleware extends BaseApplication {
 
   @Value("${middleware:}")
   private List<String> middlewareNames;

@@ -118,6 +118,19 @@ public class RetryTests extends SpringTestBase {
     assertEquals(1, getMessageCount(jobQueue));
   }
 
+  public void verifySimpleTaskExecution() throws TimedOutException {
+    cleanQueue(notificationQueue);
+    Notification notification = Notification.newInstance();
+    enqueue(notificationQueue, notification);
+    waitFor(
+        () -> {
+          Notification notificationInDb =
+              consumedMessageStore.getMessage(notification.getId(), Notification.class);
+          return notification.equals(notificationInDb);
+        },
+        "notification to be executed");
+  }
+
   public void verifyMessageIsConsumedByDeadLetterQueueListener()
       throws TimedOutException, JsonProcessingException {
     cleanQueue(reservationRequestQueue);

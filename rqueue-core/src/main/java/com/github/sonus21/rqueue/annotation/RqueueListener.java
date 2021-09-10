@@ -88,8 +88,9 @@ public @interface RqueueListener {
   String deadLetterQueue() default "";
 
   /**
-   * By default messages sent to dead letter queue are not consumable by listener. This flag is used
-   * to turn on the consumable feature of dead letter queue.
+   * By default, messages sent to dead letter queue are not consumable by listener. This flag is
+   * used to turn on the consumable feature of dead letter queue. If this is set to true then
+   * application should add message listener for the dead letter queue.
    *
    * @return true/false
    */

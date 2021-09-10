@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
-import com.github.sonus21.rqueue.spring.boot.application.MessageConverterApplication;
+import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomMessageConverter;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
@@ -37,7 +37,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-@ContextConfiguration(classes = MessageConverterApplication.class)
+@ContextConfiguration(classes = ApplicationWithCustomMessageConverter.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(

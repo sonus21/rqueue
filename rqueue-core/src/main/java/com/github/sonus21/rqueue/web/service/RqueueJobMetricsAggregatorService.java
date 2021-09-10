@@ -56,7 +56,7 @@ import org.springframework.util.CollectionUtils;
 
 @Component
 @Slf4j
-public class RqueueTaskMetricsAggregatorService
+public class RqueueJobMetricsAggregatorService
     implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
@@ -71,7 +71,7 @@ public class RqueueTaskMetricsAggregatorService
   private List<Future<?>> eventAggregatorTasks;
 
   @Autowired
-  public RqueueTaskMetricsAggregatorService(
+  public RqueueJobMetricsAggregatorService(
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueLockManager rqueueLockManager,

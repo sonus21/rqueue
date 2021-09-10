@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.spring.boot.application;
 
-import com.github.sonus21.rqueue.test.application.RedisClusterBaseApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
@@ -27,8 +26,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication(scanBasePackages = {"com.github.sonus21.rqueue.test"})
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
-public class RedisClusterApplication extends RedisClusterBaseApplication {
+public class ApplicationWithMessageProcessor
+    extends com.github.sonus21.rqueue.test.application.ApplicationWithMessageProcessor {
   public static void main(String[] args) {
-    SpringApplication.run(RedisClusterApplication.class, args);
+    SpringApplication.run(ApplicationWithMessageProcessor.class, args);
   }
 }

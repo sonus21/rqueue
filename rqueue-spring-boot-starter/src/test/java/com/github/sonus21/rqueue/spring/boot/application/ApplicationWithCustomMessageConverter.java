@@ -16,21 +16,19 @@
 
 package com.github.sonus21.rqueue.spring.boot.application;
 
-import com.github.sonus21.rqueue.test.application.CustomMessageConverterApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @PropertySource("classpath:application.properties")
 @SpringBootApplication(scanBasePackages = {"com.github.sonus21.rqueue.test"})
-@EnableRedisRepositories
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
-public class MessageConverterApplication extends CustomMessageConverterApplication {
+public class ApplicationWithCustomMessageConverter
+    extends com.github.sonus21.rqueue.test.application.ApplicationWithCustomMessageConverter {
   public static void main(String[] args) {
-    SpringApplication.run(MessageConverterApplication.class, args);
+    SpringApplication.run(ApplicationWithCustomMessageConverter.class, args);
   }
 }

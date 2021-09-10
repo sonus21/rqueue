@@ -69,13 +69,13 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Mock private RqueueJobDao rqueueJobDao;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  private RqueueTaskMetricsAggregatorService rqueueTaskMetricsAggregatorService;
+  private RqueueJobMetricsAggregatorService rqueueJobMetricsAggregatorService;
 
   @BeforeEach
   public void initService() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueTaskMetricsAggregatorService =
-        new RqueueTaskMetricsAggregatorService(
+    rqueueJobMetricsAggregatorService =
+        new RqueueJobMetricsAggregatorService(
             rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();
@@ -83,12 +83,12 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
     doReturn(100).when(rqueueWebConfig).getAggregateShutdownWaitTime();
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
     doReturn(500).when(rqueueWebConfig).getAggregateEventCount();
-    this.rqueueTaskMetricsAggregatorService.start();
+    this.rqueueJobMetricsAggregatorService.start();
     assertNotNull(
-        FieldUtils.readField(this.rqueueTaskMetricsAggregatorService, "queueNameToEvents", true));
-    assertNotNull(FieldUtils.readField(this.rqueueTaskMetricsAggregatorService, "queue", true));
+        FieldUtils.readField(this.rqueueJobMetricsAggregatorService, "queueNameToEvents", true));
+    assertNotNull(FieldUtils.readField(this.rqueueJobMetricsAggregatorService, "queue", true));
     assertNotNull(
-        FieldUtils.readField(this.rqueueTaskMetricsAggregatorService, "taskExecutor", true));
+        FieldUtils.readField(this.rqueueJobMetricsAggregatorService, "taskExecutor", true));
   }
 
   private RqueueExecutionEvent generateTaskEventWithStatus(MessageStatus status) {
@@ -132,7 +132,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
   }
 
   private void addEvent(RqueueExecutionEvent event, TasksStat stats, boolean updateTaskStat) {
-    rqueueTaskMetricsAggregatorService.onApplicationEvent(event);
+    rqueueJobMetricsAggregatorService.onApplicationEvent(event);
     if (!updateTaskStat) {
       return;
     }
@@ -230,6 +230,6 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
 
   @AfterEach
   public void clean() throws Exception {
-    rqueueTaskMetricsAggregatorService.destroy();
+    rqueueJobMetricsAggregatorService.destroy();
   }
 }

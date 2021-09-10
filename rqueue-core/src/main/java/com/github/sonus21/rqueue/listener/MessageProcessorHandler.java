@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.PrefixLogger;
@@ -42,7 +42,7 @@ class MessageProcessorHandler extends PrefixLogger {
     this.postExecutionMessageProcessor = postExecutionMessageProcessor;
   }
 
-  void handleMessage(RqueueMessage rqueueMessage, Object userMessage, MessageStatus status) {
+  void handleMessage(Job job, MessageStatus status) {
     MessageProcessor messageProcessor = null;
     switch (status) {
       case DELETED:
@@ -62,8 +62,8 @@ class MessageProcessorHandler extends PrefixLogger {
     }
     if (messageProcessor != null) {
       try {
-        log(Level.DEBUG, "Calling {} processor for {}", null, status, rqueueMessage);
-        messageProcessor.process(userMessage, rqueueMessage);
+        log(Level.DEBUG, "Calling {} processor for {}", null, status, job.getRqueueMessage());
+        messageProcessor.process(job);
       } catch (Exception e) {
         log(Level.ERROR, "Message processor {} call failed", e, status);
       }

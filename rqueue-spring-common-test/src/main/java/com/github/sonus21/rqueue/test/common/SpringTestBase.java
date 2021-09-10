@@ -296,6 +296,13 @@ public abstract class SpringTestBase extends TestBase {
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, delay) != null;
   }
 
+  protected String enqueueAtGetMessageId(String queueName, Object message, long delay) {
+    if (reactiveEnabled) {
+      return reactiveRqueueMessageEnqueuer.enqueueAt(queueName, message, delay).block();
+    }
+    return rqueueMessageEnqueuer.enqueueAt(queueName, message, delay);
+  }
+
   protected boolean enqueueIn(String queueName, Object message, long delay) {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay).block() != null;

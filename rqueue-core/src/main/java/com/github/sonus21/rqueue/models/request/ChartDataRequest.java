@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models.request;
 
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
@@ -35,12 +36,20 @@ public class ChartDataRequest extends SerializableBase {
   private static final long serialVersionUID = 7727090378318819986L;
   private ChartType type;
   private String queue;
+  private int numberOfDays;
   private AggregationType aggregationType;
   private List<ChartDataType> dateTypes;
 
   public ChartDataRequest(ChartType chartType, AggregationType aggregationType) {
     this.type = chartType;
     this.aggregationType = aggregationType;
+  }
+
+  public int numberOfDays(RqueueWebConfig rqueueWebConfig) {
+    if (numberOfDays <= 0 || numberOfDays > rqueueWebConfig.getHistoryDay()) {
+      return rqueueWebConfig.getHistoryDay();
+    }
+    return numberOfDays;
   }
 
   public ChartDataResponse validate() {

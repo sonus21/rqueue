@@ -112,10 +112,10 @@ public class RqueueMessageListenerContainer
     this.rqueueMessageHandler = rqueueMessageHandler;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.discardMessageProcessor = new MessageProcessor() {};
-    this.deadLetterQueueMessageProcessor = this.discardMessageProcessor;
-    this.manualDeletionMessageProcessor = this.discardMessageProcessor;
-    this.postExecutionMessageProcessor = this.discardMessageProcessor;
-    this.preExecutionMessageProcessor = this.discardMessageProcessor;
+    this.deadLetterQueueMessageProcessor = new MessageProcessor() {};
+    this.manualDeletionMessageProcessor = new MessageProcessor() {};
+    this.postExecutionMessageProcessor = new MessageProcessor() {};
+    this.preExecutionMessageProcessor = new MessageProcessor() {};
   }
 
   public RqueueMessageTemplate getRqueueMessageTemplate() {

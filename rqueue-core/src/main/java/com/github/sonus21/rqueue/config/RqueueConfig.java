@@ -318,6 +318,14 @@ public class RqueueConfig {
     return version;
   }
 
+  public String getGlobalJobCounterKey() {
+    return getPrefix() + Constants.GlobalJobCounter;
+  }
+
+  public String getGlobalFailedJobCounterKey() {
+    return getPrefix() + Constants.GlobalFailedJobCounter;
+  }
+
   public boolean isProducer() {
     return RqueueMode.PRODUCER.equals(getMode());
   }

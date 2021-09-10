@@ -54,6 +54,8 @@ public final class Constants {
   public static final int MIN_CONCURRENCY = 1;
   public static final long MINIMUM_JOB_PERIOD = 1000L;
   public static final String QUEUE_CRUD_LOCK_KEY_PREFIX = "q-crud::";
+  public static final String GlobalJobCounter = "job-count";
+  public static final String GlobalFailedJobCounter = "failed-job-count";
 
   private Constants() {}
 
