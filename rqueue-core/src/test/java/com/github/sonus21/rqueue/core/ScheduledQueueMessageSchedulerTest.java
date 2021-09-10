@@ -292,7 +292,7 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
     TimeoutUtils.sleep(50);
     assertEquals(2, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
-    TimeoutUtils.sleep(100);
+    TimeoutUtils.sleep(110);
     // both are correct
     messageListener.onMessage(
         new DefaultMessage(
