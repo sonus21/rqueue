@@ -1,12 +1,27 @@
 # [Rqueue] New and Notable Changes
 
-### [2.9.0] - 30-Jul-2021
+### [2.10.0] - TBD
+
 ### Fixes
-* Option to add rqueue web url prefix, the prefix is configured from application.properties file using
-`rqueue.web.url.prefix=/my-application/`, now rqueue dashboard would be served
-at  `/my-application/rquque` instead of `/rqueue`, the configuration has higher priority than the
-HTTP request header `x-forwarded-prefix`.
-  
+
+* Fixes for post processor calls (post processor calls were not made)
+* Fixes message move message count (by default 1000 messages are moved)
+* Potential issue in rename collection
+* More than one (-) sign in the dashboard
+
+### Features
+
+* Display completed jobs in the dashboard
+* Option to choose number of days in the chart
+
+### [2.9.0] - 30-Jul-2021
+
+### Fixes
+
+* Option to add rqueue web url prefix, the prefix is configured from application.properties file
+  using `rqueue.web.url.prefix=/my-application/`, now rqueue dashboard would be served
+  at  `/my-application/rquque` instead of `/rqueue`, the configuration has higher priority than the
+  HTTP request header `x-forwarded-prefix`.
 * Custom message converter is not working
 * RedisCommandExecutionException : command arguments must be strings or integers
 
@@ -255,3 +270,5 @@ Fixes:
 [2.8.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.0-RELEASE
 
 [2.9.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.9.0-RELEASE
+
+[2.10.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.0-RELEASE

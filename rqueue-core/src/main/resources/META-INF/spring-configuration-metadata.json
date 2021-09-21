@@ -348,7 +348,7 @@
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.collect.statistic.aggregate.shutdown.wait.time",
-      "description": "How long Rqueue should wait for aggregate job to complete o shutdown (milliseconds)",
+      "description": "How long Rqueue should wait for aggregate job to complete before shutdown (milliseconds)",
       "type": "java.lang.Integer",
       "defaultValue": 500
     },

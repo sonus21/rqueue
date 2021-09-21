@@ -66,9 +66,8 @@ public class MessageSweeper {
     if (MessageSweeper.messageSweeper == null) {
       synchronized (MessageSweeper.class) {
         if (MessageSweeper.messageSweeper == null) {
-          MessageSweeper tmp =
+          MessageSweeper.messageSweeper =
               new MessageSweeper(rqueueConfig, messageTemplate, rqueueMessageMetadataDao);
-          MessageSweeper.messageSweeper = tmp;
           return MessageSweeper.messageSweeper;
         }
         return MessageSweeper.messageSweeper;
@@ -85,9 +84,9 @@ public class MessageSweeper {
     List<DeleteJobData> deleteJobData = new ArrayList<>();
     QueueDetail detail = request.queueDetail;
     if (detail != null) {
-      String newQueueName = rqueueConfig.getDelDataName();
-      String newScheduledZsetName = rqueueConfig.getDelDataName();
-      String newProcessingZsetName = rqueueConfig.getDelDataName();
+      String newQueueName = rqueueConfig.getDelDataName(detail.getQueueName());
+      String newScheduledZsetName = rqueueConfig.getDelDataName(detail.getQueueName());
+      String newProcessingZsetName = rqueueConfig.getDelDataName(detail.getQueueName());
       messageTemplate.renameCollections(
           Arrays.asList(
               detail.getQueueName(),
@@ -100,12 +99,13 @@ public class MessageSweeper {
     } else {
       switch (request.dataType) {
         case LIST:
-          DeleteJobData data = new DeleteJobData(rqueueConfig.getDelDataName(), request.dataType);
+          DeleteJobData data =
+              new DeleteJobData(rqueueConfig.getDelDataName(request.dataName), request.dataType);
           messageTemplate.renameCollection(request.dataName, data.name);
           deleteJobData.add(data);
           break;
         case ZSET:
-          data = new DeleteJobData(rqueueConfig.getDelDataName(), request.dataType);
+          data = new DeleteJobData(rqueueConfig.getDelDataName(request.dataName), request.dataType);
           messageTemplate.renameCollection(request.dataName, data.name);
           deleteJobData.add(data);
           break;

@@ -17,6 +17,7 @@
 package com.github.sonus21.task.executor;
 
 import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.utils.StringUtils;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,22 +52,40 @@ public class Controller {
     return data;
   }
 
-  @GetMapping("job")
-  public Mono<String> sendJobNotification() {
+  private Job getJob(String message) {
     Job job = new Job();
     job.setId(UUID.randomUUID().toString());
-    job.setMessage("Hi this is " + job.getId());
-    Mono<String> mono = reactiveRqueueMessageEnqueuer.enqueue("job-queue", job);
+    if (!StringUtils.isEmpty(message)) {
+      job.setMessage(message);
+    } else {
+      job.setMessage("Hi this is " + job.getId());
+    }
+    return job;
+  }
+
+  private String getQueue(String queue) {
+    if (queue == null) {
+      return "job-queue";
+    }
+    return queue;
+  }
+
+  @GetMapping("job")
+  public Mono<String> sendJobNotification(
+      @RequestParam(required = false) String msg, @RequestParam(required = false) String q) {
+    Job job = getJob(msg);
+    Mono<String> mono = reactiveRqueueMessageEnqueuer.enqueue(getQueue(q), job);
     log.info("{}", job);
     return mono;
   }
 
   @GetMapping("job-delay")
-  public Mono<String> sendJobNotificationWithDelay() {
-    Job job = new Job();
-    job.setId(UUID.randomUUID().toString());
-    job.setMessage("Hi this is " + job.getId());
-    Mono<String> mono = reactiveRqueueMessageEnqueuer.enqueueIn("job-queue", job, 2000L);
+  public Mono<String> sendJobNotificationWithDelay(
+      @RequestParam(required = false) String q,
+      @RequestParam(required = false) String msg,
+      @RequestParam(required = false, defaultValue = "2000") long delay) {
+    Job job = getJob(msg);
+    Mono<String> mono = reactiveRqueueMessageEnqueuer.enqueueIn(getQueue(q), job, delay);
     log.info("{}", job);
     return mono;
   }

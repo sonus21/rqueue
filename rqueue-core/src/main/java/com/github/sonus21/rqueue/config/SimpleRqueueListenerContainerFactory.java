@@ -65,11 +65,11 @@ public class SimpleRqueueListenerContainerFactory {
   private ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   // Custom requeue message handler
   private RqueueMessageHandler rqueueMessageHandler;
-  // Send message poll time when no messages are available
+  // polling interval (millisecond) when no messages are available
   private long pollingInterval = 200L;
-  // In case of failure how much time, we should wait for next job
+  // In case of job execution failure how long(in millisecond) this job should be delayed
   private long backOffTime = 5 * Constants.ONE_MILLI;
-  // Number of workers requires for execution
+  // Number of workers requires for listeners
   private Integer maxNumWorkers;
   // This message processor would be called before a task can start execution.
   // It needs to be noted that this message processor would be called multiple time
@@ -101,9 +101,10 @@ public class SimpleRqueueListenerContainerFactory {
   private boolean inspectAllBean = true;
 
   /**
-   * Whenever a consumer fails then the consumed message can be scheduled for further consumption.
-   * The delay of that can be configured, by default same message would be retried in 5 seconds and
-   * this will continue due to default task interval. {@link
+   * Whenever a consumer fails then the consumed message can be scheduled for further retry. The
+   * delay of such retry can be configured based on the different configuration, by default same
+   * message would be retried in 5 seconds and this will continue till all retries are not exhausted
+   * due to default task interval. {@link
    * com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff#DEFAULT_INTERVAL}
    *
    * @see com.github.sonus21.rqueue.utils.backoff.ExponentialTaskExecutionBackOff

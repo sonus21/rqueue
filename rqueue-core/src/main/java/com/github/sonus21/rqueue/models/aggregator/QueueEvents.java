@@ -23,8 +23,8 @@ import java.util.List;
 
 public class QueueEvents {
 
-  private final Long createdAt;
   public final List<RqueueExecutionEvent> rqueueExecutionEvents;
+  private final Long createdAt;
 
   public QueueEvents(RqueueExecutionEvent event) {
     createdAt = System.currentTimeMillis();

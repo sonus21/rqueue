@@ -285,11 +285,12 @@ public class RqueueConfig {
     return prefix + jobsCollectionNamePrefix + messageId;
   }
 
-  public String getDelDataName() {
+  public String getDelDataName(String queueName) {
     return prefix
         + delPrefix
         + brokerId
         + Constants.REDIS_KEY_SEPARATOR
+        + getTaggedName(queueName)
         + counter.incrementAndGet();
   }
 
@@ -316,14 +317,6 @@ public class RqueueConfig {
       }
     }
     return version;
-  }
-
-  public String getGlobalJobCounterKey() {
-    return getPrefix() + Constants.GlobalJobCounter;
-  }
-
-  public String getGlobalFailedJobCounterKey() {
-    return getPrefix() + Constants.GlobalFailedJobCounter;
   }
 
   public boolean isProducer() {

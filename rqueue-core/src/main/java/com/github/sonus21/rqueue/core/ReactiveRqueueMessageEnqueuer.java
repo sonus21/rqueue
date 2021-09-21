@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
 
 public interface ReactiveRqueueMessageEnqueuer {
   /**
-   * Enqueue a message on given queue without any delay, consume as soon as possible.
+   * Enqueue a message on given queue, consume as soon as possible.
    *
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
@@ -35,7 +35,7 @@ public interface ReactiveRqueueMessageEnqueuer {
   Mono<String> enqueue(String queueName, Object message);
 
   /**
-   * Enqueue a message on given queue without any delay, consume as soon as possible.
+   * Enqueue a message on given queue, consume as soon as possible.
    *
    * @param queueName on which queue message has to be send
    * @param messageId message id
@@ -45,7 +45,7 @@ public interface ReactiveRqueueMessageEnqueuer {
   Mono<Boolean> enqueue(String queueName, String messageId, Object message);
 
   /**
-   * Enqueue unique message on a given queue without any delay, consume as soon as possible.
+   * Enqueue unique message on a given queue without, consume as soon as possible.
    *
    * @param queueName on which queue message has to be send
    * @param messageId the message id for uniqueness
