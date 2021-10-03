@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.utils.ReactiveDisabled;
-import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
 import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import java.util.Locale;
@@ -54,11 +53,7 @@ public class RqueueViewController {
   }
 
   private String xForwardedPrefix(HttpServletRequest request) {
-    String prefix = rqueueWebConfig.getUrlPrefix();
-    if (StringUtils.isEmpty(prefix)) {
-      return request.getHeader("x-forwarded-prefix");
-    }
-    return prefix;
+    return request.getHeader("x-forwarded-prefix");
   }
 
   @GetMapping

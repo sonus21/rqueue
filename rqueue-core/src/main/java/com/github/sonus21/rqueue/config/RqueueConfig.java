@@ -274,6 +274,18 @@ public class RqueueConfig {
     if (!clusterMode) {
       return queueName;
     }
+    boolean left = false;
+    boolean right = false;
+    for (Character c : queueName.toCharArray()) {
+      if (c == '{') {
+        left = true;
+      } else if (c == '}') {
+        right = true;
+      }
+    }
+    if (left && right) {
+      return queueName;
+    }
     return "{" + queueName + "}";
   }
 

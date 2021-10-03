@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.web.controller;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.utils.ReactiveEnabled;
-import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,11 +57,7 @@ public class ReactiveRqueueViewController {
   }
 
   private String xForwardedPrefix(ServerHttpRequest request) {
-    String prefix = rqueueWebConfig.getUrlPrefix();
-    if (StringUtils.isEmpty(prefix)) {
-      return request.getHeaders().getFirst("x-forwarded-prefix");
-    }
-    return prefix;
+    return request.getHeaders().getFirst("x-forwarded-prefix");
   }
 
   @GetMapping
