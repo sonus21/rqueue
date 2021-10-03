@@ -47,16 +47,16 @@ public class ChartDataRequest extends SerializableBase {
   }
 
   public int numberOfDays(RqueueWebConfig rqueueWebConfig) {
-    if (number <= 0 || number > rqueueWebConfig.getHistoryDay()) {
+    int n = this.number;
+    if (aggregationType == AggregationType.MONTHLY) {
+      n = this.number * Constants.DAYS_IN_A_MONTH;
+    } else if (aggregationType == AggregationType.WEEKLY) {
+      n = this.number * Constants.DAYS_IN_A_WEEK;
+    }
+    if (n <= 0 || n > rqueueWebConfig.getHistoryDay()) {
       return rqueueWebConfig.getHistoryDay();
     }
-    if (aggregationType == AggregationType.DAILY) {
-      return number;
-    }
-    if (aggregationType == AggregationType.MONTHLY) {
-      return number * Constants.DAYS_IN_A_MONTH;
-    }
-    return number * Constants.DAYS_IN_A_WEEK;
+    return n;
   }
 
   public ChartDataResponse validate() {

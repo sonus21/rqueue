@@ -16,19 +16,21 @@
 
 package com.github.sonus21.rqueue.models.response;
 
+import com.github.sonus21.rqueue.models.Pair;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.data.util.Pair;
 
 @Getter
 @Setter
 @ToString(callSuper = true)
 @SuppressWarnings("java:S2160")
+@NoArgsConstructor
 @AllArgsConstructor
-public class DataCounterResponse extends BaseResponse {
+public class DataSelectorResponse extends BaseResponse {
   private String title;
   private List<Pair<String, String>> data;
 }

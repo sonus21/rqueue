@@ -66,6 +66,8 @@ public final class HttpUtils {
         sb.append(comp, 0, comp.length() - 1);
       } else if (comp.startsWith(Constants.FORWARD_SLASH)) {
         sb.append(comp.substring(1));
+      } else {
+        sb.append(comp);
       }
     }
     sb.append(Constants.FORWARD_SLASH);

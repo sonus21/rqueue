@@ -52,7 +52,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
-class ReactiveWebTest extends BasicListenerTest {
+class ReactiveWebViewTest extends BasicListenerTest {
   @Autowired private WebTestClient webTestClient;
   @Autowired private RqueueConfig rqueueConfig;
 

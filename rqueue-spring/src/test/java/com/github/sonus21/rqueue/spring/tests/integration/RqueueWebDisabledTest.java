@@ -36,11 +36,12 @@ import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Job;
-import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -57,82 +58,25 @@ import org.springframework.test.context.web.WebAppConfiguration;
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
-class RqueueViewsDisabledTest extends SpringWebTestBase {
-  @Test
-  void home() throws Exception {
+class RqueueWebDisabledTest extends SpringWebTestBase {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "queues",
+        "running",
+        "scheduled",
+        "dead",
+        "pending",
+        "utility",
+        "queues/test-queue",
+        "api/v1/aggregate-data-selector?type=WEEKLY",
+        "api/v1/jobs?message-id=1234567890"
+      })
+  void pathTester(String path) throws Exception {
     assertNull(
         this.mockMvc
-            .perform(get("/rqueue"))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
-  }
-
-  @Test
-  void queues() throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue/queues"))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
-  }
-
-  @Test
-  void queueDetail() throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue/queues/" + jobQueue))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
-  }
-
-  @Test
-  void running() throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue/queues/running"))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
-  }
-
-  @Test
-  void scheduled() throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue/queues/scheduled"))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
-  }
-
-  @Test
-  void dead() throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue/queues/dead"))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
-  }
-
-  @Test
-  void pending() throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue/queues/pending"))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
-  }
-
-  @Test
-  void utility() throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue/queues/utility"))
+            .perform(get("/rqueue/" + path))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getModelAndView());
@@ -273,21 +217,6 @@ class RqueueViewsDisabledTest extends SpringWebTestBase {
             .perform(
                 post("/rqueue/api/v1/delete-message")
                     .content(mapper.writeValueAsBytes(request))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getResponse()
-            .getContentAsString());
-  }
-
-  @Test
-  void getJobs() throws Exception {
-    assertEquals(
-        "",
-        this.mockMvc
-            .perform(
-                get("/rqueue/api/v1/jobs/")
-                    .param("message-id", UUID.randomUUID().toString())
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()

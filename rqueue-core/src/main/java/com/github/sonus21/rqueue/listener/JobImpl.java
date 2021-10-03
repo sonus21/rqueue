@@ -85,6 +85,7 @@ public class JobImpl implements Job {
 
   private void save() {
     if (rqueueConfig.isJobEnabled() && !isPeriodicJob) {
+      // tracking intermediate job status
       Duration ttl = expiry;
       if (getMessageMetadata().getStatus().isTerminalState()) {
         ttl = rqueueConfig.getJobDurabilityInTerminalState();

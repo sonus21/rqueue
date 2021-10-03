@@ -86,7 +86,7 @@ public final class DateTimeUtils {
     long millis = millisecond;
     String prefix = "";
     if (millis < 0) {
-      prefix = "-";
+      prefix = "- ";
       millis = -1 * millis;
     }
     long seconds = millis / Constants.ONE_MILLI;

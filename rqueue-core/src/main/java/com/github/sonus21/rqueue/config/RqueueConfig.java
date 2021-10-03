@@ -147,11 +147,11 @@ public class RqueueConfig {
   }
 
   public boolean messageInTerminalStateShouldBeStored() {
-    return messageDurabilityInTerminalStateInSecond > 0;
+    return getMessageDurabilityInTerminalStateInSecond() > 0;
   }
 
   public long messageDurabilityInTerminalStateInMillisecond() {
-    return messageDurabilityInTerminalStateInSecond * Constants.ONE_MILLI;
+    return getMessageDurabilityInTerminalStateInSecond() * Constants.ONE_MILLI;
   }
 
   public String getInternalCommChannelName() {

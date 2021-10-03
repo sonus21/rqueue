@@ -23,8 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
@@ -42,6 +44,7 @@ import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
@@ -85,7 +88,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   @Autowired private DeleteMessageListener deleteMessageListener;
 
   @Test
-  void getChartLatency() throws Exception {
+  void verifyChartAndQueueData() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -94,6 +97,12 @@ class RqueueRestControllerTest extends SpringWebTestBase {
         () -> getMessageCount(jobQueue) == 0,
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "Job to run");
+    verifyChartLatencyData();
+    verifyChartStatsData();
+    verifyCompletedJobsData();
+  }
+
+  void verifyChartLatencyData() throws Exception {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.LATENCY, AggregationType.DAILY);
     MvcResult result =
@@ -110,16 +119,7 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertEquals(181, dataResponse.getData().size());
   }
 
-  @Test
-  void getChartStats() throws Exception {
-    for (int i = 0; i < 100; i++) {
-      Job job = Job.newInstance();
-      enqueue(jobQueue, job);
-    }
-    TimeoutUtils.waitFor(
-        () -> getMessageCount(jobQueue) == 0,
-        Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
-        "Job to run");
+  void verifyChartStatsData() throws Exception {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.STATS, AggregationType.DAILY);
     MvcResult result =
@@ -134,6 +134,36 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertNull(dataResponse.getMessage());
     assertEquals(0, dataResponse.getCode());
     assertEquals(181, dataResponse.getData().size());
+  }
+
+  void verifyCompletedJobsData() throws Exception {
+    QueueDetail queueDetail = EndpointRegistry.get(jobQueue);
+    QueueExploreRequest request = new QueueExploreRequest();
+    request.setType(DataType.ZSET);
+    request.setSrc(jobQueue);
+    request.setName(queueDetail.getCompletedQueueName());
+
+    MvcResult result =
+        this.mockMvc
+            .perform(
+                post("/rqueue/api/v1/queue-data")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(request)))
+            .andReturn();
+
+    DataViewResponse dataViewResponse =
+        mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
+    assertNull(dataViewResponse.getMessage());
+    assertEquals(0, dataViewResponse.getCode());
+    assertEquals(20, dataViewResponse.getRows().size());
+    assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
+    assertEquals(
+        Collections.singletonList(
+            new Action(
+                ActionType.DELETE,
+                String.format(
+                    "Completed messages for queue '%s'", queueDetail.getCompletedQueueName()))),
+        dataViewResponse.getActions());
   }
 
   @Test
@@ -403,5 +433,50 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertEquals("No jobs found", response.getMessage());
     assertNull(response.getHeaders());
     assertEquals(0, response.getRows().size());
+  }
+
+  @Test
+  void aggregatorSelector() throws Exception {
+    MvcResult result =
+        this.mockMvc
+            .perform(
+                get("/rqueue/api/v1/aggregate-data-selector")
+                    .param("type", AggregationType.DAILY.name())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+
+    DataSelectorResponse response =
+        mapper.readValue(result.getResponse().getContentAsString(), DataSelectorResponse.class);
+    assertEquals(0, response.getCode());
+    assertEquals("Select Number of Days", response.getTitle());
+    assertEquals(19, response.getData().size());
+
+    result =
+        this.mockMvc
+            .perform(
+                get("/rqueue/api/v1/aggregate-data-selector")
+                    .param("type", AggregationType.WEEKLY.name())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+
+    response =
+        mapper.readValue(result.getResponse().getContentAsString(), DataSelectorResponse.class);
+    assertEquals(0, response.getCode());
+    assertEquals("Select Number of Weeks", response.getTitle());
+    assertEquals(27, response.getData().size(), result.getResponse().getContentAsString());
+
+    result =
+        this.mockMvc
+            .perform(
+                get("/rqueue/api/v1/aggregate-data-selector")
+                    .param("type", AggregationType.MONTHLY.name())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+
+    response =
+        mapper.readValue(result.getResponse().getContentAsString(), DataSelectorResponse.class);
+    assertEquals(0, response.getCode());
+    assertEquals("Select Number of Months", response.getTitle());
+    assertEquals(7, response.getData().size());
   }
 }

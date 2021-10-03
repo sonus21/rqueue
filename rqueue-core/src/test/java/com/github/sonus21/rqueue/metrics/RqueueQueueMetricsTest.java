@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,13 +33,18 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class RqueueQueueMetricsTest extends TestBase {
-  private static final QueueDetail queueDetail = TestUtils.createQueueDetail("test");
+  private static final String queueName = "test";
+  private static final String priorityName = "high";
+  private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
+  private static final QueueDetail queueDetail2 =
+      TestUtils.createQueueDetail(PriorityUtils.getQueueNameForPriority(queueName, priorityName));
   private final RqueueRedisTemplate<String> redisTemplate = mock(RqueueRedisTemplate.class);
   private final RqueueQueueMetrics queueMetrics = new RqueueQueueMetrics(redisTemplate);
 
   @BeforeAll
   static void setUp() {
     EndpointRegistry.register(queueDetail);
+    EndpointRegistry.register(queueDetail2);
   }
 
   @AfterAll
@@ -49,21 +55,42 @@ class RqueueQueueMetricsTest extends TestBase {
   @Test
   void getPendingMessageCount() {
     doReturn(100L).when(redisTemplate).getListSize(queueDetail.getQueueName());
-    assertEquals(100L, queueMetrics.getPendingMessageCount(queueDetail.getName()));
+    assertEquals(100L, queueMetrics.getPendingMessageCount(queueName));
     assertEquals(-1L, queueMetrics.getPendingMessageCount("unknown"));
+  }
+
+  @Test
+  void getPendingMessageCountWithPriority() {
+    doReturn(100L).when(redisTemplate).getListSize(queueDetail2.getQueueName());
+    assertEquals(100L, queueMetrics.getPendingMessageCount(queueName, priorityName));
+    assertEquals(-1L, queueMetrics.getPendingMessageCount("unknown", priorityName));
   }
 
   @Test
   void getScheduledMessageCount() {
     doReturn(100L).when(redisTemplate).getZsetSize(queueDetail.getScheduledQueueName());
-    assertEquals(100L, queueMetrics.getScheduledMessageCount(queueDetail.getName()));
+    assertEquals(100L, queueMetrics.getScheduledMessageCount(queueName));
     assertEquals(-1L, queueMetrics.getScheduledMessageCount("unknown"));
+  }
+
+  @Test
+  void getScheduledMessageCountWithPriority() {
+    doReturn(100L).when(redisTemplate).getZsetSize(queueDetail2.getScheduledQueueName());
+    assertEquals(100L, queueMetrics.getScheduledMessageCount(queueName, priorityName));
+    assertEquals(-1L, queueMetrics.getScheduledMessageCount("unknown", priorityName));
   }
 
   @Test
   void getProcessingMessageCount() {
     doReturn(100L).when(redisTemplate).getZsetSize(queueDetail.getProcessingQueueName());
-    assertEquals(100L, queueMetrics.getProcessingMessageCount(queueDetail.getName()));
+    assertEquals(100L, queueMetrics.getProcessingMessageCount(queueName));
     assertEquals(-1L, queueMetrics.getProcessingMessageCount("unknown"));
+  }
+
+  @Test
+  void getProcessingMessageCountWithPriority() {
+    doReturn(100L).when(redisTemplate).getZsetSize(queueDetail2.getProcessingQueueName());
+    assertEquals(100L, queueMetrics.getProcessingMessageCount(queueName, priorityName));
+    assertEquals(-1L, queueMetrics.getProcessingMessageCount("unknown", priorityName));
   }
 }
