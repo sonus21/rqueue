@@ -30,7 +30,6 @@ public class BaseReactiveController {
   protected boolean isEnabled(ServerHttpResponse response) {
     if (!rqueueWebConfig.isEnable()) {
       response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return false;
     }
     return rqueueWebConfig.isEnable();
   }

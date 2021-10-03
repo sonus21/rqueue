@@ -247,18 +247,4 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .expectBody()
         .isEmpty();
   }
-
-  @Test
-  void aggregateDataSelector() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("" + AggregationType.WEEKLY)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
-        .expectBody()
-        .isEmpty();
-    ;
-  }
 }

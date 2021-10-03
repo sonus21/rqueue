@@ -8,6 +8,7 @@
 * Fixes message move message count (by default 1000 messages are moved)
 * Potential issue in rename collection
 * More than one (-) sign in the dashboard
+* Fixes for server context path. Rqueue end points would be served relative to x-forwarded-prefix/server.servlet.context-path
 
 ### Features
 
