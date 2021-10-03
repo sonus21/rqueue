@@ -56,7 +56,7 @@ public final class HttpUtils {
   public static String joinPath(String... components) {
     StringBuilder sb = new StringBuilder();
     for (String comp : components) {
-      if (StringUtils.isEmpty(comp)) {
+      if (StringUtils.isEmpty(comp) || comp.equals(Constants.FORWARD_SLASH)) {
         continue;
       }
       sb.append(Constants.FORWARD_SLASH);

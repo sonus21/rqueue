@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.exception.ProcessingException;
+import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.DataDeleteRequest;
 import com.github.sonus21.rqueue.models.request.DataTypeRequest;
@@ -29,6 +30,7 @@ import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import com.github.sonus21.rqueue.models.response.DataCounterResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
@@ -201,5 +203,16 @@ public class ReactiveRqueueRestController {
       return null;
     }
     return rqueueUtilityService.reactivePauseUnpauseQueue(request);
+  }
+
+  @GetMapping("aggregate-data-selector")
+  @ResponseBody
+  public Mono<DataCounterResponse> aggregateDataCounter(
+      @RequestParam AggregationType type, ServerHttpResponse response) {
+    if (!rqueueWebConfig.isEnable()) {
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
+      return null;
+    }
+    return rqueueUtilityService.reactiveAggregateDataCounter(type);
   }
 }

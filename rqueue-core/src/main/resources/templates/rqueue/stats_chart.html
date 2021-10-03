@@ -27,15 +27,11 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="stats-aggregator-type">Select Number of Days</label>
+            <label for="stats-nday">{{aggregatorDateCounter.title}}</label>
             <select class="form-control" id="stats-nday" name="aggregator-day-count">
-              <option>1</option>
-              <option>7</option>
-              <option>15</option>
-              <option>30</option>
-              <option>45</option>
-              <option>60</option>
-              <option>60</option>
+              {% for counter in aggregatorDateCounter.data %}
+              <option value="{{counter.first}}">{{ counter.second }}</option>
+              {% endfor %}
             </select>
           </div>
           <div class="form-group">

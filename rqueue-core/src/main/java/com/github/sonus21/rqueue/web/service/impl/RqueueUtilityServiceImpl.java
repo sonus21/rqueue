@@ -29,11 +29,13 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
+import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
+import com.github.sonus21.rqueue.models.response.DataCounterResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -42,6 +44,8 @@ import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import java.time.Duration;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -248,5 +252,91 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       rqueueSystemConfigDao.saveQConfig(queueConfig);
     }
     return response;
+  }
+
+  private List<Pair<String, String>> getDailyDateCounter() {
+    List<Pair<String, String>> dateSelector = new LinkedList<>();
+    int[] dates = new int[] {1, 2, 3, 4, 6, 7};
+    int step = 15;
+    int stepAfter = 15;
+    int i = 1;
+    dateSelector.add(Pair.of("0", "Select"));
+    // 84 days
+    while (i <= rqueueWebConfig.getHistoryDay()) {
+      if (i >= stepAfter) {
+        if (i <= rqueueWebConfig.getHistoryDay()) {
+          dateSelector.add(Pair.of(String.valueOf(i), String.format("Last %d days", i)));
+        }
+        i += step;
+      } else {
+        for (int date : dates) {
+          if (date == i) {
+            String suffix = "day";
+            if (i != 1) {
+              suffix = "days";
+            }
+            String msg = String.format("Last %d %s", date, suffix);
+            dateSelector.add(Pair.of(String.valueOf(date), msg));
+            break;
+          }
+        }
+        i += 1;
+      }
+    }
+    return dateSelector;
+  }
+
+  @Override
+  public Mono<DataCounterResponse> reactiveAggregateDataCounter(AggregationType type) {
+    return Mono.just(aggregateDataCounter(type));
+  }
+
+  @Override
+  public DataCounterResponse aggregateDataCounter(AggregationType type) {
+    String title = "";
+    List<Pair<String, String>> data;
+    if (type == AggregationType.DAILY) {
+      data = getDailyDateCounter();
+      title = "Select Number of Days";
+    } else if (type == AggregationType.WEEKLY) {
+      data = getWeeklyDateCounter();
+      title = "Select Number of Weeks";
+    } else {
+      data = getMonthlyDateCounter();
+      title = "Select Number of Months";
+    }
+    return new DataCounterResponse(title, data);
+  }
+
+  private List<Pair<String, String>> getMonthlyDateCounter() {
+    List<Pair<String, String>> dateSelector = new LinkedList<>();
+    dateSelector.add(Pair.of("0", "Select"));
+    int month = 1;
+    while (month * Constants.DAYS_IN_A_MONTH <= rqueueWebConfig.getHistoryDay()) {
+      String suffix = "month";
+      if (month != 1) {
+        suffix = "months";
+      }
+      String msg = String.format("Last %d %s", month, suffix);
+      dateSelector.add(Pair.of(String.valueOf(month), msg));
+      month += 1;
+    }
+    return dateSelector;
+  }
+
+  private List<Pair<String, String>> getWeeklyDateCounter() {
+    List<Pair<String, String>> dateSelector = new LinkedList<>();
+    dateSelector.add(Pair.of("0", "Select"));
+    int week = 1;
+    while (week * Constants.DAYS_IN_A_WEEK <= rqueueWebConfig.getHistoryDay()) {
+      String suffix = "week";
+      if (week != 1) {
+        suffix = "weeks";
+      }
+      String msg = String.format("Last %d %s", week, suffix);
+      dateSelector.add(Pair.of(String.valueOf(week), msg));
+      week += 1;
+    }
+    return dateSelector;
   }
 }

@@ -33,7 +33,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +87,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     addNavData(model, null);
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
+    model.addAttribute(
+        "aggregatorDateCounter", rqueueUtilityService.aggregateDataCounter(AggregationType.DAILY));
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
   }
 
@@ -104,31 +105,6 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("queueConfigs", queueNameConfigs);
   }
 
-  private List<String> getDateCounter() {
-    List<String> dateSelector = new LinkedList<>();
-    int[] dates = new int[] {1, 2, 3, 4, 6, 7};
-    int step = 15;
-    int stepAfter = 15;
-    int i = 1;
-    // 84 days
-    while (i <= rqueueWebConfig.getHistoryDay()) {
-      if (i >= stepAfter) {
-        if (i <= rqueueWebConfig.getHistoryDay()) {
-          dateSelector.add(String.valueOf(i));
-        }
-        i += step;
-      } else {
-        for (int date : dates) {
-          if (date == i) {
-            dateSelector.add(String.valueOf(date));
-          }
-        }
-        i += 1;
-      }
-    }
-    return dateSelector;
-  }
-
   @Override
   public void queueDetail(Model model, String xForwardedPrefix, String queueName) {
     QueueConfig queueConfig = rqueueSystemManagerService.getQueueConfig(queueName);
@@ -140,7 +116,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
-    model.addAttribute("aggregatorDateCounter", getDateCounter());
+    model.addAttribute(
+        "aggregatorDateCounter", rqueueUtilityService.aggregateDataCounter(AggregationType.DAILY));
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
     model.addAttribute("queueActions", queueActions);
     model.addAttribute("queueRedisDataDetails", queueRedisDataDetail);
