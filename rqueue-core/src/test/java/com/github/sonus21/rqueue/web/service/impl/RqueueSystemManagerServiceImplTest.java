@@ -40,6 +40,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,6 +63,7 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
   @Mock private RqueueStringDao rqueueStringDao;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
 
   @BeforeEach
@@ -69,7 +71,8 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
     MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
     rqueueSystemManagerService =
-        new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
+        new RqueueSystemManagerServiceImpl(
+            rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
     fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
     EndpointRegistry.register(slowQueueDetail);

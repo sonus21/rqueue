@@ -63,7 +63,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -425,7 +424,6 @@ class ReactiveRestApiTest extends BasicListenerTest {
   }
 
   @Test
-  @Tag("redisCluster")
   void deleteMessage() throws Exception {
     Email email = Email.newInstance();
     deleteMessageListener.clear();

@@ -57,6 +57,7 @@ class RqueueSystemManagerServiceTest extends TestBase {
   @Mock private RqueueConfig rqueueConfig;
   @Mock private RqueueStringDao rqueueStringDao;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   private RqueueSystemManagerService rqueueSystemManagerService;
   private Set<String> queues;
 
@@ -64,7 +65,8 @@ class RqueueSystemManagerServiceTest extends TestBase {
   public void init() {
     MockitoAnnotations.openMocks(this);
     rqueueSystemManagerService =
-        new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
+        new RqueueSystemManagerServiceImpl(
+            rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
     queues = new HashSet<>();
     queues.add(slowQueue);
     queues.add(fastQueue);

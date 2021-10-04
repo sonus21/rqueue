@@ -142,6 +142,9 @@ public class RqueueConfig {
   @Value("${rqueue.internal.communication.channel.name.prefix:i-channel}")
   private String internalChannelNamePrefix;
 
+  @Value("${rqueue.completed.job.cleanup.interval:30000}")
+  private long completedJobCleanupIntervalInMs;
+
   public static String getBrokerId() {
     return brokerId;
   }
