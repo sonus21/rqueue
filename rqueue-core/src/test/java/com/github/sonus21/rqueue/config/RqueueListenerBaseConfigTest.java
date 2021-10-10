@@ -41,15 +41,11 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @CoreUnitTest
 class RqueueListenerBaseConfigTest extends TestBase {
 
-  @Mock
-  private RedisConnection redisConnection;
-  @Mock
-  private ConfigurableBeanFactory beanFactory;
-  @Mock
-  private RedisConnectionFactory redisConnectionFactory;
   private final String versionKey = "__rq::version";
-  @Mock
-  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RedisConnection redisConnection;
+  @Mock private ConfigurableBeanFactory beanFactory;
+  @Mock private RedisConnectionFactory redisConnectionFactory;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
 
   @BeforeEach
   public void init() {

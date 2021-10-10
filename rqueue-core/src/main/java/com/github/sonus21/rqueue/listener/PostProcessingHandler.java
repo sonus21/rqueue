@@ -122,7 +122,7 @@ class PostProcessingHandler extends PrefixLogger {
     rqueueMessageTemplate.removeElementFromZset(
         job.getQueueDetail().getProcessingQueueName(), rqueueMessage);
     rqueueMessage.setFailureCount(failureCount);
-    messageProcessorHandler.handleMessage(rqueueMessage, job.getMessage(), status);
+    messageProcessorHandler.handleMessage(job, status);
     publishEvent(job, job.getRqueueMessage(), status);
   }
 
@@ -164,7 +164,7 @@ class PostProcessingHandler extends PrefixLogger {
     newMessage.updateReEnqueuedAt();
     QueueDetail queueDetail = job.getQueueDetail();
     Object userMessage = job.getMessage();
-    messageProcessorHandler.handleMessage(newMessage, userMessage, MessageStatus.MOVED_TO_DLQ);
+    messageProcessorHandler.handleMessage(job, MessageStatus.MOVED_TO_DLQ);
     if (queueDetail.isDeadLetterConsumerEnabled()) {
       QueueConfig queueConfig =
           rqueueSystemConfigDao.getConfigByName(queueDetail.getDeadLetterQueueName(), true);
@@ -189,7 +189,7 @@ class PostProcessingHandler extends PrefixLogger {
                 ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
                 : backOff;
         moveMessageToQueue(
-            queueDetail, queueConfig.getDelayedQueueName(), rqueueMessage, newMessage, backOff);
+            queueDetail, queueConfig.getScheduledQueueName(), rqueueMessage, newMessage, backOff);
       }
     } else {
       moveMessageToQueue(
@@ -211,7 +211,7 @@ class PostProcessingHandler extends PrefixLogger {
     } else {
       rqueueMessageTemplate.moveMessageWithDelay(
           queueDetail.getProcessingQueueName(),
-          queueDetail.getDelayedQueueName(),
+          queueDetail.getScheduledQueueName(),
           rqueueMessage,
           newMessage,
           delay);

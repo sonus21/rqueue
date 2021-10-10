@@ -37,6 +37,8 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -69,84 +71,30 @@ import reactor.core.publisher.Mono;
 class ReactiveWebDisabledTest extends BasicListenerTest {
   @Autowired private WebTestClient webTestClient;
 
-  @Test
-  void home() throws Exception {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "queues",
+        "running",
+        "scheduled",
+        "dead",
+        "pending",
+        "utility",
+        "queues/test-queue",
+        "api/v1/aggregate-data-selector?type=WEEKLY",
+        "api/v1/jobs?message-id=1234567890"
+      })
+  void testPath(String path) throws Exception {
     this.webTestClient
         .get()
-        .uri("/rqueue")
+        .uri("/rqueue/" + path)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void queues() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/queues")
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void queueDetail() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/queues/" + emailQueue)
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void running() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/running")
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void scheduled() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/scheduled")
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void dead() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/dead")
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void pending() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/pending")
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void utility() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/utility")
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
+    ;
   }
 
   @Test
@@ -169,7 +117,9 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 
   @Test
@@ -187,7 +137,9 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .body(Mono.just(request), QueueExploreRequest.class)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 
   @Test
@@ -203,7 +155,9 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .body(Mono.just(request), DataDeleteRequest.class)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 
   @Test
@@ -218,7 +172,9 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .body(Mono.just(request), DataTypeRequest.class)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 
   @Test
@@ -233,7 +189,9 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .body(Mono.just(request), MessageMoveRequest.class)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 
   @Test
@@ -250,7 +208,9 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .body(Mono.just(dateViewRequest), DateViewRequest.class)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 
   @Test
@@ -265,7 +225,9 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .body(Mono.just(request), DataTypeRequest.class)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 
   @Test
@@ -281,17 +243,8 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
         .body(Mono.just(request), MessageDeleteRequest.class)
         .exchange()
         .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-  }
-
-  @Test
-  void jobsData() throws Exception {
-    this.webTestClient
-        .get()
-        .uri("/rqueue/api/v1/jobs?message-id=" + UUID.randomUUID().toString())
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+        .expectBody()
+        .isEmpty();
   }
 }

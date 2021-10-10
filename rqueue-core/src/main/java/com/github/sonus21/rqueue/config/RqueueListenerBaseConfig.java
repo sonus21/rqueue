@@ -22,12 +22,12 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
-import com.github.sonus21.rqueue.core.DelayedMessageScheduler;
-import com.github.sonus21.rqueue.core.ProcessingMessageScheduler;
+import com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
+import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
@@ -55,18 +55,22 @@ import org.springframework.data.redis.core.RedisTemplate;
  * This is a base configuration class for Rqueue, that is used in Spring and Spring boot Rqueue libs
  * for configurations. This class creates required beans to work Rqueue library.
  *
- * <p>It internally maintains two types of scheduled tasks for different functionality, for delayed
- * queue messages have to be moved from ZSET to LIST, in other case to at least once message
- * delivery guarantee, messages have to be moved from ZSET to LIST again, we expect very small
- * number of messages in processing queue. Reason being we delete messages once it's consumed, but
- * due to failure in listeners message might not be removed, whereas message in a delayed queue can
- * be very high based on the use case.
+ * <p>It internally maintains two types of scheduled tasks for different functionality, for
+ * scheduled queue messages have to be moved from ZSET to LIST, in other case to at least once
+ * message delivery guarantee, messages have to be moved from ZSET to LIST again, we expect very
+ * small number of messages in processing queue. Reason being we delete messages once it's consumed,
+ * but due to failure in listeners message might not be removed, whereas message in a scheduled
+ * queue can be very high based on the use case.
  */
 public abstract class RqueueListenerBaseConfig {
 
   public static final int MAX_DB_VERSION = 2;
   private static final String TEMPLATE_DIR = "templates/rqueue/";
   private static final String TEMPLATE_SUFFIX = ".html";
+
+  @Autowired(required = false)
+  protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
+      new SimpleRqueueListenerContainerFactory();
 
   @Value("${rqueue.reactive.enabled:false}")
   protected boolean reactiveEnabled;
@@ -94,10 +98,6 @@ public abstract class RqueueListenerBaseConfig {
           e);
     }
   }
-
-  @Autowired(required = false)
-  protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
-      new SimpleRqueueListenerContainerFactory();
 
   /**
    * Create Rqueue configuration bean either from listener container factory or from bean factory.
@@ -184,25 +184,25 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   /**
-   * This scheduler is used to pull messages from a delayed queue to their respective queue.
+   * This scheduler is used to pull messages from a scheduled queue to their respective queue.
    * Internally it moves messages from ZSET to LIST based on the priority and current time.
    *
-   * @return {@link DelayedMessageScheduler} object
+   * @return {@link ScheduledQueueMessageScheduler} object
    */
   @Bean
-  public DelayedMessageScheduler delayedMessageScheduler() {
-    return new DelayedMessageScheduler();
+  public ScheduledQueueMessageScheduler scheduledMessageScheduler() {
+    return new ScheduledQueueMessageScheduler();
   }
 
   /**
    * This scheduler is used to pull messages from processing queue to their respective queue.
    * Internally it moves messages from ZSET to LIST based on the priority and current time.
    *
-   * @return {@link ProcessingMessageScheduler} object
+   * @return {@link ProcessingQueueMessageScheduler} object
    */
   @Bean
-  public ProcessingMessageScheduler processingMessageScheduler() {
-    return new ProcessingMessageScheduler();
+  public ProcessingQueueMessageScheduler processingMessageScheduler() {
+    return new ProcessingQueueMessageScheduler();
   }
 
   @Bean

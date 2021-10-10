@@ -57,25 +57,25 @@ public abstract class BasicListenerTest extends SpringTestBase {
   protected void verifyListMessageListener() throws TimedOutException {
     int n = 1 + random.nextInt(10);
     List<Email> emails = new ArrayList<>();
-    List<Email> delayedEmails = new ArrayList<>();
+    List<Email> scheduledEmails = new ArrayList<>();
     for (int i = 0; i < n; i++) {
       emails.add(Email.newInstance());
-      delayedEmails.add(Email.newInstance());
+      scheduledEmails.add(Email.newInstance());
     }
     enqueue(listEmailQueue, emails);
-    enqueueIn(listEmailQueue, delayedEmails, 1, TimeUnit.SECONDS);
+    enqueueIn(listEmailQueue, scheduledEmails, 1, TimeUnit.SECONDS);
     TimeoutUtils.waitFor(
         () -> getMessageCount(listEmailQueue) == 0, "waiting for email list queue to drain");
     Collection<ConsumedMessage> messages =
         consumedMessageStore.getConsumedMessages(
             emails.stream().map(Email::getId).collect(Collectors.toList()));
-    Collection<ConsumedMessage> delayedMessages =
+    Collection<ConsumedMessage> scheduledMessages =
         consumedMessageStore.getConsumedMessages(
-            delayedEmails.stream().map(Email::getId).collect(Collectors.toList()));
+            scheduledEmails.stream().map(Email::getId).collect(Collectors.toList()));
     assertEquals(n, messages.size());
-    assertEquals(n, delayedEmails.size());
-    Set<String> delayedTags =
-        delayedMessages.stream()
+    assertEquals(n, scheduledEmails.size());
+    Set<String> scheduledTags =
+        scheduledMessages.stream()
             .map(ConsumedMessage::getTag)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
@@ -84,11 +84,11 @@ public abstract class BasicListenerTest extends SpringTestBase {
             .map(ConsumedMessage::getTag)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
-    assertEquals(1, delayedTags.size());
+    assertEquals(1, scheduledTags.size());
     assertEquals(1, simpleTags.size());
   }
 
-  protected void verifyDelayedTaskExecution() throws TimedOutException {
+  protected void verifyScheduledTaskExecution() throws TimedOutException {
     cleanQueue(jobQueue);
     Job job = Job.newInstance();
     enqueueIn(jobQueue, job, 1_000L);

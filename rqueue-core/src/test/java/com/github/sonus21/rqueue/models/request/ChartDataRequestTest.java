@@ -18,9 +18,12 @@ package com.github.sonus21.rqueue.models.request;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
@@ -46,5 +49,39 @@ class ChartDataRequestTest extends TestBase {
     chartDataRequest.setAggregationType(AggregationType.MONTHLY);
     chartDataRequest.setDateTypes(Collections.singletonList(ChartDataType.EXECUTION));
     assertNull(chartDataRequest.validate());
+  }
+
+  @Test
+  void numberOfDays() {
+    RqueueWebConfig rqueueWebConfig = mock(RqueueWebConfig.class);
+    doReturn(180).when(rqueueWebConfig).getHistoryDay();
+    ChartDataRequest chartDataRequest = new ChartDataRequest();
+
+    chartDataRequest.setAggregationType(AggregationType.DAILY);
+    assertEquals(180, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setNumber(200);
+    assertEquals(180, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setNumber(-6);
+    assertEquals(180, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setAggregationType(AggregationType.WEEKLY);
+    assertEquals(180, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setNumber(10);
+    assertEquals(70, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setNumber(100);
+    assertEquals(180, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setAggregationType(AggregationType.MONTHLY);
+    assertEquals(180, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setNumber(-1);
+    assertEquals(180, chartDataRequest.numberOfDays(rqueueWebConfig));
+
+    chartDataRequest.setNumber(2);
+    assertEquals(60, chartDataRequest.numberOfDays(rqueueWebConfig));
   }
 }

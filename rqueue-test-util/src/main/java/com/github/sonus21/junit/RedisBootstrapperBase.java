@@ -39,14 +39,6 @@ public abstract class RedisBootstrapperBase {
   protected ExecutorService executorService;
   protected List<MonitorProcess> processes = new ArrayList<>();
 
-  @AllArgsConstructor
-  @Getter
-  public static class MonitorProcess {
-    public Process process;
-    public RedisNode redisNode;
-    public List<String> out;
-  }
-
   protected void bootstrap(BootstrapRedis bootstrapRedis) {
     int monitorThreads = 0;
     if (bootstrapRedis.monitorRedis()) {
@@ -111,5 +103,13 @@ public abstract class RedisBootstrapperBase {
             monitorLogger.error("Process call failed", e);
           }
         });
+  }
+
+  @AllArgsConstructor
+  @Getter
+  public static class MonitorProcess {
+    public Process process;
+    public RedisNode redisNode;
+    public List<String> out;
   }
 }

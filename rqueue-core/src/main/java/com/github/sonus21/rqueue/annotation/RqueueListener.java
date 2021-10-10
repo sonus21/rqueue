@@ -40,7 +40,6 @@ import java.lang.annotation.Target;
  * public class MessageListener {
  * &#64;RqueueListener(
  *       value="${job.queue}",
- *      delayedQueue="true",
  *      numRetries="3",
  *      deadLetterQueue="#{job.dead.letter.queue}",
  *      visibilityTimeout="30*60*1000")
@@ -61,16 +60,6 @@ public @interface RqueueListener {
    * @return list of queues.
    */
   String[] value() default {};
-
-  /**
-   * All queues are considered delayed for fast recovery, it can not be disabled even by setting
-   * this to false.
-   *
-   * @deprecated since 2.0
-   * @return whether it's delayed queue or not.
-   */
-  @Deprecated
-  String delayedQueue() default "true";
 
   /**
    * Number of times a message should be retried before it can be discarded or send it to dead
@@ -99,8 +88,9 @@ public @interface RqueueListener {
   String deadLetterQueue() default "";
 
   /**
-   * By default messages sent to dead letter queue are not consumable by listener. This flag is used
-   * to turn on the consumable feature of dead letter queue.
+   * By default, messages sent to dead letter queue are not consumable by listener. This flag is
+   * used to turn on the consumable feature of dead letter queue. If this is set to true then
+   * application should add message listener for the dead letter queue.
    *
    * @return true/false
    */
@@ -128,7 +118,7 @@ public @interface RqueueListener {
    * listeners, that will violate exactly once processing. On the other hand if provided time is too
    * high then the message would be hidden from other consumers for a longer period.
    *
-   * <p><b>NOTE:</b> This time is in milli seconds
+   * <p><b>NOTE:</b> This time is in milliseconds
    *
    * @return visibilityTimeout visibility timeout
    */

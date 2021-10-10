@@ -111,13 +111,34 @@ function refreshStatsChart(chartParams, div_id) {
   });
   chartParams["aggregationType"] = aggregatorType;
   chartParams["dateTypes"] = types;
+  chartParams['number'] = $('#stats-nday :selected').val();
   drawChart(chartParams, div_id);
 }
 
 function refreshLatencyChart(chartParams, div_id) {
   chartParams['aggregationType'] = $(
       '#latency-aggregator-type :selected').val();
+  chartParams['number'] = $('#latency-nday :selected').val();
   drawChart(chartParams, div_id);
+}
+
+function refreshAggregatorSelector(element_selector, type) {
+  ajaxRequest(
+      getAbsoluteUrl('rqueue/api/v1/aggregate-data-selector?type=' + type),
+      'GET', "",
+      function (response) {
+        let title = response.title;
+        let data = response.data;
+        let element = $(element_selector);
+        element.empty();
+        for (let i = 0; i < data.length; i++) {
+          element.append($('<option />')
+          .text(data[i].second)
+          .val(data[i].first));
+        }
+        element.siblings('label').text(title);
+      },
+      errorHandler);
 }
 
 //==================================================================
@@ -420,7 +441,7 @@ $('#move-button').on("click", function () {
     'dstType': dstType
   };
   if (messageCount !== '') {
-    other['messageCount'] = parseInt(messageCount);
+    other['maxMessages'] = parseInt(messageCount);
   }
   if ($('#priority-controller-form').is(":visible")) {
     let val = $('#priority-val').val();
@@ -554,3 +575,11 @@ $(document).on('click', '.jobs-btn', jobsButton);
 $(document).on('click', '.jobs-closer-btn', jobsCloseButton);
 $(document).on('click', '.pause-queue-btn', pauseQueueBtn);
 
+function attachChartEventListeners() {
+  $('#stats-aggregator-type').change(function () {
+    refreshAggregatorSelector('#stats-nday', this.value);
+  });
+  $('#latency-aggregator-type').change(function () {
+    refreshAggregatorSelector('#latency-nday', this.value);
+  });
+}

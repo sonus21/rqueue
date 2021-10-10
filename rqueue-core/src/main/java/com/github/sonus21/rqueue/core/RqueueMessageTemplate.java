@@ -39,7 +39,7 @@ public interface RqueueMessageTemplate {
       int count);
 
   Long addMessageWithDelay(
-      String delayQueueName, String delayQueueChannelName, RqueueMessage rqueueMessage);
+      String scheduleQueueName, String scheduleQueueChannelName, RqueueMessage rqueueMessage);
 
   void moveMessageWithDelay(
       String srcZsetName, String tgtZsetName, RqueueMessage src, RqueueMessage tgt, long delay);
@@ -51,7 +51,7 @@ public interface RqueueMessageTemplate {
   Boolean addToZset(String zsetName, RqueueMessage rqueueMessage, long score);
 
   List<RqueueMessage> getAllMessages(
-      String queueName, String processingQueueName, String delayQueueName);
+      String queueName, String processingQueueName, String scheduleQueueName);
 
   Long getScore(String zsetName, RqueueMessage message);
 
@@ -91,5 +91,5 @@ public interface RqueueMessageTemplate {
   Mono<Long> addReactiveMessage(String queueName, RqueueMessage rqueueMessage);
 
   Flux<Long> addReactiveMessageWithDelay(
-      String delayedQueueName, String delayedQueueChannelName, RqueueMessage rqueueMessage);
+      String scheduledQueueName, String scheduledQueueChannelName, RqueueMessage rqueueMessage);
 }

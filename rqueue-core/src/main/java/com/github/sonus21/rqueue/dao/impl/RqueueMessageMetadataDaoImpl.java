@@ -73,11 +73,11 @@ public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
   }
 
   @Override
-  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration) {
+  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration ttl) {
     Assert.notNull(messageMetadata.getId(), "messageMetadata id cannot be null");
     return reactiveRedisTemplate
         .template()
         .opsForValue()
-        .set(messageMetadata.getId(), messageMetadata, duration);
+        .set(messageMetadata.getId(), messageMetadata, ttl);
   }
 }

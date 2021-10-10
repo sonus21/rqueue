@@ -59,6 +59,13 @@ import org.springframework.messaging.converter.MessageConverter;
 @CoreUnitTest
 class RqueueExecutorTest extends TestBase {
   private final QueueThreadPool queueThreadPool = new QueueThreadPool(null, true, 100);
+  private final RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
+  private final TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
+  private final TestMessageProcessor discardProcessor = new TestMessageProcessor();
+  private final TestMessageProcessor preProcessMessageProcessor = new TestMessageProcessor();
+  private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
+  private final String queueName = "test-queue";
+  private final Object payload = "test message";
   @Mock private RqueueConfig rqueueConfig;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Mock private RqueueJobDao rqueueJobDao;
@@ -67,18 +74,9 @@ class RqueueExecutorTest extends TestBase {
   @Mock private QueueStateMgr queueStateMgr;
   @Mock private RqueueBeanProvider rqueueBeanProvider;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-
-  private final RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
-  private final TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
-  private final TestMessageProcessor discardProcessor = new TestMessageProcessor();
-  private final TestMessageProcessor preProcessMessageProcessor = new TestMessageProcessor();
   private RqueueMessage rqueueMessage = new RqueueMessage();
   @Mock private ApplicationEventPublisher applicationEventPublisher;
-  private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
   private PostProcessingHandler postProcessingHandler;
-
-  private final String queueName = "test-queue";
-  private final Object payload = "test message";
   private MessageMetadata defaultMessageMetadata;
 
   @BeforeEach
@@ -183,7 +181,7 @@ class RqueueExecutorTest extends TestBase {
     verify(messageTemplate, times(1))
         .moveMessageWithDelay(
             eq(queueDetail.getProcessingQueueName()),
-            eq(queueDetail.getDelayedQueueName()),
+            eq(queueDetail.getScheduledQueueName()),
             eq(rqueueMessage),
             any(),
             eq(5000L));
@@ -305,7 +303,7 @@ class RqueueExecutorTest extends TestBase {
         .run();
     verify(messageTemplate, times(1))
         .scheduleMessage(
-            eq(queueDetail.getDelayedQueueName()), eq(messageKey), eq(newMessage), any());
+            eq(queueDetail.getScheduledQueueName()), eq(messageKey), eq(newMessage), any());
     verify(messageHandler, times(1)).handleMessage(any());
   }
 

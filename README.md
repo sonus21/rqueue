@@ -1,6 +1,6 @@
 <div>
    <img  align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue-core/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
-   <h1 style="float:left">Rqueue: Redis Queue, Task Queue, Delayed Queue for Spring and Spring Boot</h1>
+   <h1 style="float:left">Rqueue: Redis Queue, Task Queue, Scheduled Queue for Spring and Spring Boot</h1>
 </div>
 
 [![Build Status](https://circleci.com/gh/sonus21/rqueue/tree/master.svg?style=shield)](https://circleci.com/gh/sonus21/rqueue/tree/master)
@@ -32,7 +32,7 @@ well, where all services code is in Spring.
 * **Automatic message serialization and deserialization**
 * **Message Multicasting** : Call multiple message listeners on every message
 * **Batch Message Polling** : Fetch multiple messages from Redis at once
-* **Metrics** : In flight messages, waiting for consumption and delayed messages
+* **Metrics** : In flight messages, waiting for consumption and scheduled messages
 * **Competing Consumers** : multiple messages can be consumed in parallel by different
   workers/listeners.
 * **Concurrency** : Concurrency of any listener can be configured
@@ -71,14 +71,14 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.9.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.10.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.9.0-RELEASE</version>
+        <version>2.10.0-RELEASE</version>
     </dependency>
     ```
 
@@ -91,14 +91,14 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.9.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.10.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.9.0-RELEASE</version>
+       <version>2.10.0-RELEASE</version>
      </dependency>
     ```
 

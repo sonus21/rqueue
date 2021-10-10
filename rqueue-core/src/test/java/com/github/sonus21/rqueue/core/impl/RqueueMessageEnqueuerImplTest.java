@@ -43,9 +43,9 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
 
   private static final String queue = "test-queue";
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
-  @Mock private RqueueMessageTemplate messageTemplate;
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
+  @Mock private RqueueMessageTemplate messageTemplate;
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @BeforeAll
@@ -53,16 +53,16 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
     EndpointRegistry.register(queueDetail);
   }
 
+  @AfterAll
+  public static void clean() {
+    EndpointRegistry.delete();
+  }
+
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
     rqueueMessageEnqueuer =
         new RqueueMessageEnqueuerImpl(messageTemplate, messageConverter, messageHeaders);
-  }
-
-  @AfterAll
-  public static void clean() {
-    EndpointRegistry.delete();
   }
 
   @Test

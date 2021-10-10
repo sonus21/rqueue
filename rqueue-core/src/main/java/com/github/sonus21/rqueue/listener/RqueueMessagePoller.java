@@ -30,10 +30,10 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.CollectionUtils;
 
 abstract class RqueueMessagePoller extends MessageContainerBase {
-  private final PostProcessingHandler postProcessingHandler;
   final List<Middleware> middlewares;
   final long pollingInterval;
   final long backoffTime;
+  private final PostProcessingHandler postProcessingHandler;
   private final RqueueBeanProvider rqueueBeanProvider;
   private final MessageHeaders messageHeaders;
   List<String> queues;

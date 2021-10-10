@@ -32,13 +32,12 @@ import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
 class StrictPriorityPoller extends RqueueMessagePoller {
+  private static final String ALL_QUEUES_ARE_INELIGIBLE = "\uD83D\uDE1F";
+  private static final String ALL_QUEUES_ARE_INACTIVE = "\uD83D\uDC4B";
   private final Map<String, QueueDetail> queueNameToDetail;
   private final Map<String, QueueThreadPool> queueNameToThread;
   private final Map<String, Long> queueDeactivationTime = new HashMap<>();
   private final Map<String, Long> lastFetchedTime = new HashMap<>();
-
-  private static final String ALL_QUEUES_ARE_INELIGIBLE = "\uD83D\uDE1F";
-  private static final String ALL_QUEUES_ARE_INACTIVE = "\uD83D\uDC4B";
 
   StrictPriorityPoller(
       String groupName,

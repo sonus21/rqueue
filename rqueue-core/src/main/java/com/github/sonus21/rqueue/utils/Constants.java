@@ -19,8 +19,6 @@ package com.github.sonus21.rqueue.utils;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 
 public final class Constants {
-  private Constants() {}
-
   public static final String BLANK = "";
   public static final long ONE_MILLI = 1000;
   public static final int ONE_MILLI_INT = 1000;
@@ -56,6 +54,8 @@ public final class Constants {
   public static final int MIN_CONCURRENCY = 1;
   public static final long MINIMUM_JOB_PERIOD = 1000L;
   public static final String QUEUE_CRUD_LOCK_KEY_PREFIX = "q-crud::";
+
+  private Constants() {}
 
   public static String getQueueCrudLockKey(RqueueConfig rqueueConfig, String queueName) {
     return rqueueConfig.getLockKey(QUEUE_CRUD_LOCK_KEY_PREFIX + queueName);

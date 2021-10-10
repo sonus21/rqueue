@@ -47,6 +47,13 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name": "rqueue.completed.job.cleanup.interval",
+      "description": "How frequently completed jobs should be disabled in millisecond",
+      "type": "java.lang.Long",
+      "defaultValue": 30000
+    },
+    {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
       "name": "rqueue.latest.version.check.enabled",
       "description": "Rqueue Version check is enabled",
       "type": "java.lang.Boolean",
@@ -110,15 +117,15 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.delayed.queue.prefix",
-      "description": "Rqueue Delayed Queue Name Prefix",
+      "name": "rqueue.scheduled.queue.prefix",
+      "description": "Rqueue Scheduled Queue Name Prefix",
       "type": "java.lang.String",
       "defaultValue": "d-queue::"
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.delayed.queue.channel.prefix",
-      "description": "Rqueue Delayed Queue Channel Name Prefix",
+      "name": "rqueue.scheduled.queue.channel.prefix",
+      "description": "Rqueue Scheduled Queue Channel Name Prefix",
       "type": "java.lang.String",
       "defaultValue": "d-channel::"
     },
@@ -270,8 +277,8 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.delayed.message.thread.pool.size",
-      "description": "Number of threads should be used to pull delayed message to original queue",
+      "name": "rqueue.scheduler.scheduled.message.thread.pool.size",
+      "description": "Number of threads should be used to pull scheduled message to original queue",
       "type": "java.lang.Integer",
       "defaultValue": 3
     },
@@ -284,8 +291,8 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.delayed.message.time.interval",
-      "description": "How frequently messages should be moved from delayed queues to source queue (millisecond) ",
+      "name": "rqueue.scheduler.scheduled.message.time.interval",
+      "description": "How frequently messages should be moved from scheduled queues to source queue (millisecond) ",
       "type": "java.lang.Long",
       "defaultValue": 5000
     },
@@ -348,14 +355,14 @@
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.collect.statistic.aggregate.shutdown.wait.time",
-      "description": "How long Rqueue should wait for aggregate job to complete o shutdown (mili seconds)",
+      "description": "How long Rqueue should wait for aggregate job to complete before shutdown (milliseconds)",
       "type": "java.lang.Integer",
       "defaultValue": 500
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.collect.statistic.aggregate.event.lock.duration",
-      "description": "How long Rqueue should wait for Redis lock when aggregation data is being saved(mili seconds)",
+      "description": "How long Rqueue should wait for Redis lock when aggregation data is being saved(milliseconds)",
       "type": "java.lang.Integer",
       "defaultValue": 500
     }

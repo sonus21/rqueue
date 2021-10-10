@@ -16,11 +16,13 @@
 
 package com.github.sonus21.rqueue.models.request;
 
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import com.github.sonus21.rqueue.utils.Constants;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,12 +37,26 @@ public class ChartDataRequest extends SerializableBase {
   private static final long serialVersionUID = 7727090378318819986L;
   private ChartType type;
   private String queue;
+  private int number;
   private AggregationType aggregationType;
   private List<ChartDataType> dateTypes;
 
   public ChartDataRequest(ChartType chartType, AggregationType aggregationType) {
     this.type = chartType;
     this.aggregationType = aggregationType;
+  }
+
+  public int numberOfDays(RqueueWebConfig rqueueWebConfig) {
+    int n = this.number;
+    if (aggregationType == AggregationType.MONTHLY) {
+      n = this.number * Constants.DAYS_IN_A_MONTH;
+    } else if (aggregationType == AggregationType.WEEKLY) {
+      n = this.number * Constants.DAYS_IN_A_WEEK;
+    }
+    if (n <= 0 || n > rqueueWebConfig.getHistoryDay()) {
+      return rqueueWebConfig.getHistoryDay();
+    }
+    return n;
   }
 
   public ChartDataResponse validate() {

@@ -44,11 +44,11 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 class RedisLockMiddlewareTest extends TestBase {
 
-  @Mock private Job job;
-  @Mock private RqueueRedisTemplate<String> redisTemplate;
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final String key = "job-xxx";
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
+  @Mock private Job job;
+  @Mock private RqueueRedisTemplate<String> redisTemplate;
 
   @BeforeEach
   public void init() {

@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.config;
 
+import com.github.sonus21.rqueue.utils.HttpUtils;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,8 +34,13 @@ public class RqueueWebConfig {
   @Value("${rqueue.web.enable:true}")
   private boolean enable;
 
+  /** Base path for Rqueue web endpoints. Relative to server.servlet.context-path */
   @Value("${rqueue.web.url.prefix:}")
+  @Getter(AccessLevel.NONE)
   private String urlPrefix;
+
+  @Value("${server.servlet.context-path:}")
+  private String servletContextPath;
 
   @Value("${rqueue.web.max.message.move.count:1000}")
   private int maxMessageMoveCount;
@@ -67,4 +74,8 @@ public class RqueueWebConfig {
   // lock duration for aggregate job, acquired  per queue
   @Value("${rqueue.web.collect.statistic.aggregate.event.lock.duration:500}")
   private int aggregateEventLockDurationInMs;
+
+  public String getUrlPrefix(String xForwardedPrefix) {
+    return HttpUtils.joinPath(xForwardedPrefix, servletContextPath, urlPrefix);
+  }
 }

@@ -40,6 +40,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,27 +50,29 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueSystemManagerServiceImplTest extends TestBase {
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueConfig rqueueConfig;
-  private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final String normalQueue = "normal-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+  private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
   private final QueueDetail fastQueueDetail =
       TestUtils.createQueueDetail(fastQueue, 3, 200000L, "fast-dlq");
+  private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private final QueueDetail normalQueueDetail =
       TestUtils.createQueueDetail(normalQueue, 3, 100000L, "normal-dlq");
-  private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
-  private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
+  @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
     rqueueSystemManagerService =
-        new RqueueSystemManagerServiceImpl(rqueueConfig, rqueueStringDao, rqueueSystemConfigDao);
+        new RqueueSystemManagerServiceImpl(
+            rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
     fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
     EndpointRegistry.register(slowQueueDetail);

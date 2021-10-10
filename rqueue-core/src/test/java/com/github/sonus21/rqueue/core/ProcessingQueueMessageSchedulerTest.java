@@ -35,21 +35,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 @CoreUnitTest
-class ProcessingMessageSchedulerTest extends TestBase {
-
-  @Mock
-  private RedisTemplate<String, Long> redisTemplate;
-  @Mock
-  private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock
-  private RedisMessageListenerContainer redisMessageListenerContainer;
-  @InjectMocks
-  private ProcessingMessageScheduler messageScheduler;
+class ProcessingQueueMessageSchedulerTest extends TestBase {
 
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
+  @Mock private RedisTemplate<String, Long> redisTemplate;
+  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
+  @InjectMocks private ProcessingQueueMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {

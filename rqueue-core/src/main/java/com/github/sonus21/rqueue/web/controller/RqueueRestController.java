@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.exception.ProcessingException;
+import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.DataDeleteRequest;
 import com.github.sonus21.rqueue.models.request.DataTypeRequest;
@@ -31,6 +32,7 @@ import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
+import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.ReactiveDisabled;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
@@ -54,12 +56,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "${rqueue.web.url.prefix:}rqueue/api/v1")
 @Conditional(ReactiveDisabled.class)
-public class RqueueRestController {
+public class RqueueRestController extends BaseController {
   private final RqueueDashboardChartService rqueueDashboardChartService;
   private final RqueueQDetailService rqueueQDetailService;
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueQManagerService;
-  private final RqueueWebConfig rqueueWebConfig;
   private final RqueueJobService rqueueJobService;
 
   @Autowired
@@ -70,11 +71,11 @@ public class RqueueRestController {
       RqueueSystemManagerService rqueueQManagerService,
       RqueueWebConfig rqueueWebConfig,
       RqueueJobService rqueueJobService) {
+    super(rqueueWebConfig);
     this.rqueueDashboardChartService = rqueueDashboardChartService;
     this.rqueueQDetailService = rqueueQDetailService;
     this.rqueueUtilityService = rqueueUtilityService;
     this.rqueueQManagerService = rqueueQManagerService;
-    this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueJobService = rqueueJobService;
   }
 
@@ -82,11 +83,10 @@ public class RqueueRestController {
   @ResponseBody
   public ChartDataResponse getDashboardData(
       @RequestBody @Valid ChartDataRequest chartDataRequest, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
     }
-    return rqueueDashboardChartService.getDashboardChartData(chartDataRequest);
+    return null;
   }
 
   @GetMapping("jobs")
@@ -94,108 +94,109 @@ public class RqueueRestController {
   public DataViewResponse getJobs(
       @RequestParam(name = "message-id") @NotEmpty String messageId, HttpServletResponse response)
       throws ProcessingException {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueJobService.getJobs(messageId);
     }
-    return rqueueJobService.getJobs(messageId);
+    return null;
   }
 
   @PostMapping("queue-data")
   @ResponseBody
   public DataViewResponse exploreQueue(
       @Valid @RequestBody QueueExploreRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueQDetailService.getExplorePageData(
+          request.getSrc(),
+          request.getName(),
+          request.getType(),
+          request.getPageNumber(),
+          request.getItemPerPage());
     }
-    return rqueueQDetailService.getExplorePageData(
-        request.getSrc(),
-        request.getName(),
-        request.getType(),
-        request.getPageNumber(),
-        request.getItemPerPage());
+    return null;
   }
 
   @PostMapping("view-data")
   @ResponseBody
   public DataViewResponse viewData(
       @RequestBody @Valid DateViewRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueQDetailService.viewData(
+          request.getName(),
+          request.getType(),
+          request.getKey(),
+          request.getPageNumber(),
+          request.getItemPerPage());
     }
-    return rqueueQDetailService.viewData(
-        request.getName(),
-        request.getType(),
-        request.getKey(),
-        request.getPageNumber(),
-        request.getItemPerPage());
+    return null;
   }
 
   @PostMapping("delete-message")
   @ResponseBody
   public BooleanResponse deleteMessage(
       @Valid @RequestBody MessageDeleteRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueUtilityService.deleteMessage(request.getQueueName(), request.getMessageId());
     }
-    return rqueueUtilityService.deleteMessage(request.getQueueName(), request.getMessageId());
+    return null;
   }
 
   @PostMapping("delete-queue")
   @ResponseBody
   public BaseResponse deleteQueue(
       @Valid @RequestBody DataTypeRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueQManagerService.deleteQueue(request.getName());
     }
-    return rqueueQManagerService.deleteQueue(request.getName());
+    return null;
   }
 
   @PostMapping("delete-queue-part")
   @ResponseBody
   public BooleanResponse deleteAll(
       @RequestBody @Valid DataDeleteRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueUtilityService.makeEmpty(request.getQueueName(), request.getDatasetName());
     }
-    return rqueueUtilityService.makeEmpty(request.getQueueName(), request.getDatasetName());
+    return null;
   }
 
   @PostMapping("data-type")
   @ResponseBody
   public StringResponse dataType(
       @RequestBody @Valid DataTypeRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueUtilityService.getDataType(request.getName());
     }
-    return rqueueUtilityService.getDataType(request.getName());
+    return null;
   }
 
   @PostMapping("move-data")
   @ResponseBody
   public MessageMoveResponse dataType(
       @RequestBody @Valid MessageMoveRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueUtilityService.moveMessage(request);
     }
-    return rqueueUtilityService.moveMessage(request);
+    return null;
   }
 
   @PostMapping("pause-unpause-queue")
   @ResponseBody
   public BaseResponse pauseUnpauseQueue(
       @RequestBody @Valid PauseUnpauseQueueRequest request, HttpServletResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      return rqueueUtilityService.pauseUnpauseQueue(request);
     }
-    return rqueueUtilityService.pauseUnpauseQueue(request);
+    return null;
+  }
+
+  @GetMapping("aggregate-data-selector")
+  @ResponseBody
+  public DataSelectorResponse aggregateDataCounter(
+      @RequestParam AggregationType type, HttpServletResponse response) {
+    if (isEnable(response)) {
+      return rqueueUtilityService.aggregateDataCounter(type);
+    }
+    return null;
   }
 }

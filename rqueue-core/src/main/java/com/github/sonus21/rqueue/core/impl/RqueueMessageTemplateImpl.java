@@ -114,13 +114,13 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
 
   @Override
   public Flux<Long> addReactiveMessageWithDelay(
-      String delayedQueueName, String delayedQueueChannelName, RqueueMessage rqueueMessage) {
+      String scheduledQueueName, String scheduledQueueChannelName, RqueueMessage rqueueMessage) {
     log.debug(
-        "AddReactiveMessageWithDelay Queue: {}, Message: {}", delayedQueueName, rqueueMessage);
+        "AddReactiveMessageWithDelay Queue: {}, Message: {}", scheduledQueueName, rqueueMessage);
     RedisScript<Long> script = getScript(ScriptType.ENQUEUE_MESSAGE);
     return reactiveScriptExecutor.execute(
         script,
-        Arrays.asList(delayedQueueName, delayedQueueChannelName),
+        Arrays.asList(scheduledQueueName, scheduledQueueChannelName),
         Arrays.asList(rqueueMessage, rqueueMessage.getProcessAt(), System.currentTimeMillis()));
   }
 

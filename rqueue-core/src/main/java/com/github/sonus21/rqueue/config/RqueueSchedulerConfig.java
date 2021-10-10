@@ -56,15 +56,15 @@ public class RqueueSchedulerConfig {
   @Value("${rqueue.scheduler.redis.enabled:true}")
   private boolean redisEnabled;
 
-  // Number of threads used to process delayed queue messages
-  @Value("${rqueue.scheduler.delayed.message.thread.pool.size:3}")
-  private int delayedMessageThreadPoolSize;
+  // Number of threads used to process scheduled-queue messages
+  @Value("${rqueue.scheduler.scheduled.message.thread.pool.size:3}")
+  private int scheduledMessageThreadPoolSize;
 
-  //  Number of threads used to process processing queue messages
+  //  Number of threads used to process processing-queue messages
   @Value("${rqueue.scheduler.processing.message.thread.pool.size:1}")
   private int processingMessageThreadPoolSize;
 
-  // How frequently messages should be moved from delayed queues to source queue
-  @Value("${rqueue.scheduler.delayed.message.time.interval:5000}")
-  private long delayedMessageTimeIntervalInMilli;
+  // How frequently messages should be moved from scheduled queues to source queue
+  @Value("${rqueue.scheduler.scheduled.message.time.interval:5000}")
+  private long scheduledMessageTimeIntervalInMilli;
 }

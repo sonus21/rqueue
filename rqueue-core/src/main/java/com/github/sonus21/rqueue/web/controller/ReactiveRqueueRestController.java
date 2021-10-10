@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.exception.ProcessingException;
+import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.request.DataDeleteRequest;
 import com.github.sonus21.rqueue.models.request.DataTypeRequest;
@@ -31,6 +32,7 @@ import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
+import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.ReactiveEnabled;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
@@ -42,7 +44,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,13 +57,12 @@ import reactor.core.publisher.Mono;
 @RestController
 @Conditional(ReactiveEnabled.class)
 @RequestMapping(path = "${rqueue.web.url.prefix:}rqueue/api/v1")
-public class ReactiveRqueueRestController {
+public class ReactiveRqueueRestController extends BaseReactiveController {
 
   private final RqueueDashboardChartService rqueueDashboardChartService;
   private final RqueueQDetailService rqueueQDetailService;
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueQManagerService;
-  private final RqueueWebConfig rqueueWebConfig;
   private final RqueueJobService rqueueJobService;
 
   @Autowired
@@ -73,11 +73,11 @@ public class ReactiveRqueueRestController {
       RqueueSystemManagerService rqueueQManagerService,
       RqueueWebConfig rqueueWebConfig,
       RqueueJobService rqueueJobService) {
+    super(rqueueWebConfig);
     this.rqueueDashboardChartService = rqueueDashboardChartService;
     this.rqueueQDetailService = rqueueQDetailService;
     this.rqueueUtilityService = rqueueUtilityService;
     this.rqueueQManagerService = rqueueQManagerService;
-    this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueJobService = rqueueJobService;
   }
 
@@ -85,11 +85,10 @@ public class ReactiveRqueueRestController {
   @ResponseBody
   public Mono<ChartDataResponse> getDashboardData(
       @RequestBody @Valid ChartDataRequest chartDataRequest, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueDashboardChartService.getReactiveDashBoardData(chartDataRequest);
     }
-    return rqueueDashboardChartService.getReactiveDashBoardData(chartDataRequest);
+    return null;
   }
 
   @GetMapping("jobs")
@@ -97,109 +96,111 @@ public class ReactiveRqueueRestController {
   public Mono<DataViewResponse> getJobs(
       @RequestParam(name = "message-id") @NotEmpty String messageId, ServerHttpResponse response)
       throws ProcessingException {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueJobService.getReactiveJobs(messageId);
     }
-    return rqueueJobService.getReactiveJobs(messageId);
+    return null;
   }
 
   @PostMapping("queue-data")
   @ResponseBody
   public Mono<DataViewResponse> exploreQueue(
       @RequestBody @Valid QueueExploreRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueQDetailService.getReactiveExplorePageData(
+          request.getSrc(),
+          request.getName(),
+          request.getType(),
+          request.getPageNumber(),
+          request.getItemPerPage());
     }
-    return rqueueQDetailService.getReactiveExplorePageData(
-        request.getSrc(),
-        request.getName(),
-        request.getType(),
-        request.getPageNumber(),
-        request.getItemPerPage());
+    return null;
   }
 
   @PostMapping("view-data")
   @ResponseBody
   public Mono<DataViewResponse> viewData(
       @RequestBody @Valid DateViewRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueQDetailService.viewReactiveData(
+          request.getName(),
+          request.getType(),
+          request.getKey(),
+          request.getPageNumber(),
+          request.getItemPerPage());
     }
-    return rqueueQDetailService.viewReactiveData(
-        request.getName(),
-        request.getType(),
-        request.getKey(),
-        request.getPageNumber(),
-        request.getItemPerPage());
+    return null;
   }
 
   @PostMapping("delete-message")
   @ResponseBody
   public Mono<BooleanResponse> deleteMessage(
       @RequestBody @Valid MessageDeleteRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueUtilityService.deleteReactiveMessage(
+          request.getQueueName(), request.getMessageId());
     }
-    return rqueueUtilityService.deleteReactiveMessage(
-        request.getQueueName(), request.getMessageId());
+    return null;
   }
 
   @PostMapping("delete-queue")
   @ResponseBody
   public Mono<BaseResponse> deleteQueue(
       @RequestBody @Valid DataTypeRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueQManagerService.deleteReactiveQueue(request.getName());
     }
-    return rqueueQManagerService.deleteReactiveQueue(request.getName());
+    return null;
   }
 
   @PostMapping("delete-queue-part")
   @ResponseBody
   public Mono<BooleanResponse> deleteAll(
       @RequestBody @Valid DataDeleteRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueUtilityService.makeEmptyReactive(
+          request.getQueueName(), request.getDatasetName());
     }
-    return rqueueUtilityService.makeEmptyReactive(request.getQueueName(), request.getDatasetName());
+    return null;
   }
 
   @PostMapping("data-type")
   @ResponseBody
   public Mono<StringResponse> dataType(
       @Valid @RequestBody DataTypeRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueUtilityService.getReactiveDataType(request.getName());
     }
-    return rqueueUtilityService.getReactiveDataType(request.getName());
+    return null;
   }
 
   @PostMapping("move-data")
   @ResponseBody
   public Mono<MessageMoveResponse> dataType(
       @RequestBody @Valid MessageMoveRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueUtilityService.moveReactiveMessage(request);
     }
-    return rqueueUtilityService.moveReactiveMessage(request);
+    return null;
   }
 
   @PostMapping("pause-unpause-queue")
   @ResponseBody
   public Mono<BaseResponse> pauseUnpauseQueue(
       @RequestBody @Valid PauseUnpauseQueueRequest request, ServerHttpResponse response) {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      return rqueueUtilityService.reactivePauseUnpauseQueue(request);
     }
-    return rqueueUtilityService.reactivePauseUnpauseQueue(request);
+    return null;
+  }
+
+  @GetMapping("aggregate-data-selector")
+  @ResponseBody
+  public Mono<DataSelectorResponse> aggregateDataCounter(
+      @RequestParam AggregationType type, ServerHttpResponse response) {
+    if (isEnabled(response)) {
+      return rqueueUtilityService.reactiveAggregateDataCounter(type);
+    }
+    return null;
   }
 }

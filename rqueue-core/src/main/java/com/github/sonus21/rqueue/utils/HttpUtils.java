@@ -26,8 +26,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public final class HttpUtils {
 
-  private HttpUtils() {
-  }
+  private HttpUtils() {}
 
   private static SimpleClientHttpRequestFactory getRequestFactory(RqueueConfig rqueueConfig) {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -52,5 +51,26 @@ public final class HttpUtils {
       log.error("GET call failed for {}", url, e);
       return null;
     }
+  }
+
+  public static String joinPath(String... components) {
+    StringBuilder sb = new StringBuilder();
+    for (String comp : components) {
+      if (StringUtils.isEmpty(comp) || comp.equals(Constants.FORWARD_SLASH)) {
+        continue;
+      }
+      sb.append(Constants.FORWARD_SLASH);
+      if (comp.endsWith(Constants.FORWARD_SLASH) && comp.startsWith(Constants.FORWARD_SLASH)) {
+        sb.append(comp, 1, comp.length() - 1);
+      } else if (comp.endsWith(Constants.FORWARD_SLASH)) {
+        sb.append(comp, 0, comp.length() - 1);
+      } else if (comp.startsWith(Constants.FORWARD_SLASH)) {
+        sb.append(comp.substring(1));
+      } else {
+        sb.append(comp);
+      }
+    }
+    sb.append(Constants.FORWARD_SLASH);
+    return sb.toString();
   }
 }

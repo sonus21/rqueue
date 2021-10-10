@@ -23,7 +23,7 @@ import java.util.List;
 
 public class QueueEvents {
 
-  public List<RqueueExecutionEvent> rqueueExecutionEvents;
+  public final List<RqueueExecutionEvent> rqueueExecutionEvents;
   private final Long createdAt;
 
   public QueueEvents(RqueueExecutionEvent event) {

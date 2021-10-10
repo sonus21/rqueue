@@ -52,7 +52,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
-class ReactiveWebTest extends BasicListenerTest {
+class ReactiveWebViewTest extends BasicListenerTest {
   @Autowired private WebTestClient webTestClient;
   @Autowired private RqueueConfig rqueueConfig;
 
@@ -60,9 +60,9 @@ class ReactiveWebTest extends BasicListenerTest {
   public void init() throws TimedOutException {
     verifyListMessageListener(); // list email queue
     verifySimpleTaskExecution(); // notification queue
-    verifyDelayedTaskExecution(); // job queue
+    verifyScheduledTaskExecution(); // job queue
     enqueueIn(
-        rqueueConfig.getDelayedQueueName(emailQueue),
+        rqueueConfig.getScheduledQueueName(emailQueue),
         (i) -> Email.newInstance(),
         (i) -> 30_000L,
         10,

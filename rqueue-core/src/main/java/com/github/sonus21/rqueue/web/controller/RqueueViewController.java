@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.utils.ReactiveDisabled;
-import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
 import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import java.util.Locale;
@@ -37,9 +36,8 @@ import org.springframework.web.servlet.View;
 @Controller
 @RequestMapping(path = "${rqueue.web.url.prefix:}rqueue")
 @Conditional(ReactiveDisabled.class)
-public class RqueueViewController {
+public class RqueueViewController extends BaseController {
 
-  private final RqueueWebConfig rqueueWebConfig;
   private final PebbleViewResolver rqueueViewResolver;
   private final RqueueViewControllerService rqueueViewControllerService;
 
@@ -48,39 +46,33 @@ public class RqueueViewController {
       @Qualifier("rqueueViewResolver") PebbleViewResolver rqueueViewResolver,
       RqueueWebConfig rqueueWebConfig,
       RqueueViewControllerService rqueueViewControllerService) {
+    super(rqueueWebConfig);
     this.rqueueViewControllerService = rqueueViewControllerService;
-    this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueViewResolver = rqueueViewResolver;
   }
 
   private String xForwardedPrefix(HttpServletRequest request) {
-    String prefix = rqueueWebConfig.getUrlPrefix();
-    if (StringUtils.isEmpty(prefix)) {
-      return request.getHeader("x-forwarded-prefix");
-    }
-    return prefix;
+    return request.getHeader("x-forwarded-prefix");
   }
 
   @GetMapping
   public View index(Model model, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.index(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("index", Locale.ENGLISH);
     }
-    rqueueViewControllerService.index(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("index", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("queues")
   public View queues(Model model, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.queues(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
     }
-    rqueueViewControllerService.queues(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("queues/{queueName}")
@@ -90,66 +82,60 @@ public class RqueueViewController {
       HttpServletRequest request,
       HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.queueDetail(model, xForwardedPrefix(request), queueName);
+      return rqueueViewResolver.resolveViewName("queue_detail", Locale.ENGLISH);
     }
-    rqueueViewControllerService.queueDetail(model, xForwardedPrefix(request), queueName);
-    return rqueueViewResolver.resolveViewName("queue_detail", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("running")
   public View running(Model model, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.running(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.running(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("scheduled")
   public View scheduled(Model model, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.scheduled(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.scheduled(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("dead")
   public View dead(Model model, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.dead(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.dead(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("pending")
   public View pending(Model model, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.pending(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.pending(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("utility")
   public View utility(Model model, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnable(response)) {
+      rqueueViewControllerService.utility(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);
     }
-    rqueueViewControllerService.utility(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);
+    return null;
   }
 }

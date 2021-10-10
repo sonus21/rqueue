@@ -28,7 +28,7 @@ public interface RqueueMessageMetadataDao {
 
   List<MessageMetadata> findAll(Collection<String> ids);
 
-  void save(MessageMetadata messageMetadata, Duration duration);
+  void save(MessageMetadata messageMetadata, Duration ttl);
 
   void delete(String id);
 

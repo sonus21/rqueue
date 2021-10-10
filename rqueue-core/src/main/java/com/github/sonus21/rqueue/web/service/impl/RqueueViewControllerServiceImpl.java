@@ -17,14 +17,14 @@
 package com.github.sonus21.rqueue.web.service.impl;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.models.Pair;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
-import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
@@ -36,8 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
@@ -45,6 +45,7 @@ import org.springframework.ui.Model;
 public class RqueueViewControllerServiceImpl implements RqueueViewControllerService {
 
   private final RqueueConfig rqueueConfig;
+  private final RqueueWebConfig rqueueWebConfig;
   private final RqueueQDetailService rqueueQDetailService;
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueSystemManagerService;
@@ -52,10 +53,12 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
   @Autowired
   public RqueueViewControllerServiceImpl(
       RqueueConfig rqueueConfig,
+      RqueueWebConfig rqueueWebConfig,
       RqueueQDetailService rqueueQDetailService,
       RqueueUtilityService rqueueUtilityService,
       RqueueSystemManagerService rqueueSystemManagerService) {
     this.rqueueConfig = rqueueConfig;
+    this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueQDetailService = rqueueQDetailService;
     this.rqueueUtilityService = rqueueUtilityService;
     this.rqueueSystemManagerService = rqueueSystemManagerService;
@@ -76,17 +79,7 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
         "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     model.addAttribute("timeInMilli", System.currentTimeMillis());
     model.addAttribute("version", rqueueConfig.getLibVersion());
-    String prefix = Constants.FORWARD_SLASH;
-    if (!StringUtils.isEmpty(xForwardedPrefix)) {
-      if (xForwardedPrefix.endsWith(Constants.FORWARD_SLASH)) {
-        xForwardedPrefix = xForwardedPrefix.substring(0, xForwardedPrefix.length() - 1);
-      }
-      prefix = xForwardedPrefix + prefix;
-    }
-    if (!prefix.startsWith(Constants.FORWARD_SLASH)) {
-      prefix = Constants.FORWARD_SLASH + prefix;
-    }
-    model.addAttribute("urlPrefix", prefix);
+    model.addAttribute("urlPrefix", rqueueWebConfig.getUrlPrefix(xForwardedPrefix));
   }
 
   @Override
@@ -95,6 +88,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     addNavData(model, null);
     model.addAttribute("title", "Rqueue Dashboard");
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
+    model.addAttribute(
+        "aggregatorDateCounter", rqueueUtilityService.aggregateDataCounter(AggregationType.DAILY));
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
   }
 
@@ -122,6 +117,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("title", "Queue: " + queueName);
     model.addAttribute("queueName", queueName);
     model.addAttribute("aggregatorTypes", Arrays.asList(AggregationType.values()));
+    model.addAttribute(
+        "aggregatorDateCounter", rqueueUtilityService.aggregateDataCounter(AggregationType.DAILY));
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
     model.addAttribute("queueActions", queueActions);
     model.addAttribute("queueRedisDataDetails", queueRedisDataDetail);

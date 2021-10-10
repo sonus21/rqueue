@@ -16,13 +16,15 @@
 
 package com.github.sonus21.rqueue.web.service;
 
+import com.github.sonus21.rqueue.models.Pair;
+import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
+import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
 public interface RqueueUtilityService {
@@ -49,4 +51,7 @@ public interface RqueueUtilityService {
 
   BaseResponse pauseUnpauseQueue(PauseUnpauseQueueRequest request);
 
+  Mono<DataSelectorResponse> reactiveAggregateDataCounter(AggregationType type);
+
+  DataSelectorResponse aggregateDataCounter(AggregationType type);
 }

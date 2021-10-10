@@ -197,9 +197,9 @@ public abstract class SpringTestBase extends TestBase {
         rqueueMessageTemplate.readFromList(queueDetail.getQueueName(), 0, -1);
     queueNameToMessage.put(queueDetail.getQueueName(), messages);
 
-    List<RqueueMessage> messagesInDelayedQueue =
-        rqueueMessageTemplate.readFromZset(queueDetail.getDelayedQueueName(), 0, -1);
-    queueNameToMessage.put(queueDetail.getDelayedQueueName(), messagesInDelayedQueue);
+    List<RqueueMessage> messagesInScheduledQueue =
+        rqueueMessageTemplate.readFromZset(queueDetail.getScheduledQueueName(), 0, -1);
+    queueNameToMessage.put(queueDetail.getScheduledQueueName(), messagesInScheduledQueue);
 
     List<RqueueMessage> messagesInProcessingQueue =
         rqueueMessageTemplate.readFromZset(queueDetail.getProcessingQueueName(), 0, -1);
@@ -249,7 +249,7 @@ public abstract class SpringTestBase extends TestBase {
   protected void cleanQueue(String queue) {
     QueueDetail queueDetail = EndpointRegistry.get(queue);
     stringRqueueRedisTemplate.delete(queueDetail.getQueueName());
-    stringRqueueRedisTemplate.delete(queueDetail.getDelayedQueueName());
+    stringRqueueRedisTemplate.delete(queueDetail.getScheduledQueueName());
     stringRqueueRedisTemplate.delete(queueDetail.getProcessingQueueName());
     if (!StringUtils.isEmpty(queueDetail.getDeadLetterQueueName())) {
       stringRqueueRedisTemplate.delete(queueDetail.getDeadLetterQueueName());
@@ -294,6 +294,13 @@ public abstract class SpringTestBase extends TestBase {
       return rqueueMessageSender.enqueueAt(queueName, message, delay);
     }
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, delay) != null;
+  }
+
+  protected String enqueueAtGetMessageId(String queueName, Object message, long delay) {
+    if (reactiveEnabled) {
+      return reactiveRqueueMessageEnqueuer.enqueueAt(queueName, message, delay).block();
+    }
+    return rqueueMessageEnqueuer.enqueueAt(queueName, message, delay);
   }
 
   protected boolean enqueueIn(String queueName, Object message, long delay) {

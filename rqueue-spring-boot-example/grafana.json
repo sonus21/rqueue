@@ -95,9 +95,9 @@
           "refId": "A"
         },
         {
-          "expr": "delayed_queue_size",
+          "expr": "scheduled_queue_size",
           "hide": false,
-          "legendFormat": "Delayed {{queue}}",
+          "legendFormat": "Scheduled {{queue}}",
           "refId": "B"
         },
         {

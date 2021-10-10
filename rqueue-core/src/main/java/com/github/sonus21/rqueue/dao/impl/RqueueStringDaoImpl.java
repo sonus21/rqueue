@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import org.springframework.data.redis.connection.DataType;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.util.CollectionUtils;
@@ -164,5 +165,25 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @Override
   public Boolean deleteIfSame(String key, String value) {
     return scriptExecutor.execute(delIfSameScript, Collections.singletonList(key), value);
+  }
+
+  @Override
+  public void addToOrderedSetWithScore(String key, String value, long score) {
+    redisTemplate.zadd(key, value, score);
+  }
+
+  @Override
+  public List<TypedTuple<String>> readFromOrderedSetWithScoreBetween(
+      String key, long start, long end) {
+    Set<TypedTuple<String>> messages = redisTemplate.zrangeWithScore(key, start, end);
+    if (CollectionUtils.isEmpty(messages)) {
+      return Collections.emptyList();
+    }
+    return new ArrayList<>(messages);
+  }
+
+  @Override
+  public void deleteAll(String key, long min, long max) {
+    redisTemplate.zremRangeByScore(key, min, max);
   }
 }

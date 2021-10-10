@@ -80,6 +80,11 @@ import org.springframework.messaging.converter.MessageConverter;
 @CoreUnitTest
 class RqueueMiddlewareTest extends TestBase {
   private final QueueThreadPool queueThreadPool = new QueueThreadPool(null, true, 100);
+  private final RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
+  private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
+  private final String queueName = "test-queue";
+  private final Object payload = "test message";
+  private final MessageConverter messageConverter = new GenericMessageConverter();
   @Mock private RqueueConfig rqueueConfig;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Mock private RqueueBeanProvider rqueueBeanProvider;
@@ -88,13 +93,7 @@ class RqueueMiddlewareTest extends TestBase {
   @Mock private RqueueMessageTemplate messageTemplate;
   @Mock private RqueueMessageHandler messageHandler;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  private final RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
   @Mock private ApplicationEventPublisher applicationEventPublisher;
-  private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
-
-  private final String queueName = "test-queue";
-  private final Object payload = "test message";
-  private final MessageConverter messageConverter = new GenericMessageConverter();
   private RqueueMessage rqueueMessage = new RqueueMessage();
   private PostProcessingHandler postProcessingHandler;
   private MessageMetadata defaultMessageMetadata;

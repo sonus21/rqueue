@@ -34,8 +34,8 @@ class RqueueConfigTest extends TestBase {
   private void initialize(RqueueConfig rqueueConfig) {
     rqueueConfig.setPrefix("__rq::");
     rqueueConfig.setSimpleQueuePrefix("queue::");
-    rqueueConfig.setDelayedQueuePrefix("d-queue::");
-    rqueueConfig.setDelayedQueueChannelPrefix("d-channel::");
+    rqueueConfig.setScheduledQueuePrefix("d-queue::");
+    rqueueConfig.setScheduledQueueChannelPrefix("d-channel::");
     rqueueConfig.setProcessingQueuePrefix("p-queue::");
     rqueueConfig.setProcessingQueueChannelPrefix("p-channel::");
     rqueueConfig.setLockKeyPrefix("lock::");
@@ -59,20 +59,21 @@ class RqueueConfigTest extends TestBase {
   }
 
   @Test
-  void getDelayedQueueName() {
-    assertEquals("rqueue-delay::test", rqueueConfigVersion1.getDelayedQueueName("test"));
-    assertEquals("__rq::d-queue::test", rqueueConfigVersion2.getDelayedQueueName("test"));
+  void getScheduledQueueName() {
+    assertEquals("rqueue-delay::test", rqueueConfigVersion1.getScheduledQueueName("test"));
+    assertEquals("__rq::d-queue::test", rqueueConfigVersion2.getScheduledQueueName("test"));
     assertEquals(
-        "__rq::d-queue::{test}", rqueueConfigVersion2ClusterMode.getDelayedQueueName("test"));
+        "__rq::d-queue::{test}", rqueueConfigVersion2ClusterMode.getScheduledQueueName("test"));
   }
 
   @Test
-  void getDelayedQueueChannelName() {
-    assertEquals("rqueue-channel::test", rqueueConfigVersion1.getDelayedQueueChannelName("test"));
-    assertEquals("__rq::d-channel::test", rqueueConfigVersion2.getDelayedQueueChannelName("test"));
+  void getScheduledQueueChannelName() {
+    assertEquals("rqueue-channel::test", rqueueConfigVersion1.getScheduledQueueChannelName("test"));
+    assertEquals(
+        "__rq::d-channel::test", rqueueConfigVersion2.getScheduledQueueChannelName("test"));
     assertEquals(
         "__rq::d-channel::{test}",
-        rqueueConfigVersion2ClusterMode.getDelayedQueueChannelName("test"));
+        rqueueConfigVersion2ClusterMode.getScheduledQueueChannelName("test"));
   }
 
   @Test

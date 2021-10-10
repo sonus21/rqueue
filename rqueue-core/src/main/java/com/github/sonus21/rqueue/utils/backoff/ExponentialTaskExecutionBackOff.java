@@ -116,7 +116,7 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
   /**
    * Set the initial interval in milliseconds.
    *
-   * @param initialInterval initial interval in milli seconds.
+   * @param initialInterval initial interval in milliseconds.
    */
   public void setInitialInterval(long initialInterval) {
     checkInitialInterval(initialInterval);
@@ -171,18 +171,16 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
   }
 
   /**
-   * Set the max interval in milli seconds
+   * Set the max interval in milliseconds
    *
-   * @param maxInterval value in milli seconds
+   * @param maxInterval value in milliseconds
    */
   public void setMaxInterval(long maxInterval) {
     checkMaxInterval(initialInterval, maxInterval);
     this.maxInterval = maxInterval;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount) {
     if (failureCount >= getMaxRetries(message, rqueueMessage, failureCount)) {

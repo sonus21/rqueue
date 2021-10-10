@@ -129,6 +129,10 @@ public class RqueueRedisTemplate<V extends Serializable> {
     return redisTemplate.opsForZSet().rangeWithScores(key, start, end);
   }
 
+  public void zremRangeByScore(String key, long min, long max) {
+    redisTemplate.opsForZSet().removeRangeByScore(key, min, max);
+  }
+
   public Set<V> getMembers(String key) {
     return redisTemplate.opsForSet().members(key);
   }

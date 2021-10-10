@@ -50,8 +50,8 @@ public class RqueueQueueMetrics {
   }
 
   /**
-   * Get number of messages waiting in delayed queue, these messages would move to pending queue as
-   * soon as the scheduled time is reach.
+   * Get number of messages waiting in scheduled queue, these messages would move to pending queue
+   * as soon as the scheduled time is reach.
    *
    * @param queue queue name
    * @return -1 if queue is not registered otherwise message count
@@ -59,7 +59,7 @@ public class RqueueQueueMetrics {
   public long getScheduledMessageCount(String queue) {
     try {
       QueueDetail queueDetail = EndpointRegistry.get(queue);
-      return redisTemplate.getZsetSize(queueDetail.getDelayedQueueName());
+      return redisTemplate.getZsetSize(queueDetail.getScheduledQueueName());
     } catch (QueueDoesNotExist e) {
       return -1;
     }
@@ -83,7 +83,7 @@ public class RqueueQueueMetrics {
   /**
    * Get number of messages waiting for consumption
    *
-   * @param queue    queue name
+   * @param queue queue name
    * @param priority priority of this queue
    * @return -1 if queue is not registered otherwise message count
    */
@@ -97,17 +97,17 @@ public class RqueueQueueMetrics {
   }
 
   /**
-   * Get number of messages waiting in delayed queue, these messages would move to pending queue as
-   * soon as the scheduled time is reach.
+   * Get number of messages waiting in scheduled queue, these messages would move to pending queue
+   * as soon as the scheduled time is reach.
    *
-   * @param queue    queue name
+   * @param queue queue name
    * @param priority priority of this queue
    * @return -1 if queue is not registered otherwise message count
    */
   public long getScheduledMessageCount(String queue, String priority) {
     try {
       QueueDetail queueDetail = EndpointRegistry.get(queue, priority);
-      return redisTemplate.getZsetSize(queueDetail.getDelayedQueueName());
+      return redisTemplate.getZsetSize(queueDetail.getScheduledQueueName());
     } catch (QueueDoesNotExist e) {
       return -1;
     }
@@ -116,7 +116,7 @@ public class RqueueQueueMetrics {
   /**
    * Get number of messages those are currently being processed
    *
-   * @param queue    queue name
+   * @param queue queue name
    * @param priority priority of this queue
    * @return -1 if queue is not registered otherwise message count
    */

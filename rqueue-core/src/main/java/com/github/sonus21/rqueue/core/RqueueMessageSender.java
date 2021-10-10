@@ -75,7 +75,7 @@ public interface RqueueMessageSender {
    *
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
-   * @param delayInMilliSecs delay in milli seconds
+   * @param delayInMilliSecs delay in milliseconds
    * @return message was submitted successfully or failed.
    */
   default boolean put(String queueName, Object message, long delayInMilliSecs) {
@@ -88,7 +88,7 @@ public interface RqueueMessageSender {
    *
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
-   * @param delayInMilliSecs delay in milli seconds
+   * @param delayInMilliSecs delay in milliseconds
    * @return message was submitted successfully or failed.
    */
   boolean enqueueIn(String queueName, Object message, long delayInMilliSecs);
@@ -193,7 +193,7 @@ public interface RqueueMessageSender {
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or sent
    *     to dead letter queue configured using {@link RqueueListener#numRetries()} ()}
-   * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
+   * @param delayInMilliSecs delay in milliseconds, this message would be only visible to the
    *     listener when number of millisecond has elapsed.
    * @return message was submitted successfully or failed.
    */
@@ -202,13 +202,13 @@ public interface RqueueMessageSender {
   }
 
   /**
-   * Enqueue a task that would be scheduled to run in the specified milli seconds.
+   * Enqueue a task that would be scheduled to run in the specified milliseconds.
    *
    * @param queueName on which queue message has to be send
    * @param message message object it could be any arbitrary object.
    * @param retryCount how many times a message would be retried, before it can be discarded or sent
    *     to dead letter queue configured using {@link RqueueListener#numRetries()} ()}
-   * @param delayInMilliSecs delay in milli seconds, this message would be only visible to the
+   * @param delayInMilliSecs delay in milliseconds, this message would be only visible to the
    *     listener when number of millisecond has elapsed.
    * @return message was submitted successfully or failed.
    */
@@ -232,7 +232,7 @@ public interface RqueueMessageSender {
    * @param queueName on which queue message has to be send
    * @param priority the name of the priority level
    * @param message message object it could be any arbitrary object.
-   * @param delayInMilliSecs delay in milli seconds
+   * @param delayInMilliSecs delay in milliseconds
    * @return message was submitted successfully or failed.
    */
   boolean enqueueInWithPriority(
@@ -353,8 +353,8 @@ public interface RqueueMessageSender {
   Iterable<? extends MessageConverter> getMessageConverters();
 
   /**
-   * Find all messages stored on a given queue, it considers all the messages including delayed and
-   * non-delayed.
+   * Find all messages stored on a given queue, it considers all the messages including scheduled
+   * and non-scheduled.
    *
    * @param queueName queue name to be query for
    * @return list of messages.

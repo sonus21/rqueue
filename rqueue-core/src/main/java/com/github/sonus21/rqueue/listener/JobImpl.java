@@ -49,9 +49,9 @@ public class JobImpl implements Job {
   private final RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
-  private Object userMessage;
   private final PostProcessingHandler postProcessingHandler;
   private final boolean isPeriodicJob;
+  private Object userMessage;
   private Context context = DefaultContext.EMPTY;
   private Boolean released;
   private Boolean deleted;
@@ -85,6 +85,7 @@ public class JobImpl implements Job {
 
   private void save() {
     if (rqueueConfig.isJobEnabled() && !isPeriodicJob) {
+      // tracking intermediate job status
       Duration ttl = expiry;
       if (getMessageMetadata().getStatus().isTerminalState()) {
         ttl = rqueueConfig.getJobDurabilityInTerminalState();
@@ -153,13 +154,13 @@ public class JobImpl implements Job {
   }
 
   @Override
-  public void setMessage(Object message) {
-    this.userMessage = message;
+  public Object getMessage() {
+    return userMessage;
   }
 
   @Override
-  public Object getMessage() {
-    return userMessage;
+  public void setMessage(Object message) {
+    this.userMessage = message;
   }
 
   @Override
@@ -279,23 +280,20 @@ public class JobImpl implements Job {
   }
 
   void updateMessageStatus(MessageStatus messageStatus) {
-    Duration messageMetaExpiry;
-    boolean deleteMessage = false;
     if (messageStatus.isTerminalState()) {
-      messageMetaExpiry =
-          Duration.ofSeconds(rqueueConfig.getMessageDurabilityInTerminalStateInSecond());
-      if (messageMetaExpiry.isZero() || messageMetaExpiry.isNegative()) {
-        deleteMessage = true;
+      if (rqueueConfig.messageInTerminalStateShouldBeStored()) {
+        this.messageMetadataService.saveMessageMetadataForQueue(
+            queueDetail.getCompletedQueueName(),
+            getMessageMetadata(),
+            rqueueConfig.messageDurabilityInTerminalStateInMillisecond());
+      } else {
+        this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
       }
     } else {
-      messageMetaExpiry = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
+      this.messageMetadataService.save(
+          getMessageMetadata(), Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
     }
     setMessageStatus(messageStatus);
-    if (deleteMessage) {
-      this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
-    } else {
-      this.messageMetadataService.save(rqueueJob.getMessageMetadata(), messageMetaExpiry);
-    }
     save();
   }
 

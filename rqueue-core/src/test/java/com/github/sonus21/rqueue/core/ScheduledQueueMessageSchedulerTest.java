@@ -60,17 +60,16 @@ import org.springframework.data.redis.listener.ChannelTopic;
 
 @CoreUnitTest
 @SuppressWarnings("unchecked")
-class DelayedMessageSchedulerTest extends TestBase {
+class ScheduledQueueMessageSchedulerTest extends TestBase {
   @InjectMocks private final TestMessageScheduler messageScheduler = new TestMessageScheduler();
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-  @Mock private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
-
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
+  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RedisTemplate<String, Long> redisTemplate;
+  @Mock private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
   @BeforeEach
   public void init() {
@@ -83,18 +82,18 @@ class DelayedMessageSchedulerTest extends TestBase {
   @Test
   void getChannelName() {
     assertEquals(
-        slowQueueDetail.getDelayedQueueChannelName(), messageScheduler.getChannelName(slowQueue));
+        slowQueueDetail.getScheduledQueueChannelName(), messageScheduler.getChannelName(slowQueue));
   }
 
   @Test
   void getZsetName() {
-    assertEquals(slowQueueDetail.getDelayedQueueName(), messageScheduler.getZsetName(slowQueue));
+    assertEquals(slowQueueDetail.getScheduledQueueName(), messageScheduler.getZsetName(slowQueue));
   }
 
   @Test
   void getNextScheduleTime() {
     long currentTime = System.currentTimeMillis();
-    doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
+    doReturn(5000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
     assertThat(
         messageScheduler.getNextScheduleTime(slowQueue, null),
         greaterThanOrEqualTo(currentTime + 5000L));
@@ -118,11 +117,11 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void start() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
+    doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     Map<String, Boolean> queueRunningState =
         (Map<String, Boolean>) FieldUtils.readField(messageScheduler, "queueRunningState", true);
@@ -139,19 +138,19 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void startAddsChannelToMessageListener() throws Exception {
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     doNothing()
         .when(rqueueRedisListenerContainerFactory)
         .addMessageListener(
-            any(), eq(new ChannelTopic(slowQueueDetail.getDelayedQueueChannelName())));
+            any(), eq(new ChannelTopic(slowQueueDetail.getScheduledQueueChannelName())));
     doNothing()
         .when(rqueueRedisListenerContainerFactory)
         .addMessageListener(
-            any(), eq(new ChannelTopic(fastQueueDetail.getDelayedQueueChannelName())));
+            any(), eq(new ChannelTopic(fastQueueDetail.getScheduledQueueChannelName())));
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     TimeoutUtils.sleep(500L);
     messageScheduler.destroy();
@@ -159,11 +158,11 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void stop() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
+    doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     TimeoutUtils.sleep(500L);
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", false));
@@ -180,15 +179,15 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void destroy() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
+    doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
       threadUtils
-          .when(() -> ThreadUtils.createTaskScheduler(1, "delayedMessageScheduler-", 60))
+          .when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
           .thenReturn(scheduler);
       messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
       TimeoutUtils.sleep(500L);
@@ -206,14 +205,14 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void startSubmitsTask() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
       threadUtils
-          .when(() -> ThreadUtils.createTaskScheduler(1, "delayedMessageScheduler-", 60))
+          .when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
           .thenReturn(scheduler);
       messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
       assertTrue(scheduler.submittedTasks() >= 1);
@@ -223,11 +222,11 @@ class DelayedMessageSchedulerTest extends TestBase {
 
   @Test
   void startSubmitsTaskAndThatGetsExecuted() throws Exception {
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-    doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
+    doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
     AtomicInteger counter = new AtomicInteger(0);
     doAnswer(
             invocation -> {
@@ -242,13 +241,13 @@ class DelayedMessageSchedulerTest extends TestBase {
   }
 
   @Test
-  void onCompletionOfExistingTaskNewTaskIsSubmitted() throws Exception {
+  void onCompletionOfExistingTaskNewTaskShouldBeSubmitted() throws Exception {
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
-      doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+      doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
       doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
       doReturn(true).when(rqueueSchedulerConfig).isEnabled();
       doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-      doReturn(1000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
+      doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
       AtomicInteger counter = new AtomicInteger(0);
       doAnswer(
               invocation -> {
@@ -259,7 +258,7 @@ class DelayedMessageSchedulerTest extends TestBase {
           .execute(any(RedisCallback.class));
       TestTaskScheduler scheduler = new TestTaskScheduler();
       threadUtils
-          .when(() -> ThreadUtils.createTaskScheduler(1, "delayedMessageScheduler-", 60))
+          .when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
           .thenReturn(scheduler);
       messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
       waitFor(() -> counter.get() >= 1, "scripts are getting executed");
@@ -272,8 +271,8 @@ class DelayedMessageSchedulerTest extends TestBase {
   @Test
   void onMessageListenerTest() throws Exception {
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
-    doReturn(5000L).when(rqueueSchedulerConfig).getDelayedMessageTimeIntervalInMilli();
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(5000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
     doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
@@ -288,16 +287,16 @@ class DelayedMessageSchedulerTest extends TestBase {
     // invalid body
     messageListener.onMessage(
         new DefaultMessage(
-            slowQueueDetail.getDelayedQueueChannelName().getBytes(), "sss".getBytes()),
+            slowQueueDetail.getScheduledQueueChannelName().getBytes(), "sss".getBytes()),
         null);
     TimeoutUtils.sleep(50);
     assertEquals(2, messageScheduler.scheduleList.stream().filter(e -> !e).count());
 
-    TimeoutUtils.sleep(100);
+    TimeoutUtils.sleep(110);
     // both are correct
     messageListener.onMessage(
         new DefaultMessage(
-            slowQueueDetail.getDelayedQueueChannelName().getBytes(),
+            slowQueueDetail.getScheduledQueueChannelName().getBytes(),
             String.valueOf(System.currentTimeMillis()).getBytes()),
         null);
 
@@ -305,7 +304,7 @@ class DelayedMessageSchedulerTest extends TestBase {
     messageScheduler.destroy();
   }
 
-  static class TestMessageScheduler extends DelayedMessageScheduler {
+  static class TestMessageScheduler extends ScheduledQueueMessageScheduler {
     List<Boolean> scheduleList;
 
     TestMessageScheduler() {

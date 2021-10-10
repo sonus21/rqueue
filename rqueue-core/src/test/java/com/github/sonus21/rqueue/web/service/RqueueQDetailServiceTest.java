@@ -23,10 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -70,17 +72,18 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class RqueueQDetailServiceTest extends TestBase {
+  private final MessageConverter messageConverter = new GenericMessageConverter();
   @Mock private RedisTemplate<?, ?> redisTemplate;
   @Mock private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RqueueSystemManagerService rqueueSystemManagerService;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   private RqueueQDetailService rqueueQDetailService;
-  private final MessageConverter messageConverter = new GenericMessageConverter();
   private QueueConfig queueConfig;
   private QueueConfig queueConfig2;
   private List<QueueConfig> queueConfigList;
   private Collection<String> queues;
+  private RqueueConfig rqueueConfig = mock(RqueueConfig.class);
 
   @BeforeEach
   public void init() {
@@ -90,7 +93,8 @@ class RqueueQDetailServiceTest extends TestBase {
             stringRqueueRedisTemplate,
             rqueueMessageTemplate,
             rqueueSystemManagerService,
-            rqueueMessageMetadataService);
+            rqueueMessageMetadataService,
+            rqueueConfig);
     queueConfig = createQueueConfig("test", 10, 10000L, "test-dlq");
     queueConfig2 = createQueueConfig("test2", 10, 10000L, null);
     queueConfigList = Arrays.asList(queueConfig, queueConfig2);
@@ -306,7 +310,7 @@ class RqueueQDetailServiceTest extends TestBase {
   }
 
   @Test
-  void getExplorePageDataTypeDelayedQueue() {
+  void getExplorePageDataTypeScheduledQueue() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
     List<RqueueMessage> rqueueMessages =
@@ -334,7 +338,8 @@ class RqueueQDetailServiceTest extends TestBase {
       lists.add(new TableRow(l));
     }
     expectedResponse.setRows(lists);
-    expectedResponse.addAction(new Action(ActionType.DELETE, "delayed messages for queue 'test'"));
+    expectedResponse.addAction(
+        new Action(ActionType.DELETE, "scheduled messages for queue 'test'"));
 
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromZset("__rq::d-queue::test", 0, 9);
@@ -513,9 +518,9 @@ class RqueueQDetailServiceTest extends TestBase {
     List<Object> headers = Arrays.asList("Queue", "Scheduled [ZSET]", "Size");
     expectedResponse.add(headers);
     expectedResponse.add(
-        Arrays.asList(queueConfig.getName(), queueConfig.getDelayedQueueName(), 100L));
+        Arrays.asList(queueConfig.getName(), queueConfig.getScheduledQueueName(), 100L));
     expectedResponse.add(
-        Arrays.asList(queueConfig2.getName(), queueConfig2.getDelayedQueueName(), 200L));
+        Arrays.asList(queueConfig2.getName(), queueConfig2.getScheduledQueueName(), 200L));
     assertEquals(expectedResponse, response);
   }
 

@@ -87,6 +87,6 @@ class QueueCounterTest extends TestBase {
 
   @Test
   void updateExecutionCount() {
-    validateCountStatistics(TestUtils.createQueueDetail("delayed-queue", 900000L), "success");
+    validateCountStatistics(TestUtils.createQueueDetail("scheduled-queue", 900000L), "success");
   }
 }

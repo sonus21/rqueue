@@ -87,7 +87,7 @@ class PriorityGroupListenerTest extends TestBase {
   void priorityGroupListener() throws Exception {
     BootstrapEventListener listener = new BootstrapEventListener();
     StaticApplicationContext applicationContext = new StaticApplicationContext();
-    applicationContext.registerSingleton("messageConverter",  DefaultRqueueMessageConverter.class);
+    applicationContext.registerSingleton("messageConverter", DefaultRqueueMessageConverter.class);
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton(
         "slowMessageListener", SlowMessageListenerWithPriority.class);

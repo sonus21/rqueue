@@ -58,7 +58,7 @@ public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
   /**
    * Return the delay between two attempts in milliseconds.
    *
-   * @return the configured interval in milli seconds.
+   * @return the configured interval in milliseconds.
    */
   public long getInterval() {
     return this.interval;

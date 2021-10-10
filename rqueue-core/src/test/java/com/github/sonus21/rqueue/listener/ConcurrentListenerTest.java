@@ -58,6 +58,7 @@ class ConcurrentListenerTest extends TestBase {
   private static final String fastProcessingQueue = "rqueue-processing::" + fastQueue;
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
+  private static final long executionTime = 2L;
   @Mock private RqueueMessageHandler rqueueMessageHandler;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @Mock private ApplicationEventPublisher applicationEventPublisher;
@@ -66,8 +67,6 @@ class ConcurrentListenerTest extends TestBase {
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Mock private RqueueWebConfig rqueueWebConfig;
   private RqueueBeanProvider beanProvider;
-
-  private static final long executionTime = 2L;
 
   @BeforeEach
   public void init() throws IllegalAccessException {

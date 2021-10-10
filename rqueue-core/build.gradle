@@ -1,4 +1,4 @@
-ext.projectDescription = 'Asynchronous and delayed task executor'
+ext.projectDescription = 'Asynchronous and scheduled task executor'
 ext.name = 'Rqueue Core Java'
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"

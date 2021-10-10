@@ -99,13 +99,13 @@ abstract class BaseMessageSender {
     } else {
       if (reactive) {
         return messageTemplate.addReactiveMessageWithDelay(
-            queueDetail.getDelayedQueueName(),
-            queueDetail.getDelayedQueueChannelName(),
+            queueDetail.getScheduledQueueName(),
+            queueDetail.getScheduledQueueChannelName(),
             rqueueMessage);
       } else {
         messageTemplate.addMessageWithDelay(
-            queueDetail.getDelayedQueueName(),
-            queueDetail.getDelayedQueueChannelName(),
+            queueDetail.getScheduledQueueName(),
+            queueDetail.getScheduledQueueChannelName(),
             rqueueMessage);
       }
     }
@@ -179,8 +179,8 @@ abstract class BaseMessageSender {
             .name(queueName)
             .active(false)
             .queueName(rqueueConfig.getQueueName(queueName))
-            .delayedQueueName(rqueueConfig.getDelayedQueueName(queueName))
-            .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queueName))
+            .scheduledQueueName(rqueueConfig.getScheduledQueueName(queueName))
+            .scheduledQueueChannelName(rqueueConfig.getScheduledQueueChannelName(queueName))
             .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
             .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
             .priority(priorityMap)
@@ -193,8 +193,9 @@ abstract class BaseMessageSender {
               .name(queueName + suffix)
               .active(false)
               .queueName(rqueueConfig.getQueueName(queueName) + suffix)
-              .delayedQueueName(rqueueConfig.getDelayedQueueName(queueName) + suffix)
-              .delayedQueueChannelName(rqueueConfig.getDelayedQueueChannelName(queueName) + suffix)
+              .scheduledQueueName(rqueueConfig.getScheduledQueueName(queueName) + suffix)
+              .scheduledQueueChannelName(
+                  rqueueConfig.getScheduledQueueChannelName(queueName) + suffix)
               .processingQueueName(rqueueConfig.getProcessingQueueName(queueName) + suffix)
               .processingQueueChannelName(
                   rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)

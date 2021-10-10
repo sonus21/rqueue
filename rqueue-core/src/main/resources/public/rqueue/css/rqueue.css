@@ -421,11 +421,6 @@ section {
   display: none;
 }
 
-.latency-chart-form {
-  margin-top: 250px;
-  margin-left: -50px;
-}
-
 .message-move-form,
 .explore-data-form {
   border: 1px solid;

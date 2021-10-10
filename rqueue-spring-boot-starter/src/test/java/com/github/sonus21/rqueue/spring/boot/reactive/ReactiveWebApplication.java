@@ -37,9 +37,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class ReactiveWebApplication extends BaseApplication {
-  public static void main(String[] args) {
-    SpringApplication.run(Application.class, args);
-  }
   @Value("${max.workers.count:6}")
   private int maxWorkers;
 
@@ -48,6 +45,10 @@ public class ReactiveWebApplication extends BaseApplication {
 
   @Value("${provide.executor:false}")
   private boolean provideExecutor;
+
+  public static void main(String[] args) {
+    SpringApplication.run(Application.class, args);
+  }
 
   @Bean
   public DeleteMessageListener deleteMessageListener() {

@@ -44,30 +44,24 @@ import lombok.ToString;
 @ToString
 public class QueueDetail extends SerializableBase {
 
+  private static final long serialVersionUID = 9153752084449974622L;
   // visibility timeout in milliseconds
   private final long visibilityTimeout;
-
-  private static final long serialVersionUID = 9153752084449974622L;
   private final String name;
   private final int numRetry;
   @Builder.Default private final QueueType type = QueueType.QUEUE;
   private final String queueName;
   private final String deadLetterQueueName;
   private final boolean deadLetterConsumerEnabled;
+  private final String completedQueueName;
   private final String processingQueueName;
   private final String processingQueueChannelName;
-  private final String delayedQueueName;
-  private final String delayedQueueChannelName;
+  private final String scheduledQueueName;
+  private final String scheduledQueueChannelName;
   private final boolean active;
   private final Concurrency concurrency;
   private final boolean systemGenerated;
   private final int batchSize;
-
-  public enum QueueType {
-    QUEUE,
-    STREAM
-  }
-
   private Map<String, Integer> priority;
   private String priorityGroup;
 
@@ -86,8 +80,9 @@ public class QueueDetail extends SerializableBase {
             .name(name)
             .numRetry(numRetry)
             .queueName(queueName)
-            .delayedQueueName(delayedQueueName)
+            .scheduledQueueName(scheduledQueueName)
             .processingQueueName(processingQueueName)
+            .completedQueueName(completedQueueName)
             .visibilityTimeout(visibilityTimeout)
             .createdOn(System.currentTimeMillis())
             .updatedOn(System.currentTimeMillis())
@@ -140,8 +135,9 @@ public class QueueDetail extends SerializableBase {
         .queueName(queueName + suffix)
         .processingQueueName(processingQueueName + suffix)
         .processingQueueChannelName(processingQueueChannelName + suffix)
-        .delayedQueueName(delayedQueueName + suffix)
-        .delayedQueueChannelName(delayedQueueChannelName + suffix)
+        .scheduledQueueName(scheduledQueueName + suffix)
+        .scheduledQueueChannelName(scheduledQueueChannelName + suffix)
+        .completedQueueName(completedQueueName + suffix)
         .active(active)
         .batchSize(batchSize)
         .systemGenerated(systemGenerated)
@@ -153,5 +149,10 @@ public class QueueDetail extends SerializableBase {
 
   public Duration visibilityDuration() {
     return Duration.ofMillis(visibilityTimeout);
+  }
+
+  public enum QueueType {
+    QUEUE,
+    STREAM
   }
 }

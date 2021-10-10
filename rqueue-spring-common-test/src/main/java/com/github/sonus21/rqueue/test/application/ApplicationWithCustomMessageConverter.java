@@ -26,7 +26,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.MimeType;
 
-public abstract class CustomMessageConverterApplication extends ApplicationBasicConfiguration {
+public abstract class ApplicationWithCustomMessageConverter extends ApplicationBasicConfiguration {
   @PostConstruct
   public void postConstruct() {
     init();

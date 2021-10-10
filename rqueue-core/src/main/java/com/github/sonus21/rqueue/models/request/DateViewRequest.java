@@ -35,7 +35,7 @@ import lombok.ToString;
 public class DateViewRequest extends SerializableBase {
   private @NotNull DataType type;
   private @NotEmpty String name;
-  private  String key;
+  private String key;
 
   @JsonProperty("page")
   private int pageNumber = 0;

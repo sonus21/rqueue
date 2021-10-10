@@ -19,16 +19,21 @@ package com.github.sonus21.rqueue.web.service.impl;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
+import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -36,10 +41,13 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataService {
   private final RqueueMessageMetadataDao rqueueMessageMetadataDao;
+  private final RqueueStringDao rqueueStringDao;
 
   @Autowired
-  public RqueueMessageMetadataServiceImpl(RqueueMessageMetadataDao rqueueMessageMetadataDao) {
+  public RqueueMessageMetadataServiceImpl(
+      RqueueMessageMetadataDao rqueueMessageMetadataDao, RqueueStringDao rqueueStringDao) {
     this.rqueueMessageMetadataDao = rqueueMessageMetadataDao;
+    this.rqueueStringDao = rqueueStringDao;
   }
 
   @Override
@@ -100,5 +108,45 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   @Override
   public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration) {
     return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration);
+  }
+
+  @Override
+  public List<TypedTuple<MessageMetadata>> readMessageMetadataForQueue(
+      String queueName, long start, long end) {
+    List<TypedTuple<String>> metaIds =
+        rqueueStringDao.readFromOrderedSetWithScoreBetween(queueName, start, end);
+    Map<String, Double> metaIdToScoreMap =
+        metaIds.stream().collect(Collectors.toMap(TypedTuple::getValue, TypedTuple::getScore));
+    List<MessageMetadata> messageMetadata = findAll(metaIdToScoreMap.keySet());
+    return messageMetadata.stream()
+        .map(
+            metadata -> {
+              Double score = metaIdToScoreMap.get(metadata.getId());
+              if (score == null) {
+                return null;
+              } else {
+                return new DefaultTypedTuple<>(metadata, score);
+              }
+            })
+        .filter(Objects::nonNull)
+        .sorted(
+            Comparator.comparingLong(
+                (DefaultTypedTuple<MessageMetadata> e1) ->
+                    -(Objects.requireNonNull(e1.getValue()).getUpdatedOn())))
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public void saveMessageMetadataForQueue(
+      String queueName, MessageMetadata messageMetadata, Long ttlInMillisecond) {
+    messageMetadata.setUpdatedOn(System.currentTimeMillis());
+    save(messageMetadata, Duration.ofMillis(ttlInMillisecond));
+    rqueueStringDao.addToOrderedSetWithScore(
+        queueName, messageMetadata.getId(), -(System.currentTimeMillis() + ttlInMillisecond));
+  }
+
+  @Override
+  public void deleteQueueMessages(String queueName, long before) {
+    rqueueStringDao.deleteAll(queueName, -before, 0);
   }
 }

@@ -83,7 +83,7 @@
     $('#refresh-latency-chart').click(function () {
       refreshLatencyChart(latencyChartParams, "latency_chart");
     });
-
+    attachChartEventListeners();
     $('#explore-queue').on('shown.bs.modal', function () {
       $('#explorer-title').empty().append("Queue:").append("<b>&nbsp;" + queueName + "</b>").append(
           "&nbsp;[" + dataType + "]").append("<b>&nbsp;" + dataName + "</b>");

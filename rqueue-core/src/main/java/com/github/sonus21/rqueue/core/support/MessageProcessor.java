@@ -58,7 +58,7 @@ public interface MessageProcessor {
    * then only message would be consumed otherwise it will be discarded, no further processing of
    * the message would be done.
    *
-   * @param message       message
+   * @param message message
    * @param rqueueMessage rqueue message object
    * @return true/false.
    * @deprecated use {@link #process(Job)}

@@ -23,7 +23,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
-import com.github.sonus21.rqueue.core.DelayedMessageSchedulerTest.TestMessageScheduler;
+import com.github.sonus21.rqueue.core.ScheduledQueueMessageSchedulerTest.TestMessageScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -42,19 +42,16 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 @CoreUnitTest
 class MessageSchedulerTest extends TestBase {
 
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-
-  @InjectMocks private TestMessageScheduler messageScheduler;
-
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
   private final Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
+  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
+  @Mock private RedisTemplate<String, Long> redisTemplate;
+  @InjectMocks private TestMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {
@@ -77,7 +74,7 @@ class MessageSchedulerTest extends TestBase {
     EndpointRegistry.register(slowQueueDetail);
     EndpointRegistry.register(fastQueueDetail);
     doReturn(true).when(rqueueSchedulerConfig).isEnabled();
-    doReturn(1).when(rqueueSchedulerConfig).getDelayedMessageThreadPoolSize();
+    doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     TestTaskScheduler scheduler = new TestTaskScheduler();
     FieldUtils.writeField(messageScheduler, "scheduler", scheduler, true);
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));

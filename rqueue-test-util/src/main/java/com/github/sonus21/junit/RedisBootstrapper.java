@@ -47,13 +47,13 @@ public class RedisBootstrapper extends RedisBootstrapperBase
 
   public static final String REDIS_BOOSTRAP_BEAN = "redisBootstrap";
 
+  private static Store getStore(ExtensionContext context) {
+    return context.getStore(Namespace.create(REDIS_BOOSTRAP_BEAN));
+  }
+
   @Override
   public void afterAll(ExtensionContext context) throws Exception {
     cleanup();
-  }
-
-  private static Store getStore(ExtensionContext context) {
-    return context.getStore(Namespace.create(REDIS_BOOSTRAP_BEAN));
   }
 
   @Override

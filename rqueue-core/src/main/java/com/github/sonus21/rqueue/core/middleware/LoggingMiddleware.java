@@ -20,9 +20,7 @@ import com.github.sonus21.rqueue.core.Job;
 import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * A simple logging middleware that logs queue and job id for visibility
- */
+/** A simple logging middleware that logs queue and job id for visibility */
 @Slf4j
 public class LoggingMiddleware implements Middleware {
 

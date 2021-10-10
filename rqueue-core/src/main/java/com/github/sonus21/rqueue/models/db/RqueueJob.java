@@ -46,7 +46,7 @@ public class RqueueJob extends SerializableBase {
 
   private String messageId;
 
-  // currently being consumed message
+  //  being consumed message
   private RqueueMessage rqueueMessage;
   // Message metadata for this message, metadata can have different RqueueMessage than currently
   // being consumed

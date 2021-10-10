@@ -448,40 +448,6 @@ class RqueueMessageListenerContainerTest extends TestBase {
     verifyNoInteractions(rqueueMessageTemplate);
   }
 
-  private class TestListenerContainer extends RqueueMessageListenerContainer {
-    TestListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
-      super(rqueueMessageHandler, rqueueMessageTemplate);
-      this.rqueueBeanProvider = beanProvider;
-    }
-  }
-
-  @Getter
-  private class StubMessageSchedulerListenerContainer extends RqueueMessageListenerContainer {
-    private boolean destroyMethodIsCalled = false;
-    private boolean doStartMethodIsCalled = false;
-    private boolean doStopMethodIsCalled = false;
-
-    StubMessageSchedulerListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
-      super(rqueueMessageHandler, rqueueMessageTemplate);
-      this.rqueueBeanProvider = beanProvider;
-    }
-
-    @Override
-    protected void doStart() {
-      doStartMethodIsCalled = true;
-    }
-
-    @Override
-    protected void doStop() {
-      doStopMethodIsCalled = true;
-    }
-
-    @Override
-    protected void doDestroy() {
-      destroyMethodIsCalled = true;
-    }
-  }
-
   @Getter
   private static class SlowMessageListener {
     private String lastMessage;
@@ -534,5 +500,39 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
     @Override
     public void publishEvent(Object event) {}
+  }
+
+  private class TestListenerContainer extends RqueueMessageListenerContainer {
+    TestListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
+      super(rqueueMessageHandler, rqueueMessageTemplate);
+      this.rqueueBeanProvider = beanProvider;
+    }
+  }
+
+  @Getter
+  private class StubMessageSchedulerListenerContainer extends RqueueMessageListenerContainer {
+    private boolean destroyMethodIsCalled = false;
+    private boolean doStartMethodIsCalled = false;
+    private boolean doStopMethodIsCalled = false;
+
+    StubMessageSchedulerListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
+      super(rqueueMessageHandler, rqueueMessageTemplate);
+      this.rqueueBeanProvider = beanProvider;
+    }
+
+    @Override
+    protected void doStart() {
+      doStartMethodIsCalled = true;
+    }
+
+    @Override
+    protected void doStop() {
+      doStopMethodIsCalled = true;
+    }
+
+    @Override
+    protected void doDestroy() {
+      destroyMethodIsCalled = true;
+    }
   }
 }

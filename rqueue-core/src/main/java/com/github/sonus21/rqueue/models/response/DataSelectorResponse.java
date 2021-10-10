@@ -14,12 +14,23 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.models.response;
 
-public final class SystemUtil {
-  private SystemUtil() {}
+import com.github.sonus21.rqueue.models.Pair;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-  public static int cpuCount() {
-    return Runtime.getRuntime().availableProcessors();
-  }
+@Getter
+@Setter
+@ToString(callSuper = true)
+@SuppressWarnings("java:S2160")
+@NoArgsConstructor
+@AllArgsConstructor
+public class DataSelectorResponse extends BaseResponse {
+  private String title;
+  private List<Pair<String, String>> data;
 }

@@ -55,12 +55,12 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 class RqueueDashboardChartServiceTest extends TestBase {
 
+  private final List<String> queues = new ArrayList<>();
   @Mock private RqueueQStatsDao rqueueQStatsDao;
   @Mock private RqueueWebConfig rqueueWebConfig;
   @Mock private RqueueConfig rqueueConfig;
   @Mock private RqueueSystemManagerService rqueueSystemManagerService;
   private RqueueDashboardChartService rqueueDashboardChartService;
-  private final List<String> queues = new ArrayList<>();
 
   @BeforeEach
   public void init() {

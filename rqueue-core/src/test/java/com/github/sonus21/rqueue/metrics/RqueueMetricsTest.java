@@ -43,23 +43,23 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMetricsTest extends TestBase {
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private QueueCounter queueCounter;
   private final MetricsProperties metricsProperties = new MetricsProperties() {};
   private final String simpleQueue = "simple-queue";
-  private final String delayedQueue = "delayed-queue";
+  private final String scheduledQueue = "scheduled-queue";
   private final String deadLetterQueue = "dlq";
   private final Tags tags = Tags.of("rQueue", "dc1");
-  private final QueueDetail delayedQueueDetail = TestUtils.createQueueDetail(delayedQueue);
+  private final QueueDetail scheduledQueueDetail = TestUtils.createQueueDetail(scheduledQueue);
   private final QueueDetail simpleQueueDetail =
       TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
+  @Mock private RqueueStringDao rqueueStringDao;
+  @Mock private QueueCounter queueCounter;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
     EndpointRegistry.register(simpleQueueDetail);
-    EndpointRegistry.register(delayedQueueDetail);
+    EndpointRegistry.register(scheduledQueueDetail);
   }
 
   private void verifyQueueStatistics(
@@ -68,7 +68,7 @@ class RqueueMetricsTest extends TestBase {
       double queueSize,
       long processingQueueSize,
       long deadLetterQueueCount,
-      long delayedQueueSize) {
+      long scheduledQueueSize) {
     Tags tags = Tags.of("queue", name);
     assertEquals(queueSize, registry.get("queue.size").tags(tags).gauge().value(), 0);
     assertEquals(
@@ -80,10 +80,10 @@ class RqueueMetricsTest extends TestBase {
       assertEquals(0, deadLetterQueueCount);
     }
     try {
-      double val = registry.get("delayed.queue.size").tags(tags).gauge().value();
-      assertEquals(delayedQueueSize, val, 0);
+      double val = registry.get("scheduled.queue.size").tags(tags).gauge().value();
+      assertEquals(scheduledQueueSize, val, 0);
     } catch (MeterNotFoundException e) {
-      assertEquals(0, delayedQueueSize);
+      assertEquals(0, scheduledQueueSize);
     }
   }
 
@@ -101,9 +101,9 @@ class RqueueMetricsTest extends TestBase {
     verify(queueCounter, times(1))
         .registerQueue(
             metricsProperties,
-            Tags.concat(tags, "queue", delayedQueue),
+            Tags.concat(tags, "queue", scheduledQueue),
             meterRegistry,
-            delayedQueueDetail);
+            scheduledQueueDetail);
     verify(queueCounter, times(2)).registerQueue(any(), any(), any(), any(QueueDetail.class));
   }
 
@@ -121,13 +121,13 @@ class RqueueMetricsTest extends TestBase {
     doAnswer(
             invocation -> {
               String zsetName = invocation.getArgument(0);
-              if (zsetName.equals(delayedQueueDetail.getDelayedQueueName())) {
+              if (zsetName.equals(scheduledQueueDetail.getScheduledQueueName())) {
                 return 5L;
               }
               if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {
                 return 10L;
               }
-              if (zsetName.equals(delayedQueueDetail.getProcessingQueueName())) {
+              if (zsetName.equals(scheduledQueueDetail.getProcessingQueueName())) {
                 return 15L;
               }
               return null;
@@ -141,7 +141,7 @@ class RqueueMetricsTest extends TestBase {
               if (listName.equals(simpleQueueDetail.getQueueName())) {
                 return 100L;
               }
-              if (listName.equals(delayedQueueDetail.getQueueName())) {
+              if (listName.equals(scheduledQueueDetail.getQueueName())) {
                 return 200L;
               }
               if (listName.equals(deadLetterQueue)) {
@@ -156,7 +156,7 @@ class RqueueMetricsTest extends TestBase {
     FieldUtils.writeField(metrics, "rqueueStringDao", rqueueStringDao, true);
     metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
-    verifyQueueStatistics(meterRegistry, delayedQueue, 200, 15, 0, 5);
+    verifyQueueStatistics(meterRegistry, scheduledQueue, 200, 15, 0, 5);
   }
 
   @Test

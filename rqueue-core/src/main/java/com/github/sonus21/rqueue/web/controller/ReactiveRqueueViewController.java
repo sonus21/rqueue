@@ -16,16 +16,13 @@
 
 package com.github.sonus21.rqueue.web.controller;
 
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.utils.ReactiveEnabled;
-import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Controller;
@@ -40,51 +37,42 @@ import reactor.core.publisher.Mono;
 @Controller
 @RequestMapping(path = "${rqueue.web.url.prefix:}rqueue")
 @Conditional(ReactiveEnabled.class)
-public class ReactiveRqueueViewController {
-
+public class ReactiveRqueueViewController extends BaseReactiveController {
   private final ViewResolver rqueueViewResolver;
   private final RqueueViewControllerService rqueueViewControllerService;
-  private final RqueueWebConfig rqueueWebConfig;
 
   @Autowired
   public ReactiveRqueueViewController(
-      RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueViewControllerService rqueueViewControllerService,
       @Qualifier("reactiveRqueueViewResolver") ViewResolver rqueueViewResolver) {
+    super(rqueueWebConfig);
     this.rqueueViewResolver = rqueueViewResolver;
     this.rqueueViewControllerService = rqueueViewControllerService;
-    this.rqueueWebConfig = rqueueWebConfig;
   }
 
   private String xForwardedPrefix(ServerHttpRequest request) {
-    String prefix = rqueueWebConfig.getUrlPrefix();
-    if (StringUtils.isEmpty(prefix)) {
-      return request.getHeaders().getFirst("x-forwarded-prefix");
-    }
-    return prefix;
+    return request.getHeaders().getFirst("x-forwarded-prefix");
   }
 
   @GetMapping
   public Mono<View> index(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.index(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("index", Locale.ENGLISH);
     }
-    rqueueViewControllerService.index(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("index", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("queues")
   public Mono<View> queues(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.queues(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
     }
-    rqueueViewControllerService.queues(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("queues/{queueName}")
@@ -94,66 +82,60 @@ public class ReactiveRqueueViewController {
       ServerHttpRequest request,
       ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.queueDetail(model, xForwardedPrefix(request), queueName);
+      return rqueueViewResolver.resolveViewName("queue_detail", Locale.ENGLISH);
     }
-    rqueueViewControllerService.queueDetail(model, xForwardedPrefix(request), queueName);
-    return rqueueViewResolver.resolveViewName("queue_detail", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("running")
   public Mono<View> running(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.running(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.running(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("scheduled")
   public Mono<View> scheduled(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.scheduled(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.scheduled(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("dead")
   public Mono<View> dead(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.dead(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.dead(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("pending")
   public Mono<View> pending(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.pending(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
     }
-    rqueueViewControllerService.pending(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("running", Locale.ENGLISH);
+    return null;
   }
 
   @GetMapping("utility")
   public Mono<View> utility(Model model, ServerHttpRequest request, ServerHttpResponse response)
       throws Exception {
-    if (!rqueueWebConfig.isEnable()) {
-      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-      return null;
+    if (isEnabled(response)) {
+      rqueueViewControllerService.utility(model, xForwardedPrefix(request));
+      return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);
     }
-    rqueueViewControllerService.utility(model, xForwardedPrefix(request));
-    return rqueueViewResolver.resolveViewName("utility", Locale.ENGLISH);
+    return null;
   }
 }

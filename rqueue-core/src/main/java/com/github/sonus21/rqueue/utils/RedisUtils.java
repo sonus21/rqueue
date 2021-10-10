@@ -79,8 +79,7 @@ public final class RedisUtils {
         }
       };
 
-  private RedisUtils() {
-  }
+  private RedisUtils() {}
 
   public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {

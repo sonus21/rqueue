@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -55,18 +57,18 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class JobImplTest extends TestBase {
-  @Mock RedisConnectionFactory redisConnectionFactory;
-  @Mock private RqueueMessageMetadataService messageMetadataService;
-  @Mock private RqueueJobDao rqueueJobDao;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  private RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
+  @Mock RedisConnectionFactory redisConnectionFactory;
   RqueueMessage rqueueMessage =
       RqueueMessageUtils.generateMessage(messageConverter, queueDetail.getName());
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
   Object userMessage = "Test Object";
+  @Mock private RqueueMessageMetadataService messageMetadataService;
+  @Mock private RqueueJobDao rqueueJobDao;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  private RqueueConfig rqueueConfig;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
@@ -356,7 +358,8 @@ class JobImplTest extends TestBase {
     job.updateExecutionTime(rqueueMessage, MessageStatus.SUCCESSFUL);
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(2)).save(any(), any());
-    verify(messageMetadataService, times(1)).save(any(), any());
+    verify(messageMetadataService, times(1))
+        .saveMessageMetadataForQueue(anyString(), any(MessageMetadata.class), anyLong());
   }
 
   @Test
@@ -376,7 +379,7 @@ class JobImplTest extends TestBase {
     doReturn(-10L)
         .when(rqueueMessageTemplate)
         .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
-    assertEquals(job.getVisibilityTimeout(), Duration.ZERO);
+    assertEquals(Duration.ZERO, job.getVisibilityTimeout());
 
     doReturn(System.currentTimeMillis() + 10_000L)
         .when(rqueueMessageTemplate)
@@ -387,7 +390,7 @@ class JobImplTest extends TestBase {
     doReturn(0L)
         .when(rqueueMessageTemplate)
         .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
-    assertEquals(job.getVisibilityTimeout(), Duration.ZERO);
+    assertEquals(Duration.ZERO, job.getVisibilityTimeout());
   }
 
   @Test
@@ -412,5 +415,55 @@ class JobImplTest extends TestBase {
         .when(rqueueMessageTemplate)
         .addScore(queueDetail.getProcessingQueueName(), rqueueMessage, 5_000L);
     assertFalse(job.updateVisibilityTimeout(Duration.ofSeconds(5)));
+  }
+
+  @Test
+  void testMessagesAreStoredInMetadataStore() {
+    JobImpl job =
+        new JobImpl(
+            rqueueConfig,
+            messageMetadataService,
+            rqueueJobDao,
+            rqueueMessageTemplate,
+            queueDetail,
+            messageMetadata,
+            rqueueMessage,
+            userMessage,
+            null);
+    job.execute();
+    job.checkIn("test..");
+    job.updateMessageStatus(MessageStatus.SUCCESSFUL);
+    verify(rqueueJobDao, times(1)).createJob(any(), any());
+    verify(rqueueJobDao, times(3)).save(any(), any());
+    verify(messageMetadataService, times(1))
+        .saveMessageMetadataForQueue(
+            eq(queueDetail.getCompletedQueueName()),
+            any(MessageMetadata.class),
+            eq(rqueueConfig.messageDurabilityInTerminalStateInMillisecond()));
+  }
+
+  @Test
+  void testMessageMetadataIsDeleted() throws IllegalAccessException {
+    long currentValue = rqueueConfig.getMessageDurabilityInTerminalStateInSecond();
+    FieldUtils.writeField(rqueueConfig, "messageDurabilityInTerminalStateInSecond", 0, true);
+    JobImpl job =
+        new JobImpl(
+            rqueueConfig,
+            messageMetadataService,
+            rqueueJobDao,
+            rqueueMessageTemplate,
+            queueDetail,
+            messageMetadata,
+            rqueueMessage,
+            userMessage,
+            null);
+    job.execute();
+    job.checkIn("test..");
+    job.updateMessageStatus(MessageStatus.SUCCESSFUL);
+    verify(rqueueJobDao, times(1)).createJob(any(), any());
+    verify(rqueueJobDao, times(3)).save(any(), any());
+    verify(messageMetadataService, times(1)).delete(messageMetadata.getId());
+    FieldUtils.writeField(
+        rqueueConfig, "messageDurabilityInTerminalStateInSecond", currentValue, true);
   }
 }

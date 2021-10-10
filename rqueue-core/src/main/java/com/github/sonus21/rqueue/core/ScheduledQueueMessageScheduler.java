@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 @Slf4j
-public class DelayedMessageScheduler extends MessageScheduler {
+public class ScheduledQueueMessageScheduler extends MessageScheduler {
 
   @Override
   protected Logger getLogger() {
@@ -31,38 +31,36 @@ public class DelayedMessageScheduler extends MessageScheduler {
   protected long getNextScheduleTime(String queueName, Long value) {
     long currentTime = System.currentTimeMillis();
     if (value == null) {
-      return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeIntervalInMilli();
+      return currentTime + rqueueSchedulerConfig.getScheduledMessageTimeIntervalInMilli();
     }
     if (value < currentTime) {
       return currentTime;
     }
-    return currentTime + rqueueSchedulerConfig.getDelayedMessageTimeIntervalInMilli();
+    return currentTime + rqueueSchedulerConfig.getScheduledMessageTimeIntervalInMilli();
   }
 
   @Override
   protected String getChannelName(String queueName) {
-    return EndpointRegistry.get(queueName).getDelayedQueueChannelName();
+    return EndpointRegistry.get(queueName).getScheduledQueueChannelName();
   }
 
   @Override
   protected String getZsetName(String queueName) {
-    return EndpointRegistry.get(queueName).getDelayedQueueName();
+    return EndpointRegistry.get(queueName).getScheduledQueueName();
   }
 
   @Override
   protected String getThreadNamePrefix() {
-    return "delayedMessageScheduler-";
+    return "scheduledQueueMsgScheduler-";
   }
 
   @Override
   protected int getThreadPoolSize() {
-    return rqueueSchedulerConfig.getDelayedMessageThreadPoolSize();
+    return rqueueSchedulerConfig.getScheduledMessageThreadPoolSize();
   }
 
   @Override
   protected boolean isProcessingQueue(String queueName) {
     return false;
   }
-
-
 }

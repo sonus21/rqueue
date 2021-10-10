@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.springframework.data.redis.connection.DataType;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
 public interface RqueueStringDao {
   Map<String, List<Object>> readFromLists(List<String> keys);
@@ -52,4 +53,10 @@ public interface RqueueStringDao {
   DataType type(String key);
 
   Boolean deleteIfSame(String key, String value);
+
+  void addToOrderedSetWithScore(String key, String value, long score);
+
+  List<TypedTuple<String>> readFromOrderedSetWithScoreBetween(String key, long start, long end);
+
+  void deleteAll(String key, long min, long max);
 }

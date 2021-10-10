@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.messaging.converter.MessageConverter;
@@ -67,8 +68,9 @@ public final class TestUtils extends TestBase {
         .queueName("__rq::queue::" + name)
         .processingQueueName("__rq::p-queue::" + name)
         .processingQueueChannelName("__rq::p-channel::" + name)
-        .delayedQueueName("__rq::d-queue::" + name)
-        .delayedQueueChannelName("__rq::d-channel::" + name)
+        .scheduledQueueName("__rq::d-queue::" + name)
+        .scheduledQueueChannelName("__rq::d-channel::" + name)
+        .completedQueueName("__rq::c-queue::" + name)
         .numRetry(numRetry)
         .visibilityTimeout(visibilityTimeout)
         .deadLetterQueueName(dlq)

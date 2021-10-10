@@ -22,8 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
@@ -41,6 +43,7 @@ import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
@@ -60,7 +63,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,13 +91,13 @@ import reactor.core.publisher.Mono;
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
-public class ReactiveRestApiTest extends BasicListenerTest {
+class ReactiveRestApiTest extends BasicListenerTest {
   @Autowired private WebTestClient webTestClient;
   @Autowired private RqueueConfig rqueueConfig;
   @Autowired private DeleteMessageListener deleteMessageListener;
 
   @Test
-  void getChartLatency() throws Exception {
+  void verifyChartAndQueueData() throws Exception {
     for (int i = 0; i < 100; i++) {
       Job job = Job.newInstance();
       enqueue(jobQueue, job);
@@ -104,6 +106,12 @@ public class ReactiveRestApiTest extends BasicListenerTest {
         () -> getMessageCount(jobQueue) == 0,
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "Job to run");
+    verifyChartLatency();
+    verifyChartStats();
+    verifyCompletedQueueData();
+  }
+
+  void verifyChartLatency() {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.LATENCY, AggregationType.DAILY);
     ChartDataResponse dataResponse =
@@ -126,16 +134,41 @@ public class ReactiveRestApiTest extends BasicListenerTest {
     assertEquals(91, dataResponse.getData().size());
   }
 
-  @Test
-  void getChartStats() throws Exception {
-    for (int i = 0; i < 100; i++) {
-      Job job = Job.newInstance();
-      enqueue(jobQueue, job);
-    }
-    TimeoutUtils.waitFor(
-        () -> getMessageCount(jobQueue) == 0,
-        Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
-        "Job to run");
+  void verifyCompletedQueueData() throws Exception {
+    QueueDetail queueDetail = EndpointRegistry.get(jobQueue);
+    QueueExploreRequest request = new QueueExploreRequest();
+    request.setType(DataType.ZSET);
+    request.setSrc(jobQueue);
+    request.setName(queueDetail.getCompletedQueueName());
+    DataViewResponse dataViewResponse =
+        this.webTestClient
+            .post()
+            .uri("/rqueue/api/v1/queue-data")
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(Mono.just(request), QueueExploreRequest.class)
+            .exchange()
+            .expectStatus()
+            .is2xxSuccessful()
+            .returnResult(DataViewResponse.class)
+            .getResponseBody()
+            .collectList()
+            .block()
+            .get(0);
+    assertNull(dataViewResponse.getMessage());
+    assertEquals(0, dataViewResponse.getCode());
+    assertEquals(20, dataViewResponse.getRows().size());
+    assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
+    assertEquals(
+        Collections.singletonList(
+            new Action(
+                ActionType.DELETE,
+                String.format(
+                    "Completed messages for queue '%s'", queueDetail.getCompletedQueueName()))),
+        dataViewResponse.getActions());
+  }
+
+  void verifyChartStats() throws Exception {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.STATS, AggregationType.DAILY);
     ChartDataResponse dataResponse =
@@ -200,7 +233,7 @@ public class ReactiveRestApiTest extends BasicListenerTest {
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.ZSET);
     request.setSrc(emailQueue);
-    request.setName(rqueueConfig.getDelayedQueueName(emailQueue));
+    request.setName(rqueueConfig.getScheduledQueueName(emailQueue));
     DataViewResponse dataViewResponse =
         this.webTestClient
             .post()
@@ -391,14 +424,13 @@ public class ReactiveRestApiTest extends BasicListenerTest {
   }
 
   @Test
-  @Tag("redisCluster")
   void deleteMessage() throws Exception {
     Email email = Email.newInstance();
     deleteMessageListener.clear();
     enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
     RqueueMessage message =
         rqueueMessageTemplate
-            .readFromZset(rqueueConfig.getDelayedQueueName(emailQueue), 0, -1)
+            .readFromZset(rqueueConfig.getScheduledQueueName(emailQueue), 0, -1)
             .get(0);
     MessageDeleteRequest request = new MessageDeleteRequest();
     request.setMessageId(message.getId());
@@ -481,5 +513,25 @@ public class ReactiveRestApiTest extends BasicListenerTest {
     assertEquals("No jobs found", response.getMessage());
     assertNull(response.getHeaders());
     assertEquals(0, response.getRows().size());
+  }
+
+  @Test
+  void aggregateDataSelector() throws Exception {
+    DataSelectorResponse response =
+        this.webTestClient
+            .get()
+            .uri("/rqueue/api/v1/aggregate-data-selector?type=" + AggregationType.WEEKLY)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus()
+            .is2xxSuccessful()
+            .returnResult(DataSelectorResponse.class)
+            .getResponseBody()
+            .collectList()
+            .block()
+            .get(0);
+    assertEquals(0, response.getCode());
+    assertEquals("Select Number of Weeks", response.getTitle());
+    assertEquals(14, response.getData().size());
   }
 }

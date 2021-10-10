@@ -27,6 +27,8 @@ import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
+import com.github.sonus21.rqueue.utils.RetryableRunnable;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +36,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -42,19 +48,24 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 @Service
+@Slf4j
 public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerService {
   private final RqueueConfig rqueueConfig;
   private final RqueueStringDao rqueueStringDao;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
+  private final RqueueMessageMetadataService rqueueMessageMetadataService;
+  private ScheduledExecutorService executorService;
 
   @Autowired
   public RqueueSystemManagerServiceImpl(
       RqueueConfig rqueueConfig,
       RqueueStringDao rqueueStringDao,
-      RqueueSystemConfigDao rqueueSystemConfigDao) {
+      RqueueSystemConfigDao rqueueSystemConfigDao,
+      RqueueMessageMetadataService rqueueMessageMetadataService) {
     this.rqueueConfig = rqueueConfig;
     this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
+    this.rqueueMessageMetadataService = rqueueMessageMetadataService;
   }
 
   private List<String> queueKeys(QueueConfig queueConfig) {
@@ -63,7 +74,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
             queueConfig.getQueueName(),
             queueConfig.getProcessingQueueName(),
             rqueueConfig.getQueueStatisticsKey(queueConfig.getName()));
-    keys.add(queueConfig.getDelayedQueueName());
+    keys.add(queueConfig.getScheduledQueueName());
     if (queueConfig.hasDeadLetterQueue()) {
       for (DeadLetterQueue queue : queueConfig.getDeadLetterQueues()) {
         keys.add(queue.getName());
@@ -103,6 +114,18 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
     if (queueDetail.isDlqSet()) {
       updated = systemQueueConfig.addDeadLetterQueue(queueDetail.getDeadLetterQueue());
     }
+
+    // for older queue this needs to be set
+    if (systemQueueConfig.getScheduledQueueName() == null) {
+      systemQueueConfig.setScheduledQueueName(queueDetail.getScheduledQueueName());
+      updated = true;
+    }
+
+    if (systemQueueConfig.getCompletedQueueName() == null) {
+      systemQueueConfig.setCompletedQueueName(queueDetail.getCompletedQueueName());
+      updated = true;
+    }
+
     updated =
         systemQueueConfig.updateVisibilityTimeout(queueDetail.getVisibilityTimeout()) || updated;
     updated =
@@ -158,6 +181,30 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
       }
       createOrUpdateConfigs(queueDetails);
     }
+    handleEventForCleanup(event);
+  }
+
+  private void handleEventForCleanup(RqueueBootstrapEvent event) {
+    if (executorService != null) {
+      executorService.shutdown();
+    }
+    if (rqueueConfig.isProducer()) {
+      return;
+    }
+    if (event.isStartup() && rqueueConfig.messageInTerminalStateShouldBeStored()) {
+      executorService = Executors.newSingleThreadScheduledExecutor();
+      List<QueueConfig> queueConfigList =
+          rqueueSystemConfigDao.getConfigByNames(EndpointRegistry.getActiveQueues());
+      int i = 0;
+      for (QueueConfig queueConfig : queueConfigList) {
+        CleanCompletedJobs completedJobs = new CleanCompletedJobs(queueConfig.getName());
+        executorService.scheduleAtFixedRate(
+            completedJobs,
+            i,
+            rqueueConfig.getCompletedJobCleanupIntervalInMs(),
+            TimeUnit.MILLISECONDS);
+      }
+    }
   }
 
   @Override
@@ -203,5 +250,37 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   @Override
   public Mono<BaseResponse> deleteReactiveQueue(String queueName) {
     return Mono.just(deleteQueue(queueName));
+  }
+
+  private class CleanCompletedJobs extends RetryableRunnable<Object> {
+    private final String queueName;
+
+    protected CleanCompletedJobs(String queueName) {
+      super(log, "");
+      this.queueName = queueName;
+    }
+
+    @Override
+    public void start() {
+      QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(queueName, true);
+      if (queueConfig == null) {
+        log.error("Queue config does not exist {}", queueName);
+        return;
+      }
+      if (queueConfig.isPaused()) {
+        log.debug("Queue {} is paused", queueName);
+        return;
+      }
+      if (queueConfig.getCompletedQueueName() == null) {
+        log.error("Queue completed queue name is not set {}", queueName);
+        return;
+      }
+
+      long endTime =
+          System.currentTimeMillis() - rqueueConfig.messageDurabilityInTerminalStateInMillisecond();
+      log.debug("Deleting completed messages for queue: {}, before: {}", endTime, queueName);
+      rqueueMessageMetadataService.deleteQueueMessages(
+          queueConfig.getCompletedQueueName(), endTime);
+    }
   }
 }

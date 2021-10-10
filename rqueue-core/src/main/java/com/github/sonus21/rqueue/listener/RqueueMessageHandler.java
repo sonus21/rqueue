@@ -258,18 +258,6 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     }
   }
 
-  @AllArgsConstructor
-  static class HandlerMethodWithPrimary {
-
-    HandlerMethod method;
-    boolean primary;
-
-    @Override
-    public String toString() {
-      return method.toString();
-    }
-  }
-
   private MappingInformation getMappingInformation(
       Method method, MappingInformation mappingInformation) {
     RqueueHandler rqueueHandler = AnnotationUtils.findAnnotation(method, RqueueHandler.class);
@@ -425,33 +413,6 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return Collections.unmodifiableMap(priorityMap);
   }
 
-  @AllArgsConstructor
-  @EqualsAndHashCode
-  private static class Match {
-
-    private final MappingInformation information;
-    private final HandlerMethodWithPrimary handlerMethod;
-  }
-
-  private class MultiHandler extends RetryableRunnable<Object> {
-
-    private final Match match;
-    private final Message<?> message;
-    private final String lookupDestination;
-
-    protected MultiHandler(Match match, Message<?> message, String lookupDestination) {
-      super(log, "");
-      this.match = match;
-      this.message = message;
-      this.lookupDestination = lookupDestination;
-    }
-
-    @Override
-    public void start() {
-      handleMatch(match.information, match.handlerMethod.method, lookupDestination, message);
-    }
-  }
-
   private boolean resolveConsumerEnabled(RqueueListener rqueueListener) {
     return ValueResolver.resolveToBoolean(
         getApplicationContext(), rqueueListener.deadLetterQueueListenerEnabled());
@@ -585,5 +546,44 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   public MessageConverter getMessageConverter() {
     return this.messageConverter;
+  }
+
+  @AllArgsConstructor
+  static class HandlerMethodWithPrimary {
+
+    HandlerMethod method;
+    boolean primary;
+
+    @Override
+    public String toString() {
+      return method.toString();
+    }
+  }
+
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private static class Match {
+
+    private final MappingInformation information;
+    private final HandlerMethodWithPrimary handlerMethod;
+  }
+
+  private class MultiHandler extends RetryableRunnable<Object> {
+
+    private final Match match;
+    private final Message<?> message;
+    private final String lookupDestination;
+
+    protected MultiHandler(Match match, Message<?> message, String lookupDestination) {
+      super(log, "");
+      this.match = match;
+      this.message = message;
+      this.lookupDestination = lookupDestination;
+    }
+
+    @Override
+    public void start() {
+      handleMatch(match.information, match.handlerMethod.method, lookupDestination, message);
+    }
   }
 }

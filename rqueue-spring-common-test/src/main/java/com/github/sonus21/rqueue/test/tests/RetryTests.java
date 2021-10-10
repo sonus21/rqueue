@@ -118,6 +118,19 @@ public class RetryTests extends SpringTestBase {
     assertEquals(1, getMessageCount(jobQueue));
   }
 
+  public void verifySimpleTaskExecution() throws TimedOutException {
+    cleanQueue(notificationQueue);
+    Notification notification = Notification.newInstance();
+    enqueue(notificationQueue, notification);
+    waitFor(
+        () -> {
+          Notification notificationInDb =
+              consumedMessageStore.getMessage(notification.getId(), Notification.class);
+          return notification.equals(notificationInDb);
+        },
+        "notification to be executed");
+  }
+
   public void verifyMessageIsConsumedByDeadLetterQueueListener()
       throws TimedOutException, JsonProcessingException {
     cleanQueue(reservationRequestQueue);
@@ -154,7 +167,7 @@ public class RetryTests extends SpringTestBase {
     assertEquals(0, getMessageCount(reservationRequestDeadLetterQueue));
   }
 
-  // this test verifies whether messages are moved from delayed queue to main queue
+  // this test verifies whether messages are moved from scheduled queue to main queue
   protected void verifyMultipleJobExecution() throws TimedOutException {
     assertEquals(1, retryPerPoll, "Retry per poll must be 1 to run this test");
     cleanQueue(emailQueue);

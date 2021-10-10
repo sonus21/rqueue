@@ -47,12 +47,12 @@ class RqueueExecutor extends MessageContainerBase {
   private final RqueueMessage rqueueMessage;
   private final RqueueBeanProvider beanProvider;
   private final QueueDetail queueDetail;
+  private final List<Middleware> middlewareList;
   private boolean updatedToProcessing;
   private JobImpl job;
   private ExecutionStatus status;
   private Throwable error;
   private int failureCount;
-  private final List<Middleware> middlewareList;
 
   RqueueExecutor(
       RqueueBeanProvider rqueueBeanProvider,
@@ -330,7 +330,7 @@ class RqueueExecutor extends MessageContainerBase {
         beanProvider
             .getRqueueMessageTemplate()
             .scheduleMessage(
-                job.getQueueDetail().getDelayedQueueName(),
+                job.getQueueDetail().getScheduledQueueName(),
                 messageKey,
                 newMessage,
                 expiryInSeconds));

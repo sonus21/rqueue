@@ -24,8 +24,8 @@ package com.github.sonus21.rqueue.core.context;
  */
 public class DefaultContext implements Context {
 
-  private final Context parentContext;
   public static final Context EMPTY = new DefaultContext(null, null, null);
+  private final Context parentContext;
   private final Object key;
   private final Object value;
 
@@ -39,8 +39,8 @@ public class DefaultContext implements Context {
    * Create a new context from the parent context, null key is not allowed.
    *
    * @param parentContext parent context
-   * @param key           key
-   * @param value         value corresponding to this context
+   * @param key key
+   * @param value value corresponding to this context
    * @return a new context
    */
   public static Context withValue(Context parentContext, Object key, Object value) {

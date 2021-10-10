@@ -43,15 +43,15 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMessageSenderTest extends TestBase {
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
-  private RqueueMessageSender rqueueMessageSender;
   private final String queueName = "test-queue";
   private final QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
   private final String slowQueue = "slow-queue";
   private final String deadLetterQueueName = "dead-test-queue";
   private final String message = "Test Message";
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueConfig rqueueConfig;
+  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  private RqueueMessageSender rqueueMessageSender;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
@@ -98,8 +98,8 @@ class RqueueMessageSenderTest extends TestBase {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
-            eq(queueDetail.getDelayedQueueName()),
-            eq(queueDetail.getDelayedQueueChannelName()),
+            eq(queueDetail.getScheduledQueueName()),
+            eq(queueDetail.getScheduledQueueChannelName()),
             any(RqueueMessage.class));
     assertTrue(rqueueMessageSender.enqueueIn(queueName, message, 1000L));
   }
@@ -109,8 +109,8 @@ class RqueueMessageSenderTest extends TestBase {
     doReturn(1L)
         .when(rqueueMessageTemplate)
         .addMessageWithDelay(
-            eq(queueDetail.getDelayedQueueName()),
-            eq(queueDetail.getDelayedQueueChannelName()),
+            eq(queueDetail.getScheduledQueueName()),
+            eq(queueDetail.getScheduledQueueChannelName()),
             any(RqueueMessage.class));
     assertTrue(rqueueMessageSender.enqueueInWithRetry(queueName, message, 3, 1000L));
   }
