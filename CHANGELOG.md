@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-### [2.10.0] - TBD
+### [2.10.0] - 10-Oct-2021
 
 ### Fixes
 
@@ -14,7 +14,7 @@
 
 * Display completed jobs in the dashboard
 * Option to choose number of days in the chart
-
+  ReactiveWebViewTest
 ### [2.9.0] - 30-Jul-2021
 
 ### Fixes
