@@ -82,7 +82,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
               queueThreadPool));
     } catch (Exception e) {
       if (e instanceof TaskRejectedException) {
-        queueThreadPool.taskRejected();
+        queueThreadPool.taskRejected(queueDetail, message);
       }
       log(Level.WARN, "Execution failed Msg: {}", e, message);
       release(postProcessingHandler, queueThreadPool, queueDetail, message);

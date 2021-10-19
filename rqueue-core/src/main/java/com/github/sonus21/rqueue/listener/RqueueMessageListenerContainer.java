@@ -255,9 +255,27 @@ public class RqueueMessageListenerContainer
       defaultTaskExecutor = true;
       taskExecutor = createDefaultTaskExecutor(queueDetails);
     } else {
-      initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
+      initializeThreadMapForNonDefaultExecutor(queueDetails);
     }
     initializeRunningQueueState();
+  }
+
+  private void initializeThreadMapForNonDefaultExecutor(
+      List<QueueDetail> registeredActiveQueueDetail) {
+    List<QueueDetail> queueDetails =
+        registeredActiveQueueDetail.stream()
+            .filter(e -> !e.isSystemGenerated())
+            .collect(Collectors.toList());
+    List<QueueDetail> withoutConcurrency = new ArrayList<>();
+    for (QueueDetail queueDetail : queueDetails) {
+      if (queueDetail.getConcurrency().isValid()) {
+        addExecutorForConcurrencyBasedQueue(queueDetail, taskExecutor, false);
+      } else {
+        withoutConcurrency.add(queueDetail);
+      }
+    }
+    initializeThreadMap(
+        withoutConcurrency, taskExecutor, false, getWorkersCount(withoutConcurrency.size()));
   }
 
   private void initialize() {
@@ -296,9 +314,12 @@ public class RqueueMessageListenerContainer
       AsyncTaskExecutor taskExecutor,
       boolean defaultExecutor,
       int workersCount) {
+    if (queueDetails.isEmpty()) {
+      return;
+    }
+    QueueThreadPool pool = new QueueThreadPool(taskExecutor, defaultExecutor, workersCount);
     for (QueueDetail queueDetail : queueDetails) {
-      queueThreadMap.put(
-          queueDetail.getName(), new QueueThreadPool(taskExecutor, defaultExecutor, workersCount));
+      queueThreadMap.put(queueDetail.getName(), pool);
     }
   }
 
@@ -332,16 +353,19 @@ public class RqueueMessageListenerContainer
     return executor;
   }
 
+  private void addExecutorForConcurrencyBasedQueue(
+      QueueDetail queueDetail, AsyncTaskExecutor executor, boolean defaultTaskExecutor) {
+    int maxJobs = queueDetail.getConcurrency().getMax();
+    QueueThreadPool threadPool = new QueueThreadPool(executor, defaultTaskExecutor, maxJobs);
+    queueThreadMap.put(queueDetail.getName(), threadPool);
+  }
+
   private void createExecutor(QueueDetail queueDetail) {
     Concurrency concurrency = queueDetail.getConcurrency();
-    int queueCapacity = 0;
-    int maxJobs = concurrency.getMax();
     int corePoolSize = concurrency.getMin();
     int maxPoolSize = concurrency.getMax();
-    AsyncTaskExecutor executor =
-        createTaskExecutor(queueDetail, corePoolSize, maxPoolSize, queueCapacity);
-    QueueThreadPool threadPool = new QueueThreadPool(executor, true, maxJobs);
-    queueThreadMap.put(queueDetail.getName(), threadPool);
+    AsyncTaskExecutor executor = createTaskExecutor(queueDetail, corePoolSize, maxPoolSize);
+    addExecutorForConcurrencyBasedQueue(queueDetail, executor, true);
   }
 
   public AsyncTaskExecutor createDefaultTaskExecutor(
@@ -362,10 +386,9 @@ public class RqueueMessageListenerContainer
   }
 
   private AsyncTaskExecutor createTaskExecutor(
-      QueueDetail queueDetail, int corePoolSize, int maxPoolSize, int queueCapacity) {
+      QueueDetail queueDetail, int corePoolSize, int maxPoolSize) {
     String name = ThreadUtils.getWorkerName(queueDetail.getName());
-    return ThreadUtils.createTaskExecutor(
-        name, name + "-", corePoolSize, maxPoolSize, queueCapacity);
+    return ThreadUtils.createTaskExecutor(name, name + "-", corePoolSize, maxPoolSize, 0);
   }
 
   private List<QueueDetail> getQueueDetail(String queue, MappingInformation mappingInformation) {
@@ -452,6 +475,8 @@ public class RqueueMessageListenerContainer
       String groupName, List<QueueDetail> queueDetails) {
     QueueThreadPool queueThreadPool = queueThreadMap.get(groupName);
     if (queueThreadPool != null) {
+      log.error("Thread pool {} is configured {}", queueThreadMap, groupName);
+      System.exit(1);
       return queueDetails.stream()
           .collect(Collectors.toMap(QueueDetail::getName, e -> queueThreadPool));
     }

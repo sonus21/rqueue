@@ -48,7 +48,7 @@
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
       "name": "rqueue.completed.job.cleanup.interval",
-      "description": "How frequently completed jobs should be disabled in millisecond",
+      "description": "How frequently completed jobs should be removed (in millisecond)",
       "type": "java.lang.Long",
       "defaultValue": 30000
     },
