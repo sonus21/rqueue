@@ -393,7 +393,7 @@ public class RqueueMessageListenerContainer
 
   private List<QueueDetail> getQueueDetail(String queue, MappingInformation mappingInformation) {
     int numRetry = mappingInformation.getNumRetry();
-    if (!mappingInformation.getDeadLetterQueueName().isEmpty() && numRetry == -1) {
+    if (!StringUtils.isEmpty(mappingInformation.getDeadLetterQueueName()) && numRetry == -1) {
       log.warn(
           "Dead letter queue {} is set but retry is not set",
           mappingInformation.getDeadLetterQueueName());
@@ -426,12 +426,13 @@ public class RqueueMessageListenerContainer
             .priority(priority)
             .priorityGroup(priorityGroup)
             .build();
+    List<QueueDetail> queueDetails;
     if (queueDetail.getPriority().size() <= 1) {
-      return Collections.singletonList(queueDetail);
+      queueDetails = Collections.singletonList(queueDetail);
+    } else {
+      queueDetails = queueDetail.expandQueueDetail(true, -1);
     }
-    return queueDetail.expandQueueDetail(
-        rqueueConfig.isAddDefaultQueueWithQueueLevelPriority(),
-        rqueueConfig.getDefaultQueueWithQueueLevelPriority());
+    return queueDetails;
   }
 
   @Override
@@ -473,10 +474,9 @@ public class RqueueMessageListenerContainer
 
   private Map<String, QueueThreadPool> getQueueThreadMap(
       String groupName, List<QueueDetail> queueDetails) {
+    // this happens only for queue having priorities like critical:10,high:5,low:3
     QueueThreadPool queueThreadPool = queueThreadMap.get(groupName);
     if (queueThreadPool != null) {
-      log.error("Thread pool {} is configured {}", queueThreadMap, groupName);
-      System.exit(1);
       return queueDetails.stream()
           .collect(Collectors.toMap(QueueDetail::getName, e -> queueThreadPool));
     }
