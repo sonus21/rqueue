@@ -187,20 +187,6 @@
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.add.default.queue.with.queue.level.priority",
-      "description": "Add default queue when priority of queues are used",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
-    },
-    {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.default.queue.with.queue.level.priority",
-      "description": "Priority of the default queue when priority is used, default to use middle priority",
-      "type": "java.lang.Integer",
-      "defaultValue": -1
-    },
-    {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
       "name": "rqueue.net.proxy.host",
       "description": "Proxy server host address for outgoing connection",
       "type": "java.lang.String"
