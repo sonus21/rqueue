@@ -98,7 +98,7 @@ public abstract class BasicListenerTest extends SpringTestBase {
           return messages.contains(job);
         },
         "message should be present in internal storage");
-    waitFor(() -> getMessageCount(jobQueue) == 0, "job to run");
+    waitFor(() -> getMessageCount(jobQueue) == 0, 30_000, "job to run");
   }
 
   protected void testMultiMessageConsumer() throws TimedOutException {
