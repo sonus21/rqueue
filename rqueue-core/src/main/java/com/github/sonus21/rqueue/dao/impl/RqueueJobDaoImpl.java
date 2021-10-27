@@ -34,6 +34,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class RqueueJobDaoImpl implements RqueueJobDao {
+
   private final RqueueRedisTemplate<RqueueJob> redisTemplate;
   private final RqueueStringDao rqueueStringDao;
   private final RqueueConfig rqueueConfig;

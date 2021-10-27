@@ -26,6 +26,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class PeriodicJob extends BaseQueueMessage {
+
   private String jobName;
   private int executionTime;
 

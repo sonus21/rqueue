@@ -39,6 +39,7 @@ import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.util.CollectionUtils;
 
 public class RqueueStringDaoImpl implements RqueueStringDao {
+
   private final RqueueRedisTemplate<String> redisTemplate;
   private final RedisScript<Boolean> delIfSameScript;
   private final DefaultScriptExecutor<String> scriptExecutor;

@@ -42,6 +42,7 @@ import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public class MessageSweeper {
+
   private static MessageSweeper messageSweeper;
 
   private final ExecutorService executorService;
@@ -150,6 +151,7 @@ public class MessageSweeper {
   }
 
   private class MessageDeleteJob extends RetryableRunnable<DeleteJobData> {
+
     private static final int batchSize = 1000;
     private final String queueName;
 

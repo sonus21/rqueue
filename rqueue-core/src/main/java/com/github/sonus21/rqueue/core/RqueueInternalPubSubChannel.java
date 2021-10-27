@@ -36,6 +36,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 
 @Slf4j
 public class RqueueInternalPubSubChannel implements InitializingBean {
+
   private final RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
   private final RqueueMessageListenerContainer rqueueMessageListenerContainer;
   private final RqueueConfig rqueueConfig;
@@ -85,6 +86,7 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
   }
 
   class InternalMessageListener implements MessageListener {
+
     @Override
     public void onMessage(Message message, byte[] pattern) {
       byte[] body = message.getBody();

@@ -40,6 +40,7 @@ import reactor.core.publisher.Mono;
 @Service
 @Slf4j
 public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataService {
+
   private final RqueueMessageMetadataDao rqueueMessageMetadataDao;
   private final RqueueStringDao rqueueStringDao;
 

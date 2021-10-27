@@ -65,6 +65,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class RqueueQDetailServiceImpl implements RqueueQDetailService {
+
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueSystemManagerService rqueueSystemManagerService;
@@ -561,6 +562,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   }
 
   private static class ListRowBuilder implements RowBuilder {
+
     private final boolean deadLetterQueue;
 
     ListRowBuilder(boolean deadLetterQueue) {
@@ -585,6 +587,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   }
 
   private static class ZsetRowBuilder implements RowBuilder {
+
     private final long currentTime;
     private final boolean scheduledQueue;
     private final boolean completionQueue;

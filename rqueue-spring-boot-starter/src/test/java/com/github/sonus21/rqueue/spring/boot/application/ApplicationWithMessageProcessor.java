@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class ApplicationWithMessageProcessor
     extends com.github.sonus21.rqueue.test.application.ApplicationWithMessageProcessor {
+
   public static void main(String[] args) {
     SpringApplication.run(ApplicationWithMessageProcessor.class, args);
   }

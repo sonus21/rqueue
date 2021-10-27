@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class Application extends BaseApplication {
+
   public static void main(String[] args) {
     SpringApplication.run(Application.class, args);
   }

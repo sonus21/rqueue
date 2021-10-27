@@ -25,6 +25,7 @@ public class RqueueQueuePauseEvent extends ApplicationEvent {
   private final String queue;
 
   private final boolean paused;
+
   /**
    * Create a new ApplicationEvent.
    *

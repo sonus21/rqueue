@@ -33,6 +33,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DataViewResponse extends BaseResponse {
+
   private static final long serialVersionUID = -8359552138158857044L;
   private List<String> headers;
   private List<Action> actions = new ArrayList<>();

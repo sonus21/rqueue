@@ -52,6 +52,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartService {
+
   private final RqueueQStatsDao rqueueQStatsDao;
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;

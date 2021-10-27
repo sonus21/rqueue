@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import reactor.core.publisher.Mono;
 
 public interface RqueueQDetailService {
+
   Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
       List<QueueConfig> queueConfig);
 

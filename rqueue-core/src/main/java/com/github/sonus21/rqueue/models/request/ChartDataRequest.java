@@ -34,6 +34,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class ChartDataRequest extends SerializableBase {
+
   private static final long serialVersionUID = 7727090378318819986L;
   private ChartType type;
   private String queue;

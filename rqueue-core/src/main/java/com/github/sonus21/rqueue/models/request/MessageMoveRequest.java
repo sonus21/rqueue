@@ -33,6 +33,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class MessageMoveRequest implements Serializable {
+
   private static final long serialVersionUID = -5105668034442269108L;
   private String src;
   private DataType srcType;

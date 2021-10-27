@@ -25,6 +25,7 @@ import org.slf4j.event.Level;
 
 @Slf4j
 class MessageProcessorHandler extends PrefixLogger {
+
   private final MessageProcessor manualDeletionMessageProcessor;
   private final MessageProcessor deadLetterQueueMessageProcessor;
   private final MessageProcessor discardMessageProcessor;

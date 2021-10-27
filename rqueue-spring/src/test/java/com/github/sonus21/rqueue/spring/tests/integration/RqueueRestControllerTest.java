@@ -85,6 +85,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class RqueueRestControllerTest extends SpringWebTestBase {
+
   @Autowired private DeleteMessageListener deleteMessageListener;
 
   @Test

@@ -58,6 +58,7 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class RqueueExecutorTest extends TestBase {
+
   private final QueueThreadPool queueThreadPool = new QueueThreadPool(null, true, 100);
   private final RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
   private final TestMessageProcessor deadLetterProcessor = new TestMessageProcessor();
@@ -308,6 +309,7 @@ class RqueueExecutorTest extends TestBase {
   }
 
   private static class TestMessageProcessor implements MessageProcessor {
+
     private int count;
 
     @Override

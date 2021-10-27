@@ -42,6 +42,7 @@ import org.springframework.messaging.support.GenericMessage;
  */
 @Slf4j
 public class GenericMessageConverter implements SmartMessageConverter {
+
   private final SmartMessageSerDes smartMessageSerDes;
 
   public GenericMessageConverter() {
@@ -85,6 +86,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
     log.trace("Payload: {} headers: {} hint: {}", payload, headers, conversionHint);
     return toMessage(payload, headers);
   }
+
   /**
    * Convert the payload of a {@link Message} from a serialized form to a typed Object of type
    * stored in message it self.
@@ -113,11 +115,13 @@ public class GenericMessageConverter implements SmartMessageConverter {
   @NoArgsConstructor
   @AllArgsConstructor
   private static class Msg {
+
     private String msg;
     private String name;
   }
 
   public static class SmartMessageSerDes {
+
     private final ObjectMapper objectMapper;
 
     public SmartMessageSerDes(ObjectMapper objectMapper) {

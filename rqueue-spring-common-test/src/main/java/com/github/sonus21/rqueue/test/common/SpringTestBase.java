@@ -488,10 +488,12 @@ public abstract class SpringTestBase extends TestBase {
   }
 
   public interface Factory {
+
     Object next(int i);
   }
 
   public interface Delay {
+
     long getDelay(int i);
   }
 }

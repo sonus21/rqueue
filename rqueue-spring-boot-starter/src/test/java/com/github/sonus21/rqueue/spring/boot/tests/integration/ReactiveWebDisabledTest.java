@@ -69,6 +69,7 @@ import reactor.core.publisher.Mono;
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class ReactiveWebDisabledTest extends BasicListenerTest {
+
   @Autowired private WebTestClient webTestClient;
 
   @ParameterizedTest

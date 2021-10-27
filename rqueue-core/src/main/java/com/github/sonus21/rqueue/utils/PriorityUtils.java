@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 public final class PriorityUtils {
+
   private PriorityUtils() {}
 
   public static Set<String> getNamesFromPriority(String queueName, Map<String, Integer> priority) {

@@ -33,6 +33,7 @@ import org.springframework.context.ApplicationEventPublisher;
 @Getter
 @Setter
 public class RqueueBeanProvider {
+
   @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Autowired private RqueueJobDao rqueueJobDao;

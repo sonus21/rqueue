@@ -35,6 +35,7 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class JsonMessageConverterTest extends TestBase {
+
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final MessageConverter messageConverter = new JsonMessageConverter();
   private final MessageConverter messageConverter2 = new JsonMessageConverter(objectMapper);
@@ -76,6 +77,7 @@ class JsonMessageConverterTest extends TestBase {
   @NoArgsConstructor
   @EqualsAndHashCode
   public static class TestData {
+
     private String id;
     private String message;
 
@@ -89,6 +91,7 @@ class JsonMessageConverterTest extends TestBase {
   @NoArgsConstructor
   @EqualsAndHashCode
   public static class TestDataX {
+
     private String id;
     private String message;
     private String x;

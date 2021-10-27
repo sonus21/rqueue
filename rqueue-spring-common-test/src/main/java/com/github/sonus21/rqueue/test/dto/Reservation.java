@@ -35,6 +35,7 @@ import org.apache.commons.lang3.RandomUtils;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class Reservation extends BaseQueueMessage {
+
   private int requestId;
   private Map<String, String> otherDetails;
 

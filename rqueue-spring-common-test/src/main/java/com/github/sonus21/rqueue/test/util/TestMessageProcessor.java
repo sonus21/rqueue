@@ -27,6 +27,7 @@ import lombok.Setter;
 
 @Getter
 public class TestMessageProcessor implements MessageProcessor {
+
   private final List<RqueueMessageEnvelop> rqueueMessageList = new Vector<>();
 
   public void clear() {
@@ -48,6 +49,7 @@ public class TestMessageProcessor implements MessageProcessor {
   @Setter
   @AllArgsConstructor
   public static class RqueueMessageEnvelop {
+
     private RqueueMessage message;
     private Long createdAt;
   }

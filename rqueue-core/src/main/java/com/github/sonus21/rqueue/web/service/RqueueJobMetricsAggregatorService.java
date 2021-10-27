@@ -58,6 +58,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class RqueueJobMetricsAggregatorService
     implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
+
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueLockManager rqueueLockManager;
@@ -229,6 +230,7 @@ public class RqueueJobMetricsAggregatorService
   }
 
   private class EventAggregator implements Runnable {
+
     private void aggregate(RqueueExecutionEvent event, TasksStat stat) {
       MessageMetadata messageMetadata = event.getJob().getMessageMetadata();
       RqueueMessage rqueueMessage = event.getJob().getRqueueMessage();

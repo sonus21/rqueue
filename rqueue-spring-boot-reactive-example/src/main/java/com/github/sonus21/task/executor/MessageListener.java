@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class MessageListener {
+
   private static final Random random = new Random();
 
   @Value("${delay.queue.fail.percentage:0}")

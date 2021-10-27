@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DateTimeFunction implements Function {
+
   public static final String FUNCTION_NAME = "time";
 
   @Override

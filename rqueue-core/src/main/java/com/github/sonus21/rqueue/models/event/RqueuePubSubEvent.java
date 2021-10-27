@@ -35,6 +35,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RqueuePubSubEvent extends SerializableBase {
+
   private PubSubType type;
   private String senderId;
   private String message;

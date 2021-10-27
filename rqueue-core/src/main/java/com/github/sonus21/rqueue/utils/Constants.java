@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.utils;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 
 public final class Constants {
+
   public static final String BLANK = "";
   public static final long ONE_MILLI = 1000;
   public static final int ONE_MILLI_INT = 1000;

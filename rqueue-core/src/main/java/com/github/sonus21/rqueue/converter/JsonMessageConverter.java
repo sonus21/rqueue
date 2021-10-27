@@ -41,6 +41,7 @@ import org.springframework.messaging.support.GenericMessage;
  */
 @Slf4j
 public class JsonMessageConverter implements MessageConverter {
+
   private final ObjectMapper objectMapper;
 
   public JsonMessageConverter() {

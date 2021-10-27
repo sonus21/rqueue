@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.example;
 
 public class Job {
+
   private String id;
   private String message;
 

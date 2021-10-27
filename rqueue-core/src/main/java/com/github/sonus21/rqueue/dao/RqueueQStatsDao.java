@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface RqueueQStatsDao {
+
   QueueStatistics findById(String id);
 
   List<QueueStatistics> findAll(Collection<String> ids);

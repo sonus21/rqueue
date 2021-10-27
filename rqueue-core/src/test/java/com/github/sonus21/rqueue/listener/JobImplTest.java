@@ -57,6 +57,7 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class JobImplTest extends TestBase {
+
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   @Mock RedisConnectionFactory redisConnectionFactory;

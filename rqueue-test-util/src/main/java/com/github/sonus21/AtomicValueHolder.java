@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AtomicValueHolder<T> {
+
   private T t;
 
   public synchronized void set(T t) {

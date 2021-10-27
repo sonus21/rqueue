@@ -32,6 +32,7 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueLockManagerImplTest extends TestBase {
+
   private final String lockKey = "test-key";
   private final String lockValue = "test-value";
   @Mock private RqueueStringDao rqueueStringDao;

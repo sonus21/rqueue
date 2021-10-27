@@ -43,6 +43,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootIntegrationTest
 @LocalTest
 class BootProcessingChannelTest extends MessageChannelTests {
+
   @Test
   void publishMessageIsTriggeredOnMessageRemoval() throws TimedOutException {
     verifyPublishMessageIsTriggeredOnMessageRemoval();

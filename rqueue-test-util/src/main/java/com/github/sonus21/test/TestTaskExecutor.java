@@ -21,6 +21,7 @@ import java.util.concurrent.Future;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 public class TestTaskExecutor extends ThreadPoolTaskExecutor {
+
   private static final long serialVersionUID = 8310240227553949352L;
   private final boolean useResources;
   private final Vector<Runnable> submittedTasks = new Vector<>();

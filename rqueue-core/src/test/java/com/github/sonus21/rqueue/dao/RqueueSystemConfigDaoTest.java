@@ -45,6 +45,7 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueSystemConfigDaoTest extends TestBase {
+
   private final String queueName = "job";
   private final String configKey = TestUtils.getQueueConfigKey(queueName);
   private final QueueConfig queueConfig = TestUtils.createQueueConfig(queueName);

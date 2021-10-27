@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class ApplicationWithCustomMessageConverter
     extends com.github.sonus21.rqueue.test.application.ApplicationWithCustomMessageConverter {
+
   public static void main(String[] args) {
     SpringApplication.run(ApplicationWithCustomMessageConverter.class, args);
   }

@@ -30,6 +30,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class Email extends BaseQueueMessage {
+
   private String email;
   private String subject;
   private String body;

@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class Job extends BaseQueueMessage {
+
   private String type;
 
   public Job(String id, String type) {

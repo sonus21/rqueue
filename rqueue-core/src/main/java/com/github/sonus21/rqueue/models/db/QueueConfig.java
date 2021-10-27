@@ -44,6 +44,7 @@ import org.springframework.util.CollectionUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QueueConfig extends SerializableBase {
+
   private static final long serialVersionUID = 2644813429709395582L;
   private String id;
   private String name;

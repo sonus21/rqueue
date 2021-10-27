@@ -29,6 +29,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ReservationRequest extends BaseQueueMessage {
+
   public static ReservationRequest newInstance() {
     ReservationRequest reservationRequest = new ReservationRequest();
     reservationRequest.setId(UUID.randomUUID().toString());

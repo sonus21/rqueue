@@ -22,6 +22,7 @@ import java.time.Duration;
 import org.springframework.util.Assert;
 
 public class RqueueLockManagerImpl implements RqueueLockManager {
+
   private final RqueueStringDao rqueueStringDao;
 
   public RqueueLockManagerImpl(RqueueStringDao rqueueStringDao) {

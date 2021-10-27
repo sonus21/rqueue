@@ -211,16 +211,17 @@ public class SimpleRqueueListenerContainerFactory {
    * for every queue.
    *
    * <p>When you're using custom executor then you should set this number as (thread pool max size -
-   * number of queues) given executor is not shared. The maxNumWorkers tells how many workers you
-   * want to run in parallel for all listeners, for example if you have 3 listeners, and you have
-   * set this as 10 then all 3 listeners would be running maximum **combined 10 jobs** at any point
-   * of time.
+   * number of queues) given executor is not shared with other application component. The
+   * maxNumWorkers tells how many workers you want to run in parallel for all listeners those are
+   * not having configured concurrency. For example if you have 3 queues without concurrency, and
+   * you have set this as 10 then all 3 listeners would be running maximum **combined 10 jobs** at
+   * any point of time. Queues having concurrency will be running at the configured concurrency.
    *
    * <p>What would happen if I set this to very high value while using custom executor? <br>
    * 1. Task(s) would be rejected by the executor unless queue size is non-zero <br>
    * 2. When queue size is non-zero then it can create duplicate message problem, since the polled
    * message has not been processed yet. This will happen when {@link
-   * RqueueListener#visibilityTimeout()} is smaller than the time a task took to execute from the
+   * RqueueListener#visibilityTimeout()} is smaller than the time a task takes to execute from the
    * time of polling to final execution.
    *
    * @param maxNumWorkers Maximum number of workers.
@@ -235,8 +236,8 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Message converter must be configured before calling this method.
    *
-   * @throws IllegalAccessException when messageConverterProvider is null
    * @return the message converter object
+   * @throws IllegalAccessException when messageConverterProvider is null
    */
   public MessageConverter getMessageConverter() throws IllegalAccessException {
     if (messageConverterProvider == null) {
@@ -248,15 +249,17 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Rqueue configures a default message converter that can convert message to/from for any object.
    *
-   * @see DefaultMessageConverterProvider
    * @param messageConverterProvider the message converter provider
+   * @see DefaultMessageConverterProvider
    */
   public void setMessageConverterProvider(MessageConverterProvider messageConverterProvider) {
     notNull(messageConverterProvider, "messageConverterProvider must not be null");
     this.messageConverterProvider = messageConverterProvider;
   }
 
-  /** @return get Redis connection factor */
+  /**
+   * @return get Redis connection factor
+   */
   public RedisConnectionFactory getRedisConnectionFactory() {
     return redisConnectionFactory;
   }
@@ -272,7 +275,9 @@ public class SimpleRqueueListenerContainerFactory {
     this.redisConnectionFactory = redisConnectionFactory;
   }
 
-  /** @return message template */
+  /**
+   * @return message template
+   */
   public RqueueMessageTemplate getRqueueMessageTemplate() {
     return rqueueMessageTemplate;
   }

@@ -49,6 +49,7 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class RqueueEndpointManagerImplTest extends TestBase {
+
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   private final MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
   private final String queue = "test-queue";

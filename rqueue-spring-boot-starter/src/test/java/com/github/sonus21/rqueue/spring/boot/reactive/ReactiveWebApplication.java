@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class ReactiveWebApplication extends BaseApplication {
+
   @Value("${max.workers.count:6}")
   private int maxWorkers;
 

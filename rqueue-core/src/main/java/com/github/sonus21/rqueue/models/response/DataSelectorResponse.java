@@ -31,6 +31,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DataSelectorResponse extends BaseResponse {
+
   private String title;
   private List<Pair<String, String>> data;
 }

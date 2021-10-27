@@ -294,6 +294,7 @@ public class MessageListener {
   }
 
   static class CheckinClerk implements Runnable {
+
     private final WeakReference<ScheduledExecutorService> serviceWeakReference;
     private final com.github.sonus21.rqueue.core.Job job;
     private final long endCheckInTime;

@@ -43,6 +43,7 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:8004"})
 @SpringBootIntegrationTest
 class RqueueMessageTemplateTest extends SpringTestBase {
+
   @Test
   void moveMessageFromDeadLetterQueueToOriginalQueue() {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10, true);

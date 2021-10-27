@@ -30,6 +30,7 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.CollectionUtils;
 
 abstract class RqueueMessagePoller extends MessageContainerBase {
+
   final List<Middleware> middlewares;
   final long pollingInterval;
   final long backoffTime;
@@ -82,7 +83,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
               queueThreadPool));
     } catch (Exception e) {
       if (e instanceof TaskRejectedException) {
-        queueThreadPool.taskRejected();
+        queueThreadPool.taskRejected(queueDetail, message);
       }
       log(Level.WARN, "Execution failed Msg: {}", e, message);
       release(postProcessingHandler, queueThreadPool, queueDetail, message);

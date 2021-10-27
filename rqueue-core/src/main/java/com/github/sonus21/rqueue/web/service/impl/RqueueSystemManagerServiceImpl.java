@@ -50,6 +50,7 @@ import reactor.core.publisher.Mono;
 @Service
 @Slf4j
 public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerService {
+
   private final RqueueConfig rqueueConfig;
   private final RqueueStringDao rqueueStringDao;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
@@ -253,6 +254,7 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   }
 
   private class CleanCompletedJobs extends RetryableRunnable<Object> {
+
     private final String queueName;
 
     protected CleanCompletedJobs(String queueName) {

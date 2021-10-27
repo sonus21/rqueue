@@ -46,6 +46,7 @@ import org.springframework.messaging.converter.MessageConverter;
 @Slf4j
 @SuppressWarnings("WeakerAccess")
 abstract class BaseMessageSender {
+
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;

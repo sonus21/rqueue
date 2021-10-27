@@ -237,6 +237,7 @@ class RqueueMessageUtilsTest extends TestBase {
 
   @Data
   static class Email {
+
     String id;
     String email;
 
@@ -250,6 +251,7 @@ class RqueueMessageUtilsTest extends TestBase {
 
   @Data
   static class GenericClass<T> {
+
     T id;
   }
 }

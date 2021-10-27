@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 @ToString(callSuper = true)
 @NoArgsConstructor
 public class Notification extends BaseQueueMessage {
+
   private String message;
 
   public Notification(String id, String message) {

@@ -32,5 +32,6 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 public class DataTypeRequest extends SerializableBase {
+
   @NotEmpty private String name;
 }

@@ -25,6 +25,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 public class RedisRunning {
+
   private final List<RedisNode> redisNodes;
   private RedisConnectionFactory redisConnectionFactory;
 

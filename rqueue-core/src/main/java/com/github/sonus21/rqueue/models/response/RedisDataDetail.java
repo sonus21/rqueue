@@ -32,6 +32,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
 public class RedisDataDetail extends SerializableBase {
+
   private static final long serialVersionUID = 1056616946630817927L;
   private String name;
   private DataType type;

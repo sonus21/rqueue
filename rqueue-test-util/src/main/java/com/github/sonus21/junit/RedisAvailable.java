@@ -28,5 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RedisAvailable {
+
   String[] nodes() default {};
 }

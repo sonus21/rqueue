@@ -21,6 +21,7 @@ import lombok.ToString;
 
 @ToString
 public class TasksStat {
+
   public long discarded = 0;
   public long success = 0;
   public long movedToDlq = 0;

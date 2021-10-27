@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class RqueueQueueMetricsTest extends TestBase {
+
   private static final String queueName = "test";
   private static final String priorityName = "high";
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);

@@ -25,6 +25,7 @@ import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import reactor.core.publisher.Mono;
 
 public interface RqueueMessageMetadataService {
+
   MessageMetadata get(String id);
 
   void delete(String id);

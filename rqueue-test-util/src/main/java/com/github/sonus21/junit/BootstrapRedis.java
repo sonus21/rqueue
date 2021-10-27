@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface BootstrapRedis {
+
   String host() default "localhost";
 
   int port() default 6379;

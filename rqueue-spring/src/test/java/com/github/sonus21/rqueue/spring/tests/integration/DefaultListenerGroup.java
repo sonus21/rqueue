@@ -52,6 +52,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
     })
 @SpringIntegrationTest
 class DefaultListenerGroup extends AllQueueMode {
+
   @Test
   void verifySimpleQueue() throws TimedOutException {
     testSimpleConsumer();

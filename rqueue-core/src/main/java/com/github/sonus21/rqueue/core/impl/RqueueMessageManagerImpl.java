@@ -39,6 +39,7 @@ import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
+
   @Autowired private RqueueLockManager rqueueLockManager;
 
   public RqueueMessageManagerImpl(

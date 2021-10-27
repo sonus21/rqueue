@@ -27,6 +27,7 @@ import org.springframework.data.redis.core.script.RedisScript;
 @SuppressWarnings("unchecked")
 @ToString
 public class RedisScriptFactory {
+
   public static <T> RedisScript<T> getScript(ScriptType type) {
     Resource resource = new ClassPathResource(type.getPath());
     DefaultRedisScript<T> script = new DefaultRedisScript<>();

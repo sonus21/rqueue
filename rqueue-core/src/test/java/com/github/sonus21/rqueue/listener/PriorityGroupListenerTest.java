@@ -54,6 +54,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @CoreUnitTest
 class PriorityGroupListenerTest extends TestBase {
+
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
   private static final String slowProcessingQueue = "rqueue-processing::" + slowQueue;
@@ -147,6 +148,7 @@ class PriorityGroupListenerTest extends TestBase {
 
   @Getter
   private static class SlowMessageListenerWithPriority {
+
     private String lastMessage;
 
     @RqueueListener(value = slowQueue, priority = "10", priorityGroup = "pg")
@@ -157,6 +159,7 @@ class PriorityGroupListenerTest extends TestBase {
 
   @Getter
   private static class FastMessageListenerWithPriority {
+
     private String lastMessage;
 
     @RqueueListener(value = fastQueue, priority = "100", priorityGroup = "pg")
@@ -166,6 +169,7 @@ class PriorityGroupListenerTest extends TestBase {
   }
 
   private class TestListenerContainer extends RqueueMessageListenerContainer {
+
     TestListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
       super(rqueueMessageHandler, rqueueMessageTemplate);
       this.rqueueBeanProvider = beanProvider;

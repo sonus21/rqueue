@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.models.event;
 import lombok.Getter;
 import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
+
 /**
  * This event is generated at RqueueContainer startup and shutdown.
  *

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
 public class PrefixLogger {
+
   private final Logger log;
   private final String prefix;
 

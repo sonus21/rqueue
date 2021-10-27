@@ -30,6 +30,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class BooleanResponse extends BaseResponse {
+
   private static final long serialVersionUID = 3137908352960413849L;
   private boolean value;
 }

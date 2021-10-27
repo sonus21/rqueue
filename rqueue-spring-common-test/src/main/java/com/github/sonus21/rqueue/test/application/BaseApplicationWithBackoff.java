@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
 public abstract class BaseApplicationWithBackoff extends ApplicationBasicConfiguration {
+
   @Value("${backoff.class.name:fixed}")
   private String backOffClassName;
 

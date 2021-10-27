@@ -29,6 +29,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class RqueueQStatsDaoImpl implements RqueueQStatsDao {
+
   private final RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
 
   @Autowired

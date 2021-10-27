@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageSenderImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.utils.ReactiveEnabled;
+import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;

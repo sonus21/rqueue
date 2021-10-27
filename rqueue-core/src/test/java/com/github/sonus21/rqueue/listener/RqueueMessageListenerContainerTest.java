@@ -68,6 +68,7 @@ import org.springframework.util.LinkedMultiValueMap;
 
 @CoreUnitTest
 class RqueueMessageListenerContainerTest extends TestBase {
+
   private static final String slowQueue = "slow-queue";
   private static final String fastQueue = "fast-queue";
   private static final String slowProcessingQueue = "rqueue-processing::" + slowQueue;
@@ -450,6 +451,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Getter
   private static class SlowMessageListener {
+
     private String lastMessage;
 
     @RqueueListener(value = slowQueue)
@@ -460,6 +462,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Getter
   private static class FastMessageListener {
+
     private String lastMessage;
 
     @RqueueListener(fastQueue)
@@ -470,6 +473,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Getter
   static class BootstrapEventListener implements ApplicationListener<RqueueBootstrapEvent> {
+
     private boolean startEventReceived;
     private boolean stopEventReceived;
 
@@ -485,6 +489,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @SuppressWarnings("unchecked")
   static class TestEventBroadcaster implements ApplicationEventPublisher {
+
     List<ApplicationListener> listenerList = new LinkedList<>();
 
     void subscribe(ApplicationListener listener) {
@@ -503,6 +508,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   private class TestListenerContainer extends RqueueMessageListenerContainer {
+
     TestListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
       super(rqueueMessageHandler, rqueueMessageTemplate);
       this.rqueueBeanProvider = beanProvider;
@@ -511,6 +517,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
   @Getter
   private class StubMessageSchedulerListenerContainer extends RqueueMessageListenerContainer {
+
     private boolean destroyMethodIsCalled = false;
     private boolean doStartMethodIsCalled = false;
     private boolean doStopMethodIsCalled = false;

@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 
 public class BaseReactiveController {
+
   protected final RqueueWebConfig rqueueWebConfig;
 
   public BaseReactiveController(RqueueWebConfig rqueueWebConfig) {

@@ -61,6 +61,7 @@ import org.mockito.MockitoAnnotations;
 @Slf4j
 @CoreUnitTest
 class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
+
   private final String queueName = "test-queue";
   @Mock private RqueueQStatsDao rqueueQStatsDao;
   @Mock private RqueueWebConfig rqueueWebConfig;

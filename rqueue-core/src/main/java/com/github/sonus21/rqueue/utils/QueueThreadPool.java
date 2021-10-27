@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.utils;
 
+import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Slf4j
 public final class QueueThreadPool {
+
   private final AsyncTaskExecutor taskExecutor;
   private final boolean defaultExecutor;
   private final Semaphore semaphore;
@@ -81,7 +84,10 @@ public final class QueueThreadPool {
     return null;
   }
 
-  public void taskRejected() {
-    log.warn("Task rejected by executor");
+  public void taskRejected(QueueDetail queueDetail, RqueueMessage message) {
+    log.warn(
+        "Task rejected by executor Queue: {}, Message: {}",
+        queueDetail.getName(),
+        message.getMessage());
   }
 }

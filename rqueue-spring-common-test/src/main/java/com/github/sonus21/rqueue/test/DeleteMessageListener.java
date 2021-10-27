@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeleteMessageListener implements MessageProcessor {
+
   private List<Object> messages = new ArrayList<>();
 
   @Override

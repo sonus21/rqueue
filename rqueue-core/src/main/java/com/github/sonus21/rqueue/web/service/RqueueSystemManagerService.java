@@ -25,6 +25,7 @@ import org.springframework.context.ApplicationListener;
 import reactor.core.publisher.Mono;
 
 public interface RqueueSystemManagerService extends ApplicationListener<RqueueBootstrapEvent> {
+
   BaseResponse deleteQueue(String queueName);
 
   List<String> getQueues();

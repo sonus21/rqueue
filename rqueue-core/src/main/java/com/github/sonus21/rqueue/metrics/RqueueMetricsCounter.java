@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.metrics;
 
 public interface RqueueMetricsCounter {
+
   void updateFailureCount(String queueName);
 
   void updateExecutionCount(String queueName);

@@ -43,6 +43,7 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMessageSenderTest extends TestBase {
+
   private final String queueName = "test-queue";
   private final QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
   private final String slowQueue = "slow-queue";

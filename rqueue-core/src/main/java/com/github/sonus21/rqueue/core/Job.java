@@ -130,8 +130,8 @@ public interface Job {
   /**
    * The current status of this job, the message can have different status.
    *
-   * @see MessageMetadata
    * @return job status
+   * @see MessageMetadata
    */
   JobStatus getStatus();
 

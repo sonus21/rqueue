@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class MappingInformationTest extends TestBase {
+
   @Test
   void testToString() {
     MappingInformation mappingInformation =

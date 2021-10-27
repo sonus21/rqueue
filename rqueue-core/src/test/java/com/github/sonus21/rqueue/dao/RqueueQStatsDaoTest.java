@@ -43,6 +43,7 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 @Slf4j
 class RqueueQStatsDaoTest extends TestBase {
+
   @Mock private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
   @Mock private RqueueConfig rqueueConfig;
   private RqueueQStatsDao rqueueQStatsDao;

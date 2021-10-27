@@ -40,6 +40,7 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.util.CollectionUtils;
 
 public class RqueueEndpointManagerImpl extends BaseMessageSender implements RqueueEndpointManager {
+
   @Autowired private RqueueUtilityService rqueueUtilityService;
   @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
 

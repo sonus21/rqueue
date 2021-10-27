@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class ApplicationWithTaskExecutionBackoff extends BaseApplicationWithBackoff {
+
   private static volatile ConfigurableApplicationContext context;
   private static ClassLoader mainThreadClassLoader;
 

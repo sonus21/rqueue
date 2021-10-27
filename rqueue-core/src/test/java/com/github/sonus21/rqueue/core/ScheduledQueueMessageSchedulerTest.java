@@ -61,6 +61,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 @CoreUnitTest
 @SuppressWarnings("unchecked")
 class ScheduledQueueMessageSchedulerTest extends TestBase {
+
   @InjectMocks private final TestMessageScheduler messageScheduler = new TestMessageScheduler();
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
@@ -305,6 +306,7 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
   }
 
   static class TestMessageScheduler extends ScheduledQueueMessageScheduler {
+
     List<Boolean> scheduleList;
 
     TestMessageScheduler() {

@@ -31,6 +31,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class OrderConfirmation extends BaseQueueMessage {
+
   private String orderId;
   private String userId;
   private long timestamp;

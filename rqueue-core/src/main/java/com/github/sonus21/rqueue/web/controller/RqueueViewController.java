@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
-import com.github.sonus21.rqueue.utils.ReactiveDisabled;
+import com.github.sonus21.rqueue.utils.condition.ReactiveDisabled;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
 import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
 import java.util.Locale;

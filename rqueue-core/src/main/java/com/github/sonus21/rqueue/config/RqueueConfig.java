@@ -113,12 +113,6 @@ public class RqueueConfig {
   @Value("${rqueue.retry.per.poll:1}")
   private int retryPerPoll;
 
-  @Value("${rqueue.add.default.queue.with.queue.level.priority:true}")
-  private boolean addDefaultQueueWithQueueLevelPriority;
-
-  @Value("${rqueue.default.queue.with.queue.level.priority:-1}")
-  private int defaultQueueWithQueueLevelPriority;
-
   @Value("${rqueue.net.proxy.host:}")
   private String proxyHost;
 

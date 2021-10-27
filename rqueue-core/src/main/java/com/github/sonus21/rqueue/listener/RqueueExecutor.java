@@ -42,6 +42,7 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
 
 class RqueueExecutor extends MessageContainerBase {
+
   private final PostProcessingHandler postProcessingHandler;
   private final QueueThreadPool queueThreadPool;
   private final RqueueMessage rqueueMessage;

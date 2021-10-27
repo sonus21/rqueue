@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
 public class ConsumedMessageStore {
+
   @NonNull private final ConsumedMessageRepository consumedMessageRepository;
   @NonNull private final ObjectMapper objectMapper;
 

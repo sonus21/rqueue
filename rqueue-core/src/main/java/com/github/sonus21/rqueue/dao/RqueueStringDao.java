@@ -24,6 +24,7 @@ import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
 public interface RqueueStringDao {
+
   Map<String, List<Object>> readFromLists(List<String> keys);
 
   List<Object> readFromList(String key);

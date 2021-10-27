@@ -72,6 +72,7 @@ import org.springframework.util.ClassUtils;
 @Slf4j
 public class RqueueMessageListenerContainer
     implements InitializingBean, DisposableBean, SmartLifecycle, BeanNameAware {
+
   public static final String EVENT_SOURCE = "RqueueMessageListenerContainer";
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
@@ -255,9 +256,27 @@ public class RqueueMessageListenerContainer
       defaultTaskExecutor = true;
       taskExecutor = createDefaultTaskExecutor(queueDetails);
     } else {
-      initializeThreadMap(queueDetails, taskExecutor, false, queueDetails.size());
+      initializeThreadMapForNonDefaultExecutor(queueDetails);
     }
     initializeRunningQueueState();
+  }
+
+  private void initializeThreadMapForNonDefaultExecutor(
+      List<QueueDetail> registeredActiveQueueDetail) {
+    List<QueueDetail> queueDetails =
+        registeredActiveQueueDetail.stream()
+            .filter(e -> !e.isSystemGenerated())
+            .collect(Collectors.toList());
+    List<QueueDetail> withoutConcurrency = new ArrayList<>();
+    for (QueueDetail queueDetail : queueDetails) {
+      if (queueDetail.getConcurrency().isValid()) {
+        addExecutorForConcurrencyBasedQueue(queueDetail, taskExecutor, false);
+      } else {
+        withoutConcurrency.add(queueDetail);
+      }
+    }
+    initializeThreadMap(
+        withoutConcurrency, taskExecutor, false, getWorkersCount(withoutConcurrency.size()));
   }
 
   private void initialize() {
@@ -296,9 +315,12 @@ public class RqueueMessageListenerContainer
       AsyncTaskExecutor taskExecutor,
       boolean defaultExecutor,
       int workersCount) {
+    if (queueDetails.isEmpty()) {
+      return;
+    }
+    QueueThreadPool pool = new QueueThreadPool(taskExecutor, defaultExecutor, workersCount);
     for (QueueDetail queueDetail : queueDetails) {
-      queueThreadMap.put(
-          queueDetail.getName(), new QueueThreadPool(taskExecutor, defaultExecutor, workersCount));
+      queueThreadMap.put(queueDetail.getName(), pool);
     }
   }
 
@@ -332,16 +354,19 @@ public class RqueueMessageListenerContainer
     return executor;
   }
 
+  private void addExecutorForConcurrencyBasedQueue(
+      QueueDetail queueDetail, AsyncTaskExecutor executor, boolean defaultTaskExecutor) {
+    int maxJobs = queueDetail.getConcurrency().getMax();
+    QueueThreadPool threadPool = new QueueThreadPool(executor, defaultTaskExecutor, maxJobs);
+    queueThreadMap.put(queueDetail.getName(), threadPool);
+  }
+
   private void createExecutor(QueueDetail queueDetail) {
     Concurrency concurrency = queueDetail.getConcurrency();
-    int queueCapacity = 0;
-    int maxJobs = concurrency.getMax();
     int corePoolSize = concurrency.getMin();
     int maxPoolSize = concurrency.getMax();
-    AsyncTaskExecutor executor =
-        createTaskExecutor(queueDetail, corePoolSize, maxPoolSize, queueCapacity);
-    QueueThreadPool threadPool = new QueueThreadPool(executor, true, maxJobs);
-    queueThreadMap.put(queueDetail.getName(), threadPool);
+    AsyncTaskExecutor executor = createTaskExecutor(queueDetail, corePoolSize, maxPoolSize);
+    addExecutorForConcurrencyBasedQueue(queueDetail, executor, true);
   }
 
   public AsyncTaskExecutor createDefaultTaskExecutor(
@@ -362,15 +387,14 @@ public class RqueueMessageListenerContainer
   }
 
   private AsyncTaskExecutor createTaskExecutor(
-      QueueDetail queueDetail, int corePoolSize, int maxPoolSize, int queueCapacity) {
+      QueueDetail queueDetail, int corePoolSize, int maxPoolSize) {
     String name = ThreadUtils.getWorkerName(queueDetail.getName());
-    return ThreadUtils.createTaskExecutor(
-        name, name + "-", corePoolSize, maxPoolSize, queueCapacity);
+    return ThreadUtils.createTaskExecutor(name, name + "-", corePoolSize, maxPoolSize, 0);
   }
 
   private List<QueueDetail> getQueueDetail(String queue, MappingInformation mappingInformation) {
     int numRetry = mappingInformation.getNumRetry();
-    if (!mappingInformation.getDeadLetterQueueName().isEmpty() && numRetry == -1) {
+    if (!StringUtils.isEmpty(mappingInformation.getDeadLetterQueueName()) && numRetry == -1) {
       log.warn(
           "Dead letter queue {} is set but retry is not set",
           mappingInformation.getDeadLetterQueueName());
@@ -403,12 +427,13 @@ public class RqueueMessageListenerContainer
             .priority(priority)
             .priorityGroup(priorityGroup)
             .build();
+    List<QueueDetail> queueDetails;
     if (queueDetail.getPriority().size() <= 1) {
-      return Collections.singletonList(queueDetail);
+      queueDetails = Collections.singletonList(queueDetail);
+    } else {
+      queueDetails = queueDetail.expandQueueDetail(true, -1);
     }
-    return queueDetail.expandQueueDetail(
-        rqueueConfig.isAddDefaultQueueWithQueueLevelPriority(),
-        rqueueConfig.getDefaultQueueWithQueueLevelPriority());
+    return queueDetails;
   }
 
   @Override
@@ -450,6 +475,7 @@ public class RqueueMessageListenerContainer
 
   private Map<String, QueueThreadPool> getQueueThreadMap(
       String groupName, List<QueueDetail> queueDetails) {
+    // this happens only for queue having priorities like critical:10,high:5,low:3
     QueueThreadPool queueThreadPool = queueThreadMap.get(groupName);
     if (queueThreadPool != null) {
       return queueDetails.stream()
@@ -685,6 +711,7 @@ public class RqueueMessageListenerContainer
   }
 
   class QueueStateMgr {
+
     Set<String> pausedQueues = ConcurrentHashMap.newKeySet();
 
     boolean isQueueActive(String queueName) {

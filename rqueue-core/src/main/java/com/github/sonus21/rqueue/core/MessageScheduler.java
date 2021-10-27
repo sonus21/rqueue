@@ -54,6 +54,7 @@ import org.springframework.util.CollectionUtils;
 
 public abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
+
   private final Object monitor = new Object();
   @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
   @Autowired protected RqueueConfig rqueueConfig;
@@ -255,6 +256,7 @@ public abstract class MessageScheduler
   }
 
   private class QueueScheduler {
+
     private void updateLastScheduleTime(String queueName, long time) {
       queueNameToLastMessageScheduleTime.put(queueName, time);
     }
@@ -354,6 +356,7 @@ public abstract class MessageScheduler
   @ToString
   @AllArgsConstructor
   private class MessageMoverTask implements Runnable {
+
     private final String name;
     private final String queueName;
     private final String zsetName;
@@ -388,6 +391,7 @@ public abstract class MessageScheduler
   }
 
   private class MessageSchedulerListener implements MessageListener {
+
     private void handleMessage(String queueName, Long startTime) {
       long lastSeenTime = getLastScheduleTime(queueName);
       long currentTime = System.currentTimeMillis();

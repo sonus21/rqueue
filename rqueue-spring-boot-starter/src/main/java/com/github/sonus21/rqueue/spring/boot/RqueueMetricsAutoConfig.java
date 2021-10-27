@@ -40,6 +40,7 @@ import org.springframework.context.annotation.Import;
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @Import(RqueueMetricsProperties.class)
 public class RqueueMetricsAutoConfig {
+
   @Bean
   public RqueueMetricsRegistry rqueueMetricsRegistry(
       MetricsProperties metricsProperties, RqueueMetricsProperties rqueueMetricsProperties) {

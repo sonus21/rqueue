@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.utils;
 import static org.springframework.util.Assert.notNull;
 
 public final class Validator {
+
   private Validator() {}
 
   public static void validateMessage(Object message) {

@@ -53,6 +53,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RqueueListener {
+
   /**
    * List of unique queues. Queues can be defined by their name, placeholder that would be resolved
    * to properties file or could be list of comma separated queue names.
@@ -144,6 +145,7 @@ public @interface RqueueListener {
    * have the same concurrency.
    *
    * @return concurrency for this worker.
+   * @see #priority()
    */
   String concurrency() default "-1";
 
@@ -158,7 +160,7 @@ public @interface RqueueListener {
    *
    * <p>Priority can be any number. There are two priority control modes. 1. Strict 2. Weighted, in
    * strict priority mode queue with higher priority is preferred over other queues. In case of
-   * weighted a round robin approach is used, and weight is followed.
+   * weighted a round-robin approach is used, and weight is followed.
    *
    * @return the priority for this listener.
    * @see #priorityGroup()
