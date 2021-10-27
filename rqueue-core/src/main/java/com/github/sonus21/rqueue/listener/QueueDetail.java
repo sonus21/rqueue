@@ -101,7 +101,7 @@ public class QueueDetail extends SerializableBase {
   List<QueueDetail> expandQueueDetail(boolean addDefault, int priority) {
     List<QueueDetail> queueDetails = new ArrayList<>();
     for (Entry<String, Integer> entry : getPriority().entrySet()) {
-      QueueDetail cloneQueueDetail = cloneQueueDetail(entry.getKey(), entry.getValue(), true, name);
+      QueueDetail cloneQueueDetail = cloneQueueDetail(entry.getKey(), entry.getValue(), name);
       queueDetails.add(cloneQueueDetail);
     }
     if (addDefault) {
@@ -121,7 +121,7 @@ public class QueueDetail extends SerializableBase {
   }
 
   private QueueDetail cloneQueueDetail(
-      String priorityName, Integer priority, boolean systemGenerated, String priorityGroup) {
+      String priorityName, Integer priority, String priorityGroup) {
     if (priority == null || priorityName == null) {
       throw new IllegalStateException("priority name is null");
     }
@@ -140,7 +140,7 @@ public class QueueDetail extends SerializableBase {
         .completedQueueName(completedQueueName + suffix)
         .active(active)
         .batchSize(batchSize)
-        .systemGenerated(systemGenerated)
+        .systemGenerated(true)
         .priorityGroup(priorityGroup)
         .concurrency(concurrency)
         .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, priority))

@@ -48,7 +48,7 @@
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
       "name": "rqueue.completed.job.cleanup.interval",
-      "description": "How frequently completed jobs should be disabled in millisecond",
+      "description": "How frequently completed jobs should be removed (in millisecond)",
       "type": "java.lang.Long",
       "defaultValue": 30000
     },
@@ -184,20 +184,6 @@
       "description": "Number of retry for polled message",
       "type": "java.lang.Integer",
       "defaultValue": 1
-    },
-    {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.add.default.queue.with.queue.level.priority",
-      "description": "Add default queue when priority of queues are used",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
-    },
-    {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.default.queue.with.queue.level.priority",
-      "description": "Priority of the default queue when priority is used, default to use middle priority",
-      "type": "java.lang.Integer",
-      "defaultValue": -1
     },
     {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",

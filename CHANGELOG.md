@@ -1,5 +1,9 @@
 # [Rqueue] New and Notable Changes
 
+### [2.10.1] - 18-Oct-2021
+
+* Fixes for concurrency when task executor is provided see issue #[122]
+
 ### [2.10.0] - 10-Oct-2021
 
 ### Fixes
@@ -8,13 +12,14 @@
 * Fixes message move message count (by default 1000 messages are moved)
 * Potential issue in rename collection
 * More than one (-) sign in the dashboard
-* Fixes for server context path. Rqueue end points would be served relative to x-forwarded-prefix/server.servlet.context-path
+* Fixes for server context path. Rqueue end points would be served relative to
+  x-forwarded-prefix/server.servlet.context-path
 
 ### Features
 
 * Display completed jobs in the dashboard
 * Option to choose number of days in the chart
-  ReactiveWebViewTest
+
 ### [2.9.0] - 30-Jul-2021
 
 ### Fixes
@@ -273,3 +278,7 @@ Fixes:
 [2.9.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.9.0-RELEASE
 
 [2.10.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.0-RELEASE
+
+[2.10.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.1-RELEASE
+
+[122]: https://github.com/sonus21/rqueue/issues/122
