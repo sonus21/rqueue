@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.core.impl;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
@@ -27,15 +26,17 @@ import com.github.sonus21.rqueue.exception.LockCanNotBeAcquired;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.MessageBuilder;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
@@ -102,10 +103,10 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
 
   @Override
   public boolean exist(String queueName, String id) {
-    if (rqueueLockManager.acquireLock(
-        queueName, RqueueConfig.getBrokerId(), Duration.ofSeconds(1))) {
+    String lockValue = UUID.randomUUID().toString();
+    if (rqueueLockManager.acquireLock(queueName, lockValue, Duration.ofSeconds(1))) {
       boolean exist = getMessage(queueName, id) != null;
-      rqueueLockManager.releaseLock(queueName, RqueueConfig.getBrokerId());
+      rqueueLockManager.releaseLock(queueName, lockValue);
       return exist;
     }
     throw new LockCanNotBeAcquired(queueName);
@@ -117,9 +118,8 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
     if (rqueueMessage == null) {
       return false;
     }
-    rqueueMessageMetadataService.deleteMessage(
+    return rqueueMessageMetadataService.deleteMessage(
         queueName, id, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
-    return true;
   }
 
   @Override

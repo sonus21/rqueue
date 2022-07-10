@@ -77,7 +77,7 @@ public class MessageSweeper {
     return MessageSweeper.messageSweeper;
   }
 
-  public boolean deleteMessage(MessageDeleteRequest request) {
+  public boolean deleteAllMessages(MessageDeleteRequest request) {
     log.debug("MessageDeleteRequest {}", request);
     if (!request.isValid()) {
       throw new IllegalArgumentException("Message request is not valid");

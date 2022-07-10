@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
-import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
-
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
@@ -34,24 +32,22 @@ import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
-import com.github.sonus21.rqueue.models.response.BaseResponse;
-import com.github.sonus21.rqueue.models.response.BooleanResponse;
-import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
-import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
-import com.github.sonus21.rqueue.models.response.StringResponse;
+import com.github.sonus21.rqueue.models.response.*;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
+
+import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
 @Service
 @Slf4j
@@ -95,8 +91,9 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       booleanResponse.setMessage("Queue config not found!");
       return booleanResponse;
     }
-    messageMetadataService.deleteMessage(queueName, id, Duration.ofDays(Constants.DAYS_IN_A_MONTH));
-    booleanResponse.setValue(true);
+    booleanResponse.setValue(
+        messageMetadataService.deleteMessage(
+            queueName, id, Duration.ofDays(Constants.DAYS_IN_A_MONTH)));
     return booleanResponse;
   }
 
@@ -172,7 +169,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     }
     return new BooleanResponse(
         MessageSweeper.getInstance(rqueueConfig, rqueueMessageTemplate, messageMetadataService)
-            .deleteMessage(
+            .deleteAllMessages(
                 MessageDeleteRequest.builder()
                     .dataName(dataName)
                     .queueName(queueName)

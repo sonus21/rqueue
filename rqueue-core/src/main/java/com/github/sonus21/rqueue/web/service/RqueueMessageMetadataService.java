@@ -18,11 +18,12 @@ package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
+import reactor.core.publisher.Mono;
+
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
-import reactor.core.publisher.Mono;
 
 public interface RqueueMessageMetadataService {
 
@@ -38,7 +39,7 @@ public interface RqueueMessageMetadataService {
 
   MessageMetadata getByMessageId(String queueName, String messageId);
 
-  void deleteMessage(String queueName, String messageId, Duration ttl);
+  boolean deleteMessage(String queueName, String messageId, Duration ttl);
 
   MessageMetadata getOrCreateMessageMetadata(RqueueMessage rqueueMessage);
 

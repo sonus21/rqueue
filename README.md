@@ -255,11 +255,13 @@ a
 PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users)
 .**
 
-<a href="https://tuneyou.com/"><img alt="TuneYou" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>
+<a href="https://tuneyou.com"><img alt="TuneYou" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>
 &nbsp;&nbsp;
 <a href="https://www.pokerstarssports.eu"><img  alt="PokerStars" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/pokerstars.png" width="250" align="middle"/></a>
 &nbsp;&nbsp;
-<a href="https://bitbot.plus/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/bitbot.png" alt="Bitbot" height="60" align="middle"/></a>
+<a href="https://bitbot.plus"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/bitbot.png" alt="Bitbot" height="60" align="middle"/></a>
+&nbsp;&nbsp;
+<a href="https://www.chaotiinfo.cn"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/chaoti-info.png" alt="CHAOTI INFO TECH(SHENZHEN)" height="60" align="middle"/></a>
 &nbsp;&nbsp;
 
 ## Support

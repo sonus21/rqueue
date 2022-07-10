@@ -111,6 +111,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
             rqueueMessageMetadataService,
             rqueueJobDao,
             rqueueMessageTemplate,
+            rqueueLockManager,
             queueDetail,
             messageMetadata,
             rqueueMessage,

@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -30,13 +31,17 @@ import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import java.io.Serializable;
-import java.time.Duration;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.util.CollectionUtils;
+import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 
 @Slf4j
 @SuppressWarnings("java:S107")
@@ -46,6 +51,7 @@ public class JobImpl implements Job {
   private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
   private final RqueueMessageTemplate rqueueMessageTemplate;
+  private final RqueueLockManager rqueueLockManager;
   private final RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail;
   private final RqueueJob rqueueJob;
@@ -61,6 +67,7 @@ public class JobImpl implements Job {
       RqueueMessageMetadataService messageMetadataService,
       RqueueJobDao rqueueJobDao,
       RqueueMessageTemplate rqueueMessageTemplate,
+      RqueueLockManager rqueueLockManager,
       QueueDetail queueDetail,
       MessageMetadata messageMetadata,
       RqueueMessage rqueueMessage,
@@ -76,6 +83,7 @@ public class JobImpl implements Job {
     this.rqueueJob = new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, null);
     this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
     this.isPeriodicJob = rqueueMessage.isPeriodicTask();
+    this.rqueueLockManager = rqueueLockManager;
     if (rqueueConfig.isJobEnabled()) {
       if (!isPeriodicJob) {
         rqueueJobDao.createJob(rqueueJob, expiry);
@@ -279,21 +287,74 @@ public class JobImpl implements Job {
     return getRqueueMessage().getFailureCount();
   }
 
-  void updateMessageStatus(MessageStatus messageStatus) {
-    if (messageStatus.isTerminalState()) {
-      if (rqueueConfig.messageInTerminalStateShouldBeStored()) {
-        this.messageMetadataService.saveMessageMetadataForQueue(
-            queueDetail.getCompletedQueueName(),
-            getMessageMetadata(),
-            rqueueConfig.messageDurabilityInTerminalStateInMillisecond());
+  private MessageMetadata getLatestMessageMetadata() {
+    return messageMetadataService.get(getMessageMetadata().getId());
+  }
+
+  private void saveMessageMetadata(Callable<Void> callable) {
+    Instant startTime = Instant.now();
+    Instant endTime = startTime.plusSeconds(10);
+    long sleepDuration = 100;
+    Duration lockDuration = Duration.ofSeconds(1);
+    String lockKey = getMessageId();
+    String lockValue = UUID.randomUUID().toString();
+    while (endTime.isBefore(startTime)) {
+      if (!rqueueLockManager.acquireLock(lockKey, lockValue, lockDuration)) {
+        TimeoutUtils.sleep(sleepDuration);
       } else {
+        MessageMetadata localMessageMetadata = getMessageMetadata();
+        MessageMetadata messageMetadata = getLatestMessageMetadata();
+        if (messageMetadata.isDeleted() && !localMessageMetadata.isDeleted()) {
+          localMessageMetadata.setDeleted(true);
+        }
+        try {
+          callable.call();
+          // success in update so return
+          return;
+        } catch (Exception e) {
+          log.error("Saving message metadata failed", e);
+        } finally {
+          rqueueLockManager.releaseLock(lockKey, lockValue);
+        }
+      }
+    }
+    // all tries have failed nothing can be done now
+    try {
+      callable.call();
+    } catch (Exception e) {
+      log.error("Saving message metadata failed", e);
+    }
+  }
+
+  void updateMessageStatus(MessageStatus messageStatus) {
+    setMessageStatus(messageStatus);
+    // We need to address these problems with message metadata
+    // 1. Message was deleted while executing, this means local copy is stale
+    // 2. Parallel update is being made [dashboard operation, periodic job (two periodic jobs can
+    // run in parallel due to failure)]
+    if (messageStatus.isTerminalState()) {
+      long ttl = rqueueConfig.getMessageDurabilityInMinute();
+      if (ttl == 0 || !rqueueConfig.messageInTerminalStateShouldBeStored()) {
         this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
+      } else {
+        saveMessageMetadata(
+            () -> {
+              messageMetadataService.saveMessageMetadataForQueue(
+                  queueDetail.getCompletedQueueName(),
+                  getMessageMetadata(),
+                  rqueueConfig.messageDurabilityInTerminalStateInMillisecond());
+              return null;
+            });
       }
     } else {
-      this.messageMetadataService.save(
-          getMessageMetadata(), Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
+      saveMessageMetadata(
+          () -> {
+            messageMetadataService.save(
+                getMessageMetadata(),
+                Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
+            return null;
+          });
     }
-    setMessageStatus(messageStatus);
     save();
   }
 

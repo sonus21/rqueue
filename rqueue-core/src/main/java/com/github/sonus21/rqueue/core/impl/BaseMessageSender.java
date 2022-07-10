@@ -163,7 +163,7 @@ abstract class BaseMessageSender {
 
   protected Object deleteAllMessages(QueueDetail queueDetail) {
     return MessageSweeper.getInstance(rqueueConfig, messageTemplate, rqueueMessageMetadataService)
-        .deleteMessage(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
+        .deleteAllMessages(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {

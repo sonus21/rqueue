@@ -17,10 +17,10 @@
 package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
-import java.time.Duration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+
+import java.time.Duration;
 
 /**
  * This uses Redis as backend for locking, using <b>SETNX</b> a lock is acquired.
@@ -72,8 +72,7 @@ public abstract class RedisLockMiddleware implements LockMiddleware {
   public String acquireLock(Job job) {
     String lockIdentifier = getLockIdentifier(job);
     Duration lockDuration = getLockDuration(job);
-    if (Boolean.TRUE.equals(
-        template.setIfAbsent(lockIdentifier, RqueueConfig.getBrokerId(), lockDuration))) {
+    if (Boolean.TRUE.equals(template.setIfAbsent(lockIdentifier, "1", lockDuration))) {
       return lockIdentifier;
     }
     return null;
