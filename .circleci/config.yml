@@ -117,7 +117,7 @@ aliases:
 executors:
   rqueue-executor:
     machine:
-      image: ubuntu-1604:202007-01
+      image: circleci/classic:201707-01
 
     working_directory: ~/repo
 
