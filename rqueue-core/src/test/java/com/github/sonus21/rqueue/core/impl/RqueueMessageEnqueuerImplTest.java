@@ -50,6 +50,7 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
 
   @BeforeAll
   public static void init0() {
+    EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
   }
 

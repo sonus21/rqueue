@@ -44,6 +44,7 @@ class RqueueQueueMetricsTest extends TestBase {
 
   @BeforeAll
   static void setUp() {
+    EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
     EndpointRegistry.register(queueDetail2);
   }

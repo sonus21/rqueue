@@ -16,12 +16,6 @@
 
 package com.github.sonus21.rqueue.web.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
@@ -45,11 +39,6 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -57,6 +46,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 
 @Slf4j
 @CoreUnitTest
@@ -173,7 +173,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
 
     doReturn(true)
         .when(rqueueLockManager)
-        .acquireLock("__rq::lock::" + id, RqueueConfig.getBrokerId(), Duration.ofMillis(500L));
+        .acquireLock(eq("__rq::lock::" + id), anyString(), eq(Duration.ofMillis(500L)));
     List<QueueStatistics> queueStatistics = new ArrayList<>();
     doAnswer(
             invocation -> {
