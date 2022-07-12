@@ -139,7 +139,7 @@ build_steps: &build_steps
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-    - run: gradle dependencies
+    - run: ./gradlew dependencies
     - save_cache:
         paths:
           - ~/.gradle
