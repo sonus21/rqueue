@@ -1,5 +1,17 @@
 # [Rqueue] New and Notable Changes
 
+### [2.10.2] - 15-Jul-2022
+
+### Fixes
+
+* Message status is not enqueued only, but it should be successful, failed etc
+* Weighted queue with size 1 was not working
+* Deleted message reappears
+
+### Features
+
+* Disable Rqueue using `rqueue.enabled` flag
+
 ### [2.10.1] - 18-Oct-2021
 
 * Fixes for concurrency when task executor is provided see issue #[122]
@@ -280,5 +292,7 @@ Fixes:
 [2.10.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.0-RELEASE
 
 [2.10.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.1-RELEASE
+
+[2.10.2]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.2-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122
