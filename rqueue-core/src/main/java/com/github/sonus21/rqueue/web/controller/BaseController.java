@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import javax.servlet.http.HttpServletResponse;
 
 public class BaseController {
+
   private final RqueueWebConfig rqueueWebConfig;
 
   public BaseController(RqueueWebConfig rqueueWebConfig) {

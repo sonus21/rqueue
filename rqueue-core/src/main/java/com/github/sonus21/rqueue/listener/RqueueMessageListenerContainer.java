@@ -72,6 +72,7 @@ import org.springframework.util.ClassUtils;
 @Slf4j
 public class RqueueMessageListenerContainer
     implements InitializingBean, DisposableBean, SmartLifecycle, BeanNameAware {
+
   public static final String EVENT_SOURCE = "RqueueMessageListenerContainer";
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
@@ -710,6 +711,7 @@ public class RqueueMessageListenerContainer
   }
 
   class QueueStateMgr {
+
     Set<String> pausedQueues = ConcurrentHashMap.newKeySet();
 
     boolean isQueueActive(String queueName) {

@@ -53,6 +53,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootIntegrationTest
 @Tag("redisCluster")
 class PauseUnpauseTest extends SpringTestBase {
+
   @Autowired private PauseUnpauseEventListener eventListener;
   @Autowired private RqueueUtilityService rqueueUtilityService;
 

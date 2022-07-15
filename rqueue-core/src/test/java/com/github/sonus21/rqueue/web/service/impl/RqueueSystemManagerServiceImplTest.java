@@ -50,6 +50,7 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueSystemManagerServiceImplTest extends TestBase {
+
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final String normalQueue = "normal-queue";

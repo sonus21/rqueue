@@ -33,6 +33,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class QueueExploreRequest extends SerializableBase {
+
   private @NotNull DataType type;
   private @NotEmpty String name;
   private @NotEmpty String src;

@@ -16,23 +16,9 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -46,7 +32,6 @@ import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import java.time.Duration;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,9 +39,15 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.converter.MessageConverter;
+import java.time.Duration;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @CoreUnitTest
 class JobImplTest extends TestBase {
+
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   @Mock RedisConnectionFactory redisConnectionFactory;
@@ -68,6 +59,7 @@ class JobImplTest extends TestBase {
   @Mock private RqueueMessageMetadataService messageMetadataService;
   @Mock private RqueueJobDao rqueueJobDao;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueLockManager rqueueLockManager;
   private RqueueConfig rqueueConfig;
 
   @BeforeEach
@@ -83,84 +75,49 @@ class JobImplTest extends TestBase {
     FieldUtils.writeField(rqueueConfig, "jobDurabilityInTerminalStateInSecond", 10080, true);
   }
 
-  @Test
-  void construct() {
-    new JobImpl(
+  private JobImpl instance() {
+    return new JobImpl(
         rqueueConfig,
         messageMetadataService,
         rqueueJobDao,
         rqueueMessageTemplate,
+        rqueueLockManager,
         queueDetail,
         messageMetadata,
         rqueueMessage,
         userMessage,
         null);
+  }
+
+  @Test
+  void construct() {
+    instance();
     verify(rqueueJobDao, times(1))
         .createJob(any(), eq(Duration.ofMillis(2 * queueDetail.getVisibilityTimeout())));
   }
 
   @Test
   void getId() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     assertNotNull(job.getId());
   }
 
   @Test
   void getRqueueMessage() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     assertEquals(rqueueMessage, job.getRqueueMessage());
   }
 
   @Test
   void checkIn() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.execute();
     job.checkIn("test..");
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(2)).save(any(), any());
 
     rqueueMessage.setPeriod(100);
-    JobImpl job2 =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job2 = instance();
     job2.execute();
     try {
       job2.checkIn("test..");
@@ -174,81 +131,31 @@ class JobImplTest extends TestBase {
 
   @Test
   void getMessage() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     assertEquals(userMessage, job.getMessage());
   }
 
   @Test
   void getMessageMetadata() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     assertEquals(messageMetadata, job.getMessageMetadata());
   }
 
   @Test
   void getStatus() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     assertEquals(JobStatus.CREATED, job.getStatus());
   }
 
   @Test
   void getExecutionTime() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     assertEquals(0, job.getExecutionTime());
   }
 
   @Test
   void getQueueDetail() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     assertEquals(queueDetail, job.getQueueDetail());
   }
 
@@ -256,17 +163,7 @@ class JobImplTest extends TestBase {
   void setMessageMetadata() {
     MessageMetadata newMeta = new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
     newMeta.setDeleted(true);
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.setMessageMetadata(newMeta);
     assertEquals(newMeta, job.getMessageMetadata());
     verify(rqueueJobDao, times(1)).createJob(any(), any());
@@ -275,17 +172,7 @@ class JobImplTest extends TestBase {
 
   @Test
   void updateMessageStatus() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.updateMessageStatus(MessageStatus.PROCESSING);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
     assertEquals(JobStatus.PROCESSING, job.getStatus());
@@ -296,17 +183,7 @@ class JobImplTest extends TestBase {
 
   @Test
   void execute() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     Execution execution = job.execute();
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(1)).save(any(), any());
@@ -318,17 +195,7 @@ class JobImplTest extends TestBase {
   @Test
   void updateExecutionStatus() {
     Exception exception = new Exception("Failing on purpose");
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     Execution execution = job.execute();
     job.updateExecutionStatus(ExecutionStatus.FAILED, exception);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
@@ -343,17 +210,7 @@ class JobImplTest extends TestBase {
 
   @Test
   void updateExecutionTime() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.execute();
     job.updateExecutionTime(rqueueMessage, MessageStatus.SUCCESSFUL);
     verify(rqueueJobDao, times(1)).createJob(any(), any());
@@ -364,17 +221,7 @@ class JobImplTest extends TestBase {
 
   @Test
   void getVisibilityTimeout() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.execute();
     doReturn(-10L)
         .when(rqueueMessageTemplate)
@@ -395,17 +242,7 @@ class JobImplTest extends TestBase {
 
   @Test
   void updateVisibilityTimeout() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.execute();
     doReturn(true)
         .when(rqueueMessageTemplate)
@@ -419,17 +256,7 @@ class JobImplTest extends TestBase {
 
   @Test
   void testMessagesAreStoredInMetadataStore() {
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.execute();
     job.checkIn("test..");
     job.updateMessageStatus(MessageStatus.SUCCESSFUL);
@@ -446,17 +273,7 @@ class JobImplTest extends TestBase {
   void testMessageMetadataIsDeleted() throws IllegalAccessException {
     long currentValue = rqueueConfig.getMessageDurabilityInTerminalStateInSecond();
     FieldUtils.writeField(rqueueConfig, "messageDurabilityInTerminalStateInSecond", 0, true);
-    JobImpl job =
-        new JobImpl(
-            rqueueConfig,
-            messageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            null);
+    JobImpl job = instance();
     job.execute();
     job.checkIn("test..");
     job.updateMessageStatus(MessageStatus.SUCCESSFUL);

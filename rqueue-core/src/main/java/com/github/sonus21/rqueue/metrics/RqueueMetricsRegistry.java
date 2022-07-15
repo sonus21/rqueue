@@ -20,5 +20,6 @@ import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import org.springframework.context.ApplicationListener;
 
 public interface RqueueMetricsRegistry extends ApplicationListener<RqueueBootstrapEvent> {
+
   QueueCounter getQueueCounter();
 }

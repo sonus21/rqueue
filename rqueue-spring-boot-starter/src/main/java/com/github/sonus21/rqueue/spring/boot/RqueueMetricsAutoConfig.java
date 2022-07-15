@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsRegistry;
+import com.github.sonus21.rqueue.utils.condition.RqueueEnabled;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import java.lang.reflect.Method;
@@ -32,6 +33,7 @@ import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -39,7 +41,9 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnClass({MeterRegistry.class})
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @Import(RqueueMetricsProperties.class)
+@Conditional({RqueueEnabled.class})
 public class RqueueMetricsAutoConfig {
+
   @Bean
   public RqueueMetricsRegistry rqueueMetricsRegistry(
       MetricsProperties metricsProperties, RqueueMetricsProperties rqueueMetricsProperties) {

@@ -51,6 +51,7 @@ import org.springframework.ui.ModelMap;
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class RqueueViewControllerTest extends SpringWebTestBase {
+
   private void verifyBasicData(ModelMap model, NavTab navTab) {
     assertNotNull(model.get("latestVersion"));
     assertNotNull(model.get("version"));

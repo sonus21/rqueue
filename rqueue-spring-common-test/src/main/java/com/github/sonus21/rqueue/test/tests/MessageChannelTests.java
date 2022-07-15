@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class MessageChannelTests extends SpringTestBase {
+
   /**
    * This test verifies whether any pending message in the scheduled queue are moved or not whenever
    * a scheduled message is pushed. During enqueue of scheduled message we check whether there are

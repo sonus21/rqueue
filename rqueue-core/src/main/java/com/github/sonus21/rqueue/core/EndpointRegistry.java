@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
  * com.github.sonus21.rqueue.annotation.RqueueListener}.
  */
 public final class EndpointRegistry {
+
   private static final Object lock = new Object();
   private static final Map<String, QueueDetail> queueNameToDetail = new HashMap<>();
 

@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 public class LongRunningJob extends BaseQueueMessage {
+
   private long runTime;
 
   public static LongRunningJob newInstance(long runTime) {

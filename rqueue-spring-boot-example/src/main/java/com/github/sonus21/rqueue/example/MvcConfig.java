@@ -26,6 +26,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
+
   @Value("${rqueue.web.url.prefix:}")
   private String rqueueWebUrlPrefix;
 

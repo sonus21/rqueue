@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class RqueueWebConfig {
+
   /**
    * Control whether web app is enabled or not. If it's marked false then it will throw HTTP 503
    * (Service unavailable) error.

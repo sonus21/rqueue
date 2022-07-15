@@ -44,6 +44,7 @@ import org.springframework.util.CollectionUtils;
 @SpringBootIntegrationTest
 @Tag("local")
 class RqueueMessageManagerTest extends SpringTestBase {
+
   @Test
   void deleteAll() throws TimedOutException {
     QueueDetail queueDetail = EndpointRegistry.get(notificationQueue);

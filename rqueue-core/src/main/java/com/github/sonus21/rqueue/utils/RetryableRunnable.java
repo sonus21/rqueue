@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
 public abstract class RetryableRunnable<V> extends PrefixLogger implements Runnable {
+
   private Iterator<V> generator;
 
   protected RetryableRunnable(Logger log, String groupName) {

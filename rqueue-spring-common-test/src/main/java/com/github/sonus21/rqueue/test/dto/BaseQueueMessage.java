@@ -30,5 +30,6 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public abstract class BaseQueueMessage {
+
   private String id;
 }

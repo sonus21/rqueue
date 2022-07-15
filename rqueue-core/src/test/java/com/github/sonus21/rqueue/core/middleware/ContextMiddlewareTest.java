@@ -31,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class ContextMiddlewareTest extends TestBase {
+
   @Mock private Job job;
 
   @BeforeEach

@@ -40,6 +40,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @EnableWebMvc
 @PropertySource("classpath:application.properties")
 public class SpringApp extends BaseApplication {
+
   @Value("${max.workers.count:6}")
   private int maxWorkers;
 

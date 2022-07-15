@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 public class PauseUnpauseEventListener implements ApplicationListener<RqueueQueuePauseEvent> {
+
   private final List<RqueueQueuePauseEvent> eventList = new LinkedList<>();
 
   @Override

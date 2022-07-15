@@ -14,7 +14,7 @@ artifacts {
     archives javadocJar
 }
 
-ext.isNotCi = !"true".equals(System.getenv("CI"))
+ext.isNotCi = "true" != System.getenv("CI")
 signing {
     required { isNotCi && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives

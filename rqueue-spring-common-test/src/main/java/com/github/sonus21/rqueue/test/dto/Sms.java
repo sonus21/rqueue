@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class Sms extends BaseQueueMessage {
+
   private String phoneNumber;
   private String sms;
 

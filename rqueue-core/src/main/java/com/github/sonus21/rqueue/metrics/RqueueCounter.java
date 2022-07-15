@@ -22,6 +22,7 @@ package com.github.sonus21.rqueue.metrics;
  * count increases.
  */
 public class RqueueCounter implements RqueueMetricsCounter {
+
   private final QueueCounter queueCounter;
 
   public RqueueCounter(QueueCounter queueCounter) {

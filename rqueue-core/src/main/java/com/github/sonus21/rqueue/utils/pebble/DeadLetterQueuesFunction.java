@@ -29,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 
 @SuppressWarnings("unchecked")
 public class DeadLetterQueuesFunction implements Function {
+
   public static final String FUNCTION_NAME = "dlq";
 
   @Override

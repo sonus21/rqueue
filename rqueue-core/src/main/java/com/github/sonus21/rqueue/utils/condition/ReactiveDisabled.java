@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.utils.condition;
 
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;

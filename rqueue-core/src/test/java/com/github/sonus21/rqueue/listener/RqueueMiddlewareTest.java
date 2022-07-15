@@ -79,6 +79,7 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
 class RqueueMiddlewareTest extends TestBase {
+
   private final QueueThreadPool queueThreadPool = new QueueThreadPool(null, true, 100);
   private final RqueueWebConfig rqueueWebConfig = new RqueueWebConfig();
   private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
@@ -385,6 +386,7 @@ class RqueueMiddlewareTest extends TestBase {
   }
 
   static class TestRateLimiter implements RateLimiterMiddleware {
+
     final RateLimiter rateLimiter;
     List<Job> jobs = Collections.synchronizedList(new ArrayList<>());
     List<Job> throttled = Collections.synchronizedList(new ArrayList<>());

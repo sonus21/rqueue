@@ -42,6 +42,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 
 @CoreUnitTest
 class SimpleRqueueListenerContainerFactoryTest extends TestBase {
+
   private final AsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
   private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
 

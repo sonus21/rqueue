@@ -25,6 +25,7 @@ import org.aspectj.lang.annotation.Pointcut;
 @Aspect
 @Slf4j
 public class ControllerProfiler {
+
   @Pointcut(
       "execution(* com.github.sonus21.rqueue.*.controller..*.*(..))||execution(* com.github.sonus21.rqueue.*.Controller.*(..))")
   public void controller() {}

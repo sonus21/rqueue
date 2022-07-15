@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class TestRunner {
+
   private TestRunner() {}
 
   public static void run(Test test, Test failureCallback) throws Exception {
@@ -55,6 +56,7 @@ public final class TestRunner {
   }
 
   public interface Test {
+
     void run() throws Exception;
   }
 }

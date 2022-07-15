@@ -34,6 +34,7 @@ import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
 @Slf4j
 public class RqueueRedisTemplate<V extends Serializable> {
+
   protected RedisTemplate<String, V> redisTemplate;
 
   public RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {

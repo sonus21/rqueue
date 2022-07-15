@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.utils.RetryableRunnable;
 import org.slf4j.Logger;
 
 abstract class MessageContainerBase extends RetryableRunnable<Object> {
+
   protected final QueueStateMgr queueStateMgr;
 
   MessageContainerBase(Logger log, String groupName, QueueStateMgr queueStateMgr) {

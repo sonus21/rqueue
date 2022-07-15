@@ -41,6 +41,7 @@ import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 
 @CoreUnitTest
 class RqueueMessageTemplateTest extends TestBase {
+
   private final String queueName = "test-queue";
   private final RqueueMessage message =
       RqueueMessage.builder()

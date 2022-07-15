@@ -46,7 +46,7 @@ public final class RqueueMessageHeaders {
   public static final String JOB = "job";
   /**
    * A reference to {@link Execution} object, that can provide current execution detail A single job
-   * can have more than one executions due to retry
+   * can have more than one execution due to retry
    */
   public static final String EXECUTION = "execution";
 

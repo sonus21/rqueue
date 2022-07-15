@@ -31,6 +31,7 @@ import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
 class WeightedPriorityPoller extends RqueueMessagePoller {
+
   private static final int ALL_QUEUES_ARE_INELIGIBLE = -1;
   private static final int ALL_QUEUES_ARE_INACTIVE = -2;
   private final Map<String, QueueThreadPool> queueNameToThread;
@@ -94,15 +95,23 @@ class WeightedPriorityPoller extends RqueueMessagePoller {
   }
 
   private int getQueueIndexToPoll() {
-    int tmpIndex = (currentIndex + 1) % queues.size();
-    while (tmpIndex != currentIndex) {
-      String queue = queues.get(tmpIndex);
-      if (currentWeight[tmpIndex] > 0 && eligibleForPolling(queue)) {
-        currentWeight[tmpIndex] -= 1;
-        currentIndex = tmpIndex;
+    if (queues.size() > 1) {
+      int tmpIndex = (currentIndex + 1) % queues.size();
+      while (tmpIndex != currentIndex) {
+        String queue = queues.get(tmpIndex);
+        if (currentWeight[tmpIndex] > 0 && eligibleForPolling(queue)) {
+          currentWeight[tmpIndex] -= 1;
+          currentIndex = tmpIndex;
+          return currentIndex;
+        }
+        tmpIndex = (tmpIndex + 1) % queues.size();
+      }
+    } else {
+      String queue = queues.get(currentIndex);
+      if (currentWeight[currentIndex] > 0 && eligibleForPolling(queue)) {
+        currentWeight[currentIndex] -= 1;
         return currentIndex;
       }
-      tmpIndex = (tmpIndex + 1) % queues.size();
     }
     return ALL_QUEUES_ARE_INELIGIBLE;
   }

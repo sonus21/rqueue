@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class MultiRedisSetupApplication extends MultiRedisSprigBaseApplication {
+
   public static void main(String[] args) {
     SpringApplication.run(MultiRedisSetupApplication.class, args);
   }

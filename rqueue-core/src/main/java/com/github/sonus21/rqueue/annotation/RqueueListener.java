@@ -53,6 +53,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RqueueListener {
+
   /**
    * List of unique queues. Queues can be defined by their name, placeholder that would be resolved
    * to properties file or could be list of comma separated queue names.

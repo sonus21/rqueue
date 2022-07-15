@@ -45,6 +45,7 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootIntegrationTest
 class PeriodicMessageTest extends SpringTestBase {
+
   @Test
   void simplePeriodicMessage() throws TimedOutException {
     PeriodicJob job = PeriodicJob.newInstance();

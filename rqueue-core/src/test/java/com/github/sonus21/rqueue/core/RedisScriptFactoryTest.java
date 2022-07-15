@@ -41,6 +41,7 @@ import org.springframework.data.redis.core.script.ScriptExecutor;
 @CoreUnitTest
 @BootstrapRedis(systemRedis = false, port = 6301)
 class RedisScriptFactoryTest extends TestBase {
+
   private final RedisConnectionFactory redisConnectionFactory;
   private final RqueueMessageTemplate rqueueMessageTemplate;
 

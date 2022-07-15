@@ -59,6 +59,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class RqueueWebDisabledTest extends SpringWebTestBase {
+
   @ParameterizedTest
   @ValueSource(
       strings = {

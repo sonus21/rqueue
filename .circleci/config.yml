@@ -117,7 +117,7 @@ aliases:
 executors:
   rqueue-executor:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202201-02
 
     working_directory: ~/repo
 
@@ -139,7 +139,7 @@ build_steps: &build_steps
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-    - run: gradle dependencies
+    - run: ./gradlew dependencies
     - save_cache:
         paths:
           - ~/.gradle

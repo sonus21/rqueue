@@ -34,6 +34,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class MessageMetadata extends SerializableBase {
+
   private static final long serialVersionUID = 4200184682879443328L;
   private String id;
   private long totalExecutionTime;

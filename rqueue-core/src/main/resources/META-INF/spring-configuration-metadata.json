@@ -46,6 +46,12 @@
       "defaultValue": false
     },
     {
+      "name": "rqueue.enabled",
+      "description": "Requeue is enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true
+    },
+    {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
       "name": "rqueue.completed.job.cleanup.interval",
       "description": "How frequently completed jobs should be removed (in millisecond)",

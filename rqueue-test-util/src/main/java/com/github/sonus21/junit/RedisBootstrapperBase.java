@@ -34,6 +34,7 @@ import redis.embedded.RedisServer;
 
 @Slf4j
 public abstract class RedisBootstrapperBase {
+
   private static final Logger monitorLogger = LoggerFactory.getLogger("monitor");
   protected RedisServer redisServer;
   protected ExecutorService executorService;
@@ -108,6 +109,7 @@ public abstract class RedisBootstrapperBase {
   @AllArgsConstructor
   @Getter
   public static class MonitorProcess {
+
     public Process process;
     public RedisNode redisNode;
     public List<String> out;

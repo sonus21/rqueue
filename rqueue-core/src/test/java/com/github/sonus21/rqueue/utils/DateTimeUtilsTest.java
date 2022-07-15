@@ -60,12 +60,14 @@ class DateTimeUtilsTest extends TestBase {
     assertEquals("- 2 Hours", DateTimeUtils.milliToHumanRepresentation(-7200000));
     assertEquals("- 1 Hour", DateTimeUtils.milliToHumanRepresentation(-3600000));
     assertEquals("- 2 Hours, 2 Minutes", DateTimeUtils.milliToHumanRepresentation(-7320000));
-    assertEquals("- 2 Hours, 2 Minutes, 1 Second", DateTimeUtils.milliToHumanRepresentation(-7321000));
+    assertEquals(
+        "- 2 Hours, 2 Minutes, 1 Second", DateTimeUtils.milliToHumanRepresentation(-7321000));
 
     assertEquals("- 1 Day", DateTimeUtils.milliToHumanRepresentation(-86400000));
     assertEquals("- 2 Days", DateTimeUtils.milliToHumanRepresentation(-172800000));
     assertEquals("- 2 Days, 2 Hours", DateTimeUtils.milliToHumanRepresentation(-180000000));
-    assertEquals("- 2 Days, 2 Hours, 2 Minutes", DateTimeUtils.milliToHumanRepresentation(-180120000));
+    assertEquals(
+        "- 2 Days, 2 Hours, 2 Minutes", DateTimeUtils.milliToHumanRepresentation(-180120000));
     assertEquals(
         "- 2 Days, 2 Hours, 2 Minutes, 1 Second",
         DateTimeUtils.milliToHumanRepresentation(-180121000));

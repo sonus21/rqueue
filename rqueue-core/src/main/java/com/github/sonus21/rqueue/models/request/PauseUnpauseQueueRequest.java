@@ -28,6 +28,7 @@ import lombok.Setter;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 public class PauseUnpauseQueueRequest extends DataTypeRequest {
+
   private boolean pause;
 
   @Override

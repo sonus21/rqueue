@@ -44,6 +44,7 @@ import org.springframework.messaging.converter.MessageConverter;
 
 @SpringBootUnitTest
 class RqueueListenerAutoConfigTest extends TestBase {
+
   @Mock private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
   @Mock private BeanFactory beanFactory;
   @Mock private RqueueMessageTemplate messageTemplate;

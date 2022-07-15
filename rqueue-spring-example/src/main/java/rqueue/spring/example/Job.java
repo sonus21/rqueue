@@ -17,6 +17,7 @@
 package rqueue.spring.example;
 
 public class Job {
+
   private String id;
   private String message;
 

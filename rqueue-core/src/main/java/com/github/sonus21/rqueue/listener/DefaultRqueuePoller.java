@@ -27,6 +27,7 @@ import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
 class DefaultRqueuePoller extends RqueueMessagePoller {
+
   private final QueueDetail queueDetail;
   private final QueueThreadPool queueThreadPool;
 

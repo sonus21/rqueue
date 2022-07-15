@@ -236,8 +236,8 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Message converter must be configured before calling this method.
    *
-   * @throws IllegalAccessException when messageConverterProvider is null
    * @return the message converter object
+   * @throws IllegalAccessException when messageConverterProvider is null
    */
   public MessageConverter getMessageConverter() throws IllegalAccessException {
     if (messageConverterProvider == null) {
@@ -249,15 +249,17 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Rqueue configures a default message converter that can convert message to/from for any object.
    *
-   * @see DefaultMessageConverterProvider
    * @param messageConverterProvider the message converter provider
+   * @see DefaultMessageConverterProvider
    */
   public void setMessageConverterProvider(MessageConverterProvider messageConverterProvider) {
     notNull(messageConverterProvider, "messageConverterProvider must not be null");
     this.messageConverterProvider = messageConverterProvider;
   }
 
-  /** @return get Redis connection factor */
+  /**
+   * @return get Redis connection factor
+   */
   public RedisConnectionFactory getRedisConnectionFactory() {
     return redisConnectionFactory;
   }
@@ -273,7 +275,9 @@ public class SimpleRqueueListenerContainerFactory {
     this.redisConnectionFactory = redisConnectionFactory;
   }
 
-  /** @return message template */
+  /**
+   * @return message template
+   */
   public RqueueMessageTemplate getRqueueMessageTemplate() {
     return rqueueMessageTemplate;
   }

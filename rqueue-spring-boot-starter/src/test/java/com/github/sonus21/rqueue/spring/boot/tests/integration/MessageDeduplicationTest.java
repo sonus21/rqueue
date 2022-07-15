@@ -46,6 +46,7 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootIntegrationTest
 class MessageDeduplicationTest extends SpringTestBase {
+
   @Test
   void enqueueUnique() throws TimedOutException {
     Email email = Email.newInstance();

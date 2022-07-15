@@ -41,6 +41,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
 public class RqueueJob extends SerializableBase {
+
   private static final long serialVersionUID = 6219118148061766036L;
   private String id;
 

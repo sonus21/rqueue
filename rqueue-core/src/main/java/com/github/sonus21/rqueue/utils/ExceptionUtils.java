@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public final class ExceptionUtils {
+
   private ExceptionUtils() {}
 
   public static String getTraceback(Throwable e, int maxLength) {

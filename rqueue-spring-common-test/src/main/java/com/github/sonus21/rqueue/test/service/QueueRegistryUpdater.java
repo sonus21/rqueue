@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @Slf4j
 public class QueueRegistryUpdater implements ApplicationListener<RqueueBootstrapEvent> {
+
   private final RqueueMessageSender rqueueMessageSender;
   private final RqueueEndpointManager rqueueEndpointManager;
   private final RqueueConfig rqueueConfig;

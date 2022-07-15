@@ -57,6 +57,7 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueUtilityServiceTest extends TestBase {
+
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueWebConfig rqueueWebConfig;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;

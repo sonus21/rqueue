@@ -30,6 +30,7 @@ import redis.embedded.RedisServer;
 
 @Slf4j
 public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicConfiguration {
+
   @Value("${spring.redis2.port}")
   private int redisPort2;
 

@@ -29,6 +29,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class JobRunTime extends SerializableBase {
+
   private static final long serialVersionUID = 6219118148061766036L;
   private long min;
   private long max;

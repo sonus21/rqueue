@@ -31,6 +31,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class DataDeleteRequest extends SerializableBase {
+
   @JsonProperty("queue")
   @NotEmpty
   private String queueName;

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public abstract class MultiLevelQueueTest extends SpringTestBase {
+
   protected void checkQueueLevelConsumer() throws TimedOutException {
     enqueue(smsQueue, Sms.newInstance());
     enqueueWithPriority(smsQueue, "critical", Sms.newInstance());

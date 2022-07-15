@@ -92,6 +92,7 @@ import reactor.core.publisher.Mono;
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class ReactiveRestApiTest extends BasicListenerTest {
+
   @Autowired private WebTestClient webTestClient;
   @Autowired private RqueueConfig rqueueConfig;
   @Autowired private DeleteMessageListener deleteMessageListener;

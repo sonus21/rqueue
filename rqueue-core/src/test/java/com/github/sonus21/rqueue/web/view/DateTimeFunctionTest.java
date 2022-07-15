@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class DateTimeFunctionTest extends TestBase {
+
   private final DateTimeFunction function = new DateTimeFunction();
 
   @Test

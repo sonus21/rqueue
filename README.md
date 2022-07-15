@@ -19,7 +19,7 @@ well, where all services code is in Spring.
 
 ## Features
 
-* **Instant delivery** : Instant execute this message
+* **Instant delivery** : Instant execute this message in the background
 * **Message scheduling** : A message can be scheduled for any arbitrary period
 * **Unique message** : Unique message processing for a queue based on the message id
 * **Periodic message** : Process same message at certain interval
@@ -71,14 +71,14 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.10.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.10.2-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.10.1-RELEASE</version>
+        <version>2.10.2-RELEASE</version>
     </dependency>
     ```
 
@@ -91,14 +91,14 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.10.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.10.2-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.10.1-RELEASE</version>
+       <version>2.10.2-RELEASE</version>
      </dependency>
     ```
 
@@ -255,12 +255,32 @@ a
 PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users)
 .**
 
-<a href="https://tuneyou.com/"><img alt="TuneYou" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>
+<a href="https://tuneyou.com"><img alt="TuneYou" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>
 &nbsp;&nbsp;
 <a href="https://www.pokerstarssports.eu"><img  alt="PokerStars" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/pokerstars.png" width="250" align="middle"/></a>
 &nbsp;&nbsp;
-<a href="https://bitbot.plus/"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/bitbot.png" alt="Bitbot" height="60" align="middle"/></a>
+<a href="https://bitbot.plus"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/bitbot.png" alt="Bitbot" height="60" align="middle"/></a>
 &nbsp;&nbsp;
+<a href="https://www.chaotiinfo.cn"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/chaoti-info.png" alt="CHAOTI INFO TECH(SHENZHEN)" height="60" align="middle"/></a>
+&nbsp;&nbsp;
+
+<!---- Signing Key
+~/.gradle/gradle.properties file
+
+sonatypeUsername=xyz
+sonatypePassword=xyz
+signing.keyId=371EDCC6
+signing.password=xyz
+signing.secretKeyRingFile=/Users/sonu/.gnupg/secring.gpg
+
+
+For signing generate gpg key using gpg tool using `gpg --gen-key`
+
+signing.password is gpg key password
+signing.keyId is last 8 character of gpg key, find using `gpg -K`
+signing.secretKeyRingFile=/Users/sonu/.gnupg/secring.gpg generate this as `gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg`
+
+--->
 
 ## Support
 

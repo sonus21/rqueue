@@ -52,6 +52,7 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootIntegrationTest
 class MessageProcessorTest extends RetryTests {
+
   @Autowired
   @Qualifier("preExecutionMessageProcessor")
   private TestMessageProcessor preExecutionMessageProcessor;

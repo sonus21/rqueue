@@ -31,6 +31,7 @@ import lombok.Getter;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder(toBuilder = true)
 class MappingInformation implements Comparable<MappingInformation> {
+
   @EqualsAndHashCode.Include private final Set<String> queueNames;
   private final int numRetry;
   private final String deadLetterQueueName;

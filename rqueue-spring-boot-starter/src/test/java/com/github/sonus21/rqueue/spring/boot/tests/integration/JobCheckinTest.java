@@ -57,6 +57,7 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootIntegrationTest
 class JobCheckinTest extends SpringTestBase {
+
   @Test
   void jobCheckin() throws TimedOutException {
     LongRunningJob longRunningJob = LongRunningJob.newInstance(2000);

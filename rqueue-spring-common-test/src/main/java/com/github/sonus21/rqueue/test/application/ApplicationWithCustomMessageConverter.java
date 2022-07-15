@@ -27,6 +27,7 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.MimeType;
 
 public abstract class ApplicationWithCustomMessageConverter extends ApplicationBasicConfiguration {
+
   @PostConstruct
   public void postConstruct() {
     init();

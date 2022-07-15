@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RetryTests extends SpringTestBase {
+
   protected void verifyAfterNRetryTaskIsDeletedFromProcessingQueue() throws TimedOutException {
     cleanQueue(jobQueue);
     Job job = Job.newInstance();

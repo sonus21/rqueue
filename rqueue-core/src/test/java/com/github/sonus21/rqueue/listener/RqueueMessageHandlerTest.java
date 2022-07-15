@@ -582,6 +582,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @NoArgsConstructor
   @Data
   public static class MessagePayload {
+
     private String key;
     private String value;
   }
@@ -589,6 +590,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @Getter
   @Setter
   private static class IncomingMessageHandler {
+
     private Object lastReceivedMessage;
     private boolean exceptionHandlerCalled;
 
@@ -622,6 +624,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @Getter
   @Setter
   private static class SpelMessageHandler {
+
     private String lastReceivedMessage;
 
     @RqueueListener("#{'slow-queue,smart-queue'.split(',')}")
@@ -633,6 +636,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @Getter
   @Setter
   private static class MessageHandlersWithProperty {
+
     private String lastReceivedMessage;
 
     @RqueueListener({"${slow.queue.name}", "${smart.queue.name}"})
@@ -644,6 +648,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @Getter
   @Setter
   private static class MessageHandlerWithExpressionProperty {
+
     private String lastReceivedMessage;
 
     @RqueueListener("#{environment.queueName}")
@@ -655,6 +660,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @Getter
   @Setter
   private static class MessageHandlerWithPlaceHolders {
+
     private String lastReceivedMessage;
 
     @RqueueListener(
@@ -747,6 +753,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @Getter
   @Setter
   private static class MessageHandlerWithPriority {
+
     private String lastReceivedMessage;
 
     @RqueueListener(
@@ -761,6 +768,7 @@ class RqueueMessageHandlerTest extends TestBase {
   @Getter
   @Setter
   private static class MessageHandlerWithBatchSize {
+
     private String lastReceivedMessage;
 
     @RqueueListener(
@@ -773,6 +781,7 @@ class RqueueMessageHandlerTest extends TestBase {
   }
 
   private static class DummyMessageHandler extends RqueueMessageHandler {
+
     private MappingInformation mappingInformation;
 
     public DummyMessageHandler() {

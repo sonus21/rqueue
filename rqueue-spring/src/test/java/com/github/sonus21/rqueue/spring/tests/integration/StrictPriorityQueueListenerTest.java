@@ -45,6 +45,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
     })
 @SpringIntegrationTest
 class StrictPriorityQueueListenerTest extends GroupPriorityTest {
+
   @Test
   void simple() throws TimedOutException {
     checkGroupConsumer();

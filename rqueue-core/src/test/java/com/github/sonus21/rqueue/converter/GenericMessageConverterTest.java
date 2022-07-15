@@ -234,6 +234,7 @@ class GenericMessageConverterTest extends TestBase {
   @Data
   @NoArgsConstructor
   public static class MultiLevelGenericTestDataNoArgs<T, V> {
+
     private String data;
     private GenericTestData<T> tGenericTestData;
     private GenericTestData<V> vGenericTestData;
@@ -243,6 +244,7 @@ class GenericMessageConverterTest extends TestBase {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class MultiLevelGenericTestData<T, V> {
+
     private String data;
     private GenericTestData<T> tGenericTestData;
     private GenericTestData<V> vGenericTestData;
@@ -252,6 +254,7 @@ class GenericMessageConverterTest extends TestBase {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class MultiLevelGenericTestDataFixedType<T, V> {
+
     private String data;
     private GenericTestData<T> tGenericTestData;
     private MultiGenericTestData<V, String> vGenericTestData;
@@ -261,6 +264,7 @@ class GenericMessageConverterTest extends TestBase {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class MultiGenericTestData<K, V> {
+
     private Integer index;
     private K key;
     private V value;
@@ -270,6 +274,7 @@ class GenericMessageConverterTest extends TestBase {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class GenericTestData<T> {
+
     private Integer index;
     private T data;
   }
@@ -278,6 +283,7 @@ class GenericMessageConverterTest extends TestBase {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class Comment {
+
     private String id;
     private String message;
   }
@@ -286,6 +292,7 @@ class GenericMessageConverterTest extends TestBase {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class Email {
+
     private String id;
     private String subject;
   }
@@ -357,6 +364,7 @@ class GenericMessageConverterTest extends TestBase {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class MultiGenericTestDataSameType<T> extends MappingRegistrar {
+
     private Integer index;
     private GenericTestData<T> genericTestData;
     private MultiGenericTestData<T, T> multiGenericTestData;
@@ -366,6 +374,7 @@ class GenericMessageConverterTest extends TestBase {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class GenericTestDataWithPredefinedType {
+
     private Integer index;
     private MultiGenericTestData<Comment, Email> data;
   }

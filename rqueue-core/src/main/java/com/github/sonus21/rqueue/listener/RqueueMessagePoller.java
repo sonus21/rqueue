@@ -30,6 +30,7 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.CollectionUtils;
 
 abstract class RqueueMessagePoller extends MessageContainerBase {
+
   final List<Middleware> middlewares;
   final long pollingInterval;
   final long backoffTime;

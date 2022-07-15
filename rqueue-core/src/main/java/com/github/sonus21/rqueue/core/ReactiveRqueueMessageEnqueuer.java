@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import reactor.core.publisher.Mono;
 
 public interface ReactiveRqueueMessageEnqueuer {
+
   /**
    * Enqueue a message on given queue, consume as soon as possible.
    *

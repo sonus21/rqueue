@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
@@ -23,31 +24,32 @@ import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import java.time.Duration;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import java.time.Duration;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataService {
+
   private final RqueueMessageMetadataDao rqueueMessageMetadataDao;
   private final RqueueStringDao rqueueStringDao;
+  private final RqueueLockManager lockManager;
 
   @Autowired
   public RqueueMessageMetadataServiceImpl(
-      RqueueMessageMetadataDao rqueueMessageMetadataDao, RqueueStringDao rqueueStringDao) {
+      RqueueMessageMetadataDao rqueueMessageMetadataDao,
+      RqueueStringDao rqueueStringDao,
+      RqueueLockManager rqueueLockManager) {
     this.rqueueMessageMetadataDao = rqueueMessageMetadataDao;
     this.rqueueStringDao = rqueueStringDao;
+    this.lockManager = rqueueLockManager;
   }
 
   @Override
@@ -84,15 +86,24 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public void deleteMessage(String queueName, String messageId, Duration duration) {
-    String id = RqueueMessageUtils.getMessageMetaId(queueName, messageId);
-    MessageMetadata messageMetadata = rqueueMessageMetadataDao.get(id);
-    if (messageMetadata == null) {
-      messageMetadata = new MessageMetadata(id, MessageStatus.DELETED);
+  public boolean deleteMessage(String queueName, String messageId, Duration duration) {
+    String lockValue = UUID.randomUUID().toString();
+    try {
+      if (lockManager.acquireLock(messageId, lockValue, Duration.ofSeconds(1))) {
+        String id = RqueueMessageUtils.getMessageMetaId(queueName, messageId);
+        MessageMetadata messageMetadata = rqueueMessageMetadataDao.get(id);
+        if (messageMetadata == null) {
+          messageMetadata = new MessageMetadata(id, MessageStatus.DELETED);
+        }
+        messageMetadata.setDeleted(true);
+        messageMetadata.setDeletedOn(System.currentTimeMillis());
+        save(messageMetadata, duration);
+        return true;
+      }
+    } finally {
+      lockManager.releaseLock(messageId, lockValue);
     }
-    messageMetadata.setDeleted(true);
-    messageMetadata.setDeletedOn(System.currentTimeMillis());
-    rqueueMessageMetadataDao.save(messageMetadata, duration);
+    return false;
   }
 
   @Override

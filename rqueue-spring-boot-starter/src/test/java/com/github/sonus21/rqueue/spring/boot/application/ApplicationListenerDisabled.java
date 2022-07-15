@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaRepositories(basePackages = {"com.github.sonus21.rqueue.test.repository"})
 @EnableTransactionManagement
 public class ApplicationListenerDisabled extends BaseApplication {
+
   @Value("${start.queue.enabled:false}")
   private boolean startQueueEnabled;
 

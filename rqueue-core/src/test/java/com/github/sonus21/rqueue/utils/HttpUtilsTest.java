@@ -16,7 +16,7 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -31,8 +31,8 @@ class HttpUtilsTest extends TestBase {
     assertEquals("/", HttpUtils.joinPath(null, "/"));
     assertEquals("/foo/", HttpUtils.joinPath(null, "/foo"));
     assertEquals("/foo/bar/", HttpUtils.joinPath(null, "/foo/", "/bar"));
-    assertEquals("/foo/bar/", HttpUtils.joinPath( "/foo/", null, "/bar"));
-    assertEquals("/foo/bar/", HttpUtils.joinPath( "/foo/", "/", "/bar"));
-    assertEquals("/foo/bar/", HttpUtils.joinPath( "foo", "/", "bar"));
+    assertEquals("/foo/bar/", HttpUtils.joinPath("/foo/", null, "/bar"));
+    assertEquals("/foo/bar/", HttpUtils.joinPath("/foo/", "/", "/bar"));
+    assertEquals("/foo/bar/", HttpUtils.joinPath("foo", "/", "bar"));
   }
 }

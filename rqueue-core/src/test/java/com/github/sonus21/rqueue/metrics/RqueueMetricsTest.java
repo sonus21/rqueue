@@ -43,6 +43,7 @@ import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMetricsTest extends TestBase {
+
   private final MetricsProperties metricsProperties = new MetricsProperties() {};
   private final String simpleQueue = "simple-queue";
   private final String scheduledQueue = "scheduled-queue";

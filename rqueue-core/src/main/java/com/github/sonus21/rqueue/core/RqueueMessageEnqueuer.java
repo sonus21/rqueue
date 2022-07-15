@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
  * @author Sonu Kumar
  */
 public interface RqueueMessageEnqueuer {
+
   /**
    * Enqueue a message on given queue without any delay, consume as soon as possible.
    *

@@ -51,6 +51,7 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootIntegrationTest
 class MultiExecutionTests extends RetryTests {
+
   @Test
   void verifyMessageIsConsumedOnNextPoll() throws TimedOutException {
     verifyMultipleJobExecution();

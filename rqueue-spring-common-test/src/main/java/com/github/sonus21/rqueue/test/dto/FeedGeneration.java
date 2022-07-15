@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomUtils;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class FeedGeneration extends BaseQueueMessage {
+
   private int userId;
   private Long timestamp;
 

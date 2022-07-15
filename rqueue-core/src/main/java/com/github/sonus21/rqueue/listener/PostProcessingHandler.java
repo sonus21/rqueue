@@ -37,6 +37,7 @@ import org.springframework.context.ApplicationEventPublisher;
 @Slf4j
 @SuppressWarnings("java:S107")
 class PostProcessingHandler extends PrefixLogger {
+
   private final ApplicationEventPublisher applicationEventPublisher;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueMessageTemplate rqueueMessageTemplate;

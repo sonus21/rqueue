@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class RqueueReactiveApplication {
+
   @Value("${workers.count:3}")
   private int workersCount;
 

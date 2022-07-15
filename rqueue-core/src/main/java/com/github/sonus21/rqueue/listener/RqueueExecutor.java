@@ -16,11 +16,6 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
-import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
-import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
-import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
-
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -33,15 +28,19 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
-import java.util.Collections;
-import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
+import java.util.Collections;
+import java.util.List;
+
+import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
+import static com.github.sonus21.rqueue.utils.Constants.*;
 
 class RqueueExecutor extends MessageContainerBase {
+
   private final PostProcessingHandler postProcessingHandler;
   private final QueueThreadPool queueThreadPool;
   private final RqueueMessage rqueueMessage;
@@ -100,6 +99,7 @@ class RqueueExecutor extends MessageContainerBase {
             beanProvider.getRqueueMessageMetadataService(),
             beanProvider.getRqueueJobDao(),
             beanProvider.getRqueueMessageTemplate(),
+            beanProvider.getRqueueLockManager(),
             queueDetail,
             messageMetadata,
             rqueueMessage,

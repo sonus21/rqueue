@@ -26,6 +26,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Slf4j
 public final class QueueThreadPool {
+
   private final AsyncTaskExecutor taskExecutor;
   private final boolean defaultExecutor;
   private final Semaphore semaphore;

@@ -46,6 +46,7 @@ import org.springframework.messaging.converter.MessageConverter;
 @Slf4j
 @SuppressWarnings("WeakerAccess")
 abstract class BaseMessageSender {
+
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
@@ -162,7 +163,7 @@ abstract class BaseMessageSender {
 
   protected Object deleteAllMessages(QueueDetail queueDetail) {
     return MessageSweeper.getInstance(rqueueConfig, messageTemplate, rqueueMessageMetadataService)
-        .deleteMessage(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
+        .deleteAllMessages(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {

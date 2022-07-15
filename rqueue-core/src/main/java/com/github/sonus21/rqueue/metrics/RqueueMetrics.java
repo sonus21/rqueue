@@ -34,6 +34,7 @@ import org.springframework.scheduling.annotation.Async;
  * queue if dead letter queue is configured.
  */
 public class RqueueMetrics implements RqueueMetricsRegistry {
+
   static final String QUEUE_KEY = "key";
   private static final String QUEUE_SIZE = "queue.size";
   private static final String SCHEDULED_QUEUE_SIZE = "scheduled.queue.size";

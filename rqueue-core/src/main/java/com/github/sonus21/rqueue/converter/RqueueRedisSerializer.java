@@ -33,6 +33,7 @@ import org.springframework.data.redis.serializer.SerializationException;
 
 @Slf4j
 public class RqueueRedisSerializer implements RedisSerializer<Object> {
+
   private final RedisSerializer<Object> serializer;
 
   public RqueueRedisSerializer(RedisSerializer<Object> redisSerializer) {

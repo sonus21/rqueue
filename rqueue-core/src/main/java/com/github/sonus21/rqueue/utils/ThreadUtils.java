@@ -30,6 +30,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public final class ThreadUtils {
+
   private ThreadUtils() {}
 
   public static ThreadPoolTaskScheduler createTaskScheduler(

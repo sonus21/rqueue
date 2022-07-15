@@ -30,11 +30,11 @@ import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
-import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.utils.ReactiveDisabled;
+import com.github.sonus21.rqueue.utils.condition.ReactiveDisabled;
 import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
 import com.github.sonus21.rqueue.web.service.RqueueJobService;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
@@ -57,6 +57,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "${rqueue.web.url.prefix:}rqueue/api/v1")
 @Conditional(ReactiveDisabled.class)
 public class RqueueRestController extends BaseController {
+
   private final RqueueDashboardChartService rqueueDashboardChartService;
   private final RqueueQDetailService rqueueQDetailService;
   private final RqueueUtilityService rqueueUtilityService;

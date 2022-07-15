@@ -52,6 +52,7 @@ import org.springframework.test.context.TestPropertySource;
     })
 @SpringBootIntegrationTest
 class CustomMessageConverterTest extends BasicListenerTest {
+
   @Test
   void verifyListenerIsWorking() throws TimedOutException {
     verifySimpleTaskExecution();

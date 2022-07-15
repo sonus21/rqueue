@@ -30,6 +30,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
  * @see ExponentialTaskExecutionBackOff
  */
 public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
+
   /** The default task delay: 5000 ms = 5 seconds. */
   public static final long DEFAULT_INTERVAL = 5000;
 

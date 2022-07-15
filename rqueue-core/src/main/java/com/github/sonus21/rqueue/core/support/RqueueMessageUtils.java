@@ -30,6 +30,7 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
 public final class RqueueMessageUtils {
+
   private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
 
   private RqueueMessageUtils() {}

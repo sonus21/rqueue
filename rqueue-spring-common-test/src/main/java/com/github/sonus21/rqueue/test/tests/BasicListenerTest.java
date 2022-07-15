@@ -41,6 +41,7 @@ import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public abstract class BasicListenerTest extends SpringTestBase {
+
   public void verifySimpleTaskExecution() throws TimedOutException {
     cleanQueue(notificationQueue);
     Notification notification = Notification.newInstance();

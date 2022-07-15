@@ -54,6 +54,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @CoreUnitTest
 @Slf4j
 class ConcurrentListenerTest extends TestBase {
+
   private static final String fastQueue = "fast-queue";
   private static final String fastProcessingQueue = "rqueue-processing::" + fastQueue;
   private static final String fastProcessingQueueChannel =
@@ -166,6 +167,7 @@ class ConcurrentListenerTest extends TestBase {
   @Getter
   @Slf4j
   private static class FastMessageListener {
+
     private final AtomicInteger totalMessages = new AtomicInteger(0);
     private final AtomicValueHolder<Long> holder = new AtomicValueHolder<>();
     private final Random random = new Random(System.currentTimeMillis());
@@ -182,6 +184,7 @@ class ConcurrentListenerTest extends TestBase {
   }
 
   private class TestListenerContainer extends RqueueMessageListenerContainer {
+
     TestListenerContainer(RqueueMessageHandler rqueueMessageHandler) {
       super(rqueueMessageHandler, rqueueMessageTemplate);
       this.rqueueBeanProvider = beanProvider;

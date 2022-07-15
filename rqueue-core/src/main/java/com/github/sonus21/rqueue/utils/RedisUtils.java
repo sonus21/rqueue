@@ -32,6 +32,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 public final class RedisUtils {
+
   @SuppressWarnings({"java:S1104", "java:S1444"})
   public static RedisTemplateProvider redisTemplateProvider =
       new RedisTemplateProvider() {

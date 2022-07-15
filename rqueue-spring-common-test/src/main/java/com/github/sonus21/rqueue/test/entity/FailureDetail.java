@@ -30,6 +30,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 public class FailureDetail {
+
   @Id private String id;
   // if minFailureCount is -1 then fail always
   @Column private int minFailureCount;

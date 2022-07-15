@@ -28,6 +28,7 @@ import org.springframework.context.ApplicationEvent;
  */
 @Getter
 public class RqueueExecutionEvent extends ApplicationEvent {
+
   private static final long serialVersionUID = -7762050873209497221L;
   // Queue Detail object
   @NotNull private final transient QueueDetail queueDetail;

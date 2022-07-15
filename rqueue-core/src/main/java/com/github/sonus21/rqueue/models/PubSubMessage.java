@@ -27,6 +27,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PubSubMessage extends SerializableBase {
+
   private static final long serialVersionUID = 780914041036616260L;
   private String senderId;
   private Serializable data;

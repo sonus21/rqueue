@@ -16,13 +16,6 @@
 
 package com.github.sonus21.rqueue.core.middleware;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
@@ -32,14 +25,19 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import java.time.Duration;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.*;
 
 @CoreUnitTest
 class RedisLockMiddlewareTest extends TestBase {
@@ -66,9 +64,7 @@ class RedisLockMiddlewareTest extends TestBase {
             return job.getId();
           }
         };
-    doReturn(false)
-        .when(redisTemplate)
-        .setIfAbsent(key, RqueueConfig.getBrokerId(), queueDetail.visibilityDuration());
+    doReturn(false).when(redisTemplate).setIfAbsent(key, "1", queueDetail.visibilityDuration());
     lockMiddleware.handle(
         job,
         () -> {
@@ -88,9 +84,7 @@ class RedisLockMiddlewareTest extends TestBase {
             return job.getId();
           }
         };
-    doReturn(true)
-        .when(redisTemplate)
-        .setIfAbsent(key, RqueueConfig.getBrokerId(), queueDetail.visibilityDuration());
+    doReturn(true).when(redisTemplate).setIfAbsent(key, "1", queueDetail.visibilityDuration());
     AtomicInteger atomicInteger = new AtomicInteger();
     lockMiddleware.handle(
         job,
@@ -116,9 +110,7 @@ class RedisLockMiddlewareTest extends TestBase {
             return Duration.ofSeconds(5);
           }
         };
-    doReturn(true)
-        .when(redisTemplate)
-        .setIfAbsent(key, RqueueConfig.getBrokerId(), Duration.ofSeconds(5));
+    doReturn(true).when(redisTemplate).setIfAbsent(key, "1", Duration.ofSeconds(5));
     AtomicInteger atomicInteger = new AtomicInteger();
     lockMiddleware.handle(
         job,
@@ -153,7 +145,7 @@ class RedisLockMiddlewareTest extends TestBase {
               return Boolean.FALSE;
             })
         .when(redisTemplate)
-        .setIfAbsent(key, RqueueConfig.getBrokerId(), queueDetail.visibilityDuration());
+        .setIfAbsent(key, "1", queueDetail.visibilityDuration());
     lockMiddleware.handle(
         job,
         () -> {
