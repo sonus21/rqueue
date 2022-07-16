@@ -1,6 +1,6 @@
 # [Rqueue] New and Notable Changes
 
-### [2.10.2] - 15-Jul-2022
+### [2.10.2] - 16-Jul-2022
 
 ### Fixes
 
