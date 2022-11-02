@@ -365,6 +365,7 @@ public abstract class MessageScheduler
     @Override
     public void run() {
       getLogger().debug("Running {}", this);
+      long nextExecutionTime = System.currentTimeMillis();
       try {
         if (isQueueActive(name)) {
           long currentTime = System.currentTimeMillis();
@@ -375,13 +376,16 @@ public abstract class MessageScheduler
                   currentTime,
                   MAX_MESSAGES,
                   processingQueue ? 1 : 0);
-          long nextExecutionTime = getNextScheduleTime(name, value);
-          schedule(name, nextExecutionTime, true);
+          nextExecutionTime = getNextScheduleTime(name, value);
         }
       } catch (RedisSystemException e) {
         // no op
       } catch (Exception e) {
         getLogger().warn("Task execution failed for the queue: {}", name, e);
+      } finally {
+        if (isQueueActive(name)) {
+          schedule(name, nextExecutionTime, true);
+        }
       }
     }
 
