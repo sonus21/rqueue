@@ -73,6 +73,7 @@ public abstract class MessageScheduler
   private RedisTemplate<String, Long> redisTemplate;
 
   private Map<String, QueueScheduler> queueSchedulers;
+  private Map<String, Integer> errorCount;
 
   protected abstract Logger getLogger();
 
@@ -212,6 +213,7 @@ public abstract class MessageScheduler
     channelNameToQueueName = new ConcurrentHashMap<>(queueNames.size());
     queueNameToLastMessageScheduleTime = new ConcurrentHashMap<>(queueNames.size());
     queueSchedulers = new ConcurrentHashMap<>(queueNames.size());
+    errorCount = new ConcurrentHashMap<>(queueNames.size());
     createScheduler(queueNames.size());
     if (isRedisEnabled()) {
       messageSchedulerListener = new MessageSchedulerListener();
@@ -362,28 +364,51 @@ public abstract class MessageScheduler
     private final String zsetName;
     private final boolean processingQueue;
 
+    private long getNextScheduleTimeInternal(Long value, boolean success,
+        Exception e) {
+      int errCount = 0;
+      long nextTime = 0;
+      if (!success) {
+        errCount = errorCount.getOrDefault(queueName, 0) + 1;
+        if (errCount % 3 == 0) {
+          getLogger().error("Message mover task is failing continuously queue: {}", name, e);
+        }
+        long delay = (long) (100 * Math.pow(1.5, errCount));
+        delay = Math.min(delay, rqueueSchedulerConfig.getMaxMessageMoverDelay());
+        nextTime = System.currentTimeMillis() + delay;
+      }else{
+        nextTime = getNextScheduleTime(queueName, value);
+      }
+      errorCount.put(queueName, errCount);
+      return nextTime;
+    }
+
     @Override
     public void run() {
       getLogger().debug("Running {}", this);
-      long nextExecutionTime = System.currentTimeMillis();
+      Long value = null;
+      boolean success = false;
+      Exception e = null;
       try {
         if (isQueueActive(name)) {
           long currentTime = System.currentTimeMillis();
-          Long value =
+          value =
               defaultScriptExecutor.execute(
                   redisScript,
                   Arrays.asList(queueName, zsetName),
                   currentTime,
                   MAX_MESSAGES,
                   processingQueue ? 1 : 0);
-          nextExecutionTime = getNextScheduleTime(name, value);
+          success = true;
         }
-      } catch (RedisSystemException e) {
-        // no op
-      } catch (Exception e) {
-        getLogger().warn("Task execution failed for the queue: {}", name, e);
+      } catch (RedisSystemException ex) {
+        e = ex;
+      } catch (Exception ex) {
+        e = ex;
+        getLogger().warn("Task execution failed for the queue: {}", getName(), e);
       } finally {
         if (isQueueActive(name)) {
+          long nextExecutionTime = getNextScheduleTimeInternal(value, success, e);
           schedule(name, nextExecutionTime, true);
         }
       }
