@@ -52,8 +52,13 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.ClusterRedirectException;
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.redis.RedisSystemException;
+import org.springframework.data.redis.TooManyClusterRedirectionsException;
 import org.springframework.data.redis.connection.DefaultMessage;
 import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.connection.RedisInvalidSubscriptionException;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -62,15 +67,20 @@ import org.springframework.data.redis.listener.ChannelTopic;
 @SuppressWarnings("unchecked")
 class ScheduledQueueMessageSchedulerTest extends TestBase {
 
-  @InjectMocks private final TestMessageScheduler messageScheduler = new TestMessageScheduler();
+  @InjectMocks
+  private final TestMessageScheduler messageScheduler = new TestMessageScheduler();
   private final String slowQueue = "slow-queue";
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-  @Mock private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  @Mock
+  private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RedisTemplate<String, Long> redisTemplate;
+  @Mock
+  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
   @BeforeEach
   public void init() {
@@ -230,10 +240,10 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
     doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
     AtomicInteger counter = new AtomicInteger(0);
     doAnswer(
-            invocation -> {
-              counter.incrementAndGet();
-              return null;
-            })
+        invocation -> {
+          counter.incrementAndGet();
+          return null;
+        })
         .when(redisTemplate)
         .execute(any(RedisCallback.class));
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
@@ -251,10 +261,10 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
       doReturn(1000L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
       AtomicInteger counter = new AtomicInteger(0);
       doAnswer(
-              invocation -> {
-                counter.incrementAndGet();
-                return null;
-              })
+          invocation -> {
+            counter.incrementAndGet();
+            return null;
+          })
           .when(redisTemplate)
           .execute(any(RedisCallback.class));
       TestTaskScheduler scheduler = new TestTaskScheduler();
@@ -266,6 +276,68 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
       sleep(10);
       messageScheduler.destroy();
       assertTrue(scheduler.submittedTasks() >= 2);
+    }
+  }
+
+  @Test
+  void taskShouldBeScheduledOnFailure() throws Exception {
+    try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
+      doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
+      doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
+      doReturn(true).when(rqueueSchedulerConfig).isEnabled();
+      doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
+      doReturn(10000L).when(rqueueSchedulerConfig).getMaxMessageMoverDelay();
+      AtomicInteger counter = new AtomicInteger(0);
+      doAnswer(
+          invocation -> {
+            counter.incrementAndGet();
+            throw new RedisSystemException("Something is not correct", new NullPointerException("oops!"));
+          })
+          .when(redisTemplate)
+          .execute(any(RedisCallback.class));
+      TestTaskScheduler scheduler = new TestTaskScheduler();
+      threadUtils
+          .when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
+          .thenReturn(scheduler);
+      messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
+      waitFor(() -> counter.get() >= 1, "scripts are getting executed");
+      sleep(10);
+      messageScheduler.destroy();
+      assertTrue(scheduler.submittedTasks() >= 2);
+    }
+  }
+
+  @Test
+  void continuousTaskFailTask() throws Exception{
+    try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
+      doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
+      doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
+      doReturn(true).when(rqueueSchedulerConfig).isEnabled();
+      doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
+      doReturn(100L).when(rqueueSchedulerConfig).getMaxMessageMoverDelay();
+      AtomicInteger counter = new AtomicInteger(0);
+      doAnswer(
+          invocation -> {
+            int count = counter.incrementAndGet();
+            if(count % 3 == 0){
+              throw new RedisSystemException("Something is not correct", new NullPointerException("oops!"));
+            }
+            if(count % 3 == 1){
+              throw  new RedisConnectionFailureException("Unknown host");
+            }
+            throw new ClusterRedirectException(3, "localhost", 9004, new TooManyClusterRedirectionsException("too many redirects") );
+          })
+          .when(redisTemplate)
+          .execute(any(RedisCallback.class));
+      TestTaskScheduler scheduler = new TestTaskScheduler();
+      threadUtils
+          .when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
+          .thenReturn(scheduler);
+      messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
+      waitFor(() -> counter.get() >= 10, "scripts are getting executed");
+      sleep(10);
+      messageScheduler.destroy();
+      assertTrue(scheduler.submittedTasks() >= 11);
     }
   }
 

@@ -65,6 +65,11 @@ public class RqueueSchedulerConfig {
   private int processingMessageThreadPoolSize;
 
   // How frequently messages should be moved from scheduled queues to source queue
-  @Value("${rqueue.scheduler.scheduled.message.time.interval:5000}")
+  @Value("${rqueue.scheduler.scheduled.message.time.interval:2000}")
   private long scheduledMessageTimeIntervalInMilli;
+
+
+  // Maximum delay for message mover task due to failure
+  @Value("${rqueue.scheduler.max.message.mover.delay:60000}")
+  private long maxMessageMoverDelay;
 }
