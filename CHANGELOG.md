@@ -1,4 +1,11 @@
 # [Rqueue] New and Notable Changes
+### [2.11] - 07-Nov-2022
+
+### Fixes
+
+* Message mover unreliability, scheduled message were not getting consumed once redis connection error occurs
+* Upgraded Jquery version
+
 
 ### [2.10.2] - 16-Jul-2022
 
@@ -294,5 +301,7 @@ Fixes:
 [2.10.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.1-RELEASE
 
 [2.10.2]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.2-RELEASE
+
+[2.11]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.11-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122
