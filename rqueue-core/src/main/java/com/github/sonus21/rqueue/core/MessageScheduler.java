@@ -364,11 +364,10 @@ public abstract class MessageScheduler
     private final String zsetName;
     private final boolean processingQueue;
 
-    private long getNextScheduleTimeInternal(Long value, boolean success,
-        Exception e) {
+    private long getNextScheduleTimeInternal(Long value, Exception e) {
       int errCount = 0;
-      long nextTime = 0;
-      if (!success) {
+      long nextTime;
+      if (null != e) {
         errCount = errorCount.getOrDefault(queueName, 0) + 1;
         if (errCount % 3 == 0) {
           getLogger().error("Message mover task is failing continuously queue: {}", name, e);
@@ -387,7 +386,6 @@ public abstract class MessageScheduler
     public void run() {
       getLogger().debug("Running {}", this);
       Long value = null;
-      boolean success = false;
       Exception e = null;
       try {
         if (isQueueActive(name)) {
@@ -399,7 +397,6 @@ public abstract class MessageScheduler
                   currentTime,
                   MAX_MESSAGES,
                   processingQueue ? 1 : 0);
-          success = true;
         }
       } catch (RedisSystemException ex) {
         e = ex;
@@ -408,7 +405,7 @@ public abstract class MessageScheduler
         getLogger().warn("Task execution failed for the queue: {}", getName(), e);
       } finally {
         if (isQueueActive(name)) {
-          long nextExecutionTime = getNextScheduleTimeInternal(value, success, e);
+          long nextExecutionTime = getNextScheduleTimeInternal(value, e);
           schedule(name, nextExecutionTime, true);
         }
       }
