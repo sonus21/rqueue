@@ -26,6 +26,8 @@ import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import java.util.List;
+import java.util.Vector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -86,5 +88,21 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
         greaterThanOrEqualTo(currentTime + 200000));
     assertEquals(
         currentTime + 1000L, messageScheduler.getNextScheduleTime(fastQueue, currentTime + 1000L));
+  }
+
+
+  static class ProcessingQTestMessageScheduler extends ProcessingQueueMessageScheduler {
+
+    List<Boolean> scheduleList;
+
+    ProcessingQTestMessageScheduler() {
+      this.scheduleList = new Vector<>();
+    }
+
+    @Override
+    protected synchronized void schedule(String queueName, Long startTime, boolean forceSchedule) {
+      super.schedule(queueName, startTime, forceSchedule);
+      this.scheduleList.add(forceSchedule);
+    }
   }
 }
