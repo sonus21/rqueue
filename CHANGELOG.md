@@ -1,5 +1,5 @@
 # [Rqueue] New and Notable Changes
-### [2.11.1] - 10-Nov-2022
+### [2.11.1] - 18-Nov-2022
 ### Fixes
 Bug introduced by 2.11
 
