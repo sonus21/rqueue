@@ -368,7 +368,7 @@ public abstract class MessageScheduler
       int errCount = 0;
       long nextTime;
       if (null != e) {
-        errCount = errorCount.getOrDefault(queueName, 0) + 1;
+        errCount = errorCount.getOrDefault(name, 0) + 1;
         if (errCount % 3 == 0) {
           getLogger().error("Message mover task is failing continuously queue: {}", name, e);
         }
@@ -376,9 +376,9 @@ public abstract class MessageScheduler
         delay = Math.min(delay, rqueueSchedulerConfig.getMaxMessageMoverDelay());
         nextTime = System.currentTimeMillis() + delay;
       }else{
-        nextTime = getNextScheduleTime(queueName, value);
+        nextTime = getNextScheduleTime(name, value);
       }
-      errorCount.put(queueName, errCount);
+      errorCount.put(name, errCount);
       return nextTime;
     }
 
