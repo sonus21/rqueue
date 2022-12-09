@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.utils;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -27,7 +26,8 @@ public final class DateTimeUtils {
 
   private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-  DateTimeUtils() {}
+  DateTimeUtils() {
+  }
 
   private static String hourString(long hour) {
     if (hour > 1) {
@@ -122,10 +122,10 @@ public final class DateTimeUtils {
   }
 
   public static LocalDate localDateFromMilli(long millis) {
-    return Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate();
+    return Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate();
   }
 
   public static LocalDate today() {
-    return LocalDate.now(ZoneOffset.UTC);
+    return LocalDate.now(ZoneId.systemDefault());
   }
 }
