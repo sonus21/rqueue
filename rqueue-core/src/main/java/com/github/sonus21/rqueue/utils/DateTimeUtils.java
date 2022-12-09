@@ -18,13 +18,14 @@ package com.github.sonus21.rqueue.utils;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public final class DateTimeUtils {
 
-  private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+  private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
   DateTimeUtils() {}
 
@@ -116,7 +117,7 @@ public final class DateTimeUtils {
       return "";
     }
     Instant instant = Instant.ofEpochMilli(milli);
-    ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, java.time.ZoneId.of("UTC"));
+    ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
     return zonedDateTime.format(simple);
   }
 
