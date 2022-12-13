@@ -52,7 +52,7 @@ ext {
 
     // server
     javaxServletVersion = '4.0.1'
-    pebbleVersion = '3.1.5'
+    pebbleVersion = '3.1.6'
 
     // database
     lettuceVersion = '5.0.2.RELEASE'
