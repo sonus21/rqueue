@@ -18,15 +18,16 @@ package com.github.sonus21.rqueue.utils;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public final class DateTimeUtils {
 
-  private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+  private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-  DateTimeUtils() {}
+  DateTimeUtils() {
+  }
 
   private static String hourString(long hour) {
     if (hour > 1) {
@@ -116,15 +117,15 @@ public final class DateTimeUtils {
       return "";
     }
     Instant instant = Instant.ofEpochMilli(milli);
-    ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, java.time.ZoneId.of("UTC"));
+    ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
     return zonedDateTime.format(simple);
   }
 
   public static LocalDate localDateFromMilli(long millis) {
-    return Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate();
+    return Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate();
   }
 
   public static LocalDate today() {
-    return LocalDate.now(ZoneOffset.UTC);
+    return LocalDate.now(ZoneId.systemDefault());
   }
 }
