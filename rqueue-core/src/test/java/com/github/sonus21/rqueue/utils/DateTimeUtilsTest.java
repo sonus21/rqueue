@@ -75,7 +75,7 @@ class DateTimeUtilsTest extends TestBase {
 
   @Test
   void formatMilliToString() {
-    assertEquals("26 Apr 1970 17:46", DateTimeUtils.formatMilliToString(10000000000L));
+    assertEquals("1970-04-26 17:46", DateTimeUtils.formatMilliToString(10000000000L));
     assertEquals("", DateTimeUtils.formatMilliToString(null));
   }
 }
