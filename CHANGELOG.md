@@ -1,4 +1,11 @@
 # [Rqueue] New and Notable Changes
+
+### [2.12] - 14-Dec-2022
+### Fixes
+* Upgraded Pebble version for CVE
+* Use System Zone ID for UI display
+
+
 ### [2.11.1] - 18-Nov-2022
 ### Fixes
 Bug introduced by 2.11
