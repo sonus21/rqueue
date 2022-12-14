@@ -37,7 +37,7 @@ class DateTimeFunctionTest extends TestBase {
   @Test
   void execute() {
     assertEquals(
-        "01 May 2020 12:21",
+        "2020-05-01 12:21",
         function.execute(Collections.singletonMap("milli", 1588335692988L), null, null, -1));
   }
 }

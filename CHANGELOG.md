@@ -1,4 +1,11 @@
 # [Rqueue] New and Notable Changes
+
+### [2.12.0] - 14-Dec-2022
+### Fixes
+* Upgraded Pebble version for CVE
+* Use System Zone ID for UI display
+
+
 ### [2.11.1] - 18-Nov-2022
 ### Fixes
 Bug introduced by 2.11
@@ -307,5 +314,9 @@ Fixes:
 [2.10.2]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.2-RELEASE
 
 [2.11]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.11-RELEASE
+
+[2.11.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.11.1-RELEASE
+
+[2.12.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.12.0-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122

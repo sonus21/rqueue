@@ -78,7 +78,7 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.11.1-RELEASE</version>
+        <version>2.12.0-RELEASE</version>
     </dependency>
     ```
 
@@ -91,14 +91,14 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.11.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.12.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.11.1-RELEASE</version>
+       <version>2.12.0-RELEASE</version>
      </dependency>
     ```
 
