@@ -298,7 +298,7 @@ public class JobImpl implements Job {
     Duration lockDuration = Duration.ofSeconds(1);
     String lockKey = getMessageId();
     String lockValue = UUID.randomUUID().toString();
-    while (endTime.isBefore(startTime)) {
+    while (startTime.isBefore(endTime)) {
       if (!rqueueLockManager.acquireLock(lockKey, lockValue, lockDuration)) {
         TimeoutUtils.sleep(sleepDuration);
       } else {

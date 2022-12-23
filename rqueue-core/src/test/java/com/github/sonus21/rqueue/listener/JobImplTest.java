@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -50,16 +50,21 @@ class JobImplTest extends TestBase {
 
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
-  @Mock RedisConnectionFactory redisConnectionFactory;
-  RqueueMessage rqueueMessage =
+  private final RqueueMessage rqueueMessage =
       RqueueMessageUtils.generateMessage(messageConverter, queueDetail.getName());
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
-  Object userMessage = "Test Object";
-  @Mock private RqueueMessageMetadataService messageMetadataService;
-  @Mock private RqueueJobDao rqueueJobDao;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueLockManager rqueueLockManager;
+  private final Object userMessage = "Test Object";
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+  @Mock
+  private RqueueMessageMetadataService messageMetadataService;
+  @Mock
+  private RqueueJobDao rqueueJobDao;
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock
+  private RqueueLockManager rqueueLockManager;
   private RqueueConfig rqueueConfig;
 
   @BeforeEach
@@ -282,5 +287,20 @@ class JobImplTest extends TestBase {
     verify(messageMetadataService, times(1)).delete(messageMetadata.getId());
     FieldUtils.writeField(
         rqueueConfig, "messageDurabilityInTerminalStateInSecond", currentValue, true);
+  }
+
+  @Test
+  void testMessageWasDeletedWhileRunning() throws IllegalAccessException {
+    JobImpl job = instance();
+    job.execute();
+    job.updateMessageStatus(MessageStatus.SUCCESSFUL);
+    verify(rqueueJobDao, times(1)).createJob(any(), any());
+    verify(rqueueJobDao, times(3)).save(any(), any());
+    verify(messageMetadataService, times(1))
+        .saveMessageMetadataForQueue(
+            eq(queueDetail.getCompletedQueueName()),
+            any(MessageMetadata.class),
+            eq(rqueueConfig.messageDurabilityInTerminalStateInMillisecond()));
+
   }
 }
