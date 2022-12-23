@@ -135,18 +135,28 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean isMessageDeleted() {
-    if (job.getMessageMetadata().isDeleted()) {
-      return true;
+    boolean deleted = job.getMessageMetadata().isDeleted();
+    // fetch latest from DB
+    if (!deleted) {
+      MessageMetadata newMessageMetadata =
+          beanProvider
+              .getRqueueMessageMetadataService()
+              .getOrCreateMessageMetadata(job.getRqueueMessage());
+      if (!newMessageMetadata.equals(job.getMessageMetadata())) {
+        // TODO what happens to the current execution data
+        job.setMessageMetadata(newMessageMetadata);
+      }
     }
-    MessageMetadata newMessageMetadata =
-        beanProvider
-            .getRqueueMessageMetadataService()
-            .getOrCreateMessageMetadata(job.getRqueueMessage());
-    if (!newMessageMetadata.equals(job.getMessageMetadata())) {
-      // TODO what happens to the current execution data
-      job.setMessageMetadata(newMessageMetadata);
+    deleted = job.getMessageMetadata().isDeleted();
+    if (deleted) {
+      if (rqueueMessage.isPeriodic()) {
+        log(Level.INFO, "Periodic Message {} having period {} has been deleted", null,
+            rqueueMessage.getId(), rqueueMessage.getPeriod());
+      } else {
+        log(Level.INFO, "Message {} has been deleted", null, rqueueMessage.getId());
+      }
     }
-    return job.getMessageMetadata().isDeleted();
+    return deleted;
   }
 
   private boolean shouldIgnore() {
@@ -323,7 +333,6 @@ class RqueueExecutor extends MessageContainerBase {
     String messageKey = getScheduledMessageKey(newMessage);
     long expiryInSeconds = getTtlForScheduledMessageKey(newMessage);
     if (isMessageDeleted()) {
-      log(Level.ERROR, "Periodic message has been deleted {}", null, rqueueMessage);
       return;
     }
     log(
