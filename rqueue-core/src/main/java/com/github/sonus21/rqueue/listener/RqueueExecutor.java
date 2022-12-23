@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ class RqueueExecutor extends MessageContainerBase {
   private boolean isOldMessage() {
     return job.getMessageMetadata().getRqueueMessage() != null
         && job.getMessageMetadata().getRqueueMessage().getQueuedTime()
-            != job.getRqueueMessage().getQueuedTime();
+        != job.getRqueueMessage().getQueuedTime();
   }
 
   private int getRetryCount() {
@@ -315,13 +315,17 @@ class RqueueExecutor extends MessageContainerBase {
         message.getProcessAt());
   }
 
-  private void processPeriodicMessage() {
+  private void handlePeriodicMessage() {
     RqueueMessage newMessage =
         job.getRqueueMessage().toBuilder()
             .processAt(job.getRqueueMessage().nextProcessAt())
             .build();
     String messageKey = getScheduledMessageKey(newMessage);
     long expiryInSeconds = getTtlForScheduledMessageKey(newMessage);
+    if (isMessageDeleted()) {
+      log(Level.ERROR, "Periodic message has been deleted {}", null, rqueueMessage);
+      return;
+    }
     log(
         Level.DEBUG,
         "Schedule periodic message: {} Status: {}",
@@ -339,8 +343,8 @@ class RqueueExecutor extends MessageContainerBase {
 
   private void handle() {
     try {
-      if (job.getRqueueMessage().isPeriodicTask()) {
-        processPeriodicMessage();
+      if (job.getRqueueMessage().isPeriodic()) {
+        handlePeriodicMessage();
       } else {
         handleMessage();
       }

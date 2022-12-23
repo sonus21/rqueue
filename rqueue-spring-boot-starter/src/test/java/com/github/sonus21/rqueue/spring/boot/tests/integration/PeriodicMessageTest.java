@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,27 +21,36 @@ import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomCo
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.PeriodicJob;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SpringBootTest
 @ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
 @Slf4j
 @TestPropertySource(
     properties = {
-      "spring.redis.port=8013",
-      "mysql.db.name=PeriodicMessageTest",
-      "rqueue.metrics.count.failure=false",
-      "rqueue.metrics.count.execution=false",
-      "periodic.job.queue.active=true",
-      "use.system.redis=false",
-      "monitor.enabled=false"
+        "spring.redis.port=8013",
+        "mysql.db.name=PeriodicMessageTest",
+        "rqueue.metrics.count.failure=false",
+        "rqueue.metrics.count.execution=false",
+        "periodic.job.queue.active=true",
+        "use.system.redis=false",
+        "monitor.enabled=false"
     })
 @SpringBootIntegrationTest
 class PeriodicMessageTest extends SpringTestBase {
@@ -83,5 +92,35 @@ class PeriodicMessageTest extends SpringTestBase {
         30_000,
         "at least two execution");
     rqueueMessageManager.deleteMessage(periodicJobQueue, messageId);
+  }
+
+
+  @Test
+  void testPeriodicMessageDelete() throws TimedOutException, InterruptedException {
+    rqueueEventListener.clearQueue();
+    PeriodicJob job = PeriodicJob.newInstance();
+    String messageId = rqueueMessageEnqueuer.enqueuePeriodic(periodicJobQueue, job, 1000);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    List<Integer> l = new ArrayList<>();
+    CountDownLatch latch = new CountDownLatch(1);
+    executor.submit(new Runnable() {
+      @SneakyThrows
+      @Override
+      public void run() {
+        TimeoutUtils.waitFor(
+            () -> consumedMessageStore.getConsumedMessageCount(job.getId()) > 1,
+            30_000,
+            "at least two execution");
+        rqueueMessageManager.deleteMessage(periodicJobQueue, messageId);
+        l.add(consumedMessageStore.getConsumedMessageCount(job.getId()));
+        l.add(rqueueEventListener.getEventCount());
+        latch.countDown();
+      }
+    });
+    latch.await();
+    // if task was running than next task should not schedule and run
+    TimeoutUtils.sleep(2 * Constants.ONE_MILLI);
+    assertEquals(l.get(0), consumedMessageStore.getConsumedMessageCount(job.getId()));
+    assertEquals(l.get(1), rqueueEventListener.getEventCount());
   }
 }

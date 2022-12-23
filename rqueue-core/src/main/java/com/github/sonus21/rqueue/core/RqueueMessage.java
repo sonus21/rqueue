@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,7 +27,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.messaging.MessageHeaders;
 
-/** Internal message for Rqueue */
+/**
+ * Internal message for Rqueue
+ */
 @Getter
 @Setter
 @ToString
@@ -43,8 +45,9 @@ public class RqueueMessage extends SerializableBase {
   // Queue name on which message was enqueued
   private String queueName;
   /**
-   * JSON encoded message, this message can be converted to actual object with the help of {@link
-   * com.github.sonus21.rqueue.core.support.RqueueMessageUtils#convertMessageToObject} method
+   * JSON encoded message, this message can be converted to actual object with the help of
+   * {@link com.github.sonus21.rqueue.core.support.RqueueMessageUtils#convertMessageToObject}
+   * method
    */
   private String message;
   // Any retry count used while enqueueing
@@ -66,7 +69,9 @@ public class RqueueMessage extends SerializableBase {
   // period of this task, if this is a periodic task.
   private long period;
 
-  @ToString.Exclude @JsonIgnore private MessageHeaders messageHeaders;
+  @ToString.Exclude
+  @JsonIgnore
+  private MessageHeaders messageHeaders;
 
   @JsonIgnore
   public RqueueMessage updateReEnqueuedAt() {
@@ -87,14 +92,14 @@ public class RqueueMessage extends SerializableBase {
 
   @JsonIgnore
   public long nextProcessAt() {
-    if (isPeriodicTask()) {
+    if (isPeriodic()) {
       return processAt + period;
     }
     throw new IllegalStateException("Only applicable for periodic message");
   }
 
   @JsonIgnore
-  public boolean isPeriodicTask() {
+  public boolean isPeriodic() {
     return period > 0;
   }
 }

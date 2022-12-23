@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ public class JobImpl implements Job {
     this.postProcessingHandler = postProcessingHandler;
     this.rqueueJob = new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, null);
     this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
-    this.isPeriodicJob = rqueueMessage.isPeriodicTask();
+    this.isPeriodicJob = rqueueMessage.isPeriodic();
     this.rqueueLockManager = rqueueLockManager;
     if (rqueueConfig.isJobEnabled()) {
       if (!isPeriodicJob) {
@@ -372,7 +372,7 @@ public class JobImpl implements Job {
   void updateExecutionTime(RqueueMessage rqueueMessage, MessageStatus messageStatus) {
     long executionTime = getExecutionTime();
     rqueueJob.getMessageMetadata().setRqueueMessage(rqueueMessage);
-    if (getRqueueMessage().isPeriodicTask()) {
+    if (getRqueueMessage().isPeriodic()) {
       this.rqueueJob.getMessageMetadata().setTotalExecutionTime(executionTime);
     } else {
       this.rqueueJob
