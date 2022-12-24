@@ -22,12 +22,13 @@ import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
-import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 abstract class RqueueMessagePoller extends MessageContainerBase {
 
@@ -100,17 +101,13 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     return true;
   }
 
-  protected boolean hasAvailableThreads(QueueDetail queueDetail, QueueThreadPool queueThreadPool){
-    return getAvailablePoolSize(queueDetail, queueThreadPool) > 0;
+  protected boolean hasAvailableThreads(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
+    return queueThreadPool.availableThreads() > 0;
   }
 
-  protected int getAvailablePoolSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool){
-    int poolSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
-    return poolSize;
-  }
 
   protected int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
-    int batchSize = getAvailablePoolSize(queueDetail, queueThreadPool);
+    int batchSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
     batchSize = Math.max(batchSize, Constants.MIN_BATCH_SIZE);
     log(Level.DEBUG, "Batch size {}", null, batchSize);
     return batchSize;
@@ -125,6 +122,8 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     }
   }
 
+  // at this point of time, we've acquired batchSize semaphore that means its guarantee that we'll
+  // have batchSize available threads in the thread pool
   private void pollAndExecute(
       int index,
       String queue,
@@ -136,23 +135,26 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
         List<RqueueMessage> messages = getMessages(queueDetail, batchSize);
         log(Level.TRACE, "Queue: {} Fetched Msgs {}", null, queue, messages);
         int messageCount = CollectionUtils.isEmpty(messages) ? 0 : messages.size();
-        if (messageCount == 0) {
-          deactivate(index, queue, DeactivateType.NO_MESSAGE);
-        }
-        // free additional required threads e.g 10 asked but only 5 messages are there
+        // free additional requested threads e.g 10 requested but only 5 messages are there
         queueThreadPool.release(batchSize - messageCount);
         if (messageCount > 0) {
           sendMessagesToExecutor(queueDetail, queueThreadPool, messages);
+        } else {
+          deactivate(index, queue, DeactivateType.NO_MESSAGE);
         }
       } catch (Exception e) {
         queueThreadPool.release(batchSize);
         log(Level.WARN, "Listener failed for the queue {}", e, queue);
         deactivate(index, queue, DeactivateType.POLL_FAILED);
       }
+    } else {
+      // release resource
+      queueThreadPool.release(batchSize);
     }
   }
 
-  protected void poll(int index, String queue, QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
+  void poll(int index, String queue, QueueDetail queueDetail,
+      QueueThreadPool queueThreadPool) {
     log(Level.TRACE, "Polling queue {}", null, queue);
     int batchSize = getBatchSize(queueDetail, queueThreadPool);
     boolean acquired;

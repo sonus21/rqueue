@@ -21,10 +21,8 @@ import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-
 import java.util.Collections;
 import java.util.List;
-
 import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
