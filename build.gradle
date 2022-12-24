@@ -3,7 +3,9 @@ plugins {
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'nebula.optional-base' version '5.0.2'
     id "com.adarshr.test-logger" version "2.1.1"
+    id 'org.gradle.test-retry' version '1.0.0'
 }
+
 allprojects {
     apply plugin: 'idea'
     apply plugin: 'java'
@@ -13,6 +15,7 @@ allprojects {
     apply plugin: 'jacoco'
     apply plugin: 'nebula.optional-base'
     apply plugin: 'com.adarshr.test-logger'
+    apply plugin: 'org.gradle.test-retry'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -116,6 +119,14 @@ def publishedProjects = subprojects.findAll({ subproject ->
     subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example") && !subproject.name.contains("test")
 })
 
+test {
+    retry {
+        failOnPassedAfterRetry = false
+        maxFailures = 15
+        maxRetries = 2
+    }
+}
+
 task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/reports/jacoco/*.exec")
 
@@ -137,6 +148,7 @@ task codeCoverageReport(type: JacocoReport, group: 'verification', description: 
                             'com/github/sonus21/rqueue/models/response',
                             'com/github/sonus21/rqueue/core/RqueueMessageSender*',
                             'com/github/sonus21/rqueue/utils/PrefixLogger*',
+                            'com/github/sonus21/rqueue/utils/StackTraceUtil*',
                             'com/github/sonus21/rqueue/core/ScheduledTaskDetail*',
                     ]
             )
