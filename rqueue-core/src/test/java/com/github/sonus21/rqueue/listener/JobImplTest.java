@@ -37,6 +37,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.messaging.converter.MessageConverter;
 import java.time.Duration;
@@ -46,6 +50,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @CoreUnitTest
+@MockitoSettings(strictness = Strictness.LENIENT)
 class JobImplTest extends TestBase {
 
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
@@ -177,6 +182,8 @@ class JobImplTest extends TestBase {
 
   @Test
   void updateMessageStatus() {
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), any(), any());
+    doReturn(messageMetadata).when(messageMetadataService).get(messageMetadata.getId());
     JobImpl job = instance();
     job.updateMessageStatus(MessageStatus.PROCESSING);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
@@ -215,6 +222,8 @@ class JobImplTest extends TestBase {
 
   @Test
   void updateExecutionTime() {
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), any(), any());
+    doReturn(messageMetadata).when(messageMetadataService).get(messageMetadata.getId());
     JobImpl job = instance();
     job.execute();
     job.updateExecutionTime(rqueueMessage, MessageStatus.SUCCESSFUL);
@@ -261,6 +270,8 @@ class JobImplTest extends TestBase {
 
   @Test
   void testMessagesAreStoredInMetadataStore() {
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), any(), any());
+    doReturn(messageMetadata).when(messageMetadataService).get(messageMetadata.getId());
     JobImpl job = instance();
     job.execute();
     job.checkIn("test..");
@@ -291,16 +302,23 @@ class JobImplTest extends TestBase {
 
   @Test
   void testMessageWasDeletedWhileRunning() throws IllegalAccessException {
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), any(), any());
+    MessageMetadata metadata = messageMetadata.toBuilder().deleted(true)
+        .status(MessageStatus.DELETED).build();
+    doReturn(metadata).when(messageMetadataService).get(messageMetadata.getId());
     JobImpl job = instance();
     job.execute();
-    job.updateMessageStatus(MessageStatus.SUCCESSFUL);
+    job.updateMessageStatus(MessageStatus.FAILED);
     verify(rqueueJobDao, times(1)).createJob(any(), any());
-    verify(rqueueJobDao, times(3)).save(any(), any());
-    verify(messageMetadataService, times(1))
-        .saveMessageMetadataForQueue(
-            eq(queueDetail.getCompletedQueueName()),
-            any(MessageMetadata.class),
-            eq(rqueueConfig.messageDurabilityInTerminalStateInMillisecond()));
+    verify(rqueueJobDao, times(2)).save(any(), any());
+    doAnswer(invocation -> {
+      MessageMetadata messageMetadata = invocation.getArgument(0);
+      assertTrue(messageMetadata.isDeleted());
+      assertEquals(MessageStatus.DELETED, messageMetadata.getStatus());
+      return null;
+    }).when(messageMetadataService).save(
+        any(MessageMetadata.class),
+        eq(Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute())));
 
   }
 }

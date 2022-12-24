@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -330,5 +330,16 @@ public class RqueueConfig {
 
   public boolean isProducer() {
     return RqueueMode.PRODUCER.equals(getMode());
+  }
+
+  public Duration getMessageDurability(Long messageLife) {
+    if (messageLife == null || messageLife.intValue() == 0) {
+      return Duration.ofMinutes(messageDurabilityInMinute);
+    }
+    Duration duration = Duration.ofMillis(2 * messageLife);
+    if (duration.toMinutes() > messageDurabilityInMinute) {
+      return duration;
+    }
+    return Duration.ofMinutes(messageDurabilityInMinute);
   }
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package com.github.sonus21.rqueue.utils;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.Concurrency;
@@ -27,11 +29,29 @@ import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 import org.springframework.messaging.converter.MessageConverter;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class TestUtils extends TestBase {
 
-  private TestUtils() {}
+  public static RqueueMessageTemplate rqueueMessageTemplate(
+      RedisConnectionFactory redisConnectionFactory,
+      RedisTemplate<String, ?> redisTemplate, DefaultScriptExecutor<String> scriptExecutor)
+      throws IllegalAccessException {
+    RqueueMessageTemplate rqueueMessageTemplate = new RqueueMessageTemplateImpl(
+        redisConnectionFactory, null);
+    FieldUtils.writeField(rqueueMessageTemplate, "redisTemplate", redisTemplate, true);
+    if (scriptExecutor != null) {
+      FieldUtils.writeField(rqueueMessageTemplate, "scriptExecutor", scriptExecutor, true);
+    }
+    return rqueueMessageTemplate;
+  }
 
   public static QueueConfig createQueueConfig(
       String name, int numRetry, long visibilityTimeout, String dlq) {

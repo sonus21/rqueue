@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -100,8 +100,17 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     return true;
   }
 
+  protected boolean hasAvailableThreads(QueueDetail queueDetail, QueueThreadPool queueThreadPool){
+    return getAvailablePoolSize(queueDetail, queueThreadPool) > 0;
+  }
+
+  protected int getAvailablePoolSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool){
+    int poolSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
+    return poolSize;
+  }
+
   protected int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
-    int batchSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
+    int batchSize = getAvailablePoolSize(queueDetail, queueThreadPool);
     batchSize = Math.max(batchSize, Constants.MIN_BATCH_SIZE);
     log(Level.DEBUG, "Batch size {}", null, batchSize);
     return batchSize;
@@ -125,11 +134,12 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     if (isQueueActive(queue)) {
       try {
         List<RqueueMessage> messages = getMessages(queueDetail, batchSize);
-        log(Level.DEBUG, "Queue: {} Fetched Msgs {}", null, queue, messages);
+        log(Level.TRACE, "Queue: {} Fetched Msgs {}", null, queue, messages);
         int messageCount = CollectionUtils.isEmpty(messages) ? 0 : messages.size();
         if (messageCount == 0) {
           deactivate(index, queue, DeactivateType.NO_MESSAGE);
         }
+        // free additional required threads e.g 10 asked but only 5 messages are there
         queueThreadPool.release(batchSize - messageCount);
         if (messageCount > 0) {
           sendMessagesToExecutor(queueDetail, queueThreadPool, messages);
@@ -142,8 +152,8 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     }
   }
 
-  void poll(int index, String queue, QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
-    log(Level.DEBUG, "Polling queue {}", null, queue);
+  protected void poll(int index, String queue, QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
+    log(Level.TRACE, "Polling queue {}", null, queue);
     int batchSize = getBatchSize(queueDetail, queueThreadPool);
     boolean acquired;
     try {

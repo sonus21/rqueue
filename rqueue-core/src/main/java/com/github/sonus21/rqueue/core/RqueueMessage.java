@@ -52,7 +52,7 @@ public class RqueueMessage extends SerializableBase {
   private String message;
   // Any retry count used while enqueueing
   private Integer retryCount;
-  // when this message was enqueued, this is in nano second
+  // when this message was enqueued, this is in nanosecond
   private long queuedTime;
   // when this message was supposed to be processed
   private long processAt;
