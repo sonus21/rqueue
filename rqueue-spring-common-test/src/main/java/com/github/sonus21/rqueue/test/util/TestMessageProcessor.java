@@ -46,7 +46,7 @@ public class TestMessageProcessor implements MessageProcessor {
 
   @Override
   public boolean process(Job job) {
-    log.info("{} MessageProcessor called queued {} with {}", name, job.getRqueueMessage().getQueueName(), job.getRqueueMessage());
+    log.info("{}MessageProcessor called queued {} with {}", name, job.getRqueueMessage().getQueueName(), job.getRqueueMessage());
     rqueueMessageList.add(
         new RqueueMessageEnvelop(job.getRqueueMessage(), System.currentTimeMillis()));
     return true;

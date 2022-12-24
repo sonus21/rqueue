@@ -119,14 +119,6 @@ def publishedProjects = subprojects.findAll({ subproject ->
     subproject.pluginManager.hasPlugin('java') && !subproject.name.endsWith("example") && !subproject.name.contains("test")
 })
 
-test {
-    retry {
-        failOnPassedAfterRetry = false
-        maxFailures = 30
-        maxRetries = 2
-    }
-}
-
 task codeCoverageReport(type: JacocoReport, group: 'verification', description: 'Generate code coverage report') {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/reports/jacoco/*.exec")
 
