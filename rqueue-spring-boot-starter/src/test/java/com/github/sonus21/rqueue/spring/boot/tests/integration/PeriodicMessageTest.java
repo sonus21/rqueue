@@ -126,7 +126,8 @@ class PeriodicMessageTest extends SpringTestBase {
         // already scheduled job
         1+l.get(1)==rqueueEventListener.getEventCount()||
             // deleted just now, so no future scheduling
-        l.get(1)==rqueueEventListener.getEventCount()
+        l.get(1)==rqueueEventListener.getEventCount(),
+        ()-> String.format("Event Count does not match %d %d", rqueueEventListener.getEventCount(), l.get(1))
         );
   }
 }
