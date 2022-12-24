@@ -38,6 +38,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
@@ -119,8 +120,13 @@ class PeriodicMessageTest extends SpringTestBase {
     });
     latch.await();
     // if task was running than next task should not schedule and run
-    TimeoutUtils.sleep(2 * Constants.ONE_MILLI);
+    TimeoutUtils.sleep(5 * Constants.ONE_MILLI);
     assertEquals(l.get(0), consumedMessageStore.getConsumedMessageCount(job.getId()));
-    assertEquals(l.get(1), rqueueEventListener.getEventCount());
+    assertTrue(
+        // already scheduled job
+        1+l.get(1)==rqueueEventListener.getEventCount()||
+            // deleted just now, so no future scheduling
+        l.get(1)==rqueueEventListener.getEventCount()
+        );
   }
 }
