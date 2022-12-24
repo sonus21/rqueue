@@ -25,6 +25,8 @@ import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -52,6 +54,7 @@ import java.util.List;
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 @AutoConfigureWebTestClient(timeout = "10000")
+@TestInstance(Lifecycle.PER_CLASS)
 class ReactiveWebViewTest extends BasicListenerTest {
 
   @Autowired

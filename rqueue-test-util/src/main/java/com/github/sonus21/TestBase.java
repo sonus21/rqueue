@@ -17,11 +17,8 @@
 package com.github.sonus21;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 
 @Slf4j
-@TestInstance(Lifecycle.PER_CLASS)
 public abstract class TestBase extends RandomUtils {
 
 }
