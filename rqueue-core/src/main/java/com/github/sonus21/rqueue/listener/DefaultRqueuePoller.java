@@ -21,8 +21,10 @@ import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+
 import java.util.Collections;
 import java.util.List;
+
 import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
@@ -70,11 +72,11 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
     }
   }
 
-  void poll(){
-    if(!hasAvailableThreads(queueDetail, queueThreadPool)){
-      log(Level.WARN, "queue {} sleeping for {} threads are not available ", null, queueDetail.getName(), pollingInterval);
+  void poll() {
+    if (!hasAvailableThreads(queueDetail, queueThreadPool)) {
+      log(Level.WARN, "No Threads are available sleeping {}Ms", null, pollingInterval);
       TimeoutUtils.sleepLog(pollingInterval, false);
-    }else {
+    } else {
       super.poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
     }
   }

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package com.github.sonus21.task.executor;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
-import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.utils.Constants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -35,13 +34,11 @@ public class RqueueReactiveApplication {
   }
 
   @Bean
-  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
-      RqueueMessageHandler rqueueMessageHandler) {
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
     SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
         new SimpleRqueueListenerContainerFactory();
     simpleRqueueListenerContainerFactory.setMaxNumWorkers(workersCount);
     simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
-    simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
     return simpleRqueueListenerContainerFactory;
   }
 }

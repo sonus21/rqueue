@@ -41,7 +41,7 @@ test {
 
     retry {
         failOnPassedAfterRetry = false
-        maxFailures = 30
-        maxRetries = 2
+        maxFailures = 10
+        maxRetries = 1
     }
 }

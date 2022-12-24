@@ -69,6 +69,11 @@ public class MessageMetadata extends SerializableBase {
       if (MessageStatus.DELETED.equals(other.getStatus()) && !MessageStatus.DELETED.equals(
           this.getStatus())) {
         this.status = MessageStatus.DELETED;
+        if (this.updatedOn < other.updatedOn) {
+          this.updatedOn = other.updatedOn;
+        } else if (this.updatedOn == 0) {
+          this.updatedOn = System.currentTimeMillis();
+        }
       }
     }
   }
