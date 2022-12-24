@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,6 +17,11 @@
 package com.github.sonus21;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 
 @Slf4j
-public abstract class TestBase extends RandomUtils {}
+@TestInstance(Lifecycle.PER_CLASS)
+public abstract class TestBase extends RandomUtils {
+
+}
