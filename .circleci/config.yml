@@ -275,7 +275,7 @@ workflows:
             - redis_custer_test
       - report_code_coverage:
           requires:
-            - redis_custer_test
+            - reactive_integration_test
   main_v0:
     jobs:
       - build_v0
