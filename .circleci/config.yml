@@ -118,7 +118,7 @@ executors:
   rqueue-executor:
     machine:
       image: ubuntu-2004:202010-01
-    resource_class: large
+    resource_class: xlarge
 
     working_directory: ~/repo
 
