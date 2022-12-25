@@ -73,7 +73,7 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     Pair<String, String> releaseAndVersion = rqueueUtilityService.getLatestVersion();
     model.addAttribute("releaseLink", releaseAndVersion.getFirst());
     model.addAttribute("latestVersion", releaseAndVersion.getSecond());
-    model.addAttribute("time", DateTimeUtils.currentLocalDateTimeString());
+    model.addAttribute("time", DateTimeUtils.currentFormatTimeString());
     model.addAttribute("timeInMilli", System.currentTimeMillis());
     model.addAttribute("version", rqueueConfig.getLibVersion());
     model.addAttribute("urlPrefix", rqueueWebConfig.getUrlPrefix(xForwardedPrefix));

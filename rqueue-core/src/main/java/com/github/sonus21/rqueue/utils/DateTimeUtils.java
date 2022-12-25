@@ -127,7 +127,7 @@ public final class DateTimeUtils {
     return LocalDate.now(ZoneId.systemDefault());
   }
 
-  public static String currentLocalDateTimeString() {
+  public static String currentFormatTimeString() {
     return LocalDateTime.now().format(simple2);
   }
 }
