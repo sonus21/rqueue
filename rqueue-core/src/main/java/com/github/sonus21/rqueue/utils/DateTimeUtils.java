@@ -16,15 +16,13 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 public final class DateTimeUtils {
 
   private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+  private static final DateTimeFormatter simple2 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   DateTimeUtils() {
   }
@@ -127,5 +125,9 @@ public final class DateTimeUtils {
 
   public static LocalDate today() {
     return LocalDate.now(ZoneId.systemDefault());
+  }
+
+  public static String currentLocalDateTimeString() {
+    return LocalDateTime.now().format(simple2);
   }
 }

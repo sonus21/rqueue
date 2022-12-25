@@ -25,20 +25,19 @@ import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
 @Service
 public class RqueueViewControllerServiceImpl implements RqueueViewControllerService {
@@ -74,8 +73,7 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     Pair<String, String> releaseAndVersion = rqueueUtilityService.getLatestVersion();
     model.addAttribute("releaseLink", releaseAndVersion.getFirst());
     model.addAttribute("latestVersion", releaseAndVersion.getSecond());
-    model.addAttribute(
-        "time", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+    model.addAttribute("time", DateTimeUtils.currentLocalDateTimeString());
     model.addAttribute("timeInMilli", System.currentTimeMillis());
     model.addAttribute("version", rqueueConfig.getLibVersion());
     model.addAttribute("urlPrefix", rqueueWebConfig.getUrlPrefix(xForwardedPrefix));
