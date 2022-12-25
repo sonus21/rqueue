@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,12 +24,11 @@ import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.apache.commons.lang3.reflect.FieldUtils;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -60,9 +59,7 @@ class RqueueMessageTemplateTest extends TestBase {
   @BeforeEach
   public void init() throws Exception {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageTemplate = new RqueueMessageTemplateImpl(redisConnectionFactory, null);
-    FieldUtils.writeField(rqueueMessageTemplate, "redisTemplate", redisTemplate, true);
-    FieldUtils.writeField(rqueueMessageTemplate, "scriptExecutor", scriptExecutor, true);
+    rqueueMessageTemplate = TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate, scriptExecutor);
   }
 
   @Test

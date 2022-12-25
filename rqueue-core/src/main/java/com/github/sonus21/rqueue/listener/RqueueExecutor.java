@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -135,18 +135,26 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private boolean isMessageDeleted() {
-    if (job.getMessageMetadata().isDeleted()) {
-      return true;
+    MessageMetadata messageMetadata = job.getMessageMetadata();
+    boolean deleted = messageMetadata.isDeleted();
+    if (!deleted) {
+      // fetch latest from DB
+      MessageMetadata newMessageMetadata =
+          beanProvider
+              .getRqueueMessageMetadataService()
+              .getOrCreateMessageMetadata(job.getRqueueMessage());
+      messageMetadata.merge(newMessageMetadata);
     }
-    MessageMetadata newMessageMetadata =
-        beanProvider
-            .getRqueueMessageMetadataService()
-            .getOrCreateMessageMetadata(job.getRqueueMessage());
-    if (!newMessageMetadata.equals(job.getMessageMetadata())) {
-      // TODO what happens to the current execution data
-      job.setMessageMetadata(newMessageMetadata);
+    deleted = messageMetadata.isDeleted();
+    if (deleted) {
+      if (rqueueMessage.isPeriodic()) {
+        log(Level.INFO, "Periodic Message {} having period {} has been deleted", null,
+            rqueueMessage.getId(), rqueueMessage.getPeriod());
+      } else {
+        log(Level.INFO, "Message {} has been deleted", null, rqueueMessage.getId());
+      }
     }
-    return job.getMessageMetadata().isDeleted();
+    return deleted;
   }
 
   private boolean shouldIgnore() {
@@ -156,7 +164,7 @@ class RqueueExecutor extends MessageContainerBase {
   private boolean isOldMessage() {
     return job.getMessageMetadata().getRqueueMessage() != null
         && job.getMessageMetadata().getRqueueMessage().getQueuedTime()
-            != job.getRqueueMessage().getQueuedTime();
+        != job.getRqueueMessage().getQueuedTime();
   }
 
   private int getRetryCount() {
@@ -315,7 +323,10 @@ class RqueueExecutor extends MessageContainerBase {
         message.getProcessAt());
   }
 
-  private void processPeriodicMessage() {
+  private void schedulePeriodicMessage() {
+    if (isMessageDeleted()) {
+      return;
+    }
     RqueueMessage newMessage =
         job.getRqueueMessage().toBuilder()
             .processAt(job.getRqueueMessage().nextProcessAt())
@@ -334,13 +345,17 @@ class RqueueExecutor extends MessageContainerBase {
                 messageKey,
                 newMessage,
                 expiryInSeconds));
+  }
+
+  private void handlePeriodicMessage() {
+    schedulePeriodicMessage();
     handleMessage();
   }
 
   private void handle() {
     try {
-      if (job.getRqueueMessage().isPeriodicTask()) {
-        processPeriodicMessage();
+      if (job.getRqueueMessage().isPeriodic()) {
+        handlePeriodicMessage();
       } else {
         handleMessage();
       }

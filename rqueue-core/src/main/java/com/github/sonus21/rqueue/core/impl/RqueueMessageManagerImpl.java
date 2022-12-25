@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -41,7 +41,8 @@ import java.util.UUID;
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
 
-  @Autowired private RqueueLockManager rqueueLockManager;
+  @Autowired
+  private RqueueLockManager rqueueLockManager;
 
   public RqueueMessageManagerImpl(
       RqueueMessageTemplate messageTemplate,
@@ -118,8 +119,8 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
     if (rqueueMessage == null) {
       return false;
     }
-    return rqueueMessageMetadataService.deleteMessage(
-        queueName, id, Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute()));
+    Duration duration = rqueueConfig.getMessageDurability(rqueueMessage.getPeriod());
+    return rqueueMessageMetadataService.deleteMessage(queueName, id, duration);
   }
 
   @Override

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,13 +19,16 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.AtomicValueHolder;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
@@ -36,8 +39,10 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,13 +64,14 @@ class ConcurrentListenerTest extends TestBase {
   private static final String fastProcessingQueue = "rqueue-processing::" + fastQueue;
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
-  private static final long executionTime = 2L;
+  private static final long executionTime = 50L;
   @Mock private RqueueMessageHandler rqueueMessageHandler;
   @Mock private RedisConnectionFactory redisConnectionFactory;
   @Mock private ApplicationEventPublisher applicationEventPublisher;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock private RqueueLockManager rqueueLockManager;
   @Mock private RqueueWebConfig rqueueWebConfig;
   private RqueueBeanProvider beanProvider;
 
@@ -80,6 +86,7 @@ class ConcurrentListenerTest extends TestBase {
     beanProvider.setApplicationEventPublisher(applicationEventPublisher);
     beanProvider.setRqueueMessageTemplate(rqueueMessageTemplate);
     beanProvider.setRqueueMessageMetadataService(rqueueMessageMetadataService);
+    beanProvider.setRqueueLockManager(rqueueLockManager);
     beanProvider.setRqueueWebConfig(rqueueWebConfig);
   }
 
@@ -103,14 +110,22 @@ class ConcurrentListenerTest extends TestBase {
     AtomicValueHolder<Long> firstCallAt = new AtomicValueHolder<>();
     AtomicInteger producerMessageCounter = new AtomicInteger(0);
     AtomicInteger pollCounter = new AtomicInteger(0);
-
+    Map<String, MessageMetadata> messageMetadataMap = new HashMap<>();
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(),anyString(),any());
     doAnswer(
-            i -> {
-              RqueueMessage rqueueMessage = i.getArgument(0);
-              return new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
-            })
+        i -> {
+          RqueueMessage rqueueMessage = i.getArgument(0);
+          MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage,
+              MessageStatus.ENQUEUED);
+          messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
+          return messageMetadata;
+        })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
+    doAnswer(
+        i -> messageMetadataMap.get(i.getArgument(0)))
+        .when(rqueueMessageMetadataService)
+        .get(any());
     doAnswer(
             invocation -> {
               if (1 == pollCounter.incrementAndGet()) {
@@ -141,8 +156,6 @@ class ConcurrentListenerTest extends TestBase {
             eq(900000L),
             anyInt());
     container.afterPropertiesSet();
-    // 40 * 20 => 800
-    long start = System.currentTimeMillis();
     container.start();
 
     long end = System.currentTimeMillis() + TimeoutUtils.EXECUTION_TIME;

@@ -117,7 +117,8 @@ aliases:
 executors:
   rqueue-executor:
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2004:202010-01
+    resource_class: large
 
     working_directory: ~/repo
 
@@ -267,15 +268,15 @@ workflows:
       - integration_test:
           requires:
             - producer_only_test
-      - reactive_integration_test:
-          requires:
-            - integration_test
       - redis_custer_test:
           requires:
-            - reactive_integration_test
-      - report_code_coverage:
+            - integration_test
+      - reactive_integration_test:
           requires:
             - redis_custer_test
+      - report_code_coverage:
+          requires:
+            - reactive_integration_test
   main_v0:
     jobs:
       - build_v0

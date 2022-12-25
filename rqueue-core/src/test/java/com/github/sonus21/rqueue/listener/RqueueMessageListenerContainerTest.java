@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
@@ -84,6 +86,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Mock private RqueueWebConfig rqueueWebConfig;
+  @Mock private RqueueLockManager rqueueLockManager;
   private RqueueMessageListenerContainer container;
   private RqueueBeanProvider beanProvider;
 
@@ -99,6 +102,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     beanProvider.setRqueueMessageTemplate(rqueueMessageTemplate);
     beanProvider.setRqueueMessageMetadataService(rqueueMessageMetadataService);
     beanProvider.setRqueueWebConfig(rqueueWebConfig);
+    beanProvider.setRqueueLockManager(rqueueLockManager);
     container = new TestListenerContainer(rqueueMessageHandler);
   }
 
@@ -268,6 +272,8 @@ class RqueueMessageListenerContainerTest extends TestBase {
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
     Map<String, MessageMetadata> messageMetadataMap = new ConcurrentHashMap<>();
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
+    doAnswer(i-> messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService).get(any());
     doAnswer(
             i -> {
               RqueueMessage rqueueMessage = i.getArgument(0);
@@ -317,6 +323,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
     beanProvider.setRqueueMessageHandler(messageHandler);
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
     FastMessageListener fastMessageListener =
         applicationContext.getBean("fastMessageListener", FastMessageListener.class);
@@ -337,6 +344,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
             })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
+    doAnswer(i->messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService).get(any());
     doAnswer(
             invocation -> {
               if (slowQueueCounter.get() == 0) {

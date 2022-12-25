@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -550,7 +550,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
           Collections.singletonList(
               new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, rqueueMessage.getId())));
       row.addColumn(column);
-      if (rqueueMessage.isPeriodicTask()) {
+      if (rqueueMessage.isPeriodic()) {
         row.addColumn(new TableColumn("Periodic(" + rqueueMessage.getPeriod() + ")Ms"));
       } else {
         row.addColumn(new TableColumn("Simple"));

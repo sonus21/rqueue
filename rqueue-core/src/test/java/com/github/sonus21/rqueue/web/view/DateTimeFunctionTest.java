@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,10 +22,17 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.utils.pebble.DateTimeFunction;
 import java.util.Collections;
+import java.util.TimeZone;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class DateTimeFunctionTest extends TestBase {
+
+  @BeforeAll
+  public static void init() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+  }
 
   private final DateTimeFunction function = new DateTimeFunction();
 

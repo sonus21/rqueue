@@ -1,5 +1,5 @@
 <!--
-  ~  Copyright 2021 Sonu Kumar
+  ~  Copyright 2022 Sonu Kumar
   ~
   ~  Licensed under the Apache License, Version 2.0 (the "License");
   ~  you may not use this file except in compliance with the License.
@@ -58,9 +58,9 @@
     </rollingPolicy>
   </appender>
 
-  <logger additivity="false" level="INFO" name="com.github.sonus21">
-    <appender-ref ref="FILE"/>
-  </logger>
+<!--  <logger additivity="false" level="INFO" name="com.github.sonus21">-->
+<!--    <appender-ref ref="FILE"/>-->
+<!--  </logger>-->
 
 <!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.listener.RqueueMessagePoller">-->
 <!--    <appender-ref ref="FILE"/>-->
@@ -70,23 +70,23 @@
 <!--    <appender-ref ref="FILE"/>-->
 <!--  </logger>-->
 
-  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledMessageScheduler">
-    <appender-ref ref="FILE"/>
-  </logger>
+<!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledMessageScheduler">-->
+<!--    <appender-ref ref="FILE"/>-->
+<!--  </logger>-->
 
-  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.ProcessingMessageScheduler">
-    <appender-ref ref="FILE"/>
-  </logger>
+<!--  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.ProcessingMessageScheduler">-->
+<!--    <appender-ref ref="FILE"/>-->
+<!--  </logger>-->
 
-  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl">
-    <appender-ref ref="FILE"/>
-  </logger>
+<!--  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl">-->
+<!--    <appender-ref ref="FILE"/>-->
+<!--  </logger>-->
 
-  <logger additivity="false" level="INFO" name="com.github.sonus21.rqueue.test.service">
-    <appender-ref ref="ConsumedMessageStore"/>
-  </logger>
+<!--  <logger additivity="false" level="INFO" name="com.github.sonus21.rqueue.test.service">-->
+<!--    <appender-ref ref="ConsumedMessageStore"/>-->
+<!--  </logger>-->
 
-  <logger level="DEBUG" name="monitor" additivity="false">
+  <logger level="INFO" name="monitor" additivity="false">
     <appender-ref ref="MONITOR"/>
   </logger>
 

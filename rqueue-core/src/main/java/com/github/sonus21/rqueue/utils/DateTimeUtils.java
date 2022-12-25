@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,18 +16,19 @@
 
 package com.github.sonus21.rqueue.utils;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DateTimeUtils {
 
-  private static final DateTimeFormatter simple = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-  DateTimeUtils() {
-  }
+  private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
+      "yyyy-MM-dd HH:mm");
+  private static final DateTimeFormatter dateTimeFormatterWithSecond = DateTimeFormatter.ofPattern(
+      "yyyy-MM-dd HH:mm:ss");
 
   private static String hourString(long hour) {
     if (hour > 1) {
@@ -118,7 +119,7 @@ public final class DateTimeUtils {
     }
     Instant instant = Instant.ofEpochMilli(milli);
     ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
-    return zonedDateTime.format(simple);
+    return zonedDateTime.format(dateTimeFormatter);
   }
 
   public static LocalDate localDateFromMilli(long millis) {
@@ -126,6 +127,10 @@ public final class DateTimeUtils {
   }
 
   public static LocalDate today() {
-    return LocalDate.now(ZoneId.systemDefault());
+    return LocalDate.now();
+  }
+
+  public static String currentTimeFormatted() {
+    return LocalDateTime.now().format(dateTimeFormatterWithSecond);
   }
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,11 +28,7 @@ import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
 import com.github.sonus21.rqueue.spring.boot.reactive.ReactiveWebApplication;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
-import com.github.sonus21.rqueue.test.dto.Email;
-import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
-import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -100,14 +96,6 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
 
   @Test
   void getChartLatency() throws Exception {
-    for (int i = 0; i < 100; i++) {
-      Job job = Job.newInstance();
-      enqueue(jobQueue, job);
-    }
-    TimeoutUtils.waitFor(
-        () -> getMessageCount(jobQueue) == 0,
-        Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
-        "Job to run");
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.LATENCY, AggregationType.DAILY);
     this.webTestClient
@@ -125,7 +113,6 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
 
   @Test
   void exploreData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     QueueExploreRequest request = new QueueExploreRequest();
     request.setType(DataType.LIST);
     request.setSrc(emailQueue);
@@ -197,7 +184,6 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
 
   @Test
   void viewData() throws Exception {
-    enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     DateViewRequest dateViewRequest = new DateViewRequest();
     dateViewRequest.setName(emailDeadLetterQueue);
     dateViewRequest.setType(DataType.LIST);

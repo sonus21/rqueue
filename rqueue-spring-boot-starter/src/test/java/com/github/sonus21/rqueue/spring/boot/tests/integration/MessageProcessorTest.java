@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -112,7 +113,7 @@ class MessageProcessorTest extends RetryTests {
     assertEquals(0, discardMessageProcessor.count());
   }
 
-  @Test
+  @RetryingTest(2)
   void manualDeletionMessageProcessorTest() throws TimedOutException {
     cleanQueue(notificationQueue);
     Notification notification = Notification.newInstance();

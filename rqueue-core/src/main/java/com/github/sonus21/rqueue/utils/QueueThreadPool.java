@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -41,11 +41,13 @@ public final class QueueThreadPool {
   }
 
   public void release() {
-    semaphore.release();
+    release(1);
   }
 
   public void release(int n) {
-    semaphore.release(n);
+    if(n > 0){
+      semaphore.release(n);
+    }
   }
 
   public boolean acquire(int n, long timeout) throws InterruptedException {

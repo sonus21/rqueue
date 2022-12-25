@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -38,8 +38,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ConsumedMessageStore {
 
-  @NonNull private final ConsumedMessageRepository consumedMessageRepository;
-  @NonNull private final ObjectMapper objectMapper;
+  @NonNull
+  private final ConsumedMessageRepository consumedMessageRepository;
+  @NonNull
+  private final ObjectMapper objectMapper;
 
   public void save(BaseQueueMessage message, Object tag, String queueName)
       throws JsonProcessingException {
@@ -67,6 +69,10 @@ public class ConsumedMessageStore {
 
   public Collection<ConsumedMessage> getConsumedMessages(Collection<String> messageIds) {
     return getMessages(messageIds).values();
+  }
+
+  public int getConsumedMessageCount(String messageId) {
+    return getConsumedMessages(messageId).size();
   }
 
   public <T> T getMessage(String messageId, Class<T> tClass) {
