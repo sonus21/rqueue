@@ -117,7 +117,8 @@ aliases:
 executors:
   rqueue-executor:
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2004:202010-01
+    resource_class: large
 
     working_directory: ~/repo
 
