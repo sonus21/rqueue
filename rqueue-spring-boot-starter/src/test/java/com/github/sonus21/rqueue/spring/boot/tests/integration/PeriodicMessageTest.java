@@ -119,6 +119,7 @@ class PeriodicMessageTest extends SpringTestBase {
       }
     });
     latch.await();
+    executor.shutdown();
     // if task was running than next task should not schedule and run
     TimeoutUtils.sleep(5 * Constants.ONE_MILLI);
     assertEquals(l.get(0), consumedMessageStore.getConsumedMessageCount(job.getId()));
