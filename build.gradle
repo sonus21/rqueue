@@ -8,8 +8,7 @@ plugins {
 
 allprojects {
     apply plugin: 'idea'
-    apply plugin: 'java'
-    apply plugin: 'maven'
+    apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'jacoco'
@@ -17,8 +16,8 @@ allprojects {
     apply plugin: 'com.adarshr.test-logger'
     apply plugin: 'org.gradle.test-retry'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = 17
+    targetCompatibility = 17
 
     repositories {
         mavenCentral()
@@ -26,20 +25,20 @@ allprojects {
 }
 
 ext {
-    springBootVersion = System.getenv("SPRING_BOOT_VERSION")
-    springVersion = System.getenv("SPRING_VERSION")
-    springDataVersion = System.getenv("SPRING_DATA_VERSION")
-    microMeterVersion = System.getenv("MICROMETER_VERSION")
+//    springBootVersion = System.getenv("SPRING_BOOT_VERSION")
+//    springVersion = System.getenv("SPRING_VERSION")
+//    springDataVersion = System.getenv("SPRING_DATA_VERSION")
+//    microMeterVersion = System.getenv("MICROMETER_VERSION")
 
-//    springBootVersion = '2.0.6.RELEASE'
-//    springVersion = '5.0.10.RELEASE'
-//    springDataVersion = '2.0.6.RELEASE'
-//    microMeterVersion = '1.1.0'
+    springBootVersion = '3.0.0'
+    springVersion = '6.0.3'
+    springDataVersion = '3.0.0'
+    microMeterVersion = '1.10.2'
 
     // logging dependencies
-    lombokVersion = '1.18.10'
-    logbackVersion = '1.2.3'
-    sl4jVersion = '1.7.28'
+    lombokVersion = '1.18.24'
+    logbackVersion = '1.4.5'
+    sl4jVersion = '2.0.6'
 
     // testing
     jupiterVersion = '5.5.0'
@@ -48,66 +47,64 @@ ext {
     jacocoVersion = '0.8.4'
     embeddedRedisVersion = '0.7.2'
     h2Version = '1.4.194'
-    tomcatVersion = '8.0.47'
+    tomcatVersion = '10.1.4'
 
     // utility
     lang3Version = '3.9'
-    jacksonVersion = '2.10.0'
+    jacksonVersion = '2.14.1'
 
     // server
-    javaxServletVersion = '4.0.1'
+    jakartaServletVersion = '6.0.0'
     pebbleVersion = '3.1.6'
 
     // database
-    lettuceVersion = '5.0.2.RELEASE'
-    javaxAnnotationVersion = '1.3.2'
-    jpaVersion = '2.2'
-    hibernateVersion = '5.4.9.Final'
+    lettuceVersion = '6.2.2.RELEASE'
+    jakartaAnnotationVersion = '2.1.0'
+    jakartaPersistenceVersion = '3.1.0'
+    hibernateVersion = '6.1.6.Final'
 
     // other dependencies
-    javaxValidationApiVersion = '2.0.1.Final'
+    jakartaValidationApiVersion = '3.0.2'
 
     guavaVersion = '30.1-jre'
-
 }
-
 
 subprojects {
     group = 'com.github.sonus21'
-    version = '2.13.0-RELEASE'
+    version = '3.0.0-RELEASE'
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
-        compile group: 'org.springframework', name: 'spring-messaging', version: "${springVersion}"
+        api group: 'org.springframework', name: 'spring-messaging', version: "${springVersion}"
         // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
-        compile group: 'org.springframework.data', name: 'spring-data-redis', version: "${springDataVersion}"
+        api group: 'org.springframework.data', name: 'spring-data-redis', version: "${springDataVersion}"
 
         // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-        compile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
+        implementation group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
 
         // https://mvnrepository.com/artifact/com.google.guava/guava
-        compile group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
+        implementation group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
 
         compileOnly "org.projectlombok:lombok:${lombokVersion}"
         annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
-        testCompile "org.projectlombok:lombok:${lombokVersion}"
+        testImplementation "org.projectlombok:lombok:${lombokVersion}"
         testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
         // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
-        testCompile group: 'ch.qos.logback', name: 'logback-core', version: "${logbackVersion}"
+        testImplementation group: 'ch.qos.logback', name: 'logback-core', version: "${logbackVersion}"
         // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-        testCompile group: 'ch.qos.logback', name: 'logback-classic', version: "${logbackVersion}"
-        testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: "${jupiterVersion}"
-        testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
-        testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
+        testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: "${logbackVersion}"
+        testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: "${jupiterVersion}"
+        testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
+        testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
         // https://mvnrepository.com/artifact/org.mockito/mockito-inline
-        testCompile group: 'org.mockito', name: 'mockito-inline', version: "${mockitoVersion}"
-        testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: "${mockitoVersion}"
+        testImplementation group: 'org.mockito', name: 'mockito-inline', version: "${mockitoVersion}"
+        testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: "${mockitoVersion}"
         // https://mvnrepository.com/artifact/org.hamcrest/hamcrest
-        testCompile group: 'org.hamcrest', name: 'hamcrest', version: "${hamcrestVersion}"
-        testCompile("org.springframework.boot:spring-boot-test:${springBootVersion}")
-        testCompile group: 'org.junit-pioneer', name: 'junit-pioneer', version: '0.9.0'
+        testImplementation group: 'org.hamcrest', name: 'hamcrest', version: "${hamcrestVersion}"
+        testImplementation("org.springframework.boot:spring-boot-test:${springBootVersion}")
+        testImplementation group: 'org.junit-pioneer', name: 'junit-pioneer', version: '0.9.0'
 
         configurations {
             all*.exclude module: 'spring-boot-starter-logging'

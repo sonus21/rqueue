@@ -6,18 +6,17 @@ mainClassName = 'rqueue.spring.example.Main'
 
 
 dependencies {
-    compile project(":rqueue-spring")
-    compile project(":rqueue-spring-common-test")
+    implementation project(":rqueue-spring")
+    implementation project(":rqueue-spring-common-test")
 
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
+    implementation group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-    compile group: 'org.slf4j', name: 'slf4j-simple', version: "${sl4jVersion}"
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: "${sl4jVersion}"
 
-    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: "${tomcatVersion}"
+    implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: "${tomcatVersion}"
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
-    compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
-
+    implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
 }

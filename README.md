@@ -52,9 +52,9 @@ well, where all services code is in Spring.
 
 ### Requirements
 
-* Spring 5+
-* Java 1.8+
-* Spring boot 2+
+* Spring 6+
+* Java 17+
+* Spring boot 3+
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
 

@@ -21,15 +21,16 @@ import com.github.sonus21.rqueue.test.repository.ConsumedMessageRepository;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import lombok.AllArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -188,6 +189,13 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
   @Override
   public void delete(ConsumedMessage entity) {
     deleteById(entity.getId());
+  }
+
+  @Override
+  public void deleteAllById(Iterable<? extends String> strings) {
+    HashSet<String> ids = new HashSet<>();
+    strings.forEach(ids::add);
+    deleteAllByIdIn(ids);
   }
 
   @Override

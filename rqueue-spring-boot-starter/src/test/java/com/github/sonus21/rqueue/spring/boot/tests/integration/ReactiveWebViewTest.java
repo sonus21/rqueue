@@ -45,7 +45,7 @@ import java.util.List;
 @TestPropertySource(
     properties = {
         "rqueue.retry.per.poll=1000",
-        "spring.redis.port=8020",
+        "spring.data.redis.port=8020",
         "list.email.queue.enabled=true",
         "mysql.db.name=ReactiveWebTest",
         "use.system.redis=false",

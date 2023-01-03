@@ -38,7 +38,7 @@ import org.springframework.util.CollectionUtils;
 @TestPropertySource(
     properties = {
       "use.system.redis=false",
-      "spring.redis.port=8014",
+      "spring.data.redis.port=8014",
       "monitor.enabled=true",
     })
 @SpringBootIntegrationTest

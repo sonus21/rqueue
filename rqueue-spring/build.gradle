@@ -7,6 +7,6 @@ buildscript {
 }
 
 dependencies {
-    compile project(":rqueue-core")
-    testCompile project(":rqueue-spring-common-test")
+    api project(":rqueue-core")
+    testImplementation project(":rqueue-spring-common-test")
 }

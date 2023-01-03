@@ -1,44 +1,42 @@
 dependencies {
 
     // https://mvnrepository.com/artifact/org.aspectj/aspectjweaver
-    compile group: 'org.aspectj', name: 'aspectjweaver', version: '1.9.5'
+    api group: 'org.aspectj', name: 'aspectjweaver', version: '1.9.5'
 
     // https://mvnrepository.com/artifact/org.aspectj/aspectjrt
-    compile group: 'org.aspectj', name: 'aspectjrt', version: '1.9.5'
+    api group: 'org.aspectj', name: 'aspectjrt', version: '1.9.5'
 
-    // https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
-    compile group: 'javax.annotation', name: 'javax.annotation-api', version: "${javaxAnnotationVersion}"
+    api group: 'jakarta.annotation', name: 'jakarta.annotation-api', version: '2.1.0'
 
-    compile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
+    api group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: "${jupiterVersion}"
 
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
-    // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
+    api group: 'org.apache.commons', name: 'commons-lang3', version: "${lang3Version}"
+
+    api group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: "${jakartaServletVersion}"
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
+    api group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
 
     // https://mvnrepository.com/artifact/org.springframework/spring-test
-    compile group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
+    api group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
 
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    compile group: 'org.springframework', name: 'spring-core', version: "${springVersion}"
+    api group: 'org.springframework', name: 'spring-core', version: "${springVersion}"
 
     // https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis
-    compile group: 'org.springframework.data', name: 'spring-data-redis', version: "${springDataVersion}"
+    api group: 'org.springframework.data', name: 'spring-data-redis', version: "${springDataVersion}"
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
+    api group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
 
-    // https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api
-    compile group: 'javax.persistence', name: 'javax.persistence-api', version: "${jpaVersion}"
+    api group: 'jakarta.persistence', name: 'jakarta.persistence-api', version: "${jakartaPersistenceVersion}"
 
-    compile "com.h2database:h2:${h2Version}"
-    compile "it.ozimov:embedded-redis:${embeddedRedisVersion}"
+    api "com.h2database:h2:${h2Version}"
+    api "it.ozimov:embedded-redis:${embeddedRedisVersion}"
 
     // https://mvnrepository.com/artifact/org.springframework.data/spring-data-jpa
-    compile group: 'org.springframework.data', name: 'spring-data-jpa', version: "${springBootVersion}"
+    api group: 'org.springframework.data', name: 'spring-data-jpa', version: "${springBootVersion}"
 
     // https://mvnrepository.com/artifact/org.hibernate/hibernate-core
-    compile group: 'org.hibernate', name: 'hibernate-core', version: "${hibernateVersion}"
+    api group: 'org.hibernate.orm', name: 'hibernate-core', version: "${hibernateVersion}"
 
-    compile "com.athaydes.javanna:javanna:1.1"
+    api "com.athaydes.javanna:javanna:1.1"
 }

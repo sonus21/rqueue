@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.models.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.sonus21.rqueue.models.SerializableBase;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

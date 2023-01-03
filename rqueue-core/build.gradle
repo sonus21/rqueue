@@ -7,27 +7,25 @@ buildscript {
 }
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: "${jacksonVersion}"
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${jacksonVersion}"
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${jacksonVersion}"
-
-    // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: "${jacksonVersion}"
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${jacksonVersion}"
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${jacksonVersion}"
+    api group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: "${jakartaServletVersion}"
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
-    compile group: 'org.springframework', name: 'spring-webflux', version: "${springVersion}"
-    compile "io.pebbletemplates:pebble-spring5:${pebbleVersion}"
-    compile group: 'io.seruco.encoding', name: 'base62', version: "0.1.3"
+    api group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
+    api group: 'org.springframework', name: 'spring-webflux', version: "${springVersion}"
+    api "io.pebbletemplates:pebble-spring5:${pebbleVersion}"
+    api group: 'io.seruco.encoding', name: 'base62', version: "0.1.3"
     // https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
-    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
-    implementation 'org.jetbrains:annotations:20.1.0'
-    compile "javax.validation:validation-api:${javaxValidationApiVersion}"
+    api group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+    api 'org.jetbrains:annotations:20.1.0'
+    api "jakarta.validation:jakarta.validation-api:${jakartaValidationApiVersion}"
     // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
-    compile group: 'org.hibernate.validator', name: 'hibernate-validator', version: '6.1.7.Final'
+    api group: 'org.hibernate.validator', name: 'hibernate-validator', version: '8.0.0.Final'
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    compile "io.micrometer:micrometer-core:${microMeterVersion}", optional
-    testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
-    testCompile project(":rqueue-test-util")
+    api "io.micrometer:micrometer-core:${microMeterVersion}", optional
+    testImplementation "io.lettuce:lettuce-core:${lettuceVersion}"
+    testImplementation project(":rqueue-test-util")
 }
 
 processResources {

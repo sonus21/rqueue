@@ -20,11 +20,11 @@ import com.github.sonus21.rqueue.test.entity.FailureDetail;
 import com.github.sonus21.rqueue.test.repository.FailureDetailRepository;
 import java.util.List;
 import java.util.Optional;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import lombok.AllArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -96,6 +96,9 @@ public class FailureDetailRepositoryImpl implements FailureDetailRepository {
 
   @Override
   public void delete(FailureDetail entity) {}
+
+  @Override
+  public void deleteAllById(Iterable<? extends String> strings) {}
 
   @Override
   public void deleteAll(Iterable<? extends FailureDetail> entities) {}

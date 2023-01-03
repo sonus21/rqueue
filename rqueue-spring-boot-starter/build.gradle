@@ -7,15 +7,15 @@ buildscript {
 }
 
 dependencies {
-    compile project(":rqueue-core")
-    compile "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+    api project(":rqueue-core")
+    api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: "${springBootVersion}", optional
+    api group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: "${springBootVersion}", optional
 
-    testCompile project(":rqueue-spring-common-test")
-    testCompile "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-    testCompile "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
-    testCompile "org.springframework.boot:spring-boot-starter-data-redis-reactive:${springBootVersion}"
-    testCompile "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
-    testCompile "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
+    testImplementation project(":rqueue-spring-common-test")
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-data-redis-reactive:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
 }
