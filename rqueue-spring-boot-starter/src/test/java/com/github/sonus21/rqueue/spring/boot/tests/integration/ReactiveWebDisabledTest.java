@@ -73,20 +73,20 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
   @ValueSource(
       strings = {
           "",
-          "queues",
-          "running",
-          "scheduled",
-          "dead",
-          "pending",
-          "utility",
-          "queues/test-queue",
-          "api/v1/aggregate-data-selector?type=WEEKLY",
-          "api/v1/jobs?message-id=1234567890"
+          "/queues",
+          "/running",
+          "/scheduled",
+          "/dead",
+          "/pending",
+          "/utility",
+          "/queues/test-queue",
+          "/api/v1/aggregate-data-selector?type=WEEKLY",
+          "/api/v1/jobs?message-id=1234567890"
       })
   void testPath(String path) throws Exception {
     this.webTestClient
         .get()
-        .uri("/rqueue/" + path)
+        .uri("/rqueue" + path)
         .exchange()
         .expectStatus()
         .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
