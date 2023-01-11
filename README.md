@@ -52,9 +52,9 @@ well, where all services code is in Spring.
 
 ### Requirements
 
-* Spring 5+
-* Java 1.8+
-* Spring boot 2+
+* Spring 5+, 6+
+* Java 1.8+,17
+* Spring boot 2+,3+
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
 
@@ -64,19 +64,18 @@ well, where all services code is in Spring.
 
 Snapshot
 Version: [https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/](https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/)
-Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.sonus21)
+<br/>Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.sonus21)
 
-**Note:**
+#### Spring Boot
+
+**NOTE:**
 
 * For spring boot 2.x use Rqueue 2.x
 * For spring boot 3.x use Rqueue 3.x
 
----
+Get the latest one
+from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
 
-#### Spring Boot 2.x
-
-* Get the latest one
-  from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
 * Add dependency
   * Gradle
     ```groovy
@@ -95,10 +94,16 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 
 ---
 
-#### Spring framework
+#### Spring Framework
 
-* Get the latest one
-  from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
+**NOTE**
+
+* For spring framework 5.x use rqueue-spring 2.x
+* For spring framework 6.x use rqueue-spring 3.x
+
+Get the latest one
+from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
+
 * Add Dependency
   * Gradle
     ```groovy

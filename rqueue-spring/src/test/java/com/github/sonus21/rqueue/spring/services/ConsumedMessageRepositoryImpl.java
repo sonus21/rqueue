@@ -52,7 +52,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     EntityManager entityManager = entityManagerFactory.createEntityManager();
     Session session = entityManager.unwrap(Session.class);
     Transaction tx = session.beginTransaction();
-    session.save(entity);
+    session.persist(entity);
     tx.commit();
     entityManager.close();
     return entity;
