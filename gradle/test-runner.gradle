@@ -15,33 +15,37 @@
  */
 
 test {
-    String itags = System.getProperty("includeTags") ? System.getProperty("includeTags") : ""
-    String etags = System.getProperty("excludeTags") ? System.getProperty("excludeTags") : ""
-    useJUnitPlatform {
-        if (itags != "") {
-            includeTags itags.split(",")
-        }
-        if (etags != "") {
-            excludeTags etags.split(",")
-        }
+  String itags = System.getProperty("includeTags") ? System.getProperty("includeTags") : ""
+  String etags = System.getProperty("excludeTags") ? System.getProperty("excludeTags") : ""
+  useJUnitPlatform {
+    if (itags != "") {
+      includeTags itags.split(",")
     }
-    jacoco {
-        if (System.getenv("CIRCLECI") == "true") {
-            destinationFile = file("$buildDir/reports/jacoco/${System.env.CIRCLE_WORKFLOW_JOB_ID}_test.exec")
-        } else {
-            destinationFile = file("$buildDir/reports/jacoco/test.exec")
-        }
+    if (etags != "") {
+      excludeTags etags.split(",")
     }
-    reports {
-        junitXml.enabled = System.getenv("CIRCLECI") == "true"
-        junitXml.destination = file("$buildDir/reports/junit/xml")
-        html.enabled = System.getenv("CIRCLECI") != "true"
-        html.destination = file("$buildDir/reports/junit/html")
-    }
+  }
 
-    retry {
-        failOnPassedAfterRetry = false
-        maxFailures = 10
-        maxRetries = 1
+  jacoco {
+    if (System.getenv("CIRCLECI") == "true") {
+      destinationFile = file("$buildDir/reports/jacoco/${System.env.CIRCLE_WORKFLOW_JOB_ID}_test.exec")
+    } else {
+      destinationFile = file("$buildDir/reports/jacoco/test.exec")
     }
+  }
+
+  jacocoTestReport {
+    reports {
+      xml.enabled = System.getenv("CIRCLECI") == "true"
+      xml.destination = file("$buildDir/reports/junit/xml")
+      html.enabled = System.getenv("CIRCLECI") != "true"
+      html.destination = file("$buildDir/reports/junit/html")
+    }
+  }
+
+  retry {
+    failOnPassedAfterRetry = false
+    maxFailures = 10
+    maxRetries = 1
+  }
 }

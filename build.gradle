@@ -137,6 +137,7 @@ task codeCoverageReport(type: JacocoReport, group: "verification", description: 
     xml.enabled = System.getenv("CIRCLECI") == "true"
     xml.destination = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
   }
+
   afterEvaluate {
     classDirectories.setFrom(files(classDirectories.files.collect {
       fileTree(dir: it,
