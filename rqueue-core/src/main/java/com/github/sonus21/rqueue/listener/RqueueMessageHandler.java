@@ -22,6 +22,7 @@ import static org.springframework.util.Assert.notNull;
 import com.github.sonus21.rqueue.annotation.MessageListener;
 import com.github.sonus21.rqueue.annotation.RqueueHandler;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.models.Concurrency;
@@ -30,6 +31,7 @@ import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.RetryableRunnable;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.ValueResolver;
+import com.google.common.annotations.VisibleForTesting;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,6 +97,11 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
         ThreadUtils.createTaskExecutor("rqueueMessageExecutor", "multiMessageExecutor-", -1, -1, 0);
   }
 
+
+  @VisibleForTesting
+  public RqueueMessageHandler() {
+    this(new DefaultRqueueMessageConverter());
+  }
 
   public RqueueMessageHandler(final MessageConverter messageConverter) {
     this(messageConverter, true);
