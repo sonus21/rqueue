@@ -20,4 +20,6 @@ import com.github.sonus21.rqueue.config.MetricsProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RqueueMetricsProperties extends MetricsProperties {}
+public class RqueueMetricsProperties extends MetricsProperties {
+
+}

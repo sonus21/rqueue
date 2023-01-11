@@ -22,13 +22,12 @@ import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
+import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.CollectionUtils;
-
-import java.util.List;
 
 abstract class RqueueMessagePoller extends MessageContainerBase {
 

@@ -79,23 +79,26 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=1000",
-      "spring.data.redis.port=8019",
-      "reservation.request.dead.letter.consumer.enabled=true",
-      "reservation.request.active=true",
-      "list.email.queue.enabled=true",
-      "mysql.db.name=ReactiveRestApiTest",
-      "use.system.redis=false",
-      "user.banned.queue.active=true",
-      "spring.main.web-application-type=reactive"
+        "rqueue.retry.per.poll=1000",
+        "spring.data.redis.port=8019",
+        "reservation.request.dead.letter.consumer.enabled=true",
+        "reservation.request.active=true",
+        "list.email.queue.enabled=true",
+        "mysql.db.name=ReactiveRestApiTest",
+        "use.system.redis=false",
+        "user.banned.queue.active=true",
+        "spring.main.web-application-type=reactive"
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class ReactiveRestApiTest extends BasicListenerTest {
 
-  @Autowired private WebTestClient webTestClient;
-  @Autowired private RqueueConfig rqueueConfig;
-  @Autowired private DeleteMessageListener deleteMessageListener;
+  @Autowired
+  private WebTestClient webTestClient;
+  @Autowired
+  private RqueueConfig rqueueConfig;
+  @Autowired
+  private DeleteMessageListener deleteMessageListener;
 
   @Test
   void verifyChartAndQueueData() throws Exception {

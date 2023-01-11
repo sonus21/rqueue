@@ -45,17 +45,19 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=1",
-      "spring.data.redis.port=8021",
-      "mysql.db.name=PauseUnpauseTest",
-      "use.system.redis=false",
+        "rqueue.retry.per.poll=1",
+        "spring.data.redis.port=8021",
+        "mysql.db.name=PauseUnpauseTest",
+        "use.system.redis=false",
     })
 @SpringBootIntegrationTest
 @Tag("redisCluster")
 class PauseUnpauseTest extends SpringTestBase {
 
-  @Autowired private PauseUnpauseEventListener eventListener;
-  @Autowired private RqueueUtilityService rqueueUtilityService;
+  @Autowired
+  private PauseUnpauseEventListener eventListener;
+  @Autowired
+  private RqueueUtilityService rqueueUtilityService;
 
   @Test
   void onMessageNotification() throws TimedOutException {

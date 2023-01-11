@@ -36,7 +36,8 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 class LockMiddlewareTest extends TestBase {
 
-  @Mock private Job job;
+  @Mock
+  private Job job;
 
   @BeforeEach
   public void init() {

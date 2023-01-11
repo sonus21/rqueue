@@ -30,7 +30,8 @@ import org.mockito.MockitoAnnotations;
 class RqueueCounterTest extends TestBase {
 
   private final String queueName = "test";
-  @Mock private QueueCounter queueCounter;
+  @Mock
+  private QueueCounter queueCounter;
   private RqueueCounter rqueueCounter;
 
   @BeforeEach

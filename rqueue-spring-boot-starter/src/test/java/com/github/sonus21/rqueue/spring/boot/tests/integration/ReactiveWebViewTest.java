@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.spring.boot.reactive.ReactiveWebApplication;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +37,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
-
-import java.util.List;
 
 @ContextConfiguration(classes = ReactiveWebApplication.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

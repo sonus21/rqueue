@@ -55,10 +55,14 @@ class RqueueSystemManagerServiceTest extends TestBase {
   private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue, 900000L);
   private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueStringDao rqueueStringDao;
+  @Mock
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
   private RqueueSystemManagerService rqueueSystemManagerService;
   private Set<String> queues;
 
@@ -102,10 +106,10 @@ class RqueueSystemManagerServiceTest extends TestBase {
   @Test
   void getQueueConfigs() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-config::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-config::" + name;
+        })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
     doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
@@ -122,10 +126,10 @@ class RqueueSystemManagerServiceTest extends TestBase {
   @Test
   void getSortedQueueConfigs() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-config::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-config::" + name;
+        })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
     doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
@@ -145,10 +149,10 @@ class RqueueSystemManagerServiceTest extends TestBase {
   @Test
   void getQueueConfig() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-config::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-config::" + name;
+        })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
     doReturn(Collections.singletonList(slowQueueConfig))

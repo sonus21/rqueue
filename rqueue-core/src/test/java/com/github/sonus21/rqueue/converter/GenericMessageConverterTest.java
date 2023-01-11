@@ -225,7 +225,8 @@ class GenericMessageConverterTest extends TestBase {
   @Test
   @Disabled
   void foo() {
-    MappingRegistrar<?> m = new MappingRegistrar<MultiGenericTestDataSameType<String>>() {};
+    MappingRegistrar<?> m = new MappingRegistrar<MultiGenericTestDataSameType<String>>() {
+    };
     m.seeIt();
     MultiGenericTestDataSameType<String> m2 = new MultiGenericTestDataSameType<>();
     m2.seeIt();

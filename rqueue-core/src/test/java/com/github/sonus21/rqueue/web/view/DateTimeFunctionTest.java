@@ -29,12 +29,12 @@ import org.junit.jupiter.api.Test;
 @CoreUnitTest
 class DateTimeFunctionTest extends TestBase {
 
+  private final DateTimeFunction function = new DateTimeFunction();
+
   @BeforeAll
   public static void init() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
   }
-
-  private final DateTimeFunction function = new DateTimeFunction();
 
   @Test
   void getArguments() {

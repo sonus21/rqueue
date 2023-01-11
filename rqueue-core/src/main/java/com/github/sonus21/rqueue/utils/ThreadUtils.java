@@ -31,7 +31,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public final class ThreadUtils {
 
-  private ThreadUtils() {}
+  private ThreadUtils() {
+  }
 
   public static ThreadPoolTaskScheduler createTaskScheduler(
       int poolSize, String threadPrefix, int terminationTime) {

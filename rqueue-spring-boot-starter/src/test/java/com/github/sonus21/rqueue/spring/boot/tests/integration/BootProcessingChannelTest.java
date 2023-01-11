@@ -30,13 +30,13 @@ import org.springframework.test.context.TestPropertySource;
 @ContextConfiguration(classes = ApplicationListenerDisabled.class)
 @TestPropertySource(
     properties = {
-      "rqueue.scheduler.auto.start=false",
-      "spring.data.redis.port=8011",
-      "mysql.db.name=BootProcessingChannelTest",
-      "max.workers.count=120",
-      "use.system.redis=false",
-      "monitor.enabled=true",
-      "start.queue.enabled=true",
+        "rqueue.scheduler.auto.start=false",
+        "spring.data.redis.port=8011",
+        "mysql.db.name=BootProcessingChannelTest",
+        "max.workers.count=120",
+        "use.system.redis=false",
+        "monitor.enabled=true",
+        "start.queue.enabled=true",
     })
 @SpringBootTest
 @Slf4j

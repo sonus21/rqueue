@@ -53,8 +53,8 @@ class RedisScriptFactoryTest extends TestBase {
   @Test
   @TestQueue(
       value = {
-        "testExpiredMessageMoverWithFailureQueue",
-        "__rq::p-queue::testExpiredMessageMoverWithFailureQueue"
+          "testExpiredMessageMoverWithFailureQueue",
+          "__rq::p-queue::testExpiredMessageMoverWithFailureQueue"
       })
   void expiredMessageMoverWithFailureQueue() {
     String queueName = "testExpiredMessageMoverWithFailureQueue";

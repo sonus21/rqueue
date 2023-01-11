@@ -93,10 +93,10 @@ public class GenericMessageConverter implements SmartMessageConverter {
    *
    * <p>If the converter cannot perform the conversion it returns {@code null}.
    *
-   * @param message the input message
+   * @param message     the input message
    * @param targetClass the target class for the conversion
    * @return the result of the conversion, or {@code null} if the converter cannot perform the
-   *     conversion.
+   * conversion.
    */
   @Override
   public Object fromMessage(Message<?> message, Class<?> targetClass) {

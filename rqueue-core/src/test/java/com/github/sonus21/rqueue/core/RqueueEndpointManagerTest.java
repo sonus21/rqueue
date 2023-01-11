@@ -32,8 +32,10 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 class RqueueEndpointManagerTest extends TestBase {
 
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock
+  private RqueueConfig rqueueConfig;
   private RqueueEndpointManager rqueueEndpointManager;
 
   @BeforeEach

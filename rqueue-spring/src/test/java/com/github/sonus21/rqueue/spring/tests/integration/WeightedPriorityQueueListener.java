@@ -31,17 +31,17 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7010",
-      "mysql.db.name=WeightedPriorityQueueListener",
-      "sms.queue.active=false",
-      "notification.queue.active=false",
-      "email.queue.active=false",
-      "job.queue.active=false",
-      "use.system.redis=false",
-      "priority.mode=WEIGHTED",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true"
+        "spring.data.redis.port=7010",
+        "mysql.db.name=WeightedPriorityQueueListener",
+        "sms.queue.active=false",
+        "notification.queue.active=false",
+        "email.queue.active=false",
+        "job.queue.active=false",
+        "use.system.redis=false",
+        "priority.mode=WEIGHTED",
+        "reservation.queue.active=true",
+        "feed.generation.queue.active=true",
+        "chat.indexing.queue.active=true"
     })
 @SpringIntegrationTest
 class WeightedPriorityQueueListener extends GroupPriorityTest {

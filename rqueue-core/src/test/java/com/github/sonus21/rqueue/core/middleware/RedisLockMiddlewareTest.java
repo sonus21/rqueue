@@ -16,28 +16,29 @@
 
 package com.github.sonus21.rqueue.core.middleware;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RedisLockMiddlewareTest extends TestBase {
@@ -45,8 +46,10 @@ class RedisLockMiddlewareTest extends TestBase {
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final String key = "job-xxx";
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
-  @Mock private Job job;
-  @Mock private RqueueRedisTemplate<String> redisTemplate;
+  @Mock
+  private Job job;
+  @Mock
+  private RqueueRedisTemplate<String> redisTemplate;
 
   @BeforeEach
   public void init() {
@@ -137,13 +140,13 @@ class RedisLockMiddlewareTest extends TestBase {
           }
         };
     doAnswer(
-            invocation -> {
-              int val = lockCounter.incrementAndGet();
-              if (val == 1) {
-                return Boolean.TRUE;
-              }
-              return Boolean.FALSE;
-            })
+        invocation -> {
+          int val = lockCounter.incrementAndGet();
+          if (val == 1) {
+            return Boolean.TRUE;
+          }
+          return Boolean.FALSE;
+        })
         .when(redisTemplate)
         .setIfAbsent(key, "1", queueDetail.visibilityDuration());
     lockMiddleware.handle(

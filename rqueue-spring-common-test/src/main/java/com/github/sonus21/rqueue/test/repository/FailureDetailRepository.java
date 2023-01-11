@@ -19,4 +19,6 @@ package com.github.sonus21.rqueue.test.repository;
 import com.github.sonus21.rqueue.test.entity.FailureDetail;
 import org.springframework.data.repository.CrudRepository;
 
-public interface FailureDetailRepository extends CrudRepository<FailureDetail, String> {}
+public interface FailureDetailRepository extends CrudRepository<FailureDetail, String> {
+
+}

@@ -35,12 +35,12 @@ public abstract class MultiLevelQueueTest extends SpringTestBase {
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(
-                    Arrays.asList(
-                        smsQueue,
-                        smsQueue + "_critical",
-                        smsQueue + "_high",
-                        smsQueue + "_medium",
-                        smsQueue + "_low"))
+                Arrays.asList(
+                    smsQueue,
+                    smsQueue + "_critical",
+                    smsQueue + "_high",
+                    smsQueue + "_medium",
+                    smsQueue + "_low"))
                 == 0,
         "Waiting for multi level queues to drain");
   }
@@ -54,12 +54,12 @@ public abstract class MultiLevelQueueTest extends SpringTestBase {
     TimeoutUtils.waitFor(
         () ->
             getMessageCount(
-                    Arrays.asList(
-                        smsQueue,
-                        smsQueue + "_critical",
-                        smsQueue + "_high",
-                        smsQueue + "_medium",
-                        smsQueue + "_low"))
+                Arrays.asList(
+                    smsQueue,
+                    smsQueue + "_critical",
+                    smsQueue + "_high",
+                    smsQueue + "_medium",
+                    smsQueue + "_low"))
                 == 0,
         "Waiting for multi level queues to drain");
   }

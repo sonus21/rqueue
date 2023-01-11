@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomConfiguration;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
@@ -36,9 +39,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ContextConfiguration(classes = ApplicationWithCustomConfiguration.class)
@@ -125,10 +125,11 @@ class PeriodicMessageTest extends SpringTestBase {
     assertEquals(l.get(0), consumedMessageStore.getConsumedMessageCount(job.getId()));
     assertTrue(
         // already scheduled job
-        1+l.get(1)==rqueueEventListener.getEventCount()||
+        1 + l.get(1) == rqueueEventListener.getEventCount() ||
             // deleted just now, so no future scheduling
-        l.get(1)==rqueueEventListener.getEventCount(),
-        ()-> String.format("Event Count does not match %d %d", rqueueEventListener.getEventCount(), l.get(1))
-        );
+            l.get(1) == rqueueEventListener.getEventCount(),
+        () -> String.format("Event Count does not match %d %d", rqueueEventListener.getEventCount(),
+            l.get(1))
+    );
   }
 }

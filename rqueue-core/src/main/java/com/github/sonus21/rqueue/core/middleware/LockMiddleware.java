@@ -37,8 +37,8 @@ public interface LockMiddleware extends TimeProviderMiddleware {
   /**
    * This method should acquire lock from any source like Redis, File, Java Lock or any system and
    * returns lock identifier for the same. If it's unable to acquire lock than this method must
-   * return null/empty string. If locking system does not support lock identifier than you can return
-   * {@link Job#getId()}.
+   * return null/empty string. If locking system does not support lock identifier than you can
+   * return {@link Job#getId()}.
    *
    * @param job running job object
    * @return lock identifier
@@ -50,7 +50,7 @@ public interface LockMiddleware extends TimeProviderMiddleware {
    *
    * <p><b> This method is always called </b>
    *
-   * @param job the running job
+   * @param job            the running job
    * @param lockIdentifier lock identifier
    */
   void releaseLock(Job job, String lockIdentifier);

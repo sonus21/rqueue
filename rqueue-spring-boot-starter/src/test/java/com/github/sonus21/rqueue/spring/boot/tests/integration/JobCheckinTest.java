@@ -46,14 +46,14 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=8015",
-      "mysql.db.name=JobCheckinTest",
-      "long.running.job.queue.active=true",
-      "use.system.redis=false",
-      "monitor.enabled=false",
-      "rqueue.retry.per.poll=4",
-      "periodic.job.queue.active=true",
-      "checkin.enabled=true",
+        "spring.data.redis.port=8015",
+        "mysql.db.name=JobCheckinTest",
+        "long.running.job.queue.active=true",
+        "use.system.redis=false",
+        "monitor.enabled=false",
+        "rqueue.retry.per.poll=4",
+        "periodic.job.queue.active=true",
+        "checkin.enabled=true",
     })
 @SpringBootIntegrationTest
 class JobCheckinTest extends SpringTestBase {

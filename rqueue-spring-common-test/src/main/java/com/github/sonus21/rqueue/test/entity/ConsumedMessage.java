@@ -16,13 +16,13 @@
 
 package com.github.sonus21.rqueue.test.entity;
 
-import java.util.UUID;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,13 +40,15 @@ import lombok.ToString;
 @Table(
     name = "consumed_messages",
     uniqueConstraints = {
-      @UniqueConstraint(
-          name = "message_id_and_tag_unique",
-          columnNames = {"message_id", "tag"})
+        @UniqueConstraint(
+            name = "message_id_and_tag_unique",
+            columnNames = {"message_id", "tag"})
     })
 public class ConsumedMessage {
 
-  @Id @Column private String id;
+  @Id
+  @Column
+  private String id;
 
   @Column(name = "message_id")
   private String messageId;
@@ -62,11 +64,14 @@ public class ConsumedMessage {
   @Column(length = 1000000)
   private String message;
 
-  @Column private Long createdAt;
+  @Column
+  private Long createdAt;
 
-  @Column private Long updatedAt;
+  @Column
+  private Long updatedAt;
 
-  @Column private int count;
+  @Column
+  private int count;
 
   public ConsumedMessage(String messageId, String tag, String queueName, String message) {
     this(

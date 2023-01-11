@@ -31,14 +31,14 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=1000",
-      "spring.data.redis.port=8001",
-      "reservation.request.dead.letter.consumer.enabled=true",
-      "reservation.request.active=true",
-      "list.email.queue.enabled=true",
-      "mysql.db.name=BootApplicationTest",
-      "use.system.redis=false",
-      "user.banned.queue.active=true",
+        "rqueue.retry.per.poll=1000",
+        "spring.data.redis.port=8001",
+        "reservation.request.dead.letter.consumer.enabled=true",
+        "reservation.request.active=true",
+        "list.email.queue.enabled=true",
+        "mysql.db.name=BootApplicationTest",
+        "use.system.redis=false",
+        "user.banned.queue.active=true",
     })
 @SpringBootIntegrationTest
 class ApplicationTest extends BasicListenerTest {

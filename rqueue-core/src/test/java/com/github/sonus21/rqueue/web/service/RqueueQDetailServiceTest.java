@@ -74,11 +74,16 @@ import org.springframework.messaging.converter.MessageConverter;
 class RqueueQDetailServiceTest extends TestBase {
 
   private final MessageConverter messageConverter = new GenericMessageConverter();
-  @Mock private RedisTemplate<?, ?> redisTemplate;
-  @Mock private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueSystemManagerService rqueueSystemManagerService;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock
+  private RedisTemplate<?, ?> redisTemplate;
+  @Mock
+  private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock
+  private RqueueSystemManagerService rqueueSystemManagerService;
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
   private RqueueQDetailService rqueueQDetailService;
   private QueueConfig queueConfig;
   private QueueConfig queueConfig2;
@@ -386,9 +391,9 @@ class RqueueQDetailServiceTest extends TestBase {
     expectedResponse.setRows(lists);
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(
-            rqueueMessages.stream()
-                .map(e -> new DefaultTypedTuple<>(e, (double) System.currentTimeMillis() + 100L))
-                .collect(Collectors.toList()))
+        rqueueMessages.stream()
+            .map(e -> new DefaultTypedTuple<>(e, (double) System.currentTimeMillis() + 100L))
+            .collect(Collectors.toList()))
         .when(rqueueMessageTemplate)
         .readFromZsetWithScore("__rq::p-queue::test", 0, 9);
 

@@ -35,7 +35,9 @@ public class RqueueWebConfig {
   @Value("${rqueue.web.enable:true}")
   private boolean enable;
 
-  /** Base path for Rqueue web endpoints. Relative to server.servlet.context-path */
+  /**
+   * Base path for Rqueue web endpoints. Relative to server.servlet.context-path
+   */
   @Value("${rqueue.web.url.prefix:}")
   @Getter(AccessLevel.NONE)
   private String urlPrefix;

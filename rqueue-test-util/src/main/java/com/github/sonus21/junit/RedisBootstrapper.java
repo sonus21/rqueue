@@ -40,10 +40,10 @@ import org.springframework.data.redis.core.RedisConnectionUtils;
 @Slf4j
 public class RedisBootstrapper extends RedisBootstrapperBase
     implements BeforeAllCallback,
-        AfterAllCallback,
-        ParameterResolver,
-        BeforeEachCallback,
-        AfterEachCallback {
+    AfterAllCallback,
+    ParameterResolver,
+    BeforeEachCallback,
+    AfterEachCallback {
 
   public static final String REDIS_BOOSTRAP_BEAN = "redisBootstrap";
 

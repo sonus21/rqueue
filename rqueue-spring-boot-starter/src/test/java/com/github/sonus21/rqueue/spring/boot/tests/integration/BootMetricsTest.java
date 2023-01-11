@@ -33,13 +33,13 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=20",
-      "rqueue.scheduler.auto.start=false",
-      "spring.data.redis.port=8003",
-      "mysql.db.name=test4",
-      "rqueue.metrics.count.failure=true",
-      "rqueue.metrics.count.execution=true",
-      "sms.queue.active=true"
+        "rqueue.retry.per.poll=20",
+        "rqueue.scheduler.auto.start=false",
+        "spring.data.redis.port=8003",
+        "mysql.db.name=test4",
+        "rqueue.metrics.count.failure=true",
+        "rqueue.metrics.count.execution=true",
+        "sms.queue.active=true"
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "CI", matches = "true")

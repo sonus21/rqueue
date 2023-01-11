@@ -33,12 +33,14 @@ public final class TimeoutUtils {
   public static final long EXECUTION_TIME = 10_000L;
   public static final long SLEEP_TIME = 100L;
 
-  private TimeoutUtils() {}
+  private TimeoutUtils() {
+  }
 
   public static void waitFor(
       BooleanSupplier callback, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
-    waitFor(callback, waitTimeInMilliSeconds, SLEEP_TIME, description, () -> {});
+    waitFor(callback, waitTimeInMilliSeconds, SLEEP_TIME, description, () -> {
+    });
   }
 
   public static void waitFor(BooleanSupplier callback, String description)

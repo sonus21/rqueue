@@ -49,7 +49,8 @@ public class QueueDetail extends SerializableBase {
   private final long visibilityTimeout;
   private final String name;
   private final int numRetry;
-  @Builder.Default private final QueueType type = QueueType.QUEUE;
+  @Builder.Default
+  private final QueueType type = QueueType.QUEUE;
   private final String queueName;
   private final String deadLetterQueueName;
   private final boolean deadLetterConsumerEnabled;

@@ -25,5 +25,6 @@ class RqueueMessagePollerTest extends TestBase {
   // DefaultRqueuePoller poller = new DefaultRqueuePoller();
 
   @BeforeEach
-  void setUp() {}
+  void setUp() {
+  }
 }

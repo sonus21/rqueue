@@ -31,17 +31,17 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7011",
-      "mysql.db.name=StrictHeterogeneousQueueListener",
-      "sms.queue.active=true",
-      "notification.queue.active=false",
-      "email.queue.active=true",
-      "job.queue.active=true",
-      "use.system.redis=false",
-      "priority.mode=STRICT",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true"
+        "spring.data.redis.port=7011",
+        "mysql.db.name=StrictHeterogeneousQueueListener",
+        "sms.queue.active=true",
+        "notification.queue.active=false",
+        "email.queue.active=true",
+        "job.queue.active=true",
+        "use.system.redis=false",
+        "priority.mode=STRICT",
+        "reservation.queue.active=true",
+        "feed.generation.queue.active=true",
+        "chat.indexing.queue.active=true"
     })
 @SpringIntegrationTest
 class StrictHeterogeneousQueueListener extends AllQueueMode {

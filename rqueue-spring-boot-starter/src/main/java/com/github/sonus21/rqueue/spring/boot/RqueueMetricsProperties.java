@@ -22,4 +22,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties(prefix = "rqueue.metrics")
-public class RqueueMetricsProperties extends MetricsProperties {}
+public class RqueueMetricsProperties extends MetricsProperties {
+
+}

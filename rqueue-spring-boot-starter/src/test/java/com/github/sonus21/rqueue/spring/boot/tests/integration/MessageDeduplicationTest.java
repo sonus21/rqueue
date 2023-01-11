@@ -37,12 +37,12 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=20",
-      "rqueue.scheduler.auto.start=true",
-      "spring.data.redis.port=8009",
-      "mysql.db.name=MessageDeduplicationTest",
-      "rqueue.metrics.count.failure=false",
-      "rqueue.metrics.count.execution=false",
+        "rqueue.retry.per.poll=20",
+        "rqueue.scheduler.auto.start=true",
+        "spring.data.redis.port=8009",
+        "mysql.db.name=MessageDeduplicationTest",
+        "rqueue.metrics.count.failure=false",
+        "rqueue.metrics.count.execution=false",
     })
 @SpringBootIntegrationTest
 class MessageDeduplicationTest extends SpringTestBase {

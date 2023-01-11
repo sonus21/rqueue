@@ -48,9 +48,12 @@ class MessageSchedulerDisabledTest extends TestBase {
 
   private final String slowQueue = "slow-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
+  @Mock
+  private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RedisTemplate<String, Long> redisTemplate;
 
   @BeforeEach
   public void init() {

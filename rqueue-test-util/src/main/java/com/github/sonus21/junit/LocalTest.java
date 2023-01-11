@@ -25,4 +25,6 @@ import org.junit.jupiter.api.Tag;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Tag("local")
-public @interface LocalTest {}
+public @interface LocalTest {
+
+}

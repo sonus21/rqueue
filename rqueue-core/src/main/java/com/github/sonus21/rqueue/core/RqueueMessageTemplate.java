@@ -26,7 +26,8 @@ import reactor.core.publisher.Mono;
 /**
  * Rqueue message template is used to send messages
  *
- * <p>Methods from this class should not be used in the application code, these methods are bound to
+ * <p>Methods from this class should not be used in the application code, these methods are bound
+ * to
  * change as new and new features are added to Rqueue.
  */
 public interface RqueueMessageTemplate {

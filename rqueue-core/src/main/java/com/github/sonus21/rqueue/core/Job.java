@@ -27,10 +27,11 @@ import java.time.Duration;
 /**
  * On each execution Rqueue creates a job to track it's status and execution progress.
  *
- * <p>A job belongs to a single message poll, each message listener call creates an execution {@link
+ * <p>A job belongs to a single message poll, each message listener call creates an execution
+ * {@link
  * com.github.sonus21.rqueue.models.db.Execution} and that has a detail for specific execution.
- * Overall job status can be found using this job interface. This object is available via {@link
- * org.springframework.messaging.handler.annotation.Header} in listener method.
+ * Overall job status can be found using this job interface. This object is available via
+ * {@link org.springframework.messaging.handler.annotation.Header} in listener method.
  */
 public interface Job {
 
@@ -81,7 +82,7 @@ public interface Job {
    * return zero value
    *
    * @return remaining duration that this job can take, otherwise other listener will consume this
-   *     message
+   * message
    */
   Duration getVisibilityTimeout();
 
@@ -181,8 +182,8 @@ public interface Job {
    * Release this job back to the queue, the released job would be available for re-execution after
    * the duration time.
    *
-   * @param status job status
-   * @param why why do want to release this job
+   * @param status   job status
+   * @param why      why do want to release this job
    * @param duration any positive duration
    */
   void release(JobStatus status, Serializable why, Duration duration);
@@ -191,7 +192,7 @@ public interface Job {
    * Release this job back to queue, this job available for execution after one second.
    *
    * @param status what should be the job status
-   * @param why why do you want to delete this job
+   * @param why    why do you want to delete this job
    */
   void release(JobStatus status, Serializable why);
 
@@ -199,7 +200,7 @@ public interface Job {
    * Delete this job
    *
    * @param status what should be the job status
-   * @param why why do you want to delete this job
+   * @param why    why do you want to delete this job
    */
   void delete(JobStatus status, Serializable why);
 

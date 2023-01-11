@@ -23,5 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 class RqueueReactiveTaskExecutorApplicationTests {
 
   @Test
-  void contextLoads() {}
+  void contextLoads() {
+  }
 }

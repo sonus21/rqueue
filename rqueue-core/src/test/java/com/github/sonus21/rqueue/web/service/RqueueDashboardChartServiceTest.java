@@ -56,10 +56,14 @@ import org.mockito.MockitoAnnotations;
 class RqueueDashboardChartServiceTest extends TestBase {
 
   private final List<String> queues = new ArrayList<>();
-  @Mock private RqueueQStatsDao rqueueQStatsDao;
-  @Mock private RqueueWebConfig rqueueWebConfig;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RqueueSystemManagerService rqueueSystemManagerService;
+  @Mock
+  private RqueueQStatsDao rqueueQStatsDao;
+  @Mock
+  private RqueueWebConfig rqueueWebConfig;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueSystemManagerService rqueueSystemManagerService;
   private RqueueDashboardChartService rqueueDashboardChartService;
 
   @BeforeEach
@@ -70,10 +74,10 @@ class RqueueDashboardChartServiceTest extends TestBase {
             rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-stat::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-stat::" + name;
+        })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
     queues.clear();

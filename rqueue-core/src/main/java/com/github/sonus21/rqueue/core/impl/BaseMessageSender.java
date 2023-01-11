@@ -50,9 +50,12 @@ abstract class BaseMessageSender {
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
-  @Autowired protected RqueueStringDao rqueueStringDao;
-  @Autowired protected RqueueConfig rqueueConfig;
-  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Autowired
+  protected RqueueStringDao rqueueStringDao;
+  @Autowired
+  protected RqueueConfig rqueueConfig;
+  @Autowired
+  protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,

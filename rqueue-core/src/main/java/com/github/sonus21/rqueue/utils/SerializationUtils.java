@@ -23,7 +23,8 @@ public final class SerializationUtils {
 
   public static final byte[] EMPTY_ARRAY = new byte[0];
 
-  private SerializationUtils() {}
+  private SerializationUtils() {
+  }
 
   public static boolean isEmpty(byte[] bytes) {
     return bytes == null || bytes.length == 0;

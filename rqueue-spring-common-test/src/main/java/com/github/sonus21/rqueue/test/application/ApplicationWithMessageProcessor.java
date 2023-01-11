@@ -51,7 +51,7 @@ public abstract class ApplicationWithMessageProcessor extends BaseApplication {
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
       @Qualifier("preExecutionMessageProcessor") TestMessageProcessor preExecutionMessageProcessor,
-      @Qualifier("postExecutionMessageProcessor")  TestMessageProcessor postExecutionMessageProcessor,
+      @Qualifier("postExecutionMessageProcessor") TestMessageProcessor postExecutionMessageProcessor,
       @Qualifier("manualDeletionMessageProcessor") TestMessageProcessor manualDeletionMessageProcessor,
       @Qualifier("discardMessageProcessor") TestMessageProcessor discardMessageProcessor,
       @Qualifier("deadLetterQueueMessageProcessor") TestMessageProcessor deadLetterQueueMessageProcessor) {

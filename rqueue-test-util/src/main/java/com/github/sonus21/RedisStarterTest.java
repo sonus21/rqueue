@@ -29,5 +29,6 @@ public abstract class RedisStarterTest extends TestBase {
   }
 
   @BeforeAll
-  public void init() {}
+  public void init() {
+  }
 }

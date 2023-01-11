@@ -24,7 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.messaging.MessageHeaders;
 
-/** */
+/**
+ *
+ */
 public final class RqueueMessageHeaders {
 
   /**
@@ -35,9 +37,13 @@ public final class RqueueMessageHeaders {
    */
   public static final String DESTINATION = "destination";
 
-  /** Id corresponding to this message */
+  /**
+   * Id corresponding to this message
+   */
   public static final String ID = "messageId";
-  /** this field will provide a {@link RqueueMessage} object */
+  /**
+   * this field will provide a {@link RqueueMessage} object
+   */
   public static final String MESSAGE = "message";
 
   /**
@@ -53,7 +59,8 @@ public final class RqueueMessageHeaders {
   private static final MessageHeaders emptyMessageHeaders =
       new MessageHeaders(Collections.emptyMap());
 
-  private RqueueMessageHeaders() {}
+  private RqueueMessageHeaders() {
+  }
 
   public static MessageHeaders emptyMessageHeaders() {
     return emptyMessageHeaders;

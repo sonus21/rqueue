@@ -31,8 +31,10 @@ import org.springframework.data.redis.listener.Topic;
 public class RqueueRedisListenerContainerFactory
     implements DisposableBean, SmartLifecycle, InitializingBean {
 
-  @Autowired private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Autowired private RqueueConfig rqueueConfig;
+  @Autowired
+  private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Autowired
+  private RqueueConfig rqueueConfig;
 
   @Autowired(required = false)
   private RedisMessageListenerContainer systemContainer;

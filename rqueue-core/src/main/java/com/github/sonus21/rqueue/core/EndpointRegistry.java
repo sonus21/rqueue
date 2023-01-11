@@ -39,7 +39,8 @@ public final class EndpointRegistry {
   private static final Object lock = new Object();
   private static final Map<String, QueueDetail> queueNameToDetail = new HashMap<>();
 
-  private EndpointRegistry() {}
+  private EndpointRegistry() {
+  }
 
   /**
    * Get QueueDetail for the given queue. If queue is having priority than it should be called with
@@ -62,7 +63,7 @@ public final class EndpointRegistry {
    * Get QueueDetail for the given queue, with priority
    *
    * @param queueName queue name
-   * @param priority priority of this queue like critical, high
+   * @param priority  priority of this queue like critical, high
    * @return queue detail
    * @throws QueueDoesNotExist this error is thrown when queue is not registered.
    */

@@ -58,13 +58,20 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 class RqueueUtilityServiceTest extends TestBase {
 
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueWebConfig rqueueWebConfig;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueMessageMetadataService messageMetadataService;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
+  @Mock
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock
+  private RqueueWebConfig rqueueWebConfig;
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock
+  private RqueueMessageMetadataService messageMetadataService;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueStringDao rqueueStringDao;
+  @Mock
+  private RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
   private RqueueUtilityService rqueueUtilityService;
 
   @BeforeEach

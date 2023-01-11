@@ -373,9 +373,9 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "slowQueue1,-1,10-20,10", // default batch size 10
-    "slowQueue2,-1,-1,1", // default batch size 1 no concurrency
-    "slowQueue3,20,10-20,20", // 20 with concurrency
+      "slowQueue1,-1,10-20,10", // default batch size 10
+      "slowQueue2,-1,-1,1", // default batch size 1 no concurrency
+      "slowQueue3,20,10-20,20", // 20 with concurrency
   })
   void batchSizeResolver(
       String queue, String batchSize, String concurrency, Integer expectedValue) {
@@ -418,10 +418,10 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "\"slowQueue,smartQueue1\",-3", // < 0
-    "\"slowQueue,smartQueue2\",high", // number format error
-    "\"slowQueue,smartQueue3\",1,1,1", // multiple priority is used
-    "\"slowQueue,smartQueue4\",critical=10,high=high", // number format error
+      "\"slowQueue,smartQueue1\",-3", // < 0
+      "\"slowQueue,smartQueue2\",high", // number format error
+      "\"slowQueue,smartQueue3\",1,1,1", // multiple priority is used
+      "\"slowQueue,smartQueue4\",critical=10,high=high", // number format error
   })
   void priorityResolverInvalidValue(String queue, String priority) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
@@ -439,9 +439,9 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "smartQueue3, \"\"", // empty value
-    "smartQueue4, xyz", // invalid value
-    "smartQueue4, 1345", // invalid value
+      "smartQueue3, \"\"", // empty value
+      "smartQueue4, xyz", // invalid value
+      "smartQueue4, 1345", // invalid value
   })
   void activeInvalidValue(String queue, String active) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
@@ -460,10 +460,10 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "smartQueue1, -1", // < 9
-    "smartQueue2, 9", // < 10
-    "smartQueue3, high", // number format error
-    "smartQueue3, \"\"", // empty value
+      "smartQueue1, -1", // < 9
+      "smartQueue2, 9", // < 10
+      "smartQueue3, high", // number format error
+      "smartQueue3, \"\"", // empty value
   })
   void visibilityInvalidValue(String queue, String visibilityTimeout) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
@@ -482,8 +482,8 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "smartQueue3, high", // number format error
-    "smartQueue3, \"\"", // empty value
+      "smartQueue3, high", // number format error
+      "smartQueue3, \"\"", // empty value
   })
   void numRetriesInvalidValue(String queue, String numRetries) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
@@ -501,8 +501,8 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "\"slowQueue{smartQueue1\",-3",
-    "\"slowQueue{smartQueue2\",100",
+      "\"slowQueue{smartQueue1\",-3",
+      "\"slowQueue{smartQueue2\",100",
   })
   void queueInvalidValue(String queue, String priority) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
@@ -535,12 +535,12 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "\"slowQueue,smartQueue1\",-3", // less than 1 is not allowed
-    "\"slowQueue,smartQueue2\",0", // less than 1 is not allowed
-    "\"slowQueue,smartQueue3\",foo", // number format error
-    "\"slowQueue,smartQueue4\", foo-bar", // number format error after split
-    "\"slowQueue,smartQueue5\", 10-5", // min > max
-    "\"slowQueue,smartQueue5\", \"\"", // empty concurrency
+      "\"slowQueue,smartQueue1\",-3", // less than 1 is not allowed
+      "\"slowQueue,smartQueue2\",0", // less than 1 is not allowed
+      "\"slowQueue,smartQueue3\",foo", // number format error
+      "\"slowQueue,smartQueue4\", foo-bar", // number format error after split
+      "\"slowQueue,smartQueue5\", 10-5", // min > max
+      "\"slowQueue,smartQueue5\", \"\"", // empty concurrency
   })
   void concurrencyInvalidValue(String queue, String concurrency) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
@@ -558,8 +558,8 @@ class RqueueMessageHandlerTest extends TestBase {
 
   @ParameterizedTest
   @CsvSource({
-    "\"slowQueue,smartQueue1\",foo, 10-20", // number format error
-    "\"slowQueue,smartQueue1\",foo, \"\"", // empty value error
+      "\"slowQueue,smartQueue1\",foo, 10-20", // number format error
+      "\"slowQueue,smartQueue1\",foo, \"\"", // empty value error
   })
   void batchSizeInvalidValue(String queue, String batchSize, String concurrency) {
     StaticApplicationContext applicationContext = new StaticApplicationContext();

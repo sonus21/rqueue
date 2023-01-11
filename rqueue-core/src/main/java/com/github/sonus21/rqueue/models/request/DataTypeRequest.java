@@ -33,5 +33,6 @@ import lombok.ToString;
 @AllArgsConstructor
 public class DataTypeRequest extends SerializableBase {
 
-  @NotEmpty private String name;
+  @NotEmpty
+  private String name;
 }

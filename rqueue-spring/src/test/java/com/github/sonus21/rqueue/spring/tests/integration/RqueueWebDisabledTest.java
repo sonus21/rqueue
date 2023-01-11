@@ -52,9 +52,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7003",
-      "mysql.db.name=RqueueRestController",
-      "rqueue.web.enable=false"
+        "spring.data.redis.port=7003",
+        "mysql.db.name=RqueueRestController",
+        "rqueue.web.enable=false"
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
@@ -63,16 +63,16 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "",
-        "queues",
-        "running",
-        "scheduled",
-        "dead",
-        "pending",
-        "utility",
-        "queues/test-queue",
-        "api/v1/aggregate-data-selector?type=WEEKLY",
-        "api/v1/jobs?message-id=1234567890"
+          "",
+          "queues",
+          "running",
+          "scheduled",
+          "dead",
+          "pending",
+          "utility",
+          "queues/test-queue",
+          "api/v1/aggregate-data-selector?type=WEEKLY",
+          "api/v1/jobs?message-id=1234567890"
       })
   void pathTester(String path) throws Exception {
     assertNull(

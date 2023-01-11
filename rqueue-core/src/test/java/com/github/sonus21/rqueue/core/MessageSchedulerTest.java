@@ -47,11 +47,16 @@ class MessageSchedulerTest extends TestBase {
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
   private final Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-  @InjectMocks private TestMessageScheduler messageScheduler;
+  @Mock
+  private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
+  @Mock
+  private RedisTemplate<String, Long> redisTemplate;
+  @InjectMocks
+  private TestMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {

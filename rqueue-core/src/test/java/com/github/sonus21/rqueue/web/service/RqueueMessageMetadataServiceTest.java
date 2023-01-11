@@ -16,6 +16,18 @@
 
 package com.github.sonus21.rqueue.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verifyNoInteractions;
+
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
@@ -25,28 +37,26 @@ import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.web.service.impl.RqueueMessageMetadataServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
 class RqueueMessageMetadataServiceTest extends TestBase {
 
   private final String queueName = "test-queue";
-  @Mock private RqueueMessageMetadataDao rqueueMessageMetadataDao;
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private RqueueLockManager lockManager;
+  @Mock
+  private RqueueMessageMetadataDao rqueueMessageMetadataDao;
+  @Mock
+  private RqueueStringDao rqueueStringDao;
+  @Mock
+  private RqueueLockManager lockManager;
   private RqueueMessageMetadataService rqueueMessageMetadataService;
 
   @BeforeEach
@@ -85,12 +95,12 @@ class RqueueMessageMetadataServiceTest extends TestBase {
     String id = UUID.randomUUID().toString();
     doReturn(true).when(lockManager).acquireLock(eq(id), anyString(), eq(Duration.ofSeconds(1)));
     doAnswer(
-            invocation -> {
-              MessageMetadata metadata = invocation.getArgument(0);
-              assertTrue(metadata.isDeleted());
-              assertNotNull(metadata.getDeletedOn());
-              return null;
-            })
+        invocation -> {
+          MessageMetadata metadata = invocation.getArgument(0);
+          assertTrue(metadata.isDeleted());
+          assertNotNull(metadata.getDeletedOn());
+          return null;
+        })
         .when(rqueueMessageMetadataDao)
         .save(any(), eq(Duration.ofDays(7)));
     assertTrue(rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7)));
@@ -108,12 +118,12 @@ class RqueueMessageMetadataServiceTest extends TestBase {
         .when(rqueueMessageMetadataDao)
         .get(RqueueMessageUtils.getMessageMetaId(queueName, id));
     doAnswer(
-            invocation -> {
-              MessageMetadata metadataBeingSaved = invocation.getArgument(0);
-              assertTrue(metadataBeingSaved.isDeleted());
-              assertNotNull(metadataBeingSaved.getDeletedOn());
-              return null;
-            })
+        invocation -> {
+          MessageMetadata metadataBeingSaved = invocation.getArgument(0);
+          assertTrue(metadataBeingSaved.isDeleted());
+          assertNotNull(metadataBeingSaved.getDeletedOn());
+          return null;
+        })
         .when(rqueueMessageMetadataDao)
         .save(any(), eq(Duration.ofDays(7)));
     assertTrue(rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7)));

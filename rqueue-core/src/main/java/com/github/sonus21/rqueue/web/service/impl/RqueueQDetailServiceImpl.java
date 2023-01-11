@@ -488,8 +488,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         String name = Constants.BLANK;
         if (i == 0
             || !queueConfig
-                .getQueueName()
-                .equals(queueConfigAndDlq.get(i - 1).getKey().getQueueName())) {
+            .getQueueName()
+            .equals(queueConfigAndDlq.get(i - 1).getKey().getQueueName())) {
           name = queueConfig.getName();
         }
         rows.add(Arrays.asList(name, entry.getValue(), result.get(j++)));

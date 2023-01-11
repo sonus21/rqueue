@@ -25,10 +25,10 @@ import static org.mockito.Mockito.verify;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import com.github.sonus21.rqueue.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -50,16 +50,21 @@ class RqueueMessageTemplateTest extends TestBase {
           .message("This is a test message")
           .processAt(System.currentTimeMillis())
           .build();
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private RedisTemplate<String, RqueueMessage> redisTemplate;
-  @Mock private ListOperations<String, RqueueMessage> listOperations;
-  @Mock private DefaultScriptExecutor<String> scriptExecutor;
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+  @Mock
+  private RedisTemplate<String, RqueueMessage> redisTemplate;
+  @Mock
+  private ListOperations<String, RqueueMessage> listOperations;
+  @Mock
+  private DefaultScriptExecutor<String> scriptExecutor;
   private RqueueMessageTemplate rqueueMessageTemplate;
 
   @BeforeEach
   public void init() throws Exception {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageTemplate = TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate, scriptExecutor);
+    rqueueMessageTemplate = TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate,
+        scriptExecutor);
   }
 
   @Test

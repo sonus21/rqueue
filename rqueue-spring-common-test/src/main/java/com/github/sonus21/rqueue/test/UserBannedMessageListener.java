@@ -33,7 +33,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserBannedMessageListener {
 
-  @NonNull private final ConsumedMessageStore consumedMessageStore;
+  @NonNull
+  private final ConsumedMessageStore consumedMessageStore;
 
   @Value("${user.banned.queue.name}")
   private String userBannedQueue;

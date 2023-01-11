@@ -36,6 +36,7 @@ import com.github.sonus21.rqueue.test.dto.Sms;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import jakarta.annotation.PostConstruct;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.List;
@@ -43,7 +44,6 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import jakarta.annotation.PostConstruct;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,9 +57,12 @@ import org.springframework.messaging.handler.annotation.Payload;
 @Slf4j
 public class MessageListener {
 
-  @NonNull private final ConsumedMessageStore consumedMessageStore;
-  @NonNull private final FailureManager failureManager;
-  @NonNull private final RqueueConfig rqueueConfig;
+  @NonNull
+  private final ConsumedMessageStore consumedMessageStore;
+  @NonNull
+  private final FailureManager failureManager;
+  @NonNull
+  private final RqueueConfig rqueueConfig;
   private ScheduledExecutorService scheduledExecutorService;
 
   @Value("${job.queue.name}")

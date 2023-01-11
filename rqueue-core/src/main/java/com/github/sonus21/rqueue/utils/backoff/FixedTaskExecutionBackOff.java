@@ -31,7 +31,9 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
  */
 public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
 
-  /** The default task delay: 5000 ms = 5 seconds. */
+  /**
+   * The default task delay: 5000 ms = 5 seconds.
+   */
   public static final long DEFAULT_INTERVAL = 5000;
 
   private long interval = DEFAULT_INTERVAL;
@@ -41,12 +43,13 @@ public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
    * Create an instance with an interval of {@value #DEFAULT_INTERVAL} ms and maximum value of
    * retries.
    */
-  public FixedTaskExecutionBackOff() {}
+  public FixedTaskExecutionBackOff() {
+  }
 
   /**
    * Create an instance.
    *
-   * @param interval the delay between two attempts.
+   * @param interval   the delay between two attempts.
    * @param maxRetries the maximum number of retries.
    */
   public FixedTaskExecutionBackOff(long interval, int maxRetries) {

@@ -24,16 +24,18 @@ import org.springframework.context.annotation.Import;
 
 /**
  * This annotation can be used to auto configure Rqueue library by providing some sample
- * configuration like by just providing {@link
- * org.springframework.data.redis.connection.RedisConnectionFactory}.
+ * configuration like by just providing
+ * {@link org.springframework.data.redis.connection.RedisConnectionFactory}.
  *
  * <p>All other beans would be created automatically. Though other components of library can be
- * configured as well using {@link
- * com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory}. Even it can be configured
- * at very fine-grained level by creating all individual beans created in {@link
- * RqueueListenerConfig}
+ * configured as well using
+ * {@link com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory}. Even it can be
+ * configured at very fine-grained level by creating all individual beans created in
+ * {@link RqueueListenerConfig}
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Import({RqueueListenerConfig.class})
-public @interface EnableRqueue {}
+public @interface EnableRqueue {
+
+}

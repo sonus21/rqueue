@@ -45,7 +45,7 @@ public final class QueueThreadPool {
   }
 
   public void release(int n) {
-    if(n > 0){
+    if (n > 0) {
       semaphore.release(n);
     }
   }

@@ -41,15 +41,15 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=1000",
-      "rqueue.retry.per.poll=1000",
-      "spring.data.redis.port=8023",
-      "reservation.request.dead.letter.consumer.enabled=true",
-      "reservation.request.active=true",
-      "list.email.queue.enabled=true",
-      "mysql.db.name=MessageProcessorTest",
-      "use.system.redis=false",
-      "user.banned.queue.active=true",
+        "rqueue.retry.per.poll=1000",
+        "rqueue.retry.per.poll=1000",
+        "spring.data.redis.port=8023",
+        "reservation.request.dead.letter.consumer.enabled=true",
+        "reservation.request.active=true",
+        "list.email.queue.enabled=true",
+        "mysql.db.name=MessageProcessorTest",
+        "use.system.redis=false",
+        "user.banned.queue.active=true",
     })
 @SpringBootIntegrationTest
 class MessageProcessorTest extends RetryTests {

@@ -30,4 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @Tag("unit")
 @Tag("core")
 @ExtendWith({MockitoExtension.class, TestTracerExtension.class})
-public @interface CoreUnitTest {}
+public @interface CoreUnitTest {
+
+}

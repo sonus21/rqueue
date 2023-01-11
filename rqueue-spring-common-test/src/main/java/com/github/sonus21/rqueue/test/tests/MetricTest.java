@@ -36,8 +36,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class MetricTest extends SpringTestBase {
 
-  @Autowired protected MeterRegistry meterRegistry;
-  @Autowired protected RqueueQueueMetrics rqueueQueueMetrics;
+  @Autowired
+  protected MeterRegistry meterRegistry;
+  @Autowired
+  protected RqueueQueueMetrics rqueueQueueMetrics;
 
   protected void verifyScheduledQueueStatus() throws TimedOutException {
     long maxDelay = 0;
@@ -63,22 +65,22 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                    .get("scheduled.queue.size")
-                    .tag("rqueue", "test")
-                    .tag("queue", notificationQueue)
-                    .gauge()
-                    .value()
+                .get("scheduled.queue.size")
+                .tag("rqueue", "test")
+                .tag("queue", notificationQueue)
+                .gauge()
+                .value()
                 > 0,
         60000,
         "stats collection");
     waitFor(
         () ->
             meterRegistry
-                    .get("queue.size")
-                    .tag("rqueue", "test")
-                    .tag("queue", notificationQueue)
-                    .gauge()
-                    .value()
+                .get("queue.size")
+                .tag("rqueue", "test")
+                .tag("queue", notificationQueue)
+                .gauge()
+                .value()
                 > 0,
         60000,
         "Message in original queue");
@@ -96,21 +98,21 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                    .get("dead.letter.queue.size")
-                    .tags("rqueue", "test")
-                    .tags("queue", emailQueue)
-                    .gauge()
-                    .value()
+                .get("dead.letter.queue.size")
+                .tags("rqueue", "test")
+                .tags("queue", emailQueue)
+                .gauge()
+                .value()
                 == 10,
         "stats collection");
     waitFor(
         () ->
             meterRegistry
-                    .get("processing.queue.size")
-                    .tags("rqueue", "test")
-                    .tags("queue", jobQueue)
-                    .gauge()
-                    .value()
+                .get("processing.queue.size")
+                .tags("rqueue", "test")
+                .tags("queue", jobQueue)
+                .gauge()
+                .value()
                 == 1,
         30 * Constants.ONE_MILLI,
         "processing queue message");
@@ -124,11 +126,11 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                    .get("failure.count")
-                    .tags("rqueue", "test")
-                    .tags("queue", jobQueue)
-                    .counter()
-                    .count()
+                .get("failure.count")
+                .tags("rqueue", "test")
+                .tags("queue", jobQueue)
+                .counter()
+                .count()
                 >= 1,
         30000,
         "job process",
@@ -136,11 +138,11 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                    .get("execution.count")
-                    .tags("rqueue", "test")
-                    .tags("queue", emailQueue)
-                    .counter()
-                    .count()
+                .get("execution.count")
+                .tags("rqueue", "test")
+                .tags("queue", emailQueue)
+                .counter()
+                .count()
                 == 1,
         "message process",
         () -> printQueueStats(newArrayList(jobQueue, emailQueue, notificationQueue)));
@@ -148,11 +150,11 @@ public abstract class MetricTest extends SpringTestBase {
     waitFor(
         () ->
             meterRegistry
-                    .get("failure.count")
-                    .tags("rqueue", "test")
-                    .tags("queue", emailQueue)
-                    .counter()
-                    .count()
+                .get("failure.count")
+                .tags("rqueue", "test")
+                .tags("queue", emailQueue)
+                .counter()
+                .count()
                 == 0,
         "stats collection");
   }

@@ -42,13 +42,13 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=1000",
-      "spring.data.redis.port=8010",
-      "reservation.request.active=true",
-      "mysql.db.name=CustomMessageConverterTest",
-      "use.system.redis=false",
-      "monitor.enabled=true",
-      "rqueue.message.converter.provider.class=com.github.sonus21.rqueue.test.util.TestMessageConverterProvider",
+        "rqueue.retry.per.poll=1000",
+        "spring.data.redis.port=8010",
+        "reservation.request.active=true",
+        "mysql.db.name=CustomMessageConverterTest",
+        "use.system.redis=false",
+        "monitor.enabled=true",
+        "rqueue.message.converter.provider.class=com.github.sonus21.rqueue.test.util.TestMessageConverterProvider",
     })
 @SpringBootIntegrationTest
 class CustomMessageConverterTest extends BasicListenerTest {

@@ -53,9 +53,12 @@ class RqueueMessageManagerImplTest extends TestBase {
   private final String queue = "test-queue";
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
-  @Mock private RqueueMessageTemplate messageTemplate;
-  @Mock private RqueueLockManager rqueueLockManager;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock
+  private RqueueMessageTemplate messageTemplate;
+  @Mock
+  private RqueueLockManager rqueueLockManager;
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
   private RqueueMessageManager rqueueMessageManager;
 
   @BeforeEach

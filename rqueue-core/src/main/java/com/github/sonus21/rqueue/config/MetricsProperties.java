@@ -34,10 +34,14 @@ import lombok.Setter;
 @Setter
 public abstract class MetricsProperties {
 
-  /** List of tags to be used while publishing metrics. */
+  /**
+   * List of tags to be used while publishing metrics.
+   */
   private Map<String, String> tags = new LinkedHashMap<>();
 
-  /** what type of counting feature is enabled, by default counting feature is disabled. */
+  /**
+   * what type of counting feature is enabled, by default counting feature is disabled.
+   */
   private Count count = new Count();
 
   private Tags metricTags = Tags.empty();

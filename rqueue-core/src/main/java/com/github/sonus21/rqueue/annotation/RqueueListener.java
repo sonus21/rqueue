@@ -70,7 +70,8 @@ public @interface RqueueListener {
    * <p>Whenever message handler fails, container keeps retrying to deliver the same message until
    * it's delivered but in some cases we can ignore or discard this message.
    *
-   * <p>Default behaviour is to try to deliver the same message until it's delivered, upper limit of
+   * <p>Default behaviour is to try to deliver the same message until it's delivered, upper limit
+   * of
    * the delivery retry is {@link Integer#MAX_VALUE} when dead letter queue is not provided. If dead
    * letter queue is provided then it will retry {@link Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE}
    * of times.
@@ -103,7 +104,8 @@ public @interface RqueueListener {
    * a job goes to running state then if it's not executed within N secs then it will be
    * re-processed, that re-process time can be controller using this.
    *
-   * <p>For example a message was consumed at 10:30AM and message was not processed successfully for
+   * <p>For example a message was consumed at 10:30AM and message was not processed successfully
+   * for
    * any reason like executor was shutdown while it's processing, task took longer time to execute
    * or application was shutdown. In such cases consumed message would become visible to other
    * consumers as soon as this time elapse. By default, message would become visible to other
@@ -112,8 +114,7 @@ public @interface RqueueListener {
    * this field.
    *
    * <p>Minimum time is based on the two factors <br>
-   * 1. Actual Task execution time <br>
-   * 2. Redis call time and thread busyness.
+   * 1. Actual Task execution time <br> 2. Redis call time and thread busyness.
    *
    * <p><b>NOTE:</b>If provided time is too small then same messages would be consumed by multiple
    * listeners, that will violate exactly once processing. On the other hand if provided time is too
@@ -170,7 +171,8 @@ public @interface RqueueListener {
   /**
    * Priority group for this listener.
    *
-   * <p>More than one priority group can be configured in an application. Priority groups are useful
+   * <p>More than one priority group can be configured in an application. Priority groups are
+   * useful
    * when inside a group some queue(s) have higher priority than the other queue(s).
    *
    * @return priority group name.

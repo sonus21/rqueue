@@ -18,9 +18,8 @@ package com.github.sonus21.rqueue.core.middleware;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.Job;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-
 import java.time.Duration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 /**
  * This uses Redis as backend for locking, using <b>SETNX</b> a lock is acquired.

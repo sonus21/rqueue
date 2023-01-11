@@ -36,8 +36,8 @@ public enum MessageStatus {
   // Message moved to dead letter queue
   MOVED_TO_DLQ(true, JobStatus.SUCCESS),
   /**
-   * Message was discarded due to retry limit exceeded or {@link
-   * com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff#STOP} was returned by task
+   * Message was discarded due to retry limit exceeded or
+   * {@link com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff#STOP} was returned by task
    * execution backoff method.
    */
   DISCARDED(true, JobStatus.SUCCESS),

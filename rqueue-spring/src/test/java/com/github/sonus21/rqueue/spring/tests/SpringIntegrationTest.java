@@ -30,4 +30,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Tag("integration")
 @Tag("spring")
 @ExtendWith(TestTracerExtension.class)
-public @interface SpringIntegrationTest {}
+public @interface SpringIntegrationTest {
+
+}

@@ -34,8 +34,10 @@ public abstract class SpringWebTestBase extends SpringTestBase {
 
   protected WebClient webClient;
   protected MockMvc mockMvc;
-  @Autowired protected ObjectMapper mapper;
-  @Autowired ApplicationContext applicationContext;
+  @Autowired
+  protected ObjectMapper mapper;
+  @Autowired
+  ApplicationContext applicationContext;
 
   @BeforeEach
   public void init() {

@@ -31,17 +31,17 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7012",
-      "mysql.db.name=WeightedHeterogeneousQueueListener",
-      "sms.queue.active=true",
-      "notification.queue.active=false",
-      "email.queue.active=true",
-      "job.queue.active=true",
-      "use.system.redis=false",
-      "priority.mode=WEIGHTED",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true"
+        "spring.data.redis.port=7012",
+        "mysql.db.name=WeightedHeterogeneousQueueListener",
+        "sms.queue.active=true",
+        "notification.queue.active=false",
+        "email.queue.active=true",
+        "job.queue.active=true",
+        "use.system.redis=false",
+        "priority.mode=WEIGHTED",
+        "reservation.queue.active=true",
+        "feed.generation.queue.active=true",
+        "chat.indexing.queue.active=true"
     })
 @SpringIntegrationTest
 class WeightedHeterogeneousQueueListener extends AllQueueMode {

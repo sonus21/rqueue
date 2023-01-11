@@ -37,17 +37,17 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=1",
-      "email.queue.retry.count=3",
-      "spring.data.redis.port=8017",
-      "mysql.db.name=MultiExecutionTests",
-      // 1500 ms
-      "email.execution.time=1500",
-      // 20 seconds is worker shutdown wait-time
-      "long.running.job.queue.visibility.timeout=35000",
-      "long.running.job.queue.active=true",
-      "use.system.redis=false",
-      "fixed.backoff.interval=100",
+        "rqueue.retry.per.poll=1",
+        "email.queue.retry.count=3",
+        "spring.data.redis.port=8017",
+        "mysql.db.name=MultiExecutionTests",
+        // 1500 ms
+        "email.execution.time=1500",
+        // 20 seconds is worker shutdown wait-time
+        "long.running.job.queue.visibility.timeout=35000",
+        "long.running.job.queue.active=true",
+        "use.system.redis=false",
+        "fixed.backoff.interval=100",
     })
 @SpringBootIntegrationTest
 class MultiExecutionTests extends RetryTests {

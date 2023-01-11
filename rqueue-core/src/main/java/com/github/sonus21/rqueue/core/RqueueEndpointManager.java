@@ -32,7 +32,7 @@ public interface RqueueEndpointManager {
   /**
    * Use this method to register any queue, that's only used for sending message.
    *
-   * @param name name of the queue
+   * @param name       name of the queue
    * @param priorities list of priorities to be used while sending message on this queue.
    */
   void registerQueue(String name, String... priorities);
@@ -49,7 +49,7 @@ public interface RqueueEndpointManager {
    * Check if a queue is registered.
    *
    * @param queueName queue that needs to be checked
-   * @param priority priority of the queue
+   * @param priority  priority of the queue
    * @return yes/no
    */
   default boolean isQueueRegistered(String queueName, String priority) {
@@ -68,7 +68,7 @@ public interface RqueueEndpointManager {
    * Pause or unpause queue
    *
    * @param queueName queue that needs to be paused or unpause
-   * @param pause boolean flags that indicates whether we need to pause or unpause
+   * @param pause     boolean flags that indicates whether we need to pause or unpause
    * @return success/fail
    */
   boolean pauseUnpauseQueue(String queueName, boolean pause);
@@ -77,8 +77,8 @@ public interface RqueueEndpointManager {
    * Pause or unpause queue with said priority
    *
    * @param queueName queue that needs to be paused or unpause
-   * @param priority priority of this queue
-   * @param pause boolean flags that indicates whether we need to pause or unpause
+   * @param priority  priority of this queue
+   * @param pause     boolean flags that indicates whether we need to pause or unpause
    * @return success/fail
    */
   boolean pauseUnpauseQueue(String queueName, String priority, boolean pause);
@@ -95,7 +95,7 @@ public interface RqueueEndpointManager {
    * Check whether a queue with given priority is paused or not
    *
    * @param queueName queue name that needs to be checked
-   * @param priority priority of that queue
+   * @param priority  priority of that queue
    * @return true/false
    */
   boolean isQueuePaused(String queueName, String priority);

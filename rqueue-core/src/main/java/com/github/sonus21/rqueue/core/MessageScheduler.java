@@ -56,8 +56,10 @@ public abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
 
   private final Object monitor = new Object();
-  @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Autowired protected RqueueConfig rqueueConfig;
+  @Autowired
+  protected RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Autowired
+  protected RqueueConfig rqueueConfig;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
@@ -66,7 +68,8 @@ public abstract class MessageScheduler
   private Map<String, String> channelNameToQueueName;
   private Map<String, Long> queueNameToLastMessageScheduleTime;
   private ThreadPoolTaskScheduler scheduler;
-  @Autowired private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  @Autowired
+  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
   @Autowired
   @Qualifier("rqueueRedisLongTemplate")
@@ -375,7 +378,7 @@ public abstract class MessageScheduler
         long delay = (long) (100 * Math.pow(1.5, errCount));
         delay = Math.min(delay, rqueueSchedulerConfig.getMaxMessageMoverDelay());
         nextTime = System.currentTimeMillis() + delay;
-      }else{
+      } else {
         nextTime = getNextScheduleTime(name, value);
       }
       errorCount.put(name, errCount);

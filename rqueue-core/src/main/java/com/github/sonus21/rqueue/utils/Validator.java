@@ -20,7 +20,8 @@ import static org.springframework.util.Assert.notNull;
 
 public final class Validator {
 
-  private Validator() {}
+  private Validator() {
+  }
 
   public static void validateMessage(Object message) {
     notNull(message, "message cannot be null");

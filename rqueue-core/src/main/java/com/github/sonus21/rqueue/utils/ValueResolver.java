@@ -30,7 +30,8 @@ import org.springframework.lang.NonNull;
 
 public final class ValueResolver {
 
-  private ValueResolver() {}
+  private ValueResolver() {
+  }
 
   @SuppressWarnings("unchecked")
   public static <T> T parseStringUsingSpel(String val, Class<?> t) {

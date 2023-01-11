@@ -31,17 +31,17 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7009",
-      "mysql.db.name=StrictPriorityQueueListenerTest",
-      "sms.queue.active=true",
-      "notification.queue.active=false",
-      "email.queue.active=false",
-      "job.queue.active=false",
-      "use.system.redis=false",
-      "priority.mode=STRICT",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true"
+        "spring.data.redis.port=7009",
+        "mysql.db.name=StrictPriorityQueueListenerTest",
+        "sms.queue.active=true",
+        "notification.queue.active=false",
+        "email.queue.active=false",
+        "job.queue.active=false",
+        "use.system.redis=false",
+        "priority.mode=STRICT",
+        "reservation.queue.active=true",
+        "feed.generation.queue.active=true",
+        "chat.indexing.queue.active=true"
     })
 @SpringIntegrationTest
 class StrictPriorityQueueListenerTest extends GroupPriorityTest {

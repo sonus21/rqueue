@@ -35,7 +35,8 @@ import lombok.ToString;
 public class QueueStatistics extends SerializableBase {
 
   private static final long serialVersionUID = -4931206278693499365L;
-  @EqualsAndHashCode.Include private String id;
+  @EqualsAndHashCode.Include
+  private String id;
   private Long startEpochDate;
   private Map<String, Long> tasksMovedToDeadLetter;
   private Map<String, Long> tasksDiscarded;

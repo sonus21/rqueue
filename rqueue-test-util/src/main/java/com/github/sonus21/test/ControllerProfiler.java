@@ -28,7 +28,8 @@ public class ControllerProfiler {
 
   @Pointcut(
       "execution(* com.github.sonus21.rqueue.*.controller..*.*(..))||execution(* com.github.sonus21.rqueue.*.Controller.*(..))")
-  public void controller() {}
+  public void controller() {
+  }
 
   @Around("controller()")
   public Object profile(ProceedingJoinPoint pjp) throws Throwable {

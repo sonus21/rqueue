@@ -53,20 +53,20 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7004",
-      "mysql.db.name=SpringAppTest",
-      "sms.queue.active=true",
-      "notification.queue.active=false",
-      "email.queue.active=true",
-      "job.queue.active=true",
-      "use.system.redis=false",
-      "priority.mode=STRICT",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true",
-      "provide.executor=true",
-      "email.queue.retry.count=-1",
-      "rqueue.retry.per.poll=10"
+        "spring.data.redis.port=7004",
+        "mysql.db.name=SpringAppTest",
+        "sms.queue.active=true",
+        "notification.queue.active=false",
+        "email.queue.active=true",
+        "job.queue.active=true",
+        "use.system.redis=false",
+        "priority.mode=STRICT",
+        "reservation.queue.active=true",
+        "feed.generation.queue.active=true",
+        "chat.indexing.queue.active=true",
+        "provide.executor=true",
+        "email.queue.retry.count=-1",
+        "rqueue.retry.per.poll=10"
     })
 @SpringIntegrationTest
 class SpringAppTest extends AllQueueMode {
@@ -109,7 +109,7 @@ class SpringAppTest extends AllQueueMode {
     Email email1 =
         (Email)
             RqueueMessageUtils.convertMessageToObject(
-                messages.get(0), rqueueMessageSender.getMessageConverter());
+                messages.get(0), rqueueMessageManager.getMessageConverter());
     assertEquals(email.getId(), email1.getId());
   }
 
@@ -129,58 +129,58 @@ class SpringAppTest extends AllQueueMode {
     registerQueue(emailQueue);
     registerQueue(smsQueue, critical, high, low);
     Email[] emails =
-        new Email[] {
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
+        new Email[]{
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
         };
     Sms[] sms =
-        new Sms[] {
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
+        new Sms[]{
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
         };
 
     assertTrue(enqueue(emailQueue, emails[0]));

@@ -26,7 +26,8 @@ import org.springframework.context.ApplicationEvent;
  * <p>This event can be used for different purpose, like registering some queue once Rqueue has
  * started, deleting all queue messages, cleaning up some resources at shutdown etc.
  *
- * <p>{@link RqueueBootstrapEvent#start} is false means it's shutdown event otherwise it's bootstrap
+ * <p>{@link RqueueBootstrapEvent#start} is false means it's shutdown event otherwise it's
+ * bootstrap
  * event.
  */
 @Getter

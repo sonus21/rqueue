@@ -16,10 +16,10 @@
 package com.github.sonus21.rqueue.test.service;
 
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RqueueEventListener {

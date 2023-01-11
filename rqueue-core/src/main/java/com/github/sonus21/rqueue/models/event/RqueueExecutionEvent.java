@@ -34,7 +34,8 @@ public class RqueueExecutionEvent extends ApplicationEvent {
   @NotNull
   private final transient QueueDetail queueDetail;
   // Job corresponding to this execution
-  @NotNull private final transient Job job;
+  @NotNull
+  private final transient Job job;
 
   public RqueueExecutionEvent(Job job) {
     super(job.getQueueDetail());

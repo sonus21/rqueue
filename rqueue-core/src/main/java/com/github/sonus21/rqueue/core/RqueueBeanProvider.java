@@ -34,19 +34,28 @@ import org.springframework.context.ApplicationEventPublisher;
 @Setter
 public class RqueueBeanProvider {
 
-  @Autowired private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Autowired private RqueueJobDao rqueueJobDao;
-  @Autowired private RqueueWebConfig rqueueWebConfig;
-  @Autowired private ApplicationEventPublisher applicationEventPublisher;
-  @Autowired private RqueueLockManager rqueueLockManager;
+  @Autowired
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Autowired
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Autowired
+  private RqueueJobDao rqueueJobDao;
+  @Autowired
+  private RqueueWebConfig rqueueWebConfig;
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
+  @Autowired
+  private RqueueLockManager rqueueLockManager;
 
   @Autowired(required = false)
   private RqueueMetricsCounter rqueueMetricsCounter;
 
-  @Autowired private RqueueMessageHandler rqueueMessageHandler;
+  @Autowired
+  private RqueueMessageHandler rqueueMessageHandler;
 
   private MessageProcessor preExecutionMessageProcessor;
-  @Autowired private RqueueMessageTemplate rqueueMessageTemplate;
-  @Autowired private RqueueConfig rqueueConfig;
+  @Autowired
+  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Autowired
+  private RqueueConfig rqueueConfig;
 }

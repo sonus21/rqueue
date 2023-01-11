@@ -63,7 +63,8 @@ public class RqueueJob extends SerializableBase {
   // stack trace
   private String error;
   // any error occurred during execution
-  @JsonIgnore private Throwable exception;
+  @JsonIgnore
+  private Throwable exception;
   // when this job was created
   private long createdAt;
   // whe this job was updated last time

@@ -33,7 +33,7 @@ public class ProfilerMiddleware implements Middleware {
   /**
    * Report execution of the said job
    *
-   * @param job the running job
+   * @param job           the running job
    * @param executionTime execution time
    */
   protected void report(Job job, Duration executionTime) {

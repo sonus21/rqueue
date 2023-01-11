@@ -26,7 +26,7 @@ import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
-import com.mitchellbosecke.pebble.spring.servlet.PebbleView;
+import io.pebbletemplates.spring.servlet.PebbleView;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -42,11 +42,11 @@ import org.springframework.ui.ModelMap;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7002",
-      "mysql.db.name=RqueueViewControllerTest",
-      "max.workers.count=40",
-      "notification.queue.active=false",
-      "rqueue.web.statistic.history.day=180",
+        "spring.data.redis.port=7002",
+        "mysql.db.name=RqueueViewControllerTest",
+        "max.workers.count=40",
+        "notification.queue.active=false",
+        "rqueue.web.statistic.history.day=180",
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")

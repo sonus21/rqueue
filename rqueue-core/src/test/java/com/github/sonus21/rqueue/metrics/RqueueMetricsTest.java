@@ -44,7 +44,8 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 class RqueueMetricsTest extends TestBase {
 
-  private final MetricsProperties metricsProperties = new MetricsProperties() {};
+  private final MetricsProperties metricsProperties = new MetricsProperties() {
+  };
   private final String simpleQueue = "simple-queue";
   private final String scheduledQueue = "scheduled-queue";
   private final String deadLetterQueue = "dlq";
@@ -52,8 +53,10 @@ class RqueueMetricsTest extends TestBase {
   private final QueueDetail scheduledQueueDetail = TestUtils.createQueueDetail(scheduledQueue);
   private final QueueDetail simpleQueueDetail =
       TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private QueueCounter queueCounter;
+  @Mock
+  private RqueueStringDao rqueueStringDao;
+  @Mock
+  private QueueCounter queueCounter;
 
   @BeforeEach
   public void init() {
@@ -120,36 +123,36 @@ class RqueueMetricsTest extends TestBase {
   @Test
   void queueStatistics() throws IllegalAccessException {
     doAnswer(
-            invocation -> {
-              String zsetName = invocation.getArgument(0);
-              if (zsetName.equals(scheduledQueueDetail.getScheduledQueueName())) {
-                return 5L;
-              }
-              if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {
-                return 10L;
-              }
-              if (zsetName.equals(scheduledQueueDetail.getProcessingQueueName())) {
-                return 15L;
-              }
-              return null;
-            })
+        invocation -> {
+          String zsetName = invocation.getArgument(0);
+          if (zsetName.equals(scheduledQueueDetail.getScheduledQueueName())) {
+            return 5L;
+          }
+          if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {
+            return 10L;
+          }
+          if (zsetName.equals(scheduledQueueDetail.getProcessingQueueName())) {
+            return 15L;
+          }
+          return null;
+        })
         .when(rqueueStringDao)
         .getSortedSetSize(anyString());
 
     doAnswer(
-            invocation -> {
-              String listName = invocation.getArgument(0);
-              if (listName.equals(simpleQueueDetail.getQueueName())) {
-                return 100L;
-              }
-              if (listName.equals(scheduledQueueDetail.getQueueName())) {
-                return 200L;
-              }
-              if (listName.equals(deadLetterQueue)) {
-                return 300L;
-              }
-              return null;
-            })
+        invocation -> {
+          String listName = invocation.getArgument(0);
+          if (listName.equals(simpleQueueDetail.getQueueName())) {
+            return 100L;
+          }
+          if (listName.equals(scheduledQueueDetail.getQueueName())) {
+            return 200L;
+          }
+          if (listName.equals(deadLetterQueue)) {
+            return 300L;
+          }
+          return null;
+        })
         .when(rqueueStringDao)
         .getListSize(anyString());
     MeterRegistry meterRegistry = new SimpleMeterRegistry();

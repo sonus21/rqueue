@@ -33,7 +33,8 @@ public final class RqueueMessageUtils {
 
   private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
 
-  private RqueueMessageUtils() {}
+  private RqueueMessageUtils() {
+  }
 
   public static String getMessageMetaId(String queueName, String messageId) {
     return META_DATA_KEY_PREFIX + queueName + REDIS_KEY_SEPARATOR + messageId;

@@ -21,7 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class TestRunner {
 
-  private TestRunner() {}
+  private TestRunner() {
+  }
 
   public static void run(Test test, Test failureCallback) throws Exception {
     run(test, null, failureCallback, 0);

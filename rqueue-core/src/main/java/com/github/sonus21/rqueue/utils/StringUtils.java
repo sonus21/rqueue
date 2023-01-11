@@ -20,7 +20,8 @@ import java.beans.Introspector;
 
 public final class StringUtils {
 
-  StringUtils() {}
+  StringUtils() {
+  }
 
   public static boolean isEmpty(String string) {
     if (string == null) {

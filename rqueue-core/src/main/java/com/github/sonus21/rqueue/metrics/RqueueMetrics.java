@@ -41,9 +41,12 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
   private final QueueCounter queueCounter;
-  @Autowired private MetricsProperties metricsProperties;
-  @Autowired private MeterRegistry meterRegistry;
-  @Autowired private RqueueStringDao rqueueStringDao;
+  @Autowired
+  private MetricsProperties metricsProperties;
+  @Autowired
+  private MeterRegistry meterRegistry;
+  @Autowired
+  private RqueueStringDao rqueueStringDao;
 
   public RqueueMetrics(QueueCounter queueCounter) {
     this.queueCounter = queueCounter;

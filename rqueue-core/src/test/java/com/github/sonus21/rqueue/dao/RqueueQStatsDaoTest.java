@@ -44,8 +44,10 @@ import org.mockito.MockitoAnnotations;
 @Slf4j
 class RqueueQStatsDaoTest extends TestBase {
 
-  @Mock private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
-  @Mock private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
+  @Mock
+  private RqueueConfig rqueueConfig;
   private RqueueQStatsDao rqueueQStatsDao;
 
   @BeforeEach
@@ -57,10 +59,10 @@ class RqueueQStatsDaoTest extends TestBase {
   @Test
   void findById() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-stat::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-stat::" + name;
+        })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
     String id = rqueueConfig.getQueueStatisticsKey("job");
@@ -74,10 +76,10 @@ class RqueueQStatsDaoTest extends TestBase {
   @Test
   void findAll() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-stat::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-stat::" + name;
+        })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
     List<String> keys =
@@ -103,10 +105,10 @@ class RqueueQStatsDaoTest extends TestBase {
   @Test
   void save() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-stat::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-stat::" + name;
+        })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
     QueueStatistics queueStatistics =

@@ -53,12 +53,16 @@ class RqueueEndpointManagerImplTest extends TestBase {
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   private final MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
   private final String queue = "test-queue";
-  private final String[] priorities = new String[] {"high", "medium", "low"};
+  private final String[] priorities = new String[]{"high", "medium", "low"};
 
-  @Mock private RqueueMessageTemplate messageTemplate;
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueUtilityService rqueueUtilityService;
+  @Mock
+  private RqueueMessageTemplate messageTemplate;
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+  @Mock
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock
+  private RqueueUtilityService rqueueUtilityService;
   private RqueueEndpointManager rqueueEndpointManager;
 
   @BeforeEach

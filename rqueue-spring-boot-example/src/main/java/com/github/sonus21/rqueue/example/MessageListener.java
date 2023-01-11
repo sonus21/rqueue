@@ -31,11 +31,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class MessageListener {
 
+  private static final Random random = new Random();
   @Autowired
   private RqueueMessageManager rqueueMessageManager;
-
-  private static final Random random = new Random();
-
   @Value("${job.fail.percentage:0}")
   private int percentageFailure;
 

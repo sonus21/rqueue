@@ -77,16 +77,17 @@ import org.springframework.test.web.servlet.MvcResult;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.data.redis.port=7001",
-      "mysql.db.name=RqueueRestController",
-      "max.workers.count=40",
-      "rqueue.web.statistic.history.day=180"
+        "spring.data.redis.port=7001",
+        "mysql.db.name=RqueueRestController",
+        "max.workers.count=40",
+        "rqueue.web.statistic.history.day=180"
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class RqueueRestControllerTest extends SpringWebTestBase {
 
-  @Autowired private DeleteMessageListener deleteMessageListener;
+  @Autowired
+  private DeleteMessageListener deleteMessageListener;
 
   @Test
   void verifyChartAndQueueData() throws Exception {

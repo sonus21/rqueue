@@ -31,9 +31,13 @@ import lombok.Setter;
 @Entity
 public class FailureDetail {
 
-  @Id private String id;
+  @Id
+  private String id;
   // if minFailureCount is -1 then fail always
-  @Column private int minFailureCount;
-  @Column private int maxFailureCount;
-  @Column private int failureCount;
+  @Column
+  private int minFailureCount;
+  @Column
+  private int maxFailureCount;
+  @Column
+  private int failureCount;
 }

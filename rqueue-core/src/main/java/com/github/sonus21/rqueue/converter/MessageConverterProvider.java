@@ -31,8 +31,8 @@ import org.springframework.messaging.converter.StringMessageConverter;
  * <p>Using message converter using other way is discouraged as it can cause problem in some flow.
  *
  * <p><b>NOTE:</b> Any custom implementation can expect targetClass being null, if targetClass is
- * null then it can return the string it self. See implementation of {@link
- * JsonMessageConverter#fromMessage(Message, Class)}
+ * null then it can return the string it self. See implementation of
+ * {@link JsonMessageConverter#fromMessage(Message, Class)}
  *
  * @see JsonMessageConverter
  * @see GenericMessageConverter
