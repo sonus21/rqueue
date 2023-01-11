@@ -16,26 +16,29 @@
 
 package com.github.sonus21.test;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 @Slf4j
 public class LoggerInterceptor implements HandlerInterceptor {
 
-//  @Override
-//  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-//      throws Exception {
-//    log.info("[preHandle] HTTP: {}, URL: {} ", request.getMethod(), request.getRequestURI());
-//    return true;
-//  }
-//
-//  @Override
-//  public void postHandle(
-//      HttpServletRequest request,
-//      HttpServletResponse response,
-//      Object handler,
-//      ModelAndView modelAndView)
-//      throws Exception {
-//    log.info("[postHandle] HTTP: {}, URL: {} ", request.getMethod(), request.getRequestURI());
-//  }
+  @Override
+  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+      throws Exception {
+    log.info("[preHandle] HTTP: {}, URL: {} ", request.getMethod(), request.getRequestURI());
+    return true;
+  }
+
+  @Override
+  public void postHandle(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      Object handler,
+      ModelAndView modelAndView)
+      throws Exception {
+    log.info("[postHandle] HTTP: {}, URL: {} ", request.getMethod(), request.getRequestURI());
+  }
 }

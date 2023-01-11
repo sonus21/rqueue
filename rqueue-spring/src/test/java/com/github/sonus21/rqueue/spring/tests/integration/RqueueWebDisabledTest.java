@@ -64,20 +64,20 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
   @ValueSource(
       strings = {
           "",
-          "queues",
-          "running",
-          "scheduled",
-          "dead",
-          "pending",
-          "utility",
-          "queues/test-queue",
-          "api/v1/aggregate-data-selector?type=WEEKLY",
-          "api/v1/jobs?message-id=1234567890"
+          "/queues",
+          "/running",
+          "/scheduled",
+          "/dead",
+          "/pending",
+          "/utility",
+          "/queues/test-queue",
+          "/api/v1/aggregate-data-selector?type=WEEKLY",
+          "/api/v1/jobs?message-id=1234567890"
       })
   void pathTester(String path) throws Exception {
     assertNull(
         this.mockMvc
-            .perform(get("/rqueue/" + path))
+            .perform(get("/rqueue" + path))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getModelAndView());

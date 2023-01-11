@@ -27,7 +27,7 @@ public class DeleteMessageListener implements MessageProcessor {
 
   @Override
   public boolean process(Job message) {
-    messages.add(message);
+    messages.add(message.getMessage());
     return true;
   }
 
