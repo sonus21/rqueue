@@ -44,11 +44,11 @@ aliases:
     run:
       name: Install Dependencies
       command: |
-        sudo apt update
-        sudo add-apt-repository ppa:redislabs/redis
-        sudo apt update
-        sudo apt -y install redis
-        redis-cli --version
+        #        sudo apt update
+        #        sudo add-apt-repository ppa:redislabs/redis
+        #        sudo apt update
+                 sudo apt -y install redis-server
+                 redis-cli --version
 
   redis_cluster_setup: &redis_cluster_setup
     run:
