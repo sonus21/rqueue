@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-jar {
-    manifest {
-        attributes(
-                'Built-By': 'Sonu Kumar<sonunitw12@gmail.com>',
-                'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
-                'Build-Revision': version,
-                'Created-By': "Gradle ${gradle.gradleVersion}",
-                'Build-Jdk': "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
-                'Build-OS': "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}",
-                'Spring-Version': "${springVersion}",
-                'Spring-Boot-Version': "${springBootVersion}"
-        )
-    }
+tasks.named('jar') {
+  manifest {
+    attributes(
+        "Built-By": "Sonu Kumar<sonunitw12@gmail.com>",
+        "Build-Timestamp": new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(new Date()),
+        "Build-Revision": version,
+        "Created-By": "Gradle ${gradle.gradleVersion}",
+        "Build-Jdk": "${System.properties["java.version"]} (${System.properties["java.vendor"]} ${System.properties["java.vm.version"]})",
+        "Build-OS": "${System.properties["os.name"]} ${System.properties["os.arch"]} ${System.properties["os.version"]}",
+        "Spring-Version": "${springVersion}",
+        "Spring-Boot-Version": "${springBootVersion}"
+    )
+  }
 }

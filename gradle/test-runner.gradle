@@ -15,8 +15,8 @@
  */
 
 test {
-    String itags = System.getProperty("includeTags") ? System.getProperty("includeTags") : ''
-    String etags = System.getProperty("excludeTags") ? System.getProperty("excludeTags") : ''
+    String itags = System.getProperty("includeTags") ? System.getProperty("includeTags") : ""
+    String etags = System.getProperty("excludeTags") ? System.getProperty("excludeTags") : ""
     useJUnitPlatform {
         if (itags != "") {
             includeTags itags.split(",")

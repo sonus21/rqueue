@@ -1,5 +1,5 @@
-ext.projectDescription = 'Asynchronous and Scheduled task executor for spring framework'
-ext.name = 'Rqueue Spring Java'
+ext.projectDescription = "Asynchronous and Scheduled task executor for spring framework"
+ext.name = "Rqueue Spring Java"
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"
     apply from: "${rootDir}/gradle/packaging.gradle"
@@ -7,6 +7,6 @@ buildscript {
 }
 
 dependencies {
-    compile project(":rqueue-core")
-    testCompile project(":rqueue-spring-common-test")
+    api project(":rqueue-core")
+    testImplementation project(":rqueue-spring-common-test")
 }

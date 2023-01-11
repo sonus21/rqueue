@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -67,7 +67,7 @@ import org.springframework.messaging.handler.annotation.support.AnnotationExcept
 import org.springframework.messaging.handler.annotation.support.HeaderMethodArgumentResolver;
 import org.springframework.messaging.handler.annotation.support.HeadersMethodArgumentResolver;
 import org.springframework.messaging.handler.annotation.support.MessageMethodArgumentResolver;
-import org.springframework.messaging.handler.annotation.support.PayloadArgumentResolver;
+import org.springframework.messaging.handler.annotation.support.PayloadMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.AbstractExceptionHandlerMethodResolver;
 import org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -129,10 +129,10 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     // Type-based argument resolution
     resolvers.add(new PrincipalMethodArgumentResolver());
     resolvers.add(new MessageMethodArgumentResolver(messageConverter));
-    resolvers.add(new PayloadArgumentResolver(messageConverter, null));
-
+    resolvers.add(new PayloadMethodArgumentResolver(messageConverter));
     return resolvers;
   }
+
 
   @Override
   protected List<? extends HandlerMethodReturnValueHandler> initReturnValueHandlers() {
@@ -450,8 +450,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   private void checkInvalidQueueName(Set<String> queueNames) {
     List<String> invalidNames = new LinkedList<>();
     Character[] invalidChars =
-        new Character[] {
-          '{', '}', ' ', '<', '>',
+        new Character[]{
+            '{', '}', ' ', '<', '>',
         };
     for (String queue : queueNames) {
       for (int i = 0; i < queue.length(); i++) {
