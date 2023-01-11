@@ -62,11 +62,18 @@ well, where all services code is in Spring.
 
 ### Dependency
 
-Snapshot Version: [https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/](https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/)
+Snapshot
+Version: [https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/](https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/sonus21/)
 Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.sonus21)
 
+**Note:**
+
+* For spring boot 2.x use Rqueue 2.x
+* For spring boot 3.x use Rqueue 3.x
+
 ---
-#### Spring Boot
+
+#### Spring Boot 2.x
 
 * Get the latest one
   from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
@@ -105,9 +112,8 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
        <version>2.13.0-RELEASE</version>
      </dependency>
     ```
-
-2. Add annotation `EnableRqueue` on application config class
-3. Provide a RedisConnectionFactory bean
+* Add annotation `EnableRqueue` on application config class
+* Provide a RedisConnectionFactory bean
 
 ###### Configuration
 
@@ -124,6 +130,7 @@ public class Application {
 ```
 
 ---
+
 ### Message publishing/Task submission
 
 All messages need to be sent using `RqueueMessageEnqueuer` bean's `enqueueXXX`, `enqueueInXXX`
@@ -231,20 +238,18 @@ public class MessageListener {
 ```
 
 ---
+
 ## Dashboard
 
 Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
-
 [![Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
-
 
 #### Queue Statistics
 
 Micrometer based dashboard for queue
 
 [![Grafana Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)
-
 
 #### Message Waiting For Execution
 
