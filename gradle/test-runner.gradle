@@ -34,15 +34,6 @@ test {
     }
   }
 
-  jacocoTestReport {
-    reports {
-      xml.enabled = System.getenv("CIRCLECI") == "true"
-      xml.destination = file("$buildDir/reports/junit/xml")
-      html.enabled = System.getenv("CIRCLECI") != "true"
-      html.destination = file("$buildDir/reports/junit/html")
-    }
-  }
-
   retry {
     failOnPassedAfterRetry = false
     maxFailures = 10

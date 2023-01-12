@@ -45,7 +45,7 @@ ext {
   jupiterVersion = "5.5.0"
   mockitoVersion = "3.5.0"
   hamcrestVersion = "2.2"
-  jacocoVersion = "0.8.4"
+  jacocoVersion = "0.8.8"
   embeddedRedisVersion = "0.7.2"
   h2Version = "2.1.214"
   tomcatVersion = "10.1.4"
