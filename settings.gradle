@@ -1,4 +1,4 @@
-rootProject.name = "redis-queue"
+rootProject.name = "Rqueue"
 include "rqueue-test-util"
 include "rqueue-core"
 include "rqueue-spring-common-test"
