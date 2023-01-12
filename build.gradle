@@ -78,7 +78,7 @@ ext {
 
 subprojects {
   group = "com.github.sonus21"
-  version = "3.0.0-RELEASE"
+  version = "3.0.0-SNAPSHOT"
 
   dependencies {
     // https://mvnrepository.com/artifact/org.springframework/spring-messaging

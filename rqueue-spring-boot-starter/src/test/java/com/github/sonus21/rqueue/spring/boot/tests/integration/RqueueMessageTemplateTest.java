@@ -47,7 +47,8 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   @Test
   void moveMessageFromDeadLetterQueueToOriginalQueue() {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10, true);
-    rqueueMessageManager.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
+    assertTrue(
+        rqueueMessageManager.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue));
     assertEquals(10, stringRqueueRedisTemplate.getListSize(emailQueue).intValue());
     assertEquals(0, stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue).intValue());
   }
