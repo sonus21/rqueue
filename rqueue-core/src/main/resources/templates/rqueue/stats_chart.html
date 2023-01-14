@@ -38,7 +38,7 @@
             <label for="stats-aggregator-type">Select Aggregator Type</label>
             <select class="form-control" id="stats-aggregator-type" name="aggregator-type">
               {% for aggregator in aggregatorTypes %}
-              <option %} %} (loop.first) endif if selected {% {%>{{aggregator}}</option>
+	                    <option {% if (loop.first) %} selected {% endif %}>{{aggregator}}</option>
               {% endfor %}
             </select>
           </div>
