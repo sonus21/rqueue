@@ -15,20 +15,18 @@ Please answer these questions before submitting your issue. Thanks!
 
 A clear and concise description of what the bug is.
 
-
 **What're application dependencies ?**
-- Rqueue Version: 
- - Spring Boot  Version: 
- - Spring Messaging Version
- - Spring Data Redis Version
- - Any other spring library dependencies and their version
 
+- Rqueue Version:
+- Spring Boot Version:
+- Spring Messaging Version
+- Spring Data Redis Version
+- Any other spring library dependencies and their version
 
 **How to Reproduce (optional)?**
 
 * Steps to reproduce the behaviour
 * A sample reproducible code if possible.
-
 
 **Additional Details (optional)**
 

@@ -1,5 +1,21 @@
 {% extends 'base' %}
 {% block main %}
+<!--
+  ~ Copyright (c) 2023 Sonu Kumar
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations under the License.
+  ~
+  -->
+
 <div class="container">
   <div class="row">
     <div class="col-md-6">
@@ -9,18 +25,19 @@
       <div class="explore-data-form col-md-12">
         <div class="form-group">
           <label for="data-name">Name: <b id="data-name-type"></b></label>
-          <input type="text" class="form-control"
-                 id="data-name" placeholder="job-queue"
-                 name="data-name">
+          <input class="form-control" id="data-name"
+                 name="data-name" placeholder="job-queue"
+                 type="text">
         </div>
         <div class="form-group display-none" id="data-key-form">
           <label for="data-key">Key:</label>
-          <input type="text" class="form-control"
-                 id="data-key" placeholder="any key" name="data-key">
+          <input class="form-control" id="data-key"
+                 name="data-key" placeholder="any key" type="text">
         </div>
         <div class="clearfix">
-          <button type="button" data-toggle="modal" data-target="#explore-queue" id="view-data"
-                  class="btn btn-primary">View
+          <button class="btn btn-primary" data-target="#explore-queue" data-toggle="modal"
+                  id="view-data"
+                  type="button">View
           </button>
         </div>
       </div>
@@ -30,20 +47,20 @@
       <div class="message-move-form col-md-12">
         <div class="form-group">
           <label for="src-data">Source Data Set: <b id="src-data-type"></b></label>
-          <input type="text" class="form-control"
-                 id="src-data" placeholder="job-queue"
-                 name="src-data">
+          <input class="form-control" id="src-data"
+                 name="src-data" placeholder="job-queue"
+                 type="text">
         </div>
         <div class="form-group">
           <label for="dst-data">Destination Data Set:<b id="dst-data-type"></b></label>
-          <input type="text" class="form-control"
-                 id="dst-data" placeholder="job-dead-letter-queue"
-                 name="dst-data">
+          <input class="form-control" id="dst-data"
+                 name="dst-data" placeholder="job-dead-letter-queue"
+                 type="text">
         </div>
         <div class="form-group display-none" id="dst-data-type-input-form">
           <label for="dst-data-type-input">Destination Data Type</label>
           <select class="form-control" id="dst-data-type-input">
-            <option value="" selected="selected">Select Type</option>
+            <option selected="selected" value="">Select Type</option>
             {% for type in supportedDataType %}
             <option value="{{type.name}}">{{type.description}}</option>
             {% endfor %}
@@ -52,9 +69,9 @@
 
         <div class="form-group">
           <label for="number-of-messages">Number of messages: </label>
-          <input type="text" class="form-control"
-                 id="number-of-messages" placeholder="100"
-                 name="dst-data">
+          <input class="form-control" id="number-of-messages"
+                 name="dst-data" placeholder="100"
+                 type="text">
         </div>
         <div class="form-group display-none" id="priority-controller-form">
           <hr/>
@@ -68,11 +85,11 @@
           </div>
           <div class="form-group">
             <label for="priority-val">Priority</label>
-            <input type="number" class="form-control" name="priority-val" id="priority-val">
+            <input class="form-control" id="priority-val" name="priority-val" type="number">
           </div>
         </div>
         <div class="clearfix">
-          <button type="button" id="move-button" class="btn  btn-danger">Move</button>
+          <button class="btn  btn-danger" id="move-button" type="button">Move</button>
         </div>
       </div>
     </div>

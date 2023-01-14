@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Sonu Kumar
+ * Copyright (c) 2022-2023 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,35 @@
  */
 
 test {
-  String itags = System.getProperty("includeTags") ? System.getProperty("includeTags") : ""
-  String etags = System.getProperty("excludeTags") ? System.getProperty("excludeTags") : ""
-  useJUnitPlatform {
-    if (itags != "") {
-      includeTags itags.split(",")
+    String itags = System.getProperty("includeTags") ? System.getProperty("includeTags") : ""
+    String etags = System.getProperty("excludeTags") ? System.getProperty("excludeTags") : ""
+    useJUnitPlatform {
+        if (itags != "") {
+            includeTags itags.split(",")
+        }
+        if (etags != "") {
+            excludeTags etags.split(",")
+        }
     }
-    if (etags != "") {
-      excludeTags etags.split(",")
+
+    jacoco {
+        if (System.getenv("CIRCLECI") == "true") {
+            destinationFile = file("$buildDir/reports/jacoco/${System.env.CIRCLE_WORKFLOW_JOB_ID}_test.exec")
+        } else {
+            destinationFile = file("$buildDir/reports/jacoco/test.exec")
+        }
     }
-  }
 
-  jacoco {
-    if (System.getenv("CIRCLECI") == "true") {
-      destinationFile = file("$buildDir/reports/jacoco/${System.env.CIRCLE_WORKFLOW_JOB_ID}_test.exec")
-    } else {
-      destinationFile = file("$buildDir/reports/jacoco/test.exec")
+    reports {
+        junitXml.enabled = true
+        junitXml.destination = file("$buildDir/reports/junit/xml")
+        html.enabled = System.getenv("CIRCLECI") != "true"
+        html.destination = file("$buildDir/reports/junit/html")
     }
-  }
 
-  reports {
-    junitXml.enabled = true
-    junitXml.destination = file("$buildDir/reports/junit/xml")
-    html.enabled = System.getenv("CIRCLECI") != "true"
-    html.destination = file("$buildDir/reports/junit/html")
-  }
-
-  retry {
-    failOnPassedAfterRetry = false
-    maxFailures = 10
-    maxRetries = 1
-  }
+    retry {
+        failOnPassedAfterRetry = false
+        maxFailures = 10
+        maxRetries = 1
+    }
 }

@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2019-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -71,10 +71,9 @@ public @interface RqueueListener {
    * it's delivered but in some cases we can ignore or discard this message.
    *
    * <p>Default behaviour is to try to deliver the same message until it's delivered, upper limit
-   * of
-   * the delivery retry is {@link Integer#MAX_VALUE} when dead letter queue is not provided. If dead
-   * letter queue is provided then it will retry {@link Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE}
-   * of times.
+   * of the delivery retry is {@link Integer#MAX_VALUE} when dead letter queue is not provided. If
+   * dead letter queue is provided then it will retry
+   * {@link Constants#DEFAULT_RETRY_DEAD_LETTER_QUEUE} of times.
    *
    * @return integer value
    */
@@ -105,10 +104,9 @@ public @interface RqueueListener {
    * re-processed, that re-process time can be controller using this.
    *
    * <p>For example a message was consumed at 10:30AM and message was not processed successfully
-   * for
-   * any reason like executor was shutdown while it's processing, task took longer time to execute
-   * or application was shutdown. In such cases consumed message would become visible to other
-   * consumers as soon as this time elapse. By default, message would become visible to other
+   * for any reason like executor was shutdown while it's processing, task took longer time to
+   * execute or application was shutdown. In such cases consumed message would become visible to
+   * other consumers as soon as this time elapse. By default, message would become visible to other
    * consumers after 15 minutes, in this case it would be visible post 10:45AM. In some cases 15
    * minutes could be too large or small, in such cases we can control the visibility timeout using
    * this field.
@@ -172,8 +170,7 @@ public @interface RqueueListener {
    * Priority group for this listener.
    *
    * <p>More than one priority group can be configured in an application. Priority groups are
-   * useful
-   * when inside a group some queue(s) have higher priority than the other queue(s).
+   * useful when inside a group some queue(s) have higher priority than the other queue(s).
    *
    * @return priority group name.
    */
