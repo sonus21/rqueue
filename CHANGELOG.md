@@ -1,5 +1,9 @@
 # [Rqueue] New and Notable Changes
 
+### [3.0.0] - 17-Jan-2022
+
+* Support for spring boot 3.0
+
 ### [2.13.0] - 25-Dec-2022
 
 ### Fixes
@@ -331,5 +335,7 @@ Fixes:
 [2.12.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.12.0-RELEASE
 
 [2.13.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.0-RELEASE
+
+[3.0.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.0.0-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122
