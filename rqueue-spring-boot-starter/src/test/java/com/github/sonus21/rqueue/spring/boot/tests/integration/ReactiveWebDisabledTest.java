@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2021-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -50,42 +50,43 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @TestPropertySource(
     properties = {
-      "rqueue.retry.per.poll=1000",
-      "spring.redis.port=8018",
-      "reservation.request.dead.letter.consumer.enabled=true",
-      "reservation.request.active=true",
-      "list.email.queue.enabled=true",
-      "mysql.db.name=ReactiveWebDisabledTest",
-      "use.system.redis=false",
-      "user.banned.queue.active=true",
-      "spring.main.web-application-type=reactive",
-      "rqueue.reactive.enabled=true",
-      "rqueue.web.enable=false",
+        "rqueue.retry.per.poll=1000",
+        "spring.data.redis.port=8018",
+        "reservation.request.dead.letter.consumer.enabled=true",
+        "reservation.request.active=true",
+        "list.email.queue.enabled=true",
+        "mysql.db.name=ReactiveWebDisabledTest",
+        "use.system.redis=false",
+        "user.banned.queue.active=true",
+        "spring.main.web-application-type=reactive",
+        "rqueue.reactive.enabled=true",
+        "rqueue.web.enable=false",
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class ReactiveWebDisabledTest extends BasicListenerTest {
 
-  @Autowired private WebTestClient webTestClient;
+  @Autowired
+  private WebTestClient webTestClient;
 
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "",
-        "queues",
-        "running",
-        "scheduled",
-        "dead",
-        "pending",
-        "utility",
-        "queues/test-queue",
-        "api/v1/aggregate-data-selector?type=WEEKLY",
-        "api/v1/jobs?message-id=1234567890"
+          "",
+          "/queues",
+          "/running",
+          "/scheduled",
+          "/dead",
+          "/pending",
+          "/utility",
+          "/queues/test-queue",
+          "/api/v1/aggregate-data-selector?type=WEEKLY",
+          "/api/v1/jobs?message-id=1234567890"
       })
   void testPath(String path) throws Exception {
     this.webTestClient
         .get()
-        .uri("/rqueue/" + path)
+        .uri("/rqueue" + path)
         .exchange()
         .expectStatus()
         .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)

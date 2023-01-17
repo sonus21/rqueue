@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2019-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -27,7 +27,7 @@ import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
@@ -45,12 +45,18 @@ import org.springframework.messaging.converter.MessageConverter;
 @SpringBootUnitTest
 class RqueueListenerAutoConfigTest extends TestBase {
 
-  @Mock private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
-  @Mock private BeanFactory beanFactory;
-  @Mock private RqueueMessageTemplate messageTemplate;
-  @Mock private RqueueMessageHandler rqueueMessageHandler;
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @InjectMocks private RqueueListenerAutoConfig rqueueMessageAutoConfig;
+  @Mock
+  private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
+  @Mock
+  private BeanFactory beanFactory;
+  @Mock
+  private RqueueMessageTemplate messageTemplate;
+  @Mock
+  private RqueueMessageHandler rqueueMessageHandler;
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+  @InjectMocks
+  private RqueueListenerAutoConfig rqueueMessageAutoConfig;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
@@ -109,7 +115,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
     doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate));
+    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(rqueueMessageHandler, messageTemplate));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
   }
 
@@ -123,14 +129,10 @@ class RqueueListenerAutoConfigTest extends TestBase {
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
-    assertNotNull(messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate));
-    RqueueMessageSender messageSender =
-        messageAutoConfig.rqueueMessageSender(rqueueMessageHandler, messageTemplate);
-    boolean messageConverterIsConfigured = false;
-    for (MessageConverter converter : messageSender.getMessageConverters()) {
-      messageConverterIsConfigured =
-          messageConverterIsConfigured || converter.hashCode() == messageConverter.hashCode();
-    }
-    assertTrue(messageConverterIsConfigured);
+    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(rqueueMessageHandler, messageTemplate));
+    RqueueMessageEnqueuer messageSender =
+        messageAutoConfig.rqueueMessageEnqueuer(rqueueMessageHandler, messageTemplate);
+    MessageConverter converter = messageSender.getMessageConverter();
+    assertTrue(converter.hashCode() == messageConverter.hashCode());
   }
 }

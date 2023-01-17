@@ -1,4 +1,4 @@
---  Copyright 2021 Sonu Kumar
+--  Copyright (c) 2021 Sonu Kumar
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
 --  you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ if #values > 0 then
         -- remove from the queue
         redis.call('LPOP', KEYS[1])
     end
-end;
+end ;
 
 --if elements with lower priority are on the head of processing queue
 local v = redis.call('ZRANGE', KEYS[2], 0, 0, 'WITHSCORES')

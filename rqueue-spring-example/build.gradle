@@ -1,23 +1,18 @@
 plugins {
-    id 'application'
+    id "application"
 }
 
-mainClassName = 'rqueue.spring.example.Main'
+mainClassName = "rqueue.spring.example.Main"
 
 
 dependencies {
-    compile project(":rqueue-spring")
-    compile project(":rqueue-spring-common-test")
-
+    implementation project(":rqueue-spring")
+    implementation project(":rqueue-spring-common-test")
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: "${lettuceVersion}"
-
+    implementation "io.lettuce:lettuce-core:${lettuceVersion}"
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-    compile group: 'org.slf4j', name: 'slf4j-simple', version: "${sl4jVersion}"
-
-    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: "${tomcatVersion}"
-
+    implementation "org.slf4j:slf4j-simple:${sl4jVersion}"
+    implementation "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
-    compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
-
+    implementation "io.micrometer:micrometer-registry-prometheus:${microMeterVersion}"
 }

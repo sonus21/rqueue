@@ -15,7 +15,6 @@ assignees: sonus21
 
 # How are you using Rqueue? (optional)
 
-
 # Testimonials (optionals)
 
 # Icon/Logo

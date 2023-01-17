@@ -1,5 +1,5 @@
-ext.projectDescription = 'Asynchronous and scheduled task executor'
-ext.name = 'Rqueue Core Java'
+ext.projectDescription = "Asynchronous and scheduled task executor"
+ext.name = "Rqueue Core Java"
 buildscript {
     apply from: "${rootDir}/gradle/code-signing.gradle"
     apply from: "${rootDir}/gradle/packaging.gradle"
@@ -7,27 +7,26 @@ buildscript {
 }
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: "${jacksonVersion}"
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${jacksonVersion}"
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${jacksonVersion}"
-
-    // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    compile group: 'javax.servlet', name: 'javax.servlet-api', version: "${javaxServletVersion}"
+    api "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    api "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+    api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    // https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api
+    api "jakarta.servlet:jakarta.servlet-api:${jakartaServletVersion}"
+    // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
+    api "jakarta.validation:jakarta.validation-api:${jakartaValidationApiVersion}"
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    compile group: 'org.springframework', name: 'spring-webmvc', version: "${springVersion}"
-    compile group: 'org.springframework', name: 'spring-webflux', version: "${springVersion}"
-    compile "io.pebbletemplates:pebble-spring5:${pebbleVersion}"
-    compile group: 'io.seruco.encoding', name: 'base62', version: "0.1.3"
+    api "org.springframework:spring-webmvc:${springVersion}"
+    api "org.springframework:spring-webflux:${springVersion}"
+    api "io.pebbletemplates:pebble-spring6:${pebbleVersion}"
+    api "io.seruco.encoding:base62:${serucoEncodingVersion}"
     // https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
-    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
-    implementation 'org.jetbrains:annotations:20.1.0'
-    compile "javax.validation:validation-api:${javaxValidationApiVersion}"
+    api "org.apache.commons:commons-collections4:${apacheCommonCollectionVerion}"
     // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
-    compile group: 'org.hibernate.validator', name: 'hibernate-validator', version: '6.1.7.Final'
+    api "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}"
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    compile "io.micrometer:micrometer-core:${microMeterVersion}", optional
-    testCompile "io.lettuce:lettuce-core:${lettuceVersion}"
-    testCompile project(":rqueue-test-util")
+    api "io.micrometer:micrometer-core:${microMeterVersion}", optional
+    testImplementation "io.lettuce:lettuce-core:${lettuceVersion}"
+    testImplementation project(":rqueue-test-util")
 }
 
 processResources {

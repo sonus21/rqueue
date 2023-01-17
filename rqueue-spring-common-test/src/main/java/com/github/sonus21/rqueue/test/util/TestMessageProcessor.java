@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2021-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -29,12 +29,13 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public class TestMessageProcessor implements MessageProcessor {
+
   private final String name;
-  public TestMessageProcessor(String name){
+  private final List<RqueueMessageEnvelop> rqueueMessageList = new Vector<>();
+
+  public TestMessageProcessor(String name) {
     this.name = name;
   }
-
-  private final List<RqueueMessageEnvelop> rqueueMessageList = new Vector<>();
 
   public void clear() {
     this.rqueueMessageList.clear();
@@ -46,7 +47,8 @@ public class TestMessageProcessor implements MessageProcessor {
 
   @Override
   public boolean process(Job job) {
-    log.info("{}MessageProcessor called queued {} with {}", name, job.getRqueueMessage().getQueueName(), job.getRqueueMessage());
+    log.info("{}MessageProcessor called queued {} with {}", name,
+        job.getRqueueMessage().getQueueName(), job.getRqueueMessage());
     rqueueMessageList.add(
         new RqueueMessageEnvelop(job.getRqueueMessage(), System.currentTimeMillis()));
     return true;

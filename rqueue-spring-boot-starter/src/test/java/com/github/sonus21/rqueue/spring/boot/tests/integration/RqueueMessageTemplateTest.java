@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -40,14 +40,15 @@ import org.springframework.test.context.TestPropertySource;
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
-@TestPropertySource(properties = {"use.system.redis=false", "spring.redis.port:8004"})
+@TestPropertySource(properties = {"use.system.redis=false", "spring.data.redis.port:8004"})
 @SpringBootIntegrationTest
 class RqueueMessageTemplateTest extends SpringTestBase {
 
   @Test
   void moveMessageFromDeadLetterQueueToOriginalQueue() {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 10, true);
-    rqueueMessageSender.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue);
+    assertTrue(
+        rqueueMessageManager.moveMessageFromDeadLetterToQueue(emailDeadLetterQueue, emailQueue));
     assertEquals(10, stringRqueueRedisTemplate.getListSize(emailQueue).intValue());
     assertEquals(0, stringRqueueRedisTemplate.getListSize(emailDeadLetterQueue).intValue());
   }

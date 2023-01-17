@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -49,8 +49,10 @@ class RqueueSystemConfigDaoTest extends TestBase {
   private final String queueName = "job";
   private final String configKey = TestUtils.getQueueConfigKey(queueName);
   private final QueueConfig queueConfig = TestUtils.createQueueConfig(queueName);
-  @Mock private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
-  @Mock private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
+  @Mock
+  private RqueueConfig rqueueConfig;
   private RqueueSystemConfigDao rqueueSystemConfigDao;
 
   @BeforeEach
@@ -92,13 +94,13 @@ class RqueueSystemConfigDaoTest extends TestBase {
   void saveAllQConfig() {
     QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification");
     doAnswer(
-            invocation -> {
-              Map<String, QueueConfig> configMap = new HashMap<>();
-              configMap.put(queueConfig.getId(), queueConfig);
-              configMap.put(queueConfig2.getId(), queueConfig2);
-              assertEquals(configMap, invocation.getArgument(0));
-              return null;
-            })
+        invocation -> {
+          Map<String, QueueConfig> configMap = new HashMap<>();
+          configMap.put(queueConfig.getId(), queueConfig);
+          configMap.put(queueConfig2.getId(), queueConfig2);
+          assertEquals(configMap, invocation.getArgument(0));
+          return null;
+        })
         .when(rqueueRedisTemplate)
         .mset(anyMap());
     rqueueSystemConfigDao.saveAllQConfig(Arrays.asList(queueConfig, queueConfig2));
@@ -133,12 +135,12 @@ class RqueueSystemConfigDaoTest extends TestBase {
     rqueueSystemConfigDao.getQConfig(configKey, false);
     QueueConfig updatedConfig = queueConfig.toBuilder().paused(true).build();
     doAnswer(
-            invocation -> {
-              Map<String, QueueConfig> configMap = new HashMap<>();
-              configMap.put(updatedConfig.getId(), updatedConfig);
-              assertEquals(configMap, invocation.getArgument(0));
-              return null;
-            })
+        invocation -> {
+          Map<String, QueueConfig> configMap = new HashMap<>();
+          configMap.put(updatedConfig.getId(), updatedConfig);
+          assertEquals(configMap, invocation.getArgument(0));
+          return null;
+        })
         .when(rqueueRedisTemplate)
         .mset(anyMap());
     rqueueSystemConfigDao.saveQConfig(updatedConfig);
@@ -152,12 +154,12 @@ class RqueueSystemConfigDaoTest extends TestBase {
     rqueueSystemConfigDao.getQConfig(configKey, false);
     QueueConfig updatedConfig = queueConfig.toBuilder().paused(true).build();
     doAnswer(
-            invocation -> {
-              Map<String, QueueConfig> configMap = new HashMap<>();
-              configMap.put(updatedConfig.getId(), updatedConfig);
-              assertEquals(configMap, invocation.getArgument(0));
-              return null;
-            })
+        invocation -> {
+          Map<String, QueueConfig> configMap = new HashMap<>();
+          configMap.put(updatedConfig.getId(), updatedConfig);
+          assertEquals(configMap, invocation.getArgument(0));
+          return null;
+        })
         .when(rqueueRedisTemplate)
         .mset(anyMap());
     rqueueSystemConfigDao.saveAllQConfig(Collections.singletonList(updatedConfig));

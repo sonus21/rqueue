@@ -20,6 +20,10 @@ signing {
     sign configurations.archives
 }
 
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -33,15 +37,16 @@ publishing {
                 def pomAscFile = signing.sign(pomFile).signatureFiles[0]
                 artifact(pomAscFile) {
                     classifier = null
-                    extension = 'pom.asc'
+                    extension = "pom.asc"
                 }
             }
 
             artifact(sourceJar) {
-                classifier = 'sources'
+                classifier = "sources"
             }
+
             artifact(javadocJar) {
-                classifier = 'javadoc'
+                classifier = "javadoc"
             }
 
             // create the signed artifacts
@@ -53,7 +58,7 @@ publishing {
                     } else {
                         classifier = null
                     }
-                    extension = 'jar.asc'
+                    extension = "jar.asc"
                 }
             }
         }
@@ -63,7 +68,7 @@ publishing {
             maven {
                 def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
                 def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots"
-                url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
                 credentials {
                     username sonatypeUsername
                     password sonatypePassword
@@ -88,30 +93,30 @@ def customizePom(pom) {
 
             description projectDescription
             name name
-            url 'https://github.com/sonus21/rqueue'
+            url "https://github.com/sonus21/rqueue"
             organization {
-                name 'com.github.sonus21'
-                url 'https://github.com/sonus21'
+                name "com.github.sonus21"
+                url "https://github.com/sonus21"
             }
             issueManagement {
-                system 'GitHub'
-                url 'https://github.com/sonus21/rqueue/issues'
+                system "GitHub"
+                url "https://github.com/sonus21/rqueue/issues"
             }
             licenses {
                 license {
                     name "Apache License 2.0"
-                    url 'https://github.com/sonus21/rqueue/blob/master/LICENSE'
-                    distribution 'repo'
+                    url "https://github.com/sonus21/rqueue/blob/master/LICENSE"
+                    distribution "repo"
                 }
             }
             scm {
-                url 'https://github.com/sonus21/rqueue'
-                connection 'scm:git:git://github.com/sonus21/rqueue.git'
-                developerConnection 'scm:git:ssh://git@github.com:sonus21/rqueue.git'
+                url "https://github.com/sonus21/rqueue"
+                connection "scm:git:git://github.com/sonus21/rqueue.git"
+                developerConnection "scm:git:ssh://git@github.com:sonus21/rqueue.git"
             }
             developers {
                 developer {
-                    name 'Sonu Kumar'
+                    name "Sonu Kumar"
                     email "sonunitw12@gmail.com"
                 }
             }

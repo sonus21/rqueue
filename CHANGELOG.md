@@ -1,28 +1,37 @@
 # [Rqueue] New and Notable Changes
 
+### [3.0.1] - 17-Jan-2022
+
+* Support for spring boot 3.0
+
 ### [2.13.0] - 25-Dec-2022
+
 ### Fixes
+
 * Important fix for parallel message deletion or delete the message from message listener
 * No threads are available, improvement on message poller
 * Use System Zone ID for UI bottom screen
 
 ### [2.12.0] - 14-Dec-2022
+
 ### Fixes
+
 * Upgraded Pebble version for CVE
 * Use System Zone ID for UI display
 
-
 ### [2.11.1] - 18-Nov-2022
+
 ### Fixes
+
 Bug introduced by 2.11
 
 ### [2.11] - 07-Nov-2022
 
 ### Fixes
 
-* Message mover unreliability, scheduled message were not getting consumed once redis connection error occurs
+* Message mover unreliability, scheduled message were not getting consumed once redis connection
+  error occurs
 * Upgraded Jquery version
-
 
 ### [2.10.2] - 16-Jul-2022
 
@@ -326,5 +335,7 @@ Fixes:
 [2.12.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.12.0-RELEASE
 
 [2.13.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.0-RELEASE
+
+[3.0.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.0.0-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122

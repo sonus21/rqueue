@@ -1,25 +1,41 @@
+<!--
+  ~ Copyright (c) 2023 Sonu Kumar
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations under the License.
+  ~
+  -->
+
 <div class="modal fade" id="explore-queue">
   <div class="modal-dialog modal-data-explorer modal-lg modal-dialog-centered" role="document">
     <div class="modal-content">
       <!-- Modal Header -->
       <div class="modal-header">
         <h4 class="modal-title" id="explorer-title">Queue: <b>{{queueName}}</b></h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <button class="close" data-dismiss="modal" type="button">&times;</button>
       </div>
       <!-- Modal body -->
       <div class="modal-body">
         <div class="queue-nav container">
           <label for="page-size">Number of items</label>
           <select id="page-size">
-            <option value="10" selected>10</option>
+            <option selected value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
             <option value="100">100</option>
           </select>
-          <button type="button" class="btn btn-danger btn-delete-all btn-sm display-none"
-                  id="clear-queue">Delete All
+          <button class="btn btn-danger btn-delete-all btn-sm display-none" id="clear-queue"
+                  type="button">Delete All
           </button>
-          <button id="poll-queue-btn" class="btn btn-info btn-sm btn-poll float-right">Poll</button>
+          <button class="btn btn-info btn-sm btn-poll float-right" id="poll-queue-btn">Poll</button>
         </div>
         <hr/>
         <div class="container">
@@ -38,7 +54,7 @@
       <!-- Modal footer -->
       <div class="modal-footer data-explorer-footer">
         <div>
-          <button type="button" class="btn btn-info" id="previous-page-button">
+          <button class="btn btn-info" id="previous-page-button" type="button">
             Previous
           </button>
         </div>
@@ -46,7 +62,7 @@
           <span id="display-page-number"></span>
         </div>
         <div>
-          <button type="button" class="btn btn-info" id="next-page-button">Next
+          <button class="btn btn-info" id="next-page-button" type="button">Next
           </button>
         </div>
       </div>

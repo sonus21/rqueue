@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2022-2023 Sonu Kumar
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
+
 package com.github.sonus21.rqueue.core;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
@@ -34,8 +51,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 @CoreUnitTest
 @SuppressWarnings("unchecked")
-
 class MessageScheduleTest extends TestBase {
+
   @InjectMocks
   private final ProcessingQTestMessageScheduler messageScheduler = new ProcessingQTestMessageScheduler();
   private final String queue = "queue";
@@ -123,7 +140,8 @@ class MessageScheduleTest extends TestBase {
       doAnswer(
           invocation -> {
             counter.incrementAndGet();
-            throw new RedisSystemException("Something is not correct", new NullPointerException("oops!"));
+            throw new RedisSystemException("Something is not correct",
+                new NullPointerException("oops!"));
           })
           .when(redisTemplate)
           .execute(any(RedisCallback.class));
@@ -140,7 +158,7 @@ class MessageScheduleTest extends TestBase {
   }
 
   @Test
-  void continuousTaskFailTask() throws Exception{
+  void continuousTaskFailTask() throws Exception {
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
       doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
       doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
@@ -151,13 +169,15 @@ class MessageScheduleTest extends TestBase {
       doAnswer(
           invocation -> {
             int count = counter.incrementAndGet();
-            if(count % 3 == 0){
-              throw new RedisSystemException("Something is not correct", new NullPointerException("oops!"));
+            if (count % 3 == 0) {
+              throw new RedisSystemException("Something is not correct",
+                  new NullPointerException("oops!"));
             }
-            if(count % 3 == 1){
-              throw  new RedisConnectionFailureException("Unknown host");
+            if (count % 3 == 1) {
+              throw new RedisConnectionFailureException("Unknown host");
             }
-            throw new ClusterRedirectException(3, "localhost", 9004, new TooManyClusterRedirectionsException("too many redirects") );
+            throw new ClusterRedirectException(3, "localhost", 9004,
+                new TooManyClusterRedirectionsException("too many redirects"));
           })
           .when(redisTemplate)
           .execute(any(RedisCallback.class));

@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -36,7 +36,7 @@ import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
 import com.github.sonus21.rqueue.test.dto.Job;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -52,9 +52,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=7003",
-      "mysql.db.name=RqueueRestController",
-      "rqueue.web.enable=false"
+        "spring.data.redis.port=7003",
+        "mysql.db.name=RqueueRestController",
+        "rqueue.web.enable=false"
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
@@ -63,21 +63,21 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "",
-        "queues",
-        "running",
-        "scheduled",
-        "dead",
-        "pending",
-        "utility",
-        "queues/test-queue",
-        "api/v1/aggregate-data-selector?type=WEEKLY",
-        "api/v1/jobs?message-id=1234567890"
+          "",
+          "/queues",
+          "/running",
+          "/scheduled",
+          "/dead",
+          "/pending",
+          "/utility",
+          "/queues/test-queue",
+          "/api/v1/aggregate-data-selector?type=WEEKLY",
+          "/api/v1/jobs?message-id=1234567890"
       })
   void pathTester(String path) throws Exception {
     assertNull(
         this.mockMvc
-            .perform(get("/rqueue/" + path))
+            .perform(get("/rqueue" + path))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getModelAndView());

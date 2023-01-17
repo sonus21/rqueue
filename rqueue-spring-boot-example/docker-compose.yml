@@ -10,7 +10,7 @@ services:
   grafana:
     ports:
       - "3000:3000"
-    image:  grafana/grafana
+    image: grafana/grafana
 
   redis:
     ports:
@@ -22,7 +22,7 @@ services:
       dockerfile: Dockerfile
       context: .
     environment:
-      - spring.redis.host=redis
+      - spring.data.redis.host=redis
     ports:
       - "8080:8080"
     image: rqueue

@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2019-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -56,8 +56,10 @@ public abstract class MessageScheduler
     implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
 
   private final Object monitor = new Object();
-  @Autowired protected RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Autowired protected RqueueConfig rqueueConfig;
+  @Autowired
+  protected RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Autowired
+  protected RqueueConfig rqueueConfig;
   private RedisScript<Long> redisScript;
   private MessageSchedulerListener messageSchedulerListener;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
@@ -66,7 +68,8 @@ public abstract class MessageScheduler
   private Map<String, String> channelNameToQueueName;
   private Map<String, Long> queueNameToLastMessageScheduleTime;
   private ThreadPoolTaskScheduler scheduler;
-  @Autowired private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  @Autowired
+  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
   @Autowired
   @Qualifier("rqueueRedisLongTemplate")
@@ -375,7 +378,7 @@ public abstract class MessageScheduler
         long delay = (long) (100 * Math.pow(1.5, errCount));
         delay = Math.min(delay, rqueueSchedulerConfig.getMaxMessageMoverDelay());
         nextTime = System.currentTimeMillis() + delay;
-      }else{
+      } else {
         nextTime = getNextScheduleTime(name, value);
       }
       errorCount.put(name, errCount);

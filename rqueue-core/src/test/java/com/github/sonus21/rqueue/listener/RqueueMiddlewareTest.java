@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2021-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -126,9 +126,7 @@ class RqueueMiddlewareTest extends TestBase {
     defaultMessageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     MessageProcessorHandler messageProcessorHandler =
         new MessageProcessorHandler(
-            null, new MessageProcessor() {
-        }, new MessageProcessor() {
-        }, null);
+            null, job -> true, job -> true, null);
     postProcessingHandler =
         new PostProcessingHandler(
             rqueueWebConfig,
@@ -141,8 +139,8 @@ class RqueueMiddlewareTest extends TestBase {
         .when(rqueueBeanProvider)
         .getRqueueMessageMetadataService();
     doReturn(true).when(queueStateMgr).isQueueActive(anyString());
-    doReturn(new MessageProcessor() {
-    }).when(rqueueBeanProvider).getPreExecutionMessageProcessor();
+    doReturn((MessageProcessor) job -> true).when(rqueueBeanProvider)
+        .getPreExecutionMessageProcessor();
     doReturn(messageHandler).when(rqueueBeanProvider).getRqueueMessageHandler();
     doReturn(messageConverter).when(messageHandler).getMessageConverter();
     doReturn(rqueueJobDao).when(rqueueBeanProvider).getRqueueJobDao();

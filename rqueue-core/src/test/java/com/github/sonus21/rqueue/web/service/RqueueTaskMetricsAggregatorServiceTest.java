@@ -1,20 +1,28 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
 package com.github.sonus21.rqueue.web.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -39,6 +47,11 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -46,30 +59,26 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 
 @Slf4j
 @CoreUnitTest
 class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
 
   private final String queueName = "test-queue";
-  @Mock private RqueueQStatsDao rqueueQStatsDao;
-  @Mock private RqueueWebConfig rqueueWebConfig;
-  @Mock private RqueueLockManager rqueueLockManager;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Mock private RqueueJobDao rqueueJobDao;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock
+  private RqueueQStatsDao rqueueQStatsDao;
+  @Mock
+  private RqueueWebConfig rqueueWebConfig;
+  @Mock
+  private RqueueLockManager rqueueLockManager;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock
+  private RqueueJobDao rqueueJobDao;
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
   private RqueueJobMetricsAggregatorService rqueueJobMetricsAggregatorService;
 
   @BeforeEach
@@ -176,10 +185,10 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
         .acquireLock(eq("__rq::lock::" + id), anyString(), eq(Duration.ofMillis(500L)));
     List<QueueStatistics> queueStatistics = new ArrayList<>();
     doAnswer(
-            invocation -> {
-              queueStatistics.add(invocation.getArgument(0));
-              return null;
-            })
+        invocation -> {
+          queueStatistics.add(invocation.getArgument(0));
+          return null;
+        })
         .when(rqueueQStatsDao)
         .save(any());
 

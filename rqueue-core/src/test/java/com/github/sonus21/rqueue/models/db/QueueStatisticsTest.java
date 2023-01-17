@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -65,15 +65,15 @@ public class QueueStatisticsTest extends TestBase {
     assertNotNull(queueStatistics.getTasksMovedToDeadLetter());
 
     queueStatistics.incrementDeadLetter("2020-03-11", 10L);
-    assertEquals(new Long(10), queueStatistics.getTasksMovedToDeadLetter().get("2020-03-11"));
+    assertEquals(10, queueStatistics.getTasksMovedToDeadLetter().get("2020-03-11"));
 
     queueStatistics.incrementDeadLetter("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksMovedToDeadLetter().size());
-    assertEquals(new Long(100), queueStatistics.getTasksMovedToDeadLetter().get("2020-03-12"));
+    assertEquals(100, queueStatistics.getTasksMovedToDeadLetter().get("2020-03-12"));
 
     queueStatistics.incrementDeadLetter("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksMovedToDeadLetter().size());
-    assertEquals(new Long(200), queueStatistics.getTasksMovedToDeadLetter().get("2020-03-12"));
+    assertEquals(200, queueStatistics.getTasksMovedToDeadLetter().get("2020-03-12"));
   }
 
   @Test
@@ -86,11 +86,11 @@ public class QueueStatisticsTest extends TestBase {
 
     queueStatistics.incrementDiscard("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksDiscarded().size());
-    assertEquals(new Long(100), queueStatistics.getTasksDiscarded().get("2020-03-12"));
+    assertEquals(100L, queueStatistics.getTasksDiscarded().get("2020-03-12"));
 
     queueStatistics.incrementDiscard("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksDiscarded().size());
-    assertEquals(new Long(200), queueStatistics.getTasksDiscarded().get("2020-03-12"));
+    assertEquals(200L, queueStatistics.getTasksDiscarded().get("2020-03-12"));
   }
 
   @Test
@@ -103,11 +103,11 @@ public class QueueStatisticsTest extends TestBase {
 
     queueStatistics.incrementRetry("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksRetried().size());
-    assertEquals(new Long(100), queueStatistics.getTasksRetried().get("2020-03-12"));
+    assertEquals(100L, queueStatistics.getTasksRetried().get("2020-03-12"));
 
     queueStatistics.incrementRetry("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksRetried().size());
-    assertEquals(new Long(200), queueStatistics.getTasksRetried().get("2020-03-12"));
+    assertEquals(200L, queueStatistics.getTasksRetried().get("2020-03-12"));
   }
 
   @Test
@@ -120,11 +120,11 @@ public class QueueStatisticsTest extends TestBase {
 
     queueStatistics.incrementSuccessful("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksSuccessful().size());
-    assertEquals(new Long(100), queueStatistics.getTasksSuccessful().get("2020-03-12"));
+    assertEquals(100L, queueStatistics.getTasksSuccessful().get("2020-03-12"));
 
     queueStatistics.incrementSuccessful("2020-03-12", 100L);
     assertEquals(2, queueStatistics.getTasksSuccessful().size());
-    assertEquals(new Long(200), queueStatistics.getTasksSuccessful().get("2020-03-12"));
+    assertEquals(200L, queueStatistics.getTasksSuccessful().get("2020-03-12"));
   }
 
   @Test
