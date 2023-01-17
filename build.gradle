@@ -8,8 +8,7 @@ plugins {
 
 allprojects {
     apply plugin: "idea"
-    apply plugin: "java"
-    apply plugin: 'java-library'
+    apply plugin: "java-library"
     apply plugin: "maven-publish"
     apply plugin: "signing"
     apply plugin: "jacoco"

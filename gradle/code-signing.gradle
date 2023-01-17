@@ -20,6 +20,10 @@ signing {
     sign configurations.archives
 }
 
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -40,6 +44,7 @@ publishing {
             artifact(sourceJar) {
                 classifier = "sources"
             }
+
             artifact(javadocJar) {
                 classifier = "javadoc"
             }
