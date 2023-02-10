@@ -1,23 +1,22 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
 package com.github.sonus21.rqueue.core.support;
 
 import com.github.sonus21.rqueue.core.Job;
-import com.github.sonus21.rqueue.core.RqueueMessage;
 
 /**
  * This interface can be used to take some action whenever a message is processed
@@ -41,34 +40,8 @@ public interface MessageProcessor {
    * then only message would be consumed otherwise it will be discarded, no further processing of
    * the message would be done.
    *
-   * @param message message
+   * @param job message
    * @return true/false.
-   * @deprecated use {@link #process(Job)}
    */
-  @Deprecated
-  default boolean process(Object message) {
-    return true;
-  }
-
-  /**
-   * This method would be called with the specified object, this will happen only when message is
-   * deserialize successfully.
-   *
-   * <p>Return value is used only when it's called from pre-processing, if the method returns true
-   * then only message would be consumed otherwise it will be discarded, no further processing of
-   * the message would be done.
-   *
-   * @param message message
-   * @param rqueueMessage rqueue message object
-   * @return true/false.
-   * @deprecated use {@link #process(Job)}
-   */
-  @Deprecated
-  default boolean process(Object message, RqueueMessage rqueueMessage) {
-    return process(message);
-  }
-
-  default boolean process(Job job) {
-    return process(job.getMessage(), job.getRqueueMessage());
-  }
+  boolean process(Job job);
 }

@@ -1,20 +1,25 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
 package com.github.sonus21.rqueue.listener;
+
+import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
+import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
+import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
@@ -28,16 +33,13 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
+import java.util.Collections;
+import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
-import java.util.Collections;
-import java.util.List;
-
-import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
-import static com.github.sonus21.rqueue.utils.Constants.*;
 
 class RqueueExecutor extends MessageContainerBase {
 

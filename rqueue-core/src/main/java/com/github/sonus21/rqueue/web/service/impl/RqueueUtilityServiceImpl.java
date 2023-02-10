@@ -1,20 +1,22 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
 package com.github.sonus21.rqueue.web.service.impl;
+
+import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
@@ -32,22 +34,24 @@ import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
-import com.github.sonus21.rqueue.models.response.*;
+import com.github.sonus21.rqueue.models.response.BaseResponse;
+import com.github.sonus21.rqueue.models.response.BooleanResponse;
+import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
+import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
+import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
@@ -254,7 +258,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   private List<Pair<String, String>> getDailyDateCounter() {
     List<Pair<String, String>> dateSelector = new LinkedList<>();
-    int[] dates = new int[] {1, 2, 3, 4, 6, 7};
+    int[] dates = new int[]{1, 2, 3, 4, 6, 7};
     int step = 15;
     int stepAfter = 15;
     int i = 1;

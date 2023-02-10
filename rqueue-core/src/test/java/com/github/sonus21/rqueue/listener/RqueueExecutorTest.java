@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -32,6 +32,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
+import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -174,7 +175,8 @@ class RqueueExecutorTest extends TestBase {
         .getOrCreateMessageMetadata(any(RqueueMessage.class));
     doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
-    doReturn(Collections.emptyList()).when(redisTemplate).executePipelined(any(RedisCallback.class));
+    doReturn(Collections.emptyList()).when(redisTemplate)
+        .executePipelined(any(RedisCallback.class));
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     new RqueueExecutor(
         rqueueBeanProvider,
@@ -275,13 +277,7 @@ class RqueueExecutorTest extends TestBase {
   @Test
   void handleIgnoredMessage() {
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
-    MessageProcessor messageProcessor =
-        new MessageProcessor() {
-          @Override
-          public boolean process(Object message) {
-            return false;
-          }
-        };
+    MessageProcessor messageProcessor = job -> false;
     doReturn(messageProcessor).when(rqueueBeanProvider).getPreExecutionMessageProcessor();
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
@@ -347,7 +343,7 @@ class RqueueExecutorTest extends TestBase {
     private int count;
 
     @Override
-    public boolean process(Object message) {
+    public boolean process(Job job) {
       count += 1;
       return true;
     }

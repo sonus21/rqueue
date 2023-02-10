@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2019-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -95,8 +95,8 @@ public class SimpleRqueueListenerContainerFactory {
 
   /**
    * Whether all beans of spring application should be inspected to find methods annotated with
-   * {@link RqueueListener}, otherwise it will only inspect beans those are annotated with {@link
-   * MessageListener}
+   * {@link RqueueListener}, otherwise it will only inspect beans those are annotated with
+   * {@link MessageListener}
    */
   private boolean inspectAllBean = true;
 
@@ -104,8 +104,8 @@ public class SimpleRqueueListenerContainerFactory {
    * Whenever a consumer fails then the consumed message can be scheduled for further retry. The
    * delay of such retry can be configured based on the different configuration, by default same
    * message would be retried in 5 seconds and this will continue till all retries are not exhausted
-   * due to default task interval. {@link
-   * com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff#DEFAULT_INTERVAL}
+   * due to default task interval.
+   * {@link com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff#DEFAULT_INTERVAL}
    *
    * @see com.github.sonus21.rqueue.utils.backoff.ExponentialTaskExecutionBackOff
    * @see com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff
@@ -144,7 +144,8 @@ public class SimpleRqueueListenerContainerFactory {
    * The default value is true.
    *
    * <p>Setting this to false means, you must call start, stop and destroy methods of {@link
-   * RqueueMessageListenerContainer#start()}, {@link RqueueMessageListenerContainer#stop() },{@link
+   * RqueueMessageListenerContainer#start()},
+   * {@link RqueueMessageListenerContainer#stop() },{@link
    * RqueueMessageListenerContainer#destroy()}
    *
    * @param autoStartup - false if the container will be manually started
@@ -157,7 +158,7 @@ public class SimpleRqueueListenerContainerFactory {
    * Return configured message handler
    *
    * @param messageConverterProvider message converter that will be used to serialize/deserialize
-   *     message
+   *                                 message
    * @return RqueueMessageHandler object
    */
   public RqueueMessageHandler getRqueueMessageHandler(
@@ -186,7 +187,7 @@ public class SimpleRqueueListenerContainerFactory {
 
   /**
    * @return The number of milliseconds the polling thread must wait before trying to recover when
-   *     an error occurs (e.g. connection timeout)
+   * an error occurs (e.g. connection timeout)
    */
   public long getBackOffTime() {
     return backOffTime;
@@ -210,19 +211,18 @@ public class SimpleRqueueListenerContainerFactory {
    * Maximum number of workers, that would be used to run tasks. The default size which is 2 threads
    * for every queue.
    *
-   * <p>When you're using custom executor then you should set this number as (thread pool max size -
-   * number of queues) given executor is not shared with other application component. The
+   * <p>When you're using custom executor then you should set this number as (thread pool max size
+   * - number of queues) given executor is not shared with other application component. The
    * maxNumWorkers tells how many workers you want to run in parallel for all listeners those are
    * not having configured concurrency. For example if you have 3 queues without concurrency, and
    * you have set this as 10 then all 3 listeners would be running maximum **combined 10 jobs** at
    * any point of time. Queues having concurrency will be running at the configured concurrency.
    *
    * <p>What would happen if I set this to very high value while using custom executor? <br>
-   * 1. Task(s) would be rejected by the executor unless queue size is non-zero <br>
-   * 2. When queue size is non-zero then it can create duplicate message problem, since the polled
-   * message has not been processed yet. This will happen when {@link
-   * RqueueListener#visibilityTimeout()} is smaller than the time a task takes to execute from the
-   * time of polling to final execution.
+   * 1. Task(s) would be rejected by the executor unless queue size is non-zero <br> 2. When queue
+   * size is non-zero then it can create duplicate message problem, since the polled message has not
+   * been processed yet. This will happen when {@link RqueueListener#visibilityTimeout()} is smaller
+   * than the time a task takes to execute from the time of polling to final execution.
    *
    * @param maxNumWorkers Maximum number of workers.
    */
@@ -294,8 +294,8 @@ public class SimpleRqueueListenerContainerFactory {
 
   /**
    * Creates a {@link RqueueMessageListenerContainer} container. To create this container we would
-   * need redis connection factory {@link RedisConnectionFactory }as well as message handler {@link
-   * RqueueMessageHandler}.
+   * need redis connection factory {@link RedisConnectionFactory }as well as message handler
+   * {@link RqueueMessageHandler}.
    *
    * @return an object of {@link RqueueMessageListenerContainer} object
    */
@@ -493,8 +493,8 @@ public class SimpleRqueueListenerContainerFactory {
    * {@link MessageListener} the scanned beans can be limited.
    *
    * <p>If you just want to scan specific beans for {@link RqueueListener} annotated methods, than
-   * set {@link #inspectAllBean} to false and annotate your message listener classes with {@link
-   * MessageListener}
+   * set {@link #inspectAllBean} to false and annotate your message listener classes with
+   * {@link MessageListener}
    *
    * @param inspectAllBean whether all beans should be inspected for {@link RqueueListener} or not
    * @see MessageListener

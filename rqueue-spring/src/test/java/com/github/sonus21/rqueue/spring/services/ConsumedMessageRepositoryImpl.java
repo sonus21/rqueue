@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2019-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -18,18 +18,19 @@ package com.github.sonus21.rqueue.spring.services;
 
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.repository.ConsumedMessageRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import lombok.AllArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -51,7 +52,7 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
     EntityManager entityManager = entityManagerFactory.createEntityManager();
     Session session = entityManager.unwrap(Session.class);
     Transaction tx = session.beginTransaction();
-    session.save(entity);
+    session.persist(entity);
     tx.commit();
     entityManager.close();
     return entity;
@@ -188,6 +189,13 @@ public class ConsumedMessageRepositoryImpl implements ConsumedMessageRepository 
   @Override
   public void delete(ConsumedMessage entity) {
     deleteById(entity.getId());
+  }
+
+  @Override
+  public void deleteAllById(Iterable<? extends String> strings) {
+    HashSet<String> ids = new HashSet<>();
+    strings.forEach(ids::add);
+    deleteAllByIdIn(ids);
   }
 
   @Override

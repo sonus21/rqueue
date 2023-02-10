@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2019-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -58,7 +58,6 @@ import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.TooManyClusterRedirectionsException;
 import org.springframework.data.redis.connection.DefaultMessage;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.connection.RedisInvalidSubscriptionException;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -291,7 +290,8 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
       doAnswer(
           invocation -> {
             counter.incrementAndGet();
-            throw new RedisSystemException("Something is not correct", new NullPointerException("oops!"));
+            throw new RedisSystemException("Something is not correct",
+                new NullPointerException("oops!"));
           })
           .when(redisTemplate)
           .execute(any(RedisCallback.class));
@@ -308,7 +308,7 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
   }
 
   @Test
-  void continuousTaskFailTask() throws Exception{
+  void continuousTaskFailTask() throws Exception {
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
       doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
       doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
@@ -319,13 +319,15 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
       doAnswer(
           invocation -> {
             int count = counter.incrementAndGet();
-            if(count % 3 == 0){
-              throw new RedisSystemException("Something is not correct", new NullPointerException("oops!"));
+            if (count % 3 == 0) {
+              throw new RedisSystemException("Something is not correct",
+                  new NullPointerException("oops!"));
             }
-            if(count % 3 == 1){
-              throw  new RedisConnectionFailureException("Unknown host");
+            if (count % 3 == 1) {
+              throw new RedisConnectionFailureException("Unknown host");
             }
-            throw new ClusterRedirectException(3, "localhost", 9004, new TooManyClusterRedirectionsException("too many redirects") );
+            throw new ClusterRedirectException(3, "localhost", 9004,
+                new TooManyClusterRedirectionsException("too many redirects"));
           })
           .when(redisTemplate)
           .execute(any(RedisCallback.class));

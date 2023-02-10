@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -44,8 +44,10 @@ import org.mockito.MockitoAnnotations;
 @Slf4j
 class RqueueQStatsDaoTest extends TestBase {
 
-  @Mock private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
-  @Mock private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
+  @Mock
+  private RqueueConfig rqueueConfig;
   private RqueueQStatsDao rqueueQStatsDao;
 
   @BeforeEach
@@ -57,10 +59,10 @@ class RqueueQStatsDaoTest extends TestBase {
   @Test
   void findById() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-stat::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-stat::" + name;
+        })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
     String id = rqueueConfig.getQueueStatisticsKey("job");
@@ -74,10 +76,10 @@ class RqueueQStatsDaoTest extends TestBase {
   @Test
   void findAll() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-stat::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-stat::" + name;
+        })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
     List<String> keys =
@@ -103,10 +105,10 @@ class RqueueQStatsDaoTest extends TestBase {
   @Test
   void save() {
     doAnswer(
-            invocation -> {
-              String name = invocation.getArgument(0);
-              return "__rq::q-stat::" + name;
-            })
+        invocation -> {
+          String name = invocation.getArgument(0);
+          return "__rq::q-stat::" + name;
+        })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
     QueueStatistics queueStatistics =

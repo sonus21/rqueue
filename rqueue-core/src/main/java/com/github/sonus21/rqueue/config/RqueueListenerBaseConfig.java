@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -37,10 +37,10 @@ import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
 import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
-import com.mitchellbosecke.pebble.PebbleEngine;
-import com.mitchellbosecke.pebble.spring.extension.SpringExtension;
-import com.mitchellbosecke.pebble.spring.reactive.PebbleReactiveViewResolver;
-import com.mitchellbosecke.pebble.spring.servlet.PebbleViewResolver;
+import io.pebbletemplates.pebble.PebbleEngine;
+import io.pebbletemplates.spring.extension.SpringExtension;
+import io.pebbletemplates.spring.reactive.PebbleReactiveViewResolver;
+import io.pebbletemplates.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,6 +50,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.servlet.ViewResolver;
 
 /**
  * This is a base configuration class for Rqueue, that is used in Spring and Spring boot Rqueue libs
@@ -105,8 +106,8 @@ public abstract class RqueueListenerBaseConfig {
    * Database for different ops.
    *
    * @param beanFactory configurable bean factory
-   * @param versionKey Rqueue db version key
-   * @param dbVersion database version
+   * @param versionKey  Rqueue db version key
+   * @param dbVersion   database version
    * @return {@link RedisConnectionFactory} object.
    */
   @Bean
@@ -231,7 +232,7 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
-  public PebbleViewResolver rqueueViewResolver() {
+  public ViewResolver rqueueViewResolver() {
     PebbleViewResolver resolver = new PebbleViewResolver(createPebbleEngine());
     resolver.setPrefix(TEMPLATE_DIR);
     resolver.setSuffix(TEMPLATE_SUFFIX);
@@ -240,7 +241,7 @@ public abstract class RqueueListenerBaseConfig {
 
   @Bean
   @Conditional(ReactiveEnabled.class)
-  public PebbleReactiveViewResolver reactiveRqueueViewResolver() {
+  public org.springframework.web.reactive.result.view.ViewResolver reactiveRqueueViewResolver() {
     PebbleReactiveViewResolver resolver = new PebbleReactiveViewResolver(createPebbleEngine());
     resolver.setPrefix(TEMPLATE_DIR);
     resolver.setSuffix(TEMPLATE_SUFFIX);
@@ -265,7 +266,7 @@ public abstract class RqueueListenerBaseConfig {
       RqueueConfig rqueueConfig,
       RqueueBeanProvider rqueueBeanProvider,
       @Qualifier("stringRqueueRedisTemplate")
-          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueInternalPubSubChannel(
         rqueueRedisListenerContainerFactory,
         rqueueMessageListenerContainer,

@@ -1,8 +1,7 @@
 dependencies {
-    compile project(":rqueue-core")
-    compile project(":rqueue-test-util")
-
+    implementation project(":rqueue-core")
+    api project(":rqueue-test-util")
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
-    compile group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: "${microMeterVersion}"
-    compile 'io.projectreactor:reactor-test:3.2.5.RELEASE'
+    api "io.micrometer:micrometer-registry-prometheus:${microMeterVersion}"
+    api "io.projectreactor:reactor-test:${projectReactorReactorTestVersion}"
 }

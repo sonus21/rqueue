@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -26,21 +26,27 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
  *
  * <p>Default delay for the task is 1.5 seconds, that increases at the rate of 1.5 on each failure.
  * After a hundred plus failures, it will reach the limit of long value {@value Long#MAX_VALUE}, and
- * no more retry would be possible, by default any task can be delay upto 3 hours {@value
- * #DEFAULT_MAX_INTERVAL}.
+ * no more retry would be possible, by default any task can be delay upto 3 hours
+ * {@value #DEFAULT_MAX_INTERVAL}.
  *
  * <p>Using multiplier 1 would mean using the fixed execution back off {@link
  * FixedTaskExecutionBackOff}
  */
 public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
 
-  /** The default initial delay for the any task: 1500 ms (1.5 seconds) */
+  /**
+   * The default initial delay for the any task: 1500 ms (1.5 seconds)
+   */
   public static final long DEFAULT_INITIAL_INTERVAL = 1500L;
 
-  /** The default multiplier (increases the delay by 50%). */
+  /**
+   * The default multiplier (increases the delay by 50%).
+   */
   public static final double DEFAULT_MULTIPLIER = 1.5;
 
-  /** The default maximum delay for any task (3 hours) */
+  /**
+   * The default maximum delay for any task (3 hours)
+   */
   public static final long DEFAULT_MAX_INTERVAL = 10800000L;
 
   private long initialInterval = DEFAULT_INITIAL_INTERVAL;
@@ -54,15 +60,16 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
    * interval of {@value #DEFAULT_MAX_INTERVAL}, multiplier of {@value #DEFAULT_MULTIPLIER} and
    * default unlimited retries.
    */
-  public ExponentialTaskExecutionBackOff() {}
+  public ExponentialTaskExecutionBackOff() {
+  }
 
   /**
    * Create an instance.
    *
    * @param initialInterval the initial delay for the message
-   * @param maxInterval the maximum delay for the message.
-   * @param multiplier the factor at which delay would be increases.
-   * @param maxRetries the maximum retry count for any message.
+   * @param maxInterval     the maximum delay for the message.
+   * @param multiplier      the factor at which delay would be increases.
+   * @param maxRetries      the maximum retry count for any message.
    */
   public ExponentialTaskExecutionBackOff(
       long initialInterval, long maxInterval, double multiplier, int maxRetries) {
@@ -181,7 +188,9 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
     this.maxInterval = maxInterval;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount) {
     if (failureCount >= getMaxRetries(message, rqueueMessage, failureCount)) {

@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2021-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -65,14 +65,22 @@ class ConcurrentListenerTest extends TestBase {
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
   private static final long executionTime = 50L;
-  @Mock private RqueueMessageHandler rqueueMessageHandler;
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private ApplicationEventPublisher applicationEventPublisher;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Mock private RqueueLockManager rqueueLockManager;
-  @Mock private RqueueWebConfig rqueueWebConfig;
+  @Mock
+  private RqueueMessageHandler rqueueMessageHandler;
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock
+  private RqueueLockManager rqueueLockManager;
+  @Mock
+  private RqueueWebConfig rqueueWebConfig;
   private RqueueBeanProvider beanProvider;
 
   @BeforeEach
@@ -111,7 +119,7 @@ class ConcurrentListenerTest extends TestBase {
     AtomicInteger producerMessageCounter = new AtomicInteger(0);
     AtomicInteger pollCounter = new AtomicInteger(0);
     Map<String, MessageMetadata> messageMetadataMap = new HashMap<>();
-    doReturn(true).when(rqueueLockManager).acquireLock(anyString(),anyString(),any());
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     doAnswer(
         i -> {
           RqueueMessage rqueueMessage = i.getArgument(0);
@@ -127,27 +135,27 @@ class ConcurrentListenerTest extends TestBase {
         .when(rqueueMessageMetadataService)
         .get(any());
     doAnswer(
-            invocation -> {
-              if (1 == pollCounter.incrementAndGet()) {
-                firstCallAt.set(System.currentTimeMillis());
-              }
-              int count = invocation.getArgument(4);
-              List<RqueueMessage> rqueueMessageList = new LinkedList<>();
-              for (int i = 0; i < count; i++) {
-                int id = producerMessageCounter.incrementAndGet();
-                RqueueMessage rqueueMessage =
-                    RqueueMessage.builder()
-                        .message("Message ::" + id + "::" + i)
-                        .id(UUID.randomUUID().toString())
-                        .queueName(fastQueue)
-                        .processAt(System.currentTimeMillis())
-                        .queuedTime(System.currentTimeMillis())
-                        .build();
-                rqueueMessageList.add(rqueueMessage);
-              }
-              lastCalledAt.set(System.currentTimeMillis());
-              return rqueueMessageList;
-            })
+        invocation -> {
+          if (1 == pollCounter.incrementAndGet()) {
+            firstCallAt.set(System.currentTimeMillis());
+          }
+          int count = invocation.getArgument(4);
+          List<RqueueMessage> rqueueMessageList = new LinkedList<>();
+          for (int i = 0; i < count; i++) {
+            int id = producerMessageCounter.incrementAndGet();
+            RqueueMessage rqueueMessage =
+                RqueueMessage.builder()
+                    .message("Message ::" + id + "::" + i)
+                    .id(UUID.randomUUID().toString())
+                    .queueName(fastQueue)
+                    .processAt(System.currentTimeMillis())
+                    .queuedTime(System.currentTimeMillis())
+                    .build();
+            rqueueMessageList.add(rqueueMessage);
+          }
+          lastCalledAt.set(System.currentTimeMillis());
+          return rqueueMessageList;
+        })
         .when(rqueueMessageTemplate)
         .pop(
             eq(fastQueue),

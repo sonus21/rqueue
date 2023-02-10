@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Sonu Kumar
+ * Copyright (c) 2021-2023 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-jar {
+tasks.named('jar') {
     manifest {
         attributes(
-                'Built-By': 'Sonu Kumar<sonunitw12@gmail.com>',
-                'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
-                'Build-Revision': version,
-                'Created-By': "Gradle ${gradle.gradleVersion}",
-                'Build-Jdk': "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
-                'Build-OS': "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}",
-                'Spring-Version': "${springVersion}",
-                'Spring-Boot-Version': "${springBootVersion}"
+                "Built-By": "Sonu Kumar<sonunitw12@gmail.com>",
+                "Build-Timestamp": new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(new Date()),
+                "Build-Revision": version,
+                "Created-By": "Gradle ${gradle.gradleVersion}",
+                "Build-Jdk": "${System.properties["java.version"]} (${System.properties["java.vendor"]} ${System.properties["java.vm.version"]})",
+                "Build-OS": "${System.properties["os.name"]} ${System.properties["os.arch"]} ${System.properties["os.version"]}",
+                "Spring-Version": "${springVersion}",
+                "Spring-Boot-Version": "${springBootVersion}"
         )
     }
 }
