@@ -157,11 +157,16 @@ callouts:
 # ga_tracking_anonymize_ip: true # Use GDPR compliant Google Analytics settings (true/nil by default)
 
 theme: just-the-docs
+remote_theme: pmarsceill/just-the-docs
+
 
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
   - jekyll-default-layout
+  - jekyll-sitemap
+  - jekyll-mermaid
+  - jekyll-spaceship
 
 kramdown:
   syntax_highlighter_opts:

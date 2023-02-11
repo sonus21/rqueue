@@ -295,15 +295,13 @@ Rqueue is &copy; 2019-{{ "now" | date: "%Y" }} by [Sonu Kumar](http://github.com
 
 ### License
 
-Rqueue is distributed by
-an [Apache license](https://github.com/sonus21/rqueue/tree/master/LICENSE.txt).
+Rqueue is distributed by an [Apache license](https://github.com/sonus21/rqueue/tree/master/LICENSE).
 
 ### Contributing
 
 When contributing to this repository, please first discuss the change you wish to make via issue,
 email, or any other method with the owners of this repository before making a change. Read more
-about becoming a contributor
-in [our GitHub repo](https://github.com/sonus21/rqueue#contributing).
+about becoming a contributor in [our GitHub repo](https://github.com/sonus21/rqueue#contributing).
 
 #### Thank you to the contributors of Rqueue!
 

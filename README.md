@@ -328,7 +328,7 @@ environment variables for Spring versions.
 
 ## Links
 
-* Documentation: [https://sonus21.github.com/rqueue](https://sonus21.github.com/rqueue)
+* Documentation: [https://sonus21.github.io/rqueue](https://sonus21.github.io/rqueue)
 * Releases: [https://github.com/sonus21/rqueue/releases](https://github.com/sonus21/rqueue/releases)
 * Issue tracker: [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues)
 * Maven Central:
