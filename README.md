@@ -328,20 +328,16 @@ environment variables for Spring versions.
 
 ## Links
 
-* Documentation:
-  [https://github.com/sonus21/rqueue/wiki](https://github.com/sonus21/rqueue/wiki)
-* Releases:
-  [https://github.com/sonus21/rqueue/releases](https://github.com/sonus21/rqueue/releases)
-* Issue tracker:
-  [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues)
+* Documentation: [https://sonus21.github.com/rqueue](https://sonus21.github.com/rqueue)
+* Releases: [https://github.com/sonus21/rqueue/releases](https://github.com/sonus21/rqueue/releases)
+* Issue tracker: [https://github.com/sonus21/rqueue/issues](https://github.com/sonus21/rqueue/issues)
 * Maven Central:
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
-
+  
 * StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
 * Discord: https://discord.gg/2hgQZXS2
-* Project
-  Progress: [https://github.com/sonus21/rqueue/projects/3](https://github.com/sonus21/rqueue/projects/3)
+* Project Progress: [https://github.com/sonus21/rqueue/projects/3](https://github.com/sonus21/rqueue/projects/3)
 
 ## License
 

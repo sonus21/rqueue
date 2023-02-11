@@ -1,16 +1,28 @@
-# [Rqueue] New and Notable Changes
+---
+title: CHANGELOG
+layout: default
 
-### [3.0.1] - 17-Jan-2022
+---
 
-* Support for spring boot 3.0
+# CHANGELOG
+
+All notable user-facing changes to this project are documented in this file.
+
+## Release [3.0.1] 17-Jan-2022
+
+We're so excited to release Rqueue `3.0.1`. This release supports the Java 17, Spring Boot 3.x and Spring Framework 6.x
+
 
 ### [2.13.0] - 25-Dec-2022
 
 ### Fixes
+{: .highlight} 
+Migrate to this version as soon as possible to avoid duplicate message consumption post deletion.
 
 * Important fix for parallel message deletion or delete the message from message listener
 * No threads are available, improvement on message poller
 * Use System Zone ID for UI bottom screen
+
 
 ### [2.12.0] - 14-Dec-2022
 
@@ -21,17 +33,14 @@
 
 ### [2.11.1] - 18-Nov-2022
 
-### Fixes
+{: .highlight} 
+Migrate to this version as soon as possible to avoid message build up. Messages in scheduled queue 
+can grow if poller is failing. Workaround is to restart the application. 
 
-Bug introduced by 2.11
-
-### [2.11] - 07-Nov-2022
-
-### Fixes
-
-* Message mover unreliability, scheduled message were not getting consumed once redis connection
-  error occurs
+* Message mover unreliability, scheduled message were not getting consumed once redis connection error occurs
 * Upgraded Jquery version
+
+
 
 ### [2.10.2] - 16-Jul-2022
 
@@ -50,6 +59,11 @@ Bug introduced by 2.11
 * Fixes for concurrency when task executor is provided see issue #[122]
 
 ### [2.10.0] - 10-Oct-2021
+
+{: .warning } 
+Breaking change, if you're controlling any internal settings of Rqueue using application environment
+or configuration variable than application can break. We've renamed some config keys, [see](./migration#290-to-210)
+
 
 ### Fixes
 
@@ -89,7 +103,7 @@ Bug introduced by 2.11
 ### Added
 
 * Pause/Unpause queue from dashboard
-* Pause/Unpause queue programatically
+* Pause/Unpause queue programmatically
 * Batch message fetching
 * Default queue priority to WEIGHTED
 * Added an API to update the visibility timeout of running job
@@ -213,6 +227,15 @@ Fixes:
 
 ## [2.0.0] - 10-May-2020
 
+{: .warning}
+Breaking change, for migration [see](./migration#1x-to-2x)
+
+- Queue names are prefixed, that can lead to error. 1.x users set REDIS key `__rq::version` to `1`.
+  It does try to find the version using key prefix, but if all queues are empty or no key exist in
+  REDIS with prefix `rqueue-` then it will consider version 2.
+- Renamed annotation field `maxJobExecutionTime` to `visibilityTimeout`
+
+
 ### Added
 
 - Web interface to visualize queue
@@ -226,13 +249,6 @@ Fixes:
 - Group level queue priority
 - Multi level queue priority
 - Strict or weighted algorithm for message execution
-
-### Breaking Changes
-
-- Queue names are prefixed, that can lead to error. 1.x users set REDIS key `__rq::version` to `1`.
-  It does try to find the version using key prefix, but if all queues are empty or no key exist in
-  REDIS with prefix `rqueue-` then it will consider version 2.
-- Renamed annotation field `maxJobExecutionTime` to `visibilityTimeout`
 
 ### Fixes
 
@@ -277,6 +293,7 @@ Fixes:
 ## [1.0] - 23-Oct-2019
 
 * The basic version of Asynchronous task execution using Redis for Spring and Spring Boot
+
 
 [1.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.0-RELEASE
 

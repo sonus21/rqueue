@@ -1,42 +1,329 @@
 ---
+layout: default
 title: Home
-layout: home
+nav_order: 1
+description: Rqueue Redis Based Async Message Processor
+permalink: /
 ---
 
-This is a *bare-minimum* template to create a Jekyll site that uses the [Just the Docs] theme. You
-can easily set the created site to be published on [GitHub Pages] – the [README] file explains how
-to do that, along with other details.
+# Rqueue | Redis Queue For Spring Framework
 
-If [Jekyll] is installed on your computer, you can also build and preview the created site *locally*
-. This lets you test changes before committing them, and avoids waiting for GitHub Pages.[^1] And
-you will be able to deploy your local build to a different platform than GitHub Pages.
+{: .fs-4 }
 
-More specifically, the created site:
+Rqueue is an asynchronous task executor(worker) built for spring framework based on the spring
+framework's messaging library backed by Redis. It can be used as message broker as well, where all
+services code is in Spring/Spring Boot. It supports Spring and Spring Boot framework.
 
-- uses a gem-based approach, i.e. uses a `Gemfile` and loads the `just-the-docs` gem
-- uses the [GitHub Pages / Actions workflow] to build and publish the site on GitHub Pages
+{: .fs-6 .fw-300 }
 
-Other than that, you're free to customize sites that you create with this template, however you
-like. You can easily change the versions of `just-the-docs` and Jekyll it uses, as well as adding
-further plugins.
+[Get started now](#getting-started){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[View it on GitHub][Rqueue repo]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
-[Browse our documentation][Just the Docs] to learn more about how to use this theme.
+---
 
-To get started with creating a site, just click "[use this template]"!
+## Features
 
-----
+* **Instant delivery** : Instant execute this message
+* **Message scheduling** : A message can be scheduled for any arbitrary period
+* **Unique message** : Unique message processing for a queue based on the message id
+* **Periodic message** : Process same message at certain interval
+* **Priority tasks** : task having some special priority like high, low, medium
+* **Message delivery** : It's guaranteed that a message is consumed **at least once**.  (Message
+  would be consumed by a worker more than once due to the failure in the underlying
+  worker/restart-process etc, otherwise exactly one delivery)
+* **Message retry** : Message would be retried automatically on application crash/failure/restart
+  etc.
+* **Automatic message serialization and deserialization**
+* **Message Multicasting** : Call multiple message listeners on every message
+* **Batch Message Polling** : Fetch multiple messages from Redis at once
+* **Metrics** : In flight messages, waiting for consumption and delayed messages
+* **Competing Consumers** : multiple messages can be consumed in parallel by different
+  workers/listeners.
+* **Concurrency** : Concurrency of any listener can be configured
+* **Queue Priority** :
+  * Group level queue priority(weighted and strict)
+  * Sub queue priority(weighted and strict)
+* **Long execution job** : Long running jobs can check in periodically.
+* **Execution Backoff** : Exponential and fixed back off (default fixed back off)
+* **Middleware** :  Add one or more middleware, middlewares are called before listener method.
+* **Callbacks** : Callbacks for dead letter queue, discard etc
+* **Events** : 1. Bootstrap event 2. Task execution event.
+* **Redis connection** : A different redis setup can be used for Rqueue
+* **Redis cluster** : Redis cluster can be used with Lettuce client.
+* **Redis Sentinel** : Redis sentinel can be used with Rqueue.
+* **Reactive Programming** : Supports reactive Redis and spring webflux
+* **Web Dashboard** :  Web dashboard to manage a queue and queue insights including latency
 
-[^1]: [It can take up to 10 minutes for changes to your site to publish after you push the changes to GitHub](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/creating-a-github-pages-site-with-jekyll#creating-your-site)
-.
+### Requirements
 
-[Just the Docs]: https://just-the-docs.github.io/just-the-docs/
+* Spring 5+, 6+
+* Spring boot 2+, 3+
+* Spring Reactive
+* Lettuce client for Redis cluster
+* Read master preference for Redis cluster
 
-[GitHub Pages]: https://docs.github.com/en/pages
+## Getting started
 
-[README]: https://github.com/just-the-docs/just-the-docs-template/blob/main/README.md
+{: .highlight }
+The Rqueue code repository has multiple sample test apps, try to run them in local all of these apps
+provides simple APIs for demo. You can clone this repo, in cloned repo you run one of these apps.
 
-[Jekyll]: https://jekyllrb.com
+* [Rqueue Sprint Boot](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example)
+* [Rqueue Sprint Boot Reactive](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-reactive-example)
+* [Rqueue Sprint](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example)
 
-[GitHub Pages / Actions workflow]: https://github.blog/changelog/2022-07-27-github-pages-custom-github-actions-workflows-beta/
+## Project Integration
 
-[use this template]: https://github.com/just-the-docs/just-the-docs-template/generate
+### Spring Boot
+
+{: .warning }
+For Spring Boot 3.x you need to use Rqueue Spring Boot Starter 3.x and for Spring Boot 2.x you need
+to use 2.x.
+
+Get the latest version of Rqueue spring boot starter from [Maven central][Boot Maven Central], add
+the latest version in your dependency manager.
+
+#### Spring Boot 2.x Setup
+
+Add Rqueue Spring Boot Starter 2.9.0 and refresh your project. Once you've added the dependency,
+you can start sending and consuming messages.
+
+* Gradle
+  ```groovy
+      implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.9.0-RELEASE'
+  ```
+* Maven
+  ```xml
+   <dependency>
+      <groupId>com.github.sonus21</groupId>
+      <artifactId>rqueue-spring-boot-starter</artifactId>
+      <version>2.9.0-RELEASE</version>
+  </dependency>
+  ```
+
+#### Spring Boot 3.x Setup
+
+Add Rqueue Spring Boot Starter 3.0.1 and refresh your project. Once you've added the dependency,
+you can start sending and consuming messages.
+
+* Add dependency
+  * Gradle
+    ```groovy
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.0.1-RELEASE'
+    ```
+  * Maven
+    ```xml
+     <dependency>
+        <groupId>com.github.sonus21</groupId>
+        <artifactId>rqueue-spring-boot-starter</artifactId>
+        <version>3.0.1-RELEASE</version>
+    </dependency>
+    ```
+
+### Spring Framework
+
+{: .warning }
+For Spring Framework 6.x you need to use Rqueue Spring 3.x and for Spring Framework 5.x you need
+to use 2.x
+
+Get the latest version of Rqueue Spring from [Maven Central][Maven Central], add the latest version
+in your dependency manager.
+
+#### Spring Framework 5.x Dependency
+
+* Gradle
+  ```groovy
+      implementation 'com.github.sonus21:rqueue-spring:2.9.0-RELEASE'
+  ```
+* Maven
+  ```xml
+   <dependency>
+     <groupId>com.github.sonus21</groupId>
+     <artifactId>rqueue-spring</artifactId>
+     <version>2.9.0-RELEASE</version>
+   </dependency>
+  ```
+
+#### Spring Framework 6.x Dependency
+
+* Gradle
+  ```groovy
+      implementation 'com.github.sonus21:rqueue-spring:3.0.1-RELEASE'
+  ```
+* Maven
+  ```xml
+   <dependency>
+     <groupId>com.github.sonus21</groupId>
+     <artifactId>rqueue-spring</artifactId>
+     <version>3.0.1-RELEASE</version>
+   </dependency>
+  ```
+
+{: .note }
+For **Spring framework**, just adding dependency won't work
+
+* Add `EnableRqueue` annotation on main method. If you do not add
+  this annotation than it will fail, and application bootstrap will fail due to bean not found and
+  message consumer will not work.
+* Provide RedisConnectionFactory bean.
+
+##### A Simple **Spring Application** Configuration
+
+```java
+
+@EnableRqueue
+public class Application {
+  @Bean
+  public RedisConnectionFactory redisConnectionFactory() {
+    // return a redis connection factory
+  }
+}
+```
+
+---
+
+### Message publishing/Task submission
+
+All messages need to be sent using `RqueueMessageEnqueuer` bean's `enqueueXXX`, `enqueueInXXX`
+and `enqueueAtXXX` methods. It has handful number of `enqueue`, `enqueueIn`, `enqueueAt` methods, we
+can use one of them based on the use case.
+
+```java
+import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+
+public class MessageService {
+  @AutoWired
+  private RqueueMessageEnqueuer rqueueMessageEnqueuer;
+
+  public void doSomething() {
+    rqueueMessageEnqueuer.enqueue("simple-queue", "Rqueue is configured");
+  }
+
+  public void createJOB(Job job) {
+    rqueueMessageEnqueuer.enqueue("job-queue", job);
+  }
+
+  // send notification in 30 seconds
+  public void sendNotification(Notification notification) {
+    rqueueMessageEnqueuer.enqueueIn("notification-queue", notification, 30 * 1000L);
+  }
+
+  // enqueue At example
+  public void createInvoice(Invoice invoice, Instant instant) {
+    rqueueMessageEnqueuer.enqueueAt("invoice-queue", invoice, instant);
+  }
+
+  // enqueue with priority, when sub queues are used as explained in the queue priority section.
+  enum SmsPriority {
+    CRITICAL("critical"),
+    HIGH("high"),
+    MEDIUM("medium"),
+    LOW("low");
+    private String value;
+  }
+
+  public void sendSms(Sms sms, SmsPriority priority) {
+    rqueueMessageEnqueuer.enqueueWithPriority("sms-queue", priority.value(), sms);
+  }
+
+  // enqueue periodic job, email should be sent every 30 seconds
+  public void sendPeriodicEmail(Email email) {
+    rqueueMessageEnqueuer.enqueuePeriodic("email-queue", invoice, 30_000);
+  }
+
+}
+```
+
+### Worker/Consumer/Task executor/Listener
+
+Annotate any public method of spring bean using `RqueueListener`, all annotated method will work as
+consumer.
+
+```java
+import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
+
+@Component
+@Slf4j
+public class MessageListener {
+
+  @RqueueListener(value = "simple-queue")
+  public void simpleMessage(String message) {
+    log.info("simple-queue: {}", message);
+  }
+
+  @RqueueListener(value = "job-queue", numRetries = "3",
+      deadLetterQueue = "failed-job-queue", concurrency = "5-10")
+  public void onMessage(Job job) {
+    log.info("Job alert: {}", job);
+  }
+
+  @RqueueListener(value = "push-notification-queue", numRetries = "3",
+      deadLetterQueue = "failed-notification-queue")
+  public void onMessage(Notification notification) {
+    log.info("Push notification: {}", notification);
+  }
+
+  @RqueueListener(value = "sms", priority = "critical=10,high=8,medium=4,low=1")
+  public void onMessage(Sms sms) {
+    log.info("Sms : {}", sms);
+  }
+
+  @RqueueListener(value = "chat-indexing", priority = "20", priorityGroup = "chat")
+  public void onMessage(ChatIndexing chatIndexing) {
+    log.info("ChatIndexing message: {}", chatIndexing);
+  }
+
+  @RqueueListener(value = "chat-indexing-daily", priority = "10", priorityGroup = "chat")
+  public void onMessage(ChatIndexing chatIndexing) {
+    log.info("ChatIndexing message: {}", chatIndexing);
+  }
+
+  // checkin job example
+  @RqueueListener(value = "chat-indexing-weekly", priority = "5", priorityGroup = "chat")
+  public void onMessage(ChatIndexing chatIndexing,
+                        @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job) {
+    log.info("ChatIndexing message: {}", chatIndexing);
+    job.checkIn("Chat indexing...");
+  }
+}
+```
+
+## About the project
+
+Rqueue is &copy; 2019-{{ "now" | date: "%Y" }} by [Sonu Kumar](http://github.com/sonus21).
+
+### License
+
+Rqueue is distributed by
+an [Apache license](https://github.com/sonus21/rqueue/tree/master/LICENSE.txt).
+
+### Contributing
+
+When contributing to this repository, please first discuss the change you wish to make via issue,
+email, or any other method with the owners of this repository before making a change. Read more
+about becoming a contributor
+in [our GitHub repo](https://github.com/sonus21/rqueue#contributing).
+
+#### Thank you to the contributors of Rqueue!
+
+<ul class="list-style-none">
+{% for contributor in site.github.contributors %}
+  <li class="d-inline-block mr-1">
+     <a href="{{ contributor.html_url }}"><img src="{{ contributor.avatar_url }}" width="32" height="32" alt="{{ contributor.login }}"></a>
+  </li>
+{% endfor %}
+</ul>
+
+### Code of Conduct
+
+Rqueue is committed to fostering a welcoming community.
+
+[View our Code of Conduct](https://github.com/sonus21/rqueue/tree/master/CODE_OF_CONDUCT.md)
+on our GitHub repository.
+
+[Rqueue repo]: https://github.com/sonus21/rqueue
+
+[Boot Maven Central]: https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter
+
+[Maven Central]: https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring
