@@ -164,9 +164,8 @@ in your dependency manager.
 {: .note }
 For **Spring framework**, just adding dependency won't work
 
-* Add `EnableRqueue` annotation on main method. If you do not add
-  this annotation than it will fail, and application bootstrap will fail due to bean not found and
-  message consumer will not work.
+* Add `EnableRqueue` annotation on main method. If you do not add this annotation than application
+bootstrap will fail due to bean not found and message consumer will not work.
 * Provide RedisConnectionFactory bean.
 
 ##### A Simple **Spring Application** Configuration
