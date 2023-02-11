@@ -43,7 +43,7 @@ exclude:
    - README.md
 
 # Set a path/url to a logo that will be displayed instead of the title
-logo: "static/logo.png"
+#logo: nil
 
 # Enable or disable the site search
 # Supports true (default) or false
@@ -114,8 +114,6 @@ nav_external_links:
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "Copyright &copy; 2019-2023 Sonu Kumar. Distributed by an <a href=\"https://github.com/sonus21/rqueue/tree/main/LICENSE.txt\">Apache 2.0 license.</a>"
-
 # Footer last edited timestamp
 last_edit_timestamp: true # show or hide edit time - page must have `last_modified_date` defined in the frontmatter
 last_edit_time_format: "%b %e %Y at %I:%M %p" # uses ruby's time format: https://ruby-doc.org/stdlib-2.7.0/libdoc/time/rdoc/Time.html
@@ -131,7 +129,7 @@ gh_edit_branch: "main" # the branch that your docs is served from
 gh_edit_view_mode: "tree" # "tree" or "edit" if you want the user to jump into the editor immediately
 
 # Color scheme currently only supports "dark", "light"/nil (default), or a custom scheme that you define
-color_scheme: nil
+color_scheme: dark
 
 callouts_level: quiet # or loud
 callouts:
@@ -158,6 +156,8 @@ callouts:
 
 theme: just-the-docs
 remote_theme: pmarsceill/just-the-docs
+
+favicon_ico: "/static/favicon/favicon.ico"
 
 
 plugins:
