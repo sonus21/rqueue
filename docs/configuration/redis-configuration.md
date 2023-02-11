@@ -2,8 +2,10 @@
 layout: default
 title: Redis Configuration
 parent: Configuration
-nav_order: 2
+nav_order: 1
 ---
+
+# Redis Configuration
 
 Rqueue stores tasks, and it's transient state in Redis. We can configure Application to use one
 redis connection for Rqueue and another one for Application, this will allow complete isolation of

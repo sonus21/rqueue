@@ -10,7 +10,7 @@ permalink: configuration
 # Configuration
 {: .no_toc }
 
-Rqueue has some many configuration settings that can be configured either using application config or code.
+Rqueue has many configuration settings that can be configured either using application config or code.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -22,10 +22,11 @@ Rqueue has some many configuration settings that can be configured either using 
 ---
 Apart from the basic configuration, it can be customized heavily, like number of tasks it would be
 executing concurrently. More and more configurations can be provided using 
-`SimpleRqueueListenerContainerFactory` class.
+`SimpleRqueueListenerContainerFactory` class. See SimpleRqueueListenerContainerFactory [doc](https://javadoc.io/doc/com.github.sonus21/rqueue-core/latest/com/github/sonus21/rqueue/config/SimpleRqueueListenerContainerFactory.html) for more configs.
 
 ```java
-class RqueueConfiguration {
+@Configuration
+public class RqueueConfiguration {
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
     // return SimpleRqueueListenerContainerFactory object

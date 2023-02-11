@@ -68,7 +68,7 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
    *
    * @param initialInterval the initial delay for the message
    * @param maxInterval     the maximum delay for the message.
-   * @param multiplier      the factor at which delay would be increases.
+   * @param multiplier      the factor at which delay would be increased.
    * @param maxRetries      the maximum retry count for any message.
    */
   public ExponentialTaskExecutionBackOff(

@@ -120,6 +120,8 @@ you can start sending and consuming messages.
     </dependency>
     ```
 
+---
+
 ### Spring Framework
 
 {: .warning }
@@ -129,7 +131,7 @@ to use 2.x
 Get the latest version of Rqueue Spring from [Maven Central][Maven Central], add the latest version
 in your dependency manager.
 
-#### Spring Framework 5.x Dependency
+#### Spring Framework 5.x
 
 * Gradle
   ```groovy
@@ -144,7 +146,7 @@ in your dependency manager.
    </dependency>
   ```
 
-#### Spring Framework 6.x Dependency
+#### Spring Framework 6.x
 
 * Gradle
   ```groovy
@@ -182,6 +184,11 @@ public class Application {
 
 ---
 
+{: .highlight }
+
+Once Rqueue is configured in Spring/Boot as mentioned above, we're ready to use the Rqueue method
+and annotation. Either you're using Spring Boot or only Spring framework the usage is same. 
+
 ### Message publishing/Task submission
 
 All messages need to be sent using `RqueueMessageEnqueuer` bean's `enqueueXXX`, `enqueueInXXX`
@@ -191,6 +198,7 @@ can use one of them based on the use case.
 ```java
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 
+@Component
 public class MessageService {
   @AutoWired
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
@@ -289,6 +297,27 @@ public class MessageListener {
 }
 ```
 
+## Rqueue Users
+
+Rqueue is stable and production ready, it's processing millions of on messages daily in production environment.
+
+**We would love to add your organization name here, if you're one of the Rqueue users, please lets know either via [GitHub][I am Using Rqueue] or [Email](mailto:sonunitw12@gmail.com).**
+
+<div markdown="1" style="background: white">
+<div markdown="1" style="padding: 10px">
+
+[![Airtel](static/users/airtel-africa.png){: width="140" position:"relative" margin-left="10" height="60" alt="Airtel Africa" }](https://airtel.africa){:target="_blank"}
+[![Line](static/users/line.png){: width="70" position:"relative" margin-left="10" height="60" alt="Line Chat" }](https://line.me){:target="_blank"}
+[![Aviva](static/users/aviva.jpeg){: width="70" position:"relative" margin-left="10" height="60" alt="Aviva" }](https://www.aviva.com/){:target="_blank"}
+[![Diamler Truck](static/users/mercedes.png){: width="80" position:"relative" margin-left="10" height="60" alt="Daimler Truck (Mercedes)" }](https://www.daimlertruck.com/en){:target="_blank"}
+[![Tune You](static/users/tuneyou.png){: width="140" position:"relative" margin-left="10" height="60" alt="TuneYou" }](https://tuneyou.com){:target="_blank"}
+[![Poker Stars](static/users/pokerstars.png){: width="140" position:"relative" margin-left="10" height="60" alt="PokerStars" }](https://www.pokerstarssports.eu){:target="_blank"}
+[![Bit bot](static/users/bitbot.png){: width="80" position:"relative" margin-left="10" height="60" alt="BitBot" }](https://bitbot.plus){:target="_blank"}
+[![CHAOTI INFO TECH(SHENZHEN)](static/users/chaoti-info.png){: width="140" position:"relative" margin-left="10" height="60" alt="CHAOTI INFO TECH(SHENZHEN)" }](https://www.chaotiinfo.cn){:target="_blank"}
+
+</div>
+</div>
+
 ## About the project
 
 Rqueue is &copy; 2019-{{ "now" | date: "%Y" }} by [Sonu Kumar](http://github.com/sonus21).
@@ -325,3 +354,5 @@ on our GitHub repository.
 [Boot Maven Central]: https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter
 
 [Maven Central]: https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring
+
+[I am Using Rqueue]: https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users

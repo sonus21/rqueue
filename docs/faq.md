@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Faq 
+title: FAQ
 nav_order: 8
 description: Rqueue FAQ
 permalink: /faq
