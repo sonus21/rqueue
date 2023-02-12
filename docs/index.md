@@ -74,6 +74,11 @@ provides simple APIs for demo. You can clone this repo, in cloned repo you run o
 
 ## Project Integration
 
+{: .warning }
+
+While creating redis connection factory you must use readFrom `MASTER_PREFERRED` otherwise application won't start.
+
+
 ### Spring Boot
 
 {: .warning }
@@ -305,14 +310,14 @@ Rqueue is stable and production ready, it's processing millions of on messages d
 <div markdown="1" style="background: white">
 <div markdown="1" style="padding: 10px">
 
-[![Airtel](static/users/airtel-africa.png){: width="140" position:"relative" margin-left="10" height="60" alt="Airtel Africa" }](https://airtel.africa){:target="_blank"}
-[![Line](static/users/line.png){: width="70" position:"relative" margin-left="10" height="60" alt="Line Chat" }](https://line.me){:target="_blank"}
-[![Aviva](static/users/aviva.jpeg){: width="70" position:"relative" margin-left="10" height="60" alt="Aviva" }](https://www.aviva.com/){:target="_blank"}
-[![Diamler Truck](static/users/mercedes.png){: width="80" position:"relative" margin-left="10" height="60" alt="Daimler Truck (Mercedes)" }](https://www.daimlertruck.com/en){:target="_blank"}
-[![Tune You](static/users/tuneyou.png){: width="140" position:"relative" margin-left="10" height="60" alt="TuneYou" }](https://tuneyou.com){:target="_blank"}
-[![Poker Stars](static/users/pokerstars.png){: width="140" position:"relative" margin-left="10" height="60" alt="PokerStars" }](https://www.pokerstarssports.eu){:target="_blank"}
-[![Bit bot](static/users/bitbot.png){: width="80" position:"relative" margin-left="10" height="60" alt="BitBot" }](https://bitbot.plus){:target="_blank"}
-[![CHAOTI INFO TECH(SHENZHEN)](static/users/chaoti-info.png){: width="140" position:"relative" margin-left="10" height="60" alt="CHAOTI INFO TECH(SHENZHEN)" }](https://www.chaotiinfo.cn){:target="_blank"}
+[![Airtel](static/users/airtel-africa.png){: width="160" height="60" alt="Airtel Africa" }](https://airtel.africa){: target="_blank" style="margin:10px"}
+[![Line](static/users/line.png){: width="70" height="60" alt="Line Chat" }](https://line.me){:target="_blank" style="margin:10px"}
+[![Aviva](static/users/aviva.jpeg){: width="70" height="60" alt="Aviva" }](https://www.aviva.com/){:target="_blank" style="margin:10px"}
+[![Diamler Truck](static/users/mercedes.png){: width="80" height="60" alt="Daimler Truck (Mercedes)" }](https://www.daimlertruck.com/en){:target="_blank" style="margin:10px"}
+[![Poker Stars](static/users/pokerstars.png){: width="210" height="60" alt="PokerStars" }](https://www.pokerstarssports.eu){:target="_blank" style="margin:10px"}
+[![Tune You](static/users/tuneyou.png){: width="140" height="60" alt="TuneYou" }](https://tuneyou.com){:target="_blank" style="margin:10px"}
+[![Bit bot](static/users/bitbot.png){: width="80" height="60" alt="BitBot" }](https://bitbot.plus){:target="_blank" style="margin:10px"}
+[![CHAOTI INFO TECH(SHENZHEN)](static/users/chaoti-info.png){: width="140" height="60" alt="CHAOTI INFO TECH(SHENZHEN)" }](https://www.chaotiinfo.cn){:target="_blank" style="margin:10px"}
 
 </div>
 </div>
