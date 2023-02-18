@@ -45,6 +45,9 @@ exclude:
 # Set a path/url to a logo that will be displayed instead of the title
 #logo: nil
 
+ga_tracking: G-HWK3PKDELN
+ga_tracking_anonymize_ip: false
+
 # Enable or disable the site search
 # Supports true (default) or false
 search_enabled: true
