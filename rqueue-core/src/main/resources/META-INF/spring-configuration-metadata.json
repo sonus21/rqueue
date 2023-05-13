@@ -283,6 +283,13 @@
     },
     {
       "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.max.message.count",
+      "description" : "Maximum number of messages that should be moved to normal queue from processing/schedule queue",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 100
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
       "name" : "rqueue.scheduler.scheduled.message.time.interval",
       "description" : "How frequently messages should be moved from scheduled queues to source queue (millisecond) ",
       "type" : "java.lang.Long",

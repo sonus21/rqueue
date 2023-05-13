@@ -65,34 +65,19 @@ public class MessageListener {
     execute("simple: {}", message, false);
   }
 
-  @RqueueListener(
-      active = "false",
-      value = {"${rqueue.delay.queue}", "${rqueue.delay2.queue}"},
-      numRetries = "${rqueue.delay.queue.retries}",
-      visibilityTimeout = "60*60*1000")
+  @RqueueListener(value = {"${rqueue.delay.queue}",
+      "${rqueue.delay2.queue}"}, numRetries = "${rqueue.delay.queue.retries}", visibilityTimeout = "60*60*1000")
   public void onMessage(String message) {
     execute("delay: {}", message, true);
   }
 
-  @RqueueListener(
-      active = "false",
-      value = "job-queue",
-      deadLetterQueue = "job-morgue",
-      numRetries = "2",
-      deadLetterQueueListenerEnabled = "false",
-      concurrency = "10-20")
+  @RqueueListener(value = "job-queue", deadLetterQueue = "job-morgue", numRetries = "2", deadLetterQueueListenerEnabled = "false", concurrency = "10-20")
   public void onJobMessage(Job job) {
     execute("job-queue: {}", job, true);
   }
 
 
-  @RqueueListener(
-      active = "false",
-      value = "sch-job-queue",
-      deadLetterQueue = "job-morgue",
-      numRetries = "2",
-      deadLetterQueueListenerEnabled = "false",
-      concurrency = "1-3")
+  @RqueueListener(value = "sch-job-queue", deadLetterQueue = "job-morgue", numRetries = "2", deadLetterQueueListenerEnabled = "false", concurrency = "1-3")
   public void onSchJobMessage(Job job, @Header(RqueueMessageHeaders.ID) String messageId) {
     execute("sch-job-queue: {}", job, false);
     count += 1;
@@ -103,8 +88,7 @@ public class MessageListener {
   }
 
 
-  @RqueueListener(value = "job-morgue", active = "false",
-      numRetries = "1", concurrency = "1-3")
+  @RqueueListener(value = "job-morgue", numRetries = "1", concurrency = "1-3")
   public void onJobDlqMessage(Job job) {
     execute("job-morgue: {}", job, true);
   }
