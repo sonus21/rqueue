@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static com.github.sonus21.rqueue.utils.Constants.MAX_MESSAGES;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_DELAY;
 import static java.lang.Math.min;
 
@@ -31,10 +30,12 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import lombok.AllArgsConstructor;
-import lombok.ToString;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +53,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-public abstract class MessageScheduler
-    implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
+public abstract class MessageScheduler implements DisposableBean,
+    ApplicationListener<RqueueBootstrapEvent> {
 
   private final Object monitor = new Object();
   @Autowired
@@ -102,8 +103,8 @@ public abstract class MessageScheduler
     if (isRedisEnabled()) {
       String channelName = getChannelName(queueName);
       getLogger().debug("Queue {} subscribe to channel {}", queueName, channelName);
-      this.rqueueRedisListenerContainerFactory.addMessageListener(
-          messageSchedulerListener, new ChannelTopic(channelName));
+      this.rqueueRedisListenerContainerFactory.addMessageListener(messageSchedulerListener,
+          new ChannelTopic(channelName));
       channelNameToQueueName.put(channelName, queueName);
     }
   }
@@ -114,8 +115,7 @@ public abstract class MessageScheduler
     }
     queueRunningState.put(queueName, true);
     if (scheduleTaskAtStartup() || !isRedisEnabled()) {
-      long scheduleAt = getQueueStartTime();
-      schedule(queueName, scheduleAt, false);
+      schedule(queueName, getQueueStartTime(), false);
     }
     subscribeToRedisTopic(queueName);
   }
@@ -152,8 +152,7 @@ public abstract class MessageScheduler
   }
 
   private void stopQueue(String queueName) {
-    Assert.isTrue(
-        queueRunningState.containsKey(queueName),
+    Assert.isTrue(queueRunningState.containsKey(queueName),
         "Queue with name '" + queueName + "' does not exist");
     queueRunningState.put(queueName, false);
   }
@@ -262,42 +261,25 @@ public abstract class MessageScheduler
 
   private class QueueScheduler {
 
-    private void updateLastScheduleTime(String queueName, long time) {
-      queueNameToLastMessageScheduleTime.put(queueName, time);
+    private void scheduleNewTask(QueueDetail queueDetail, String zsetName, long startTime) {
+      MessageMoverTask task = new MessageMoverTask(queueDetail, zsetName);
+      Future<?> future = scheduler.schedule(task, Instant.ofEpochMilli(startTime));
+      addTask(task, new ScheduledTaskDetail(task.id, future, startTime));
     }
 
-    private void scheduleNewTask(
-        QueueDetail queueDetail, String queueName, String zsetName, long startTime) {
-      MessageMoverTask timerTask =
-          new MessageMoverTask(
-              queueDetail.getName(),
-              queueDetail.getQueueName(),
-              zsetName,
-              isProcessingQueue(zsetName));
-      Future<?> future =
-          scheduler.schedule(
-              timerTask, Instant.ofEpochMilli(getNextScheduleTime(queueName, startTime)));
-      addTask(timerTask, new ScheduledTaskDetail(startTime, future));
-    }
-
-    private void scheduleTask(
-        long startTime, long currentTime, QueueDetail queueDetail, String zsetName) {
+    private void scheduleTask(QueueDetail queueDetail, String zsetName, long startTime,
+        long currentTime) {
       long requiredDelay = Math.max(1, startTime - currentTime);
-      long taskStartTime = startTime;
-      MessageMoverTask timerTask =
-          new MessageMoverTask(
-              queueDetail.getName(),
-              queueDetail.getQueueName(),
-              zsetName,
-              isProcessingQueue(queueDetail.getName()));
+      long taskStartTime = currentTime;
+      MessageMoverTask task = new MessageMoverTask(queueDetail, zsetName);
       Future<?> future;
       if (requiredDelay < MIN_DELAY) {
-        future = scheduler.submit(timerTask);
-        taskStartTime = currentTime;
+        future = scheduler.submit(task);
       } else {
-        future = scheduler.schedule(timerTask, Instant.ofEpochMilli(currentTime + requiredDelay));
+        taskStartTime = currentTime + requiredDelay;
+        future = scheduler.schedule(task, Instant.ofEpochMilli(taskStartTime));
       }
-      addTask(timerTask, new ScheduledTaskDetail(taskStartTime, future));
+      addTask(task, new ScheduledTaskDetail(task.id, future, taskStartTime));
     }
 
     private boolean shouldNotSchedule(String queueName, boolean forceSchedule) {
@@ -311,61 +293,83 @@ public abstract class MessageScheduler
       return !forceSchedule && currentTime - lastSeenTime < getMinDelay();
     }
 
+    private void handleTaskOverride(ScheduledTaskDetail scheduledTaskDetail,
+        QueueDetail queueDetail, String zsetName, long startTime) {
+      // we should not schedule too frequent calls
+      long difference = startTime - scheduledTaskDetail.getStartTime();
+      if (difference < getMinDelay()) {
+        return;
+      }
+      long currentTime = System.currentTimeMillis();
+      if (cancelExistingTask(scheduledTaskDetail, currentTime, queueDetail, zsetName)) {
+        scheduleNewTask(queueDetail, zsetName, startTime);
+      }
+    }
+
     protected synchronized void schedule(String queueName, Long startTime, boolean forceSchedule) {
+      getLogger().debug("Schedule Task queue={}, force={}", queueName, forceSchedule);
       if (shouldNotSchedule(queueName, forceSchedule)) {
         return;
       }
       long currentTime = System.currentTimeMillis();
-      updateLastScheduleTime(queueName, currentTime);
       ScheduledTaskDetail scheduledTaskDetail = getScheduledTask(queueName);
       QueueDetail queueDetail = EndpointRegistry.get(queueName);
       String zsetName = getZsetName(queueName);
+      // no task was scheduled or call came from existing MessageMoverTask
       if (scheduledTaskDetail == null || forceSchedule) {
-        scheduleTask(startTime, currentTime, queueDetail, zsetName);
-        return;
+        scheduleTask(queueDetail, zsetName, startTime, currentTime);
+      } else {
+        handleTaskOverride(scheduledTaskDetail, queueDetail, zsetName, startTime);
       }
-      checkExistingTask(scheduledTaskDetail, currentTime, queueDetail, zsetName);
-      scheduleNewTask(queueDetail, queueName, zsetName, startTime);
     }
 
-    private void addTask(MessageMoverTask timerTask, ScheduledTaskDetail scheduledTaskDetail) {
-      getLogger().debug("Timer: {}, Task: {}", timerTask, scheduledTaskDetail);
-      queueNameToScheduledTask.put(timerTask.getName(), scheduledTaskDetail);
+    private void addTask(MessageMoverTask task, ScheduledTaskDetail scheduledTaskDetail) {
+      getLogger().debug("Adding Task task={}, startTime={}", task,
+          scheduledTaskDetail.getStartTime());
+      queueNameToLastMessageScheduleTime.put(task.getName(), System.currentTimeMillis());
+      queueNameToScheduledTask.put(task.getName(), scheduledTaskDetail);
     }
 
-    private void checkExistingTask(
-        ScheduledTaskDetail scheduledTaskDetail,
-        long currentTime,
-        QueueDetail queueDetail,
-        String zsetName) {
-      // run existing tasks continue
-      long existingDelay = scheduledTaskDetail.getStartTime() - currentTime;
+    private boolean cancelExistingTask(ScheduledTaskDetail scheduledTaskDetail, long currentTime,
+        QueueDetail queueDetail, String zsetName) {
       Future<?> submittedTask = scheduledTaskDetail.getFuture();
       boolean completedOrCancelled = submittedTask.isDone() || submittedTask.isCancelled();
-      // tasks older than TASK_ALIVE_TIME are considered dead
-      if (!completedOrCancelled
-          && existingDelay < MIN_DELAY
-          && existingDelay > Constants.TASK_ALIVE_TIME) {
-        ThreadUtils.waitForTermination(
-            getLogger(),
-            submittedTask,
-            Constants.DEFAULT_SCRIPT_EXECUTION_TIME,
-            "LIST: {} ZSET: {}, Task: {} failed",
-            queueDetail.getQueueName(),
-            zsetName,
-            scheduledTaskDetail);
+      // this can happen when task was not scheduled due to some exception in scheduling
+      if (completedOrCancelled) {
+        return false;
       }
+      // run existing tasks continue
+      long existingDelay = scheduledTaskDetail.getStartTime() - currentTime;
+      // task is about to run or was scheduled to run in last alive time, but could not so run it
+      if (existingDelay < MIN_DELAY && existingDelay > Constants.TASK_ALIVE_TIME) {
+        ThreadUtils.waitForTermination(getLogger(), submittedTask,
+            Constants.DEFAULT_SCRIPT_EXECUTION_TIME, "LIST: {} ZSET: {}, Task: {} failed",
+            queueDetail.getQueueName(), zsetName, scheduledTaskDetail);
+        return false;
+      }
+      boolean cancelled = submittedTask.cancel(false);
+      if (cancelled) {
+        getLogger().debug("Task {} cancelled", scheduledTaskDetail.getId());
+      }
+      return cancelled;
     }
   }
 
-  @ToString
-  @AllArgsConstructor
   private class MessageMoverTask implements Runnable {
 
+    private final String id;
     private final String name;
     private final String queueName;
     private final String zsetName;
     private final boolean processingQueue;
+
+    MessageMoverTask(QueueDetail queueDetail, String zsetName) {
+      this.id = UUID.randomUUID().toString();
+      this.name = queueDetail.getName();
+      this.queueName = queueDetail.getQueueName();
+      this.zsetName = zsetName;
+      this.processingQueue = isProcessingQueue(zsetName);
+    }
 
     private long getNextScheduleTimeInternal(Long value, Exception e) {
       int errCount = 0;
@@ -375,7 +379,7 @@ public abstract class MessageScheduler
         if (errCount % 3 == 0) {
           getLogger().error("Message mover task is failing continuously queue: {}", name, e);
         }
-        long delay = (long) (100 * Math.pow(1.5, errCount));
+        long delay = (long) (MIN_DELAY * Math.pow(1.5, errCount));
         delay = Math.min(delay, rqueueSchedulerConfig.getMaxMessageMoverDelay());
         nextTime = System.currentTimeMillis() + delay;
       } else {
@@ -386,20 +390,31 @@ public abstract class MessageScheduler
     }
 
     @Override
+    public String toString() {
+      return String.format("MessageMoverTask(id=%s, queue=%s)", id, name);
+    }
+
+    private long getMessageCount() {
+      return rqueueSchedulerConfig.getMaxMessageCount();
+    }
+
+    private List<String> scriptKeys() {
+      return Arrays.asList(queueName, zsetName);
+    }
+
+    private Object[] scriptArgs() {
+      long currentTime = System.currentTimeMillis();
+      return new Object[]{currentTime, getMessageCount(), processingQueue ? 1 : 0};
+    }
+
+    @Override
     public void run() {
       getLogger().debug("Running {}", this);
       Long value = null;
       Exception e = null;
       try {
         if (isQueueActive(name)) {
-          long currentTime = System.currentTimeMillis();
-          value =
-              defaultScriptExecutor.execute(
-                  redisScript,
-                  Arrays.asList(queueName, zsetName),
-                  currentTime,
-                  MAX_MESSAGES,
-                  processingQueue ? 1 : 0);
+          value = defaultScriptExecutor.execute(redisScript, scriptKeys(), scriptArgs());
         }
       } catch (RedisSystemException ex) {
         e = ex;
@@ -407,10 +422,8 @@ public abstract class MessageScheduler
         e = ex;
         getLogger().warn("Task execution failed for the queue: {}", getName(), e);
       } finally {
-        if (isQueueActive(name)) {
-          long nextExecutionTime = getNextScheduleTimeInternal(value, e);
-          schedule(name, nextExecutionTime, true);
-        }
+        long nextExecutionTime = getNextScheduleTimeInternal(value, e);
+        schedule(name, nextExecutionTime, true);
       }
     }
 
@@ -427,7 +440,8 @@ public abstract class MessageScheduler
       if (currentTime - lastSeenTime < getMinDelay()) {
         return;
       }
-      schedule(queueName, startTime, false);
+      long jobStartTime = getNextScheduleTime(queueName, startTime);
+      schedule(queueName, jobStartTime, false);
     }
 
     @Override
@@ -451,4 +465,39 @@ public abstract class MessageScheduler
       }
     }
   }
+
+  @Getter
+  private static class ScheduledTaskDetail {
+
+    private final Future<?> future;
+    private final long startTime;
+    private final String id;
+
+    ScheduledTaskDetail(String id, Future<?> future, long startTime) {
+      this.startTime = startTime;
+      this.future = future;
+      this.id = id;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      if (future instanceof ScheduledFuture) {
+        sb.append("ScheduledFuture(delay=");
+        sb.append(((ScheduledFuture<?>) future).getDelay(TimeUnit.MILLISECONDS));
+        sb.append("Ms, ");
+      } else {
+        sb.append("Future(");
+      }
+      sb.append("id=");
+      sb.append(id);
+      sb.append(", startTime=");
+      sb.append(startTime);
+      sb.append(", currentTime=");
+      sb.append(System.currentTimeMillis());
+      sb.append(")");
+      return sb.toString();
+    }
+  }
+
 }

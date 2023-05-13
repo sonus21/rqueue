@@ -66,6 +66,7 @@ public class MessageListener {
   }
 
   @RqueueListener(
+      active = "false",
       value = {"${rqueue.delay.queue}", "${rqueue.delay2.queue}"},
       numRetries = "${rqueue.delay.queue.retries}",
       visibilityTimeout = "60*60*1000")
@@ -74,6 +75,7 @@ public class MessageListener {
   }
 
   @RqueueListener(
+      active = "false",
       value = "job-queue",
       deadLetterQueue = "job-morgue",
       numRetries = "2",
@@ -85,6 +87,7 @@ public class MessageListener {
 
 
   @RqueueListener(
+      active = "false",
       value = "sch-job-queue",
       deadLetterQueue = "job-morgue",
       numRetries = "2",
@@ -100,7 +103,8 @@ public class MessageListener {
   }
 
 
-  @RqueueListener(value = "job-morgue", numRetries = "1", concurrency = "1-3")
+  @RqueueListener(value = "job-morgue", active = "false",
+      numRetries = "1", concurrency = "1-3")
   public void onJobDlqMessage(Job job) {
     execute("job-morgue: {}", job, true);
   }

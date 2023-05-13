@@ -17,16 +17,12 @@
 <configuration>
   <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
     <encoder>
-      <pattern>[%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %X{traceId:-} %X{spanId:-}
-        ${PID:-} %logger{36} - %msg%n
-      </pattern>
+      <pattern>[%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %X{traceId:-} %X{spanId:-} ${PID:-} %logger{36} - %msg%n </pattern>
     </encoder>
   </appender>
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
     <encoder>
-      <pattern>[%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %X{traceId:-} %X{spanId:-}
-        ${PID:-} %logger{36} - %msg%n
-      </pattern>
+      <pattern>[%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %X{traceId:-} %X{spanId:-} ${PID:-} %logger{36} - %msg%n </pattern>
     </encoder>
     <file>log/app.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -37,6 +33,12 @@
   </appender>
 
   <logger level="INFO" name="root">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler" additivity="false">
     <appender-ref ref="STDOUT"/>
   </logger>
 </configuration>
