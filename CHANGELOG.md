@@ -1,5 +1,13 @@
 # [Rqueue] New and Notable Changes
 
+
+
+### [2.12.1] - TBD
+### Fixes
+This will fix a severe bug happening due to task multiplications. This is causing more Redis resource usage Please check #[193]
+
+
+
 ### [2.12.0] - 14-Dec-2022
 ### Fixes
 * Upgraded Pebble version for CVE
@@ -320,3 +328,4 @@ Fixes:
 [2.12.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.12.0-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122
+[193]: https://github.com/sonus21/rqueue/issues/193

@@ -72,4 +72,7 @@ public class RqueueSchedulerConfig {
   // Maximum delay for message mover task due to failure
   @Value("${rqueue.scheduler.max.message.mover.delay:60000}")
   private long maxMessageMoverDelay;
+
+  @Value("${rqueue.scheduler.max.message.count:100}")
+  private long maxMessageCount;
 }

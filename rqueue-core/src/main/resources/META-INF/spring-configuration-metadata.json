@@ -289,6 +289,13 @@
       "defaultValue": 5000
     },
     {
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name": "rqueue.scheduler.max.message.count",
+      "description": "Maximum number of messages that should be moved from processing/scheduled to normal queue",
+      "type": "java.lang.Integer",
+      "defaultValue": 100
+    },
+    {
       "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
       "name": "rqueue.web.enable",
       "description": "whether web component is enabled or not",
