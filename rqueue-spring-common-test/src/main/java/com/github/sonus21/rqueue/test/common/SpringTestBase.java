@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
+import com.github.sonus21.rqueue.test.service.RqueueEventListener;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -66,6 +67,7 @@ public abstract class SpringTestBase extends TestBase {
   @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
   @Autowired protected FailureManager failureManager;
   @Autowired protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
+  @Autowired protected RqueueEventListener rqueueEventListener;
 
   @Autowired(required = false)
   protected ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer;

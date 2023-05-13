@@ -1,11 +1,16 @@
 # [Rqueue] New and Notable Changes
 
 
-
-### [2.12.1] - TBD
+### [2.13.1] - TBD
 ### Fixes
 This will fix a severe bug happening due to task multiplications. This is causing more Redis resource usage Please check #[193]
 
+
+### [2.13.0] - 25-Dec-2022
+### Fixes
+* Important fix for parallel message deletion or delete the message from message listener
+* No threads are available, improvement on message poller
+* Use System Zone ID for UI bottom screen
 
 
 ### [2.12.0] - 14-Dec-2022
@@ -326,6 +331,8 @@ Fixes:
 [2.11.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.11.1-RELEASE
 
 [2.12.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.12.0-RELEASE
+
+[2.13.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.0-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122
 [193]: https://github.com/sonus21/rqueue/issues/193

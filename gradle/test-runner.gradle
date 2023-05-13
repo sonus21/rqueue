@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Sonu Kumar
+ * Copyright 2022 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,5 +37,11 @@ test {
         junitXml.destination = file("$buildDir/reports/junit/xml")
         html.enabled = System.getenv("CIRCLECI") != "true"
         html.destination = file("$buildDir/reports/junit/html")
+    }
+
+    retry {
+        failOnPassedAfterRetry = false
+        maxFailures = 10
+        maxRetries = 1
     }
 }

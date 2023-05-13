@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,15 +17,22 @@
 package com.github.sonus21.rqueue.example;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.core.RqueueMessageManager;
+import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 public class MessageListener {
+
+  @Autowired
+  private RqueueMessageManager rqueueMessageManager;
 
   private static final Random random = new Random();
 
@@ -34,6 +41,8 @@ public class MessageListener {
 
   @Value("${job.execution.interval:100}")
   private int jobExecutionTime;
+
+  private int count;
 
   protected boolean shouldFail() {
     if (percentageFailure == 0) {
@@ -75,6 +84,23 @@ public class MessageListener {
   public void onJobMessage(Job job) {
     execute("job-queue: {}", job, true);
   }
+
+
+  @RqueueListener(
+      value = "sch-job-queue",
+      deadLetterQueue = "job-morgue",
+      numRetries = "2",
+      deadLetterQueueListenerEnabled = "false",
+      concurrency = "1-3")
+  public void onSchJobMessage(Job job, @Header(RqueueMessageHeaders.ID) String messageId) {
+    execute("sch-job-queue: {}", job, false);
+    count += 1;
+    if (count == 4) {
+      boolean result = rqueueMessageManager.deleteMessage("sch-job-queue", messageId);
+      log.info("Message {}  delete result is {}", messageId, result);
+    }
+  }
+
 
   @RqueueListener(value = "job-morgue", numRetries = "1", concurrency = "1-3")
   public void onJobDlqMessage(Job job) {

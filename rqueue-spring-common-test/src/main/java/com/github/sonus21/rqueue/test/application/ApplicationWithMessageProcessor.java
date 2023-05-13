@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,44 +18,50 @@ package com.github.sonus21.rqueue.test.application;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import com.github.sonus21.rqueue.test.util.TestMessageProcessor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 
 public abstract class ApplicationWithMessageProcessor extends BaseApplication {
 
   @Bean
   public TestMessageProcessor deadLetterQueueMessageProcessor() {
-    return new TestMessageProcessor();
+    return new TestMessageProcessor("DLQ");
   }
 
   @Bean
   public TestMessageProcessor preExecutionMessageProcessor() {
-    return new TestMessageProcessor();
+    return new TestMessageProcessor("PreEx");
   }
 
   @Bean
   public TestMessageProcessor postExecutionMessageProcessor() {
-    return new TestMessageProcessor();
+    return new TestMessageProcessor("PostEx");
   }
 
   @Bean
   public TestMessageProcessor manualDeletionMessageProcessor() {
-    return new TestMessageProcessor();
+    return new TestMessageProcessor("ManualDeletion");
   }
 
   @Bean
   public TestMessageProcessor discardMessageProcessor() {
-    return new TestMessageProcessor();
+    return new TestMessageProcessor("Discard");
   }
 
   @Bean
-  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
+      @Qualifier("preExecutionMessageProcessor") TestMessageProcessor preExecutionMessageProcessor,
+      @Qualifier("postExecutionMessageProcessor")  TestMessageProcessor postExecutionMessageProcessor,
+      @Qualifier("manualDeletionMessageProcessor") TestMessageProcessor manualDeletionMessageProcessor,
+      @Qualifier("discardMessageProcessor") TestMessageProcessor discardMessageProcessor,
+      @Qualifier("deadLetterQueueMessageProcessor") TestMessageProcessor deadLetterQueueMessageProcessor) {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setInspectAllBean(false);
-    factory.setPreExecutionMessageProcessor(preExecutionMessageProcessor());
-    factory.setPostExecutionMessageProcessor(postExecutionMessageProcessor());
-    factory.setDiscardMessageProcessor(discardMessageProcessor());
-    factory.setDeadLetterQueueMessageProcessor(deadLetterQueueMessageProcessor());
-    factory.setManualDeletionMessageProcessor(manualDeletionMessageProcessor());
+    factory.setPreExecutionMessageProcessor(preExecutionMessageProcessor);
+    factory.setPostExecutionMessageProcessor(postExecutionMessageProcessor);
+    factory.setDiscardMessageProcessor(discardMessageProcessor);
+    factory.setDeadLetterQueueMessageProcessor(deadLetterQueueMessageProcessor);
+    factory.setManualDeletionMessageProcessor(manualDeletionMessageProcessor);
     return factory;
   }
 }

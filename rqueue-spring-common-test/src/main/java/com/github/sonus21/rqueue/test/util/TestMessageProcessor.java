@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,9 +24,15 @@ import java.util.Vector;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
+@Slf4j
 public class TestMessageProcessor implements MessageProcessor {
+  private final String name;
+  public TestMessageProcessor(String name){
+    this.name = name;
+  }
 
   private final List<RqueueMessageEnvelop> rqueueMessageList = new Vector<>();
 
@@ -40,6 +46,7 @@ public class TestMessageProcessor implements MessageProcessor {
 
   @Override
   public boolean process(Job job) {
+    log.info("{}MessageProcessor called queued {} with {}", name, job.getRqueueMessage().getQueueName(), job.getRqueueMessage());
     rqueueMessageList.add(
         new RqueueMessageEnvelop(job.getRqueueMessage(), System.currentTimeMillis()));
     return true;

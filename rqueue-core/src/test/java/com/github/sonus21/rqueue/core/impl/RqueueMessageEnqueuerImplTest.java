@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
@@ -29,6 +30,8 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.UUID;
+import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +48,12 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
-  @Mock private RqueueMessageTemplate messageTemplate;
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock
+  private RqueueMessageTemplate messageTemplate;
+  @Mock
+  private RqueueConfig rqueueConfig;
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @BeforeAll
@@ -60,10 +68,13 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
   }
 
   @BeforeEach
-  public void init() {
+  public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
     rqueueMessageEnqueuer =
         new RqueueMessageEnqueuerImpl(messageTemplate, messageConverter, messageHeaders);
+    FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueConfig", rqueueConfig, true);
+    FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueMessageMetadataService",
+        rqueueMessageMetadataService, true);
   }
 
   @Test

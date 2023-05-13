@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -68,16 +68,7 @@ abstract class BaseMessageSender {
   protected Object storeMessageMetadata(
       RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive) {
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
-    Duration duration;
-    if (delayInMillis != null) {
-      duration = Duration.ofMillis(2 * delayInMillis);
-      long minutes = duration.toMinutes();
-      if (minutes < rqueueConfig.getMessageDurabilityInMinute()) {
-        duration = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
-      }
-    } else {
-      duration = Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute());
-    }
+    Duration duration = rqueueConfig.getMessageDurability(delayInMillis);
     if (reactive) {
       return rqueueMessageMetadataService.saveReactive(messageMetadata, duration);
     } else {

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -39,16 +39,18 @@ public class Controller {
       String msg,
       @RequestParam(required = false) Integer numRetries,
       @RequestParam(required = false) Long delay) {
+    String messageId = null;
     if (numRetries == null && delay == null) {
-      rqueueMessageEnqueuer.enqueue(q, msg);
+      messageId = rqueueMessageEnqueuer.enqueue(q, msg);
     } else if (numRetries == null) {
-      rqueueMessageEnqueuer.enqueueIn(q, msg, delay);
+      messageId = rqueueMessageEnqueuer.enqueueIn(q, msg, delay);
     } else {
-      rqueueMessageEnqueuer.enqueueInWithRetry(q, msg, numRetries, delay);
+      messageId = rqueueMessageEnqueuer.enqueueInWithRetry(q, msg, numRetries, delay);
     }
     log.info("Message {}", msg);
-    return "Message sent successfully";
+    return "Message sent successfully, message id " + messageId;
   }
+
 
   private String getQueue(String queue) {
     if (queue == null) {
@@ -72,8 +74,8 @@ public class Controller {
   public String sendJobNotification(
       @RequestParam(required = false) String msg, @RequestParam(required = false) String q) {
     Job job = getJob(msg);
-    rqueueMessageEnqueuer.enqueue(getQueue(q), job);
-    log.info("{}", job);
+    String messageId = rqueueMessageEnqueuer.enqueue(getQueue(q), job);
+    job.setMessage(messageId);
     return job.toString();
   }
 
@@ -83,7 +85,19 @@ public class Controller {
       @RequestParam(required = false) String msg,
       @RequestParam(required = false, defaultValue = "2000") long delay) {
     Job job = getJob(msg);
-    rqueueMessageEnqueuer.enqueueIn(getQueue(q), job, delay);
+    String messageId = rqueueMessageEnqueuer.enqueueIn(getQueue(q), job, delay);
+    job.setMessage(messageId);
     return job.toString();
   }
+
+  @GetMapping("sch-job")
+  public String scheduleJob(
+      @RequestParam(required = false) String msg,
+      @RequestParam(required = false, defaultValue = "2000") long period) {
+    Job job = getJob(msg);
+    String messageId = rqueueMessageEnqueuer.enqueuePeriodic("sch-job-queue", job, period);
+    job.setMessageId(messageId);
+    return job.toString();
+  }
+
 }

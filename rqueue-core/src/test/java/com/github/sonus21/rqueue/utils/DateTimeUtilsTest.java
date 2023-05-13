@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,10 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.TimeZone;
 
 @CoreUnitTest
 class DateTimeUtilsTest extends TestBase {
+
+  @BeforeEach
+  public void init() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+  }
 
   @Test
   void milliToHumanRepresentation() {

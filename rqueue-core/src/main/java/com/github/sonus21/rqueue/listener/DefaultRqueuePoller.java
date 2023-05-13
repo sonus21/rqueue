@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2022 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -70,13 +70,22 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
     }
   }
 
+  void poll() {
+    if (!hasAvailableThreads(queueDetail, queueThreadPool)) {
+      log(Level.WARN, "No Threads are available sleeping {}Ms", null, pollingInterval);
+      TimeoutUtils.sleepLog(pollingInterval, false);
+    } else {
+      super.poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+    }
+  }
+
   @Override
   public void start() {
     log(Level.DEBUG, "Running Queue {}", null, queueDetail.getName());
     while (true) {
       try {
         if (eligibleForPolling(queueDetail.getName())) {
-          poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+          poll();
         } else if (shouldExit()) {
           return;
         } else {
