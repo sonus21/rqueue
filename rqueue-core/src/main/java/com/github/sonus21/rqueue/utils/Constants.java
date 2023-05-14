@@ -37,7 +37,7 @@ public final class Constants {
   public static final long MIN_DELAY = 100L;
   public static final long MIN_EXECUTION_TIME = MIN_DELAY;
   public static final long DELTA_BETWEEN_RE_ENQUEUE_TIME = ONE_MILLI;
-  public static final long TASK_ALIVE_TIME = -30 * ONE_MILLI;
+  public static final long TASK_ALIVE_TIME = -10 * ONE_MILLI;
   public static final int DEFAULT_RETRY_DEAD_LETTER_QUEUE = 3;
   public static final int MAX_MESSAGES = 100;
   public static final int DEFAULT_WORKER_COUNT_PER_QUEUE = 2;
