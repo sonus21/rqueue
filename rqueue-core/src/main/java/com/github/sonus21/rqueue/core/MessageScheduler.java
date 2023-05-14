@@ -347,6 +347,11 @@ public abstract class MessageScheduler implements DisposableBean,
             queueDetail.getQueueName(), zsetName, scheduledTaskDetail);
         return false;
       }
+      if (existingDelay < Constants.TASK_ALIVE_TIME) {
+        getLogger().warn(
+            "MessageMoverTask {} has not run, you should consider increasing scheduled thread pool size",
+            scheduledTaskDetail);
+      }
       boolean cancelled = submittedTask.cancel(false);
       if (cancelled) {
         getLogger().debug("Task {} cancelled", scheduledTaskDetail.getId());
@@ -491,7 +496,7 @@ public abstract class MessageScheduler implements DisposableBean,
       }
       sb.append("id=");
       sb.append(id);
-      sb.append(", startTime=");
+      sb.append(", scheduledTime=");
       sb.append(startTime);
       sb.append(", currentTime=");
       sb.append(System.currentTimeMillis());
