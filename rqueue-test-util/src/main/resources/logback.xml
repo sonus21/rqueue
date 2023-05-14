@@ -1,16 +1,16 @@
 <!--
-  ~  Copyright 2022 Sonu Kumar
+  ~ Copyright (c) 2019-2023 Sonu Kumar
   ~
-  ~  Licensed under the Apache License, Version 2.0 (the "License");
-  ~  you may not use this file except in compliance with the License.
-  ~  You may obtain a copy of the License at
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
   ~
-  ~         https://www.apache.org/licenses/LICENSE-2.0
+  ~     https://www.apache.org/licenses/LICENSE-2.0
   ~
-  ~   Unless required by applicable law or agreed to in writing, software
-  ~   distributed under the License is distributed on an "AS IS" BASIS,
-  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~  See the License for the specific language governing permissions and limitations under the License.
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations under the License.
   ~
   -->
 
@@ -34,8 +34,7 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="MONITOR">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
     <file>log/monitor.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -47,8 +46,7 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="ConsumedMessageStore">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
     <file>log/message.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -58,33 +56,33 @@
     </rollingPolicy>
   </appender>
 
-<!--  <logger additivity="false" level="INFO" name="com.github.sonus21">-->
-<!--    <appender-ref ref="FILE"/>-->
-<!--  </logger>-->
+  <!--  <logger additivity="false" level="INFO" name="com.github.sonus21">-->
+  <!--    <appender-ref ref="FILE"/>-->
+  <!--  </logger>-->
 
-<!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.listener.RqueueMessagePoller">-->
-<!--    <appender-ref ref="FILE"/>-->
-<!--  </logger>-->
+  <!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.listener.RqueueMessagePoller">-->
+  <!--    <appender-ref ref="FILE"/>-->
+  <!--  </logger>-->
 
-<!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.utils.QueueThreadPool">-->
-<!--    <appender-ref ref="FILE"/>-->
-<!--  </logger>-->
+  <!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.utils.QueueThreadPool">-->
+  <!--    <appender-ref ref="FILE"/>-->
+  <!--  </logger>-->
 
-<!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledMessageScheduler">-->
-<!--    <appender-ref ref="FILE"/>-->
-<!--  </logger>-->
+  <!--  <logger additivity="false" level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledMessageScheduler">-->
+  <!--    <appender-ref ref="FILE"/>-->
+  <!--  </logger>-->
 
-<!--  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.ProcessingMessageScheduler">-->
-<!--    <appender-ref ref="FILE"/>-->
-<!--  </logger>-->
+  <!--  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.ProcessingMessageScheduler">-->
+  <!--    <appender-ref ref="FILE"/>-->
+  <!--  </logger>-->
 
-<!--  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl">-->
-<!--    <appender-ref ref="FILE"/>-->
-<!--  </logger>-->
+  <!--  <logger additivity="false" level="DEBUG"  name="com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl">-->
+  <!--    <appender-ref ref="FILE"/>-->
+  <!--  </logger>-->
 
-<!--  <logger additivity="false" level="INFO" name="com.github.sonus21.rqueue.test.service">-->
-<!--    <appender-ref ref="ConsumedMessageStore"/>-->
-<!--  </logger>-->
+  <!--  <logger additivity="false" level="INFO" name="com.github.sonus21.rqueue.test.service">-->
+  <!--    <appender-ref ref="ConsumedMessageStore"/>-->
+  <!--  </logger>-->
 
   <logger level="INFO" name="monitor" additivity="false">
     <appender-ref ref="MONITOR"/>
@@ -93,5 +91,11 @@
   <root level="INFO">
     <appender-ref ref="FILE"/>
   </root>
+  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler" additivity="false">
+    <appender-ref ref="FILE"/>
+  </logger>
+  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler" additivity="false">
+    <appender-ref ref="FILE"/>
+  </logger>
 
 </configuration>

@@ -62,7 +62,7 @@ public abstract class MessageScheduler implements DisposableBean,
   @Autowired
   protected RqueueConfig rqueueConfig;
   private RedisScript<Long> redisScript;
-  private MessageSchedulerListener messageSchedulerListener;
+  protected MessageListener messageSchedulerListener;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
   private Map<String, Boolean> queueRunningState;
   private Map<String, ScheduledTaskDetail> queueNameToScheduledTask;
@@ -296,7 +296,7 @@ public abstract class MessageScheduler implements DisposableBean,
     private void handleTaskOverride(ScheduledTaskDetail scheduledTaskDetail,
         QueueDetail queueDetail, String zsetName, long startTime) {
       // we should not schedule too frequent calls
-      long difference = startTime - scheduledTaskDetail.getStartTime();
+      long difference = startTime - scheduledTaskDetail.getScheduleTime();
       if (difference < getMinDelay()) {
         return;
       }
@@ -324,8 +324,8 @@ public abstract class MessageScheduler implements DisposableBean,
     }
 
     private void addTask(MessageMoverTask task, ScheduledTaskDetail scheduledTaskDetail) {
-      getLogger().debug("Adding Task task={}, startTime={}", task,
-          scheduledTaskDetail.getStartTime());
+      getLogger().debug("Adding Task task={}, scheduleTime={}", task,
+          scheduledTaskDetail.getScheduleTime());
       queueNameToLastMessageScheduleTime.put(task.getName(), System.currentTimeMillis());
       queueNameToScheduledTask.put(task.getName(), scheduledTaskDetail);
     }
@@ -339,7 +339,7 @@ public abstract class MessageScheduler implements DisposableBean,
         return false;
       }
       // run existing tasks continue
-      long existingDelay = scheduledTaskDetail.getStartTime() - currentTime;
+      long existingDelay = scheduledTaskDetail.getScheduleTime() - currentTime;
       // task is about to run or was scheduled to run in last alive time, but could not so run it
       if (existingDelay < MIN_DELAY && existingDelay > Constants.TASK_ALIVE_TIME) {
         ThreadUtils.waitForTermination(getLogger(), submittedTask,
@@ -475,11 +475,11 @@ public abstract class MessageScheduler implements DisposableBean,
   private static class ScheduledTaskDetail {
 
     private final Future<?> future;
-    private final long startTime;
+    private final long scheduleTime;
     private final String id;
 
-    ScheduledTaskDetail(String id, Future<?> future, long startTime) {
-      this.startTime = startTime;
+    ScheduledTaskDetail(String id, Future<?> future, long scheduleTime) {
+      this.scheduleTime = scheduleTime;
       this.future = future;
       this.id = id;
     }
@@ -496,8 +496,8 @@ public abstract class MessageScheduler implements DisposableBean,
       }
       sb.append("id=");
       sb.append(id);
-      sb.append(", scheduledTime=");
-      sb.append(startTime);
+      sb.append(", scheduleTime=");
+      sb.append(scheduleTime);
       sb.append(", currentTime=");
       sb.append(System.currentTimeMillis());
       sb.append(")");

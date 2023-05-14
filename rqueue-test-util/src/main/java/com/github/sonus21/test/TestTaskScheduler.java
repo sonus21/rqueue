@@ -25,12 +25,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public class TestTaskScheduler extends ThreadPoolTaskScheduler {
 
-  private static final long serialVersionUID = 3617860362304703358L;
   public boolean shutdown = false;
   List<Future<?>> tasks = new Vector<>();
 
   public TestTaskScheduler() {
     setPoolSize(1);
+    afterPropertiesSet();
+  }
+
+  public TestTaskScheduler(int poolSize) {
+    setPoolSize(poolSize);
     afterPropertiesSet();
   }
 
