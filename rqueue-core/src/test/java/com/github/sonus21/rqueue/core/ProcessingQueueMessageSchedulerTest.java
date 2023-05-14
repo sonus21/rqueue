@@ -64,8 +64,7 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
 
   @Test
   void getChannelName() {
-    assertEquals(
-        slowQueueDetail.getProcessingQueueChannelName(),
+    assertEquals(slowQueueDetail.getProcessingQueueChannelName(),
         messageScheduler.getChannelName(slowQueue));
   }
 
@@ -77,21 +76,19 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
   @Test
   void getNextScheduleTimeSlowQueue() {
     long currentTime = System.currentTimeMillis();
-    assertThat(
-        messageScheduler.getNextScheduleTime(slowQueue, null),
+    assertThat(messageScheduler.getNextScheduleTime(slowQueue, null),
         greaterThanOrEqualTo(currentTime + 100000));
-    assertEquals(
-        currentTime + 1000L, messageScheduler.getNextScheduleTime(slowQueue, currentTime + 1000L));
+    assertEquals(currentTime + 1000L,
+        messageScheduler.getNextScheduleTime(slowQueue, currentTime + 1000L));
   }
 
   @Test
   void getNextScheduleTimeFastQueue() {
     long currentTime = System.currentTimeMillis();
-    assertThat(
-        messageScheduler.getNextScheduleTime(fastQueue, null),
+    assertThat(messageScheduler.getNextScheduleTime(fastQueue, null),
         greaterThanOrEqualTo(currentTime + 200000));
-    assertEquals(
-        currentTime + 1000L, messageScheduler.getNextScheduleTime(fastQueue, currentTime + 1000L));
+    assertEquals(currentTime + 1000L,
+        messageScheduler.getNextScheduleTime(fastQueue, currentTime + 1000L));
   }
 
 
