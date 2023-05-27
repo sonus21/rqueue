@@ -26,8 +26,8 @@ import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import java.util.List;
-import java.util.Vector;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -76,34 +76,41 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
   @Test
   void getNextScheduleTimeSlowQueue() {
     long currentTime = System.currentTimeMillis();
-    assertThat(messageScheduler.getNextScheduleTime(slowQueue, null),
+    assertThat(messageScheduler.getNextScheduleTime(slowQueue, currentTime, null),
         greaterThanOrEqualTo(currentTime + 100000));
     assertEquals(currentTime + 1000L,
-        messageScheduler.getNextScheduleTime(slowQueue, currentTime + 1000L));
+        messageScheduler.getNextScheduleTime(slowQueue, currentTime, currentTime + 1000L));
   }
 
   @Test
   void getNextScheduleTimeFastQueue() {
     long currentTime = System.currentTimeMillis();
-    assertThat(messageScheduler.getNextScheduleTime(fastQueue, null),
+    assertThat(messageScheduler.getNextScheduleTime(fastQueue, currentTime, null),
         greaterThanOrEqualTo(currentTime + 200000));
     assertEquals(currentTime + 1000L,
-        messageScheduler.getNextScheduleTime(fastQueue, currentTime + 1000L));
+        messageScheduler.getNextScheduleTime(fastQueue, currentTime, currentTime + 1000L));
   }
 
 
   static class ProcessingQTestMessageScheduler extends ProcessingQueueMessageScheduler {
 
-    List<Boolean> scheduleList;
+    private final AtomicInteger schedulesCalls;
+    private final AtomicInteger addTaskCalls;
 
     ProcessingQTestMessageScheduler() {
-      this.scheduleList = new Vector<>();
+      this.schedulesCalls = new AtomicInteger(0);
+      this.addTaskCalls = new AtomicInteger(0);
     }
 
     @Override
-    protected synchronized void schedule(String queueName, Long startTime, boolean forceSchedule) {
-      super.schedule(queueName, startTime, forceSchedule);
-      this.scheduleList.add(forceSchedule);
+    protected synchronized void schedule(String queueName) {
+      schedulesCalls.incrementAndGet();
+      super.schedule(queueName);
+    }
+
+    protected Future<?> addTask(String queueName) {
+      addTaskCalls.incrementAndGet();
+      return super.addTask(queueName);
     }
   }
 }

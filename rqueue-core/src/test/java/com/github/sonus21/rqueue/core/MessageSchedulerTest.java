@@ -69,7 +69,7 @@ class MessageSchedulerTest extends TestBase {
   void afterPropertiesSetWithEmptyQueSet() throws Exception {
     EndpointRegistry.delete();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-    assertEquals(0, messageScheduler.scheduleList.size());
+    assertEquals(0, messageScheduler.scheduleCounter.get());
     messageScheduler.destroy();
   }
 
