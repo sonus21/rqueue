@@ -68,7 +68,7 @@ class RedisAndNormalSchedulingTest extends TestBase {
     long totalTime = 2000L;
     long minDelay = 10L;
     //15% buffer due to short polling intervals
-    double buffer = 0.13;
+    double buffer = 0.15;
     String channelName = messageScheduler.getChannelName(slowQueue);
     doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();

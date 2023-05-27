@@ -119,7 +119,7 @@ public abstract class MessageScheduler implements DisposableBean,
       return;
     }
     queueRunningState.put(queueName, true);
-    if (scheduleTaskAtStartup()) {
+    if (rqueueSchedulerConfig.isAutoStart()) {
       schedule(queueName);
     }
     if (isRedisEnabled()) {
@@ -161,10 +161,6 @@ public abstract class MessageScheduler implements DisposableBean,
     Assert.isTrue(queueRunningState.containsKey(queueName),
         "Queue with name '" + queueName + "' does not exist");
     queueRunningState.put(queueName, false);
-  }
-
-  private boolean scheduleTaskAtStartup() {
-    return rqueueSchedulerConfig.isAutoStart();
   }
 
   private boolean isRedisEnabled() {
