@@ -263,14 +263,14 @@
     {
       "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
       "name" : "rqueue.scheduler.redis.enabled",
-      "description" : "Scheduler Should auto start or not",
+      "description" : "Scheduler Should use redis PUB/SUB",
       "type" : "java.lang.Boolean",
       "defaultValue" : true
     },
     {
       "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
       "name" : "rqueue.scheduler.scheduled.message.thread.pool.size",
-      "description" : "Number of threads should be used to pull scheduled message to original queue",
+      "description" : "Number of threads that will be used to pull scheduled message to normal queue",
       "type" : "java.lang.Integer",
       "defaultValue" : 3
     },
@@ -294,6 +294,28 @@
       "description" : "How frequently messages should be moved from scheduled queues to source queue (millisecond) ",
       "type" : "java.lang.Long",
       "defaultValue" : 5000
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.termination.wait.time",
+      "description" : "How long the application would wait for task termination",
+      "type" : "java.lang.Long",
+      "defaultValue" : 200
+    },
+
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.max.message.mover.delay",
+      "description" : "Maximum delay for message mover task due to failure",
+      "type" : "java.lang.Long",
+      "defaultValue" : 60000
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.min.message.mover.delay",
+      "description" : "Minimum amount of time between two consecutive message move calls",
+      "type" : "java.lang.Long",
+      "defaultValue" : 100
     },
     {
       "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",

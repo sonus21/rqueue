@@ -69,7 +69,8 @@ public class RqueueSchedulerConfig {
   @Value("${rqueue.scheduler.scheduled.message.time.interval:2000}")
   private long scheduledMessageTimeIntervalInMilli;
 
-  @Value("${rqueue.scheduler.termination.wait.time:1000}")
+  // How long the application should wait for task termination
+  @Value("${rqueue.scheduler.termination.wait.time:200}")
   private long terminationWaitTime;
 
   // Maximum delay for message mover task due to failure
@@ -80,6 +81,7 @@ public class RqueueSchedulerConfig {
   @Value("${rqueue.scheduler.min.message.mover.delay:100}")
   private long minMessageMoverDelay;
 
+  // Maximum number of messages that should be copied from scheduled to normal queue
   @Value("${rqueue.scheduler.max.message.count:100}")
   private long maxMessageCount;
 

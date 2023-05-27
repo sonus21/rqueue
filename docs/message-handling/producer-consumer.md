@@ -179,6 +179,13 @@ supported configurations.
   instances when large number of messages are scheduled to be run in next 5 minutes. In such cases
   Rqueue can pull message from scheduled queue to normal queue at higher rate. By default, it copies
   100 messages from scheduled/processing queue to normal queue.
+* `rqueue.scheduler.max.message.mover.delay=60000` Rqueue continuously move scheduled messages from
+  processing/scheduled queue to normal queue so that we can process them asap. Due to failure, it
+  can load the Redis system, in such cases it uses exponential backoff to limit the damage. This
+  time indicates maximum time for which it should wait before making Redis calls.
+* `rqueue.scheduler.min.message.mover.delay=200` Rqueue continuously move scheduled messages from
+  processing/scheduled queue to normal queue so that we can process them asap. It periodically
+  fetches the messages, the minium delay in such cases can be configured using this variable.
 
 ### Dead Letter Queue Consumer/Listener
 
