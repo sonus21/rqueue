@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.core;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -76,39 +77,17 @@ class MessageSchedulingTest extends TestBase {
     MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
-  }
-
-  @Test
-  void onCompletionOfExistingTaskNewTaskShouldBeSubmitted() throws Exception {
-    try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
-      doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
-      doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
-      doReturn(true).when(rqueueSchedulerConfig).isEnabled();
-      doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-      AtomicInteger counter = new AtomicInteger(0);
-      doAnswer(invocation -> {
-        counter.incrementAndGet();
-        return null;
-      }).when(redisTemplate).execute(any(RedisCallback.class));
-      TestTaskScheduler scheduler = new TestTaskScheduler();
-      threadUtils.when(() -> ThreadUtils.createTaskScheduler(1, "processingQueueMsgScheduler-", 60))
-          .thenReturn(scheduler);
-      messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-      waitFor(() -> counter.get() >= 1, "scripts are getting executed");
-      sleep(10);
-      messageScheduler.destroy();
-      assertTrue(scheduler.submittedTasks() >= 2);
-    }
+    doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
+    doReturn(200L).when(rqueueSchedulerConfig).getScheduledMessageTimeIntervalInMilli();
+    doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
+    doReturn(true).when(rqueueSchedulerConfig).isEnabled();
+    doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
   }
 
 
   @Test
   void multipleTasksAreRunningForTheSameQueue() throws Exception {
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
-      doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
-      doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
-      doReturn(true).when(rqueueSchedulerConfig).isEnabled();
-      doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
       AtomicInteger counter = new AtomicInteger(0);
       doAnswer(invocation -> {
         counter.incrementAndGet();
@@ -121,18 +100,15 @@ class MessageSchedulingTest extends TestBase {
       waitFor(() -> counter.get() >= 2, "scripts are getting executed");
       sleep(10);
       messageScheduler.destroy();
-      assertTrue(scheduler.submittedTasks() >= 3);
+      assertEquals(1, scheduler.submittedTasks());
     }
   }
 
   @Test
   void taskShouldBeScheduledOnFailure() throws Exception {
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
-      doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
-      doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
-      doReturn(true).when(rqueueSchedulerConfig).isEnabled();
-      doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
       doReturn(10000L).when(rqueueSchedulerConfig).getMaxMessageMoverDelay();
+      doReturn(100L).when(rqueueSchedulerConfig).minMessageMoveDelay();
       AtomicInteger counter = new AtomicInteger(0);
       doAnswer(invocation -> {
         counter.incrementAndGet();
@@ -143,21 +119,18 @@ class MessageSchedulingTest extends TestBase {
       threadUtils.when(() -> ThreadUtils.createTaskScheduler(1, "processingQueueMsgScheduler-", 60))
           .thenReturn(scheduler);
       messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-      waitFor(() -> counter.get() >= 2, "scripts are getting executed");
+      waitFor(() -> counter.get() >= 3, "scripts are getting executed");
       sleep(10);
       messageScheduler.destroy();
-      assertTrue(scheduler.submittedTasks() >= 3);
+      assertEquals(1, scheduler.submittedTasks());
     }
   }
 
   @Test
   void continuousTaskFailure() throws Exception {
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
-      doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();
-      doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
-      doReturn(true).when(rqueueSchedulerConfig).isEnabled();
-      doReturn(true).when(rqueueSchedulerConfig).isRedisEnabled();
-      doReturn(100L).when(rqueueSchedulerConfig).getMaxMessageMoverDelay();
+      doReturn(500L).when(rqueueSchedulerConfig).getMaxMessageMoverDelay();
+      doReturn(100L).when(rqueueSchedulerConfig).minMessageMoveDelay();
       AtomicInteger counter = new AtomicInteger(0);
       doAnswer(
           invocation -> {
@@ -182,7 +155,7 @@ class MessageSchedulingTest extends TestBase {
       waitFor(() -> counter.get() >= 5, "scripts are getting executed");
       sleep(10);
       messageScheduler.destroy();
-      assertTrue(scheduler.submittedTasks() >= 6);
+      assertEquals(1, scheduler.submittedTasks());
     }
   }
 
