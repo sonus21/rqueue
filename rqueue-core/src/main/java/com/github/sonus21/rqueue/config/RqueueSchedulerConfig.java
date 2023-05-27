@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.config;
 
+import com.github.sonus21.rqueue.utils.Constants;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,11 +69,24 @@ public class RqueueSchedulerConfig {
   @Value("${rqueue.scheduler.scheduled.message.time.interval:2000}")
   private long scheduledMessageTimeIntervalInMilli;
 
+  @Value("${rqueue.scheduler.termination.wait.time:1000}")
+  private long terminationWaitTime;
 
   // Maximum delay for message mover task due to failure
   @Value("${rqueue.scheduler.max.message.mover.delay:60000}")
   private long maxMessageMoverDelay;
 
+  // Minimum amount of time between two consecutive message move calls
+  @Value("${rqueue.scheduler.min.message.mover.delay:100}")
+  private long minMessageMoverDelay;
+
   @Value("${rqueue.scheduler.max.message.count:100}")
   private long maxMessageCount;
+
+  public long minMessageMoveDelay() {
+    if (minMessageMoverDelay <= 0) {
+      return Constants.MIN_SCHEDULE_INTERVAL;
+    }
+    return minMessageMoverDelay;
+  }
 }

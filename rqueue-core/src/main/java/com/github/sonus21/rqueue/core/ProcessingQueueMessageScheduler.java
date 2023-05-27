@@ -19,9 +19,11 @@ package com.github.sonus21.rqueue.core;
 import static java.lang.Long.max;
 
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import com.github.sonus21.rqueue.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
@@ -61,7 +63,7 @@ public class ProcessingQueueMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected boolean isProcessingQueue(String queueName) {
+  protected boolean isProcessingQueue() {
     return true;
   }
 
@@ -71,8 +73,7 @@ public class ProcessingQueueMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected long getNextScheduleTime(String queueName, Long value) {
-    long currentTime = System.currentTimeMillis();
+  protected long getNextScheduleTime(String queueName, long currentTime, Long value) {
     if (value == null) {
       long delay = queueNameToDelay.get(queueName);
       return currentTime + delay;

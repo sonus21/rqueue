@@ -77,16 +77,14 @@ public final class ThreadUtils {
 
   public static void waitForTermination(
       Logger log, Future<?> future, long waitTimeInMillis, String msg, Object... msgParams) {
-    if (future == null) {
+    if (future == null || future.isCancelled() || future.isDone()) {
       return;
     }
-    boolean completedOrCancelled = future.isCancelled() || future.isDone();
-    if (!completedOrCancelled) {
-      if (future instanceof ScheduledFuture) {
-        ScheduledFuture<?> f = (ScheduledFuture<?>) future;
-        if (f.getDelay(TimeUnit.MILLISECONDS) > Constants.MIN_DELAY) {
-          return;
-        }
+    if (future instanceof ScheduledFuture) {
+      ScheduledFuture<?> f = (ScheduledFuture<?>) future;
+      if (f.getDelay(TimeUnit.MILLISECONDS) > Constants.MIN_DELAY) {
+        f.cancel(false);
+        return;
       }
     }
     waitForShutdown(log, future, waitTimeInMillis, msg, msgParams);
