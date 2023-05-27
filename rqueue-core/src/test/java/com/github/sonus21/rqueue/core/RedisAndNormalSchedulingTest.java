@@ -67,8 +67,8 @@ class RedisAndNormalSchedulingTest extends TestBase {
     AtomicBoolean generateMessage = new AtomicBoolean(true);
     long totalTime = 2000L;
     long minDelay = 10L;
-    //15% buffer due to short polling intervals
-    double buffer = 0.15;
+    //25% buffer due to short polling intervals, IN CI it runs slowly
+    double buffer = 0.25;
     String channelName = messageScheduler.getChannelName(slowQueue);
     doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
     doReturn(true).when(rqueueSchedulerConfig).isAutoStart();
