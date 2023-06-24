@@ -314,11 +314,11 @@ Rqueue is stable and production ready, it's processing millions of on messages d
 [![Line](static/users/line.png){: width="70" height="60" alt="Line Chat" }](https://line.me){:target="_blank" style="margin:10px"}
 [![Aviva](static/users/aviva.jpeg){: width="70" height="60" alt="Aviva" }](https://www.aviva.com/){:target="_blank" style="margin:10px"}
 [![Diamler Truck](static/users/mercedes.png){: width="80" height="60" alt="Daimler Truck (Mercedes)" }](https://www.daimlertruck.com/en){:target="_blank" style="margin:10px"}
-[![Vonage](static/users/vonage.png){: width="250" height="60" alt="Vonage" }](http://vonage.com){:target="_blank" style="margin:10px"}
 [![T-Mobile](static/users/t-mobile.svg){: width="50" height="50" alt="T Mobile" }](https://www.t-mobile.com){:target="_blank" style="margin:10px"}
+[![Bit bot](static/users/bitbot.png){: width="80" height="60" alt="BitBot" }](https://bitbot.plus){:target="_blank" style="margin:10px"}
+[![Vonage](static/users/vonage.png){: width="250" height="60" alt="Vonage" }](http://vonage.com){:target="_blank" style="margin:10px"}
 [![Poker Stars](static/users/pokerstars.png){: width="210" height="60" alt="PokerStars" }](https://www.pokerstarssports.eu){:target="_blank" style="margin:10px"}
 [![Tune You](static/users/tuneyou.png){: width="140" height="60" alt="TuneYou" }](https://tuneyou.com){:target="_blank" style="margin:10px"}
-[![Bit bot](static/users/bitbot.png){: width="80" height="60" alt="BitBot" }](https://bitbot.plus){:target="_blank" style="margin:10px"}
 [![CHAOTI INFO TECH(SHENZHEN)](static/users/chaoti-info.png){: width="140" height="60" alt="CHAOTI INFO TECH(SHENZHEN)" }](https://www.chaotiinfo.cn){:target="_blank" style="margin:10px"}
 
 </div>
