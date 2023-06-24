@@ -16,7 +16,7 @@
 
 package com.github.sonus21.test;
 
-import java.time.Instant;
+import java.time.Duration;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Future;
@@ -25,12 +25,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public class TestTaskScheduler extends ThreadPoolTaskScheduler {
 
-  private static final long serialVersionUID = 3617860362304703358L;
   public boolean shutdown = false;
   List<Future<?>> tasks = new Vector<>();
 
   public TestTaskScheduler() {
     setPoolSize(1);
+    afterPropertiesSet();
+  }
+
+  public TestTaskScheduler(int poolSize) {
+    setPoolSize(poolSize);
     afterPropertiesSet();
   }
 
@@ -42,8 +46,8 @@ public class TestTaskScheduler extends ThreadPoolTaskScheduler {
   }
 
   @Override
-  public ScheduledFuture<?> schedule(Runnable r, Instant instant) {
-    ScheduledFuture<?> f = super.schedule(r, instant);
+  public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Duration period) {
+    ScheduledFuture<?> f = super.scheduleAtFixedRate(task, period);
     tasks.add(f);
     return f;
   }

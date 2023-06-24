@@ -1,362 +1,391 @@
 {
-  "hints": [],
-  "groups": [
+  "hints" : [],
+  "groups" : [
     {
-      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
-      "name": "rqueue.metrics",
-      "type": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties"
+      "sourceType" : "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name" : "rqueue.metrics",
+      "type" : "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue",
-      "type": "com.github.sonus21.rqueue.config.RqueueConfig"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue",
+      "type" : "com.github.sonus21.rqueue.config.RqueueConfig"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler",
-      "type": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler",
+      "type" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web",
-      "type": "com.github.sonus21.rqueue.config.RqueueWebConfig"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web",
+      "type" : "com.github.sonus21.rqueue.config.RqueueWebConfig"
     }
   ],
-  "properties": [
+  "properties" : [
     {
-      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
-      "name": "rqueue.metrics.count",
-      "type": "com.github.sonus21.rqueue.config.RqueueMetricsProperties$Count"
+      "sourceType" : "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name" : "rqueue.metrics.count",
+      "type" : "com.github.sonus21.rqueue.config.RqueueMetricsProperties$Count"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
-      "name": "rqueue.metrics.metric-tags",
-      "type": "io.micrometer.core.instrument.Tags"
+      "sourceType" : "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name" : "rqueue.metrics.metric-tags",
+      "type" : "io.micrometer.core.instrument.Tags"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
-      "name": "rqueue.metrics.tags",
-      "type": "java.util.Map<java.lang.String,java.lang.String>"
+      "sourceType" : "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
+      "name" : "rqueue.metrics.tags",
+      "type" : "java.util.Map<java.lang.String,java.lang.String>"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.reactive.enabled",
-      "description": "Reactive Feature is enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": false
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.reactive.enabled",
+      "description" : "Reactive Feature is enabled",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : false
     },
     {
-      "name": "rqueue.enabled",
-      "description": "Requeue is enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "name" : "rqueue.enabled",
+      "description" : "Requeue is enabled",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.completed.job.cleanup.interval",
-      "description": "How frequently completed jobs should be removed (in millisecond)",
-      "type": "java.lang.Long",
-      "defaultValue": 30000
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.completed.job.cleanup.interval",
+      "description" : "How frequently completed jobs should be removed (in millisecond)",
+      "type" : "java.lang.Long",
+      "defaultValue" : 30000
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.latest.version.check.enabled",
-      "description": "Rqueue Version check is enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.latest.version.check.enabled",
+      "description" : "Rqueue Version check is enabled",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.key.prefix",
-      "description": "Rqueue Key prefix",
-      "type": "java.lang.String",
-      "defaultValue": "__rq::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.key.prefix",
+      "description" : "Rqueue Key prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "__rq::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.del.prefix",
-      "description": "Rqueue Deleted Message Collection Name prefix",
-      "type": "java.lang.String",
-      "defaultValue": "del::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.del.prefix",
+      "description" : "Rqueue Deleted Message Collection Name prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "del::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.job.enabled",
-      "description": "Rqueue Job Feature is Enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.job.enabled",
+      "description" : "Rqueue Job Feature is Enabled",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.job.durability.in-terminal-state",
-      "description": "Rqueue Job Feature is Enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.job.durability.in-terminal-state",
+      "description" : "Rqueue Job Feature is Enabled",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.job.key.prefix",
-      "description": "Rqueue Job Key Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "job::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.job.key.prefix",
+      "description" : "Rqueue Job Key Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "job::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.jobs.collection.name.prefix",
-      "description": "Rqueue Job Collection Name Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "jobs::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.jobs.collection.name.prefix",
+      "description" : "Rqueue Job Collection Name Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "jobs::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.cluster.mode",
-      "description": "Rqueue Cluster Mode",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.cluster.mode",
+      "description" : "Rqueue Cluster Mode",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.simple.queue.prefix",
-      "description": "Rqueue Queue Name Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "queue::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.simple.queue.prefix",
+      "description" : "Rqueue Queue Name Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "queue::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.scheduled.queue.prefix",
-      "description": "Rqueue Scheduled Queue Name Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "d-queue::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.scheduled.queue.prefix",
+      "description" : "Rqueue Scheduled Queue Name Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "d-queue::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.scheduled.queue.channel.prefix",
-      "description": "Rqueue Scheduled Queue Channel Name Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "d-channel::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.scheduled.queue.channel.prefix",
+      "description" : "Rqueue Scheduled Queue Channel Name Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "d-channel::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.processing.queue.name.prefix",
-      "description": "Rqueue Processing Queue Name Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "p-queue::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.processing.queue.name.prefix",
+      "description" : "Rqueue Processing Queue Name Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "p-queue::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.processing.queue.channel.name.prefix",
-      "description": "Rqueue Processing Queue Channel Name Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "p-channel::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.processing.queue.channel.name.prefix",
+      "description" : "Rqueue Processing Queue Channel Name Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "p-channel::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.processing.queue.channel.name.prefix",
-      "description": "Rqueue Processing Queue Channel Name Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "p-channel::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.processing.queue.channel.name.prefix",
+      "description" : "Rqueue Processing Queue Channel Name Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "p-channel::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.queues.key.suffix",
-      "description": "Rqueue All Queues Collection Name Suffix",
-      "type": "java.lang.String",
-      "defaultValue": "queues"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.queues.key.suffix",
+      "description" : "Rqueue All Queues Collection Name Suffix",
+      "type" : "java.lang.String",
+      "defaultValue" : "queues"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.lock.key.prefix",
-      "description": "Rqueue Lock Key Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "lock::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.lock.key.prefix",
+      "description" : "Rqueue Lock Key Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "lock::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.queue.stat.key.prefix",
-      "description": "Rqueue Queue Statistics Key Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "q-stat::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.queue.stat.key.prefix",
+      "description" : "Rqueue Queue Statistics Key Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "q-stat::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.queue.config.key.prefix",
-      "description": "Rqueue Queue Configuration Key Prefix",
-      "type": "java.lang.String",
-      "defaultValue": "q-config::"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.queue.config.key.prefix",
+      "description" : "Rqueue Queue Configuration Key Prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : "q-config::"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.retry.per.poll",
-      "description": "Number of retry for polled message",
-      "type": "java.lang.Integer",
-      "defaultValue": 1
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.retry.per.poll",
+      "description" : "Number of retry for polled message",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 1
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.net.proxy.host",
-      "description": "Proxy server host address for outgoing connection",
-      "type": "java.lang.String"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.net.proxy.host",
+      "description" : "Proxy server host address for outgoing connection",
+      "type" : "java.lang.String"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.net.proxy.port",
-      "description": "Proxy server host address for outgoing connection",
-      "type": "java.lang.Integer",
-      "defaultValue": 8000
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.net.proxy.port",
+      "description" : "Proxy server host address for outgoing connection",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 8000
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.net.proxy.type",
-      "description": "Proxy server host address for outgoing connection",
-      "type": "java.net.Proxy$Type",
-      "defaultValue": "HTTP"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.net.proxy.type",
+      "description" : "Proxy server host address for outgoing connection",
+      "type" : "java.net.Proxy$Type",
+      "defaultValue" : "HTTP"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.message.durability",
-      "description": "Message durability in seconds",
-      "type": "java.lang.Long",
-      "defaultValue": 10080
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.message.durability",
+      "description" : "Message durability in seconds",
+      "type" : "java.lang.Long",
+      "defaultValue" : 10080
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.message.durability.in-terminal-state",
-      "description": "Message durability in terminal state in seconds",
-      "type": "java.lang.Long",
-      "defaultValue": 1800
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.message.durability.in-terminal-state",
+      "description" : "Message durability in terminal state in seconds",
+      "type" : "java.lang.Long",
+      "defaultValue" : 1800
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.system.mode",
-      "description": "System Mode",
-      "type": "com.github.sonus21.rqueue.models.enums.RqueueMode",
-      "defaultValue": "BOTH"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.system.mode",
+      "description" : "System Mode",
+      "type" : "com.github.sonus21.rqueue.models.enums.RqueueMode",
+      "defaultValue" : "BOTH"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig",
-      "name": "rqueue.message.converter.provider.class",
-      "description": "Rqueue Message Converter Provider",
-      "type": "java.lang.String",
-      "defaultValue": "com.github.sonus21.rqueue.converter.MessageConverterProvider"
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.message.converter.provider.class",
+      "description" : "Rqueue Message Converter Provider",
+      "type" : "java.lang.String",
+      "defaultValue" : "com.github.sonus21.rqueue.converter.MessageConverterProvider"
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.enabled",
-      "description": "Scheduler is enabled or not",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.enabled",
+      "description" : "Scheduler is enabled or not",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.listener.shared",
-      "description": "Scheduler listener is shared or not",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.listener.shared",
+      "description" : "Scheduler listener is shared or not",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.auto.start",
-      "description": "Scheduler Should auto start or not",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.auto.start",
+      "description" : "Scheduler Should auto start or not",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.redis.enabled",
-      "description": "Scheduler Should auto start or not",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.redis.enabled",
+      "description" : "Scheduler Should use redis PUB/SUB",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.scheduled.message.thread.pool.size",
-      "description": "Number of threads should be used to pull scheduled message to original queue",
-      "type": "java.lang.Integer",
-      "defaultValue": 3
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.scheduled.message.thread.pool.size",
+      "description" : "Number of threads that will be used to pull scheduled message to normal queue",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 3
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.processing.message.thread.pool.size",
-      "description": "Number of threads used to pull processing message back to normal queue",
-      "type": "java.lang.Integer",
-      "defaultValue": 1
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.processing.message.thread.pool.size",
+      "description" : "Number of threads used to pull processing message back to normal queue",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 1
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
-      "name": "rqueue.scheduler.scheduled.message.time.interval",
-      "description": "How frequently messages should be moved from scheduled queues to source queue (millisecond) ",
-      "type": "java.lang.Long",
-      "defaultValue": 5000
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.max.message.count",
+      "description" : "Maximum number of messages that should be moved to normal queue from processing/schedule queue",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 100
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.enable",
-      "description": "whether web component is enabled or not",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.scheduled.message.time.interval",
+      "description" : "How frequently messages should be moved from scheduled queues to source queue (millisecond) ",
+      "type" : "java.lang.Long",
+      "defaultValue" : 5000
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.url.prefix",
-      "description": "Rqueue web url path prefix",
-      "type": "java.lang.String",
-      "defaultValue": null
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.termination.wait.time",
+      "description" : "How long the application would wait for task termination",
+      "type" : "java.lang.Long",
+      "defaultValue" : 200
+    },
+
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.max.message.mover.delay",
+      "description" : "Maximum delay for message mover task due to failure",
+      "type" : "java.lang.Long",
+      "defaultValue" : 60000
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.max.message.move.count",
-      "description": "Maximum number of messages that should be moved when move message is trigger",
-      "type": "java.lang.Integer",
-      "defaultValue": 1000
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueSchedulerConfig",
+      "name" : "rqueue.scheduler.min.message.mover.delay",
+      "description" : "Minimum amount of time between two consecutive message move calls",
+      "type" : "java.lang.Long",
+      "defaultValue" : 100
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.collect.listener.stats",
-      "description": "Listener stats should be collected or not",
-      "type": "java.lang.Boolean",
-      "defaultValue": true
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.enable",
+      "description" : "whether web component is enabled or not",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.collect.listener.stats.thread.count",
-      "description": "Number of threads used to aggregate listener stats",
-      "type": "java.lang.Integer",
-      "defaultValue": 1
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.url.prefix",
+      "description" : "Rqueue web url path prefix",
+      "type" : "java.lang.String",
+      "defaultValue" : null
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.statistic.history.day",
-      "description": "For how long stats history should be preserved in days",
-      "type": "java.lang.Integer",
-      "defaultValue": 90
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.max.message.move.count",
+      "description" : "Maximum number of messages that should be moved when move message is trigger",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 1000
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.collect.statistic.aggregate.event.count",
-      "description": "How many jobs should be aggregated at one",
-      "type": "java.lang.Integer",
-      "defaultValue": 500
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.collect.listener.stats",
+      "description" : "Listener stats should be collected or not",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.collect.statistic.aggregate.event.wait.time",
-      "description": "Maximum aggregator should wait before it can trigger aggregate event (seconds)",
-      "type": "java.lang.Integer",
-      "defaultValue": 60
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.collect.listener.stats.thread.count",
+      "description" : "Number of threads used to aggregate listener stats",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 1
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.collect.statistic.aggregate.shutdown.wait.time",
-      "description": "How long Rqueue should wait for aggregate job to complete before shutdown (milliseconds)",
-      "type": "java.lang.Integer",
-      "defaultValue": 500
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.statistic.history.day",
+      "description" : "For how long stats history should be preserved in days",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 90
     },
     {
-      "sourceType": "com.github.sonus21.rqueue.config.RqueueWebConfig",
-      "name": "rqueue.web.collect.statistic.aggregate.event.lock.duration",
-      "description": "How long Rqueue should wait for Redis lock when aggregation data is being saved(milliseconds)",
-      "type": "java.lang.Integer",
-      "defaultValue": 500
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.collect.statistic.aggregate.event.count",
+      "description" : "How many jobs should be aggregated at one",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 500
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.collect.statistic.aggregate.event.wait.time",
+      "description" : "Maximum aggregator should wait before it can trigger aggregate event (seconds)",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 60
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.collect.statistic.aggregate.shutdown.wait.time",
+      "description" : "How long Rqueue should wait for aggregate job to complete before shutdown (milliseconds)",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 500
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueWebConfig",
+      "name" : "rqueue.web.collect.statistic.aggregate.event.lock.duration",
+      "description" : "How long Rqueue should wait for Redis lock when aggregation data is being saved(milliseconds)",
+      "type" : "java.lang.Integer",
+      "defaultValue" : 500
     }
   ]
 }
