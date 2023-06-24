@@ -1,7 +1,7 @@
 # [Rqueue] New and Notable Changes
 
 
-### [2.13.1] - TBD
+### [2.13.1] - 24-June-2023
 ### Fixes
 This will fix a severe bug happening due to task multiplications. This is causing more Redis resource usage Please check #[193]
 
