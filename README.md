@@ -270,20 +270,29 @@ Micrometer based dashboard for queue
 
 Rqueue is stable and production ready, it's processing 100K+ messages daily in production
 environment.
+**Some of the Rqueue Users**
+
+<a href="https://airtel.africa" target="_blank">
+<img alt="Airtel" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/airtel-africa.png" width="160" align="middle"/>
+</a>
+&nbsp;&nbsp;
+<a href="https://vonage.com" target="_blank">
+  <img alt="Vonage" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/vonage.png" width="160" align="middle"/>
+</a>
+&nbsp;&nbsp;
+<a href="https://www.t-mobile.com" target="_blank">
+  <img alt="Vonage" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/t-mobile.svg" align="middle"/>
+</a>
+&nbsp;&nbsp;
+<a href="https://line.me" target="_blank">
+  <img alt="Line Chat" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/line.png" width="60" height="60" align="middle"/>
+</a>
 
 **We would love to add your organization name here, if you're one of the Rqueue users, please raise
 a
 PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users)
 .**
 
-<a href="https://tuneyou.com"><img alt="TuneYou" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/tuneyou.png" width="150" align="middle"/></a>
-&nbsp;&nbsp;
-<a href="https://www.pokerstarssports.eu"><img  alt="PokerStars" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/pokerstars.png" width="250" align="middle"/></a>
-&nbsp;&nbsp;
-<a href="https://bitbot.plus"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/bitbot.png" alt="Bitbot" height="60" align="middle"/></a>
-&nbsp;&nbsp;
-<a href="https://www.chaotiinfo.cn"><img src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/chaoti-info.png" alt="CHAOTI INFO TECH(SHENZHEN)" height="60" align="middle"/></a>
-&nbsp;&nbsp;
 
 ---
 
