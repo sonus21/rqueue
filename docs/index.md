@@ -90,38 +90,38 @@ the latest version in your dependency manager.
 
 #### Spring Boot 2.x Setup
 
-Add Rqueue Spring Boot Starter 2.9.0 and refresh your project. Once you've added the dependency,
+Add Rqueue Spring Boot Starter 2.13.1 and refresh your project. Once you've added the dependency,
 you can start sending and consuming messages.
 
 * Gradle
   ```groovy
-      implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.9.0-RELEASE'
+      implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'
   ```
 * Maven
   ```xml
    <dependency>
       <groupId>com.github.sonus21</groupId>
       <artifactId>rqueue-spring-boot-starter</artifactId>
-      <version>2.9.0-RELEASE</version>
+      <version>2.13.1-RELEASE</version>
   </dependency>
   ```
 
 #### Spring Boot 3.x Setup
 
-Add Rqueue Spring Boot Starter 3.0.1 and refresh your project. Once you've added the dependency,
+Add Rqueue Spring Boot Starter 3.1.0 and refresh your project. Once you've added the dependency,
 you can start sending and consuming messages.
 
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.0.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.1.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>3.0.1-RELEASE</version>
+        <version>3.1.0-RELEASE</version>
     </dependency>
     ```
 
@@ -140,14 +140,14 @@ in your dependency manager.
 
 * Gradle
   ```groovy
-      implementation 'com.github.sonus21:rqueue-spring:2.9.0-RELEASE'
+      implementation 'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'
   ```
 * Maven
   ```xml
    <dependency>
      <groupId>com.github.sonus21</groupId>
      <artifactId>rqueue-spring</artifactId>
-     <version>2.9.0-RELEASE</version>
+     <version>2.13.1-RELEASE</version>
    </dependency>
   ```
 
@@ -155,14 +155,14 @@ in your dependency manager.
 
 * Gradle
   ```groovy
-      implementation 'com.github.sonus21:rqueue-spring:3.0.1-RELEASE'
+      implementation 'com.github.sonus21:rqueue-spring:3.1.0-RELEASE'
   ```
 * Maven
   ```xml
    <dependency>
      <groupId>com.github.sonus21</groupId>
      <artifactId>rqueue-spring</artifactId>
-     <version>3.0.1-RELEASE</version>
+     <version>3.1.0-RELEASE</version>
    </dependency>
   ```
 
@@ -314,6 +314,8 @@ Rqueue is stable and production ready, it's processing millions of on messages d
 [![Line](static/users/line.png){: width="70" height="60" alt="Line Chat" }](https://line.me){:target="_blank" style="margin:10px"}
 [![Aviva](static/users/aviva.jpeg){: width="70" height="60" alt="Aviva" }](https://www.aviva.com/){:target="_blank" style="margin:10px"}
 [![Diamler Truck](static/users/mercedes.png){: width="80" height="60" alt="Daimler Truck (Mercedes)" }](https://www.daimlertruck.com/en){:target="_blank" style="margin:10px"}
+[![T-Mobile](static/users/t-mobile.svg){: width="50" height="50" alt="T Mobile" }](https://www.t-mobile.com){:target="_blank" style="margin:10px"}
+[![Vonage](static/users/vonage.png){: width="80" height="60" alt="VONAGE" }](https://www.vonage.com){:target="_blank" style="margin:10px"}
 [![Poker Stars](static/users/pokerstars.png){: width="210" height="60" alt="PokerStars" }](https://www.pokerstarssports.eu){:target="_blank" style="margin:10px"}
 [![Tune You](static/users/tuneyou.png){: width="140" height="60" alt="TuneYou" }](https://tuneyou.com){:target="_blank" style="margin:10px"}
 [![Bit bot](static/users/bitbot.png){: width="80" height="60" alt="BitBot" }](https://bitbot.plus){:target="_blank" style="margin:10px"}

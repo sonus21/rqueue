@@ -8,9 +8,16 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
-## Release [3.0.2] TBD
+## Release [3.1.0] 24-June-2023
 {: .highlight } 
-Migrate to this version to reduce resource utilization
+Migrate to this version to reduce redis resource utilization
+
+This will fix an important bug happening due to task multiplications. This is causing more Redis
+resource usage Please check #[193]
+
+## Release [2.13.1] 24-June-2023
+{: .highlight }
+Migrate to this version to reduce redis resource utilization
 
 This will fix an important bug happening due to task multiplications. This is causing more Redis
 resource usage Please check #[193]
@@ -358,7 +365,11 @@ Breaking change, for migration [see](./migration#1x-to-2x)
 
 [2.13.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.0-RELEASE
 
+[2.13.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.1-RELEASE
+
 [3.0.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.0.0-RELEASE
+
+[3.1.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.1.0-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122
 [193]: https://github.com/sonus21/rqueue/issues/193
