@@ -17,16 +17,12 @@
 <configuration>
   <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread]
-        %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread]
-        %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
     <file>log/test.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -38,9 +34,7 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="MONITOR">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread]
-        %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
     <file>log/monitor.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -52,9 +46,7 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="ConsumedMessageStore">
     <encoder>
-      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread]
-        %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>%property{testClass}::%property{testName} [%date{dd-MM-yyyy HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
     <file>log/message.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -99,5 +91,11 @@
   <root level="INFO">
     <appender-ref ref="FILE"/>
   </root>
+  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler" additivity="false">
+    <appender-ref ref="FILE"/>
+  </logger>
+  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler" additivity="false">
+    <appender-ref ref="FILE"/>
+  </logger>
 
 </configuration>

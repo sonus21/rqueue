@@ -80,14 +80,14 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.13.0-RELEASE</version>
+        <version>2.13.1-RELEASE</version>
     </dependency>
     ```
 
@@ -108,14 +108,14 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.13.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.13.0-RELEASE</version>
+       <version>2.13.1-RELEASE</version>
      </dependency>
     ```
 * Add annotation `EnableRqueue` on application config class
@@ -127,7 +127,6 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 
 @EnableRqueue
 public class Application {
-
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
     // return a redis connection factory
@@ -320,13 +319,6 @@ environment variables for Spring versions. You can use [module, class and other 
 to familiarise yourself with the project.
 
 **Please format your code with Google Java formatter.**
-
-```groovy
-// springBootVersion = '2.0.6.RELEASE'
-// springVersion = '5.0.10.RELEASE'
-// springDataVersion = '2.0.6.RELEASE'
-// microMeterVersion = '1.1.0'
-```
 
 ## Links
 

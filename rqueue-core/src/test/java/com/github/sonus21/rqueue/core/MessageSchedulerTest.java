@@ -23,7 +23,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
-import com.github.sonus21.rqueue.core.ScheduledQueueMessageSchedulerTest.TestMessageScheduler;
+import com.github.sonus21.rqueue.core.ScheduledQueueMessageSchedulerTest.TestScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -56,7 +56,7 @@ class MessageSchedulerTest extends TestBase {
   @Mock
   private RedisTemplate<String, Long> redisTemplate;
   @InjectMocks
-  private TestMessageScheduler messageScheduler;
+  private TestScheduledQueueMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {
@@ -69,7 +69,7 @@ class MessageSchedulerTest extends TestBase {
   void afterPropertiesSetWithEmptyQueSet() throws Exception {
     EndpointRegistry.delete();
     messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
-    assertEquals(0, messageScheduler.scheduleList.size());
+    assertEquals(0, messageScheduler.scheduleCounter.get());
     messageScheduler.destroy();
   }
 

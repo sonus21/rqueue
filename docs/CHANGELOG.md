@@ -8,21 +8,36 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [3.1.0] 24-June-2023
+{: .highlight } 
+Migrate to this version to reduce redis resource utilization
+
+This will fix an important bug happening due to task multiplications. This is causing more Redis
+resource usage Please check #[193]
+
+## Release [2.13.1] 24-June-2023
+{: .highlight }
+Migrate to this version to reduce redis resource utilization
+
+This will fix an important bug happening due to task multiplications. This is causing more Redis
+resource usage Please check #[193]
+
+
 ## Release [3.0.1] 17-Jan-2022
 
-We're so excited to release Rqueue `3.0.1`. This release supports the Java 17, Spring Boot 3.x and Spring Framework 6.x
-
+We're so excited to release Rqueue `3.0.1`. This release supports the Java 17, Spring Boot 3.x and
+Spring Framework 6.x
 
 ### [2.13.0] - 25-Dec-2022
 
 ### Fixes
-{: .highlight} 
+
+{: .highlight}
 Migrate to this version as soon as possible to avoid duplicate message consumption post deletion.
 
 * Important fix for parallel message deletion or delete the message from message listener
 * No threads are available, improvement on message poller
 * Use System Zone ID for UI bottom screen
-
 
 ### [2.12.0] - 14-Dec-2022
 
@@ -33,14 +48,13 @@ Migrate to this version as soon as possible to avoid duplicate message consumpti
 
 ### [2.11.1] - 18-Nov-2022
 
-{: .highlight} 
-Migrate to this version as soon as possible to avoid message build up. Messages in scheduled queue 
-can grow if poller is failing. Workaround is to restart the application. 
+{: .highlight}
+Migrate to this version as soon as possible to avoid message build up. Messages in scheduled queue
+can grow if poller is failing. Workaround is to restart the application.
 
-* Message mover unreliability, scheduled message were not getting consumed once redis connection error occurs
+* Message mover unreliability, scheduled message were not getting consumed once redis connection
+  error occurs
 * Upgraded Jquery version
-
-
 
 ### [2.10.2] - 16-Jul-2022
 
@@ -60,10 +74,10 @@ can grow if poller is failing. Workaround is to restart the application.
 
 ### [2.10.0] - 10-Oct-2021
 
-{: .warning } 
+{: .warning }
 Breaking change, if you're controlling any internal settings of Rqueue using application environment
-or configuration variable than application can break. We've renamed some config keys, [see](./migration#290-to-210)
-
+or configuration variable than application can break. We've renamed some config
+keys, [see](./migration#290-to-210)
 
 ### Fixes
 
@@ -235,7 +249,6 @@ Breaking change, for migration [see](./migration#1x-to-2x)
   REDIS with prefix `rqueue-` then it will consider version 2.
 - Renamed annotation field `maxJobExecutionTime` to `visibilityTimeout`
 
-
 ### Added
 
 - Web interface to visualize queue
@@ -293,7 +306,6 @@ Breaking change, for migration [see](./migration#1x-to-2x)
 ## [1.0] - 23-Oct-2019
 
 * The basic version of Asynchronous task execution using Redis for Spring and Spring Boot
-
 
 [1.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.0-RELEASE
 
@@ -353,6 +365,11 @@ Breaking change, for migration [see](./migration#1x-to-2x)
 
 [2.13.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.0-RELEASE
 
+[2.13.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.1-RELEASE
+
 [3.0.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.0.0-RELEASE
 
+[3.1.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.1.0-RELEASE
+
 [122]: https://github.com/sonus21/rqueue/issues/122
+[193]: https://github.com/sonus21/rqueue/issues/193

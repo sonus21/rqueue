@@ -28,8 +28,7 @@ public class ScheduledQueueMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected long getNextScheduleTime(String queueName, Long value) {
-    long currentTime = System.currentTimeMillis();
+  protected long getNextScheduleTime(String queueName, long currentTime, Long value) {
     if (value == null) {
       return currentTime + rqueueSchedulerConfig.getScheduledMessageTimeIntervalInMilli();
     }
@@ -60,7 +59,7 @@ public class ScheduledQueueMessageScheduler extends MessageScheduler {
   }
 
   @Override
-  protected boolean isProcessingQueue(String queueName) {
+  protected boolean isProcessingQueue() {
     return false;
   }
 }

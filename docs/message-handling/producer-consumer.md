@@ -163,10 +163,10 @@ supported configurations.
   setting.
 * `rqueue.scheduler.auto.start=true` Rqueue scheduler also have thread pools, that handles the
   message. If you would like to use only event based message movement than set auto start as false.
-* `rqueue.scheduler.scheduled.message.thread.pool.size=5` There could be many delayed queues, in that
-  case Rqueue has to move more messages from ZSET to LIST. In such cases, you can increase thread
-  pool size, the number of threads used for message movement is minimum of queue count and pool
-  size.
+* `rqueue.scheduler.scheduled.message.thread.pool.size=5` There could be many delayed queues, in
+  that case Rqueue has to move more messages from ZSET to LIST. In such cases, you can increase
+  thread pool size, the number of threads used for message movement is minimum of queue count and
+  pool size.
 * `rqueue.scheduler.processing.message.thread.pool.size=1` there could be some dead message in
   processing queue as well, if you're seeing large number of dead messages in processing queue, then
   you should increase the thread pool size. Processing queue is used for at least once message
@@ -174,6 +174,18 @@ supported configurations.
 * `rqueue.scheduler.scheduled.message.time.interval=5000` At what interval message should be moved
   from scheduled queue to normal queue. The default value is 5 seconds, that means, you can observe
   minimum delay of 5 seconds in delayed message consumption.
+* `rqueue.scheduler.max.message.count=100` Rqueue continuously move scheduled messages from
+  processing/scheduled queue to normal queue so that we can process them asap. There are many
+  instances when large number of messages are scheduled to be run in next 5 minutes. In such cases
+  Rqueue can pull message from scheduled queue to normal queue at higher rate. By default, it copies
+  100 messages from scheduled/processing queue to normal queue.
+* `rqueue.scheduler.max.message.mover.delay=60000` Rqueue continuously move scheduled messages from
+  processing/scheduled queue to normal queue so that we can process them asap. Due to failure, it
+  can load the Redis system, in such cases it uses exponential backoff to limit the damage. This
+  time indicates maximum time for which it should wait before making Redis calls.
+* `rqueue.scheduler.min.message.mover.delay=200` Rqueue continuously move scheduled messages from
+  processing/scheduled queue to normal queue so that we can process them asap. It periodically
+  fetches the messages, the minium delay in such cases can be configured using this variable.
 
 ### Dead Letter Queue Consumer/Listener
 

@@ -24,6 +24,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
 
@@ -96,7 +97,7 @@ public class RqueueRedisListenerContainerFactory
       createContainer();
       return;
     }
-    if (rqueueConfig.isSharedConnection() || rqueueSchedulerConfig.isListenerShared()) {
+    if (rqueueSchedulerConfig.isListenerShared()) {
       if (systemContainer != null) {
         container = systemContainer;
         sharedContainer = true;
@@ -120,5 +121,9 @@ public class RqueueRedisListenerContainerFactory
   @Override
   public int getPhase() {
     return Integer.MAX_VALUE;
+  }
+
+  public void removeMessageListener(MessageListener messageListener, ChannelTopic channelTopic) {
+    getContainer().removeMessageListener(messageListener, channelTopic);
   }
 }
