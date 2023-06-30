@@ -20,7 +20,8 @@ Read More about Rqueue Design at [Introducing Rqueue: Redis Queue][Introducing R
 
 Rqueue Architecture
 --------------------
-Rqueue Broker runs scheduled job as well as it communicates with Redis.
+Rqueue Broker runs scheduled job as well as it communicates with Redis. In general Rqueue works as 
+producers and consumers at the same time. 
 
 ```text
 +-----------------------+                         +------------------------+
@@ -40,11 +41,11 @@ Rqueue Broker runs scheduled job as well as it communicates with Redis.
                                   +-----+                                 
 ```  
 
-An application can work in both modes(producer and consumer) but if application try to push message
-to unknown queue then it would throw QueueDoesNotExist error. This error can be solved
-using `registerQueue` but there's a race condition in that case registered queues could be deleted.
-So again you can receive QueueDoesNotExist error, you can avoid this error by listening to
-RqueueBootStrapEvent, you should register queues only when your application receives bootstrap
+An application can work in both modes(`producer` and `consumer`) but if application try to push message
+to unknown queue then it would receive `QueueDoesNotExist` error. This error can be solved using 
+`registerQueue` but there's a race condition in that case registered queues could be deleted.
+So again you can receive `QueueDoesNotExist` error, you can avoid this error by listening to
+`RqueueBootStrapEvent`, you should register queues **only** when your application receives bootstrap
 event.
 
 ```java
@@ -72,8 +73,10 @@ class AppMessageSender implements ApplicationListener<RqueueBootStrapEvent> {
 } 
 ```
 
-Rqueue can be used to run consumer and producer on two different machines, where on one machine only
-producer(s) would be running while on another machine only consumer(s) would be running.
+Rqueue can be used to run consumer and producer in two different clusters, one cluster would be 
+acting as producer and another one would be acting as consumer. We do not have to change application
+code, this can be done very easily using `active` flag of `RqueueListener`, in producer cluster
+set `active` to `false` and in consumer cluster set `active` flag to `true`.
 
 ```text
 +-----------------------+                         +------------------------+
@@ -91,41 +94,10 @@ producer(s) would be running while on another machine only consumer(s) would be 
                                   +-----+                                 
 ```  
 
-Rqueue can't be directly used to push message on a queue, to push a message the application must
-register queues using `registerQueue` methods of `MessageSender` interface.
-
-For example
-
-```java
-
-@Component
-class AppMessageSender implements ApplicationListener<RqueueBootStrapEvent> {
-
-  @Autowired
-  private RqueueEndpointManager rqueueEndpointManager;
-
-  @Override
-  public void onApplicationEvent(RqueueBootstrapEvent event) {
-    if (!event.isStartup()) {
-      return;
-    }
-    for (String queue : queues) {
-      String[] priorities = getPriority(queue);
-      rqueueEndpointManager.registerQueue(queue, priorities);
-    }
-  }
-
-  private String[] getPriority(String queue) {
-    return new String[]{};
-  }
-} 
-```
-
-If you have configured a producer and consumer on two different machines then you can disable Rqueue
-scheduler on producer machine using
-`rqueue.scheduler.enabled=false` once we turn off Rqueue scheduler on producer application.
-
-You should also set `rqueue.system.mode=PRODUCER`, otherwise you may observe QueueDoesNotExist error
+If we have configured producer and consumer on two different clusters then we can disable
+Rqueue scheduler on producer machine using `rqueue.scheduler.enabled=false` once we turn off Rqueue
+scheduler on producer application, it will just act as producer now. We should also set 
+`rqueue.system.mode=PRODUCER`, otherwise we may observe QueueDoesNotExist error
 
 ```text
 +-----------------------+                         +------------------------+
