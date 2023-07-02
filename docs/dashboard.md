@@ -16,7 +16,7 @@ multiple features.
   due to retry limit exhaust.
 * **Task Deletion** : Allows to delete any enqueued messages, either it’s in scheduled to be run, or
   it’s running, or it’s waiting to run.
-* **Queue Insight** : It also allows you to see queue internal messages like SQS dashboard.
+* **Queue Insight** : It also allows us to see queue internal messages like SQS dashboard.
 * **Queue Management** : Move tasks from one queue to another
 
 Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)

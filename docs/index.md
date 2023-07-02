@@ -64,15 +64,15 @@ services code is in Spring/Spring Boot. It supports Spring and Spring Boot frame
 
 ## Getting started
 
-{: .highlight }
+{: .warning }
 All queue names are dynamic, we do not have to create any queue manually or programmatically using
 `registerQueue` method. Creating queue manually could lead to inconsistencies, queue should be
 **only** created when we're using Rqueue as producer.
 
-
+### Sample Apps
 {: .highlight }
-The Rqueue code repository has multiple sample test apps, try to run them in local all of these apps
-provides simple APIs for demo. You can clone this repo, in cloned repo you run one of these apps.
+The Rqueue Github repository has multiple sample test apps, try to run them in local all of these apps
+provides simple APIs for demo. In cloned repo we can run one of these apps.
 
 * [Rqueue Sprint Boot](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example)
 * [Rqueue Sprint Boot Reactive](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-reactive-example)
