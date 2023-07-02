@@ -65,6 +65,12 @@ services code is in Spring/Spring Boot. It supports Spring and Spring Boot frame
 ## Getting started
 
 {: .highlight }
+All queue names are dynamic, we do not have to create any queue manually or programmatically using
+`registerQueue` method. Creating queue manually could lead to inconsistencies, queue should be
+**only** created when we're using Rqueue as producer.
+
+
+{: .highlight }
 The Rqueue code repository has multiple sample test apps, try to run them in local all of these apps
 provides simple APIs for demo. You can clone this repo, in cloned repo you run one of these apps.
 
