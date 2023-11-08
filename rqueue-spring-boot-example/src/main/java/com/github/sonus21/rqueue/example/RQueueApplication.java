@@ -17,11 +17,19 @@
 package com.github.sonus21.rqueue.example;
 
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.core.Job;
+import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.utils.Constants;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.util.CollectionUtils;
 
 @SpringBootApplication
 public class RQueueApplication {
@@ -33,12 +41,31 @@ public class RQueueApplication {
     SpringApplication.run(RQueueApplication.class, args);
   }
 
+  static class TraceDataInjector implements Middleware {
+
+    @Override
+    public void handle(Job job, Callable<Void> next) throws Exception {
+      Object message = job.getMessage();
+      if (Objects.nonNull(message) && message instanceof BaseMessage) {
+        Map<String, Object> ctx = ((BaseMessage) message).getMetadata();
+        if (!CollectionUtils.isEmpty(ctx)) {
+          for (Map.Entry<String, Object> e : ctx.entrySet()) {
+            MDC.put(e.getKey(), e.getValue().toString());
+          }
+        }
+      }
+      next.call();
+      MDC.clear();
+    }
+  }
+
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
     SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
         new SimpleRqueueListenerContainerFactory();
     simpleRqueueListenerContainerFactory.setMaxNumWorkers(workersCount);
     simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
+    simpleRqueueListenerContainerFactory.setMiddlewares(Collections.singletonList(new TraceDataInjector()));
     return simpleRqueueListenerContainerFactory;
   }
 }

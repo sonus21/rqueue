@@ -39,7 +39,7 @@ public class MvcConfig implements WebMvcConfigurer {
     }
     if (!StringUtils.isEmpty(rqueueWebUrlPrefix)) {
       registry
-          .addResourceHandler(rqueueWebUrlPrefix + "/**")
+          .addResourceHandler(rqueueWebUrlPrefix + "**")
           .addResourceLocations("classpath:/public/");
     }
     if (!registry.hasMappingForPattern("/**")) {

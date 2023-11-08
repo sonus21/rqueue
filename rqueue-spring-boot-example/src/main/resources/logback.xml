@@ -35,10 +35,10 @@
   <logger level="INFO" name="root">
     <appender-ref ref="STDOUT"/>
   </logger>
-  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler" additivity="false">
+  <logger level="INFO" name="com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler" additivity="false">
     <appender-ref ref="STDOUT"/>
   </logger>
-  <logger level="DEBUG" name="com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler" additivity="false">
+  <logger level="INFO" name="com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler" additivity="false">
     <appender-ref ref="STDOUT"/>
   </logger>
 </configuration>

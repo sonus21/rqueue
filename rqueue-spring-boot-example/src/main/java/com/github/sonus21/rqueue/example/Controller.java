@@ -18,9 +18,12 @@ package com.github.sonus21.rqueue.example;
 
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -67,6 +70,12 @@ public class Controller {
     } else {
       job.setMessage("Hi this is " + job.getId());
     }
+    Map<String, String> ctx = MDC.getCopyOfContextMap();
+    if (Objects.nonNull(ctx)) {
+      for (Map.Entry<String, String> entry : MDC.getCopyOfContextMap().entrySet()) {
+        job.addMetadata(entry.getKey(), entry.getValue());
+      }
+    }
     return job;
   }
 
@@ -76,6 +85,7 @@ public class Controller {
     Job job = getJob(msg);
     String messageId = rqueueMessageEnqueuer.enqueue(getQueue(q), job);
     job.setMessage(messageId);
+    log.info("Job notification pushed {}", job);
     return job.toString();
   }
 

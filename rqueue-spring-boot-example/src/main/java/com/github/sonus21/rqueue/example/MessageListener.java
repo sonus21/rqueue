@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Random;
+import io.micrometer.tracing.annotation.NewSpan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

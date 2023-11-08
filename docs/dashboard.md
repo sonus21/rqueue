@@ -63,7 +63,7 @@ public class MvcConfig implements WebMvcConfigurer {
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
     if (!StringUtils.isEmpty(rqueueWebUrlPrefix)) {
       registry
-          .addResourceHandler(rqueueWebUrlPrefix + "/**")
+          .addResourceHandler(rqueueWebUrlPrefix + "**")
           .addResourceLocations("classpath:/public/");
     } else if (!registry.hasMappingForPattern("/**")) {
       registry.addResourceHandler("/**").addResourceLocations("classpath:/public/");

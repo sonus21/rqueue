@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.example;
 
+import com.fasterxml.jackson.databind.ser.Serializers.Base;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -23,7 +24,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class Job {
+public class Job extends BaseMessage {
 
   private String id;
   private String message;
