@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.spring.boot;
 
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.metrics.QueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
@@ -46,7 +47,9 @@ public class RqueueMetricsAutoConfig {
 
   @Bean
   public RqueueMetricsRegistry rqueueMetricsRegistry(
-      MetricsProperties metricsProperties, RqueueMetricsProperties rqueueMetricsProperties) {
+      MetricsProperties metricsProperties,
+      RqueueMetricsProperties rqueueMetricsProperties,
+      RqueueEventBus eventBus) {
     Tags actualTags = Tags.empty();
     for (Entry<String, String> e : getTags(metricsProperties).entrySet()) {
       actualTags = Tags.concat(actualTags, e.getKey(), e.getValue());
@@ -56,7 +59,7 @@ public class RqueueMetricsAutoConfig {
     }
     rqueueMetricsProperties.setMetricTags(actualTags);
     QueueCounter queueCounter = new QueueCounter();
-    return new RqueueMetrics(queueCounter);
+    return new RqueueMetrics(queueCounter, eventBus);
   }
 
   @SuppressWarnings("unchecked")

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,14 +15,20 @@
  */
 package com.github.sonus21.rqueue.test.service;
 
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
+import com.google.common.eventbus.Subscribe;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RqueueEventListener {
+
+  public RqueueEventListener(RqueueEventBus eventBus) {
+    eventBus.register(this);
+  }
+
 
   private Queue<RqueueExecutionEvent> executionEvents = new ConcurrentLinkedQueue<>();
 
@@ -34,7 +40,7 @@ public class RqueueEventListener {
     return executionEvents.size();
   }
 
-  @EventListener
+  @Subscribe
   public void listen(RqueueExecutionEvent event) {
     executionEvents.add(event);
   }

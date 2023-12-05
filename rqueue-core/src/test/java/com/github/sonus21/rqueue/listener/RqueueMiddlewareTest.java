@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.core.context.DefaultContext;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.core.middleware.ContextMiddleware;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.middleware.PermissionMiddleware;
@@ -75,7 +76,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
@@ -106,7 +106,7 @@ class RqueueMiddlewareTest extends TestBase {
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock
-  private ApplicationEventPublisher applicationEventPublisher;
+  private RqueueEventBus rqueueEventBus;
   private RqueueMessage rqueueMessage = new RqueueMessage();
   private PostProcessingHandler postProcessingHandler;
   private MessageMetadata defaultMessageMetadata;
@@ -132,7 +132,7 @@ class RqueueMiddlewareTest extends TestBase {
     postProcessingHandler =
         new PostProcessingHandler(
             rqueueWebConfig,
-            applicationEventPublisher,
+            rqueueEventBus,
             messageTemplate,
             taskBackOff,
             messageProcessorHandler,

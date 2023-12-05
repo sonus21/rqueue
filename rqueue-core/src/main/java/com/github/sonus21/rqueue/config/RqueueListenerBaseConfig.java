@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
+import com.github.sonus21.rqueue.core.eventbus.EventBusErrorHandler;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
@@ -37,6 +39,8 @@ import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
 import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.spring.extension.SpringExtension;
 import com.mitchellbosecke.pebble.spring.reactive.PebbleReactiveViewResolver;
@@ -45,11 +49,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
  * This is a base configuration class for Rqueue, that is used in Spring and Spring boot Rqueue libs
@@ -105,8 +111,8 @@ public abstract class RqueueListenerBaseConfig {
    * Database for different ops.
    *
    * @param beanFactory configurable bean factory
-   * @param versionKey Rqueue db version key
-   * @param dbVersion database version
+   * @param versionKey  Rqueue db version key
+   * @param dbVersion   database version
    * @return {@link RedisConnectionFactory} object.
    */
   @Bean
@@ -151,6 +157,11 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
+  public RqueueEventBusConfig rqueueEventBusConfig() {
+    return new RqueueEventBusConfig();
+  }
+
+  @Bean
   public RqueueSchedulerConfig rqueueSchedulerConfig() {
     return new RqueueSchedulerConfig();
   }
@@ -190,8 +201,14 @@ public abstract class RqueueListenerBaseConfig {
    * @return {@link ScheduledQueueMessageScheduler} object
    */
   @Bean
-  public ScheduledQueueMessageScheduler scheduledMessageScheduler() {
-    return new ScheduledQueueMessageScheduler();
+  public ScheduledQueueMessageScheduler scheduledMessageScheduler(
+      RqueueSchedulerConfig rqueueSchedulerConfig,
+      RqueueConfig rqueueConfig,
+      RqueueEventBus eventBus,
+      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+      @Qualifier("rqueueRedisLongTemplate")
+      RedisTemplate<String, Long> redisTemplate) {
+    return new ScheduledQueueMessageScheduler(rqueueSchedulerConfig, rqueueConfig, eventBus, rqueueRedisListenerContainerFactory, redisTemplate);
   }
 
   /**
@@ -201,8 +218,14 @@ public abstract class RqueueListenerBaseConfig {
    * @return {@link ProcessingQueueMessageScheduler} object
    */
   @Bean
-  public ProcessingQueueMessageScheduler processingMessageScheduler() {
-    return new ProcessingQueueMessageScheduler();
+  public ProcessingQueueMessageScheduler processingMessageScheduler(
+      RqueueSchedulerConfig rqueueSchedulerConfig,
+      RqueueConfig rqueueConfig,
+      RqueueEventBus eventBus,
+      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+      @Qualifier("rqueueRedisLongTemplate")
+      RedisTemplate<String, Long> redisTemplate) {
+    return new ProcessingQueueMessageScheduler(rqueueSchedulerConfig, rqueueConfig, eventBus, rqueueRedisListenerContainerFactory, redisTemplate);
   }
 
   @Bean
@@ -265,12 +288,27 @@ public abstract class RqueueListenerBaseConfig {
       RqueueConfig rqueueConfig,
       RqueueBeanProvider rqueueBeanProvider,
       @Qualifier("stringRqueueRedisTemplate")
-          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueInternalPubSubChannel(
         rqueueRedisListenerContainerFactory,
         rqueueMessageListenerContainer,
         rqueueConfig,
         stringRqueueRedisTemplate,
         rqueueBeanProvider);
+  }
+
+  @Bean
+  public RqueueEventBus rqueueEventBus(ApplicationEventPublisher applicationEventPublisher,
+      RqueueEventBusConfig rqueueEventBusConfig) {
+    ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+    threadPoolTaskExecutor.setCorePoolSize(rqueueEventBusConfig.getCorePoolSize());
+    threadPoolTaskExecutor.setMaxPoolSize(rqueueEventBusConfig.getMaxPoolSize());
+    threadPoolTaskExecutor.setKeepAliveSeconds(rqueueEventBusConfig.getKeepAliveTime());
+    threadPoolTaskExecutor.setQueueCapacity(rqueueEventBusConfig.getQueueCapacity());
+    threadPoolTaskExecutor.setThreadNamePrefix("RqueueEventBusAsyncExecutor-");
+    threadPoolTaskExecutor.initialize();
+    EventBus eventBus = new AsyncEventBus(threadPoolTaskExecutor);
+    eventBus.register(new EventBusErrorHandler());
+    return new RqueueEventBus(eventBus, applicationEventPublisher);
   }
 }

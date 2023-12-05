@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,25 +16,26 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
+import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.utils.TestUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
-
-import com.github.sonus21.TestBase;
-import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
-import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.utils.TestUtils;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 @CoreUnitTest
 class ProcessingQueueMessageSchedulerTest extends TestBase {
@@ -43,14 +44,23 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RedisMessageListenerContainer redisMessageListenerContainer;
-  @InjectMocks private ProcessingQueueMessageScheduler messageScheduler;
+  @Mock
+  private RedisTemplate<String, Long> redisTemplate;
+  @Mock
+  private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock
+  private RqueueEventBus eventBus;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  private ProcessingQueueMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
+    messageScheduler = new ProcessingQTestMessageScheduler(rqueueSchedulerConfig, rqueueConfig,
+        eventBus, rqueueRedisListenerContainerFactory, redisTemplate);
     EndpointRegistry.delete();
     EndpointRegistry.register(slowQueueDetail);
     EndpointRegistry.register(fastQueueDetail);
@@ -93,7 +103,13 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
     private final AtomicInteger schedulesCalls;
     private final AtomicInteger addTaskCalls;
 
-    ProcessingQTestMessageScheduler() {
+    ProcessingQTestMessageScheduler(RqueueSchedulerConfig rqueueSchedulerConfig,
+        RqueueConfig rqueueConfig,
+        RqueueEventBus eventBus,
+        RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+        RedisTemplate<String, Long> redisTemplate) {
+      super(rqueueSchedulerConfig, rqueueConfig, eventBus, rqueueRedisListenerContainerFactory,
+          redisTemplate);
       this.schedulesCalls = new AtomicInteger(0);
       this.addTaskCalls = new AtomicInteger(0);
     }

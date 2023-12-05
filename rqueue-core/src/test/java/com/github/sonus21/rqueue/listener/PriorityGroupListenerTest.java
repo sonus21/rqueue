@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainerTest.BootstrapEventListener;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainerTest.TestEventBroadcaster;
@@ -43,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import com.google.common.eventbus.EventBus;
 import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,11 +67,13 @@ class PriorityGroupListenerTest extends TestBase {
   private static final long VISIBILITY_TIMEOUT = 900000L;
   @Mock private RqueueMessageHandler rqueueMessageHandler;
   @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private ApplicationEventPublisher applicationEventPublisher;
+  @Mock private RqueueEventBus rqueueEventBus;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock private ApplicationEventPublisher applicationEventPublisher;
   private RqueueBeanProvider beanProvider;
+  private EventBus eventBus;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
@@ -79,9 +83,10 @@ class PriorityGroupListenerTest extends TestBase {
     beanProvider.setRqueueConfig(rqueueConfig);
     beanProvider.setRqueueMessageHandler(rqueueMessageHandler);
     beanProvider.setRqueueSystemConfigDao(rqueueSystemConfigDao);
-    beanProvider.setApplicationEventPublisher(applicationEventPublisher);
+    beanProvider.setRqueueEventBus(rqueueEventBus);
     beanProvider.setRqueueMessageTemplate(rqueueMessageTemplate);
     beanProvider.setRqueueMessageMetadataService(rqueueMessageMetadataService);
+    eventBus = new EventBus();
   }
 
   @Test
@@ -94,11 +99,13 @@ class PriorityGroupListenerTest extends TestBase {
         "slowMessageListener", SlowMessageListenerWithPriority.class);
     applicationContext.registerSingleton(
         "fastMessageListener", FastMessageListenerWithPriority.class);
-    applicationContext.registerSingleton("applicationEventPublisher", TestEventBroadcaster.class);
+    applicationContext.registerSingleton("rqueueEventBus", TestEventBroadcaster.class);
+
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
+
     TestEventBroadcaster eventBroadcaster =
-        applicationContext.getBean("applicationEventPublisher", TestEventBroadcaster.class);
+            (TestEventBroadcaster) applicationContext.getBean("rqueueEventBus", eventBus,  applicationEventPublisher);
     eventBroadcaster.subscribe(listener);
 
     messageHandler.setApplicationContext(applicationContext);
@@ -110,7 +117,7 @@ class PriorityGroupListenerTest extends TestBase {
         .when(rqueueSystemConfigDao)
         .getConfigByNames(any());
 
-    beanProvider.setApplicationEventPublisher(eventBroadcaster);
+    beanProvider.setRqueueEventBus(eventBroadcaster);
     beanProvider.setRqueueMessageHandler(messageHandler);
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
 

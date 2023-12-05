@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2023 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,39 +16,20 @@
 
 package com.github.sonus21.rqueue.core;
 
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
-import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.TestTaskScheduler;
-import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -60,6 +41,18 @@ import org.springframework.data.redis.TooManyClusterRedirectionsException;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @CoreUnitTest
 @SuppressWarnings("unchecked")
@@ -74,15 +67,18 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
   @Mock
   private RqueueConfig rqueueConfig;
   @Mock
+  private RqueueEventBus eventBus;
+  @Mock
   private RedisTemplate<String, Long> redisTemplate;
   @Mock
   private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
-  @InjectMocks
   private TestScheduledQueueMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
+    messageScheduler = new TestScheduledQueueMessageScheduler(rqueueSchedulerConfig, rqueueConfig,
+        eventBus, rqueueRedisListenerContainerFactory, redisTemplate);
     EndpointRegistry.delete();
     EndpointRegistry.register(fastQueueDetail);
     EndpointRegistry.register(slowQueueDetail);
@@ -319,7 +315,13 @@ class ScheduledQueueMessageSchedulerTest extends TestBase {
     final AtomicInteger scheduleCounter;
     final AtomicInteger addTaskCounter;
 
-    TestScheduledQueueMessageScheduler() {
+    public TestScheduledQueueMessageScheduler(RqueueSchedulerConfig rqueueSchedulerConfig,
+        RqueueConfig rqueueConfig,
+        RqueueEventBus eventBus,
+        RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+        RedisTemplate<String, Long> redisTemplate) {
+      super(rqueueSchedulerConfig, rqueueConfig, eventBus, rqueueRedisListenerContainerFactory,
+          redisTemplate);
       this.scheduleCounter = new AtomicInteger(0);
       this.addTaskCounter = new AtomicInteger(0);
     }

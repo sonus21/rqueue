@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static com.google.common.collect.Lists.newArrayList;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -40,9 +41,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
@@ -55,18 +56,22 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   private final RqueueStringDao rqueueStringDao;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
+
   private ScheduledExecutorService executorService;
+
 
   @Autowired
   public RqueueSystemManagerServiceImpl(
       RqueueConfig rqueueConfig,
       RqueueStringDao rqueueStringDao,
       RqueueSystemConfigDao rqueueSystemConfigDao,
-      RqueueMessageMetadataService rqueueMessageMetadataService) {
+      RqueueMessageMetadataService rqueueMessageMetadataService,
+      RqueueEventBus eventBus) {
     this.rqueueConfig = rqueueConfig;
     this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
     this.rqueueMessageMetadataService = rqueueMessageMetadataService;
+    eventBus.register(this);
   }
 
   private List<String> queueKeys(QueueConfig queueConfig) {
@@ -172,9 +177,9 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
     }
   }
 
-  @Override
-  @Async
+  @Subscribe
   public void onApplicationEvent(RqueueBootstrapEvent event) {
+    log.info("{} event received", event);
     if (event.isStartup()) {
       List<QueueDetail> queueDetails = EndpointRegistry.getActiveQueueDetails();
       if (queueDetails.isEmpty()) {

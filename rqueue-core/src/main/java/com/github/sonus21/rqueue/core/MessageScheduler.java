@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2023 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -21,10 +21,13 @@ import static java.lang.Math.min;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.eventbus.Subscribe;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -33,29 +36,23 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
-import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationListener;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-public abstract class MessageScheduler implements DisposableBean,
-    ApplicationListener<RqueueBootstrapEvent> {
+public abstract class MessageScheduler implements DisposableBean {
 
   private final Object monitor = new Object();
-  @Autowired
-  protected RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Autowired
-  protected RqueueConfig rqueueConfig;
+  protected final RqueueSchedulerConfig rqueueSchedulerConfig;
+  protected final RqueueConfig rqueueConfig;
+  private final RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  private final RedisTemplate<String, Long> redisTemplate;
   private RedisScript<Long> redisScript;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
   private Map<String, Boolean> queueRunningState;
@@ -66,13 +63,20 @@ public abstract class MessageScheduler implements DisposableBean,
   protected RedisScheduleTriggerHandler redisScheduleTriggerHandler;
 
   private ThreadPoolTaskScheduler scheduler;
-  @Autowired
-  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
-  @Autowired
-  @Qualifier("rqueueRedisLongTemplate")
-  private RedisTemplate<String, Long> redisTemplate;
   private Map<String, Integer> errorCount;
+
+  protected MessageScheduler(RqueueSchedulerConfig rqueueSchedulerConfig,
+      RqueueConfig rqueueConfig,
+      RqueueEventBus eventBus,
+      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+      RedisTemplate<String, Long> redisTemplate) {
+    this.rqueueSchedulerConfig = rqueueSchedulerConfig;
+    this.rqueueConfig = rqueueConfig;
+    this.rqueueRedisListenerContainerFactory = rqueueRedisListenerContainerFactory;
+    this.redisTemplate = redisTemplate;
+    eventBus.register(this);
+  }
 
   protected abstract Logger getLogger();
 
@@ -224,9 +228,9 @@ public abstract class MessageScheduler implements DisposableBean,
     queueRunningState.put(queueName, false);
   }
 
-  @Override
-  @Async
+  @Subscribe
   public void onApplicationEvent(RqueueBootstrapEvent event) {
+    getLogger().info("{} Even received", event);
     synchronized (monitor) {
       doStop();
       if (!rqueueSchedulerConfig.isEnabled()) {

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
@@ -52,7 +53,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
@@ -67,7 +67,7 @@ class ConcurrentListenerTest extends TestBase {
   private static final long executionTime = 50L;
   @Mock private RqueueMessageHandler rqueueMessageHandler;
   @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private ApplicationEventPublisher applicationEventPublisher;
+  @Mock private RqueueEventBus rqueueEventBus;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
@@ -83,7 +83,7 @@ class ConcurrentListenerTest extends TestBase {
     beanProvider.setRqueueConfig(rqueueConfig);
     beanProvider.setRqueueMessageHandler(rqueueMessageHandler);
     beanProvider.setRqueueSystemConfigDao(rqueueSystemConfigDao);
-    beanProvider.setApplicationEventPublisher(applicationEventPublisher);
+    beanProvider.setRqueueEventBus(rqueueEventBus);
     beanProvider.setRqueueMessageTemplate(rqueueMessageTemplate);
     beanProvider.setRqueueMessageMetadataService(rqueueMessageMetadataService);
     beanProvider.setRqueueLockManager(rqueueLockManager);

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import static org.mockito.Mockito.doReturn;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -59,6 +60,9 @@ class RqueueSystemManagerServiceTest extends TestBase {
   @Mock private RqueueStringDao rqueueStringDao;
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+
+  @Mock
+  private RqueueEventBus eventBus;
   private RqueueSystemManagerService rqueueSystemManagerService;
   private Set<String> queues;
 
@@ -67,7 +71,9 @@ class RqueueSystemManagerServiceTest extends TestBase {
     MockitoAnnotations.openMocks(this);
     rqueueSystemManagerService =
         new RqueueSystemManagerServiceImpl(
-            rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
+            rqueueConfig, rqueueStringDao,
+            rqueueSystemConfigDao,
+            rqueueMessageMetadataService, eventBus);
     queues = new HashSet<>();
     queues.add(slowQueue);
     queues.add(fastQueue);

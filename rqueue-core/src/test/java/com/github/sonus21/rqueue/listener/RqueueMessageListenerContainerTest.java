@@ -1,5 +1,5 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -46,6 +47,7 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.test.TestTaskExecutor;
+import com.google.common.eventbus.EventBus;
 import io.lettuce.core.RedisCommandExecutionException;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -79,14 +81,26 @@ class RqueueMessageListenerContainerTest extends TestBase {
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
   private static final long VISIBILITY_TIMEOUT = 900000L;
-  @Mock private RqueueMessageHandler rqueueMessageHandler;
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private ApplicationEventPublisher applicationEventPublisher;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Mock private RqueueWebConfig rqueueWebConfig;
-  @Mock private RqueueLockManager rqueueLockManager;
+  @Mock
+  private RqueueMessageHandler rqueueMessageHandler;
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+  @Mock
+  private RqueueEventBus rqueueEventBus;
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Mock
+  private RqueueWebConfig rqueueWebConfig;
+  @Mock
+  private RqueueLockManager rqueueLockManager;
+
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
+  private EventBus eventBus;
   private RqueueMessageListenerContainer container;
   private RqueueBeanProvider beanProvider;
 
@@ -98,12 +112,13 @@ class RqueueMessageListenerContainerTest extends TestBase {
     beanProvider.setRqueueConfig(rqueueConfig);
     beanProvider.setRqueueMessageHandler(rqueueMessageHandler);
     beanProvider.setRqueueSystemConfigDao(rqueueSystemConfigDao);
-    beanProvider.setApplicationEventPublisher(applicationEventPublisher);
+    beanProvider.setRqueueEventBus(rqueueEventBus);
     beanProvider.setRqueueMessageTemplate(rqueueMessageTemplate);
     beanProvider.setRqueueMessageMetadataService(rqueueMessageMetadataService);
     beanProvider.setRqueueWebConfig(rqueueWebConfig);
     beanProvider.setRqueueLockManager(rqueueLockManager);
     container = new TestListenerContainer(rqueueMessageHandler);
+    eventBus  = new EventBus();
   }
 
   @Test
@@ -219,29 +234,34 @@ class RqueueMessageListenerContainerTest extends TestBase {
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
     applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
+    applicationContext.registerSingleton("rqueueEventBus", TestEventBroadcaster.class);
 
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
+
+    TestEventBroadcaster eventBroadcaster =
+        (TestEventBroadcaster) applicationContext.getBean("rqueueEventBus", eventBus,  applicationEventPublisher);
     messageHandler.setApplicationContext(applicationContext);
     messageHandler.afterPropertiesSet();
     beanProvider.setRqueueMessageHandler(rqueueMessageHandler);
+
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
 
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     AtomicInteger slowQueueCounter = new AtomicInteger(0);
     doAnswer(
-            invocation -> {
-              fastQueueCounter.incrementAndGet();
-              return null;
-            })
+        invocation -> {
+          fastQueueCounter.incrementAndGet();
+          return null;
+        })
         .when(rqueueMessageTemplate)
         .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
 
     doAnswer(
-            invocation -> {
-              slowQueueCounter.incrementAndGet();
-              return null;
-            })
+        invocation -> {
+          slowQueueCounter.incrementAndGet();
+          return null;
+        })
         .when(rqueueMessageTemplate)
         .pop(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
     container.afterPropertiesSet();
@@ -273,15 +293,16 @@ class RqueueMessageListenerContainerTest extends TestBase {
     messageHandler.afterPropertiesSet();
     Map<String, MessageMetadata> messageMetadataMap = new ConcurrentHashMap<>();
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
-    doAnswer(i-> messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService).get(any());
+    doAnswer(i -> messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService)
+        .get(any());
     doAnswer(
-            i -> {
-              RqueueMessage rqueueMessage = i.getArgument(0);
-              MessageMetadata messageMetadata =
-                  new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
-              messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
-              return messageMetadata;
-            })
+        i -> {
+          RqueueMessage rqueueMessage = i.getArgument(0);
+          MessageMetadata messageMetadata =
+              new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
+          messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
+          return messageMetadata;
+        })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
 
@@ -289,15 +310,15 @@ class RqueueMessageListenerContainerTest extends TestBase {
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
 
     doAnswer(
-            invocation -> {
-              if (fastQueueCounter.get() < 2) {
-                if (fastQueueCounter.incrementAndGet() == 1) {
-                  throw new RedisCommandExecutionException("Some error occurred");
-                }
-                return Collections.singletonList(message);
-              }
-              return null;
-            })
+        invocation -> {
+          if (fastQueueCounter.get() < 2) {
+            if (fastQueueCounter.incrementAndGet() == 1) {
+              throw new RedisCommandExecutionException("Some error occurred");
+            }
+            return Collections.singletonList(message);
+          }
+          return null;
+        })
         .when(rqueueMessageTemplate)
         .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
     FastMessageListener fastMessageListener =
@@ -335,49 +356,50 @@ class RqueueMessageListenerContainerTest extends TestBase {
     String slowQueueMessage = "This is slow queue";
     Map<String, MessageMetadata> messageMetadataMap = new ConcurrentHashMap<>();
     doAnswer(
-            i -> {
-              RqueueMessage rqueueMessage = i.getArgument(0);
-              MessageMetadata messageMetadata =
-                  new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
-              messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
-              return messageMetadata;
-            })
+        i -> {
+          RqueueMessage rqueueMessage = i.getArgument(0);
+          MessageMetadata messageMetadata =
+              new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
+          messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
+          return messageMetadata;
+        })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
-    doAnswer(i->messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService).get(any());
+    doAnswer(i -> messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService)
+        .get(any());
     doAnswer(
-            invocation -> {
-              if (slowQueueCounter.get() == 0) {
-                slowQueueCounter.incrementAndGet();
-                return Collections.singletonList(
-                    RqueueMessage.builder()
-                        .queueName(slowQueue)
-                        .message(slowQueueMessage)
-                        .processAt(System.currentTimeMillis())
-                        .queuedTime(System.nanoTime())
-                        .id(UUID.randomUUID().toString())
-                        .build());
-              }
-              return null;
-            })
+        invocation -> {
+          if (slowQueueCounter.get() == 0) {
+            slowQueueCounter.incrementAndGet();
+            return Collections.singletonList(
+                RqueueMessage.builder()
+                    .queueName(slowQueue)
+                    .message(slowQueueMessage)
+                    .processAt(System.currentTimeMillis())
+                    .queuedTime(System.nanoTime())
+                    .id(UUID.randomUUID().toString())
+                    .build());
+          }
+          return null;
+        })
         .when(rqueueMessageTemplate)
         .pop(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
 
     doAnswer(
-            invocation -> {
-              if (fastQueueCounter.get() == 0) {
-                fastQueueCounter.incrementAndGet();
-                return Collections.singletonList(
-                    RqueueMessage.builder()
-                        .queueName(fastQueue)
-                        .message(fastQueueMessage)
-                        .processAt(System.currentTimeMillis())
-                        .queuedTime(System.nanoTime())
-                        .id(UUID.randomUUID().toString())
-                        .build());
-              }
-              return null;
-            })
+        invocation -> {
+          if (fastQueueCounter.get() == 0) {
+            fastQueueCounter.incrementAndGet();
+            return Collections.singletonList(
+                RqueueMessage.builder()
+                    .queueName(fastQueue)
+                    .message(fastQueueMessage)
+                    .processAt(System.currentTimeMillis())
+                    .queuedTime(System.nanoTime())
+                    .id(UUID.randomUUID().toString())
+                    .build());
+          }
+          return null;
+        })
         .when(rqueueMessageTemplate)
         .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
     container.afterPropertiesSet();
@@ -424,12 +446,12 @@ class RqueueMessageListenerContainerTest extends TestBase {
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton("slowMessageListener", SlowMessageListener.class);
-    applicationContext.registerSingleton("applicationEventPublisher", TestEventBroadcaster.class);
+    applicationContext.registerSingleton("rqueueEventBus", TestEventBroadcaster.class);
 
     RqueueMessageHandler messageHandler =
         applicationContext.getBean("messageHandler", RqueueMessageHandler.class);
     TestEventBroadcaster eventBroadcaster =
-        applicationContext.getBean("applicationEventPublisher", TestEventBroadcaster.class);
+        (TestEventBroadcaster) applicationContext.getBean("rqueueEventBus", eventBus,  applicationEventPublisher);
     eventBroadcaster.subscribe(listener);
 
     messageHandler.setApplicationContext(applicationContext);
@@ -438,7 +460,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     queueConfig.setPaused(true);
     doReturn(queueConfig).when(rqueueSystemConfigDao).getConfigByName(slowQueue);
 
-    beanProvider.setApplicationEventPublisher(eventBroadcaster);
+    beanProvider.setRqueueEventBus(eventBroadcaster);
     beanProvider.setRqueueMessageHandler(messageHandler);
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
 
@@ -496,23 +518,25 @@ class RqueueMessageListenerContainerTest extends TestBase {
   }
 
   @SuppressWarnings("unchecked")
-  static class TestEventBroadcaster implements ApplicationEventPublisher {
+  static class TestEventBroadcaster extends RqueueEventBus {
 
-    List<ApplicationListener> listenerList = new LinkedList<>();
+    private final List<ApplicationListener> listenerList = new LinkedList<>();
+
+    public TestEventBroadcaster(EventBus eventBus,
+        ApplicationEventPublisher applicationEventPublisher) {
+      super(eventBus, applicationEventPublisher);
+    }
 
     void subscribe(ApplicationListener listener) {
       listenerList.add(listener);
     }
 
     @Override
-    public void publishEvent(ApplicationEvent event) {
+    public void publish(ApplicationEvent event) {
       for (ApplicationListener listener : listenerList) {
         listener.onApplicationEvent(event);
       }
     }
-
-    @Override
-    public void publishEvent(Object event) {}
   }
 
   private class TestListenerContainer extends RqueueMessageListenerContainer {

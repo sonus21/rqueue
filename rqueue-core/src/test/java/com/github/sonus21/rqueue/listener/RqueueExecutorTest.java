@@ -1,5 +1,5 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
@@ -91,7 +92,7 @@ class RqueueExecutorTest extends TestBase {
   @Mock
   private RedisTemplate<String, RqueueMessage> redisTemplate;
   @Mock
-  private ApplicationEventPublisher applicationEventPublisher;
+  private RqueueEventBus rqueueEventBus;
   @Mock
   private RqueueMessageTemplate messageTemplate;
 
@@ -118,7 +119,7 @@ class RqueueExecutorTest extends TestBase {
     postProcessingHandler =
         new PostProcessingHandler(
             rqueueWebConfig,
-            applicationEventPublisher,
+            rqueueEventBus,
             messageTemplate,
             taskBackOff,
             messageProcessorHandler,

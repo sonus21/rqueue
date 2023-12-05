@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -65,6 +66,9 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
   @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Mock private RqueueConfig rqueueConfig;
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
+
+  @Mock
+  private RqueueEventBus eventBus;
   private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
 
   @BeforeEach
@@ -73,7 +77,9 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
     EndpointRegistry.delete();
     rqueueSystemManagerService =
         new RqueueSystemManagerServiceImpl(
-            rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
+            rqueueConfig, rqueueStringDao,
+            rqueueSystemConfigDao, rqueueMessageMetadataService,
+            eventBus);
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
     fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
     EndpointRegistry.register(slowQueueDetail);

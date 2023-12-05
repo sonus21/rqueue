@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,23 +19,32 @@ package com.github.sonus21.rqueue.test.service;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
-import lombok.AllArgsConstructor;
+import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@AllArgsConstructor
 @Slf4j
-public class QueueRegistryUpdater implements ApplicationListener<RqueueBootstrapEvent> {
+public class QueueRegistryUpdater {
 
   private final RqueueMessageSender rqueueMessageSender;
   private final RqueueEndpointManager rqueueEndpointManager;
   private final RqueueConfig rqueueConfig;
 
-  @Override
+  public QueueRegistryUpdater(RqueueMessageSender rqueueMessageSender,
+      RqueueEndpointManager rqueueEndpointManager, RqueueConfig rqueueConfig,
+      RqueueEventBus eventBus) {
+    this.rqueueMessageSender = rqueueMessageSender;
+    this.rqueueEndpointManager = rqueueEndpointManager;
+    this.rqueueConfig = rqueueConfig;
+    eventBus.register(this);
+  }
+
+
+  @Subscribe
   public void onApplicationEvent(RqueueBootstrapEvent event) {
     log.info("Mode {} Event {}", rqueueConfig.getMode(), event);
     if (!RqueueMode.PRODUCER.equals(rqueueConfig.getMode()) || !event.isStartup()) {
