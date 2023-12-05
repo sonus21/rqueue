@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Sonu Kumar
+ * Copyright (c) 2023 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ package com.github.sonus21.rqueue.core;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -30,18 +29,15 @@ import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.ProcessingQueueMessageSchedulerTest.ProcessingQTestMessageScheduler;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
-import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
-import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.TestTaskScheduler;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -50,8 +46,6 @@ import org.springframework.data.redis.ClusterRedirectException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.TooManyClusterRedirectionsException;
-import org.springframework.data.redis.connection.DefaultMessage;
-import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -59,22 +53,28 @@ import org.springframework.data.redis.core.RedisTemplate;
 @SuppressWarnings("unchecked")
 class MessageSchedulingTest extends TestBase {
 
-  @InjectMocks
-  private final ProcessingQTestMessageScheduler messageScheduler = new ProcessingQTestMessageScheduler();
   private final String queue = "queue";
   private final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
   @Mock
   private RqueueSchedulerConfig rqueueSchedulerConfig;
   @Mock
   private RqueueConfig rqueueConfig;
+
+  @Mock
+  private RqueueEventBus rqueueEventBus;
+
   @Mock
   private RedisTemplate<String, Long> redisTemplate;
   @Mock
   private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+  private ProcessingQTestMessageScheduler messageScheduler;
+
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
+    messageScheduler = new ProcessingQTestMessageScheduler(rqueueSchedulerConfig, rqueueConfig,
+        rqueueEventBus, rqueueRedisListenerContainerFactory, redisTemplate);
     EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
     doReturn(1).when(rqueueSchedulerConfig).getProcessingMessageThreadPoolSize();

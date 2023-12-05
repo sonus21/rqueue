@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -284,7 +284,7 @@ public class RqueueMessageListenerContainer
     this.postProcessingHandler =
         new PostProcessingHandler(
             rqueueBeanProvider.getRqueueWebConfig(),
-            rqueueBeanProvider.getApplicationEventPublisher(),
+            rqueueBeanProvider.getRqueueEventBus(),
             rqueueMessageTemplate,
             taskExecutionBackOff,
             new MessageProcessorHandler(
@@ -443,8 +443,8 @@ public class RqueueMessageListenerContainer
       running = true;
       doStart();
       rqueueBeanProvider
-          .getApplicationEventPublisher()
-          .publishEvent(new RqueueBootstrapEvent(EVENT_SOURCE, true));
+          .getRqueueEventBus()
+          .publish(new RqueueBootstrapEvent(EVENT_SOURCE, true));
       lifecycleMgr.notifyAll();
     }
   }
@@ -564,8 +564,8 @@ public class RqueueMessageListenerContainer
     synchronized (lifecycleMgr) {
       running = false;
       rqueueBeanProvider
-          .getApplicationEventPublisher()
-          .publishEvent(new RqueueBootstrapEvent(EVENT_SOURCE, false));
+          .getRqueueEventBus()
+          .publish(new RqueueBootstrapEvent(EVENT_SOURCE, false));
       doStop();
       lifecycleMgr.notifyAll();
     }
@@ -737,7 +737,7 @@ public class RqueueMessageListenerContainer
         unpause(queue);
       }
       RqueueQueuePauseEvent event = new RqueueQueuePauseEvent(EVENT_SOURCE, queue, pause);
-      rqueueBeanProvider.getApplicationEventPublisher().publishEvent(event);
+      rqueueBeanProvider.getRqueueEventBus().publish(event);
     }
 
     private void unpause(String queue) {

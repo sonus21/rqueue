@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -32,7 +33,6 @@ import com.github.sonus21.test.TestTaskScheduler;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -42,19 +42,28 @@ import org.springframework.data.redis.core.RedisTemplate;
 @CoreUnitTest
 class MessageSchedulerDisabledTest extends TestBase {
 
-  @InjectMocks
-  private final ScheduledQueueMessageScheduler messageScheduler =
-      new ScheduledQueueMessageScheduler();
-
   private final String slowQueue = "slow-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
-  @Mock private RqueueSchedulerConfig rqueueSchedulerConfig;
-  @Mock private RqueueConfig rqueueConfig;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
+  @Mock
+  private RqueueSchedulerConfig rqueueSchedulerConfig;
+  @Mock
+  private RqueueConfig rqueueConfig;
+  @Mock
+  private RedisTemplate<String, Long> redisTemplate;
+
+  @Mock
+  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+
+  @Mock
+  private RqueueEventBus rqueueEventBus;
+
+  private ScheduledQueueMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
+    messageScheduler = new ScheduledQueueMessageScheduler(rqueueSchedulerConfig, rqueueConfig,
+        rqueueEventBus, rqueueRedisListenerContainerFactory, redisTemplate);
     EndpointRegistry.delete();
     EndpointRegistry.register(slowQueueDetail);
   }

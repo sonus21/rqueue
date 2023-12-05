@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
@@ -105,9 +106,9 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   @Bean
   @Conditional(MetricsEnabled.class)
   @DependsOn({"meterRegistry", "rqueueMetricsProperties"})
-  public RqueueMetricsRegistry rqueueMetricsRegistry() {
+  public RqueueMetricsRegistry rqueueMetricsRegistry(RqueueEventBus eventBus) {
     QueueCounter queueCounter = new QueueCounter();
-    return new RqueueMetrics(queueCounter);
+    return new RqueueMetrics(queueCounter, eventBus);
   }
 
   @Bean

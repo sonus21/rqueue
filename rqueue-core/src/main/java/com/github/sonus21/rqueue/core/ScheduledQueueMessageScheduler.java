@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,11 +16,24 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @Slf4j
 public class ScheduledQueueMessageScheduler extends MessageScheduler {
+
+
+  public ScheduledQueueMessageScheduler(RqueueSchedulerConfig rqueueSchedulerConfig,
+      RqueueConfig rqueueConfig, RqueueEventBus eventBus,
+      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+      RedisTemplate<String, Long> redisTemplate) {
+    super(rqueueSchedulerConfig, rqueueConfig, eventBus, rqueueRedisListenerContainerFactory,
+        redisTemplate);
+  }
 
   @Override
   protected Logger getLogger() {

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.core;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
@@ -28,7 +29,6 @@ import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 
 @Getter
 @Setter
@@ -38,7 +38,7 @@ public class RqueueBeanProvider {
   @Autowired private RqueueSystemConfigDao rqueueSystemConfigDao;
   @Autowired private RqueueJobDao rqueueJobDao;
   @Autowired private RqueueWebConfig rqueueWebConfig;
-  @Autowired private ApplicationEventPublisher applicationEventPublisher;
+  @Autowired private RqueueEventBus rqueueEventBus;
   @Autowired private RqueueLockManager rqueueLockManager;
 
   @Autowired(required = false)

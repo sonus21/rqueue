@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.aggregator.QueueEvents;
@@ -32,24 +33,32 @@ import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import com.google.common.eventbus.Subscribe;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.*;
 
 @Component
 @Slf4j
-public class RqueueJobMetricsAggregatorService
-    implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
+public class RqueueJobMetricsAggregatorService implements DisposableBean, SmartLifecycle {
 
   private final RqueueConfig rqueueConfig;
   private final RqueueWebConfig rqueueWebConfig;
@@ -68,11 +77,13 @@ public class RqueueJobMetricsAggregatorService
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueLockManager rqueueLockManager,
-      RqueueQStatsDao rqueueQStatsDao) {
+      RqueueQStatsDao rqueueQStatsDao,
+      RqueueEventBus eventBus) {
     this.rqueueConfig = rqueueConfig;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueLockManager = rqueueLockManager;
     this.rqueueQStatsDao = rqueueQStatsDao;
+    eventBus.register(this);
   }
 
   @Override
@@ -153,7 +164,7 @@ public class RqueueJobMetricsAggregatorService
     }
   }
 
-  @Override
+  @Subscribe
   public void onApplicationEvent(RqueueExecutionEvent event) {
     synchronized (aggregatorLock) {
       if (log.isTraceEnabled()) {

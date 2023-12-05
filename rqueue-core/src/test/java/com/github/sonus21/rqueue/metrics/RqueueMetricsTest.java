@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
@@ -54,6 +55,7 @@ class RqueueMetricsTest extends TestBase {
       TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
   @Mock private RqueueStringDao rqueueStringDao;
   @Mock private QueueCounter queueCounter;
+  @Mock private RqueueEventBus eventBus;
 
   @BeforeEach
   public void init() {
@@ -91,7 +93,7 @@ class RqueueMetricsTest extends TestBase {
   private void verifyCounterRegisterMethodIsCalled(Tags tags) throws IllegalAccessException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     metricsProperties.setMetricTags(tags);
-    RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
+    RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties, eventBus);
     metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verify(queueCounter, times(1))
         .registerQueue(
@@ -109,9 +111,11 @@ class RqueueMetricsTest extends TestBase {
   }
 
   private RqueueMetrics rqueueMetrics(
-      MeterRegistry meterRegistry, MetricsProperties metricsProperties)
+      MeterRegistry meterRegistry,
+      MetricsProperties metricsProperties,
+      RqueueEventBus eventBus)
       throws IllegalAccessException {
-    RqueueMetrics metrics = new RqueueMetrics(queueCounter);
+    RqueueMetrics metrics = new RqueueMetrics(queueCounter, eventBus);
     FieldUtils.writeField(metrics, "meterRegistry", meterRegistry, true);
     FieldUtils.writeField(metrics, "metricsProperties", metricsProperties, true);
     return metrics;
@@ -153,7 +157,7 @@ class RqueueMetricsTest extends TestBase {
         .when(rqueueStringDao)
         .getListSize(anyString());
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
+    RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties,eventBus);
     FieldUtils.writeField(metrics, "rqueueStringDao", rqueueStringDao, true);
     metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.github.sonus21.TestBase;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsRegistry;
 import com.github.sonus21.rqueue.spring.boot.RqueueMetricsAutoConfig;
 import com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties;
@@ -28,12 +29,24 @@ import io.micrometer.core.instrument.Tags;
 import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
 
 @SpringBootUnitTest
 @Slf4j
 class RqueueMetricsAutoConfigTest extends TestBase {
+
+  @Mock
+  private RqueueEventBus rqueueEventBus;
+
+  @BeforeEach
+  public void init() throws IllegalAccessException {
+    MockitoAnnotations.openMocks(this);
+  }
+
 
   @Test
   void rqueueMetricsRegistryNoAdditionalTags() {
@@ -41,7 +54,8 @@ class RqueueMetricsAutoConfigTest extends TestBase {
     MetricsProperties metricsProperties = new MetricsProperties();
     RqueueMetricsProperties rqueueMetricsProperties = new RqueueMetricsProperties();
     RqueueMetricsRegistry rqueueMetricsRegistry =
-        rqueueMetricsAutoConfig.rqueueMetricsRegistry(metricsProperties, rqueueMetricsProperties);
+        rqueueMetricsAutoConfig.rqueueMetricsRegistry(metricsProperties,
+            rqueueMetricsProperties, rqueueEventBus);
     assertNotNull(rqueueMetricsRegistry);
     assertEquals(Tags.empty(), rqueueMetricsProperties.getMetricTags());
   }
@@ -53,7 +67,7 @@ class RqueueMetricsAutoConfigTest extends TestBase {
     RqueueMetricsProperties rqueueMetricsProperties = new RqueueMetricsProperties();
     rqueueMetricsProperties.setTags(Collections.singletonMap("dc", "test"));
     RqueueMetricsRegistry rqueueMetricsRegistry =
-        rqueueMetricsAutoConfig.rqueueMetricsRegistry(metricsProperties, rqueueMetricsProperties);
+        rqueueMetricsAutoConfig.rqueueMetricsRegistry(metricsProperties, rqueueMetricsProperties, rqueueEventBus);
     assertNotNull(rqueueMetricsRegistry);
     assertEquals(Tags.of("dc", "test"), rqueueMetricsProperties.getMetricTags());
   }
@@ -73,7 +87,7 @@ class RqueueMetricsAutoConfigTest extends TestBase {
     FieldUtils.writeField(
         metricsProperties, "tags", Collections.singletonMap("region", "ap-south-1"), true);
     RqueueMetricsRegistry rqueueMetricsRegistry =
-        rqueueMetricsAutoConfig.rqueueMetricsRegistry(metricsProperties, rqueueMetricsProperties);
+        rqueueMetricsAutoConfig.rqueueMetricsRegistry(metricsProperties, rqueueMetricsProperties, rqueueEventBus);
     assertNotNull(rqueueMetricsRegistry);
     assertEquals(
         Tags.of("region", "ap-south-1", "dc", "test"), rqueueMetricsProperties.getMetricTags());

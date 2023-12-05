@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.listener;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -32,13 +33,12 @@ import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.io.Serializable;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
-import org.springframework.context.ApplicationEventPublisher;
 
 @Slf4j
 @SuppressWarnings("java:S107")
 class PostProcessingHandler extends PrefixLogger {
 
-  private final ApplicationEventPublisher applicationEventPublisher;
+  private final RqueueEventBus eventBus;
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final TaskExecutionBackOff taskExecutionBackoff;
@@ -47,13 +47,13 @@ class PostProcessingHandler extends PrefixLogger {
 
   PostProcessingHandler(
       RqueueWebConfig rqueueWebConfig,
-      ApplicationEventPublisher applicationEventPublisher,
+      RqueueEventBus eventBus,
       RqueueMessageTemplate rqueueMessageTemplate,
       TaskExecutionBackOff taskExecutionBackoff,
       MessageProcessorHandler messageProcessorHandler,
       RqueueSystemConfigDao rqueueSystemConfigDao) {
     super(log, null);
-    this.applicationEventPublisher = applicationEventPublisher;
+    this.eventBus = eventBus;
     this.rqueueWebConfig = rqueueWebConfig;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.taskExecutionBackoff = taskExecutionBackoff;
@@ -109,7 +109,7 @@ class PostProcessingHandler extends PrefixLogger {
     updateMetadata(job, rqueueMessage, messageStatus);
     if (rqueueWebConfig.isCollectListenerStats()) {
       RqueueExecutionEvent event = new RqueueExecutionEvent(job);
-      applicationEventPublisher.publishEvent(event);
+      eventBus.publish(event);
     }
   }
 

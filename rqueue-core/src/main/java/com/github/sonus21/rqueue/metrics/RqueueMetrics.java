@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,21 +18,26 @@ package com.github.sonus21.rqueue.metrics;
 
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
+import com.google.common.eventbus.Subscribe;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Gauge.Builder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
+
+
 
 /**
  * RqueueMetrics register metrics related to queue. A queue can have 4 types of metrics like
  * queue.size, processing.queue.size and scheduled.queue.size. Some messages can be in dead letter
  * queue if dead letter queue is configured.
  */
+@Slf4j
 public class RqueueMetrics implements RqueueMetricsRegistry {
 
   static final String QUEUE_KEY = "key";
@@ -41,12 +46,15 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
   private final QueueCounter queueCounter;
-  @Autowired private MetricsProperties metricsProperties;
+  private final RqueueEventBus eventBus;
+  @Autowired private MetricsProperties  metricsProperties;
   @Autowired private MeterRegistry meterRegistry;
   @Autowired private RqueueStringDao rqueueStringDao;
 
-  public RqueueMetrics(QueueCounter queueCounter) {
+  public RqueueMetrics(QueueCounter queueCounter, RqueueEventBus eventBus) {
     this.queueCounter = queueCounter;
+    this.eventBus = eventBus;
+    this.eventBus.register(this);
   }
 
   private long size(String name, boolean isZset) {
@@ -98,9 +106,9 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
     }
   }
 
-  @Override
-  @Async
+  @Subscribe
   public void onApplicationEvent(RqueueBootstrapEvent event) {
+    log.info("{} Event received", event);
     if (event.isStartup()) {
       monitor();
     }

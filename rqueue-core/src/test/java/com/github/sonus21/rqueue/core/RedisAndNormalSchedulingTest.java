@@ -1,10 +1,34 @@
+/*
+ *  Copyright 2023 Sonu Kumar
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
 package com.github.sonus21.rqueue.core;
+
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.ScheduledQueueMessageSchedulerTest.TestScheduledQueueMessageScheduler;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -12,6 +36,8 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.TestTaskScheduler;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,15 +49,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.connection.DefaultMessage;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 
 @CoreUnitTest
 @Slf4j
@@ -49,12 +66,15 @@ class RedisAndNormalSchedulingTest extends TestBase {
   private RedisTemplate<String, Long> redisTemplate;
   @Mock
   private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
-  @InjectMocks
+  @Mock
+  private RqueueEventBus rqueueEventBus;
   private TestScheduledQueueMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
+    messageScheduler = new TestScheduledQueueMessageScheduler(rqueueSchedulerConfig, rqueueConfig,
+        rqueueEventBus, rqueueRedisListenerContainerFactory, redisTemplate);
     EndpointRegistry.delete();
     EndpointRegistry.register(fastQueueDetail);
     EndpointRegistry.register(slowQueueDetail);

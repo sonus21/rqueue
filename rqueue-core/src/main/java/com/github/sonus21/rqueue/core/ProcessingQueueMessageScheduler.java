@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,19 +18,30 @@ package com.github.sonus21.rqueue.core;
 
 import static java.lang.Long.max;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import com.github.sonus21.rqueue.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @Slf4j
 public class ProcessingQueueMessageScheduler extends MessageScheduler {
 
   private Map<String, Long> queueNameToDelay;
+
+  public ProcessingQueueMessageScheduler(RqueueSchedulerConfig rqueueSchedulerConfig,
+      RqueueConfig rqueueConfig, RqueueEventBus eventBus,
+      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
+      RedisTemplate<String, Long> redisTemplate) {
+    super(rqueueSchedulerConfig, rqueueConfig, eventBus, rqueueRedisListenerContainerFactory,
+        redisTemplate);
+  }
+
 
   @Override
   protected void initialize() {

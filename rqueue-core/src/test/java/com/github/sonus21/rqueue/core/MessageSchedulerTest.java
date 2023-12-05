@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2023 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.core.ScheduledQueueMessageSchedulerTest.TestScheduledQueueMessageScheduler;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -33,11 +34,9 @@ import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 @CoreUnitTest
 class MessageSchedulerTest extends TestBase {
@@ -52,15 +51,17 @@ class MessageSchedulerTest extends TestBase {
   @Mock
   private RqueueConfig rqueueConfig;
   @Mock
-  private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
+  private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
   @Mock
   private RedisTemplate<String, Long> redisTemplate;
-  @InjectMocks
+  @Mock
+  private RqueueEventBus eventBus;
   private TestScheduledQueueMessageScheduler messageScheduler;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
+    messageScheduler = new TestScheduledQueueMessageScheduler(rqueueSchedulerConfig, rqueueConfig, eventBus, rqueueRedisListenerContainerFactory, redisTemplate);
     queueNameToQueueDetail.put(slowQueue, slowQueueDetail);
     queueNameToQueueDetail.put(fastQueue, fastQueueDetail);
   }

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ *  Copyright 2023 Sonu Kumar
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.eventbus.RqueueEventBus;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
@@ -70,6 +71,9 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
   @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
   @Mock private RqueueJobDao rqueueJobDao;
   @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+
+  @Mock
+  private RqueueEventBus eventBus;
   private RqueueJobMetricsAggregatorService rqueueJobMetricsAggregatorService;
 
   @BeforeEach
@@ -77,7 +81,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
     MockitoAnnotations.openMocks(this);
     rqueueJobMetricsAggregatorService =
         new RqueueJobMetricsAggregatorService(
-            rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
+            rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao, eventBus);
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();
     doReturn(100).when(rqueueWebConfig).getAggregateEventWaitTimeInSecond();
