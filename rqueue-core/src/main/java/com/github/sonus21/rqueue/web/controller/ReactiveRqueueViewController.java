@@ -78,7 +78,7 @@ public class ReactiveRqueueViewController extends BaseReactiveController {
 
   @GetMapping("queues/{queueName}")
   public Mono<View> queueDetail(
-      @PathVariable String queueName,
+      @PathVariable("queueName") String queueName,
       Model model,
       ServerHttpRequest request,
       ServerHttpResponse response)
