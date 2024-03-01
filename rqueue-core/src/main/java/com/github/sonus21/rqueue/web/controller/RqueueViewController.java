@@ -77,7 +77,7 @@ public class RqueueViewController extends BaseController {
 
   @GetMapping("queues/{queueName}")
   public View queueDetail(
-      @PathVariable String queueName,
+      @PathVariable("queueName") String queueName,
       Model model,
       HttpServletRequest request,
       HttpServletResponse response)
