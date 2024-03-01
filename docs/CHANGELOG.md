@@ -8,6 +8,11 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [3.1.1] 1-Mar-2024
+### Fixes
+* Fixed issue for spring boot 3.2 #218
+
+
 ## Release [3.1.0] 24-June-2023
 {: .highlight } 
 Migrate to this version to reduce redis resource utilization
