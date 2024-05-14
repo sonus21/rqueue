@@ -28,7 +28,7 @@ public enum ChartDataType {
   SUCCESSFUL("Successful execution", true),
   DISCARDED("Message discarded", true),
   MOVED_TO_DLQ("Moved to dead letter queue messages", true),
-  RETRIED("Retired at least once", true),
+  RETRIED("Retried at least once", true),
   EXECUTION("Min Execution time", false);
   private final String description;
   private final boolean userView;
