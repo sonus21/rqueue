@@ -288,6 +288,10 @@ environment.
   <img alt="Line Chat" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/line.png" width="60" height="60" align="middle"/>
 </a>
 
+<a href="https://opentext.com/" target="_blank">
+  <img alt="Opentext" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/opentext.png" width="60" height="60" align="middle"/>
+</a>
+
 **We would love to add your organization name here, if you're one of the Rqueue users, please raise
 a
 PR/[issue](https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users)
