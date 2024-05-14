@@ -289,7 +289,7 @@ environment.
 </a>
 
 <a href="https://opentext.com/" target="_blank">
-  <img alt="Opentext" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/opentext.png" width="60" height="60" align="middle"/>
+  <img alt="Opentext" src="https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/users/opentext.png" width="200" height="100" align="middle"/>
 </a>
 
 **We would love to add your organization name here, if you're one of the Rqueue users, please raise
