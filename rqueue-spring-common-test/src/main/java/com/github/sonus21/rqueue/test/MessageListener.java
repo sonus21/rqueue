@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -107,11 +107,40 @@ public class MessageListener {
   @Value("${checkin.enabled:false}")
   private boolean checkinEnabled;
 
-  @RqueueListener(value = "${job.queue.name}", active = "${job.queue.active}")
+  @Value("${donot.retry:false}")
+  private boolean doNotRetry;
+
+  public static class DoNotRetryException extends Exception {
+
+    public DoNotRetryException(String message) {
+      super(message);
+    }
+
+  }
+
+  public static class DoNotRetry2Exception extends Exception {
+
+    public DoNotRetry2Exception(String message) {
+      super(message);
+    }
+
+  }
+
+  @RqueueListener(
+      value = "${job.queue.name}",
+      active = "${job.queue.active}",
+      doNotRetry = {DoNotRetryException.class, DoNotRetry2Exception.class})
   public void onMessage(Job job) throws Exception {
     log.info("Job: {}", job);
     if (failureManager.shouldFail(job.getId())) {
-      throw new Exception("Failing job task to be retried" + job);
+      if (doNotRetry) {
+        if (Math.random() < 0.5) {
+          throw new DoNotRetryException("This job should not be retired " + job);
+        }
+        throw new DoNotRetry2Exception("This job should not be retired " + job);
+      } else {
+        throw new Exception("Failing job task to be retried" + job);
+      }
     }
     consumedMessageStore.save(job, null, jobQueue);
   }
