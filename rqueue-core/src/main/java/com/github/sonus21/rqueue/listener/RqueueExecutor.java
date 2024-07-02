@@ -16,6 +16,11 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
+import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
+import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
+import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
+
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -28,17 +33,15 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-
-import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
-import static com.github.sonus21.rqueue.utils.Constants.*;
 
 class RqueueExecutor extends MessageContainerBase {
 
@@ -198,6 +201,9 @@ class RqueueExecutor extends MessageContainerBase {
 
   private void updateToProcessing() {
     this.error = null;
+    if (updatedToProcessing) {
+      return;
+    }
     this.updatedToProcessing = true;
     this.job.updateMessageStatus(MessageStatus.PROCESSING);
   }
@@ -277,7 +283,12 @@ class RqueueExecutor extends MessageContainerBase {
   private boolean shouldRetry(long maxProcessingTime, int retryCount) {
     if (retryCount > 0 && Objects.isNull(status)
         && System.currentTimeMillis() < maxProcessingTime) {
-      return !queueDetail.getDoNotRetry().contains(error.getClass());
+      Set<Class<? extends Throwable>> exceptions = queueDetail.getDoNotRetry();
+      boolean doNoRetry = Objects.nonNull(exceptions) &&
+          !exceptions.isEmpty() &&
+          Objects.nonNull(error) &&
+          exceptions.contains(error);
+      return !doNoRetry;
     }
     return false;
   }

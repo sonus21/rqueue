@@ -21,13 +21,20 @@ import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import java.util.Collections;
-import java.util.List;
 import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
+import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_MINUTE;
+
 class DefaultRqueuePoller extends RqueueMessagePoller {
 
+  private Long lastNotAvailableAt;
   private final QueueDetail queueDetail;
   private final QueueThreadPool queueThreadPool;
 
@@ -70,12 +77,25 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
     }
   }
 
+  private void logNotAvailable() {
+    long maxNotAvailableDelay = 10 * SECONDS_IN_A_MINUTE * ONE_MILLI;
+    if (Objects.isNull(lastNotAvailableAt)) {
+      lastNotAvailableAt = System.currentTimeMillis();
+    } else if (System.currentTimeMillis() - lastNotAvailableAt > maxNotAvailableDelay) {
+      log(Level.ERROR, "deadlock?? frozen?? stuck?? No Threads are available in last {}, queue={}", null,
+          Duration.ofMillis(maxNotAvailableDelay),
+          queueDetail.getName());
+    }
+    log(Level.DEBUG, "No Threads are available sleeping {}Ms", null, pollingInterval);
+  }
+
   void poll() {
     if (!hasAvailableThreads(queueDetail, queueThreadPool)) {
-      log(Level.DEBUG, "No Threads are available sleeping {}Ms", null, pollingInterval);
+      logNotAvailable();
       TimeoutUtils.sleepLog(pollingInterval, false);
     } else {
       super.poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+      lastNotAvailableAt = null;
     }
   }
 
