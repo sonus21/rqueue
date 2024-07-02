@@ -320,7 +320,7 @@ public class MessageListener {
       if (endCheckInTime < System.currentTimeMillis()) {
         return;
       }
-      this.job.checkIn("Running ..." + checkInId);
+      this.job.checkIn("Running ... " + checkInId);
       long startedAt = System.currentTimeMillis();
       Duration visibilityTimout = this.job.getVisibilityTimeout(); // 1000
       assertTrue(this.job.updateVisibilityTimeout(Duration.ofMillis(1000))); // 2000+
