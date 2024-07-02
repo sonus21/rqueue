@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,11 +16,6 @@
 
 package com.github.sonus21.rqueue.listener;
 
-import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
-import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
-import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
-import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
-
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -33,13 +28,17 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
-import java.util.Collections;
-import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+import static com.github.sonus21.rqueue.listener.RqueueMessageHeaders.buildMessageHeaders;
+import static com.github.sonus21.rqueue.utils.Constants.*;
 
 class RqueueExecutor extends MessageContainerBase {
 
@@ -198,9 +197,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void updateToProcessing() {
-    if (updatedToProcessing) {
-      return;
-    }
+    this.error = null;
     this.updatedToProcessing = true;
     this.job.updateMessageStatus(MessageStatus.PROCESSING);
   }
@@ -269,12 +266,20 @@ class RqueueExecutor extends MessageContainerBase {
       updateCounter(true);
       failureCount += 1;
       error = e;
-    } catch (Exception e) {
+    } catch (Throwable e) {
       updateCounter(true);
       failureCount += 1;
       error = e;
       log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, job.getRqueueMessage());
     }
+  }
+
+  private boolean shouldRetry(long maxProcessingTime, int retryCount) {
+    if (retryCount > 0 && Objects.isNull(status)
+        && System.currentTimeMillis() < maxProcessingTime) {
+      return !queueDetail.getDoNotRetry().contains(error.getClass());
+    }
+    return false;
   }
 
   private void handleMessage() {
@@ -291,9 +296,9 @@ class RqueueExecutor extends MessageContainerBase {
       retryCount -= 1;
       attempt += 1;
       end();
-    } while (retryCount > 0 && status == null && System.currentTimeMillis() < maxProcessingTime);
+    } while (shouldRetry(maxProcessingTime, retryCount));
     postProcessingHandler.handle(
-        job, (status == null ? ExecutionStatus.FAILED : status), failureCount);
+        job, (status == null ? ExecutionStatus.FAILED : status), failureCount, error);
     logExecutionTimeWarning(maxProcessingTime, startTime, status);
   }
 

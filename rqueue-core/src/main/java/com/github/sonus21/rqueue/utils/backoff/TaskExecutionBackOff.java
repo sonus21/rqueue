@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -37,4 +37,20 @@ public interface TaskExecutionBackOff {
    * @return backoff in the millisecond.
    */
   long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount);
+
+  /**
+   * Return the number of milliseconds to wait for the same message to be consumed by other
+   * consumers. ({@value #STOP}) to indicate that no further enqueue should be made for the
+   * message.
+   *
+   * @param message       message that's fetched
+   * @param rqueueMessage raw message
+   * @param failureCount  number of times this message has failed.
+   * @param throwable     the exception that has occurred
+   * @return backoff in the millisecond.
+   */
+  default long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount,
+      Throwable throwable) {
+    return nextBackOff(message, rqueueMessage, failureCount);
+  }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
 
   void poll() {
     if (!hasAvailableThreads(queueDetail, queueThreadPool)) {
-      log(Level.WARN, "No Threads are available sleeping {}Ms", null, pollingInterval);
+      log(Level.DEBUG, "No Threads are available sleeping {}Ms", null, pollingInterval);
       TimeoutUtils.sleepLog(pollingInterval, false);
     } else {
       super.poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);

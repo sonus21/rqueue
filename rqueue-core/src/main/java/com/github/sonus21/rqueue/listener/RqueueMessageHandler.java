@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -287,6 +287,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
                         .priorityGroup(priorityGroup)
                         .priority(priorityMap)
                         .batchSize(batchSize)
+                        .doNotRetry(new HashSet<>(Arrays.asList(rqueueListener.doNotRetry())))
                         .build();
         if (mappingInformation.isValid()) {
             return mappingInformation;
