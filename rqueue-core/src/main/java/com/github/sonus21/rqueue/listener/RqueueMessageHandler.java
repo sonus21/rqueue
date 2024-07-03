@@ -51,6 +51,7 @@ import java.util.stream.Stream;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -83,6 +84,7 @@ import org.springframework.util.comparator.ComparableComparator;
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
 
     private final ConversionService conversionService;
+    @Getter
     private final MessageConverter messageConverter;
     private final boolean inspectAllBean;
     private final AsyncTaskExecutor asyncTaskExecutor;
@@ -542,11 +544,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
         throw new MessagingException("An exception occurred while invoking the handler method", ex);
     }
 
-    public MessageConverter getMessageConverter() {
-        return this.messageConverter;
-    }
-
-    @AllArgsConstructor
+  @AllArgsConstructor
     static class HandlerMethodWithPrimary {
 
         HandlerMethod method;

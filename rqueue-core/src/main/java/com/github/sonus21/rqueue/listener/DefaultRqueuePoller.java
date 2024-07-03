@@ -16,21 +16,20 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
+import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_MINUTE;
+
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import org.slf4j.event.Level;
-import org.springframework.messaging.MessageHeaders;
-
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
-import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_MINUTE;
+import org.slf4j.event.Level;
+import org.springframework.messaging.MessageHeaders;
 
 class DefaultRqueuePoller extends RqueueMessagePoller {
 
@@ -82,9 +81,9 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
     if (Objects.isNull(lastNotAvailableAt)) {
       lastNotAvailableAt = System.currentTimeMillis();
     } else if (System.currentTimeMillis() - lastNotAvailableAt > maxNotAvailableDelay) {
-      log(Level.ERROR, "deadlock?? frozen?? stuck?? No Threads are available in last {}, queue={}", null,
-          Duration.ofMillis(maxNotAvailableDelay),
-          queueDetail.getName());
+      log(Level.ERROR, "deadlock?? frozen?? stuck?? No Threads are available in last {}",
+          null,
+          Duration.ofMillis(maxNotAvailableDelay));
     }
     log(Level.DEBUG, "No Threads are available sleeping {}Ms", null, pollingInterval);
   }
@@ -101,7 +100,7 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
 
   @Override
   public void start() {
-    log(Level.DEBUG, "Running Queue {}", null, queueDetail.getName());
+    log(Level.INFO, "poll starting", null);
     while (true) {
       try {
         if (eligibleForPolling(queueDetail.getName())) {
@@ -111,8 +110,8 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
         } else {
           deactivate(-1, queueDetail.getName(), DeactivateType.NO_MESSAGE);
         }
-      } catch (Exception e) {
-        log(Level.ERROR, "Error in poller", e);
+      } catch (Throwable e) {
+        log(Level.ERROR, "error in polling", e);
         if (shouldExit()) {
           return;
         }

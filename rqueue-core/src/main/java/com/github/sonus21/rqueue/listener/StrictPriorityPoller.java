@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -125,7 +125,7 @@ class StrictPriorityPoller extends RqueueMessagePoller {
           QueueDetail queueDetail = queueNameToDetail.get(queue);
           poll(-1, queue, queueDetail, queueThreadPool);
         }
-      } catch (Exception e) {
+      } catch (Throwable e) {
         log(Level.ERROR, "Exception in the poller {}", e, e.getMessage());
         if (shouldExit()) {
           return;
