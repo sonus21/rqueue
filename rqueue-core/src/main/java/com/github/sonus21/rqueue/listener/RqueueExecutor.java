@@ -113,14 +113,14 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private int getMaxRetryCount() {
-    return job.getRqueueMessage().getRetryCount() == null
+    return Objects.isNull(job.getRqueueMessage().getRetryCount())
         ? job.getQueueDetail().getNumRetry()
         : job.getRqueueMessage().getRetryCount();
   }
 
   private void updateCounter(boolean fail) {
     RqueueMetricsCounter counter = beanProvider.getRqueueMetricsCounter();
-    if (counter == null) {
+    if (Objects.isNull(counter)) {
       return;
     }
     if (fail) {
@@ -200,7 +200,6 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void updateToProcessing() {
-    this.error = null;
     if (updatedToProcessing) {
       return;
     }
@@ -208,8 +207,7 @@ class RqueueExecutor extends MessageContainerBase {
     this.job.updateMessageStatus(MessageStatus.PROCESSING);
   }
 
-  private void logExecutionTimeWarning(
-      long maxProcessingTime, long startTime, ExecutionStatus status) {
+  private void logExecutionTimeWarning(long maxProcessingTime, long startTime) {
     if (System.currentTimeMillis() > maxProcessingTime) {
       long maxAllowedTime = maxExecutionTime();
       long executionTime = System.currentTimeMillis() - startTime;
@@ -231,11 +229,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void end() {
-    if (status == null) {
-      job.updateExecutionStatus(ExecutionStatus.FAILED, error);
-    } else {
-      job.updateExecutionStatus(status, error);
-    }
+    job.updateExecutionStatus(status, error);
   }
 
   private void callMiddlewares(int currentIndex, List<Middleware> middlewares, Job job)
@@ -255,7 +249,7 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private void processMessage() throws Exception {
-    if (middlewareList == null) {
+    if (Objects.isNull(middlewareList)) {
       callMiddlewares(0, Collections.emptyList(), job);
     } else {
       callMiddlewares(0, middlewareList, job);
@@ -272,22 +266,25 @@ class RqueueExecutor extends MessageContainerBase {
       updateCounter(true);
       failureCount += 1;
       error = e;
+      status = ExecutionStatus.FAILED;
     } catch (Throwable e) {
       updateCounter(true);
       failureCount += 1;
       error = e;
+      status = ExecutionStatus.FAILED;
       log(Level.ERROR, "Message execution failed, RqueueMessage: {}", e, job.getRqueueMessage());
     }
   }
 
   private boolean shouldRetry(long maxProcessingTime, int retryCount) {
-    if (retryCount > 0 && Objects.isNull(status)
-        && System.currentTimeMillis() < maxProcessingTime) {
+    if (retryCount > 0 &&
+        ExecutionStatus.FAILED.equals(status) &&
+        System.currentTimeMillis() < maxProcessingTime) {
       Set<Class<? extends Throwable>> exceptions = queueDetail.getDoNotRetry();
       boolean doNoRetry = Objects.nonNull(exceptions) &&
           !exceptions.isEmpty() &&
           Objects.nonNull(error) &&
-          exceptions.contains(error);
+          exceptions.contains(error.getClass());
       return !doNoRetry;
     }
     return false;
@@ -301,23 +298,22 @@ class RqueueExecutor extends MessageContainerBase {
     do {
       log(Level.DEBUG, "Attempt {} message: {}", null, attempt, job.getMessage());
       begin();
-      if (status == null) {
+      if (Objects.isNull(status)) {
         execute();
       }
       retryCount -= 1;
       attempt += 1;
       end();
     } while (shouldRetry(maxProcessingTime, retryCount));
-    postProcessingHandler.handle(
-        job, (status == null ? ExecutionStatus.FAILED : status), failureCount, error);
-    logExecutionTimeWarning(maxProcessingTime, startTime, status);
+    postProcessingHandler.handle(job, status, failureCount, error);
+    logExecutionTimeWarning(maxProcessingTime, startTime);
   }
 
   private long getTtlForScheduledMessageKey(RqueueMessage message) {
     // Assume a message can be executing for at most 2x of their visibility timeout
     // due to failure in some other job same message should not be enqueued
     long expiryInSeconds = 2 * job.getQueueDetail().getVisibilityTimeout() / ONE_MILLI;
-    // A message wil be processed after period, so it must stay in the system till that time
+    // A message wil be processed after a period, so it must stay in the system till that time
     // how many more seconds are left to process this message
     long remainingTime = (message.getProcessAt() - System.currentTimeMillis()) / ONE_MILLI;
     if (remainingTime > 0) {
@@ -327,8 +323,8 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private String getScheduledMessageKey(RqueueMessage message) {
-    // avoid duplicate message enqueue due to retry by checking the message key
-    // avoid cross slot error by using tagged queue name in the key
+    // avoid a duplicate message enqueue due to retry by checking the message key
+    // avoid cross-slot error by using tagged queue name in the key
     // enqueuing duplicate message can lead to duplicate consumption when one job is executing task
     // at the same time this message was enqueued.
     return String.format(
