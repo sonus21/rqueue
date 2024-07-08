@@ -22,9 +22,12 @@ public interface TaskExecutionBackOff {
 
   /**
    * Return value of {@link #nextBackOff(Object, RqueueMessage, int)} that indicates that the task
-   * should not be executed further.
+   * should not be retried further.
    */
   long STOP = -1;
+  /**
+   * Return this value, so that it will not retry post-failure, and it won't move to DLQ as well.
+   */
   long DO_NOT_RETRY = -2;
 
   /**
