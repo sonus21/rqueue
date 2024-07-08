@@ -7,17 +7,18 @@ description: Message deduplication in Rqueue
 permalink: /message-deduplication
 ---
 
-There are some times when you want to schedule unique messages on a queue. In such cases the older
-message needs to be discarded and new one should be consumed. We can implement such use case using
-different mechanisms. Even before we implement this we need to see what makes a message unique, is
-that just an `ID` field or a composition of multiple fields. Once you have identified what makes a
-message unique, we can use Pre execution message processor to discards older messages.
+Sometimes, there's a need to schedule unique messages in a queue. In these instances, the older
+message should be discarded to ensure only the newest one is consumed. Implementing this requires
+careful consideration of what defines message uniqueness — whether it's a single `ID` field or a
+combination of multiple fields. Once identified, you can use a pre-execution message processor to
+manage the discarding of older messages before processing the latest ones.
 
 ##### Enqueue Process
 
 ```java
 interface MessageRepository {
   Long getLatestEnqueueAt(String messageId);
+
   void addEnqueueAt(String messageId, Long time);
 }
 
@@ -30,6 +31,7 @@ class MessageSender {
   private MessageRepository messageRepository;
   @Autowired
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
+
   public void sendMessage(SimpleMessage message) {
     String id = message.getId();
     //TODO handle error case

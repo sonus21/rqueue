@@ -17,17 +17,17 @@ Rqueue supports two types of message handling
 
 ## Message Multicasting
 
-Multiple listeners can be attached with any queue, when more than one message consumers are working
-for the same queue then one of them must be designed as primary. Retry and every other things works
-on the primary listener, other listener would be called when a message is received. For example
-three listeners `L1`, `L2` and `L3` are registered to queue `user-queue` then either `L1`, `L2`
-or `L3` must be a primary listener. Designating primary listener means if execution of primary
-listener fails then this will be retried and will call other listeners as well, so it can lead to
-duplicate message for some listener due to failure in the primary listener. In this example let's
-assume `L2` is primary listener and a message `UserEvent1` was dequeued from queue `user-queue` than
-it will call `L1`, `L3` and  `L2` with the `UserEvent1` arguments. If execution of `L2` fails for
-some reason than on next retry it will call `L1`, `L3` as well even though `L1` and `L3` might have
-successfully consumed the event.
+When multiple listeners are attached to the same queue, it's essential to designate one as the
+primary listener. This primary listener handles retries and other operations related to message
+processing. Secondary listeners are invoked alongside the primary listener whenever a message is
+received. For example, if three listeners (`L1`, `L2`, and `L3`) are registered for
+the `user-queue`, one of them must be designated as primary.
+
+Designating a primary listener means that if the primary listener (`L2`, in this example) encounters
+a processing failure, it retries the message. During retries, all listeners (`L1`, `L3`, and `L2`)
+might be called again with the same message (`UserEvent1`), potentially leading to duplicate
+processing for some listeners (`L1` and `L3`), even if they successfully processed the event
+initially.
 
 ## Configuration
 
@@ -76,12 +76,13 @@ public class UserBannedMessageListener {
 
 ## Limitation
 
-* **Middleware** : Middlewares are not called for each of the handler,global middlewares are called
-  before calling any handler method. Also, message should be only released by a primary handler,
-  releasing message from another handler can create inconsistent state.
-* **Failure/Retry**: Failure/Retry handling is only applicable for the primary handler, if primary
-  handler execution fails than all handlers would be called next time.
-* **Metrics/Job data**: This is traced only once, for example in this example we've configured four
-  handlers, but it will be counted as only one execution and each execution will create only one
-  job.   
-  
+- **Middleware**: Middlewares are invoked globally before any handler method is called. They are not
+  called individually for each handler. It's crucial that message release is only handled by the
+  primary handler to avoid inconsistent states.
+
+- **Failure/Retry**: Failure and retry mechanisms apply exclusively to the primary handler. If the
+  primary handler fails during execution, all handlers will be retried in the subsequent attempt.
+
+- **Metrics/Job data**: Metrics and job data are recorded once per execution cycle. For instance,
+  even if there are multiple handlers configured, such as four in this example, it will count as a
+  single execution generating a single job record.

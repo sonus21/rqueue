@@ -8,6 +8,13 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [3.2.0] 10-July-2024
+### Fixes
+* Fixed typo #218
+
+### Feature
+* Do not retry some exceptions
+
 ## Release [3.1.1] 1-Mar-2024
 ### Fixes
 * Fixed issue for spring boot 3.2 #218

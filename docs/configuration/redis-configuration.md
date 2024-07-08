@@ -7,42 +7,68 @@ nav_order: 1
 
 # Redis Configuration
 
-Rqueue stores tasks, and it's transient state in Redis. We can configure Application to use one
-redis connection for Rqueue and another one for Application, this will allow complete isolation of
-Redis connection and usage.
+You can configure your application to use separate Redis connections for Rqueue and other
+application needs. This approach ensures complete isolation between the Redis connections and their
+usage, providing distinct environments for storing Rqueue tasks and transient states, as well as
+other application data.
+
+By configuring separate Redis connections:
+
+- Rqueue can manage its tasks and transient states in Redis without interference from other
+  application components.
+- Your main application can utilize a separate Redis connection for its own data storage and
+  retrieval needs.
+
+This isolation helps in managing resources efficiently and prevents potential conflicts or
+performance issues that might arise from shared Redis usage across different parts of your
+application.
 
 ## Redis Connection Configuration
 
-All Rqueue data is stored in Redis database. As an application developer, you have the flexibility to
-specify which redis cluster/server should be used by Rqueue. You need to specify redis connection via
-container factory's method `setRedisConnectionFactory`. 
+As an application developer using Rqueue, you have the flexibility to specify which Redis cluster or
+server should be used for storing Rqueue data. This is achieved by configuring the Redis connection
+factory via the container factory's method `setRedisConnectionFactory`.
+
+Here's how you can specify the Redis connection for Rqueue:
+
+1. Implement or configure a `RedisConnectionFactory` that points to your desired Redis cluster or
+   server.
+
+2. Set this connection factory using the `setRedisConnectionFactory` method of your Rqueue container
+   factory.
+
+This approach allows you to control where Rqueue stores its data within Redis, ensuring it aligns
+with your application's Redis configuration and deployment requirements.
 
 {: .warning }
 
-While creating redis connection factory you must use readFrom `MASTER_PREFERRED` otherwise application won't start.
-
+When creating a Redis connection factory for Rqueue, it's essential to set `readFrom`
+to `MASTER_PREFERRED`. This ensures that the application starts correctly and operates as expected
+with the Redis setup.
 
 ### Standalone Redis
 
  ```java
+
 @Configuration
 public class RqueueConfiguration {
   // this property must be set to true if you're using webflux or reactive redis
   @Value("${rqueue.reactive.enabled:false}")
   private boolean reactiveEnabled;
+
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
     LettuceClientConfiguration lettuceClientConfiguration =
-            LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER_PREFERRED).build();
-      
+        LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER_PREFERRED).build();
+
     // Stand alone redis configuration, Set fields of redis configuration
     RedisStandaloneConfiguration redisConfiguration = new RedisStandaloneConfiguration();
     // set properties of redis configuration as you need. 
-    
+
     // Create lettuce connection factory
     LettuceConnectionFactory redisConnectionFactory = new LettuceConnectionFactory(redisConfiguration, lettuceClientConfiguration);
     redisConnectionFactory.afterPropertiesSet();
-    
+
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setRedisConnectionFactory(redisConnectionFactory);
     // if reactive redis is enabled set the correct connection factory
@@ -54,72 +80,73 @@ public class RqueueConfiguration {
   }
 }
  ``` 
- 
 
 ### Redis Cluster
 
-For Redis cluster you should use Lettuce client as Jedis client does not support `EVALSHA` request.
+For Redis clusters, it's recommended to use the Lettuce client because Jedis does not
+support `EVALSHA` requests, which are often used for efficient script execution in Redis
+environments.
 
 ```java
+
 @Configuration
-public  class RqueueConfiguration {
-    // this property must be set to true if you're using webflux or reactive redis
-    @Value("${rqueue.reactive.enabled:false}")
-    private boolean reactiveEnabled;
-    
-    @Bean
-    public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
-      // here always use MASTER_PREFERRED otherwise it will to start
-      LettuceClientConfiguration lettuceClientConfiguration =
-          LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER_PREFERRED).build();
-      
-      // add all nodes
-      RedisClusterConfiguration redisClusterConfiguration = new RedisClusterConfiguration();
-      List<RedisNode> redisNodes = new ArrayList<>();
-      redisNodes.add(new RedisNode("127.0.0.1", 9000));
-      redisNodes.add(new RedisNode("127.0.0.1", 9001));
-      redisNodes.add(new RedisNode("127.0.0.1", 9002));
-      redisNodes.add(new RedisNode("127.0.0.1", 9003));
-      redisNodes.add(new RedisNode("127.0.0.1", 9004));
-      redisNodes.add(new RedisNode("127.0.0.1", 9005));
-      redisClusterConfiguration.setClusterNodes(redisNodes);
-  
-      // create lettuce connection factory
-      LettuceConnectionFactory lettuceConnectionFactory =
-          new LettuceConnectionFactory(redisClusterConfiguration, lettuceClientConfiguration);
-      lettuceConnectionFactory.afterPropertiesSet();
-      
-      
-      SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
-          new SimpleRqueueListenerContainerFactory();
-      simpleRqueueListenerContainerFactory.setRedisConnectionFactory(lettuceConnectionFactory);
-      
-      // set polling interval, by default its 5 seconds
-      simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
-      
-      // if reactive redis is enabled set the correct connection factory
-      if (reactiveEnabled) {
-        simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
-            lettuceConnectionFactory);
-      }
-      
-      // set any other property if you need
-      
-      // return connection factory
-      return simpleRqueueListenerContainerFactory;
+public class RqueueConfiguration {
+  // this property must be set to true if you're using webflux or reactive redis
+  @Value("${rqueue.reactive.enabled:false}")
+  private boolean reactiveEnabled;
+
+  @Bean
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
+    // here always use MASTER_PREFERRED otherwise it will to start
+    LettuceClientConfiguration lettuceClientConfiguration =
+        LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER_PREFERRED).build();
+
+    // add all nodes
+    RedisClusterConfiguration redisClusterConfiguration = new RedisClusterConfiguration();
+    List<RedisNode> redisNodes = new ArrayList<>();
+    redisNodes.add(new RedisNode("127.0.0.1", 9000));
+    redisNodes.add(new RedisNode("127.0.0.1", 9001));
+    redisNodes.add(new RedisNode("127.0.0.1", 9002));
+    redisNodes.add(new RedisNode("127.0.0.1", 9003));
+    redisNodes.add(new RedisNode("127.0.0.1", 9004));
+    redisNodes.add(new RedisNode("127.0.0.1", 9005));
+    redisClusterConfiguration.setClusterNodes(redisNodes);
+
+    // create lettuce connection factory
+    LettuceConnectionFactory lettuceConnectionFactory =
+        new LettuceConnectionFactory(redisClusterConfiguration, lettuceClientConfiguration);
+    lettuceConnectionFactory.afterPropertiesSet();
+
+
+    SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
+        new SimpleRqueueListenerContainerFactory();
+    simpleRqueueListenerContainerFactory.setRedisConnectionFactory(lettuceConnectionFactory);
+
+    // set polling interval, by default its 5 seconds
+    simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
+
+    // if reactive redis is enabled set the correct connection factory
+    if (reactiveEnabled) {
+      simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
+          lettuceConnectionFactory);
     }
+
+    // set any other property if you need
+
+    // return connection factory
+    return simpleRqueueListenerContainerFactory;
+  }
 }
 ```
-
 
 ### Redis Sentinel
 
 Redis sentinel can be configured similar to Standalone redis.
 
-
 ```java
+
 @Configuration
-public class RedisClusterBaseApplication{
+public class RedisClusterBaseApplication {
 
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
@@ -132,7 +159,7 @@ public class RedisClusterBaseApplication{
     // Create lettuce connection factory
     LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisConfiguration, lettuceClientConfiguration);
     lettuceConnectionFactory.afterPropertiesSet();
-    
+
     SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
         new SimpleRqueueListenerContainerFactory();
     simpleRqueueListenerContainerFactory.setRedisConnectionFactory(lettuceConnectionFactory);
@@ -148,8 +175,11 @@ public class RedisClusterBaseApplication{
 
 ## Redis connection failure and retry
 
-All Redis commands failure would be retried in 5 seconds, to change that we can set
-back off to some different value.
+To adjust the retry interval for failed Redis commands in Rqueue, you can configure the backoff time
+to a different value. By default, Rqueue retries failed commands after 5 seconds. You can customize
+this behavior by setting the backoff time to your desired interval. This ensures that if a Redis
+command fails, Rqueue will retry the command after the specified backoff period before attempting
+again.
 
  ```java
  class RqueueConfiguration {
@@ -167,32 +197,35 @@ back off to some different value.
 
 ## Redis Key configuration
 
-Rqueue uses multiple Redis data types like `SET`, `ZSET`, `LIST` etc. Generally, you should not
-delete or change any Rqueue related redis keys. As developer mistake happens, one mistake can lead
-to deletion of all tasks. Due to this Rqueue prefix all of it's key.
+Rqueue utilizes multiple Redis data types such as `SET`, `ZSET`, and `LIST`. It's crucial not to
+delete or modify any Rqueue-related Redis keys, as a single mistake could result in the inadvertent
+deletion of all tasks. To mitigate this risk, Rqueue prefixes all of its keys with specific
+identifiers:
 
-* `rqueue.key.prefix` : Prefix for every key used by Rqueue
-* `rqueue.cluster.mode` : Whether your Redis database is cluster or not, by default it's assumed
-  cluster mode. Rqueue uses `Lua` script for atomic operation, changing from non-cluster to cluster
-  can lead to `Cross Slot` error.
-* `rqueue.simple.queue.prefix:queue` : Prefix to be used for the simple queue (`LIST`), by default
-  it used `queue`, so each key would look like `__rq::queue::XYZ`
-* `rqueue.scheduled.queue.prefix` :  Prefix to be used for the delayed queue (`ZSET`), by default it's
-  configured to use `d-queue::`, therefor each scheduled `ZSET` key would look
-  like `__rq::d-queue::XYZ`
-* `rqueue.scheduled.queue.channel.prefix`: Rqueue communicates with Redis using Redis pub/sub for some
-  use cases, this channel is used when the message from scheduled queue must be moved to simple queue
-  for processing. Default value is `p-channel`.
-* `rqueue.processing.queue.name.prefix`:  Prefix to be used for the processing queue (`ZSET`), by
-  default it's configured to use `p-queue::`, there for each processing `ZSET` key would look
-  like `__rq::p-queue::XYZ`. This queue is used to provide at least once message delivery.
-* `rqueue.processing.queue.channel.prefix`: Rqueue communicates with Redis using Redis pub/sub for
-  some use cases, this channel is used when the message from processing queue must be moved to
-  origin queue, this happens when the listener dies in between. Default value is `p-channel`.
-* `rqueue.queues.key.suffix`: Key to be used fot storing all active queues, default value
+- **`rqueue.key.prefix`**: Prefix for every key used by Rqueue.
+- **`rqueue.cluster.mode`**: Indicates whether your Redis database operates in cluster mode or not.
+  By default, Rqueue assumes cluster mode. Switching from non-cluster to cluster mode can lead
+  to `Cross Slot` errors due to the use of Lua scripts for atomic operations.
+- **`rqueue.simple.queue.prefix:queue`**: Prefix used for the simple queue (`LIST`). By default, it
+  uses `queue`, resulting in keys like `__rq::queue::XYZ`.
+- **`rqueue.scheduled.queue.prefix`**: Prefix used for the delayed queue (`ZSET`). Default
+  configuration uses `d-queue::`, resulting in keys like `__rq::d-queue::XYZ`.
+- **`rqueue.scheduled.queue.channel.prefix`**: Prefix for Redis pub/sub channel used when moving
+  messages from the scheduled queue to the simple queue for processing. Default value
+  is `p-channel`.
+- **`rqueue.processing.queue.name.prefix`**: Prefix used for the processing queue (`ZSET`). By
+  default, it uses `p-queue::`, resulting in keys like `__rq::p-queue::XYZ`. This queue ensures
+  at-least-once message delivery.
+- **`rqueue.processing.queue.channel.prefix`**: Prefix for Redis pub/sub channel used when moving
+  messages from the processing queue back to the origin queue, triggered if a listener stops
+  unexpectedly. Default value is `p-channel`.
+- **`rqueue.queues.key.suffix`**: Key suffix used for storing all active queues. Default value
   is `queues`.
-* `rqueue.lock.key.prefix`: The key prefix to be used for locking, default value is `lock::`
-* `rqueue.queue.stat.key.prefix` : The key prefix to be used for storing queue metrics, default
-  value is `q-stat`.
-* `rqueue.queue.config.key.prefix` : The key prefix to be used for storing listener configuration,
-  default value is `q-config`.
+- **`rqueue.lock.key.prefix`**: Prefix used for locking keys. Default value is `lock::`.
+- **`rqueue.queue.stat.key.prefix`**: Prefix used for storing queue metrics. Default value
+  is `q-stat`.
+- **`rqueue.queue.config.key.prefix`**: Prefix used for storing listener configuration. Default
+  value is `q-config`.
+
+These prefixes help Rqueue manage its interactions with Redis effectively while minimizing the risk
+of unintended data loss or corruption.
