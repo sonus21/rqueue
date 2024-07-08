@@ -9,7 +9,7 @@ name: Deploy Jekyll site to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: [main]
+    branches: [$default-branch]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -42,7 +42,7 @@ jobs:
       - name: Bundle install and Build with Jekyll
         run: |
           bundle install
-          bundle exec jekyll build --baseurl "${{ github.repository_owner }}/docs"
+          bundle exec jekyll build --baseurl "./docs"
         env:
           JEKYLL_ENV: production
       - name: Upload artifact
