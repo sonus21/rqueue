@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<link rel="stylesheet" href="/rqueue/assets/css/just-the-docs-default.css"> <script async src="https://www.googletagmanager.com/gtag/js?id=G-HWK3PKDELN"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-HWK3PKDELN', { 'anonymize_ip': true }); </script> <script src="/rqueue/assets/js/vendor/lunr.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mermaid@9.1.6/dist/mermaid.min.js"></script> <script src="/rqueue/assets/js/just-the-docs.js"></script><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/rqueue/static/favicon/favicon.ico" type="image/x-icon">
+<title>Home | Rqueue</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="Home">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Rqueue Redis Based Async Message Processor">
+<meta property="og:description" content="Rqueue Redis Based Async Message Processor">
+<link rel="canonical" href="https://sonus21.github.io/rqueue/rqueue/">
+<meta property="og:url" content="https://sonus21.github.io/rqueue/rqueue/">
+<meta property="og:site_name" content="Rqueue">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Home"> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"WebSite","description":"Rqueue Redis Based Async Message Processor","headline":"Home","name":"Rqueue","url":"https://sonus21.github.io/rqueue/rqueue/"}</script> <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9220054661402722" crossorigin="anonymous"></script>
+</head>
+<body> <a class="skip-to-main" href="#main-content">Skip to main content</a> <svg xmlns="http://www.w3.org/2000/svg" class="d-none"> <symbol id="svg-link" viewbox="0 0 24 24"><title>Link</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path> </svg> </symbol> <symbol id="svg-menu" viewbox="0 0 24 24"><title>Menu</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line> </svg> </symbol> <symbol id="svg-arrow-right" viewbox="0 0 24 24"><title>Expand</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"></polyline> </svg> </symbol> <symbol id="svg-external-link" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link"><title id="svg-external-link-title">(external link)</title>
+<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line> </symbol> <symbol id="svg-doc" viewbox="0 0 24 24"><title>Document</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline> </svg> </symbol> <symbol id="svg-search" viewbox="0 0 24 24"><title>Search</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"> <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg> </symbol> <symbol id="svg-copy" viewbox="0 0 16 16"><title>Copy</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewbox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"></path><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"></path> </svg> </symbol> <symbol id="svg-copied" viewbox="0 0 16 16"><title>Copied</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewbox="0 0 16 16"><path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"></path><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"></path> </svg> </symbol> </svg><div class="side-bar">
+<div class="site-header"> <a href="/rqueue/" class="site-title lh-tight"> Rqueue </a> <a href="#" id="menu-button" class="site-button"> <svg viewbox="0 0 24 24" class="icon"><use xlink:href="#svg-menu"></use></svg> </a>
+</div>
+<nav aria-label="Main" id="site-nav" class="site-nav"><ul class="nav-list">
+<li class="nav-list-item active"><a href="/rqueue/" class="nav-list-link active">Home</a></li>
+<li class="nav-list-item">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Configuration category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/configuration" class="nav-list-link">Configuration</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/configuration/redis-configuration/" class="nav-list-link">Redis Configuration</a></li>
+<li class="nav-list-item "><a href="/rqueue/configuration/retry-and-backoff/" class="nav-list-link">Retry and Backoff</a></li>
+</ul>
+</li>
+<li class="nav-list-item">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Producer Consumer category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/producer-consumer" class="nav-list-link">Producer Consumer</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/message-handling" class="nav-list-link">Message Handling</a></li>
+<li class="nav-list-item "><a href="/rqueue/message-deduplication" class="nav-list-link">Message Deduplication</a></li>
+<li class="nav-list-item "><a href="/rqueue/middleware" class="nav-list-link">Middleware</a></li>
+<li class="nav-list-item "><a href="/rqueue/priority" class="nav-list-link">Queue Priority</a></li>
+</ul>
+</li>
+<li class="nav-list-item"><a href="/rqueue/callback-and-events" class="nav-list-link">Callbacks and Events</a></li>
+<li class="nav-list-item"><a href="/rqueue/dashboard" class="nav-list-link">Rqueue Dashboard</a></li>
+<li class="nav-list-item"><a href="/rqueue/monitoring-alerting" class="nav-list-link">Monitoring and Alerting</a></li>
+<li class="nav-list-item"><a href="/rqueue/faq" class="nav-list-link">FAQ</a></li>
+<li class="nav-list-item"><a href="/rqueue/CHANGELOG/" class="nav-list-link">CHANGELOG</a></li>
+<li class="nav-list-item"><a href="/rqueue/migration" class="nav-list-link">Migration from older to new version</a></li>
+</ul>
+<ul class="nav-list"><li class="nav-list-item external"> <a href="https://github.com/sonus21/rqueue" class="nav-list-link external"> Rqueue on GitHub <svg viewbox="0 0 24 24" aria-labelledby="svg-external-link-title"><use xlink:href="#svg-external-link"></use></svg> </a>
+</li></ul></nav><footer class="site-footer"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.</footer>
+</div>
+<div class="main" id="top">
+<div id="main-header" class="main-header">
+<div class="search">
+<div class="search-input-wrap"> <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search Rqueue" aria-label="Search Rqueue" autocomplete="off"> <label for="search-input" class="search-label"><svg viewbox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+</div>
+<div id="search-results" class="search-results"></div>
+</div>
+<nav aria-label="Auxiliary" class="aux-nav"><ul class="aux-nav-list"><li class="aux-nav-list-item"> <a href="//github.com/sonus21/rqueue" class="site-button"> Rqueue on GitHub </a>
+</li></ul></nav>
+</div>
+<div id="main-content-wrap" class="main-content-wrap"><div id="main-content" class="main-content" role="main">
+<h1 id="rqueue--redis-queue-for-spring-framework"> <a href="#rqueue--redis-queue-for-spring-framework" class="anchor-heading" aria-labelledby="rqueue--redis-queue-for-spring-framework"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Rqueue | Redis Queue For Spring Framework</h1>
+<p class="fs-4">Rqueue is an asynchronous task executor (worker) built for the Spring Framework based on Spring’s messaging library, backed by Redis. It can serve as a message broker where all service code is within Spring/Spring Boot applications. Rqueue fully supports both Spring and Spring Boot frameworks.</p>
+<p class="fs-6 fw-300"><a href="#getting-started" class="btn btn-primary fs-5 mb-4 mb-md-0 mr-2">Get started now</a> [View it on GitHub][Rqueue repo]{: .btn .fs-5 .mb-4 .mb-md-0 }</p>
+<hr>
+<h2 id="features"> <a href="#features" class="anchor-heading" aria-labelledby="features"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Features</h2>
+<ul>
+<li>
+<strong>Instant Delivery</strong>: Immediate execution of messages.</li>
+<li>
+<strong>Message Scheduling</strong>: Schedule messages for any arbitrary period.</li>
+<li>
+<strong>Unique Message Processing</strong>: Ensures unique processing of messages based on message ID.</li>
+<li>
+<strong>Periodic Message Processing</strong>: Process the same message at defined intervals.</li>
+<li>
+<strong>Priority Tasks</strong>: Support for task prioritization (e.g., high, low, medium).</li>
+<li>
+<strong>Message Delivery Guarantee</strong>: Ensures each message is consumed at least once, and may be retried in case of worker failures or restarts.</li>
+<li>
+<strong>Automatic Serialization and Deserialization of Messages</strong>.</li>
+<li>
+<strong>Message Multicasting</strong>: Call multiple message listeners for each message.</li>
+<li>
+<strong>Batch Message Polling</strong>: Fetch multiple messages from Redis in one operation.</li>
+<li>
+<strong>Metrics</strong>: Provides insights into in-flight messages, waiting messages, and delayed messages.</li>
+<li>
+<strong>Competing Consumers</strong>: Multiple workers can consume messages in parallel.</li>
+<li>
+<strong>Concurrency Control</strong>: Configurable concurrency for message listeners.</li>
+<li>
+<strong>Queue Priority</strong>: Supports both group-level and sub-queue level priorities.</li>
+<li>
+<strong>Long Execution Jobs</strong>: Check-in mechanism for long-running jobs.</li>
+<li>
+<strong>Execution Backoff</strong>: Supports exponential and fixed backoff strategies.</li>
+<li>
+<strong>Do not retry</strong>: Supports do not retry exceptions.</li>
+<li>
+<strong>Middleware</strong>: Allows integration of middleware to intercept messages before processing.</li>
+<li>
+<strong>Callbacks</strong>: Supports callbacks for handling dead letter queues and discarding messages.</li>
+<li>
+<strong>Events</strong>: Provides bootstrap and task execution events.</li>
+<li>
+<strong>Redis Connection Options</strong>: Supports different Redis configurations including Redis Cluster and Redis Sentinel.</li>
+<li>
+<strong>Reactive Programming</strong>: Integrates with reactive Redis and Spring WebFlux.</li>
+<li>
+<strong>Web Dashboard</strong>: Provides a web-based dashboard for managing queues and monitoring queue metrics.</li>
+</ul>
+<h3 id="requirements"> <a href="#requirements" class="anchor-heading" aria-labelledby="requirements"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Requirements</h3>
+<ul>
+<li>Spring 5+, 6+</li>
+<li>Spring Boot 2+, 3+</li>
+<li>Spring Reactive</li>
+<li>Lettuce client for Redis cluster</li>
+<li>Read master preference for Redis cluster</li>
+</ul>
+<h2 id="getting-started"> <a href="#getting-started" class="anchor-heading" aria-labelledby="getting-started"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Getting Started</h2>
+<p class="warning">All queue names are dynamic. Manually creating queues using <code class="language-plaintext highlighter-rouge">registerQueue</code> method can lead to inconsistencies. Queues should <strong>only</strong> be created when using Rqueue as a producer.</p>
+<h3 id="sample-apps"> <a href="#sample-apps" class="anchor-heading" aria-labelledby="sample-apps"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Sample Apps</h3>
+<p class="highlight">The Rqueue GitHub repository includes several sample apps for local testing and demonstration:</p>
+<ul>
+<li><a href="https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example">Rqueue Spring Boot Example</a></li>
+<li><a href="https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-reactive-example">Rqueue Spring Boot Reactive Example</a></li>
+<li><a href="https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example">Rqueue Spring Example</a></li>
+</ul>
+<h2 id="project-integration"> <a href="#project-integration" class="anchor-heading" aria-labelledby="project-integration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Project Integration</h2>
+<p class="warning">When configuring the Redis connection factory, ensure to set <code class="language-plaintext highlighter-rouge">readFrom</code> to <code class="language-plaintext highlighter-rouge">MASTER_PREFERRED</code> for Redis cluster compatibility, otherwise the application may fail to start.</p>
+<h3 id="spring-boot"> <a href="#spring-boot" class="anchor-heading" aria-labelledby="spring-boot"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Boot</h3>
+<p class="warning">Use Rqueue Spring Boot Starter 3.x for Spring Boot 3.x, and Rqueue Spring Boot Starter 2.x for Spring Boot 2.x.</p>
+<p>Get the latest version of Rqueue Spring Boot Starter from [Maven Central][Boot Maven Central]. Add the dependency to your project:</p>
+<h4 id="spring-boot-2x-setup"> <a href="#spring-boot-2x-setup" class="anchor-heading" aria-labelledby="spring-boot-2x-setup"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Boot 2.x Setup</h4>
+<ul>
+<li>Gradle<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implementation</span> <span class="s1">'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'</span>
+</code></pre></div></div>
+</li>
+<li>Maven<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>com.github.sonus21<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>rqueue-spring-boot-starter<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>2.13.1-RELEASE<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+</li>
+</ul>
+<h4 id="spring-boot-3x-setup"> <a href="#spring-boot-3x-setup" class="anchor-heading" aria-labelledby="spring-boot-3x-setup"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Boot 3.x Setup</h4>
+<ul>
+<li>Gradle<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implementation</span> <span class="s1">'com.github.sonus21:rqueue-spring-boot-starter:3.1.0-RELEASE'</span>
+</code></pre></div></div>
+</li>
+<li>Maven<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>com.github.sonus21<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>rqueue-spring-boot-starter<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>3.1.0-RELEASE<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+</li>
+</ul>
+<hr>
+<h3 id="spring-framework"> <a href="#spring-framework" class="anchor-heading" aria-labelledby="spring-framework"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Framework</h3>
+<p class="warning">Use Rqueue Spring 3.x for Spring Framework 6.x, and Rqueue Spring 2.x for Spring Framework 5.x.</p>
+<p>Get the latest version of Rqueue Spring from [Maven Central][Maven Central]. Add the dependency to your project:</p>
+<h4 id="spring-framework-5x-setup"> <a href="#spring-framework-5x-setup" class="anchor-heading" aria-labelledby="spring-framework-5x-setup"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Framework 5.x Setup</h4>
+<ul>
+<li>Gradle<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implementation</span> <span class="s1">'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'</span>
+</code></pre></div></div>
+</li>
+<li>Maven<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>com.github.sonus21<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>rqueue-spring<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>2.13.1-RELEASE<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+</li>
+</ul>
+<h4 id="spring-framework-6x-setup"> <a href="#spring-framework-6x-setup" class="anchor-heading" aria-labelledby="spring-framework-6x-setup"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Framework 6.x Setup</h4>
+<ul>
+<li>Gradle<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implementation</span> <span class="s1">'com.github.sonus21:rqueue-spring:3.1.0-RELEASE'</span>
+</code></pre></div></div>
+</li>
+<li>Maven<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>com.github.sonus21<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>rqueue-spring<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>3.1.0-RELEASE<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+</li>
+</ul>
+<p class="note">For <strong>Spring Framework</strong>, ensure to:</p>
+<ul>
+<li>Add <code class="language-plaintext highlighter-rouge">EnableRqueue</code> annotation on the main method.</li>
+<li>Provide a <code class="language-plaintext highlighter-rouge">RedisConnectionFactory</code> bean.</li>
+</ul>
+<h5 id="example-spring-application-configuration"> <a href="#example-spring-application-configuration" class="anchor-heading" aria-labelledby="example-spring-application-configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Example Spring Application Configuration</h5>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nd">@EnableRqueue</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Application</span> <span class="o">{</span>
+  <span class="nd">@Bean</span>
+  <span class="kd">public</span> <span class="nc">RedisConnectionFactory</span> <span class="nf">redisConnectionFactory</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// return a Redis connection factory</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<hr>
+<p class="highlight">Once Rqueue is configured in Spring or Spring Boot as described above, you can start using Rqueue methods and annotations. The usage remains consistent whether using Spring Boot or the Spring framework.</p>
+<h3 id="message-publishing--task-submission"> <a href="#message-publishing--task-submission" class="anchor-heading" aria-labelledby="message-publishing--task-submission"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Message Publishing / Task Submission</h3>
+<p>All messages should be sent using the <code class="language-plaintext highlighter-rouge">RqueueMessageEnqueuer</code> bean’s <code class="language-plaintext highlighter-rouge">enqueueXXX</code>, <code class="language-plaintext highlighter-rouge">enqueueInXXX</code>, and <code class="language-plaintext highlighter-rouge">enqueueAtXXX</code> methods. Use the appropriate method based on your use case:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">com.github.sonus21.rqueue.core.RqueueMessageEnqueuer</span><span class="o">;</span>
+
+<span class="nd">@Component</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MessageService</span> <span class="o">{</span>
+  <span class="nd">@Autowired</span>
+  <span class="kd">private</span> <span class="nc">RqueueMessageEnqueuer</span> <span class="n">rqueueMessageEnqueuer</span><span class="o">;</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">doSomething</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">rqueueMessageEnqueuer</span><span class="o">.</span><span class="na">enqueue</span><span class="o">(</span><span class="s">"simple-queue"</span><span class="o">,</span> <span class="s">"Rqueue is configured"</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">createJob</span><span class="o">(</span><span class="nc">Job</span> <span class="n">job</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">rqueueMessageEnqueuer</span><span class="o">.</span><span class="na">enqueue</span><span class="o">(</span><span class="s">"job-queue"</span><span class="o">,</span> <span class="n">job</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">sendNotification</span><span class="o">(</span><span class="nc">Notification</span> <span class="n">notification</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">rqueueMessageEnqueuer</span><span class="o">.</span><span class="na">enqueueIn</span><span class="o">(</span><span class="s">"notification-queue"</span><span class="o">,</span> <span class="n">notification</span><span class="o">,</span> <span class="mi">30</span> <span class="o">*</span> <span class="mi">1000L</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">createInvoice</span><span class="o">(</span><span class="nc">Invoice</span> <span class="n">invoice</span><span class="o">,</span> <span class="nc">Instant</span> <span class="n">instant</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">rqueueMessageEnqueuer</span><span class="o">.</span><span class="na">enqueueAt</span><span class="o">(</span><span class="s">"invoice-queue"</span><span class="o">,</span> <span class="n">invoice</span><span class="o">,</span> <span class="n">instant</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">sendSms</span><span class="o">(</span><span class="nc">Sms</span> <span class="n">sms</span><span class="o">,</span> <span class="nc">SmsPriority</span> <span class="n">priority</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">rqueueMessageEnqueuer</span><span class="o">.</span><span class="na">enqueueWithPriority</span><span class="o">(</span><span class="s">"sms-queue"</span><span class="o">,</span> <span class="n">priority</span><span class="o">.</span><span class="na">value</span><span class="o">(),</span> <span class="n">sms</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">sendPeriodicEmail</span><span class="o">(</span><span class="nc">Email</span> <span class="n">email</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">rqueueMessageEnqueuer</span><span class="o">.</span><span class="na">enqueuePeriodic</span><span class="o">(</span><span class="s">"email-queue"</span><span class="o">,</span> <span class="n">email</span><span class="o">,</span> <span class="mi">30_000</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<h3 id="worker--consumer--task-executor--listener"> <a href="#worker--consumer--task-executor--listener" class="anchor-heading" aria-labelledby="worker--consumer--task-executor--listener"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Worker / Consumer / Task Executor / Listener</h3>
+<p>Annotate any public method of a Spring bean with <code class="language-plaintext highlighter-rouge">RqueueListener</code> to make it a message consumer:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">com.github.sonus21.rqueue.annotation.RqueueListener</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.github.sonus21.rqueue.listener.RqueueMessageHeaders</span><span class="o">;</span>
+
+<span class="nd">@Component</span>
+<span class="nd">@Slf4j</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MessageListener</span> <span class="o">{</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"simple-queue"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleSimpleMessage</span><span class="o">(</span><span class="nc">String</span> <span class="n">message</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Received message from simple-queue: {}"</span><span class="o">,</span> <span class="n">message</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"job-queue"</span><span class="o">,</span> <span class="n">numRetries</span> <span class="o">=</span> <span class="s">"3"</span><span class="o">,</span> <span class="n">deadLetterQueue</span> <span class="o">=</span> <span class="s">"failed-job-queue"</span><span class="o">,</span> <span class="n">concurrency</span> <span class="o">=</span> <span class="s">"5-10"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleJob</span><span class="o">(</span><span class="nc">Job</span> <span class="n">job</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Received job: {}"</span><span class="o">,</span> <span class="n">job</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"push-notification-queue"</span><span class="o">,</span> <span class="n">numRetries</span> <span class="o">=</span> <span class="s">"3"</span><span class="o">,</span> <span class="n">deadLetterQueue</span> <span class="o">=</span> <span class="s">"failed-notification-queue"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleNotification</span><span class="o">(</span><span class="nc">Notification</span> <span class="n">notification</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Received notification: {}"</span><span class="o">,</span> <span class="n">notification</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"sms"</span><span class="o">,</span> <span class="n">priority</span> <span class="o">=</span> <span class="s">"critical=10,high=8,medium=4,low=1"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleSms</span><span class="o">(</span><span class="nc">Sms</span> <span class="n">sms</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Received SMS: {}"</span><span class="o">,</span> <span class="n">sms</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"chat-indexing"</span><span class="o">,</span> <span class="n">priority</span> <span class="o">=</span> <span class="s">"20"</span><span class="o">,</span> <span class="n">priorityGroup</span> <span class="o">=</span> <span class="s">"chat"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleChatIndexing</span><span class="o">(</span><span class="nc">ChatIndexing</span> <span class="n">chatIndexing</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Received chat indexing message: {}"</span><span class="o">,</span> <span class="n">chatIndexing</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"chat-indexing-daily"</span><span class="o">,</span> <span class="n">priority</span> <span class="o">=</span> <span class="s">"10"</span><span class="o">,</span> <span class="n">priorityGroup</span> <span class="o">=</span> <span class="s">"chat"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleDailyChatIndexing</span><span class="o">(</span><span class="nc">ChatIndexing</span> <span class="n">chatIndexing</span><span class="o">)</span> <span class="o">{</span>
+
+
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Received daily chat indexing message: {}"</span><span class="o">,</span> <span class="n">chatIndexing</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<h4 id="notes"> <a href="#notes" class="anchor-heading" aria-labelledby="notes"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Notes:</h4>
+<ul>
+<li>
+<strong>Retry Mechanism</strong>: Configure retry behavior using <code class="language-plaintext highlighter-rouge">numRetries</code> and <code class="language-plaintext highlighter-rouge">deadLetterQueue</code> attributes.</li>
+<li>
+<strong>Concurrency</strong>: Adjust concurrency using the <code class="language-plaintext highlighter-rouge">concurrency</code> attribute.</li>
+<li>
+<strong>Priority</strong>: Set message priority using the <code class="language-plaintext highlighter-rouge">priority</code> attribute.</li>
+</ul>
+<hr>
+<h3 id="advanced-configuration"> <a href="#advanced-configuration" class="anchor-heading" aria-labelledby="advanced-configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Configuration</h3>
+<h4 id="rqueue-configuration"> <a href="#rqueue-configuration" class="anchor-heading" aria-labelledby="rqueue-configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Rqueue Configuration</h4>
+<p class="note fw-300">For advanced configurations such as message serialization, queue properties, message listener details, and more, refer to the [official documentation][Rqueue Docs].</p>
+<h3 id="support"> <a href="#support" class="anchor-heading" aria-labelledby="support"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Support</h3>
+<p class="fs-5">For any issues, questions, or feature requests, please create an issue on the [GitHub repository][Rqueue repo] or contact the maintainers directly.</p>
+<hr>
+<h3 id="license"> <a href="#license" class="anchor-heading" aria-labelledby="license"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> License</h3>
+<p class="fs-5">Rqueue is licensed under the Apache License 2.0. See the <a href="https://github.com/sonus21/rqueue/blob/master/LICENSE">LICENSE</a> file for more details. [Rqueue Docs]: https://github.com/sonus21/rqueue/wiki [Boot Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring-boot-starter [Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring [Rqueue repo]: https://github.com/sonus21/rqueue</p>
+<hr>
+<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a><div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/index.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
+</div></div>
+<div class="search-overlay"></div>
+</div>
+<script> var config = {} ; mermaid.initialize(config); window.mermaid.init(undefined, document.querySelectorAll('.language-mermaid')); </script>
+</body>
+</html>

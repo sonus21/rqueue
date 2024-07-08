@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<link rel="stylesheet" href="/rqueue/assets/css/just-the-docs-default.css"> <script async src="https://www.googletagmanager.com/gtag/js?id=G-HWK3PKDELN"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-HWK3PKDELN', { 'anonymize_ip': true }); </script> <script src="/rqueue/assets/js/vendor/lunr.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mermaid@9.1.6/dist/mermaid.min.js"></script> <script src="/rqueue/assets/js/just-the-docs.js"></script><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/rqueue/static/favicon/favicon.ico" type="image/x-icon">
+<title>CHANGELOG | Rqueue</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="CHANGELOG">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Library for Async Processing using Redis">
+<meta property="og:description" content="Library for Async Processing using Redis">
+<link rel="canonical" href="https://sonus21.github.io/rqueue/rqueue/CHANGELOG/">
+<meta property="og:url" content="https://sonus21.github.io/rqueue/rqueue/CHANGELOG/">
+<meta property="og:site_name" content="Rqueue">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="CHANGELOG"> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"WebPage","description":"Library for Async Processing using Redis","headline":"CHANGELOG","url":"https://sonus21.github.io/rqueue/rqueue/CHANGELOG/"}</script> <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9220054661402722" crossorigin="anonymous"></script>
+</head>
+<body> <a class="skip-to-main" href="#main-content">Skip to main content</a> <svg xmlns="http://www.w3.org/2000/svg" class="d-none"> <symbol id="svg-link" viewbox="0 0 24 24"><title>Link</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path> </svg> </symbol> <symbol id="svg-menu" viewbox="0 0 24 24"><title>Menu</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line> </svg> </symbol> <symbol id="svg-arrow-right" viewbox="0 0 24 24"><title>Expand</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"></polyline> </svg> </symbol> <symbol id="svg-external-link" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link"><title id="svg-external-link-title">(external link)</title>
+<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line> </symbol> <symbol id="svg-doc" viewbox="0 0 24 24"><title>Document</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline> </svg> </symbol> <symbol id="svg-search" viewbox="0 0 24 24"><title>Search</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"> <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg> </symbol> <symbol id="svg-copy" viewbox="0 0 16 16"><title>Copy</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewbox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"></path><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"></path> </svg> </symbol> <symbol id="svg-copied" viewbox="0 0 16 16"><title>Copied</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewbox="0 0 16 16"><path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"></path><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"></path> </svg> </symbol> </svg><div class="side-bar">
+<div class="site-header"> <a href="/rqueue/" class="site-title lh-tight"> Rqueue </a> <a href="#" id="menu-button" class="site-button"> <svg viewbox="0 0 24 24" class="icon"><use xlink:href="#svg-menu"></use></svg> </a>
+</div>
+<nav aria-label="Main" id="site-nav" class="site-nav"><ul class="nav-list">
+<li class="nav-list-item"><a href="/rqueue/" class="nav-list-link">Home</a></li>
+<li class="nav-list-item">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Configuration category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/configuration" class="nav-list-link">Configuration</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/configuration/redis-configuration/" class="nav-list-link">Redis Configuration</a></li>
+<li class="nav-list-item "><a href="/rqueue/configuration/retry-and-backoff/" class="nav-list-link">Retry and Backoff</a></li>
+</ul>
+</li>
+<li class="nav-list-item">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Producer Consumer category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/producer-consumer" class="nav-list-link">Producer Consumer</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/message-handling" class="nav-list-link">Message Handling</a></li>
+<li class="nav-list-item "><a href="/rqueue/message-deduplication" class="nav-list-link">Message Deduplication</a></li>
+<li class="nav-list-item "><a href="/rqueue/middleware" class="nav-list-link">Middleware</a></li>
+<li class="nav-list-item "><a href="/rqueue/priority" class="nav-list-link">Queue Priority</a></li>
+</ul>
+</li>
+<li class="nav-list-item"><a href="/rqueue/callback-and-events" class="nav-list-link">Callbacks and Events</a></li>
+<li class="nav-list-item"><a href="/rqueue/dashboard" class="nav-list-link">Rqueue Dashboard</a></li>
+<li class="nav-list-item"><a href="/rqueue/monitoring-alerting" class="nav-list-link">Monitoring and Alerting</a></li>
+<li class="nav-list-item"><a href="/rqueue/faq" class="nav-list-link">FAQ</a></li>
+<li class="nav-list-item active"><a href="/rqueue/CHANGELOG/" class="nav-list-link active">CHANGELOG</a></li>
+<li class="nav-list-item"><a href="/rqueue/migration" class="nav-list-link">Migration from older to new version</a></li>
+</ul>
+<ul class="nav-list"><li class="nav-list-item external"> <a href="https://github.com/sonus21/rqueue" class="nav-list-link external"> Rqueue on GitHub <svg viewbox="0 0 24 24" aria-labelledby="svg-external-link-title"><use xlink:href="#svg-external-link"></use></svg> </a>
+</li></ul></nav><footer class="site-footer"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.</footer>
+</div>
+<div class="main" id="top">
+<div id="main-header" class="main-header">
+<div class="search">
+<div class="search-input-wrap"> <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search Rqueue" aria-label="Search Rqueue" autocomplete="off"> <label for="search-input" class="search-label"><svg viewbox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+</div>
+<div id="search-results" class="search-results"></div>
+</div>
+<nav aria-label="Auxiliary" class="aux-nav"><ul class="aux-nav-list"><li class="aux-nav-list-item"> <a href="//github.com/sonus21/rqueue" class="site-button"> Rqueue on GitHub </a>
+</li></ul></nav>
+</div>
+<div id="main-content-wrap" class="main-content-wrap"><div id="main-content" class="main-content" role="main">
+<h1 id="changelog"> <a href="#changelog" class="anchor-heading" aria-labelledby="changelog"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CHANGELOG</h1>
+<p>All notable user-facing changes to this project are documented in this file.</p>
+<h2 id="release-320-10-july-2024"> <a href="#release-320-10-july-2024" class="anchor-heading" aria-labelledby="release-320-10-july-2024"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Release [3.2.0] 10-July-2024</h2>
+<h3 id="fixes"> <a href="#fixes" class="anchor-heading" aria-labelledby="fixes"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul><li>Fixed typo #218</li></ul>
+<h3 id="feature"> <a href="#feature" class="anchor-heading" aria-labelledby="feature"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Feature</h3>
+<ul><li>Do not retry some exceptions</li></ul>
+<h2 id="release-311-1-mar-2024"> <a href="#release-311-1-mar-2024" class="anchor-heading" aria-labelledby="release-311-1-mar-2024"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Release [3.1.1] 1-Mar-2024</h2>
+<h3 id="fixes-1"> <a href="#fixes-1" class="anchor-heading" aria-labelledby="fixes-1"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul><li>Fixed issue for spring boot 3.2 #218</li></ul>
+<h2 class="highlight" id="release-310-24-june-2023"> <a href="#release-310-24-june-2023" class="anchor-heading" aria-labelledby="release-310-24-june-2023"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Release <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.1.0-RELEASE">3.1.0</a> 24-June-2023</h2>
+<p>Migrate to this version to reduce redis resource utilization</p>
+<p>This will fix an important bug happening due to task multiplications. This is causing more Redis resource usage Please check #<a href="https://github.com/sonus21/rqueue/issues/193">193</a></p>
+<h2 class="highlight" id="release-2131-24-june-2023"> <a href="#release-2131-24-june-2023" class="anchor-heading" aria-labelledby="release-2131-24-june-2023"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Release <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.1-RELEASE">2.13.1</a> 24-June-2023</h2>
+<p>Migrate to this version to reduce redis resource utilization</p>
+<p>This will fix an important bug happening due to task multiplications. This is causing more Redis resource usage Please check #<a href="https://github.com/sonus21/rqueue/issues/193">193</a></p>
+<h2 id="release-301-17-jan-2022"> <a href="#release-301-17-jan-2022" class="anchor-heading" aria-labelledby="release-301-17-jan-2022"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Release <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.0.0-RELEASE">3.0.1</a> 17-Jan-2022</h2>
+<p>We’re so excited to release Rqueue <code class="language-plaintext highlighter-rouge">3.0.1</code>. This release supports the Java 17, Spring Boot 3.x and Spring Framework 6.x</p>
+<h3 id="2130---25-dec-2022"> <a href="#2130---25-dec-2022" class="anchor-heading" aria-labelledby="2130---25-dec-2022"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.0-RELEASE">2.13.0</a> - 25-Dec-2022</h3>
+<h3 id="fixes-2"> <a href="#fixes-2" class="anchor-heading" aria-labelledby="fixes-2"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<p class="highlight">Migrate to this version as soon as possible to avoid duplicate message consumption post deletion.</p>
+<ul>
+<li>Important fix for parallel message deletion or delete the message from message listener</li>
+<li>No threads are available, improvement on message poller</li>
+<li>Use System Zone ID for UI bottom screen</li>
+</ul>
+<h3 id="2120---14-dec-2022"> <a href="#2120---14-dec-2022" class="anchor-heading" aria-labelledby="2120---14-dec-2022"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.12.0-RELEASE">2.12.0</a> - 14-Dec-2022</h3>
+<h3 id="fixes-3"> <a href="#fixes-3" class="anchor-heading" aria-labelledby="fixes-3"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Upgraded Pebble version for CVE</li>
+<li>Use System Zone ID for UI display</li>
+</ul>
+<h3 id="2111---18-nov-2022"> <a href="#2111---18-nov-2022" class="anchor-heading" aria-labelledby="2111---18-nov-2022"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.11.1-RELEASE">2.11.1</a> - 18-Nov-2022</h3>
+<p class="highlight">Migrate to this version as soon as possible to avoid message build up. Messages in scheduled queue can grow if poller is failing. Workaround is to restart the application.</p>
+<ul>
+<li>Message mover unreliability, scheduled message were not getting consumed once redis connection error occurs</li>
+<li>Upgraded Jquery version</li>
+</ul>
+<h3 id="2102---16-jul-2022"> <a href="#2102---16-jul-2022" class="anchor-heading" aria-labelledby="2102---16-jul-2022"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.2-RELEASE">2.10.2</a> - 16-Jul-2022</h3>
+<h3 id="fixes-4"> <a href="#fixes-4" class="anchor-heading" aria-labelledby="fixes-4"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Message status is not enqueued only, but it should be successful, failed etc</li>
+<li>Weighted queue with size 1 was not working</li>
+<li>Deleted message reappears</li>
+</ul>
+<h3 id="features"> <a href="#features" class="anchor-heading" aria-labelledby="features"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Features</h3>
+<ul><li>Disable Rqueue using <code class="language-plaintext highlighter-rouge">rqueue.enabled</code> flag</li></ul>
+<h3 id="2101---18-oct-2021"> <a href="#2101---18-oct-2021" class="anchor-heading" aria-labelledby="2101---18-oct-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.1-RELEASE">2.10.1</a> - 18-Oct-2021</h3>
+<ul><li>Fixes for concurrency when task executor is provided see issue #<a href="https://github.com/sonus21/rqueue/issues/122">122</a>
+</li></ul>
+<h3 id="2100---10-oct-2021"> <a href="#2100---10-oct-2021" class="anchor-heading" aria-labelledby="2100---10-oct-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.10.0-RELEASE">2.10.0</a> - 10-Oct-2021</h3>
+<p class="warning">Breaking change, if you’re controlling any internal settings of Rqueue using application environment or configuration variable than application can break. We’ve renamed some config keys, <a href="./migration#290-to-210">see</a></p>
+<h3 id="fixes-5"> <a href="#fixes-5" class="anchor-heading" aria-labelledby="fixes-5"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Fixes for post processor calls (post processor calls were not made)</li>
+<li>Fixes message move message count (by default 1000 messages are moved)</li>
+<li>Potential issue in rename collection</li>
+<li>More than one (-) sign in the dashboard</li>
+<li>Fixes for server context path. Rqueue end points would be served relative to x-forwarded-prefix/server.servlet.context-path</li>
+</ul>
+<h3 id="features-1"> <a href="#features-1" class="anchor-heading" aria-labelledby="features-1"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Features</h3>
+<ul>
+<li>Display completed jobs in the dashboard</li>
+<li>Option to choose number of days in the chart</li>
+</ul>
+<h3 id="290---30-jul-2021"> <a href="#290---30-jul-2021" class="anchor-heading" aria-labelledby="290---30-jul-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.9.0-RELEASE">2.9.0</a> - 30-Jul-2021</h3>
+<h3 id="fixes-6"> <a href="#fixes-6" class="anchor-heading" aria-labelledby="fixes-6"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Option to add rqueue web url prefix, the prefix is configured from application.properties file using <code class="language-plaintext highlighter-rouge">rqueue.web.url.prefix=/my-application/</code>, now rqueue dashboard would be served at <code class="language-plaintext highlighter-rouge">/my-application/rquque</code> instead of <code class="language-plaintext highlighter-rouge">/rqueue</code>, the configuration has higher priority than the HTTP request header <code class="language-plaintext highlighter-rouge">x-forwarded-prefix</code>.</li>
+<li>Custom message converter is not working</li>
+<li>RedisCommandExecutionException : command arguments must be strings or integers</li>
+</ul>
+<h3 id="280---08-jun-2021"> <a href="#280---08-jun-2021" class="anchor-heading" aria-labelledby="280---08-jun-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.8.0-RELEASE">2.8.0</a> - 08-Jun-2021</h3>
+<h3 id="fixes-7"> <a href="#fixes-7" class="anchor-heading" aria-labelledby="fixes-7"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Producer mode is not honored in Message scheduler</li>
+<li>Message scheduler disable flag is not honored</li>
+<li>Aggregator should not be running in producer mode</li>
+<li>Listener concurrency is not reached, even though messages are in queue</li>
+<li>Register queue in producer mode for all listener methods</li>
+</ul>
+<h3 id="added"> <a href="#added" class="anchor-heading" aria-labelledby="added"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul>
+<li>Pause/Unpause queue from dashboard</li>
+<li>Pause/Unpause queue programmatically</li>
+<li>Batch message fetching</li>
+<li>Default queue priority to WEIGHTED</li>
+<li>Added an API to update the visibility timeout of running job</li>
+</ul>
+<h2 id="270---13-apr-2021"> <a href="#270---13-apr-2021" class="anchor-heading" aria-labelledby="270---13-apr-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.7.0-RELEASE">2.7.0</a> - 13-Apr-2021</h2>
+<h3 id="fixes-8"> <a href="#fixes-8" class="anchor-heading" aria-labelledby="fixes-8"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Spring Boot App could not start due to class not found error <strong>Boot 2.0</strong>
+</li>
+<li>Utility UI message move not working due to invalid data type</li>
+</ul>
+<h3 id="added-1"> <a href="#added-1" class="anchor-heading" aria-labelledby="added-1"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul>
+<li>Support for Reactive Redis and Spring Webflux</li>
+<li>Delete message metadata when <code class="language-plaintext highlighter-rouge">rqueue.message.durability.in-terminal-state</code> is less than equal to zero</li>
+<li>Delete job detail when <code class="language-plaintext highlighter-rouge">rqueue.job.durability.in-terminal-state</code> is less tha equal to zero</li>
+</ul>
+<h2 id="261---1-mar-2021"> <a href="#261---1-mar-2021" class="anchor-heading" aria-labelledby="261---1-mar-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.6.1-RELEASE">2.6.1</a> - 1-Mar-2021</h2>
+<h3 id="fixes-9"> <a href="#fixes-9" class="anchor-heading" aria-labelledby="fixes-9"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Graph not rendering in firefox due to unsafe csp rule</li>
+<li>Crash in dashboard due to Twig template, changed it to Pebble template</li>
+</ul>
+<h2 id="260---22-feb-2021"> <a href="#260---22-feb-2021" class="anchor-heading" aria-labelledby="260---22-feb-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.6.0-RELEASE">2.6.0</a> - 22-Feb-2021</h2>
+<p>Message counts api</p>
+<h2 id="250---9-feb-2021"> <a href="#250---9-feb-2021" class="anchor-heading" aria-labelledby="250---9-feb-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.5.0-RELEASE">2.5.0</a> - 9-Feb-2021</h2>
+<h3 id="added-2"> <a href="#added-2" class="anchor-heading" aria-labelledby="added-2"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul><li>Attach more than one message listeners to the same queue</li></ul>
+<h2 id="240---3-feb-2021"> <a href="#240---3-feb-2021" class="anchor-heading" aria-labelledby="240---3-feb-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.4.0-RELEASE">2.4.0</a> - 3-Feb-2021</h2>
+<h3 id="added-3"> <a href="#added-3" class="anchor-heading" aria-labelledby="added-3"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul>
+<li>Job Middlewares</li>
+<li>Delay execution of message when it’s moved to enqueue instead of consuming it immediately.</li>
+</ul>
+<h2 id="230---2-jan-2021"> <a href="#230---2-jan-2021" class="anchor-heading" aria-labelledby="230---2-jan-2021"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.3.0-RELEASE">2.3.0</a> - 2-Jan-2021</h2>
+<h3 id="added-4"> <a href="#added-4" class="anchor-heading" aria-labelledby="added-4"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul>
+<li>Job checkin for long-running tasks</li>
+<li>Display job and failure details in UI for each message</li>
+<li>Allow deleting messages from normal and scheduled queues instead of only dead letter queue.</li>
+<li>Scan only required beans for RqueueListener annotated methods</li>
+</ul>
+<h3 id="fixes-10"> <a href="#fixes-10" class="anchor-heading" aria-labelledby="fixes-10"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Redis string deserialization issue, string were inserted without quote’’</li>
+<li>Dashboard CSP rule error for inline javascript</li>
+<li>Double minus sign (–) in UI</li>
+</ul>
+<h3 id="miscellaneous"> <a href="#miscellaneous" class="anchor-heading" aria-labelledby="miscellaneous"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Miscellaneous</h3>
+<ul>
+<li>Delete message metadata along with messages using background job</li>
+<li>Potential error for a periodic message, if period was longer than 24 hours</li>
+<li>Add retry limit exceeded messages at the front of dead letter queue instead at the back.</li>
+</ul>
+<h2 id="220---6-dec-2020"> <a href="#220---6-dec-2020" class="anchor-heading" aria-labelledby="220---6-dec-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.2.0-RELEASE">2.2.0</a> - 6-Dec-2020</h2>
+<h3 id="added-5"> <a href="#added-5" class="anchor-heading" aria-labelledby="added-5"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul><li>New API to enqueue periodic message. Periodic jobs are like cron jobs that would run at the certain interval.</li></ul>
+<h2 id="211---24-sep-2020"> <a href="#211---24-sep-2020" class="anchor-heading" aria-labelledby="211---24-sep-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.1.1-RELEASE">2.1.1</a> - 24-Sep-2020</h2>
+<h3 id="added-6"> <a href="#added-6" class="anchor-heading" aria-labelledby="added-6"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul><li>More apis to enqueue unique message</li></ul>
+<h2 id="210---16-sep-2020"> <a href="#210---16-sep-2020" class="anchor-heading" aria-labelledby="210---16-sep-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.1.0-RELEASE">2.1.0</a> - 16-Sep-2020</h2>
+<h3 id="added-7"> <a href="#added-7" class="anchor-heading" aria-labelledby="added-7"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul>
+<li>Allow application to provide message id while enqueuing messages</li>
+<li>Unique message enqueue</li>
+<li>Api to check if message was enqueued or not</li>
+<li>Api to delete single message</li>
+<li>Proxy for outbound http connection</li>
+<li>Enqueue list of objects and process them, like batch-processing</li>
+</ul>
+<p>Fixes:</p>
+<ul><li>Registered queues should not be deleted when used in producer mode</li></ul>
+<h2 id="204---2-aug-2020"> <a href="#204---2-aug-2020" class="anchor-heading" aria-labelledby="204---2-aug-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.0.4-RELEASE">2.0.4</a> - 2-Aug-2020</h2>
+<h3 id="added-8"> <a href="#added-8" class="anchor-heading" aria-labelledby="added-8"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul><li>Allow a listener to be added on dead letter queue</li></ul>
+<h3 id="fixes-11"> <a href="#fixes-11" class="anchor-heading" aria-labelledby="fixes-11"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes:</h3>
+<ul><li>Rqueue views/apis not accessible via api gateway</li></ul>
+<h2 id="202---13-july-2020"> <a href="#202---13-july-2020" class="anchor-heading" aria-labelledby="202---13-july-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.2-RELEASE">2.0.2</a> - 13-July-2020</h2>
+<h3 id="fixes-12"> <a href="#fixes-12" class="anchor-heading" aria-labelledby="fixes-12"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>JDK dynamic proxy</li>
+<li>AoP profiler</li>
+</ul>
+<h2 id="201---17-may-2020"> <a href="#201---17-may-2020" class="anchor-heading" aria-labelledby="201---17-may-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.1-RELEASE">2.0.1</a> - 17-May-2020</h2>
+<h3 id="added-9"> <a href="#added-9" class="anchor-heading" aria-labelledby="added-9"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul>
+<li>Allow registering a queue, that can be in push only mode</li>
+<li>Apis to schedule task at the given time</li>
+<li>Refine enqueueIn apis to support Duration and TimeUnit</li>
+</ul>
+<h3 id="fixes-13"> <a href="#fixes-13" class="anchor-heading" aria-labelledby="fixes-13"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul>
+<li>Arguments mismatch due to multiple class loaders.</li>
+<li>Dead letter queue clear lead to clearing all the messages related to that queue.</li>
+</ul>
+<h2 id="200---10-may-2020"> <a href="#200---10-may-2020" class="anchor-heading" aria-labelledby="200---10-may-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/2.0.0-RELEASE">2.0.0</a> - 10-May-2020</h2>
+<p class="warning">Breaking change, for migration <a href="./migration#1x-to-2x">see</a></p>
+<ul>
+<li>Queue names are prefixed, that can lead to error. 1.x users set REDIS key <code class="language-plaintext highlighter-rouge">__rq::version</code> to <code class="language-plaintext highlighter-rouge">1</code>. It does try to find the version using key prefix, but if all queues are empty or no key exist in REDIS with prefix <code class="language-plaintext highlighter-rouge">rqueue-</code> then it will consider version 2.</li>
+<li>Renamed annotation field <code class="language-plaintext highlighter-rouge">maxJobExecutionTime</code> to <code class="language-plaintext highlighter-rouge">visibilityTimeout</code>
+</li>
+</ul>
+<h3 id="added-10"> <a href="#added-10" class="anchor-heading" aria-labelledby="added-10"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Added</h3>
+<ul>
+<li>Web interface to visualize queue</li>
+<li>Move message from one queue to another</li>
+<li>Latency visualizer</li>
+<li>Delete one or more message(s) from the queue</li>
+<li>Allow deactivating a consumer in a given environment</li>
+<li>Single or multiple execution of polled messages</li>
+<li>Queue level concurrency</li>
+<li>BackOff for failed messages, linear or exponential</li>
+<li>Group level queue priority</li>
+<li>Multi level queue priority</li>
+<li>Strict or weighted algorithm for message execution</li>
+</ul>
+<h3 id="fixes-14"> <a href="#fixes-14" class="anchor-heading" aria-labelledby="fixes-14"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixes</h3>
+<ul><li>
+<strong>Spring</strong> Optional Micrometer, in older version config class was importing micrometer related classes, that could lead to error if classes are not found. In this version now code depends on bean name using DependsOn annotation.</li></ul>
+<h2 id="140---08-apr-2020"> <a href="#140---08-apr-2020" class="anchor-heading" aria-labelledby="140---08-apr-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.4.0-RELEASE">1.4.0</a> - 08-Apr-2020</h2>
+<ul>
+<li>Allow queue level configuration of job execution time.</li>
+<li>Support to add Message processor for discard and dead letter queue</li>
+</ul>
+<h2 id="132---01-apr-2020"> <a href="#132---01-apr-2020" class="anchor-heading" aria-labelledby="132---01-apr-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.3.2-RELEASE">1.3.2</a> - 01-Apr-2020</h2>
+<ul><li>Support lower version of spring 2.1.x</li></ul>
+<h2 id="131---27-feb-2020"> <a href="#131---27-feb-2020" class="anchor-heading" aria-labelledby="131---27-feb-2020"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.3.1-RELEASE">1.3.1</a> - 27-Feb-2020</h2>
+<ul><li>
+<strong>Fixed</strong> Bootstrap issue due to optional dependencies of micrometer</li></ul>
+<h2 id="13---11-dec-2019"> <a href="#13---11-dec-2019" class="anchor-heading" aria-labelledby="13---11-dec-2019"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.3-RELEASE">1.3</a> - 11-Dec-2019</h2>
+<ul>
+<li>Expose multiple queue metrics using micrometer. (queue-size, delay queue size, processing queue size, dead letter queue size, execution counter, failure counter)</li>
+<li>An api to move messages from dead letter queue to other queue. (Any source queue to target queue).</li>
+</ul>
+<h3 id="fixed"> <a href="#fixed" class="anchor-heading" aria-labelledby="fixed"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fixed</h3>
+<ul><li>An issue in the scheduler that’s always scheduling job at the delay of 5 seconds. (this leads to messages are not copied from scheduled queue to main queue on high load)</li></ul>
+<h2 id="12---03-nov-2019"> <a href="#12---03-nov-2019" class="anchor-heading" aria-labelledby="12---03-nov-2019"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.2-RELEASE">1.2</a> - 03-Nov-2019</h2>
+<ul><li>Typo of <em>Later</em> to <em>Letter</em>
+</li></ul>
+<h2 id="11---02-nov-2019"> <a href="#11---02-nov-2019" class="anchor-heading" aria-labelledby="11---02-nov-2019"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.1-RELEASE">1.1</a> - 02-Nov-2019</h2>
+<ul>
+<li>At least once message guarantee</li>
+<li>Reduced ZSET calls</li>
+<li>Lua script to make atomic operation</li>
+</ul>
+<h2 id="10---23-oct-2019"> <a href="#10---23-oct-2019" class="anchor-heading" aria-labelledby="10---23-oct-2019"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <a href="https://repo1.maven.org/maven2/com/github/sonus21/rqueue/1.0-RELEASE">1.0</a> - 23-Oct-2019</h2>
+<ul><li>The basic version of Asynchronous task execution using Redis for Spring and Spring Boot</li></ul>
+<hr>
+<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a><div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/CHANGELOG.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
+</div></div>
+<div class="search-overlay"></div>
+</div>
+<script> var config = {} ; mermaid.initialize(config); window.mermaid.init(undefined, document.querySelectorAll('.language-mermaid')); </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<link rel="stylesheet" href="/rqueue/assets/css/just-the-docs-default.css"> <script async src="https://www.googletagmanager.com/gtag/js?id=G-HWK3PKDELN"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-HWK3PKDELN', { 'anonymize_ip': true }); </script> <script src="/rqueue/assets/js/vendor/lunr.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mermaid@9.1.6/dist/mermaid.min.js"></script> <script src="/rqueue/assets/js/just-the-docs.js"></script><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/rqueue/static/favicon/favicon.ico" type="image/x-icon">
+<title>Producer Consumer | Rqueue</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="Producer Consumer">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Message Handling in Rqueue">
+<meta property="og:description" content="Message Handling in Rqueue">
+<link rel="canonical" href="https://sonus21.github.io/rqueue/rqueue/producer-consumer">
+<meta property="og:url" content="https://sonus21.github.io/rqueue/rqueue/producer-consumer">
+<meta property="og:site_name" content="Rqueue">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Producer Consumer"> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"WebPage","description":"Message Handling in Rqueue","headline":"Producer Consumer","url":"https://sonus21.github.io/rqueue/rqueue/producer-consumer"}</script> <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9220054661402722" crossorigin="anonymous"></script>
+</head>
+<body> <a class="skip-to-main" href="#main-content">Skip to main content</a> <svg xmlns="http://www.w3.org/2000/svg" class="d-none"> <symbol id="svg-link" viewbox="0 0 24 24"><title>Link</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path> </svg> </symbol> <symbol id="svg-menu" viewbox="0 0 24 24"><title>Menu</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line> </svg> </symbol> <symbol id="svg-arrow-right" viewbox="0 0 24 24"><title>Expand</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"></polyline> </svg> </symbol> <symbol id="svg-external-link" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link"><title id="svg-external-link-title">(external link)</title>
+<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line> </symbol> <symbol id="svg-doc" viewbox="0 0 24 24"><title>Document</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline> </svg> </symbol> <symbol id="svg-search" viewbox="0 0 24 24"><title>Search</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"> <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg> </symbol> <symbol id="svg-copy" viewbox="0 0 16 16"><title>Copy</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewbox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"></path><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"></path> </svg> </symbol> <symbol id="svg-copied" viewbox="0 0 16 16"><title>Copied</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewbox="0 0 16 16"><path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"></path><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"></path> </svg> </symbol> </svg><div class="side-bar">
+<div class="site-header"> <a href="/rqueue/" class="site-title lh-tight"> Rqueue </a> <a href="#" id="menu-button" class="site-button"> <svg viewbox="0 0 24 24" class="icon"><use xlink:href="#svg-menu"></use></svg> </a>
+</div>
+<nav aria-label="Main" id="site-nav" class="site-nav"><ul class="nav-list">
+<li class="nav-list-item"><a href="/rqueue/" class="nav-list-link">Home</a></li>
+<li class="nav-list-item">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Configuration category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/configuration" class="nav-list-link">Configuration</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/configuration/redis-configuration/" class="nav-list-link">Redis Configuration</a></li>
+<li class="nav-list-item "><a href="/rqueue/configuration/retry-and-backoff/" class="nav-list-link">Retry and Backoff</a></li>
+</ul>
+</li>
+<li class="nav-list-item active">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Producer Consumer category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/producer-consumer" class="nav-list-link active">Producer Consumer</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/message-handling" class="nav-list-link">Message Handling</a></li>
+<li class="nav-list-item "><a href="/rqueue/message-deduplication" class="nav-list-link">Message Deduplication</a></li>
+<li class="nav-list-item "><a href="/rqueue/middleware" class="nav-list-link">Middleware</a></li>
+<li class="nav-list-item "><a href="/rqueue/priority" class="nav-list-link">Queue Priority</a></li>
+</ul>
+</li>
+<li class="nav-list-item"><a href="/rqueue/callback-and-events" class="nav-list-link">Callbacks and Events</a></li>
+<li class="nav-list-item"><a href="/rqueue/dashboard" class="nav-list-link">Rqueue Dashboard</a></li>
+<li class="nav-list-item"><a href="/rqueue/monitoring-alerting" class="nav-list-link">Monitoring and Alerting</a></li>
+<li class="nav-list-item"><a href="/rqueue/faq" class="nav-list-link">FAQ</a></li>
+<li class="nav-list-item"><a href="/rqueue/CHANGELOG/" class="nav-list-link">CHANGELOG</a></li>
+<li class="nav-list-item"><a href="/rqueue/migration" class="nav-list-link">Migration from older to new version</a></li>
+</ul>
+<ul class="nav-list"><li class="nav-list-item external"> <a href="https://github.com/sonus21/rqueue" class="nav-list-link external"> Rqueue on GitHub <svg viewbox="0 0 24 24" aria-labelledby="svg-external-link-title"><use xlink:href="#svg-external-link"></use></svg> </a>
+</li></ul></nav><footer class="site-footer"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.</footer>
+</div>
+<div class="main" id="top">
+<div id="main-header" class="main-header">
+<div class="search">
+<div class="search-input-wrap"> <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search Rqueue" aria-label="Search Rqueue" autocomplete="off"> <label for="search-input" class="search-label"><svg viewbox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+</div>
+<div id="search-results" class="search-results"></div>
+</div>
+<nav aria-label="Auxiliary" class="aux-nav"><ul class="aux-nav-list"><li class="aux-nav-list-item"> <a href="//github.com/sonus21/rqueue" class="site-button"> Rqueue on GitHub </a>
+</li></ul></nav>
+</div>
+<div id="main-content-wrap" class="main-content-wrap"><div id="main-content" class="main-content" role="main">
+<p>The Rqueue provides an abstraction over Redis for Producer and Consumer use case. The library provides two types of queues for producer/consumer.</p>
+<ul>
+<li>General queue (FIFO)</li>
+<li>Delay queue (Priority queue)</li>
+</ul>
+<p>Rqueue has been designed to handle different use cases and scenarios.</p>
+<p>Read More about Rqueue Design at <a href="https://sonus21.medium.com/introducing-rqueue-redis-queue-d344f5c36e1b">Introducing Rqueue: Redis Queue</a></p>
+<h2 id="rqueue-architecture"> <a href="#rqueue-architecture" class="anchor-heading" aria-labelledby="rqueue-architecture"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Rqueue Architecture</h2>
+<p>Rqueue Broker runs scheduled job as well as it communicates with Redis. In general Rqueue works as producers and consumers at the same time.</p>
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-----------------------+                         +------------------------+
+|                       |                         |                        |
+|     Application       |                         |        Application     | 
+|                       |                         |                        |
+|-----------------------|         +-----+         |------------------------|
+|       Rqueue          |    +---&gt;|Redis|&lt;---+    |         Rqueue         |
+| +----------------+    |    |    +-----+    |    |    +----------------+  |                    
+| |Rqueue Scheduler|    |    |               |    |    |Rqueue Scheduler|  |
+| |----------------|    |    |    +-----+    |    |    |----------------|  |
+| |Rqueue Producer |&lt;---+----+---&gt;|Redis|&lt;---+----+---&gt;|Rqueue Producer |  |
+| |----------------|    |    |    +-----+    |    |    |----------------|  |
+| |Rqueue Consumer |    |    |               |    |    |Rqueue Consumer |  |
+| +----------------+    |    |    +-----+    |    |    +----------------+  |                
++-----------------------+    +---&gt;|Redis|&lt;---+    +------------------------+
+                                  +-----+                                 
+</code></pre></div></div>
+<p>An application can operate in both producer and consumer modes. However, attempting to push a message to an unknown queue will result in a <code class="language-plaintext highlighter-rouge">QueueDoesNotExist</code> error. This error can be mitigated by using <code class="language-plaintext highlighter-rouge">registerQueue</code>, but there’s a potential race condition where registered queues might get deleted. To prevent encountering the <code class="language-plaintext highlighter-rouge">QueueDoesNotExist</code> error again, listen for <code class="language-plaintext highlighter-rouge">RqueueBootStrapEvent</code> in your application and register queues only upon receiving this bootstrap event.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">AppMessageSender</span> <span class="kd">implements</span> <span class="nc">ApplicationListener</span><span class="o">&lt;</span><span class="nc">RqueueBootStrapEvent</span><span class="o">&gt;</span> <span class="o">{</span>
+
+  <span class="nd">@Autowired</span>
+  <span class="kd">private</span> <span class="nc">RqueueEndpointManager</span> <span class="n">rqueueEndpointManager</span><span class="o">;</span>
+
+  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onApplicationEvent</span><span class="o">(</span><span class="nc">RqueueBootstrapEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(!</span><span class="n">event</span><span class="o">.</span><span class="na">isStartup</span><span class="o">())</span> <span class="o">{</span>
+      <span class="k">return</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">for</span> <span class="o">(</span><span class="nc">String</span> <span class="n">queue</span> <span class="o">:</span> <span class="n">queues</span><span class="o">)</span> <span class="o">{</span>
+      <span class="nc">String</span><span class="o">[]</span> <span class="n">priorities</span> <span class="o">=</span> <span class="n">getPriority</span><span class="o">(</span><span class="n">queue</span><span class="o">);</span>
+      <span class="n">rqueueEndpointManager</span><span class="o">.</span><span class="na">registerQueue</span><span class="o">(</span><span class="n">queue</span><span class="o">,</span> <span class="n">priorities</span><span class="o">);</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="kd">private</span> <span class="nc">String</span><span class="o">[]</span> <span class="nf">getPriority</span><span class="o">(</span><span class="nc">String</span> <span class="n">queue</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nc">String</span><span class="o">[]{};</span>
+  <span class="o">}</span>
+<span class="o">}</span> 
+</code></pre></div></div>
+<p>Rqueue can facilitate running consumers and producers in separate clusters without requiring changes to application code. This can be achieved effortlessly using the <code class="language-plaintext highlighter-rouge">active</code> flag of <code class="language-plaintext highlighter-rouge">RqueueListener</code>. In the producer cluster, you set <code class="language-plaintext highlighter-rouge">active</code> to <code class="language-plaintext highlighter-rouge">false</code>, while in the consumer cluster, you set the <code class="language-plaintext highlighter-rouge">active</code> flag to <code class="language-plaintext highlighter-rouge">true</code>. This approach allows for straightforward configuration and management of distinct roles within different clusters using Rqueue.</p>
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-----------------------+                         +------------------------+
+|                       |                         |                        |
+| Producer Application  |                         | Consumer Application   | 
+|                       |                         |                        |
+|-----------------------|         +-----+         |------------------------|
+|       Rqueue          |    +---&gt;|Redis|&lt;---+    |         Rqueue         |
+| +----------------+    |    |    +-----+    |    |    +----------------+  |                    
+| |Rqueue Scheduler|    |    |    +-----+    |    |    |Rqueue Scheduler|  |
+| |----------------+----+----+---&gt;|Redis|&lt;---+----+---&gt;|----------------|  |
+| |Rqueue Producer |    |    |    +-----+    |    |    |Rqueue Consumer |  |
+| +----------------+    |    |    +-----+    |    |    +----------------+  |
++-----------------------+    +---&gt;|Redis|&lt;---+    +------------------------+
+                                  +-----+                                 
+</code></pre></div></div>
+<p>If you have configured the producer and consumer on separate clusters, you can disable the Rqueue scheduler on the producer machine by setting <code class="language-plaintext highlighter-rouge">rqueue.scheduler.enabled=false</code>. This configuration ensures that the producer application operates solely as a producer without handling scheduling tasks.</p>
+<p>Additionally, it’s crucial to set <code class="language-plaintext highlighter-rouge">rqueue.system.mode=PRODUCER</code> to prevent potential <code class="language-plaintext highlighter-rouge">QueueDoesNotExist</code> errors. This setting explicitly defines the application mode as a producer, ensuring that it doesn’t attempt to perform consumer-specific operations that might lead to queue-related issues in a split-cluster setup.</p>
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-----------------------+                         +------------------------+
+|                       |                         |                        |
+| Producer Application  |                         | Consumer Application   | 
+|                       |         +-----+         |                        |
+|-----------------------|    +---&gt;|Redis|&lt;---+    |------------------------|
+|       Rqueue          |    |    +-----+    |    |         Rqueue         |
+|                       |    |               |    |    +----------------+  |                    |
+| +----------------+    |    |    +-----+    |    |    |Rqueue Scheduler|  |                    
+| |Rqueue Producer |----+----+---&gt;|Redis|&lt;---+----+---&gt;|----------------+  |
+| +----------------+    |    |    +-----+    |    |    | Rqueue Consumer|  |
+|                       |    |               |    |    +----------------+  |
+|                       |    |    +-----+    |    |                        |
++-----------------------+    +---&gt;|Redis|&lt;---+    +------------------------+
+                                  +-----+                                 
+</code></pre></div></div>
+<h3 id="rqueue-scheduler"> <a href="#rqueue-scheduler" class="anchor-heading" aria-labelledby="rqueue-scheduler"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Rqueue Scheduler</h3>
+<p>The Rqueue scheduler offers extensive configurability across various parameters:</p>
+<ul>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.enabled=true</code>: By default, the scheduler runs on all machines. You can disable it globally using this flag if running on a single machine is sufficient.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.listener.shared=true</code>: Controls whether Rqueue scheduler shares the RedisMessageListenerContainer for PUB/SUB communication with Redis consumers. Enabling this allows efficient use of the same Redis connection for both application and Rqueue code.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.redis.enabled=true</code>: Disables event-based message movement, providing control over when messages are processed.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.auto.start=true</code>: Manages thread pools for message handling. Setting this to <code class="language-plaintext highlighter-rouge">false</code> uses only event-based message movement.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.scheduled.message.thread.pool.size=5</code>: Adjusts the thread pool size for handling messages moved from ZSET to LIST, balancing efficiency with the number of delayed queues.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.processing.message.thread.pool.size=1</code>: Sets the thread pool size for handling messages in the processing queue, ensuring reliable at-least-once message delivery.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.scheduled.message.time.interval=5000</code>: Specifies the interval for moving messages from the scheduled queue to the normal queue, providing control over delayed message consumption.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.max.message.count=100</code>: Limits the number of messages moved per batch from scheduled/processing queues to the normal queue, optimizing processing efficiency during peak loads.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.max.message.mover.delay=60000</code>: Specifies the maximum delay before retrying Redis calls in case of failure, preventing system overload through exponential backoff.</p></li>
+<li><p><code class="language-plaintext highlighter-rouge">rqueue.scheduler.min.message.mover.delay=200</code>: Sets the minimum delay for periodic message fetching, ensuring efficient processing of scheduled messages.</p></li>
+</ul>
+<p>These configurations allow fine-tuning of Rqueue scheduler behavior across different operational scenarios.</p>
+<h3 id="dead-letter-queue-consumerlistener"> <a href="#dead-letter-queue-consumerlistener" class="anchor-heading" aria-labelledby="dead-letter-queue-consumerlistener"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Dead Letter Queue Consumer/Listener</h3>
+<p>By default, an application cannot attach a listener to a dead letter queue. To enable dead letter queue listener functionality for a specific queue, set the <code class="language-plaintext highlighter-rouge">deadLetterQueueListenerEnabled</code> attribute of the <code class="language-plaintext highlighter-rouge">RqueueListener</code> annotation.</p>
+<p>Example configuration</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nd">@Component</span>
+<span class="nd">@Slf4j</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MessageListener</span> <span class="o">{</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"job-queue"</span><span class="o">,</span>
+      <span class="n">numRetries</span> <span class="o">=</span> <span class="s">"3"</span><span class="o">,</span>
+      <span class="n">deadLetterQueueListenerEnabled</span> <span class="o">=</span> <span class="s">"true"</span><span class="o">,</span>
+      <span class="n">deadLetterQueue</span> <span class="o">=</span> <span class="s">"failed-job-queue"</span><span class="o">,</span>
+      <span class="n">concurrency</span> <span class="o">=</span> <span class="s">"5-10"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="nc">Job</span> <span class="n">job</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Job alert: {}"</span><span class="o">,</span> <span class="n">job</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"failed-job-queue"</span><span class="o">,</span> <span class="n">concurrency</span> <span class="o">=</span> <span class="s">"1"</span><span class="o">)</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="nc">Job</span> <span class="n">job</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Job alert: {}"</span><span class="o">,</span> <span class="n">job</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<hr>
+<h2 class="text-delta">Table of contents</h2>
+<ul>
+<li> <a href="/rqueue/message-handling">Message Handling</a>
+</li>
+<li> <a href="/rqueue/message-deduplication">Message Deduplication</a>
+</li>
+<li> <a href="/rqueue/middleware">Middleware</a>
+</li>
+<li> <a href="/rqueue/priority">Queue Priority</a>
+</li>
+</ul>
+<hr>
+<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a><div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/message-handling/producer-consumer.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
+</div></div>
+<div class="search-overlay"></div>
+</div>
+<script> var config = {} ; mermaid.initialize(config); window.mermaid.init(undefined, document.querySelectorAll('.language-mermaid')); </script>
+</body>
+</html>

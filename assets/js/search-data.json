@@ -1,0 +1,534 @@
+{"0": {
+    "doc": "CHANGELOG",
+    "title": "CHANGELOG",
+    "content": "All notable user-facing changes to this project are documented in this file. ",
+    "url": "/rqueue/CHANGELOG/",
+    
+    "relUrl": "/CHANGELOG/"
+  },"1": {
+    "doc": "CHANGELOG",
+    "title": "Release [3.2.0] 10-July-2024",
+    "content": "Fixes . | Fixed typo #218 | . Feature . | Do not retry some exceptions | . ",
+    "url": "/rqueue/CHANGELOG/#release-320-10-july-2024",
+    
+    "relUrl": "/CHANGELOG/#release-320-10-july-2024"
+  },"2": {
+    "doc": "CHANGELOG",
+    "title": "Release [3.1.1] 1-Mar-2024",
+    "content": "Fixes . | Fixed issue for spring boot 3.2 #218 | . ",
+    "url": "/rqueue/CHANGELOG/#release-311-1-mar-2024",
+    
+    "relUrl": "/CHANGELOG/#release-311-1-mar-2024"
+  },"3": {
+    "doc": "CHANGELOG",
+    "title": "Release 3.1.0 24-June-2023",
+    "content": "Migrate to this version to reduce redis resource utilization . This will fix an important bug happening due to task multiplications. This is causing more Redis resource usage Please check #193 . ",
+    "url": "/rqueue/CHANGELOG/#release-310-24-june-2023",
+    
+    "relUrl": "/CHANGELOG/#release-310-24-june-2023"
+  },"4": {
+    "doc": "CHANGELOG",
+    "title": "Release 2.13.1 24-June-2023",
+    "content": "Migrate to this version to reduce redis resource utilization . This will fix an important bug happening due to task multiplications. This is causing more Redis resource usage Please check #193 . ",
+    "url": "/rqueue/CHANGELOG/#release-2131-24-june-2023",
+    
+    "relUrl": "/CHANGELOG/#release-2131-24-june-2023"
+  },"5": {
+    "doc": "CHANGELOG",
+    "title": "Release 3.0.1 17-Jan-2022",
+    "content": "We’re so excited to release Rqueue 3.0.1. This release supports the Java 17, Spring Boot 3.x and Spring Framework 6.x . 2.13.0 - 25-Dec-2022 . Fixes . Migrate to this version as soon as possible to avoid duplicate message consumption post deletion. | Important fix for parallel message deletion or delete the message from message listener | No threads are available, improvement on message poller | Use System Zone ID for UI bottom screen | . 2.12.0 - 14-Dec-2022 . Fixes . | Upgraded Pebble version for CVE | Use System Zone ID for UI display | . 2.11.1 - 18-Nov-2022 . Migrate to this version as soon as possible to avoid message build up. Messages in scheduled queue can grow if poller is failing. Workaround is to restart the application. | Message mover unreliability, scheduled message were not getting consumed once redis connection error occurs | Upgraded Jquery version | . 2.10.2 - 16-Jul-2022 . Fixes . | Message status is not enqueued only, but it should be successful, failed etc | Weighted queue with size 1 was not working | Deleted message reappears | . Features . | Disable Rqueue using rqueue.enabled flag | . 2.10.1 - 18-Oct-2021 . | Fixes for concurrency when task executor is provided see issue #122 | . 2.10.0 - 10-Oct-2021 . Breaking change, if you’re controlling any internal settings of Rqueue using application environment or configuration variable than application can break. We’ve renamed some config keys, see . Fixes . | Fixes for post processor calls (post processor calls were not made) | Fixes message move message count (by default 1000 messages are moved) | Potential issue in rename collection | More than one (-) sign in the dashboard | Fixes for server context path. Rqueue end points would be served relative to x-forwarded-prefix/server.servlet.context-path | . Features . | Display completed jobs in the dashboard | Option to choose number of days in the chart | . 2.9.0 - 30-Jul-2021 . Fixes . | Option to add rqueue web url prefix, the prefix is configured from application.properties file using rqueue.web.url.prefix=/my-application/, now rqueue dashboard would be served at /my-application/rquque instead of /rqueue, the configuration has higher priority than the HTTP request header x-forwarded-prefix. | Custom message converter is not working | RedisCommandExecutionException : command arguments must be strings or integers | . 2.8.0 - 08-Jun-2021 . Fixes . | Producer mode is not honored in Message scheduler | Message scheduler disable flag is not honored | Aggregator should not be running in producer mode | Listener concurrency is not reached, even though messages are in queue | Register queue in producer mode for all listener methods | . Added . | Pause/Unpause queue from dashboard | Pause/Unpause queue programmatically | Batch message fetching | Default queue priority to WEIGHTED | Added an API to update the visibility timeout of running job | . ",
+    "url": "/rqueue/CHANGELOG/#release-301-17-jan-2022",
+    
+    "relUrl": "/CHANGELOG/#release-301-17-jan-2022"
+  },"6": {
+    "doc": "CHANGELOG",
+    "title": "2.7.0 - 13-Apr-2021",
+    "content": "Fixes . | Spring Boot App could not start due to class not found error Boot 2.0 | Utility UI message move not working due to invalid data type | . Added . | Support for Reactive Redis and Spring Webflux | Delete message metadata when rqueue.message.durability.in-terminal-state is less than equal to zero | Delete job detail when rqueue.job.durability.in-terminal-state is less tha equal to zero | . ",
+    "url": "/rqueue/CHANGELOG/#270---13-apr-2021",
+    
+    "relUrl": "/CHANGELOG/#270---13-apr-2021"
+  },"7": {
+    "doc": "CHANGELOG",
+    "title": "2.6.1 - 1-Mar-2021",
+    "content": "Fixes . | Graph not rendering in firefox due to unsafe csp rule | Crash in dashboard due to Twig template, changed it to Pebble template | . ",
+    "url": "/rqueue/CHANGELOG/#261---1-mar-2021",
+    
+    "relUrl": "/CHANGELOG/#261---1-mar-2021"
+  },"8": {
+    "doc": "CHANGELOG",
+    "title": "2.6.0 - 22-Feb-2021",
+    "content": "Message counts api . ",
+    "url": "/rqueue/CHANGELOG/#260---22-feb-2021",
+    
+    "relUrl": "/CHANGELOG/#260---22-feb-2021"
+  },"9": {
+    "doc": "CHANGELOG",
+    "title": "2.5.0 - 9-Feb-2021",
+    "content": "Added . | Attach more than one message listeners to the same queue | . ",
+    "url": "/rqueue/CHANGELOG/#250---9-feb-2021",
+    
+    "relUrl": "/CHANGELOG/#250---9-feb-2021"
+  },"10": {
+    "doc": "CHANGELOG",
+    "title": "2.4.0 - 3-Feb-2021",
+    "content": "Added . | Job Middlewares | Delay execution of message when it’s moved to enqueue instead of consuming it immediately. | . ",
+    "url": "/rqueue/CHANGELOG/#240---3-feb-2021",
+    
+    "relUrl": "/CHANGELOG/#240---3-feb-2021"
+  },"11": {
+    "doc": "CHANGELOG",
+    "title": "2.3.0 - 2-Jan-2021",
+    "content": "Added . | Job checkin for long-running tasks | Display job and failure details in UI for each message | Allow deleting messages from normal and scheduled queues instead of only dead letter queue. | Scan only required beans for RqueueListener annotated methods | . Fixes . | Redis string deserialization issue, string were inserted without quote’’ | Dashboard CSP rule error for inline javascript | Double minus sign (–) in UI | . Miscellaneous . | Delete message metadata along with messages using background job | Potential error for a periodic message, if period was longer than 24 hours | Add retry limit exceeded messages at the front of dead letter queue instead at the back. | . ",
+    "url": "/rqueue/CHANGELOG/#230---2-jan-2021",
+    
+    "relUrl": "/CHANGELOG/#230---2-jan-2021"
+  },"12": {
+    "doc": "CHANGELOG",
+    "title": "2.2.0 - 6-Dec-2020",
+    "content": "Added . | New API to enqueue periodic message. Periodic jobs are like cron jobs that would run at the certain interval. | . ",
+    "url": "/rqueue/CHANGELOG/#220---6-dec-2020",
+    
+    "relUrl": "/CHANGELOG/#220---6-dec-2020"
+  },"13": {
+    "doc": "CHANGELOG",
+    "title": "2.1.1 - 24-Sep-2020",
+    "content": "Added . | More apis to enqueue unique message | . ",
+    "url": "/rqueue/CHANGELOG/#211---24-sep-2020",
+    
+    "relUrl": "/CHANGELOG/#211---24-sep-2020"
+  },"14": {
+    "doc": "CHANGELOG",
+    "title": "2.1.0 - 16-Sep-2020",
+    "content": "Added . | Allow application to provide message id while enqueuing messages | Unique message enqueue | Api to check if message was enqueued or not | Api to delete single message | Proxy for outbound http connection | Enqueue list of objects and process them, like batch-processing | . Fixes: . | Registered queues should not be deleted when used in producer mode | . ",
+    "url": "/rqueue/CHANGELOG/#210---16-sep-2020",
+    
+    "relUrl": "/CHANGELOG/#210---16-sep-2020"
+  },"15": {
+    "doc": "CHANGELOG",
+    "title": "2.0.4 - 2-Aug-2020",
+    "content": "Added . | Allow a listener to be added on dead letter queue | . Fixes: . | Rqueue views/apis not accessible via api gateway | . ",
+    "url": "/rqueue/CHANGELOG/#204---2-aug-2020",
+    
+    "relUrl": "/CHANGELOG/#204---2-aug-2020"
+  },"16": {
+    "doc": "CHANGELOG",
+    "title": "2.0.2 - 13-July-2020",
+    "content": "Fixes . | JDK dynamic proxy | AoP profiler | . ",
+    "url": "/rqueue/CHANGELOG/#202---13-july-2020",
+    
+    "relUrl": "/CHANGELOG/#202---13-july-2020"
+  },"17": {
+    "doc": "CHANGELOG",
+    "title": "2.0.1 - 17-May-2020",
+    "content": "Added . | Allow registering a queue, that can be in push only mode | Apis to schedule task at the given time | Refine enqueueIn apis to support Duration and TimeUnit | . Fixes . | Arguments mismatch due to multiple class loaders. | Dead letter queue clear lead to clearing all the messages related to that queue. | . ",
+    "url": "/rqueue/CHANGELOG/#201---17-may-2020",
+    
+    "relUrl": "/CHANGELOG/#201---17-may-2020"
+  },"18": {
+    "doc": "CHANGELOG",
+    "title": "2.0.0 - 10-May-2020",
+    "content": "Breaking change, for migration see . | Queue names are prefixed, that can lead to error. 1.x users set REDIS key __rq::version to 1. It does try to find the version using key prefix, but if all queues are empty or no key exist in REDIS with prefix rqueue- then it will consider version 2. | Renamed annotation field maxJobExecutionTime to visibilityTimeout | . Added . | Web interface to visualize queue | Move message from one queue to another | Latency visualizer | Delete one or more message(s) from the queue | Allow deactivating a consumer in a given environment | Single or multiple execution of polled messages | Queue level concurrency | BackOff for failed messages, linear or exponential | Group level queue priority | Multi level queue priority | Strict or weighted algorithm for message execution | . Fixes . | Spring Optional Micrometer, in older version config class was importing micrometer related classes, that could lead to error if classes are not found. In this version now code depends on bean name using DependsOn annotation. | . ",
+    "url": "/rqueue/CHANGELOG/#200---10-may-2020",
+    
+    "relUrl": "/CHANGELOG/#200---10-may-2020"
+  },"19": {
+    "doc": "CHANGELOG",
+    "title": "1.4.0 - 08-Apr-2020",
+    "content": ". | Allow queue level configuration of job execution time. | Support to add Message processor for discard and dead letter queue | . ",
+    "url": "/rqueue/CHANGELOG/#140---08-apr-2020",
+    
+    "relUrl": "/CHANGELOG/#140---08-apr-2020"
+  },"20": {
+    "doc": "CHANGELOG",
+    "title": "1.3.2 - 01-Apr-2020",
+    "content": ". | Support lower version of spring 2.1.x | . ",
+    "url": "/rqueue/CHANGELOG/#132---01-apr-2020",
+    
+    "relUrl": "/CHANGELOG/#132---01-apr-2020"
+  },"21": {
+    "doc": "CHANGELOG",
+    "title": "1.3.1 - 27-Feb-2020",
+    "content": ". | Fixed Bootstrap issue due to optional dependencies of micrometer | . ",
+    "url": "/rqueue/CHANGELOG/#131---27-feb-2020",
+    
+    "relUrl": "/CHANGELOG/#131---27-feb-2020"
+  },"22": {
+    "doc": "CHANGELOG",
+    "title": "1.3 - 11-Dec-2019",
+    "content": ". | Expose multiple queue metrics using micrometer. (queue-size, delay queue size, processing queue size, dead letter queue size, execution counter, failure counter) | An api to move messages from dead letter queue to other queue. (Any source queue to target queue). | . Fixed . | An issue in the scheduler that’s always scheduling job at the delay of 5 seconds. (this leads to messages are not copied from scheduled queue to main queue on high load) | . ",
+    "url": "/rqueue/CHANGELOG/#13---11-dec-2019",
+    
+    "relUrl": "/CHANGELOG/#13---11-dec-2019"
+  },"23": {
+    "doc": "CHANGELOG",
+    "title": "1.2 - 03-Nov-2019",
+    "content": ". | Typo of Later to Letter | . ",
+    "url": "/rqueue/CHANGELOG/#12---03-nov-2019",
+    
+    "relUrl": "/CHANGELOG/#12---03-nov-2019"
+  },"24": {
+    "doc": "CHANGELOG",
+    "title": "1.1 - 02-Nov-2019",
+    "content": ". | At least once message guarantee | Reduced ZSET calls | Lua script to make atomic operation | . ",
+    "url": "/rqueue/CHANGELOG/#11---02-nov-2019",
+    
+    "relUrl": "/CHANGELOG/#11---02-nov-2019"
+  },"25": {
+    "doc": "CHANGELOG",
+    "title": "1.0 - 23-Oct-2019",
+    "content": ". | The basic version of Asynchronous task execution using Redis for Spring and Spring Boot | . ",
+    "url": "/rqueue/CHANGELOG/#10---23-oct-2019",
+    
+    "relUrl": "/CHANGELOG/#10---23-oct-2019"
+  },"26": {
+    "doc": "Callbacks and Events",
+    "title": "Message Processors/Callbacks",
+    "content": "Rqueue supports the following message processors, which can be used for different purposes such as setting up tracers or managing transactions. Pre Execution Processor . This message processor is invoked before calling the handler methods. If the processor returns false, the message handler will not be called. class RqueueConfiguration { private MessageProcessor preExecutorMessageProcessor() { // return message processor object } @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); MessageProcessor preExecutorMessageProcessor = preExecutorMessageProcessor(); factory.setPreExecutionMessageProcessor(preExecutorMessageProcessor); return factory; } } . Discard Execution Processor . This message processor is called whenever a message is discarded due to exceeding the retry limit. class RqueueConfiguration { private MessageProcessor discardMessageProcessor() { // return message processor object } @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); MessageProcessor discardMessageProcessor = discardMessageProcessor(); factory.setDiscardMessageProcessor(discardMessageProcessor); return factory; } } . Dead Letter Queue Processor . This message processor is called whenever a message is moved to the dead letter queue. class RqueueConfiguration { private MessageProcessor deadLetterQueueMessageProcessor() { // return message processor object } @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); MessageProcessor deadLetterQueueMessageProcessor = deadLetterQueueMessageProcessor(); factory.setDeadLetterQueueMessageProcessor(deadLetterQueueMessageProcessor); return factory; } } . Manual Deletion Processor . This message processor is called whenever a message is deleted manually. class RqueueConfiguration { private MessageProcessor manualDeletionMessageProcessor() { // return message processor object } @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); MessageProcessor manualDeletionMessageProcessor = manualDeletionMessageProcessor(); factory.setManualDeletionMessageProcessor(manualDeletionMessageProcessor); return factory; } } . Post Execution Processor . This message processor is called upon successful consumption of the message. class RqueueConfiguration { private MessageProcessor postExecutionMessageProcessor() { // return message processor object } @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); MessageProcessor postExecutionMessageProcessor = postExecutionMessageProcessor(); factory.setPostExecutionMessageProcessor(postExecutionMessageProcessor); return factory; } } . ",
+    "url": "/rqueue/callback-and-events#message-processorscallbacks",
+    
+    "relUrl": "/callback-and-events#message-processorscallbacks"
+  },"27": {
+    "doc": "Callbacks and Events",
+    "title": "Events",
+    "content": "Rqueue generates two types of application events: one for Rqueue container start/shutdown and another for task execution status. Job/Task Execution Event . Upon completion of each task, Rqueue generates RqueueExecutionEvent, which the application can listen to. This event contains a job object providing all relevant information about the job. Application Bootstrap Event . Once the RqueueListenerContainer is started, it emits RqueueBootstrapEvent. This event is generated post container shutdown and can be used for tasks such as queue registration or cleaning up local states. ",
+    "url": "/rqueue/callback-and-events#events",
+    
+    "relUrl": "/callback-and-events#events"
+  },"28": {
+    "doc": "Callbacks and Events",
+    "title": "Callbacks and Events",
+    "content": "Rqueue provides various types of callbacks and events for handling message processing and application events. ",
+    "url": "/rqueue/callback-and-events",
+    
+    "relUrl": "/callback-and-events"
+  },"29": {
+    "doc": "Configuration",
+    "title": "Configuration",
+    "content": "Rqueue offers many configuration settings that can be adjusted either through the application configuration or directly in the code. ",
+    "url": "/rqueue/configuration",
+    
+    "relUrl": "/configuration"
+  },"30": {
+    "doc": "Configuration",
+    "title": "Table of contents",
+    "content": ". | TOC | . Apart from the basic configuration, Rqueue can be heavily customized, such as adjusting the number of tasks executed concurrently. Additional configurations can be provided using the SimpleRqueueListenerContainerFactory class. See SimpleRqueueListenerContainerFactory doc for more configs. @Configuration public class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { // return SimpleRqueueListenerContainerFactory object } } . ",
+    "url": "/rqueue/configuration#table-of-contents",
+    
+    "relUrl": "/configuration#table-of-contents"
+  },"31": {
+    "doc": "Configuration",
+    "title": "Task or Queue Concurrency",
+    "content": "By default, the number of task executors is twice the number of queues. You can configure a custom or shared task executor using the factory’s setTaskExecutor method. Additionally, queue concurrency can be set using the RqueueListener annotation’s concurrency field, which can be a positive number like 10 or a range like 5-10. If queue concurrency is specified, each queue will use its own task executor to handle consumed messages; otherwise, a shared task executor is used. A global number of workers can be configured using the setMaxNumWorkers method. The RqueueListener annotation also has a batchSize field. By default, listeners with a concurrency set will fetch 10 messages, while others will fetch 1. Increasing the batch size has its consequences. If your thread pool size is too low, you may encounter many processing jobs being rejected by the executor unless you have configured a large queueCapacity. class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); //... factory.setMaxNumWorkers(10); return factory; } } . class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); //... ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor(); threadPoolTaskExecutor.setThreadNamePrefix(\"taskExecutor\"); threadPoolTaskExecutor.setCorePoolSize(10); threadPoolTaskExecutor.setMaxPoolSize(50); threadPoolTaskExecutor.setQueueCapacity(0); threadPoolTaskExecutor.afterPropertiesSet(); factory.setTaskExecutor(threadPoolTaskExecutor); return factory; } } . When a custom executor is provided, it is essential to set MaxNumWorkers correctly. Otherwise, the thread pool might be over- or under-utilized. Over-utilization of the thread pool is not possible, as it will reject new tasks, leading to delays in message consumption. Under-utilization can be managed by ensuring proper configuration of the executor and adjusting the MaxNumWorkers setting appropriately. ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor(); threadPoolTaskExecutor.setThreadNamePrefix( \"ListenerExecutor\" ); threadPoolTaskExecutor.setCorePoolSize(corePoolSize); threadPoolTaskExecutor.setMaxPoolSize(maxPoolSize); threadPoolTaskExecutor.setQueueCapacity(queueCapacity); threadPoolTaskExecutor.afterPropertiesSet(); factory.setTaskExecutor(threadPoolTaskExecutor); . In this configuration, there are three key variables: corePoolSize, maxPoolSize, and queueCapacity. | corePoolSize signifies the lower limit of active threads. | maxPoolSize signifies the upper limit of active threads. | queueCapacity signifies that even if you have maxPoolSize running threads, you can have queueCapacity tasks waiting in the queue, which can be dequeued and executed by the existing threads as soon as the running threads complete their execution. | . If you have N queues, you can set the maximum number of workers as (maxPoolSize + queueCapacity - N). In this context, N threads are allocated for polling queues, but this is not a correct number when * *priority** is used. The number of message pollers is determined by the sum of the following: . | Number of unique priority groups. | Number of queues with specified priorities (e.g., \"critical=5,high=2\"). | Number of queues without priority. | . If you prefer not to delve into the calculations, you can set the following: . | queueCapacity &gt;= 2 * number of queues | maxPoolSize &gt;= 2 * number of queues | ",
+    "url": "/rqueue/configuration#task-or-queue-concurrency",
+    
+    "relUrl": "/configuration#task-or-queue-concurrency"
+  },"32": {
+    "doc": "Configuration",
+    "title": "corePoolSize &gt;= number of queues",
+    "content": "| . Setting a non-zero queueCapacity can indeed lead to duplicate message problems. This occurs because polled messages that are waiting to be executed might have their visibilityTimeout expire, causing another message listener to pull the same message again. This scenario can result in duplicate processing of messages, which can impact the correctness of your application’s logic. To mitigate this issue, it’s crucial to carefully configure queueCapacity and visibilityTimeout settings to ensure that messages are processed correctly without duplication. ",
+    "url": "/rqueue/configuration#corepoolsize--number-of-queues",
+    
+    "relUrl": "/configuration#corepoolsize--number-of-queues"
+  },"33": {
+    "doc": "Configuration",
+    "title": "Manual start of the container",
+    "content": "When using a container that starts automatically and offers graceful shutdown, you can control its automatic startup behavior using the autoStartup flag. If autoStartup is set to false, then your application needs to manually call the start and stop methods of the container to control its lifecycle. Additionally, for a graceful shutdown, you should call the destroy method when appropriate. This gives you finer control over when the container starts and stops within your application’s lifecycle. class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); //... factory.setAutoStartup(false); return factory; } } . public class BootstrapController { @Autowired private RqueueMessageListenerContainer rqueueMessageListenerContainer; // ... public void start() { // ... rqueueMessageListenerContainer.start(); } public void stop() { // ... rqueueMessageListenerContainer.stop(); } public void destroy() { // ... rqueueMessageListenerContainer.destroy(); } //... } . ",
+    "url": "/rqueue/configuration#manual-start-of-the-container",
+    
+    "relUrl": "/configuration#manual-start-of-the-container"
+  },"34": {
+    "doc": "Configuration",
+    "title": "Message converters configuration",
+    "content": "To configure the message converter, you can only use application configuration by specifying the property rqueue.message.converter.provider.class=com.example.MyMessageConverterProvider. This approach allows you to customize message conversion behavior using your own implementation of org.springframework.messaging.converter.MessageConverter. Typically, this customization ensures that messages can be converted to and from various formats smoothly within your application. MyMessageConverterProvider class must implement com.github.sonus21.rqueue.converter.MessageConverterProvider interface. class MyMessageConverterProvider implements MessageConverterProvider { @Override public MessageConverter getConverter() { // here any message converter can be returned except null return new MyMessageConverter(); } } . The default implementation, DefaultMessageConverterProvider, returns DefaultRqueueMessageConverter. While DefaultRqueueMessageConverter can handle encoding and decoding for most messages, it may encounter issues when message classes are not shared across applications. To avoid sharing classes as JAR files, you can opt for converters such as com.github.sonus21.rqueue.converter.JsonMessageConverter or org.springframework.messaging.converter.MappingJackson2MessageConverter. These converters serialize messages into JSON format, facilitating interoperability without shared class dependencies. Additionally, alternatives like MessagePack or ProtoBuf can also be employed based on specific requirements for message serialization and deserialization. Each of these options provides flexibility in how messages are encoded and decoded across different systems and applications. ",
+    "url": "/rqueue/configuration#message-converters-configuration",
+    
+    "relUrl": "/configuration#message-converters-configuration"
+  },"35": {
+    "doc": "Configuration",
+    "title": "Additional Configuration",
+    "content": ". | rqueue.retry.per.poll: This setting determines how many times a polled message should be retried before declaring it dead or moving it back into the queue for subsequent retries. The default value is 1, meaning a message will be processed once initially, and if it fails, it will be retried on the next poll. If you increase this value to N, the polled message will be retried consecutively N times before it is considered failed and made available for other listeners to process. | . This configuration allows you to control how many times Rqueue attempts to process a message before handling it as a failed message, giving you flexibility in managing message retries and error handling strategies. ",
+    "url": "/rqueue/configuration#additional-configuration",
+    
+    "relUrl": "/configuration#additional-configuration"
+  },"36": {
+    "doc": "Rqueue Dashboard",
+    "title": "Configuration",
+    "content": "Adding Resource Handlers . To handle static resources, configure a resource handler in your MVC configuration. public class MvcConfig implements WebMvcConfigurer { @Value(\"${rqueue.web.url.prefix:}\") private String rqueueWebUrlPrefix; @Override public void addResourceHandlers(ResourceHandlerRegistry registry) { if (!StringUtils.isEmpty(rqueueWebUrlPrefix)) { registry .addResourceHandler(rqueueWebUrlPrefix + \"/**\") .addResourceLocations(\"classpath:/public/\"); } else if (!registry.hasMappingForPattern(\"/**\")) { registry.addResourceHandler(\"/**\").addResourceLocations(\"classpath:/public/\"); } } } . Adding Path Prefix . Rqueue endpoints and dashboards are available at /rqueue/**, but they can handle the x-forwarded-prefix HTTP header for custom prefixing. Configure the prefix using rqueue.web.url.prefix, for example: rqueue.web.url.prefix=/my-application/. If a path prefix is configured, ensure that static file resource handling is also configured accordingly, or the dashboard may not function correctly. Link with configured path prefix: http://localhost:8080/my-application/rqueue . ",
+    "url": "/rqueue/dashboard#configuration",
+    
+    "relUrl": "/dashboard#configuration"
+  },"37": {
+    "doc": "Rqueue Dashboard",
+    "title": "Dashboard Configurations",
+    "content": ". | rqueue.web.enable: Controls whether the web dashboard is enabled (default: true). | rqueue.web.max.message.move.count: Specifies the number of messages to move on a single request from the utility tab (default: 1000). | rqueue.web.collect.listener.stats: Enables collection of task execution status metrics ( default: false). | rqueue.web.collect.listener.stats.thread.count: Controls the number of threads for metrics aggregation. | rqueue.web.statistic.history.day: Specifies the number of days to store metrics data ( default: 90). | rqueue.web.collect.statistic.aggregate.event.count: Aggregates metrics for a specified number of events at once (default: 500). | rqueue.web.collect.statistic.aggregate.event.wait.time: Specifies the wait time in seconds for metrics aggregation based on event occurrence or elapsed time (default: 60 seconds). | rqueue.web.collect.statistic.aggregate.shutdown.wait.time: Sets the wait time in milliseconds for force aggregation of pending events during application shutdown. | . Dashboard Screenshots . Latency Graph . Queue Statistics . Tasks Waiting for Execution . Running Tasks . ",
+    "url": "/rqueue/dashboard#dashboard-configurations",
+    
+    "relUrl": "/dashboard#dashboard-configurations"
+  },"38": {
+    "doc": "Rqueue Dashboard",
+    "title": "Rqueue Dashboard",
+    "content": "The Rqueue dashboard provides several components to monitor and manage various aspects of message processing. Components of the Rqueue Dashboard . | Latency Graph: Displays latency metrics for all queues or specific queues over a daily basis for up to 90 days, showing minimum, maximum, and average latency. | Queue Statistics: Provides insights into message retry counts, executions, movements to dead-letter queues, and discards due to retry limit exhaustion. | Task Deletion: Allows deletion of enqueued messages, whether scheduled to run, currently running, or waiting to run. | Queue Insight: Offers visibility into internal queue messages, akin to an SQS dashboard. | Queue Management: Facilitates moving tasks from one queue to another. | . Link to access the dashboard: http://localhost:8080/rqueue . ",
+    "url": "/rqueue/dashboard",
+    
+    "relUrl": "/dashboard"
+  },"39": {
+    "doc": "FAQ",
+    "title": "How can we handle different types of messages with a single listener?",
+    "content": "Sometimes, you may need a single message listener to handle various asynchronous tasks. To achieve this, define a superclass and subclasses for different message types. In your listener, enqueue instances of these subclasses using the superclass. Define Message Classes . class FancyMessage { } class SuperFancyMessage extends FancyMessage { private boolean fancy; } class OkOkFancyMessage extends FancyMessage { private boolean okOk; } . Here, FancyMessage acts as a superclass for SuperFancyMessage and OkOkFancyMessage. You can enqueue both SuperFancyMessage and OkOkFancyMessage instances in the same queue. Enqueuing Process . @Component class MyMessageEnqueuer { @Autowired private RqueueMessageEnqueuer rqueueMessageEnqueuer; public void enqueueFancyMessage(FancyMessage fancyMessage) { rqueueMessageEnqueuer.enqueue(\"fancy-queue\", fancyMessage); // handle errors } } . Message Listener . @Component class FancyMessageListener { private void handleSuperFancyMessage(SuperFancyMessage superFancyMessage) { // handle SuperFancyMessage } private void handleOkOkFancyMessage(OkOkFancyMessage okOkFancyMessage) { // handle OkOkFancyMessage } @RqueueListener(\"fancy-queue\") public void handleMessage(FancyMessage fancyMessage) { if (fancyMessage instanceof SuperFancyMessage) { handleSuperFancyMessage((SuperFancyMessage) fancyMessage); } else if (fancyMessage instanceof OkOkFancyMessage) { handleOkOkFancyMessage((OkOkFancyMessage) fancyMessage); } else { // handle other cases } } } . ",
+    "url": "/rqueue/faq#how-can-we-handle-different-types-of-messages-with-a-single-listener",
+    
+    "relUrl": "/faq#how-can-we-handle-different-types-of-messages-with-a-single-listener"
+  },"40": {
+    "doc": "FAQ",
+    "title": "How do we apply rate limiting?",
+    "content": "Rate limiting can be implemented using middleware. In the middleware, you can customize whether to allow or reject messages based on specific criteria. class MyRateLimiter implements RateLimiterMiddleware { final RateLimiter rateLimiter; MyRateLimiter(RateLimiter rateLimiter) { this.rateLimiter = rateLimiter; } @Override public boolean isThrottled(Job job) { RqueueMessage rqueueMessage = job.getRqueueMessage(); if (rqueueMessage.getQueueName().equals(\"rate-limited-queue\")) { return rateLimiter.tryAcquire(); } Object message = job.getMessage(); if (message instanceof RateLimitedMessage) { return rateLimiter.tryAcquire(); } return true; } } . Using rate limiting middleware: . @Configuration public class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); RateLimiterMiddleware limiterMiddleware = new MyRateLimiter(); factory.useMiddleware(limiterMiddleware); // add other middlewares here return factory; } } . ",
+    "url": "/rqueue/faq#how-do-we-apply-rate-limiting",
+    
+    "relUrl": "/faq#how-do-we-apply-rate-limiting"
+  },"41": {
+    "doc": "FAQ",
+    "title": "Does Rqueue support generic classes?",
+    "content": "No, Rqueue does not support generic classes. ",
+    "url": "/rqueue/faq#does-rqueue-support-generic-classes",
+    
+    "relUrl": "/faq#does-rqueue-support-generic-classes"
+  },"42": {
+    "doc": "FAQ",
+    "title": "Why are messages consumed late by a listener?",
+    "content": "Messages should typically be consumed promptly by listeners. Delays may occur if there are more messages in the queue than available listeners, or due to high processing times. To minimize delays, consider increasing the concurrency of your queue. For scheduled messages, you can monitor the queue details page and ensure the time left is always greater than -1000 milliseconds. ",
+    "url": "/rqueue/faq#why-are-messages-consumed-late-by-a-listener",
+    
+    "relUrl": "/faq#why-are-messages-consumed-late-by-a-listener"
+  },"43": {
+    "doc": "FAQ",
+    "title": "How can we retrieve a job’s position in the queue?",
+    "content": "Determining a job’s exact position in the queue can be challenging due to parallel processing and Redis data structures. You can estimate the queue size by checking pending and scheduled message counts. class TestJobPosition { @Autowired private RqueueQueueMetrics rqueueQueueMetrics; public long getTestQueueSize() { return rqueueQueueMetrics.getPendingMessageCount(\"test-queue\") + rqueueQueueMetrics.getScheduledMessageCount(\"test-queue\"); } } . ",
+    "url": "/rqueue/faq#how-can-we-retrieve-a-jobs-position-in-the-queue",
+    
+    "relUrl": "/faq#how-can-we-retrieve-a-jobs-position-in-the-queue"
+  },"44": {
+    "doc": "FAQ",
+    "title": "How can we scale Rqueue to process millions of messages per hour?",
+    "content": "To scale Rqueue for high throughput: . | Use a minimal number of queues and utilize them efficiently. | Distribute queues across multiple machines. | Group queues using priority groups. | Increase batch sizes if threads are underutilized. | Disable unnecessary features like job persistence and immediate message deletion. | . For optimal performance, group queues based on message rates, business verticals, and message types. ",
+    "url": "/rqueue/faq#how-can-we-scale-rqueue-to-process-millions-of-messages-per-hour",
+    
+    "relUrl": "/faq#how-can-we-scale-rqueue-to-process-millions-of-messages-per-hour"
+  },"45": {
+    "doc": "FAQ",
+    "title": "Rqueue is using a significant amount of Redis memory. How can this be managed?",
+    "content": "Rqueue stores completed jobs and messages in Redis by default. To reduce Redis memory usage, disable job persistence and immediate message deletion: . rqueue.job.enabled=false rqueue.message.durability.in-terminal-state=0 . ",
+    "url": "/rqueue/faq#rqueue-is-using-a-significant-amount-of-redis-memory-how-can-this-be-managed",
+    
+    "relUrl": "/faq#rqueue-is-using-a-significant-amount-of-redis-memory-how-can-this-be-managed"
+  },"46": {
+    "doc": "FAQ",
+    "title": "How can we consume events from the dead letter queue?",
+    "content": "To consume messages from the dead letter queue: . @Component class ReservationRequestMessageConsumer { @RqueueListener( value = \"reservation.request.queue\", deadLetterQueue = \"reservation.request.dead.letter.queue.name\", deadLetterQueueListenerEnabled = \"true\", numRetries = \"3\") public void onMessageReservationRequest(ReservationRequest request) throws Exception { // Handle messages from main queue } @RqueueListener(value = \"reservation.request.dead.letter.queue\", numRetries = \"1\") public void onMessageReservationRequestDeadLetterQueue( ReservationRequest request, @Header(RqueueMessageHeaders.MESSAGE) RqueueMessage rqueueMessage) throws Exception { // Handle messages from dead letter queue } } . ",
+    "url": "/rqueue/faq#how-can-we-consume-events-from-the-dead-letter-queue",
+    
+    "relUrl": "/faq#how-can-we-consume-events-from-the-dead-letter-queue"
+  },"47": {
+    "doc": "FAQ",
+    "title": "FAQ",
+    "content": " ",
+    "url": "/rqueue/faq",
+    
+    "relUrl": "/faq"
+  },"48": {
+    "doc": "Home",
+    "title": "Rqueue | Redis Queue For Spring Framework",
+    "content": "Rqueue is an asynchronous task executor (worker) built for the Spring Framework based on Spring’s messaging library, backed by Redis. It can serve as a message broker where all service code is within Spring/Spring Boot applications. Rqueue fully supports both Spring and Spring Boot frameworks. Get started now [View it on GitHub][Rqueue repo]{: .btn .fs-5 .mb-4 .mb-md-0 } . ",
+    "url": "/rqueue/#rqueue--redis-queue-for-spring-framework",
+    
+    "relUrl": "/#rqueue--redis-queue-for-spring-framework"
+  },"49": {
+    "doc": "Home",
+    "title": "Features",
+    "content": ". | Instant Delivery: Immediate execution of messages. | Message Scheduling: Schedule messages for any arbitrary period. | Unique Message Processing: Ensures unique processing of messages based on message ID. | Periodic Message Processing: Process the same message at defined intervals. | Priority Tasks: Support for task prioritization (e.g., high, low, medium). | Message Delivery Guarantee: Ensures each message is consumed at least once, and may be retried in case of worker failures or restarts. | Automatic Serialization and Deserialization of Messages. | Message Multicasting: Call multiple message listeners for each message. | Batch Message Polling: Fetch multiple messages from Redis in one operation. | Metrics: Provides insights into in-flight messages, waiting messages, and delayed messages. | Competing Consumers: Multiple workers can consume messages in parallel. | Concurrency Control: Configurable concurrency for message listeners. | Queue Priority: Supports both group-level and sub-queue level priorities. | Long Execution Jobs: Check-in mechanism for long-running jobs. | Execution Backoff: Supports exponential and fixed backoff strategies. | Do not retry: Supports do not retry exceptions. | Middleware: Allows integration of middleware to intercept messages before processing. | Callbacks: Supports callbacks for handling dead letter queues and discarding messages. | Events: Provides bootstrap and task execution events. | Redis Connection Options: Supports different Redis configurations including Redis Cluster and Redis Sentinel. | Reactive Programming: Integrates with reactive Redis and Spring WebFlux. | Web Dashboard: Provides a web-based dashboard for managing queues and monitoring queue metrics. | . Requirements . | Spring 5+, 6+ | Spring Boot 2+, 3+ | Spring Reactive | Lettuce client for Redis cluster | Read master preference for Redis cluster | . ",
+    "url": "/rqueue/#features",
+    
+    "relUrl": "/#features"
+  },"50": {
+    "doc": "Home",
+    "title": "Getting Started",
+    "content": "All queue names are dynamic. Manually creating queues using registerQueue method can lead to inconsistencies. Queues should only be created when using Rqueue as a producer. Sample Apps . The Rqueue GitHub repository includes several sample apps for local testing and demonstration: . | Rqueue Spring Boot Example | Rqueue Spring Boot Reactive Example | Rqueue Spring Example | . ",
+    "url": "/rqueue/#getting-started",
+    
+    "relUrl": "/#getting-started"
+  },"51": {
+    "doc": "Home",
+    "title": "Project Integration",
+    "content": "When configuring the Redis connection factory, ensure to set readFrom to MASTER_PREFERRED for Redis cluster compatibility, otherwise the application may fail to start. Spring Boot . Use Rqueue Spring Boot Starter 3.x for Spring Boot 3.x, and Rqueue Spring Boot Starter 2.x for Spring Boot 2.x. Get the latest version of Rqueue Spring Boot Starter from [Maven Central][Boot Maven Central]. Add the dependency to your project: . Spring Boot 2.x Setup . | Gradle implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE' . | Maven &lt;dependency&gt; &lt;groupId&gt;com.github.sonus21&lt;/groupId&gt; &lt;artifactId&gt;rqueue-spring-boot-starter&lt;/artifactId&gt; &lt;version&gt;2.13.1-RELEASE&lt;/version&gt; &lt;/dependency&gt; . | . Spring Boot 3.x Setup . | Gradle implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.1.0-RELEASE' . | Maven &lt;dependency&gt; &lt;groupId&gt;com.github.sonus21&lt;/groupId&gt; &lt;artifactId&gt;rqueue-spring-boot-starter&lt;/artifactId&gt; &lt;version&gt;3.1.0-RELEASE&lt;/version&gt; &lt;/dependency&gt; . | . Spring Framework . Use Rqueue Spring 3.x for Spring Framework 6.x, and Rqueue Spring 2.x for Spring Framework 5.x. Get the latest version of Rqueue Spring from [Maven Central][Maven Central]. Add the dependency to your project: . Spring Framework 5.x Setup . | Gradle implementation 'com.github.sonus21:rqueue-spring:2.13.1-RELEASE' . | Maven &lt;dependency&gt; &lt;groupId&gt;com.github.sonus21&lt;/groupId&gt; &lt;artifactId&gt;rqueue-spring&lt;/artifactId&gt; &lt;version&gt;2.13.1-RELEASE&lt;/version&gt; &lt;/dependency&gt; . | . Spring Framework 6.x Setup . | Gradle implementation 'com.github.sonus21:rqueue-spring:3.1.0-RELEASE' . | Maven &lt;dependency&gt; &lt;groupId&gt;com.github.sonus21&lt;/groupId&gt; &lt;artifactId&gt;rqueue-spring&lt;/artifactId&gt; &lt;version&gt;3.1.0-RELEASE&lt;/version&gt; &lt;/dependency&gt; . | . For Spring Framework, ensure to: . | Add EnableRqueue annotation on the main method. | Provide a RedisConnectionFactory bean. | . Example Spring Application Configuration . @EnableRqueue public class Application { @Bean public RedisConnectionFactory redisConnectionFactory() { // return a Redis connection factory } } . Once Rqueue is configured in Spring or Spring Boot as described above, you can start using Rqueue methods and annotations. The usage remains consistent whether using Spring Boot or the Spring framework. Message Publishing / Task Submission . All messages should be sent using the RqueueMessageEnqueuer bean’s enqueueXXX, enqueueInXXX, and enqueueAtXXX methods. Use the appropriate method based on your use case: . import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer; @Component public class MessageService { @Autowired private RqueueMessageEnqueuer rqueueMessageEnqueuer; public void doSomething() { rqueueMessageEnqueuer.enqueue(\"simple-queue\", \"Rqueue is configured\"); } public void createJob(Job job) { rqueueMessageEnqueuer.enqueue(\"job-queue\", job); } public void sendNotification(Notification notification) { rqueueMessageEnqueuer.enqueueIn(\"notification-queue\", notification, 30 * 1000L); } public void createInvoice(Invoice invoice, Instant instant) { rqueueMessageEnqueuer.enqueueAt(\"invoice-queue\", invoice, instant); } public void sendSms(Sms sms, SmsPriority priority) { rqueueMessageEnqueuer.enqueueWithPriority(\"sms-queue\", priority.value(), sms); } public void sendPeriodicEmail(Email email) { rqueueMessageEnqueuer.enqueuePeriodic(\"email-queue\", email, 30_000); } } . Worker / Consumer / Task Executor / Listener . Annotate any public method of a Spring bean with RqueueListener to make it a message consumer: . import com.github.sonus21.rqueue.annotation.RqueueListener; import com.github.sonus21.rqueue.listener.RqueueMessageHeaders; @Component @Slf4j public class MessageListener { @RqueueListener(value = \"simple-queue\") public void handleSimpleMessage(String message) { log.info(\"Received message from simple-queue: {}\", message); } @RqueueListener(value = \"job-queue\", numRetries = \"3\", deadLetterQueue = \"failed-job-queue\", concurrency = \"5-10\") public void handleJob(Job job) { log.info(\"Received job: {}\", job); } @RqueueListener(value = \"push-notification-queue\", numRetries = \"3\", deadLetterQueue = \"failed-notification-queue\") public void handleNotification(Notification notification) { log.info(\"Received notification: {}\", notification); } @RqueueListener(value = \"sms\", priority = \"critical=10,high=8,medium=4,low=1\") public void handleSms(Sms sms) { log.info(\"Received SMS: {}\", sms); } @RqueueListener(value = \"chat-indexing\", priority = \"20\", priorityGroup = \"chat\") public void handleChatIndexing(ChatIndexing chatIndexing) { log.info(\"Received chat indexing message: {}\", chatIndexing); } @RqueueListener(value = \"chat-indexing-daily\", priority = \"10\", priorityGroup = \"chat\") public void handleDailyChatIndexing(ChatIndexing chatIndexing) { log.info(\"Received daily chat indexing message: {}\", chatIndexing); } } . Notes: . | Retry Mechanism: Configure retry behavior using numRetries and deadLetterQueue attributes. | Concurrency: Adjust concurrency using the concurrency attribute. | Priority: Set message priority using the priority attribute. | . Advanced Configuration . Rqueue Configuration . For advanced configurations such as message serialization, queue properties, message listener details, and more, refer to the [official documentation][Rqueue Docs]. Support . For any issues, questions, or feature requests, please create an issue on the [GitHub repository][Rqueue repo] or contact the maintainers directly. License . Rqueue is licensed under the Apache License 2.0. See the LICENSE file for more details. [Rqueue Docs]: https://github.com/sonus21/rqueue/wiki [Boot Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring-boot-starter [Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring [Rqueue repo]: https://github.com/sonus21/rqueue . ",
+    "url": "/rqueue/#project-integration",
+    
+    "relUrl": "/#project-integration"
+  },"52": {
+    "doc": "Home",
+    "title": "Home",
+    "content": " ",
+    "url": "/rqueue/",
+    
+    "relUrl": "/"
+  },"53": {
+    "doc": "Message Deduplication",
+    "title": "Message Deduplication",
+    "content": "Sometimes, there’s a need to schedule unique messages in a queue. In these instances, the older message should be discarded to ensure only the newest one is consumed. Implementing this requires careful consideration of what defines message uniqueness — whether it’s a single ID field or a combination of multiple fields. Once identified, you can use a pre-execution message processor to manage the discarding of older messages before processing the latest ones. Enqueue Process . interface MessageRepository { Long getLatestEnqueueAt(String messageId); void addEnqueueAt(String messageId, Long time); } class SimpleMessage { private String id; } class MessageSender { @Autowited private MessageRepository messageRepository; @Autowired private RqueueMessageEnqueuer rqueueMessageEnqueuer; public void sendMessage(SimpleMessage message) { String id = message.getId(); //TODO handle error case messageRepository.addEnqueueAt(id, System.currentTimeMillis()); rqueueMessageEnqueuer.enqueueIn(\"simple-queue\", message, Duration.ofMinutes(10)); } } . UniqueMessageProcessor that implements MessageProcessor and returns false for the older messages. class UniqueMessageProcessor implements MessageProcessor { @Autowired private MessageRepository messageRepository; @Override boolean process(Object message, RqueueMessage rqueueMessage) { if (message instanceof SimpleMessage) { // here you can get id using composite fields, add a method to find the unique id String messageId = ((SimpleMessage) message).getId(); Long latestEnqueueTime = messageRepository.getLatestEnqueueAt(messageId); // no entry return true // no new message return true return latestEnqueueTime == null || latestEnqueueTime &lt;= rqueueMessage.getQueuedTime(); } return true; } } . Rqueue configuration, that uses preExecutionMessageProcessor to skip messages. class RqueueConfiguration { @Bean public MessageProcessor preExecutionMessageProcessor() { return new UniqueMessageProcessor(); } @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); MessageProcessor preExecutionMessageProcessor = preExecutionMessageProcessor(); factory.setPreExecutionMessageProcessor(preExecutionMessageProcessor); return factory; } } . If your use case requires that older message should be executed while new one should be ignored than you can also implement that using pre execution message processor. interface MessageRepository { Long getEnqueueAt(String messageId); void saveEnqueueAt(String messageId, Long time); } class MessageSender { @Autowired private RqueueMessageEnqueuer rqueueMessageEnqueuer; public void sendMessage(SimpleMessage message) { rqueueMessageEnqueuer.enqueueIn(\"simple-queue\", message, Duration.ofMinutes(10)); } } . class UniqueMessageProcessor implements MessageProcessor { @Autowired private MessageRepository messageRepository; @Override boolean process(Object message, RqueueMessage rqueueMessage) { if (message instanceof SimpleMessage) { String messageId = ((SimpleMessage) message).getId(); Long enqueueAt = messageRepository.getEnqueueAt(messageId); if (enqueueAt == null) { messageRepository.saveEnqueueAt(messageId, System.currentTimeMillis()); return true; } // allow running the same message multiple times return enqueueAt == rqueueMessage.getQueuedTime(); } return true; } } . This does not handle the following cases . | Multiple similar messages enqueue at the same time. | Multiple similar messages are trying to run at the same time. | Enqueuing new message when the existing one is running. | Enqueuing new message when the older message was discarded. | . ",
+    "url": "/rqueue/message-deduplication",
+    
+    "relUrl": "/message-deduplication"
+  },"54": {
+    "doc": "Message Handling",
+    "title": "Message Multicasting",
+    "content": "When multiple listeners are attached to the same queue, it’s essential to designate one as the primary listener. This primary listener handles retries and other operations related to message processing. Secondary listeners are invoked alongside the primary listener whenever a message is received. For example, if three listeners (L1, L2, and L3) are registered for the user-queue, one of them must be designated as primary. Designating a primary listener means that if the primary listener (L2, in this example) encounters a processing failure, it retries the message. During retries, all listeners (L1, L3, and L2) might be called again with the same message (UserEvent1), potentially leading to duplicate processing for some listeners (L1 and L3), even if they successfully processed the event initially. ",
+    "url": "/rqueue/message-handling#message-multicasting",
+    
+    "relUrl": "/message-handling#message-multicasting"
+  },"55": {
+    "doc": "Message Handling",
+    "title": "Configuration",
+    "content": "Add RqueueListener annotation to any class, and use any of the spring stereotype annotation, so that a bean would be created. Annotate all listener methods in this class using RqueueHandler . @RqueueListener(value = \"${user.banned.queue.name}\", active = \"${user.banned.queue.active}\") @Slf4j @Component @RequiredArgsConstructor public class UserBannedMessageListener { @NonNull private final ConsumedMessageStore consumedMessageStore; @Value(\"${user.banned.queue.name}\") private String userBannedQueue; @RqueueHandler public void handleMessage1(UserBanned userBanned) throws JsonProcessingException { consumedMessageStore.save(userBanned, \"handleMessage1\", userBannedQueue); log.info(\"handleMessage1 {}\", userBanned); } @RqueueHandler public void handleMessage2(UserBanned userBanned) throws JsonProcessingException { consumedMessageStore.save(userBanned, \"handleMessage2\", userBannedQueue); log.info(\"handleMessage2 {}\", userBanned); } @RqueueHandler(primary = true) public void handleMessagePrimary(UserBanned userBanned) throws JsonProcessingException { consumedMessageStore.save(userBanned, \"handleMessagePrimary\", userBannedQueue); log.info(\"handleMessagePrimary {}\", userBanned); } @RqueueHandler public void handleUserBanned(UserBanned userBanned) throws JsonProcessingException { consumedMessageStore.save(userBanned, \"handleUserBanned\", userBannedQueue); log.info(\"handleUserBanned {}\", userBanned); } } . ",
+    "url": "/rqueue/message-handling#configuration",
+    
+    "relUrl": "/message-handling#configuration"
+  },"56": {
+    "doc": "Message Handling",
+    "title": "Limitation",
+    "content": ". | Middleware: Middlewares are invoked globally before any handler method is called. They are not called individually for each handler. It’s crucial that message release is only handled by the primary handler to avoid inconsistent states. | Failure/Retry: Failure and retry mechanisms apply exclusively to the primary handler. If the primary handler fails during execution, all handlers will be retried in the subsequent attempt. | Metrics/Job data: Metrics and job data are recorded once per execution cycle. For instance, even if there are multiple handlers configured, such as four in this example, it will count as a single execution generating a single job record. | . ",
+    "url": "/rqueue/message-handling#limitation",
+    
+    "relUrl": "/message-handling#limitation"
+  },"57": {
+    "doc": "Message Handling",
+    "title": "Message Handling",
+    "content": "Rqueue supports two types of message handling . | Unicast: One message is handed over to one the listener/handler/consumer | Multicast: One message is handed over to multiple listeners/handlers/consumers | . ",
+    "url": "/rqueue/message-handling",
+    
+    "relUrl": "/message-handling"
+  },"58": {
+    "doc": "Middleware",
+    "title": "Middleware",
+    "content": "In many scenarios, there’s a need to execute specific blocks of code repetitively. Some common use cases include: . | Logging job details | Profiling listener methods | Initiating transactions (e.g., New Relic, database, distributed transactions, Micrometer tracer) | Implementing rate limiting (e.g., restricting a queue to process only 10 jobs per minute) | Managing concurrent job execution (e.g., ensuring a user’s account updater job runs sequentially) | Handling permission or role changes (e.g., reacting to user bans or role updates) | . Middleware can effectively handle these situations by configuring one or more middlewares through the SimpleRqueueListenerContainerFactory object. These middlewares are invoked in the order they are added, enabling structured and consistent execution of tasks across different scenarios. public class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); factory.useMiddleware(new LoggingMiddleware()); // add other middlewares here return factory; } } . ",
+    "url": "/rqueue/middleware",
+    
+    "relUrl": "/middleware"
+  },"59": {
+    "doc": "Migration from older to new version",
+    "title": "2.9.0 to 2.10+",
+    "content": "In 2.10 we changed some configuration keys used for Rqueue configuration. Following config keys were renamed. | Older | New | Purpopse | . | delayed.queue.size | scheduled.queue.size | Monitoring metrics name | . | rqueue.scheduler.delayed.message.thread.pool.size | rqueue.scheduler.scheduled.message.thread.pool.size | used to pull message from scheduled message to normal queue | . | rqueue.scheduler.delayed.message.time.interval | rqueue.scheduler.scheduled.message.time.interval | how frequently message should be pulled from scheduled queue | . | rqueue.scheduled.queue.prefix | rqueue.delayed.queue.prefix | scheduled queue name prefix used in Redis | . | rqueue.delayed.queue.channel.prefix | queue.scheduled.queue.channel.prefix | scheduled queue channel name prefix, used by Rqueue for immediate action | . If you do not use these configuration keys then you can directly migrate without doing anything. ",
+    "url": "/rqueue/migration#290-to-210",
+    
+    "relUrl": "/migration#290-to-210"
+  },"60": {
+    "doc": "Migration from older to new version",
+    "title": "1.x to 2.x",
+    "content": "Set redis key __rq::version=1 or add rqueue.db.version=1 in the properties file, this is required to handle data present in the old queues. It’s safe to use version 2.x if existing queues do not have any tasks to process. Look for the results of following redis commands. 1. LLEN &lt;queueName&gt; 2. ZCARD rqueue-delay::&lt;queueName&gt; 3. ZCARD rqueue-processing::&lt;queueName&gt; . If all of these commands gives zero then all tasks have been consumed. ",
+    "url": "/rqueue/migration#1x-to-2x",
+    
+    "relUrl": "/migration#1x-to-2x"
+  },"61": {
+    "doc": "Migration from older to new version",
+    "title": "Migration from older to new version",
+    "content": " ",
+    "url": "/rqueue/migration",
+    
+    "relUrl": "/migration"
+  },"62": {
+    "doc": "Monitoring and Alerting",
+    "title": "Monitoring Queue Statistics",
+    "content": "Rqueue supports monitoring via the Micrometer library. Gauge Metrics . Rqueue provides the following gauge metrics: . | queue.size: Number of tasks waiting to be processed. | dead.letter.queue.size: Number of tasks in the dead letter queue. | scheduled.queue.size: Approximate number of tasks scheduled for future execution. | processing.queue.size: Approximate number of tasks currently being processed. | . Execution and Failure Counters . Execution and failure counters can be enabled (disabled by default) by configuring RqueueMetricsProperties. rqueue.metrics.count.execution=true rqueue.metrics.count.failure=true . Integration . Spring Boot Application . | Include Micrometer dependencies and relevant exporters. | Set tags using rqueue.metrics.tags.&lt;name&gt; = &lt;value&gt; if needed. | Enable counting features as required. | . Spring Application . | Include Micrometer dependencies and provide MeterRegistry as a bean. | Configure a RqueueMetricsProperties bean with necessary settings. | . Example Grafana Dashboard . ",
+    "url": "/rqueue/monitoring-alerting#monitoring-queue-statistics",
+    
+    "relUrl": "/monitoring-alerting#monitoring-queue-statistics"
+  },"63": {
+    "doc": "Monitoring and Alerting",
+    "title": "Monitoring and Alerting",
+    "content": " ",
+    "url": "/rqueue/monitoring-alerting",
+    
+    "relUrl": "/monitoring-alerting"
+  },"64": {
+    "doc": "Producer Consumer",
+    "title": "Rqueue Architecture",
+    "content": "Rqueue Broker runs scheduled job as well as it communicates with Redis. In general Rqueue works as producers and consumers at the same time. +-----------------------+ +------------------------+ | | | Application | Application | | |-----------------------| +-----+ |------------------------| Rqueue | +---&gt;|Redis|&lt;---+ | Rqueue | +----------------+ | +-----+ | +----------------+ | |Rqueue Scheduler| | |Rqueue Scheduler| |----------------| | +-----+ | |----------------| |Rqueue Producer |&lt;---+----+---&gt;|Redis|&lt;---+----+---&gt;|Rqueue Producer | |----------------| | +-----+ | |----------------| |Rqueue Consumer | | |Rqueue Consumer | | +----------------+ | +-----+ | +----------------+ | +-----------------------+ +---&gt;|Redis|&lt;---+ +------------------------+ +-----+ . An application can operate in both producer and consumer modes. However, attempting to push a message to an unknown queue will result in a QueueDoesNotExist error. This error can be mitigated by using registerQueue, but there’s a potential race condition where registered queues might get deleted. To prevent encountering the QueueDoesNotExist error again, listen for RqueueBootStrapEvent in your application and register queues only upon receiving this bootstrap event. @Component class AppMessageSender implements ApplicationListener&lt;RqueueBootStrapEvent&gt; { @Autowired private RqueueEndpointManager rqueueEndpointManager; @Override public void onApplicationEvent(RqueueBootstrapEvent event) { if (!event.isStartup()) { return; } for (String queue : queues) { String[] priorities = getPriority(queue); rqueueEndpointManager.registerQueue(queue, priorities); } } private String[] getPriority(String queue) { return new String[]{}; } } . Rqueue can facilitate running consumers and producers in separate clusters without requiring changes to application code. This can be achieved effortlessly using the active flag of RqueueListener. In the producer cluster, you set active to false, while in the consumer cluster, you set the active flag to true. This approach allows for straightforward configuration and management of distinct roles within different clusters using Rqueue. +-----------------------+ +------------------------+ | | | Producer Application | Consumer Application | | |-----------------------| +-----+ |------------------------| Rqueue | +---&gt;|Redis|&lt;---+ | Rqueue | +----------------+ | +-----+ | +----------------+ | |Rqueue Scheduler| | +-----+ | |Rqueue Scheduler| |----------------+----+----+---&gt;|Redis|&lt;---+----+---&gt;|----------------| |Rqueue Producer | | +-----+ | |Rqueue Consumer | | +----------------+ | +-----+ | +----------------+ | +-----------------------+ +---&gt;|Redis|&lt;---+ +------------------------+ +-----+ . If you have configured the producer and consumer on separate clusters, you can disable the Rqueue scheduler on the producer machine by setting rqueue.scheduler.enabled=false. This configuration ensures that the producer application operates solely as a producer without handling scheduling tasks. Additionally, it’s crucial to set rqueue.system.mode=PRODUCER to prevent potential QueueDoesNotExist errors. This setting explicitly defines the application mode as a producer, ensuring that it doesn’t attempt to perform consumer-specific operations that might lead to queue-related issues in a split-cluster setup. +-----------------------+ +------------------------+ | | | Producer Application | Consumer Application | | +-----+ | |-----------------------| +---&gt;|Redis|&lt;---+ |------------------------| Rqueue | +-----+ | Rqueue | | | +----------------+ | | +----------------+ | +-----+ | |Rqueue Scheduler| |Rqueue Producer |----+----+---&gt;|Redis|&lt;---+----+---&gt;|----------------+ | +----------------+ | +-----+ | | Rqueue Consumer| | | | +----------------+ | | +-----+ | | +-----------------------+ +---&gt;|Redis|&lt;---+ +------------------------+ +-----+ . Rqueue Scheduler . The Rqueue scheduler offers extensive configurability across various parameters: . | rqueue.scheduler.enabled=true: By default, the scheduler runs on all machines. You can disable it globally using this flag if running on a single machine is sufficient. | rqueue.scheduler.listener.shared=true: Controls whether Rqueue scheduler shares the RedisMessageListenerContainer for PUB/SUB communication with Redis consumers. Enabling this allows efficient use of the same Redis connection for both application and Rqueue code. | rqueue.scheduler.redis.enabled=true: Disables event-based message movement, providing control over when messages are processed. | rqueue.scheduler.auto.start=true: Manages thread pools for message handling. Setting this to false uses only event-based message movement. | rqueue.scheduler.scheduled.message.thread.pool.size=5: Adjusts the thread pool size for handling messages moved from ZSET to LIST, balancing efficiency with the number of delayed queues. | rqueue.scheduler.processing.message.thread.pool.size=1: Sets the thread pool size for handling messages in the processing queue, ensuring reliable at-least-once message delivery. | rqueue.scheduler.scheduled.message.time.interval=5000: Specifies the interval for moving messages from the scheduled queue to the normal queue, providing control over delayed message consumption. | rqueue.scheduler.max.message.count=100: Limits the number of messages moved per batch from scheduled/processing queues to the normal queue, optimizing processing efficiency during peak loads. | rqueue.scheduler.max.message.mover.delay=60000: Specifies the maximum delay before retrying Redis calls in case of failure, preventing system overload through exponential backoff. | rqueue.scheduler.min.message.mover.delay=200: Sets the minimum delay for periodic message fetching, ensuring efficient processing of scheduled messages. | . These configurations allow fine-tuning of Rqueue scheduler behavior across different operational scenarios. Dead Letter Queue Consumer/Listener . By default, an application cannot attach a listener to a dead letter queue. To enable dead letter queue listener functionality for a specific queue, set the deadLetterQueueListenerEnabled attribute of the RqueueListener annotation. Example configuration . @Component @Slf4j public class MessageListener { @RqueueListener(value = \"job-queue\", numRetries = \"3\", deadLetterQueueListenerEnabled = \"true\", deadLetterQueue = \"failed-job-queue\", concurrency = \"5-10\") public void onMessage(Job job) { log.info(\"Job alert: {}\", job); } @RqueueListener(value = \"failed-job-queue\", concurrency = \"1\") public void onMessage(Job job) { log.info(\"Job alert: {}\", job); } } . ",
+    "url": "/rqueue/producer-consumer#rqueue-architecture",
+    
+    "relUrl": "/producer-consumer#rqueue-architecture"
+  },"65": {
+    "doc": "Producer Consumer",
+    "title": "Producer Consumer",
+    "content": "The Rqueue provides an abstraction over Redis for Producer and Consumer use case. The library provides two types of queues for producer/consumer. | General queue (FIFO) | Delay queue (Priority queue) | . Rqueue has been designed to handle different use cases and scenarios. Read More about Rqueue Design at Introducing Rqueue: Redis Queue . ",
+    "url": "/rqueue/producer-consumer",
+    
+    "relUrl": "/producer-consumer"
+  },"66": {
+    "doc": "Queue Priority",
+    "title": "Weighted Priority",
+    "content": "Weighted priority operates in a round-robin manner, where each queue’s polling frequency is determined by its assigned weight. In this example, Q1 is polled 6 times, Q2 4 times, and Q3 2 times before the cycle repeats. If a queue is found to have no items during polling, its weight is reduced by Δ. For instance, if Q1 has no items, its weight decreases by Δ = currentWeight * (1 - (6 / (6 + 4 + 2))). When a queue’s weight drops to or below 0, it becomes inactive. The weights are reinitialized when all queues are inactive. This algorithm is implemented in WeightedPriorityPoller . ",
+    "url": "/rqueue/priority#weighted-priority",
+    
+    "relUrl": "/priority#weighted-priority"
+  },"67": {
+    "doc": "Queue Priority",
+    "title": "Strict Priority",
+    "content": "In strict priority mode, the poller always starts by polling from the highest priority queue, which is Q1 in this case. After polling, if the queue is found to have no elements, it becomes inactive for a designated polling interval. To prevent starvation, a queue can remain inactive for a maximum of 1 minute before becoming eligible for polling again. This algorithm is implemented in StrictPriorityPoller . Additional Configuration . | rqueue.add.default.queue.with.queue.level.priority: This flag determines whether the default queue should be added to listeners where a priority has been defined using priority=\"critical=5,high=3\". If enabled (true), such queues will include an additional default level. The default value for this flag is true. | rqueue.default.queue.with.queue.level.priority: This setting specifies the priority of the default queue when rqueue.add.default.queue.with.queue.level.priority is set to true. By default, the queue is positioned in the middle of the defined priority levels. | . ",
+    "url": "/rqueue/priority#strict-priority",
+    
+    "relUrl": "/priority#strict-priority"
+  },"68": {
+    "doc": "Queue Priority",
+    "title": "Queue Priority",
+    "content": "There are situations where queues need to be grouped based on priority, ensuring critical tasks are handled before lower priority ones. Rqueue provides two types of priority handling: . Weighted: Allows specifying different numeric priorities for queues. Strict: Enforces strict ordering of queues based on priority. To configure priority handling in Rqueue: . Set priorityMode in the container factory to either STRICT or WEIGHTED. Use the priority field in the RqueueListener annotation to assign priorities to individual queues. Use the priorityGroup field to group multiple queues together. By default, any queue with a specified priority is added to the default priority group. You can categorize queues into multiple priority groups. For instance, a SMS queue might have sub-queues like critical, high, medium, and low, with priorities specified as priority=”critical=10, high=6, medium=4, low=1”. If you prefer a simpler priority mechanism, assign a numeric priority directly to each queue and its group. For example: . priority=\"60\" priorityGroup=\"critical-group\" . Let’s say there’re three queues . | Queue | Priority | . | Q1 | 6 | . | Q2 | 4 | . | Q3 | 2 | . ",
+    "url": "/rqueue/priority",
+    
+    "relUrl": "/priority"
+  },"69": {
+    "doc": "Redis Configuration",
+    "title": "Redis Configuration",
+    "content": "You can configure your application to use separate Redis connections for Rqueue and other application needs. This approach ensures complete isolation between the Redis connections and their usage, providing distinct environments for storing Rqueue tasks and transient states, as well as other application data. By configuring separate Redis connections: . | Rqueue can manage its tasks and transient states in Redis without interference from other application components. | Your main application can utilize a separate Redis connection for its own data storage and retrieval needs. | . This isolation helps in managing resources efficiently and prevents potential conflicts or performance issues that might arise from shared Redis usage across different parts of your application. ",
+    "url": "/rqueue/configuration/redis-configuration/",
+    
+    "relUrl": "/configuration/redis-configuration/"
+  },"70": {
+    "doc": "Redis Configuration",
+    "title": "Redis Connection Configuration",
+    "content": "As an application developer using Rqueue, you have the flexibility to specify which Redis cluster or server should be used for storing Rqueue data. This is achieved by configuring the Redis connection factory via the container factory’s method setRedisConnectionFactory. Here’s how you can specify the Redis connection for Rqueue: . | Implement or configure a RedisConnectionFactory that points to your desired Redis cluster or server. | Set this connection factory using the setRedisConnectionFactory method of your Rqueue container factory. | . This approach allows you to control where Rqueue stores its data within Redis, ensuring it aligns with your application’s Redis configuration and deployment requirements. When creating a Redis connection factory for Rqueue, it’s essential to set readFrom to MASTER_PREFERRED. This ensures that the application starts correctly and operates as expected with the Redis setup. Standalone Redis . @Configuration public class RqueueConfiguration { // this property must be set to true if you're using webflux or reactive redis @Value(\"${rqueue.reactive.enabled:false}\") private boolean reactiveEnabled; @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { LettuceClientConfiguration lettuceClientConfiguration = LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER_PREFERRED).build(); // Stand alone redis configuration, Set fields of redis configuration RedisStandaloneConfiguration redisConfiguration = new RedisStandaloneConfiguration(); // set properties of redis configuration as you need. // Create lettuce connection factory LettuceConnectionFactory redisConnectionFactory = new LettuceConnectionFactory(redisConfiguration, lettuceClientConfiguration); redisConnectionFactory.afterPropertiesSet(); SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); factory.setRedisConnectionFactory(redisConnectionFactory); // if reactive redis is enabled set the correct connection factory if (reactiveEnabled) { factory.setReactiveRedisConnectionFactory(lettuceConnectionFactory); } // set other properties as you see return factory; } } . Redis Cluster . For Redis clusters, it’s recommended to use the Lettuce client because Jedis does not support EVALSHA requests, which are often used for efficient script execution in Redis environments. @Configuration public class RqueueConfiguration { // this property must be set to true if you're using webflux or reactive redis @Value(\"${rqueue.reactive.enabled:false}\") private boolean reactiveEnabled; @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { // here always use MASTER_PREFERRED otherwise it will to start LettuceClientConfiguration lettuceClientConfiguration = LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER_PREFERRED).build(); // add all nodes RedisClusterConfiguration redisClusterConfiguration = new RedisClusterConfiguration(); List&lt;RedisNode&gt; redisNodes = new ArrayList&lt;&gt;(); redisNodes.add(new RedisNode(\"127.0.0.1\", 9000)); redisNodes.add(new RedisNode(\"127.0.0.1\", 9001)); redisNodes.add(new RedisNode(\"127.0.0.1\", 9002)); redisNodes.add(new RedisNode(\"127.0.0.1\", 9003)); redisNodes.add(new RedisNode(\"127.0.0.1\", 9004)); redisNodes.add(new RedisNode(\"127.0.0.1\", 9005)); redisClusterConfiguration.setClusterNodes(redisNodes); // create lettuce connection factory LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisClusterConfiguration, lettuceClientConfiguration); lettuceConnectionFactory.afterPropertiesSet(); SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory = new SimpleRqueueListenerContainerFactory(); simpleRqueueListenerContainerFactory.setRedisConnectionFactory(lettuceConnectionFactory); // set polling interval, by default its 5 seconds simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI); // if reactive redis is enabled set the correct connection factory if (reactiveEnabled) { simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory( lettuceConnectionFactory); } // set any other property if you need // return connection factory return simpleRqueueListenerContainerFactory; } } . Redis Sentinel . Redis sentinel can be configured similar to Standalone redis. @Configuration public class RedisClusterBaseApplication { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { LettuceClientConfiguration lettuceClientConfiguration = LettuceClientConfiguration.builder().readFrom(ReadFrom.MASTER_PREFERRED).build(); // Sentinel redis configuration, Set fields of redis configuration RedisSentinelConfiguration redisConfiguration = new RedisSentinelConfiguration(); // Create lettuce connection factory LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisConfiguration, lettuceClientConfiguration); lettuceConnectionFactory.afterPropertiesSet(); SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory = new SimpleRqueueListenerContainerFactory(); simpleRqueueListenerContainerFactory.setRedisConnectionFactory(lettuceConnectionFactory); simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI); if (reactiveEnabled) { simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory( lettuceConnectionFactory); } return simpleRqueueListenerContainerFactory; } } . ",
+    "url": "/rqueue/configuration/redis-configuration/#redis-connection-configuration",
+    
+    "relUrl": "/configuration/redis-configuration/#redis-connection-configuration"
+  },"71": {
+    "doc": "Redis Configuration",
+    "title": "Redis connection failure and retry",
+    "content": "To adjust the retry interval for failed Redis commands in Rqueue, you can configure the backoff time to a different value. By default, Rqueue retries failed commands after 5 seconds. You can customize this behavior by setting the backoff time to your desired interval. This ensures that if a Redis command fails, Rqueue will retry the command after the specified backoff period before attempting again. class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory(); //... // set back off time to 100 milli second factory.setBackOffTime(100); return factory; } } . ",
+    "url": "/rqueue/configuration/redis-configuration/#redis-connection-failure-and-retry",
+    
+    "relUrl": "/configuration/redis-configuration/#redis-connection-failure-and-retry"
+  },"72": {
+    "doc": "Redis Configuration",
+    "title": "Redis Key configuration",
+    "content": "Rqueue utilizes multiple Redis data types such as SET, ZSET, and LIST. It’s crucial not to delete or modify any Rqueue-related Redis keys, as a single mistake could result in the inadvertent deletion of all tasks. To mitigate this risk, Rqueue prefixes all of its keys with specific identifiers: . | rqueue.key.prefix: Prefix for every key used by Rqueue. | rqueue.cluster.mode: Indicates whether your Redis database operates in cluster mode or not. By default, Rqueue assumes cluster mode. Switching from non-cluster to cluster mode can lead to Cross Slot errors due to the use of Lua scripts for atomic operations. | rqueue.simple.queue.prefix:queue: Prefix used for the simple queue (LIST). By default, it uses queue, resulting in keys like __rq::queue::XYZ. | rqueue.scheduled.queue.prefix: Prefix used for the delayed queue (ZSET). Default configuration uses d-queue::, resulting in keys like __rq::d-queue::XYZ. | rqueue.scheduled.queue.channel.prefix: Prefix for Redis pub/sub channel used when moving messages from the scheduled queue to the simple queue for processing. Default value is p-channel. | rqueue.processing.queue.name.prefix: Prefix used for the processing queue (ZSET). By default, it uses p-queue::, resulting in keys like __rq::p-queue::XYZ. This queue ensures at-least-once message delivery. | rqueue.processing.queue.channel.prefix: Prefix for Redis pub/sub channel used when moving messages from the processing queue back to the origin queue, triggered if a listener stops unexpectedly. Default value is p-channel. | rqueue.queues.key.suffix: Key suffix used for storing all active queues. Default value is queues. | rqueue.lock.key.prefix: Prefix used for locking keys. Default value is lock::. | rqueue.queue.stat.key.prefix: Prefix used for storing queue metrics. Default value is q-stat. | rqueue.queue.config.key.prefix: Prefix used for storing listener configuration. Default value is q-config. | . These prefixes help Rqueue manage its interactions with Redis effectively while minimizing the risk of unintended data loss or corruption. ",
+    "url": "/rqueue/configuration/redis-configuration/#redis-key-configuration",
+    
+    "relUrl": "/configuration/redis-configuration/#redis-key-configuration"
+  },"73": {
+    "doc": "Retry and Backoff",
+    "title": "Retry And Backoff",
+    "content": "Rqueue is a poll-based library that sends various commands to Redis to retrieve messages. These commands can fail for several reasons, such as Redis being under stress, outages, connection timeouts, or poor internet connections. Continuous attempts to send commands can overload the Redis server. To mitigate this, you can configure a back-off interval, causing the poller to sleep instead of repeatedly sending commands. This is done by setting the backOffTime in the SimpleRqueueListenerContainerFactory. The default back-off time is 5 seconds. ",
+    "url": "/rqueue/configuration/retry-and-backoff/#retry-and-backoff",
+    
+    "relUrl": "/configuration/retry-and-backoff/#retry-and-backoff"
+  },"74": {
+    "doc": "Retry and Backoff",
+    "title": "Do not retry",
+    "content": "In scenarios where you don’t want Rqueue to retry failures, you can handle this in two ways: . | Using RqueueListener Annotation: Add exceptions to the doNotRetry list within the RqueueListener annotation. This instructs Rqueue not to retry for specific exceptions. ```java | . public class MessageListener{ @RqueueListener(value = “sms”, priority = “critical=10,high=8,medium=4,low=1”, doNoRetry={Exception1.class, Exception2.class}) public void onMessage(Sms sms) { log.info(“Sms : {}”, sms); } . } . 2. **Returning `-2` from Execution Backoff Method**: Alternatively, you can return `-2` from the execution backoff method. This signals Rqueue to stop any further retry attempts for the failed message. These approaches offer flexibility in managing error handling and retry policies within your application using Rqueue. Messages handled in this way also won't be sent to the Dead Letter Queue. ## Task Execution backoff The method consuming the message can also fail for various reasons. In such cases, the message may be retried, moved to a dead letter queue, or dropped. If a message needs to be retried, it can either be retried immediately or after some time. To retry immediately, set `rqueue.retry.per.poll` to a positive number like 2, which means the message will be retried twice in quick succession. If you prefer not to retry the message immediately, you can configure Rqueue to retry the message after a delay using an exponential or linear backoff approach, or any other strategy. By default, Rqueue uses a linear backoff with a delay of 5 seconds, meaning the failed message will be retried after 5 seconds. To customize this behavior, you can provide an implementation of `TaskExecutionBackoff`, or use the default implementations such as `FixedTaskExecutionBackOff` or `ExponentialTaskExecutionBackOff`. ```java public class RqueueConfiguration { @Bean public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() { SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory = new SimpleRqueueListenerContainerFactory(); // ... simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(getTaskExecutionBackoff()); return simpleRqueueListenerContainerFactory; } private TaskExecutionBackOff getTaskExecutionBackoff() { // return TaskExecutionBackOff implementation // return new FixedTaskExecutionBackOff(2_000L, 2); // 2 seconds delay and 2 retries // return new ExponentialTaskExecutionBackOff(2_000L, 10*60_000L, 2, 200) } } . ",
+    "url": "/rqueue/configuration/retry-and-backoff/#do-not-retry",
+    
+    "relUrl": "/configuration/retry-and-backoff/#do-not-retry"
+  },"75": {
+    "doc": "Retry and Backoff",
+    "title": "Retry and Backoff",
+    "content": " ",
+    "url": "/rqueue/configuration/retry-and-backoff/",
+    
+    "relUrl": "/configuration/retry-and-backoff/"
+  }
+}

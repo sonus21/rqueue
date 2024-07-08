@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<link rel="stylesheet" href="/rqueue/assets/css/just-the-docs-default.css"> <script async src="https://www.googletagmanager.com/gtag/js?id=G-HWK3PKDELN"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-HWK3PKDELN', { 'anonymize_ip': true }); </script> <script src="/rqueue/assets/js/vendor/lunr.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mermaid@9.1.6/dist/mermaid.min.js"></script> <script src="/rqueue/assets/js/just-the-docs.js"></script><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/rqueue/static/favicon/favicon.ico" type="image/x-icon">
+<title>Configuration | Rqueue</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="Configuration">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Library for Async Processing using Redis">
+<meta property="og:description" content="Library for Async Processing using Redis">
+<link rel="canonical" href="https://sonus21.github.io/rqueue/rqueue/configuration">
+<meta property="og:url" content="https://sonus21.github.io/rqueue/rqueue/configuration">
+<meta property="og:site_name" content="Rqueue">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Configuration"> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"WebPage","description":"Library for Async Processing using Redis","headline":"Configuration","url":"https://sonus21.github.io/rqueue/rqueue/configuration"}</script> <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9220054661402722" crossorigin="anonymous"></script>
+</head>
+<body> <a class="skip-to-main" href="#main-content">Skip to main content</a> <svg xmlns="http://www.w3.org/2000/svg" class="d-none"> <symbol id="svg-link" viewbox="0 0 24 24"><title>Link</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path> </svg> </symbol> <symbol id="svg-menu" viewbox="0 0 24 24"><title>Menu</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line> </svg> </symbol> <symbol id="svg-arrow-right" viewbox="0 0 24 24"><title>Expand</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"></polyline> </svg> </symbol> <symbol id="svg-external-link" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link"><title id="svg-external-link-title">(external link)</title>
+<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line> </symbol> <symbol id="svg-doc" viewbox="0 0 24 24"><title>Document</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline> </svg> </symbol> <symbol id="svg-search" viewbox="0 0 24 24"><title>Search</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"> <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg> </symbol> <symbol id="svg-copy" viewbox="0 0 16 16"><title>Copy</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewbox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"></path><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"></path> </svg> </symbol> <symbol id="svg-copied" viewbox="0 0 16 16"><title>Copied</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewbox="0 0 16 16"><path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"></path><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"></path> </svg> </symbol> </svg><div class="side-bar">
+<div class="site-header"> <a href="/rqueue/" class="site-title lh-tight"> Rqueue </a> <a href="#" id="menu-button" class="site-button"> <svg viewbox="0 0 24 24" class="icon"><use xlink:href="#svg-menu"></use></svg> </a>
+</div>
+<nav aria-label="Main" id="site-nav" class="site-nav"><ul class="nav-list">
+<li class="nav-list-item"><a href="/rqueue/" class="nav-list-link">Home</a></li>
+<li class="nav-list-item active">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Configuration category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/configuration" class="nav-list-link active">Configuration</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/configuration/redis-configuration/" class="nav-list-link">Redis Configuration</a></li>
+<li class="nav-list-item "><a href="/rqueue/configuration/retry-and-backoff/" class="nav-list-link">Retry and Backoff</a></li>
+</ul>
+</li>
+<li class="nav-list-item">
+<a href="#" class="nav-list-expander" aria-label="toggle links in Producer Consumer category"> <svg viewbox="0 0 24 24"><use xlink:href="#svg-arrow-right"></use></svg> </a><a href="/rqueue/producer-consumer" class="nav-list-link">Producer Consumer</a><ul class="nav-list">
+<li class="nav-list-item "><a href="/rqueue/message-handling" class="nav-list-link">Message Handling</a></li>
+<li class="nav-list-item "><a href="/rqueue/message-deduplication" class="nav-list-link">Message Deduplication</a></li>
+<li class="nav-list-item "><a href="/rqueue/middleware" class="nav-list-link">Middleware</a></li>
+<li class="nav-list-item "><a href="/rqueue/priority" class="nav-list-link">Queue Priority</a></li>
+</ul>
+</li>
+<li class="nav-list-item"><a href="/rqueue/callback-and-events" class="nav-list-link">Callbacks and Events</a></li>
+<li class="nav-list-item"><a href="/rqueue/dashboard" class="nav-list-link">Rqueue Dashboard</a></li>
+<li class="nav-list-item"><a href="/rqueue/monitoring-alerting" class="nav-list-link">Monitoring and Alerting</a></li>
+<li class="nav-list-item"><a href="/rqueue/faq" class="nav-list-link">FAQ</a></li>
+<li class="nav-list-item"><a href="/rqueue/CHANGELOG/" class="nav-list-link">CHANGELOG</a></li>
+<li class="nav-list-item"><a href="/rqueue/migration" class="nav-list-link">Migration from older to new version</a></li>
+</ul>
+<ul class="nav-list"><li class="nav-list-item external"> <a href="https://github.com/sonus21/rqueue" class="nav-list-link external"> Rqueue on GitHub <svg viewbox="0 0 24 24" aria-labelledby="svg-external-link-title"><use xlink:href="#svg-external-link"></use></svg> </a>
+</li></ul></nav><footer class="site-footer"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.</footer>
+</div>
+<div class="main" id="top">
+<div id="main-header" class="main-header">
+<div class="search">
+<div class="search-input-wrap"> <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search Rqueue" aria-label="Search Rqueue" autocomplete="off"> <label for="search-input" class="search-label"><svg viewbox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+</div>
+<div id="search-results" class="search-results"></div>
+</div>
+<nav aria-label="Auxiliary" class="aux-nav"><ul class="aux-nav-list"><li class="aux-nav-list-item"> <a href="//github.com/sonus21/rqueue" class="site-button"> Rqueue on GitHub </a>
+</li></ul></nav>
+</div>
+<div id="main-content-wrap" class="main-content-wrap"><div id="main-content" class="main-content" role="main">
+<h1 id="configuration"> <a href="#configuration" class="anchor-heading" aria-labelledby="configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Configuration</h1>
+<p class="no_toc">Rqueue offers many configuration settings that can be adjusted either through the application configuration or directly in the code.</p>
+<h2 class="fs-6 fw-300" id="table-of-contents"> <a href="#table-of-contents" class="anchor-heading" aria-labelledby="table-of-contents"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Table of contents</h2>
+<ol class="no_toc text-delta"><li>TOC</li></ol>
+<hr>
+<p>Apart from the basic configuration, Rqueue can be heavily customized, such as adjusting the number of tasks executed concurrently. Additional configurations can be provided using the <code class="language-plaintext highlighter-rouge">SimpleRqueueListenerContainerFactory</code> class. See SimpleRqueueListenerContainerFactory <a href="https://javadoc.io/doc/com.github.sonus21/rqueue-core/latest/com/github/sonus21/rqueue/config/SimpleRqueueListenerContainerFactory.html">doc</a> for more configs.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nd">@Configuration</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RqueueConfiguration</span> <span class="o">{</span>
+  <span class="nd">@Bean</span>
+  <span class="kd">public</span> <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="nf">simpleRqueueListenerContainerFactory</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// return SimpleRqueueListenerContainerFactory object</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<h2 id="task-or-queue-concurrency"> <a href="#task-or-queue-concurrency" class="anchor-heading" aria-labelledby="task-or-queue-concurrency"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Task or Queue Concurrency</h2>
+<p>By default, the number of task executors is twice the number of queues. You can configure a custom or shared task executor using the factory’s <code class="language-plaintext highlighter-rouge">setTaskExecutor</code> method. Additionally, queue concurrency can be set using the <code class="language-plaintext highlighter-rouge">RqueueListener</code> annotation’s <code class="language-plaintext highlighter-rouge">concurrency</code> field, which can be a positive number like 10 or a range like 5-10. If queue concurrency is specified, each queue will use its own task executor to handle consumed messages; otherwise, a shared task executor is used.</p>
+<p>A global number of workers can be configured using the <code class="language-plaintext highlighter-rouge">setMaxNumWorkers</code> method. The <code class="language-plaintext highlighter-rouge">RqueueListener</code> annotation also has a <code class="language-plaintext highlighter-rouge">batchSize</code> field. By default, listeners with a concurrency set will fetch 10 messages, while others will fetch 1.</p>
+<p class="note">Increasing the batch size has its consequences. If your thread pool size is too low, you may encounter many processing jobs being rejected by the executor unless you have configured a large <code class="language-plaintext highlighter-rouge">queueCapacity</code>.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">RqueueConfiguration</span> <span class="o">{</span>
+  <span class="nd">@Bean</span>
+  <span class="kd">public</span> <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="nf">simpleRqueueListenerContainerFactory</span><span class="o">()</span> <span class="o">{</span>
+    <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">SimpleRqueueListenerContainerFactory</span><span class="o">();</span>
+    <span class="c1">//...</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">setMaxNumWorkers</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+    <span class="k">return</span> <span class="n">factory</span><span class="o">;</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">RqueueConfiguration</span> <span class="o">{</span>
+
+  <span class="nd">@Bean</span>
+  <span class="kd">public</span> <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="nf">simpleRqueueListenerContainerFactory</span><span class="o">()</span> <span class="o">{</span>
+    <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">SimpleRqueueListenerContainerFactory</span><span class="o">();</span>
+    <span class="c1">//...</span>
+    <span class="nc">ThreadPoolTaskExecutor</span> <span class="n">threadPoolTaskExecutor</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ThreadPoolTaskExecutor</span><span class="o">();</span>
+    <span class="n">threadPoolTaskExecutor</span><span class="o">.</span><span class="na">setThreadNamePrefix</span><span class="o">(</span><span class="s">"taskExecutor"</span><span class="o">);</span>
+    <span class="n">threadPoolTaskExecutor</span><span class="o">.</span><span class="na">setCorePoolSize</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+    <span class="n">threadPoolTaskExecutor</span><span class="o">.</span><span class="na">setMaxPoolSize</span><span class="o">(</span><span class="mi">50</span><span class="o">);</span>
+    <span class="n">threadPoolTaskExecutor</span><span class="o">.</span><span class="na">setQueueCapacity</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+    <span class="n">threadPoolTaskExecutor</span><span class="o">.</span><span class="na">afterPropertiesSet</span><span class="o">();</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">setTaskExecutor</span><span class="o">(</span><span class="n">threadPoolTaskExecutor</span><span class="o">);</span>
+    <span class="k">return</span> <span class="n">factory</span><span class="o">;</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>When a custom executor is provided, it is essential to set <code class="language-plaintext highlighter-rouge">MaxNumWorkers</code> correctly. Otherwise, the thread pool might be over- or under-utilized. Over-utilization of the thread pool is not possible, as it will reject new tasks, leading to delays in message consumption. Under-utilization can be managed by ensuring proper configuration of the executor and adjusting the <code class="language-plaintext highlighter-rouge">MaxNumWorkers</code> setting appropriately.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+threadPoolTaskExecutor.setThreadNamePrefix( "ListenerExecutor" );
+threadPoolTaskExecutor.setCorePoolSize(corePoolSize);
+threadPoolTaskExecutor.setMaxPoolSize(maxPoolSize);
+threadPoolTaskExecutor.setQueueCapacity(queueCapacity);
+threadPoolTaskExecutor.afterPropertiesSet();
+factory.setTaskExecutor(threadPoolTaskExecutor);
+</code></pre></div></div>
+<p>In this configuration, there are three key variables: <code class="language-plaintext highlighter-rouge">corePoolSize</code>, <code class="language-plaintext highlighter-rouge">maxPoolSize</code>, and <code class="language-plaintext highlighter-rouge">queueCapacity</code>.</p>
+<ul>
+<li>
+<code class="language-plaintext highlighter-rouge">corePoolSize</code> signifies the lower limit of active threads.</li>
+<li>
+<code class="language-plaintext highlighter-rouge">maxPoolSize</code> signifies the upper limit of active threads.</li>
+<li>
+<code class="language-plaintext highlighter-rouge">queueCapacity</code> signifies that even if you have <code class="language-plaintext highlighter-rouge">maxPoolSize</code> running threads, you can have <code class="language-plaintext highlighter-rouge">queueCapacity</code> tasks waiting in the queue, which can be dequeued and executed by the existing threads as soon as the running threads complete their execution.</li>
+</ul>
+<p>If you have N queues, you can set the maximum number of workers as <code class="language-plaintext highlighter-rouge">(maxPoolSize + queueCapacity - N)</code>.</p>
+<p class="warning">In this context, N threads are allocated for polling queues, but this is not a correct number when * *priority** is used.</p>
+<p>The number of message pollers is determined by the sum of the following:</p>
+<ol>
+<li>Number of unique priority groups.</li>
+<li>Number of queues with specified priorities (e.g., <code class="language-plaintext highlighter-rouge">"critical=5,high=2"</code>).</li>
+<li>Number of queues without priority.</li>
+</ol>
+<p>If you prefer not to delve into the calculations, you can set the following:</p>
+<ul>
+<li><code class="language-plaintext highlighter-rouge">queueCapacity &gt;= 2 * number of queues</code></li>
+<li><code class="language-plaintext highlighter-rouge">maxPoolSize &gt;= 2 * number of queues</code></li>
+<li><h2 id="corepoolsize--number-of-queues"> <a href="#corepoolsize--number-of-queues" class="anchor-heading" aria-labelledby="corepoolsize--number-of-queues"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <code class="language-plaintext highlighter-rouge">corePoolSize &gt;= number of queues</code>
+</h2></li>
+</ul>
+<p class="note">Setting a non-zero <code class="language-plaintext highlighter-rouge">queueCapacity</code> can indeed lead to duplicate message problems. This occurs because polled messages that are waiting to be executed might have their <code class="language-plaintext highlighter-rouge">visibilityTimeout</code> expire, causing another message listener to pull the same message again. This scenario can result in duplicate processing of messages, which can impact the correctness of your application’s logic. To mitigate this issue, it’s crucial to carefully configure <code class="language-plaintext highlighter-rouge">queueCapacity</code> and <code class="language-plaintext highlighter-rouge">visibilityTimeout</code> settings to ensure that messages are processed correctly without duplication.</p>
+<h2 id="manual-start-of-the-container"> <a href="#manual-start-of-the-container" class="anchor-heading" aria-labelledby="manual-start-of-the-container"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Manual start of the container</h2>
+<p>When using a container that starts automatically and offers graceful shutdown, you can control its automatic startup behavior using the <code class="language-plaintext highlighter-rouge">autoStartup</code> flag. If <code class="language-plaintext highlighter-rouge">autoStartup</code> is set to <code class="language-plaintext highlighter-rouge">false</code>, then your application needs to manually call the <code class="language-plaintext highlighter-rouge">start</code> and <code class="language-plaintext highlighter-rouge">stop</code> methods of the container to control its lifecycle. Additionally, for a graceful shutdown, you should call the <code class="language-plaintext highlighter-rouge">destroy</code> method when appropriate. This gives you finer control over when the container starts and stops within your application’s lifecycle.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">RqueueConfiguration</span> <span class="o">{</span>
+
+  <span class="nd">@Bean</span>
+  <span class="kd">public</span> <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="nf">simpleRqueueListenerContainerFactory</span><span class="o">()</span> <span class="o">{</span>
+    <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">SimpleRqueueListenerContainerFactory</span><span class="o">();</span>
+    <span class="c1">//...</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">setAutoStartup</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+    <span class="k">return</span> <span class="n">factory</span><span class="o">;</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BootstrapController</span> <span class="o">{</span>
+
+  <span class="nd">@Autowired</span>
+  <span class="kd">private</span> <span class="nc">RqueueMessageListenerContainer</span> <span class="n">rqueueMessageListenerContainer</span><span class="o">;</span>
+
+  <span class="c1">// ...</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">start</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// ...</span>
+    <span class="n">rqueueMessageListenerContainer</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">stop</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// ...</span>
+    <span class="n">rqueueMessageListenerContainer</span><span class="o">.</span><span class="na">stop</span><span class="o">();</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">destroy</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// ...</span>
+    <span class="n">rqueueMessageListenerContainer</span><span class="o">.</span><span class="na">destroy</span><span class="o">();</span>
+  <span class="o">}</span>
+  <span class="c1">//...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<h2 id="message-converters-configuration"> <a href="#message-converters-configuration" class="anchor-heading" aria-labelledby="message-converters-configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Message converters configuration</h2>
+<p>To configure the message converter, you can only use application configuration by specifying the property <code class="language-plaintext highlighter-rouge">rqueue.message.converter.provider.class=com.example.MyMessageConverterProvider</code>. This approach allows you to customize message conversion behavior using your own implementation of <code class="language-plaintext highlighter-rouge">org.springframework.messaging.converter.MessageConverter</code>. Typically, this customization ensures that messages can be converted to and from various formats smoothly within your application.</p>
+<p class="note">MyMessageConverterProvider class must implement <code class="language-plaintext highlighter-rouge">com.github.sonus21.rqueue.converter.MessageConverterProvider</code> interface.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">MyMessageConverterProvider</span> <span class="kd">implements</span> <span class="nc">MessageConverterProvider</span> <span class="o">{</span>
+
+  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="nc">MessageConverter</span> <span class="nf">getConverter</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// here any message converter can be returned except null </span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">MyMessageConverter</span><span class="o">();</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>The default implementation, <code class="language-plaintext highlighter-rouge">DefaultMessageConverterProvider</code>, returns <code class="language-plaintext highlighter-rouge">DefaultRqueueMessageConverter</code>. While <code class="language-plaintext highlighter-rouge">DefaultRqueueMessageConverter</code> can handle encoding and decoding for most messages, it may encounter issues when message classes are not shared across applications. To avoid sharing classes as JAR files, you can opt for converters such as <code class="language-plaintext highlighter-rouge">com.github.sonus21.rqueue.converter.JsonMessageConverter</code> or <code class="language-plaintext highlighter-rouge">org.springframework.messaging.converter.MappingJackson2MessageConverter</code>. These converters serialize messages into JSON format, facilitating interoperability without shared class dependencies.</p>
+<p>Additionally, alternatives like MessagePack or ProtoBuf can also be employed based on specific requirements for message serialization and deserialization. Each of these options provides flexibility in how messages are encoded and decoded across different systems and applications.</p>
+<h2 id="additional-configuration"> <a href="#additional-configuration" class="anchor-heading" aria-labelledby="additional-configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Additional Configuration</h2>
+<ul><li>
+<strong>rqueue.retry.per.poll</strong>: This setting determines how many times a polled message should be retried before declaring it dead or moving it back into the queue for subsequent retries. The default value is <code class="language-plaintext highlighter-rouge">1</code>, meaning a message will be processed once initially, and if it fails, it will be retried on the next poll. If you increase this value to <code class="language-plaintext highlighter-rouge">N</code>, the polled message will be retried consecutively N times before it is considered failed and made available for other listeners to process.</li></ul>
+<p>This configuration allows you to control how many times Rqueue attempts to process a message before handling it as a failed message, giving you flexibility in managing message retries and error handling strategies.</p>
+<hr>
+<h2 class="text-delta">Table of contents</h2>
+<ul>
+<li> <a href="/rqueue/configuration/redis-configuration/">Redis Configuration</a>
+</li>
+<li> <a href="/rqueue/configuration/retry-and-backoff/">Retry and Backoff</a>
+</li>
+</ul>
+<hr>
+<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a><div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/configuration/configuration.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
+</div></div>
+<div class="search-overlay"></div>
+</div>
+<script> var config = {} ; mermaid.initialize(config); window.mermaid.init(undefined, document.querySelectorAll('.language-mermaid')); </script>
+</body>
+</html>
