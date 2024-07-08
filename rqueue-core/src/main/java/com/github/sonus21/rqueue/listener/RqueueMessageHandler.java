@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ import java.util.stream.Stream;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -83,6 +84,7 @@ import org.springframework.util.comparator.ComparableComparator;
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
 
     private final ConversionService conversionService;
+    @Getter
     private final MessageConverter messageConverter;
     private final boolean inspectAllBean;
     private final AsyncTaskExecutor asyncTaskExecutor;
@@ -287,6 +289,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
                         .priorityGroup(priorityGroup)
                         .priority(priorityMap)
                         .batchSize(batchSize)
+                        .doNotRetry(new HashSet<>(Arrays.asList(rqueueListener.doNotRetry())))
                         .build();
         if (mappingInformation.isValid()) {
             return mappingInformation;
@@ -541,11 +544,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
         throw new MessagingException("An exception occurred while invoking the handler method", ex);
     }
 
-    public MessageConverter getMessageConverter() {
-        return this.messageConverter;
-    }
-
-    @AllArgsConstructor
+  @AllArgsConstructor
     static class HandlerMethodWithPrimary {
 
         HandlerMethod method;

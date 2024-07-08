@@ -10,9 +10,10 @@ permalink: /
 
 {: .fs-4 }
 
-Rqueue is an asynchronous task executor(worker) built for spring framework based on the spring
-framework's messaging library backed by Redis. It can be used as message broker as well, where all
-services code is in Spring/Spring Boot. It supports Spring and Spring Boot framework.
+Rqueue is an asynchronous task executor (worker) built for the Spring Framework based on Spring's
+messaging library, backed by Redis. It can serve as a message broker where all service code is
+within Spring/Spring Boot applications. Rqueue fully supports both Spring and Spring Boot
+frameworks.
 
 {: .fs-6 .fw-300 }
 
@@ -23,89 +24,80 @@ services code is in Spring/Spring Boot. It supports Spring and Spring Boot frame
 
 ## Features
 
-* **Instant delivery** : Instant execute this message
-* **Message scheduling** : A message can be scheduled for any arbitrary period
-* **Unique message** : Unique message processing for a queue based on the message id
-* **Periodic message** : Process same message at certain interval
-* **Priority tasks** : task having some special priority like high, low, medium
-* **Message delivery** : It's guaranteed that a message is consumed **at least once**.  (Message
-  would be consumed by a worker more than once due to the failure in the underlying
-  worker/restart-process etc, otherwise exactly one delivery)
-* **Message retry** : Message would be retried automatically on application crash/failure/restart
-  etc.
-* **Automatic message serialization and deserialization**
-* **Message Multicasting** : Call multiple message listeners on every message
-* **Batch Message Polling** : Fetch multiple messages from Redis at once
-* **Metrics** : In flight messages, waiting for consumption and delayed messages
-* **Competing Consumers** : multiple messages can be consumed in parallel by different
-  workers/listeners.
-* **Concurrency** : Concurrency of any listener can be configured
-* **Queue Priority** :
-  * Group level queue priority(weighted and strict)
-  * Sub queue priority(weighted and strict)
-* **Long execution job** : Long running jobs can check in periodically.
-* **Execution Backoff** : Exponential and fixed back off (default fixed back off)
-* **Middleware** :  Add one or more middleware, middlewares are called before listener method.
-* **Callbacks** : Callbacks for dead letter queue, discard etc
-* **Events** : 1. Bootstrap event 2. Task execution event.
-* **Redis connection** : A different redis setup can be used for Rqueue
-* **Redis cluster** : Redis cluster can be used with Lettuce client.
-* **Redis Sentinel** : Redis sentinel can be used with Rqueue.
-* **Reactive Programming** : Supports reactive Redis and spring webflux
-* **Web Dashboard** :  Web dashboard to manage a queue and queue insights including latency
+* **Instant Delivery**: Immediate execution of messages.
+* **Message Scheduling**: Schedule messages for any arbitrary period.
+* **Unique Message Processing**: Ensures unique processing of messages based on message ID.
+* **Periodic Message Processing**: Process the same message at defined intervals.
+* **Priority Tasks**: Support for task prioritization (e.g., high, low, medium).
+* **Message Delivery Guarantee**: Ensures each message is consumed at least once, and may be retried
+  in case of worker failures or restarts.
+* **Automatic Serialization and Deserialization of Messages**.
+* **Message Multicasting**: Call multiple message listeners for each message.
+* **Batch Message Polling**: Fetch multiple messages from Redis in one operation.
+* **Metrics**: Provides insights into in-flight messages, waiting messages, and delayed messages.
+* **Competing Consumers**: Multiple workers can consume messages in parallel.
+* **Concurrency Control**: Configurable concurrency for message listeners.
+* **Queue Priority**: Supports both group-level and sub-queue level priorities.
+* **Long Execution Jobs**: Check-in mechanism for long-running jobs.
+* **Execution Backoff**: Supports exponential and fixed backoff strategies.
+* **Do not retry**: Supports do not retry exceptions.
+* **Middleware**: Allows integration of middleware to intercept messages before processing.
+* **Callbacks**: Supports callbacks for handling dead letter queues and discarding messages.
+* **Events**: Provides bootstrap and task execution events.
+* **Redis Connection Options**: Supports different Redis configurations including Redis Cluster and
+  Redis Sentinel.
+* **Reactive Programming**: Integrates with reactive Redis and Spring WebFlux.
+* **Web Dashboard**: Provides a web-based dashboard for managing queues and monitoring queue
+  metrics.
 
 ### Requirements
 
 * Spring 5+, 6+
-* Spring boot 2+, 3+
+* Spring Boot 2+, 3+
 * Spring Reactive
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
 
-## Getting started
+## Getting Started
 
 {: .warning }
-All queue names are dynamic, we do not have to create any queue manually or programmatically using
-`registerQueue` method. Creating queue manually could lead to inconsistencies, queue should be
-**only** created when we're using Rqueue as producer.
+All queue names are dynamic. Manually creating queues using `registerQueue` method can lead to
+inconsistencies. Queues should **only** be created when using Rqueue as a producer.
 
 ### Sample Apps
-{: .highlight }
-The Rqueue Github repository has multiple sample test apps, try to run them in local all of these apps
-provides simple APIs for demo. In cloned repo we can run one of these apps.
 
-* [Rqueue Sprint Boot](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example)
-* [Rqueue Sprint Boot Reactive](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-reactive-example)
-* [Rqueue Sprint](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example)
+{: .highlight }
+The Rqueue GitHub repository includes several sample apps for local testing and demonstration:
+
+* [Rqueue Spring Boot Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example)
+* [Rqueue Spring Boot Reactive Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-reactive-example)
+* [Rqueue Spring Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example)
 
 ## Project Integration
 
 {: .warning }
-
-While creating redis connection factory you must use readFrom `MASTER_PREFERRED` otherwise application won't start.
-
+When configuring the Redis connection factory, ensure to set `readFrom` to `MASTER_PREFERRED` for
+Redis cluster compatibility, otherwise the application may fail to start.
 
 ### Spring Boot
 
 {: .warning }
-For Spring Boot 3.x you need to use Rqueue Spring Boot Starter 3.x and for Spring Boot 2.x you need
-to use 2.x.
+Use Rqueue Spring Boot Starter 3.x for Spring Boot 3.x, and Rqueue Spring Boot Starter 2.x for
+Spring Boot 2.x.
 
-Get the latest version of Rqueue spring boot starter from [Maven central][Boot Maven Central], add
-the latest version in your dependency manager.
+Get the latest version of Rqueue Spring Boot Starter from [Maven Central][Boot Maven Central]. Add
+the dependency to your project:
 
 #### Spring Boot 2.x Setup
 
-Add Rqueue Spring Boot Starter 2.13.1 and refresh your project. Once you've added the dependency,
-you can start sending and consuming messages.
-
 * Gradle
   ```groovy
-      implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'
+  implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'
   ```
+
 * Maven
   ```xml
-   <dependency>
+  <dependency>
       <groupId>com.github.sonus21</groupId>
       <artifactId>rqueue-spring-boot-starter</artifactId>
       <version>2.13.1-RELEASE</version>
@@ -114,72 +106,69 @@ you can start sending and consuming messages.
 
 #### Spring Boot 3.x Setup
 
-Add Rqueue Spring Boot Starter 3.1.0 and refresh your project. Once you've added the dependency,
-you can start sending and consuming messages.
+* Gradle
+  ```groovy
+  implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.1.0-RELEASE'
+  ```
 
-* Add dependency
-  * Gradle
-    ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.1.0-RELEASE'
-    ```
-  * Maven
-    ```xml
-     <dependency>
-        <groupId>com.github.sonus21</groupId>
-        <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>3.1.0-RELEASE</version>
-    </dependency>
-    ```
+* Maven
+  ```xml
+  <dependency>
+      <groupId>com.github.sonus21</groupId>
+      <artifactId>rqueue-spring-boot-starter</artifactId>
+      <version>3.1.0-RELEASE</version>
+  </dependency>
+  ```
 
 ---
 
 ### Spring Framework
 
 {: .warning }
-For Spring Framework 6.x you need to use Rqueue Spring 3.x and for Spring Framework 5.x you need
-to use 2.x
+Use Rqueue Spring 3.x for Spring Framework 6.x, and Rqueue Spring 2.x for Spring Framework 5.x.
 
-Get the latest version of Rqueue Spring from [Maven Central][Maven Central], add the latest version
-in your dependency manager.
+Get the latest version of Rqueue Spring from [Maven Central][Maven Central]. Add the dependency to
+your project:
 
-#### Spring Framework 5.x
-
-* Gradle
-  ```groovy
-      implementation 'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'
-  ```
-* Maven
-  ```xml
-   <dependency>
-     <groupId>com.github.sonus21</groupId>
-     <artifactId>rqueue-spring</artifactId>
-     <version>2.13.1-RELEASE</version>
-   </dependency>
-  ```
-
-#### Spring Framework 6.x
+#### Spring Framework 5.x Setup
 
 * Gradle
   ```groovy
-      implementation 'com.github.sonus21:rqueue-spring:3.1.0-RELEASE'
+  implementation 'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'
   ```
+
 * Maven
   ```xml
-   <dependency>
-     <groupId>com.github.sonus21</groupId>
-     <artifactId>rqueue-spring</artifactId>
-     <version>3.1.0-RELEASE</version>
-   </dependency>
+  <dependency>
+      <groupId>com.github.sonus21</groupId>
+      <artifactId>rqueue-spring</artifactId>
+      <version>2.13.1-RELEASE</version>
+  </dependency>
+  ```
+
+#### Spring Framework 6.x Setup
+
+* Gradle
+  ```groovy
+  implementation 'com.github.sonus21:rqueue-spring:3.1.0-RELEASE'
+  ```
+
+* Maven
+  ```xml
+  <dependency>
+      <groupId>com.github.sonus21</groupId>
+      <artifactId>rqueue-spring</artifactId>
+      <version>3.1.0-RELEASE</version>
+  </dependency>
   ```
 
 {: .note }
-For **Spring framework**, just adding dependency won't work
+For **Spring Framework**, ensure to:
 
-* Add `EnableRqueue` annotation on main method. If you do not add this annotation than application
-bootstrap will fail due to bean not found and message consumer will not work.
-* Provide RedisConnectionFactory bean.
+* Add `EnableRqueue` annotation on the main method.
+* Provide a `RedisConnectionFactory` bean.
 
-##### A Simple **Spring Application** Configuration
+##### Example Spring Application Configuration
 
 ```java
 
@@ -187,7 +176,7 @@ bootstrap will fail due to bean not found and message consumer will not work.
 public class Application {
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
-    // return a redis connection factory
+    // return a Redis connection factory
   }
 }
 ```
@@ -196,66 +185,52 @@ public class Application {
 
 {: .highlight }
 
-Once Rqueue is configured in Spring/Boot as mentioned above, we're ready to use the Rqueue method
-and annotation. Either you're using Spring Boot or only Spring framework the usage is same. 
+Once Rqueue is configured in Spring or Spring Boot as described above, you can start using Rqueue
+methods and annotations. The usage remains consistent whether using Spring Boot or the Spring
+framework.
 
-### Message publishing/Task submission
+### Message Publishing / Task Submission
 
-All messages need to be sent using `RqueueMessageEnqueuer` bean's `enqueueXXX`, `enqueueInXXX`
-and `enqueueAtXXX` methods. It has handful number of `enqueue`, `enqueueIn`, `enqueueAt` methods, we
-can use one of them based on the use case.
+All messages should be sent using the `RqueueMessageEnqueuer` bean's `enqueueXXX`, `enqueueInXXX`,
+and `enqueueAtXXX` methods. Use the appropriate method based on your use case:
 
 ```java
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 
 @Component
 public class MessageService {
-  @AutoWired
+  @Autowired
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   public void doSomething() {
     rqueueMessageEnqueuer.enqueue("simple-queue", "Rqueue is configured");
   }
 
-  public void createJOB(Job job) {
+  public void createJob(Job job) {
     rqueueMessageEnqueuer.enqueue("job-queue", job);
   }
 
-  // send notification in 30 seconds
   public void sendNotification(Notification notification) {
     rqueueMessageEnqueuer.enqueueIn("notification-queue", notification, 30 * 1000L);
   }
 
-  // enqueue At example
   public void createInvoice(Invoice invoice, Instant instant) {
     rqueueMessageEnqueuer.enqueueAt("invoice-queue", invoice, instant);
-  }
-
-  // enqueue with priority, when sub queues are used as explained in the queue priority section.
-  enum SmsPriority {
-    CRITICAL("critical"),
-    HIGH("high"),
-    MEDIUM("medium"),
-    LOW("low");
-    private String value;
   }
 
   public void sendSms(Sms sms, SmsPriority priority) {
     rqueueMessageEnqueuer.enqueueWithPriority("sms-queue", priority.value(), sms);
   }
 
-  // enqueue periodic job, email should be sent every 30 seconds
   public void sendPeriodicEmail(Email email) {
-    rqueueMessageEnqueuer.enqueuePeriodic("email-queue", invoice, 30_000);
+    rqueueMessageEnqueuer.enqueuePeriodic("email-queue", email, 30_000);
   }
-
 }
 ```
 
-### Worker/Consumer/Task executor/Listener
+### Worker / Consumer / Task Executor / Listener
 
-Annotate any public method of spring bean using `RqueueListener`, all annotated method will work as
-consumer.
+Annotate any public method of a Spring bean with `RqueueListener` to make it a message consumer:
 
 ```java
 import com.github.sonus21.rqueue.annotation.RqueueListener;
@@ -266,105 +241,70 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 public class MessageListener {
 
   @RqueueListener(value = "simple-queue")
-  public void simpleMessage(String message) {
-    log.info("simple-queue: {}", message);
+  public void handleSimpleMessage(String message) {
+    log.info("Received message from simple-queue: {}", message);
   }
 
-  @RqueueListener(value = "job-queue", numRetries = "3",
-      deadLetterQueue = "failed-job-queue", concurrency = "5-10")
-  public void onMessage(Job job) {
-    log.info("Job alert: {}", job);
+  @RqueueListener(value = "job-queue", numRetries = "3", deadLetterQueue = "failed-job-queue", concurrency = "5-10")
+  public void handleJob(Job job) {
+    log.info("Received job: {}", job);
   }
 
-  @RqueueListener(value = "push-notification-queue", numRetries = "3",
-      deadLetterQueue = "failed-notification-queue")
-  public void onMessage(Notification notification) {
-    log.info("Push notification: {}", notification);
+  @RqueueListener(value = "push-notification-queue", numRetries = "3", deadLetterQueue = "failed-notification-queue")
+  public void handleNotification(Notification notification) {
+    log.info("Received notification: {}", notification);
   }
 
   @RqueueListener(value = "sms", priority = "critical=10,high=8,medium=4,low=1")
-  public void onMessage(Sms sms) {
-    log.info("Sms : {}", sms);
+  public void handleSms(Sms sms) {
+    log.info("Received SMS: {}", sms);
   }
 
   @RqueueListener(value = "chat-indexing", priority = "20", priorityGroup = "chat")
-  public void onMessage(ChatIndexing chatIndexing) {
-    log.info("ChatIndexing message: {}", chatIndexing);
+  public void handleChatIndexing(ChatIndexing chatIndexing) {
+    log.info("Received chat indexing message: {}", chatIndexing);
   }
 
   @RqueueListener(value = "chat-indexing-daily", priority = "10", priorityGroup = "chat")
-  public void onMessage(ChatIndexing chatIndexing) {
-    log.info("ChatIndexing message: {}", chatIndexing);
-  }
+  public void handleDailyChatIndexing(ChatIndexing chatIndexing) {
 
-  // checkin job example
-  @RqueueListener(value = "chat-indexing-weekly", priority = "5", priorityGroup = "chat")
-  public void onMessage(ChatIndexing chatIndexing,
-                        @Header(RqueueMessageHeaders.JOB) com.github.sonus21.rqueue.core.Job job) {
-    log.info("ChatIndexing message: {}", chatIndexing);
-    job.checkIn("Chat indexing...");
+
+    log.info("Received daily chat indexing message: {}", chatIndexing);
   }
 }
 ```
 
-## Rqueue Users
+#### Notes:
 
-Rqueue is stable and production ready, it's processing millions of on messages daily in production environment.
+* **Retry Mechanism**: Configure retry behavior using `numRetries` and `deadLetterQueue` attributes.
+* **Concurrency**: Adjust concurrency using the `concurrency` attribute.
+* **Priority**: Set message priority using the `priority` attribute.
 
-**We would love to add your organization name here, if you're one of the Rqueue users, please lets know either via [GitHub][I am Using Rqueue] or [Email](mailto:sonunitw12@gmail.com).**
+---
 
-<div markdown="1" style="background: white">
-<div markdown="1" style="padding: 10px">
+### Advanced Configuration
 
-[![Airtel](static/users/airtel-africa.png){: width="160" height="60" alt="Airtel Africa" }](https://airtel.africa){: target="_blank" style="margin:10px"}
-[![Line](static/users/line.png){: width="70" height="60" alt="Line Chat" }](https://line.me){:target="_blank" style="margin:10px"}
-[![Aviva](static/users/aviva.jpeg){: width="70" height="60" alt="Aviva" }](https://www.aviva.com/){:target="_blank" style="margin:10px"}
-[![Diamler Truck](static/users/mercedes.png){: width="80" height="60" alt="Daimler Truck (Mercedes)" }](https://www.daimlertruck.com/en){:target="_blank" style="margin:10px"}
-[![T-Mobile](static/users/t-mobile.svg){: width="50" height="50" alt="T Mobile" }](https://www.t-mobile.com){:target="_blank" style="margin:10px"}
-[![Bit bot](static/users/bitbot.png){: width="80" height="60" alt="BitBot" }](https://bitbot.plus){:target="_blank" style="margin:10px"}
-[![Vonage](static/users/vonage.png){: width="250" height="60" alt="Vonage" }](http://vonage.com){:target="_blank" style="margin:10px"}
-[![Poker Stars](static/users/pokerstars.png){: width="210" height="60" alt="PokerStars" }](https://www.pokerstarssports.eu){:target="_blank" style="margin:10px"}
-[![Tune You](static/users/tuneyou.png){: width="140" height="60" alt="TuneYou" }](https://tuneyou.com){:target="_blank" style="margin:10px"}
-[![CHAOTI INFO TECH(SHENZHEN)](static/users/chaoti-info.png){: width="140" height="60" alt="CHAOTI INFO TECH(SHENZHEN)" }](https://www.chaotiinfo.cn){:target="_blank" style="margin:10px"}
+#### Rqueue Configuration
 
-</div>
-</div>
+{: .note .fw-300 }
+For advanced configurations such as message serialization, queue properties, message listener
+details, and more, refer to the [official documentation][Rqueue Docs].
 
-## About the project
+### Support
 
-Rqueue is &copy; 2019-{{ "now" | date: "%Y" }} by [Sonu Kumar](http://github.com/sonus21).
+{: .fs-5 }
+
+For any issues, questions, or feature requests, please create an issue on
+the [GitHub repository][Rqueue repo] or contact the maintainers directly.
+
+---
 
 ### License
 
-Rqueue is distributed by an [Apache license](https://github.com/sonus21/rqueue/tree/master/LICENSE).
+{: .fs-5 }
 
-### Contributing
-
-When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change. Read more
-about becoming a contributor in [our GitHub repo](https://github.com/sonus21/rqueue#contributing).
-
-#### Thank you to the contributors of Rqueue!
-
-<ul class="list-style-none">
-{% for contributor in site.github.contributors %}
-  <li class="d-inline-block mr-1">
-     <a href="{{ contributor.html_url }}"><img src="{{ contributor.avatar_url }}" width="32" height="32" alt="{{ contributor.login }}"></a>
-  </li>
-{% endfor %}
-</ul>
-
-### Code of Conduct
-
-Rqueue is committed to fostering a welcoming community.
-
-[View our Code of Conduct](https://github.com/sonus21/rqueue/tree/master/CODE_OF_CONDUCT.md)
-on our GitHub repository.
-
+Rqueue is licensed under the Apache License 2.0. See the [LICENSE](https://github.com/sonus21/rqueue/blob/master/LICENSE) file for more details.
+[Rqueue Docs]: https://github.com/sonus21/rqueue/wiki
+[Boot Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring-boot-starter
+[Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring
 [Rqueue repo]: https://github.com/sonus21/rqueue
-
-[Boot Maven Central]: https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter
-
-[Maven Central]: https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring
-
-[I am Using Rqueue]: https://github.com/sonus21/rqueue/issues/new?template=i-m-using-rqueue.md&title=Add+my+organisation+in+Rqueue+Users

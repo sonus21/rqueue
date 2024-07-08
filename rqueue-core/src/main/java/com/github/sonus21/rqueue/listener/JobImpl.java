@@ -336,7 +336,7 @@ public class JobImpl implements Job {
   void updateMessageStatus(MessageStatus messageStatus) {
     setMessageStatus(messageStatus);
     // We need to address these problems with message metadata
-    // 1. Message was deleted while executing, this means local copy is stale
+    // 1. The Message was deleted while executing; this means local copy is stale
     // 2. Parallel update is being made [dashboard operation, periodic job (two periodic jobs can
     // run in parallel due to failure)]
     if (!messageStatus.isTerminalState() || getRqueueMessage().isPeriodic()) {

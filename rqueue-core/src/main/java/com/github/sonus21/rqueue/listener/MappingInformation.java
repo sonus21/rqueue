@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ class MappingInformation implements Comparable<MappingInformation> {
   private final Map<String, Integer> priority;
   private final boolean primary;
   private final int batchSize;
+  private final Set<Class<? extends Throwable>> doNotRetry;
 
   @Override
   public String toString() {

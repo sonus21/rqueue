@@ -1,57 +1,36 @@
 ---
 layout: default
-title: WEB UI 
+title: Rqueue Dashboard
 nav_order: 5
-description: Rqueue Dashboard
+description: Dashboard for Rqueue Monitoring and Management
 permalink: /dashboard
 ---
 
+The Rqueue dashboard provides several components to monitor and manage various aspects of message
+processing.
 
-The Rqueue has got a dashboard to see what’s going on, dashboard has multiple components for
-multiple features.
+### Components of the Rqueue Dashboard
 
-* **Latency graph**: Latency for all queues or specific queues on daily basis upto 90 days. Latency
-  has min, max and average latency.
-* **Queue statistics**: How many messages were retried, executed, moved to dead letter, discarded
-  due to retry limit exhaust.
-* **Task Deletion** : Allows to delete any enqueued messages, either it’s in scheduled to be run, or
-  it’s running, or it’s waiting to run.
-* **Queue Insight** : It also allows us to see queue internal messages like SQS dashboard.
-* **Queue Management** : Move tasks from one queue to another
+* **Latency Graph**: Displays latency metrics for all queues or specific queues over a daily basis
+  for up to 90 days, showing minimum, maximum, and average latency.
 
-Link: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
+* **Queue Statistics**: Provides insights into message retry counts, executions, movements to
+  dead-letter queues, and discards due to retry limit exhaustion.
+
+* **Task Deletion**: Allows deletion of enqueued messages, whether scheduled to run, currently
+  running, or waiting to run.
+
+* **Queue Insight**: Offers visibility into internal queue messages, akin to an SQS dashboard.
+
+* **Queue Management**: Facilitates moving tasks from one queue to another.
+
+Link to access the dashboard: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
 ## Configuration
 
-Add resource handler to handle the static resources.
+### Adding Resource Handlers
 
-```java
-  public class MvcConfig implements WebMvcConfigurer {
-
-  @Override
-  public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    //...
-    if (!registry.hasMappingForPattern("/**")) {
-      registry.addResourceHandler("/**").addResourceLocations("classpath:/public/");
-    }
-  }
-}
-```
-
-All paths are under `/rqueue/**`. for authentication add interceptor(s) that would check for the
-session etc.
-
-### Adding Path Prefix
-
-Rqueue endpoints and dashboards are available at `/rqueue/**` but it can handle `x-forwarded-prefix`
-header, `x-forwarded-prefix` HTTP header is added as prefix in all urls. Rqueue can be configured to
-use prefix using `rqueue.web.url.prefix` like `rqueue.web.url.prefix=/my-application/`
-
-If path prefix is configured then static file resource handler must be configured to handle the
-static files otherwise dashboard will not work.
-
-Link: [http://localhost:8080/my-application/rqueue](http://localhost:8080/my-application/rqueue)
-
+To handle static resources, configure a resource handler in your MVC configuration.
 
 ```java
 public class MvcConfig implements WebMvcConfigurer {
@@ -72,44 +51,50 @@ public class MvcConfig implements WebMvcConfigurer {
 }
 ```
 
+### Adding Path Prefix
+
+Rqueue endpoints and dashboards are available at `/rqueue/**`, but they can handle
+the `x-forwarded-prefix` HTTP header for custom prefixing. Configure the prefix
+using `rqueue.web.url.prefix`, for example: `rqueue.web.url.prefix=/my-application/`.
+
+If a path prefix is configured, ensure that static file resource handling is also configured
+accordingly, or the dashboard may not function correctly.
+
+Link with configured path
+prefix: [http://localhost:8080/my-application/rqueue](http://localhost:8080/my-application/rqueue)
+
 ## Dashboard Configurations
 
-* `rqueue.web.enable` : Whether web dashboard is enabled or not, by default dashboard is enabled.
-* `rqueue.web.max.message.move.count` : From utility tab one or more messages can be moved to other
-  queue, by default on one request it will move `1000` messages, if you want larger/smaller number
-  of messages to be moved then change this number.
-* `rqueue.web.collect.listener.stats` : Whether the task execution status should be collected or
-  not, when this is enabled than one or more background threads are put in place to aggregate
-  metrics.
-* `rqueue.web.collect.listener.stats.thread.count` : This controls thread count for metrics
+* `rqueue.web.enable`: Controls whether the web dashboard is enabled (default: `true`).
+* `rqueue.web.max.message.move.count`: Specifies the number of messages to move on a single request
+  from the utility tab (default: `1000`).
+* `rqueue.web.collect.listener.stats`: Enables collection of task execution status metrics (
+  default: `false`).
+* `rqueue.web.collect.listener.stats.thread.count`: Controls the number of threads for metrics
   aggregation.
-* `rqueue.web.statistic.history.day` : By default metrics are stored for 90 days, change this number
-  to accommodate your use case.
-* `rqueue.web.collect.statistic.aggregate.event.count` : The metrics of 500 events are aggregated at
-  once, if you want fast update than you can change this to smaller one while if you want delay the
-  metrics update than you need to increase this number. **Reducing this number will cause more
-  write**
-* `rqueue.web.collect.statistic.aggregate.event.wait.time` : Listeners event are aggregated when one
-  of these two things either we have enough number of events, or the first event was occurred a long
-  time ago, by default an event would wait upto 1 minute of time. If you want aggregation can be
-  delayed then increase this to some higher value or reduce it. Provided time is in **second**.
-* `rqueue.web.collect.statistic.aggregate.shutdown.wait.time` : At the time of application shutdown,
-  there could be some events in the queue those require aggregation. If there are any pending events
-  than a force aggregation is triggered, this parameter controls the waiting time for the force
-  aggregation task. The provided time is in **millisecond**.
+* `rqueue.web.statistic.history.day`: Specifies the number of days to store metrics data (
+  default: `90`).
+* `rqueue.web.collect.statistic.aggregate.event.count`: Aggregates metrics for a specified number of
+  events at once (default: `500`).
+* `rqueue.web.collect.statistic.aggregate.event.wait.time`: Specifies the wait time in seconds for
+  metrics aggregation based on event occurrence or elapsed time (default: `60` seconds).
+* `rqueue.web.collect.statistic.aggregate.shutdown.wait.time`: Sets the wait time in milliseconds
+  for force aggregation of pending events during application shutdown.
 
-Home Page
----
-[![Execution Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
+### Dashboard Screenshots
 
-Queue Page
----
-[![Queues Page](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)
+#### Latency Graph
 
-Tasks waiting for execution
----
-[![Explore Queue](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
+[![Latency Graph](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
 
-Running tasks
----
-[![Running tasks](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)
+#### Queue Statistics
+
+[![Queue Statistics](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)
+
+#### Tasks Waiting for Execution
+
+[![Tasks Waiting for Execution](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
+
+#### Running Tasks
+
+[![Running Tasks](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)

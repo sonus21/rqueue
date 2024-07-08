@@ -1,45 +1,49 @@
 ---
 layout: default
 nav_order: 7
-title: Monitoring/Alerting
+title: Monitoring and Alerting
 description: Rqueue Health Monitoring and Alerting
 permalink: /monitoring-alerting
 ---
 
 ## Monitoring Queue Statistics
+
 {: .note}
-Rqueue support **micrometer** library for monitoring. 
 
-**It provides 4 types of gauge metrics.**
+Rqueue supports monitoring via the **Micrometer** library.
 
-* **queue.size** : number of tasks to be run
-* **dead.letter.queue.size** : number of tasks in the dead letter queue
-* **scheduled.queue.size** : number of tasks scheduled for later time, it's an approximate number,
-  since some tasks might not have moved to be processed despite best efforts
-* **processing.queue.size** : number of tasks are being processed. It's also an approximate number
-  due to retry and tasks acknowledgements.
+### Gauge Metrics
 
-**Execution and failure counters can be enabled (by default this is disabled).**
+Rqueue provides the following gauge metrics:
 
-We need to set `count.execution` and `count.failure` fields of RqueueMetricsProperties
+* **queue.size**: Number of tasks waiting to be processed.
+* **dead.letter.queue.size**: Number of tasks in the dead letter queue.
+* **scheduled.queue.size**: Approximate number of tasks scheduled for future execution.
+* **processing.queue.size**: Approximate number of tasks currently being processed.
 
+### Execution and Failure Counters
+
+Execution and failure counters can be enabled (disabled by default) by
+configuring `RqueueMetricsProperties`.
+
+```properties
+rqueue.metrics.count.execution=true
+rqueue.metrics.count.failure=true
 ```
-1. execution.count
-2. failure.count 
-```
 
-All these metrics are tagged
+### Integration
 
-**Spring Boot Application**
+#### Spring Boot Application
 
-1. Add `micrometer` and the exporter dependencies
-2. Set tags if any using `rqueue.metrics.tags.<name> = <value>`
-3. Enable counting features using `rqueue.metrics.count.execution=true`
-   , `rqueue.metrics.count.failure=true`
+1. Include Micrometer dependencies and relevant exporters.
+2. Set tags using `rqueue.metrics.tags.<name> = <value>` if needed.
+3. Enable counting features as required.
 
-**Spring Application**
+#### Spring Application
 
-1. Add `micrometer` and the exporter dependencies provide `MeterRegistry` as bean
-2. Provide a bean of `RqueueMetricsProperties`, in this bean set all the required fields.
+1. Include Micrometer dependencies and provide `MeterRegistry` as a bean.
+2. Configure a `RqueueMetricsProperties` bean with necessary settings.
+
+### Example Grafana Dashboard
 
 [![Grafana Dashboard](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/grafana-dashboard.png)

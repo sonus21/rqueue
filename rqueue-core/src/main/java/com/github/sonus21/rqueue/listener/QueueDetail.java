@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -33,10 +33,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.util.CollectionUtils;
 
 @Getter
 @Builder
@@ -65,6 +68,7 @@ public class QueueDetail extends SerializableBase {
   private final int batchSize;
   private Map<String, Integer> priority;
   private String priorityGroup;
+  private Set<Class<? extends Throwable>> doNotRetry;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
@@ -100,7 +104,7 @@ public class QueueDetail extends SerializableBase {
   }
 
   List<QueueDetail> expandQueueDetail(boolean addDefault, int priority) {
-    List<QueueDetail> queueDetails = new ArrayList<>();
+    List<QueueDetail> queueDetails = new ArrayList<>(1 + getPriority().size());
     for (Entry<String, Integer> entry : getPriority().entrySet()) {
       QueueDetail cloneQueueDetail = cloneQueueDetail(entry.getKey(), entry.getValue(), name);
       queueDetails.add(cloneQueueDetail);
@@ -145,6 +149,7 @@ public class QueueDetail extends SerializableBase {
         .priorityGroup(priorityGroup)
         .concurrency(concurrency)
         .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, priority))
+        .doNotRetry(doNotRetry)
         .build();
   }
 
@@ -155,5 +160,19 @@ public class QueueDetail extends SerializableBase {
   public enum QueueType {
     QUEUE,
     STREAM
+  }
+
+  public boolean isDoNotRetryError(Throwable throwable) {
+    if (Objects.isNull(throwable)) {
+      return false;
+    }
+    if (CollectionUtils.isEmpty(doNotRetry)) {
+      return false;
+    }
+    if (doNotRetry.contains(throwable.getClass())) {
+      return true;
+    }
+    Throwable t = throwable.getCause();
+    return Objects.nonNull(t) && doNotRetry.contains(t.getClass());
   }
 }

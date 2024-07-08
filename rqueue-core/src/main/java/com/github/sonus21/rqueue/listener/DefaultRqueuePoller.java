@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,18 +16,24 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static com.github.sonus21.rqueue.utils.Constants.ONE_MILLI;
+import static com.github.sonus21.rqueue.utils.Constants.SECONDS_IN_A_MINUTE;
+
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
 class DefaultRqueuePoller extends RqueueMessagePoller {
 
+  private Long lastNotAvailableAt;
   private final QueueDetail queueDetail;
   private final QueueThreadPool queueThreadPool;
 
@@ -70,18 +76,31 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
     }
   }
 
+  private void logNotAvailable() {
+    long maxNotAvailableDelay = 10 * SECONDS_IN_A_MINUTE * ONE_MILLI;
+    if (Objects.isNull(lastNotAvailableAt)) {
+      lastNotAvailableAt = System.currentTimeMillis();
+    } else if (System.currentTimeMillis() - lastNotAvailableAt > maxNotAvailableDelay) {
+      log(Level.ERROR, "deadlock?? frozen?? stuck?? No Threads are available in last {}",
+          null,
+          Duration.ofMillis(maxNotAvailableDelay));
+    }
+    log(Level.DEBUG, "No Threads are available sleeping {}Ms", null, pollingInterval);
+  }
+
   void poll() {
     if (!hasAvailableThreads(queueDetail, queueThreadPool)) {
-      log(Level.WARN, "No Threads are available sleeping {}Ms", null, pollingInterval);
+      logNotAvailable();
       TimeoutUtils.sleepLog(pollingInterval, false);
     } else {
       super.poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
+      lastNotAvailableAt = null;
     }
   }
 
   @Override
   public void start() {
-    log(Level.DEBUG, "Running Queue {}", null, queueDetail.getName());
+    log(Level.INFO, "poll starting", null);
     while (true) {
       try {
         if (eligibleForPolling(queueDetail.getName())) {
@@ -91,8 +110,8 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
         } else {
           deactivate(-1, queueDetail.getName(), DeactivateType.NO_MESSAGE);
         }
-      } catch (Exception e) {
-        log(Level.ERROR, "Error in poller", e);
+      } catch (Throwable e) {
+        log(Level.ERROR, "error in polling", e);
         if (shouldExit()) {
           return;
         }

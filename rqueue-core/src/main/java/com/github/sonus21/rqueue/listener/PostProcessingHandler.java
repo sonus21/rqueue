@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -29,10 +29,11 @@ import com.github.sonus21.rqueue.utils.PrefixLogger;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import java.io.Serializable;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.context.ApplicationEventPublisher;
+
+import java.io.Serializable;
 
 @Slf4j
 @SuppressWarnings("java:S107")
@@ -61,7 +62,15 @@ class PostProcessingHandler extends PrefixLogger {
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
   }
 
-  void handle(JobImpl job, ExecutionStatus status, int failureCount) {
+  long backOff(RqueueMessage rqueueMessage, Object userMessage, int failureCount,
+      Throwable throwable) {
+    return taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, failureCount, throwable);
+  }
+
+  void handle(JobImpl job,
+      ExecutionStatus status,
+      int failureCount,
+      Throwable throwable) {
     try {
       switch (status) {
         case QUEUE_INACTIVE:
@@ -72,6 +81,9 @@ class PostProcessingHandler extends PrefixLogger {
         case IGNORED:
           handleIgnoredMessage(job, failureCount);
           break;
+        case FAILED_IGNORED:
+          handleFailedIgnoredMessage(job, failureCount);
+          break;
         case OLD_MESSAGE:
           handleOldMessage(job, job.getRqueueMessage());
           break;
@@ -79,7 +91,7 @@ class PostProcessingHandler extends PrefixLogger {
           handleSuccessFullExecution(job, failureCount);
           break;
         case FAILED:
-          handleFailure(job, failureCount);
+          handleFailure(job, failureCount, throwable);
           break;
         default:
           throw new UnknownSwitchCase(String.valueOf(status));
@@ -153,7 +165,7 @@ class PostProcessingHandler extends PrefixLogger {
         });
   }
 
-  private void moveMessageToDlq(JobImpl job, int failureCount) {
+  private void moveMessageToDlq(JobImpl job, int failureCount, Throwable throwable) {
     log(
         Level.DEBUG,
         "Message {} Moved to dead letter queue: {}",
@@ -184,11 +196,10 @@ class PostProcessingHandler extends PrefixLogger {
         newMessage.setFailureCount(0);
         newMessage.setSourceQueueName(rqueueMessage.getQueueName());
         newMessage.setSourceQueueFailureCount(failureCount);
-        long backOff = taskExecutionBackoff.nextBackOff(userMessage, newMessage, failureCount);
-        backOff =
-            (backOff == TaskExecutionBackOff.STOP)
-                ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
-                : backOff;
+        long backOff = backOff(newMessage, userMessage, failureCount, throwable);
+        backOff = (backOff == TaskExecutionBackOff.STOP)
+            ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
+            : backOff;
         moveMessageToQueue(
             queueDetail, queueConfig.getScheduledQueueName(), rqueueMessage, newMessage, backOff);
       }
@@ -256,9 +267,9 @@ class PostProcessingHandler extends PrefixLogger {
     deleteMessage(job, MessageStatus.SUCCESSFUL, failureCount);
   }
 
-  private void handleRetryExceededMessage(JobImpl job, int failureCount) {
+  private void handleRetryExceededMessage(JobImpl job, int failureCount, Throwable throwable) {
     if (job.getQueueDetail().isDlqSet()) {
-      moveMessageToDlq(job, failureCount);
+      moveMessageToDlq(job, failureCount, throwable);
     } else {
       discardMessage(job, failureCount);
     }
@@ -270,18 +281,25 @@ class PostProcessingHandler extends PrefixLogger {
         : rqueueMessage.getRetryCount();
   }
 
-  private void handleFailure(JobImpl job, int failureCount) {
-    int maxRetryCount = getMaxRetryCount(job.getRqueueMessage(), job.getQueueDetail());
-    if (failureCount < maxRetryCount) {
-      long delay =
-          taskExecutionBackoff.nextBackOff(job.getMessage(), job.getRqueueMessage(), failureCount);
-      if (delay == TaskExecutionBackOff.STOP) {
-        handleRetryExceededMessage(job, failureCount);
-      } else {
-        parkMessageForRetry(job, null, failureCount, delay);
-      }
+  private void handleFailure(JobImpl job, int failureCount, Throwable throwable) {
+    if (job.getQueueDetail().isDoNotRetryError(throwable)) {
+      handleFailedIgnoredMessage(job, failureCount);
     } else {
-      handleRetryExceededMessage(job, failureCount);
+      int maxRetryCount = getMaxRetryCount(job.getRqueueMessage(), job.getQueueDetail());
+      if (failureCount < maxRetryCount) {
+        long delay =
+            taskExecutionBackoff.nextBackOff(job.getMessage(), job.getRqueueMessage(), failureCount,
+                throwable);
+        if (delay == TaskExecutionBackOff.STOP) {
+          handleRetryExceededMessage(job, failureCount, throwable);
+        } else if (delay == TaskExecutionBackOff.DO_NOT_RETRY) {
+          handleFailedIgnoredMessage(job, failureCount);
+        } else {
+          parkMessageForRetry(job, null, failureCount, delay);
+        }
+      } else {
+        handleRetryExceededMessage(job, failureCount, throwable);
+      }
     }
   }
 
@@ -293,5 +311,15 @@ class PostProcessingHandler extends PrefixLogger {
         job.getRqueueMessage(),
         job.getQueueDetail().getName());
     deleteMessage(job, MessageStatus.IGNORED, failureCount);
+  }
+
+  private void handleFailedIgnoredMessage(JobImpl job, int failureCount) {
+    log(
+        Level.DEBUG,
+        "Message {} failed & ignored, Queue: {}",
+        null,
+        job.getRqueueMessage(),
+        job.getQueueDetail().getName());
+    deleteMessage(job, MessageStatus.DISCARDED, failureCount);
   }
 }

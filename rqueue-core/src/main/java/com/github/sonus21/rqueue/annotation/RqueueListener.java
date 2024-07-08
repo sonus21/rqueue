@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -177,11 +177,18 @@ public @interface RqueueListener {
   String priorityGroup() default "";
 
   /**
-   * The message batch size, Rqueue will try to pull batchSize message in one Redis call. By default
-   * it will try to pull one message but if concurrency is not reached then it will try to pull more
-   * than one messages.
+   * The message batch size, Rqueue will try to pull batchSize message in one Redis call. By
+   * default, it will try to pull one message, but if concurrency is not reached, then it will try to
+   * pull more than one message.
    *
    * @return batch size
    */
   String batchSize() default "-1";
+
+  /**
+   * Exception types that are not retryable, defaults to empty.
+   *
+   * @return exceptions those will not be retried
+   */
+  Class<? extends Throwable>[] doNotRetry() default {};
 }

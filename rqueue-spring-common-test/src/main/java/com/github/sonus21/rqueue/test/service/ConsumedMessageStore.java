@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2024 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -95,6 +96,10 @@ public class ConsumedMessageStore {
     return idToMessage;
   }
 
+  public List<ConsumedMessage> getAllMessages(String messageId) {
+    return consumedMessageRepository.findByMessageIdIn(Collections.singletonList(messageId));
+  }
+
   public Map<String, ConsumedMessage> getMessages(Collection<String> messageIds) {
     Iterable<ConsumedMessage> consumedMessages =
         consumedMessageRepository.findByMessageIdIn(messageIds);
@@ -104,14 +109,6 @@ public class ConsumedMessageStore {
     return idToMessage;
   }
 
-  public List<ConsumedMessage> getAllMessages() {
-    List<ConsumedMessage> consumedMessages = new ArrayList<>();
-    for (ConsumedMessage consumedMessage : consumedMessageRepository.findAll()) {
-      consumedMessages.add(consumedMessage);
-    }
-    return consumedMessages;
-  }
-
   public ConsumedMessage getConsumedMessage(String messageId) {
     List<ConsumedMessage> messages = getConsumedMessages(messageId);
     if (messages.isEmpty()) {
@@ -119,6 +116,21 @@ public class ConsumedMessageStore {
     }
     if (messages.size() == 1) {
       return messages.get(0);
+    }
+    throw new IllegalStateException("more than one record found");
+  }
+
+  public ConsumedMessage getConsumedMessage(String messageId, String tag) {
+    List<ConsumedMessage> messages = getConsumedMessages(messageId);
+    if (messages.isEmpty()) {
+      throw new IllegalStateException("no message found");
+    }
+    messages = messages.stream().filter(e -> tag.equals(e.getTag())).collect(Collectors.toList());
+    if (messages.size() == 1) {
+      return messages.get(0);
+    }
+    if(messages.isEmpty()){
+      throw new IllegalStateException("no message found");
     }
     throw new IllegalStateException("more than one record found");
   }
