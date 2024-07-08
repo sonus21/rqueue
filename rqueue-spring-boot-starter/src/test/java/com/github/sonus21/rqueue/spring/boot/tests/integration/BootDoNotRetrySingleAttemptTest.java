@@ -16,9 +16,6 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
@@ -26,30 +23,34 @@ import com.github.sonus21.rqueue.test.MessageListener;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.tests.RetryTests;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.List;
+
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8024",
+        "rqueue.retry.per.poll=1",
+        "spring.data.redis.port=6379",
         "reservation.request.dead.letter.consumer.enabled=true",
         "reservation.request.active=true",
         "list.email.queue.enabled=true",
-        "mysql.db.name=BootDoNotRetryTest",
+        "mysql.db.name=BootDoNotSingleAttemptRetryTest",
         "record.failed.execution=true",
-        "use.system.redis=false",
+        "use.system.redis=true",
         "donot.retry=true"
     })
 @SpringBootIntegrationTest
-class BootDoNotRetryTest extends RetryTests {
+class BootDoNotRetrySingleAttemptTest extends RetryTests {
 
   @Test
   void taskIsNotRetried() throws TimedOutException {

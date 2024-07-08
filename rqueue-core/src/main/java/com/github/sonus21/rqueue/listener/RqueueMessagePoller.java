@@ -100,7 +100,6 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     return true;
   }
 
-
   protected boolean hasAvailableThreads(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     return queueThreadPool.availableThreads() > 0;
   }

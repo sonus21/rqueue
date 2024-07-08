@@ -16,34 +16,16 @@
 
 package com.github.sonus21.rqueue.test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
-import com.github.sonus21.rqueue.test.dto.ChatIndexing;
-import com.github.sonus21.rqueue.test.dto.Email;
-import com.github.sonus21.rqueue.test.dto.FeedGeneration;
-import com.github.sonus21.rqueue.test.dto.Job;
-import com.github.sonus21.rqueue.test.dto.LongRunningJob;
-import com.github.sonus21.rqueue.test.dto.Notification;
-import com.github.sonus21.rqueue.test.dto.PeriodicJob;
-import com.github.sonus21.rqueue.test.dto.Reservation;
-import com.github.sonus21.rqueue.test.dto.ReservationRequest;
-import com.github.sonus21.rqueue.test.dto.Sms;
+import com.github.sonus21.rqueue.test.dto.*;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import jakarta.annotation.PostConstruct;
-import java.lang.ref.WeakReference;
-import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +33,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
+import java.lang.ref.WeakReference;
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @com.github.sonus21.rqueue.annotation.MessageListener
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -110,6 +101,11 @@ public class MessageListener {
   @Value("${donot.retry:false}")
   private boolean doNotRetry;
 
+  @Value("${record.failed.execution:false}")
+  private boolean recordFailedExecution;
+
+  public static final String FAILED_TAG = "failed";
+
   public static class DoNotRetryException extends Exception {
 
     public DoNotRetryException(String message) {
@@ -133,6 +129,9 @@ public class MessageListener {
   public void onMessage(Job job) throws Exception {
     log.info("Job: {}", job);
     if (failureManager.shouldFail(job.getId())) {
+      if (recordFailedExecution) {
+        consumedMessageStore.save(job, FAILED_TAG, jobQueue);
+      }
       if (doNotRetry) {
         if (Math.random() < 0.5) {
           throw new DoNotRetryException("This job should not be retired " + job);

@@ -29,10 +29,11 @@ import com.github.sonus21.rqueue.utils.PrefixLogger;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import java.io.Serializable;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.context.ApplicationEventPublisher;
+
+import java.io.Serializable;
 
 @Slf4j
 @SuppressWarnings("java:S107")
@@ -61,6 +62,11 @@ class PostProcessingHandler extends PrefixLogger {
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
   }
 
+  long backOff(RqueueMessage rqueueMessage, Object userMessage, int failureCount,
+      Throwable throwable) {
+    return taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, failureCount, throwable);
+  }
+
   void handle(JobImpl job,
       ExecutionStatus status,
       int failureCount,
@@ -74,6 +80,9 @@ class PostProcessingHandler extends PrefixLogger {
           break;
         case IGNORED:
           handleIgnoredMessage(job, failureCount);
+          break;
+        case FAILED_IGNORED:
+          handleFailedIgnoredMessage(job, failureCount);
           break;
         case OLD_MESSAGE:
           handleOldMessage(job, job.getRqueueMessage());
@@ -187,12 +196,10 @@ class PostProcessingHandler extends PrefixLogger {
         newMessage.setFailureCount(0);
         newMessage.setSourceQueueName(rqueueMessage.getQueueName());
         newMessage.setSourceQueueFailureCount(failureCount);
-        long backOff = taskExecutionBackoff.nextBackOff(userMessage, newMessage, failureCount,
-            throwable);
-        backOff =
-            (backOff == TaskExecutionBackOff.STOP)
-                ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
-                : backOff;
+        long backOff = backOff(newMessage, userMessage, failureCount, throwable);
+        backOff = (backOff == TaskExecutionBackOff.STOP)
+            ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
+            : backOff;
         moveMessageToQueue(
             queueDetail, queueConfig.getScheduledQueueName(), rqueueMessage, newMessage, backOff);
       }
@@ -275,18 +282,24 @@ class PostProcessingHandler extends PrefixLogger {
   }
 
   private void handleFailure(JobImpl job, int failureCount, Throwable throwable) {
-    int maxRetryCount = getMaxRetryCount(job.getRqueueMessage(), job.getQueueDetail());
-    if (failureCount < maxRetryCount) {
-      long delay =
-          taskExecutionBackoff.nextBackOff(job.getMessage(), job.getRqueueMessage(), failureCount,
-              throwable);
-      if (delay == TaskExecutionBackOff.STOP) {
-        handleRetryExceededMessage(job, failureCount, throwable);
-      } else {
-        parkMessageForRetry(job, null, failureCount, delay);
-      }
+    if (job.getQueueDetail().isDoNotRetryError(throwable)) {
+      handleFailedIgnoredMessage(job, failureCount);
     } else {
-      handleRetryExceededMessage(job, failureCount, throwable);
+      int maxRetryCount = getMaxRetryCount(job.getRqueueMessage(), job.getQueueDetail());
+      if (failureCount < maxRetryCount) {
+        long delay =
+            taskExecutionBackoff.nextBackOff(job.getMessage(), job.getRqueueMessage(), failureCount,
+                throwable);
+        if (delay == TaskExecutionBackOff.STOP) {
+          handleRetryExceededMessage(job, failureCount, throwable);
+        } else if (delay == TaskExecutionBackOff.DO_NOT_RETRY) {
+          handleFailedIgnoredMessage(job, failureCount);
+        } else {
+          parkMessageForRetry(job, null, failureCount, delay);
+        }
+      } else {
+        handleRetryExceededMessage(job, failureCount, throwable);
+      }
     }
   }
 
@@ -298,5 +311,15 @@ class PostProcessingHandler extends PrefixLogger {
         job.getRqueueMessage(),
         job.getQueueDetail().getName());
     deleteMessage(job, MessageStatus.IGNORED, failureCount);
+  }
+
+  private void handleFailedIgnoredMessage(JobImpl job, int failureCount) {
+    log(
+        Level.DEBUG,
+        "Message {} failed & ignored, Queue: {}",
+        null,
+        job.getRqueueMessage(),
+        job.getQueueDetail().getName());
+    deleteMessage(job, MessageStatus.DISCARDED, failureCount);
   }
 }

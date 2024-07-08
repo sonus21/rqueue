@@ -33,11 +33,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.util.CollectionUtils;
 
 @Getter
 @Builder
@@ -158,5 +160,19 @@ public class QueueDetail extends SerializableBase {
   public enum QueueType {
     QUEUE,
     STREAM
+  }
+
+  public boolean isDoNotRetryError(Throwable throwable) {
+    if (Objects.isNull(throwable)) {
+      return false;
+    }
+    if (CollectionUtils.isEmpty(doNotRetry)) {
+      return false;
+    }
+    if (doNotRetry.contains(throwable.getClass())) {
+      return true;
+    }
+    Throwable t = throwable.getCause();
+    return Objects.nonNull(t) && doNotRetry.contains(t.getClass());
   }
 }

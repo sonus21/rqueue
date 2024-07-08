@@ -22,6 +22,7 @@ public enum ExecutionStatus {
   THROTTLED,
   DELETED,
   FAILED,
+  FAILED_IGNORED,
   IGNORED,
   OLD_MESSAGE,
   QUEUE_INACTIVE,

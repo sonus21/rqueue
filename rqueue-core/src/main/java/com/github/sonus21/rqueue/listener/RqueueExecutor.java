@@ -33,10 +33,10 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
+import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.messaging.Message;
@@ -56,6 +56,7 @@ class RqueueExecutor extends MessageContainerBase {
   private ExecutionStatus status;
   private Throwable error;
   private int failureCount;
+  private Object userMessage;
 
   RqueueExecutor(
       RqueueBeanProvider rqueueBeanProvider,
@@ -97,6 +98,7 @@ class RqueueExecutor extends MessageContainerBase {
   private void init() {
     MessageMetadata messageMetadata =
         beanProvider.getRqueueMessageMetadataService().getOrCreateMessageMetadata(rqueueMessage);
+    this.userMessage = getUserMessage();
     this.job =
         new JobImpl(
             beanProvider.getRqueueConfig(),
@@ -107,7 +109,7 @@ class RqueueExecutor extends MessageContainerBase {
             queueDetail,
             messageMetadata,
             rqueueMessage,
-            getUserMessage(),
+            userMessage,
             postProcessingHandler);
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }
@@ -276,16 +278,24 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-  private boolean shouldRetry(long maxProcessingTime, int retryCount) {
+
+  private boolean shouldRetry(long maxProcessingTime, int retryCount, int failureCount) {
     if (retryCount > 0 &&
         ExecutionStatus.FAILED.equals(status) &&
         System.currentTimeMillis() < maxProcessingTime) {
-      Set<Class<? extends Throwable>> exceptions = queueDetail.getDoNotRetry();
-      boolean doNoRetry = Objects.nonNull(exceptions) &&
-          !exceptions.isEmpty() &&
-          Objects.nonNull(error) &&
-          exceptions.contains(error.getClass());
-      return !doNoRetry;
+      boolean doNoRetry = queueDetail.isDoNotRetryError(error);
+      // it should not be retried based on the exception list
+      if (doNoRetry) {
+        status = ExecutionStatus.FAILED_IGNORED;
+        return false;
+      }
+      // check if this should not be retried based on the backoff
+      long backOff = postProcessingHandler.backOff(rqueueMessage, userMessage, failureCount, error);
+      if (backOff == TaskExecutionBackOff.DO_NOT_RETRY) {
+        status = ExecutionStatus.FAILED_IGNORED;
+        return false;
+      }
+      return backOff != TaskExecutionBackOff.STOP;
     }
     return false;
   }
@@ -304,7 +314,7 @@ class RqueueExecutor extends MessageContainerBase {
       retryCount -= 1;
       attempt += 1;
       end();
-    } while (shouldRetry(maxProcessingTime, retryCount));
+    } while (shouldRetry(maxProcessingTime, retryCount, failureCount));
     postProcessingHandler.handle(job, status, failureCount, error);
     logExecutionTimeWarning(maxProcessingTime, startTime);
   }

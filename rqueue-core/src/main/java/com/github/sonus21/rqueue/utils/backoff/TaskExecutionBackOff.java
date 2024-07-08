@@ -25,6 +25,7 @@ public interface TaskExecutionBackOff {
    * should not be executed further.
    */
   long STOP = -1;
+  long DO_NOT_RETRY = -2;
 
   /**
    * Return the number of milliseconds to wait for the same message to be consumed.
@@ -40,8 +41,8 @@ public interface TaskExecutionBackOff {
 
   /**
    * Return the number of milliseconds to wait for the same message to be consumed.
-   * <p>Return {@value #STOP} to indicate that no further enqueue should be made for the message.
-   * </p>
+   * <p>Return {@value #DO_NOT_RETRY} to indicate that no further retry should be made</p>
+   * <p>Return {@value #STOP} to indicate message should be moved to DLQ if DLQ is set</p>
    *
    * @param message       message that's fetched
    * @param rqueueMessage raw message
