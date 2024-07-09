@@ -65,13 +65,14 @@ jobs:
         with:
           name: Jekyll site
           path: "docs/_site"
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          branch: $default-branch
-          folder: "docs/_site"
-        env:
-          JEKYLL_ENV: production
-          BASE_URL: /rqueue
-          name: github-pages
-          url: ${{ steps.deployment.outputs.page_url }}
