@@ -52,7 +52,7 @@ jobs:
           working-directory: '${{ github.workspace }}/docs'
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v3
       - name: Bundle install in docs folder
         run: bundle install
       - name: Build Jekyll site
@@ -63,7 +63,6 @@ jobs:
         uses: actions/upload-pages-artifact@v2
         with:
           path: 'docs'
-
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3  # Note: v4 does not work!
+        uses: actions/deploy-pages@v2
