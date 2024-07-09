@@ -69,7 +69,7 @@
 <div id="main-content-wrap" class="main-content-wrap"><div id="main-content" class="main-content" role="main">
 <h1 id="rqueue--redis-queue-for-spring-framework"> <a href="#rqueue--redis-queue-for-spring-framework" class="anchor-heading" aria-labelledby="rqueue--redis-queue-for-spring-framework"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Rqueue | Redis Queue For Spring Framework</h1>
 <p class="fs-4">Rqueue is an asynchronous task executor (worker) built for the Spring Framework based on Spring’s messaging library, backed by Redis. It can serve as a message broker where all service code is within Spring/Spring Boot applications. Rqueue fully supports both Spring and Spring Boot frameworks.</p>
-<p class="fs-6 fw-300"><a href="#getting-started" class="btn btn-primary fs-5 mb-4 mb-md-0 mr-2">Get started now</a> [View it on GitHub][Rqueue repo]{: .btn .fs-5 .mb-4 .mb-md-0 }</p>
+<p class="fs-6 fw-300"><a href="#getting-started" class="btn btn-primary fs-5 mb-4 mb-md-0 mr-2">Get started now</a> <a href="https://github.com/sonus21/rqueue" class="btn fs-5 mb-4 mb-md-0">View it on GitHub</a></p>
 <hr>
 <h2 id="features"> <a href="#features" class="anchor-heading" aria-labelledby="features"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Features</h2>
 <ul>
@@ -104,7 +104,7 @@
 <li>
 <strong>Execution Backoff</strong>: Supports exponential and fixed backoff strategies.</li>
 <li>
-<strong>Do not retry</strong>: Supports do not retry exceptions.</li>
+<strong>Do not retry</strong>: Supports do not retry strategy.</li>
 <li>
 <strong>Middleware</strong>: Allows integration of middleware to intercept messages before processing.</li>
 <li>
@@ -139,7 +139,7 @@
 <p class="warning">When configuring the Redis connection factory, ensure to set <code class="language-plaintext highlighter-rouge">readFrom</code> to <code class="language-plaintext highlighter-rouge">MASTER_PREFERRED</code> for Redis cluster compatibility, otherwise the application may fail to start.</p>
 <h3 id="spring-boot"> <a href="#spring-boot" class="anchor-heading" aria-labelledby="spring-boot"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Boot</h3>
 <p class="warning">Use Rqueue Spring Boot Starter 3.x for Spring Boot 3.x, and Rqueue Spring Boot Starter 2.x for Spring Boot 2.x.</p>
-<p>Get the latest version of Rqueue Spring Boot Starter from [Maven Central][Boot Maven Central]. Add the dependency to your project:</p>
+<p>Get the latest version of Rqueue Spring Boot Starter from <a href="https://search.maven.org/artifact/com.github.sonus21/rqueue-spring-boot-starter">Maven Central</a>. Add the dependency to your project:</p>
 <h4 id="spring-boot-2x-setup"> <a href="#spring-boot-2x-setup" class="anchor-heading" aria-labelledby="spring-boot-2x-setup"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Boot 2.x Setup</h4>
 <ul>
 <li>Gradle<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implementation</span> <span class="s1">'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'</span>
@@ -169,7 +169,7 @@
 <hr>
 <h3 id="spring-framework"> <a href="#spring-framework" class="anchor-heading" aria-labelledby="spring-framework"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Framework</h3>
 <p class="warning">Use Rqueue Spring 3.x for Spring Framework 6.x, and Rqueue Spring 2.x for Spring Framework 5.x.</p>
-<p>Get the latest version of Rqueue Spring from [Maven Central][Maven Central]. Add the dependency to your project:</p>
+<p>Get the latest version of Rqueue Spring from <a href="https://search.maven.org/artifact/com.github.sonus21/rqueue-spring">Maven Central</a>. Add the dependency to your project:</p>
 <h4 id="spring-framework-5x-setup"> <a href="#spring-framework-5x-setup" class="anchor-heading" aria-labelledby="spring-framework-5x-setup"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Spring Framework 5.x Setup</h4>
 <ul>
 <li>Gradle<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implementation</span> <span class="s1">'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'</span>
@@ -301,14 +301,14 @@
 <hr>
 <h3 id="advanced-configuration"> <a href="#advanced-configuration" class="anchor-heading" aria-labelledby="advanced-configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Advanced Configuration</h3>
 <h4 id="rqueue-configuration"> <a href="#rqueue-configuration" class="anchor-heading" aria-labelledby="rqueue-configuration"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Rqueue Configuration</h4>
-<p class="note fw-300">For advanced configurations such as message serialization, queue properties, message listener details, and more, refer to the [official documentation][Rqueue Docs].</p>
+<p class="note fw-300">For advanced configurations such as message serialization, queue properties, message listener details, and more, refer to the <a href="https://github.com/sonus21/rqueue/wiki">official documentation</a>.</p>
 <h3 id="support"> <a href="#support" class="anchor-heading" aria-labelledby="support"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Support</h3>
-<p class="fs-5">For any issues, questions, or feature requests, please create an issue on the [GitHub repository][Rqueue repo] or contact the maintainers directly.</p>
+<p class="fs-5">For any issues, questions, or feature requests, please create an issue on the <a href="https://github.com/sonus21/rqueue">GitHub repository</a> or contact the maintainers directly.</p>
 <hr>
 <h3 id="license"> <a href="#license" class="anchor-heading" aria-labelledby="license"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> License</h3>
-<p class="fs-5">Rqueue is licensed under the Apache License 2.0. See the <a href="https://github.com/sonus21/rqueue/blob/master/LICENSE">LICENSE</a> file for more details. [Rqueue Docs]: https://github.com/sonus21/rqueue/wiki [Boot Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring-boot-starter [Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring [Rqueue repo]: https://github.com/sonus21/rqueue</p>
+<p class="fs-5">Rqueue is licensed under the Apache License 2.0. See the <a href="https://github.com/sonus21/rqueue/blob/master/LICENSE">LICENSE</a> file for more details.</p>
 <hr>
-<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a><div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/index.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
+<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a> Build on 2024-07-09 03:53<div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/index.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
 </div></div>
 <div class="search-overlay"></div>
 </div>

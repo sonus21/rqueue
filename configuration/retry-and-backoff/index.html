@@ -75,51 +75,42 @@
 <p>Rqueue is a poll-based library that sends various commands to Redis to retrieve messages. These commands can fail for several reasons, such as Redis being under stress, outages, connection timeouts, or poor internet connections. Continuous attempts to send commands can overload the Redis server. To mitigate this, you can configure a back-off interval, causing the poller to sleep instead of repeatedly sending commands. This is done by setting the <code class="language-plaintext highlighter-rouge">backOffTime</code> in the <code class="language-plaintext highlighter-rouge">SimpleRqueueListenerContainerFactory</code>. The default back-off time is 5 seconds.</p>
 <h2 id="do-not-retry"> <a href="#do-not-retry" class="anchor-heading" aria-labelledby="do-not-retry"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Do not retry</h2>
 <p>In scenarios where you don’t want Rqueue to retry failures, you can handle this in two ways:</p>
-<ol><li>
-<strong>Using <code class="language-plaintext highlighter-rouge">RqueueListener</code> Annotation</strong>: Add exceptions to the <code class="language-plaintext highlighter-rouge">doNotRetry</code> list within the <code class="language-plaintext highlighter-rouge">RqueueListener</code> annotation. This instructs Rqueue not to retry for specific exceptions. ```java</li></ol>
-<p>public class MessageListener{ @RqueueListener(value = “sms”, priority = “critical=10,high=8,medium=4,low=1”, doNoRetry={Exception1.class, Exception2.class}) public void onMessage(Sms sms) { log.info(“Sms : {}”, sms); }</p>
-<p>}</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2. **Returning `-2` from Execution Backoff Method**: Alternatively, you can return `-2` from the
-   execution backoff method. This signals Rqueue to stop any further retry attempts for the failed
-   message. 
+<ul><li>
+<strong>Using <code class="language-plaintext highlighter-rouge">RqueueListener</code> Annotation</strong>: Add exceptions to the <code class="language-plaintext highlighter-rouge">doNotRetry</code> list within the <code class="language-plaintext highlighter-rouge">RqueueListener</code> annotation. This instructs Rqueue not to retry for specific exceptions.</li></ul>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MessageListener</span><span class="o">{</span>
+  <span class="nd">@RqueueListener</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"sms"</span><span class="o">,</span> <span class="n">priority</span> <span class="o">=</span> <span class="s">"critical=10,high=8,medium=4,low=1"</span><span class="o">,</span> <span class="n">doNoRetry</span><span class="o">={</span><span class="nc">Exception1</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="nc">Exception2</span><span class="o">.</span><span class="na">class</span><span class="o">})</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="nc">Sms</span> <span class="n">sms</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Sms : {}"</span><span class="o">,</span> <span class="n">sms</span><span class="o">);</span>
+  <span class="o">}</span>
+    
+<span class="o">}</span>
+</code></pre></div></div>
+<ul><li>
+<strong>Returning <code class="language-plaintext highlighter-rouge">-1</code> from Execution Backoff Method</strong>: Alternatively, you can return <code class="language-plaintext highlighter-rouge">-1</code> from the execution backoff method. This signals Rqueue to stop any further retry attempts for the failed message.</li></ul>
+<p>These approaches offer flexibility in managing error handling and retry policies within your application using Rqueue. Messages handled in this way also won’t be sent to the Dead Letter Queue.</p>
+<h2 id="task-execution-backoff"> <a href="#task-execution-backoff" class="anchor-heading" aria-labelledby="task-execution-backoff"><svg viewbox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Task Execution backoff</h2>
+<p>The method consuming the message can also fail for various reasons. In such cases, the message may be retried, moved to a dead letter queue, or dropped. If a message needs to be retried, it can either be retried immediately or after some time. To retry immediately, set <code class="language-plaintext highlighter-rouge">rqueue.retry.per.poll</code> to a positive number like 2, which means the message will be retried twice in quick succession.</p>
+<p>If you prefer not to retry the message immediately, you can configure Rqueue to retry the message after a delay using an exponential or linear backoff approach, or any other strategy. By default, Rqueue uses a linear backoff with a delay of 5 seconds, meaning the failed message will be retried after 5 seconds. To customize this behavior, you can provide an implementation of <code class="language-plaintext highlighter-rouge">TaskExecutionBackoff</code>, or use the default implementations such as <code class="language-plaintext highlighter-rouge">FixedTaskExecutionBackOff</code> or <code class="language-plaintext highlighter-rouge">ExponentialTaskExecutionBackOff</code>.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">RqueueConfiguration</span> <span class="o">{</span>
 
-These approaches offer flexibility in managing error handling and retry policies within your
-application using Rqueue. Messages handled in this way also won't be sent to the Dead Letter Queue.
+  <span class="nd">@Bean</span>
+  <span class="kd">public</span> <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="nf">simpleRqueueListenerContainerFactory</span><span class="o">()</span> <span class="o">{</span>
+    <span class="nc">SimpleRqueueListenerContainerFactory</span> <span class="n">simpleRqueueListenerContainerFactory</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">SimpleRqueueListenerContainerFactory</span><span class="o">();</span>
+    <span class="c1">// ...</span>
+    <span class="n">simpleRqueueListenerContainerFactory</span><span class="o">.</span><span class="na">setTaskExecutionBackOff</span><span class="o">(</span><span class="n">getTaskExecutionBackoff</span><span class="o">());</span>
+    <span class="k">return</span> <span class="n">simpleRqueueListenerContainerFactory</span><span class="o">;</span>
+  <span class="o">}</span>
 
-## Task Execution backoff
-
-The method consuming the message can also fail for various reasons. In such cases, the message may
-be retried, moved to a dead letter queue, or dropped. If a message needs to be retried, it can
-either be retried immediately or after some time. To retry immediately, set `rqueue.retry.per.poll`
-to a positive number like 2, which means the message will be retried twice in quick succession.
-
-If you prefer not to retry the message immediately, you can configure Rqueue to retry the message
-after a delay using an exponential or linear backoff approach, or any other strategy. By default,
-Rqueue uses a linear backoff with a delay of 5 seconds, meaning the failed message will be retried
-after 5 seconds. To customize this behavior, you can provide an implementation
-of `TaskExecutionBackoff`, or use the default implementations such as `FixedTaskExecutionBackOff`
-or `ExponentialTaskExecutionBackOff`.
-
-```java
-public class RqueueConfiguration {
-
-  @Bean
-  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
-    SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory = new SimpleRqueueListenerContainerFactory();
-    // ...
-    simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(getTaskExecutionBackoff());
-    return simpleRqueueListenerContainerFactory;
-  }
-
-  private TaskExecutionBackOff getTaskExecutionBackoff() {
-    // return TaskExecutionBackOff implementation
-    // return new FixedTaskExecutionBackOff(2_000L, 2); // 2 seconds delay and 2 retries
-    // return new ExponentialTaskExecutionBackOff(2_000L, 10*60_000L,  2, 200) 
-  }
-}
+  <span class="kd">private</span> <span class="nc">TaskExecutionBackOff</span> <span class="nf">getTaskExecutionBackoff</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// return TaskExecutionBackOff implementation</span>
+    <span class="c1">// return new FixedTaskExecutionBackOff(2_000L, 2); // 2 seconds delay and 2 retries</span>
+    <span class="c1">// return new ExponentialTaskExecutionBackOff(2_000L, 10*60_000L,  2, 200) </span>
+  <span class="o">}</span>
+<span class="o">}</span>
 </code></pre></div></div>
 <hr>
-<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a><div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/configuration/retry-and-backoff.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
+<footer><p><a href="#top" id="back-to-top">Back to top</a></p>Copyright © 2019-2024 Sonu Kumar. Distributed by an <a href="https://github.com/sonus21/rqueue/tree/main/LICENSE">Apache 2.0 license.</a> Build on 2024-07-09 03:53<div class="d-flex mt-2"><p class="text-small text-grey-dk-000 mb-0"> <a href="https://github.com/sonus21/rqueue/tree/main/configuration/retry-and-backoff.md" id="edit-this-page">Edit this page on GitHub</a></p></div></footer>
 </div>
 </div>
 <div class="search-overlay"></div>
