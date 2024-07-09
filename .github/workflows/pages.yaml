@@ -7,65 +7,65 @@
 name: Deploy Jekyll site to Pages
 
 on:
+  # Runs on pushes targeting the default branch
   push:
-    branches: [$default-branch]
-  pull_request:
-    branches: [ 'main', '2.x' ]
-      # Allows you to run this workflow manually from the Actions tab
+    branches: [ $default-branch ]
+
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  # Build job
-  build:
+  # Build and Deploy job
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1 # Update to latest version as needed
         with:
-          ruby-version: '3.3' # Not needed with a .ruby-version file
+          ruby-version: '3.1' # Not needed with a .ruby-version file
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
           cache-version: 0 # Increment this number if you need to re-download cached gems
-      - name: Setup Pages
-        id: pages
-        uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-
-        # Outputs to the './_site' directory by default
-        run:
-          |
+      - name: Bundle install in docs folder
+        run: |
           cd docs
           bundle install
-          bundle exec jekyll build
-          mkdir -p _site
+      - name: Build Jekyll site
+        run: |
+          cd docs
+          bundle exec jekyll build --baseurl /rqueue
+          mkdir -p _site  # Ensure _site directory exists
         env:
           JEKYLL_ENV: production
+      - name: Verify _site directory
+        run: |
+          cd docs
+          ls -l _site
       - name: Upload artifact
         # Automatically uploads an artifact from the './_site' directory by default
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
+          name: Jekyll site
           path: docs/_site
-
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: JamesIves/github-pages-deploy-action@4.1.4 # Replace with the appropriate deploy action
+        with:
+          branch: $default-branch
+          folder: docs/_site
+          cname: sonus21.github.io
+        env:
+          JEKYLL_ENV: production
+          BASE_URL: /rqueue
