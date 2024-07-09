@@ -10,6 +10,9 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: [ $default-branch ]
+  pull_request:
+    branches: [ 'main', '2.x' ]
+    types: [ opened ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
