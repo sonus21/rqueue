@@ -18,8 +18,9 @@ the `SimpleRqueueListenerContainerFactory`. The default back-off time is 5 secon
 
 In scenarios where you don't want Rqueue to retry failures, you can handle this in two ways:
 
-1. **Using `RqueueListener` Annotation**: Add exceptions to the `doNotRetry` list within
+- **Using `RqueueListener` Annotation**: Add exceptions to the `doNotRetry` list within
    the `RqueueListener` annotation. This instructs Rqueue not to retry for specific exceptions.
+
 ```java
 
 public class MessageListener{
@@ -30,7 +31,8 @@ public class MessageListener{
     
 }
 ```
-2. **Returning `-2` from Execution Backoff Method**: Alternatively, you can return `-2` from the
+
+- **Returning `-1` from Execution Backoff Method**: Alternatively, you can return `-1` from the
    execution backoff method. This signals Rqueue to stop any further retry attempts for the failed
    message. 
 
