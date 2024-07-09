@@ -68,7 +68,6 @@ jobs:
         with:
           branch: $default-branch
           folder: docs/_site
-          cname: sonus21.github.io
         env:
           JEKYLL_ENV: production
           BASE_URL: /rqueue
