@@ -15,13 +15,6 @@ configuration or directly in the code.
 
 {: .fs-6 .fw-300 }
 
-## Table of contents
-
-{: .no_toc .text-delta }
-
-1. TOC
-   {:toc}
-
 ---
 Apart from the basic configuration, Rqueue can be heavily customized, such as adjusting the number
 of tasks executed concurrently. Additional configurations can be provided using

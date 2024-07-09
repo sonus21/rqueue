@@ -286,15 +286,10 @@ class RqueueExecutor extends MessageContainerBase {
       boolean doNoRetry = queueDetail.isDoNotRetryError(error);
       // it should not be retried based on the exception list
       if (doNoRetry) {
-        status = ExecutionStatus.FAILED_IGNORED;
         return false;
       }
       // check if this should not be retried based on the backoff
       long backOff = postProcessingHandler.backOff(rqueueMessage, userMessage, failureCount, error);
-      if (backOff == TaskExecutionBackOff.DO_NOT_RETRY) {
-        status = ExecutionStatus.FAILED_IGNORED;
-        return false;
-      }
       return backOff != TaskExecutionBackOff.STOP;
     }
     return false;

@@ -84,17 +84,21 @@ prefix: [http://localhost:8080/my-application/rqueue](http://localhost:8080/my-a
 ### Dashboard Screenshots
 
 #### Latency Graph
+<br/>
 
 [![Latency Graph](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/stats-graph.png)
 
 #### Queue Statistics
+<br/>
 
 [![Queue Statistics](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queues.png)
 
 #### Tasks Waiting for Execution
+<br/>
 
 [![Tasks Waiting for Execution](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/queue-explore.png)
 
 #### Running Tasks
+<br/>
 
 [![Running Tasks](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/running-tasks.png)

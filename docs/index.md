@@ -40,7 +40,7 @@ frameworks.
 * **Queue Priority**: Supports both group-level and sub-queue level priorities.
 * **Long Execution Jobs**: Check-in mechanism for long-running jobs.
 * **Execution Backoff**: Supports exponential and fixed backoff strategies.
-* **Do not retry**: Supports do not retry exceptions.
+* **Do not retry**: Supports do not retry strategy.
 * **Middleware**: Allows integration of middleware to intercept messages before processing.
 * **Callbacks**: Supports callbacks for handling dead letter queues and discarding messages.
 * **Events**: Provides bootstrap and task execution events.
@@ -304,6 +304,7 @@ the [GitHub repository][Rqueue repo] or contact the maintainers directly.
 {: .fs-5 }
 
 Rqueue is licensed under the Apache License 2.0. See the [LICENSE](https://github.com/sonus21/rqueue/blob/master/LICENSE) file for more details.
+
 [Rqueue Docs]: https://github.com/sonus21/rqueue/wiki
 [Boot Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring-boot-starter
 [Maven Central]: https://search.maven.org/artifact/com.github.sonus21/rqueue-spring
