@@ -18,7 +18,7 @@ tasks.named('jar') {
     manifest {
         attributes(
                 "Built-By": "Sonu Kumar<sonunitw12@gmail.com>",
-                "Build-Timestamp": new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(new Date()),
+                "Build-Timestamp": new java.text.SimpleDateFormat("yyyy-MM-dd HH:mmZ").format(new Date()),
                 "Build-Revision": version,
                 "Created-By": "Gradle ${gradle.gradleVersion}",
                 "Build-Jdk": "${System.properties["java.version"]} (${System.properties["java.vendor"]} ${System.properties["java.vm.version"]})",
