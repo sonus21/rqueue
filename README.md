@@ -8,7 +8,6 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.sonus21/rqueue-core)](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core)
 [![Javadoc](https://javadoc.io/badge2/com.github.sonus21/rqueue-core/javadoc.svg)](https://javadoc.io/doc/com.github.sonus21/rqueue-core)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Source Dashboard](https://sourcespy.com/shield.svg)](https://sourcespy.com/github/sonus21rqueue/)
 
 **Rqueue** is an asynchronous task executor(worker) built for spring and spring-boot framework based
 on the spring framework's messaging library backed by Redis. It can be used as message broker as
