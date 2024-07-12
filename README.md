@@ -16,7 +16,7 @@ well, where all services code is in Spring.
 
 <br/>
 
-[![Message Flow](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.jpg)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/qrqueue-message-flow.jpg)
+![Message Flow](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.svg?sanitize=true)
 
 ## Features
 
