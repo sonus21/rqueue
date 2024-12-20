@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -146,7 +146,8 @@ class RqueueMiddlewareTest extends TestBase {
     doReturn(rqueueJobDao).when(rqueueBeanProvider).getRqueueJobDao();
     doReturn(rqueueConfig).when(rqueueBeanProvider).getRqueueConfig();
     doReturn(1).when(rqueueConfig).getRetryPerPoll();
-    doReturn("test-job::" + UUID.randomUUID().toString()).when(rqueueConfig).getJobId();
+    doReturn("test-job::" + UUID.randomUUID()).when(rqueueConfig).getJobId();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0)).when(rqueueConfig).getLockKey(anyString());
   }
 
   @Test

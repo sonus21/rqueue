@@ -306,7 +306,7 @@ public class JobImpl implements Job {
     long endTime = System.currentTimeMillis() + 10 * Constants.ONE_MILLI;
     long sleepDuration = 100;
     Duration lockDuration = Duration.ofSeconds(1);
-    String lockKey = getMessageId();
+    String lockKey = Constants.getMessageLockName(rqueueConfig, getMessageId());
     String lockValue = UUID.randomUUID().toString();
     while (System.currentTimeMillis() < endTime) {
       if (!rqueueLockManager.acquireLock(lockKey, lockValue, lockDuration)) {

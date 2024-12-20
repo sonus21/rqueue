@@ -108,13 +108,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
 
   @Override
   public boolean exist(String queueName, String id) {
-    String lockValue = UUID.randomUUID().toString();
-    if (rqueueLockManager.acquireLock(queueName, lockValue, Duration.ofSeconds(1))) {
-      boolean exist = getMessage(queueName, id) != null;
-      rqueueLockManager.releaseLock(queueName, lockValue);
-      return exist;
-    }
-    throw new LockCanNotBeAcquired(queueName);
+    return getMessage(queueName, id) != null;
   }
 
   @Override
