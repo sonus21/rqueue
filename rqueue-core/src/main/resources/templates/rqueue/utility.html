@@ -26,7 +26,7 @@
         <div class="form-group">
           <label for="data-name">Name: <b id="data-name-type"></b></label>
           <input class="form-control" id="data-name"
-                 name="data-name" placeholder="job-queue"
+                 name="data-name" placeholder="__rq::queue::{job-queue}"
                  type="text">
         </div>
         <div class="form-group display-none" id="data-key-form">
@@ -48,13 +48,13 @@
         <div class="form-group">
           <label for="src-data">Source Data Set: <b id="src-data-type"></b></label>
           <input class="form-control" id="src-data"
-                 name="src-data" placeholder="job-queue"
+                 name="src-data" placeholder="__rq::queue::{job-queue}"
                  type="text">
         </div>
         <div class="form-group">
           <label for="dst-data">Destination Data Set:<b id="dst-data-type"></b></label>
           <input class="form-control" id="dst-data"
-                 name="dst-data" placeholder="job-dead-letter-queue"
+                 name="dst-data" placeholder="__rq::queue::{job-morgue}"
                  type="text">
         </div>
         <div class="form-group display-none" id="dst-data-type-input-form">
