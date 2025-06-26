@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -418,7 +418,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Processing [ZSET]", "Size"));
+    rows.add(Arrays.asList("Queue", "Processing [ZSET]", "Number Of Messages"));
     for (int i = 0; i < queueConfigs.size(); i++) {
       QueueConfig queueConfig = queueConfigs.get(i);
       rows.add(
@@ -443,7 +443,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Queue [LIST]", "Size"));
+    rows.add(Arrays.asList("Queue", "Queue [LIST]", "Number of Messages"));
     for (int i = 0; i < queueConfigs.size(); i++) {
       QueueConfig queueConfig = queueConfigs.get(i);
       rows.add(Arrays.asList(queueConfig.getName(), queueConfig.getQueueName(), result.get(i)));
@@ -466,7 +466,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Scheduled [ZSET]", "Size"));
+    rows.add(Arrays.asList("Queue", "Scheduled [ZSET]", "Number of Messages"));
     for (int i = 0; i < queueConfigs.size(); i++) {
       QueueConfig queueConfig = queueConfigs.get(i);
       rows.add(
@@ -524,7 +524,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Dead Letter Queue [LIST]", "Size"));
+    rows.add(Arrays.asList("Queue", "Dead Letter Queues [LIST]", "Number of Messages"));
     addRows(result, rows, queueConfigAndDlq);
     return rows;
   }
