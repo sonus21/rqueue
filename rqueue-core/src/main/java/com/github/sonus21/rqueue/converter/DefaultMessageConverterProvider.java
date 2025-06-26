@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.converter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
-public class DefaultMessageConverterProvider implements MessageConverterProvider {
+public final class DefaultMessageConverterProvider implements MessageConverterProvider {
 
   @Override
   public MessageConverter getConverter() {

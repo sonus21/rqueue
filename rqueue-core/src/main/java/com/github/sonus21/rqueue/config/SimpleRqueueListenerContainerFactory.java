@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -157,14 +157,14 @@ public class SimpleRqueueListenerContainerFactory {
   /**
    * Return configured message handler
    *
-   * @param messageConverterProvider message converter that will be used to serialize/deserialize
+   * @param messageConverterProviderIn message converter that will be used to serialize/deserialize
    *                                 message
    * @return RqueueMessageHandler object
    */
   public RqueueMessageHandler getRqueueMessageHandler(
-      MessageConverterProvider messageConverterProvider) {
+      MessageConverterProvider messageConverterProviderIn) {
     if (this.messageConverterProvider == null) {
-      this.messageConverterProvider = messageConverterProvider;
+      this.messageConverterProvider = messageConverterProviderIn;
     }
     notNull(this.messageConverterProvider, "messageConverterProvider can not be null");
     if (rqueueMessageHandler == null) {
