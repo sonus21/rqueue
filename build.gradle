@@ -50,7 +50,7 @@ ext {
 
     // server
     jakartaServletVersion = "6.0.0"
-    pebbleVersion = "3.2.0"
+    pebbleVersion = "3.2.2"
 
     // database
     lettuceVersion = "6.2.2.RELEASE"
