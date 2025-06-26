@@ -418,7 +418,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 }
               }));
     }
-    rows.add(Arrays.asList("Queue", "Processing [ZSET]", "Number Of Messages"));
+    rows.add(Arrays.asList("Queue", "Processing [ZSET]", "Number of Messages"));
     for (int i = 0; i < queueConfigs.size(); i++) {
       QueueConfig queueConfig = queueConfigs.get(i);
       rows.add(
