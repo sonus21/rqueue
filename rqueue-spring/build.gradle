@@ -1,9 +1,42 @@
-ext.projectDescription = "Asynchronous and Scheduled task executor for spring framework"
-ext.name = "Rqueue Spring Java"
-buildscript {
-    apply from: "${rootDir}/gradle/code-signing.gradle"
-    apply from: "${rootDir}/gradle/packaging.gradle"
-    apply from: "${rootDir}/gradle/test-runner.gradle"
+plugins {
+    id 'com.vanniktech.maven.publish' version '0.28.0'
+}
+apply from: "${rootDir}/gradle/packaging.gradle"
+apply from: "${rootDir}/gradle/test-runner.gradle"
+apply from: "${rootDir}/gradle/code-publish.gradle"
+
+import com.vanniktech.maven.publish.SonatypeHost;
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+    pom {
+        name = "Rqueue Spring Java"
+        description = "Redis Asynchronous and Scheduled task executor for spring framework"
+        url = "https://github.com/sonus21/rqueue"
+        licenses {
+            license {
+                name = "Apache License 2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "sonus21"
+                name = "Sonu Kumar"
+                email = "sonunitw12@gmail.com"
+            }
+        }
+        scm {
+            url = "https://github.com/sonus21/rqueue"
+            connection = "scm:git:git://github.com/sonus21/rqueue.git"
+            developerConnection = "scm:git:ssh://git@github.com:sonus21/rqueue.git"
+        }
+        issueManagement {
+            system = "GitHub"
+            url = "https://github.com/sonus21/rqueue/issues"
+        }
+    }
 }
 
 dependencies {

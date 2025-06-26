@@ -1,7 +1,6 @@
 plugins {
     id "jacoco"
-    id "com.github.kt3k.coveralls" version "2.12.0"
-    id "nebula.optional-base" version "7.0.0"
+    id 'com.github.kt3k.coveralls' version '2.12.2'
     id "com.adarshr.test-logger" version "3.2.0"
     id "org.gradle.test-retry" version "1.5.0"
 }
@@ -9,10 +8,7 @@ plugins {
 allprojects {
     apply plugin: "idea"
     apply plugin: "java-library"
-    apply plugin: "maven-publish"
-    apply plugin: "signing"
     apply plugin: "jacoco"
-    apply plugin: "nebula.optional-base"
     apply plugin: "com.adarshr.test-logger"
     apply plugin: "org.gradle.test-retry"
 
@@ -21,6 +17,7 @@ allprojects {
 
     repositories {
         mavenCentral()
+        mavenLocal()
     }
 }
 
@@ -31,7 +28,7 @@ ext {
     microMeterVersion = "1.10.2"
 
     // logging dependencies
-    lombokVersion = "1.18.24"
+    lombokVersion = "1.18.30"
     logbackVersion = "1.4.5"
     sl4jVersion = "2.0.6"
 
@@ -72,7 +69,7 @@ ext {
 
 subprojects {
     group = "com.github.sonus21"
-    version = "3.2.0-RELEASE"
+    version = "3.3.0-RELEASE"
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
@@ -126,10 +123,10 @@ task codeCoverageReport(type: JacocoReport, group: "verification", description: 
     }
 
     reports {
-        csv.enabled = false
-        html.enabled = System.getenv("CIRCLECI") != "true"
-        xml.enabled = System.getenv("CIRCLECI") == "true"
-        xml.destination = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+        xml.required = System.getenv("CIRCLECI") == "true"
+        csv.required = false
+        html.required = System.getenv("CIRCLECI") != "true"
+        xml.outputLocation = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
     }
 
     afterEvaluate {

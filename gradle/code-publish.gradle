@@ -1,0 +1,18 @@
+afterEvaluate {
+    publishing {
+        publications.withType(MavenPublication).configureEach {
+            pom.withXml {
+                def optionalDeps = [
+                        'org.springframework.boot:spring-boot-starter-actuator',
+                        'io.micrometer:micrometer-core'
+                ]
+                asNode().dependencies.dependency.findAll {
+                    var dep = it.artifactId.text() + ":" + it.groupId.text()
+                    optionalDeps.contains(dep)
+                }.each {
+                    it.appendNode('optional', 'true')
+                }
+            }
+        }
+    }
+}
