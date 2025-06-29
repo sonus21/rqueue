@@ -1,16 +1,49 @@
-ext.projectDescription = "Asynchronous and Scheduled task executor for spring boot framework"
-ext.name = "Rqueue Spring Boot Java"
-buildscript {
-    apply from: "${rootDir}/gradle/code-signing.gradle"
-    apply from: "${rootDir}/gradle/packaging.gradle"
-    apply from: "${rootDir}/gradle/test-runner.gradle"
+plugins {
+    id 'com.vanniktech.maven.publish' version '0.28.0'
+}
+apply from: "${rootDir}/gradle/packaging.gradle"
+apply from: "${rootDir}/gradle/test-runner.gradle"
+apply from: "${rootDir}/gradle/code-publish.gradle"
+
+
+import com.vanniktech.maven.publish.SonatypeHost;
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+    pom {
+        name = "Rqueue Spring Boot Starter"
+        description = "Redis Asynchronous and Scheduled task executor for spring boot framework"
+        url = "https://github.com/sonus21/rqueue"
+        licenses {
+            license {
+                name = "Apache License 2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "sonus21"
+                name = "Sonu Kumar"
+                email = "sonunitw12@gmail.com"
+            }
+        }
+        scm {
+            url = "https://github.com/sonus21/rqueue"
+            connection = "scm:git:git://github.com/sonus21/rqueue.git"
+            developerConnection = "scm:git:ssh://git@github.com:sonus21/rqueue.git"
+        }
+        issueManagement {
+            system = "GitHub"
+            url = "https://github.com/sonus21/rqueue/issues"
+        }
+    }
 }
 
 dependencies {
     api project(":rqueue-core")
     api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
-    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator
-    api "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}", optional
+    api "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
     testImplementation project(":rqueue-spring-common-test")
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"

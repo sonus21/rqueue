@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@ package com.github.sonus21.rqueue.common.impl;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
+@Slf4j
 public class RqueueLockManagerImpl implements RqueueLockManager {
 
   private final RqueueStringDao rqueueStringDao;
@@ -42,6 +44,9 @@ public class RqueueLockManagerImpl implements RqueueLockManager {
     Assert.hasText(lockKey, "key cannot be null.");
     Assert.hasText(lockValue, "value cannot be null.");
     Boolean result = rqueueStringDao.deleteIfSame(lockKey, lockValue);
+    if (!Boolean.TRUE.equals(result)) {
+      log.error("release lock failed, key: {}, value: {}", lockKey, lockValue);
+    }
     return Boolean.TRUE.equals(result);
   }
 }

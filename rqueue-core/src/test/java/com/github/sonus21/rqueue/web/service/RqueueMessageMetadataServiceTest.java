@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -31,11 +31,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.web.service.impl.RqueueMessageMetadataServiceImpl;
 import java.time.Duration;
 import java.util.Arrays;
@@ -46,6 +48,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 @CoreUnitTest
 class RqueueMessageMetadataServiceTest extends TestBase {
@@ -57,14 +61,17 @@ class RqueueMessageMetadataServiceTest extends TestBase {
   private RqueueStringDao rqueueStringDao;
   @Mock
   private RqueueLockManager lockManager;
+  @Mock
+  private RqueueConfig rqueueConfig;
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
     rqueueMessageMetadataService =
         new RqueueMessageMetadataServiceImpl(
-            rqueueMessageMetadataDao, rqueueStringDao, lockManager);
+            rqueueMessageMetadataDao, rqueueStringDao, lockManager, rqueueConfig);
   }
 
   @Test
@@ -92,8 +99,11 @@ class RqueueMessageMetadataServiceTest extends TestBase {
 
   @Test
   void deleteMessageShouldCreateMessageMetadata() {
+    doAnswer(
+        (Answer<String>) invocationOnMock -> invocationOnMock.getArgument(0)).when(rqueueConfig)
+        .getLockKey(anyString());
     String id = UUID.randomUUID().toString();
-    doReturn(true).when(lockManager).acquireLock(eq(id), anyString(), eq(Duration.ofSeconds(1)));
+    doReturn(true).when(lockManager).acquireLock(eq(Constants.MESSAGE_LOCK_KEY_PREFIX + id), anyString(), eq(Duration.ofSeconds(1)));
     doAnswer(
         invocation -> {
           MessageMetadata metadata = invocation.getArgument(0);
@@ -109,7 +119,10 @@ class RqueueMessageMetadataServiceTest extends TestBase {
   @Test
   void deleteMessage() {
     String id = UUID.randomUUID().toString();
-    doReturn(true).when(lockManager).acquireLock(eq(id), anyString(), eq(Duration.ofSeconds(1)));
+    doAnswer(
+        (Answer<String>) invocationOnMock -> invocationOnMock.getArgument(0)).when(rqueueConfig)
+        .getLockKey(anyString());
+    doReturn(true).when(lockManager).acquireLock(eq(Constants.MESSAGE_LOCK_KEY_PREFIX + id), anyString(), eq(Duration.ofSeconds(1)));
     MessageMetadata metadata =
         new MessageMetadata(
             RqueueMessageUtils.getMessageMetaId(queueName, id), MessageStatus.ENQUEUED);
@@ -132,7 +145,10 @@ class RqueueMessageMetadataServiceTest extends TestBase {
   @Test
   void deleteMessageShouldFailDueToLock() {
     String id = UUID.randomUUID().toString();
-    doReturn(false).when(lockManager).acquireLock(eq(id), anyString(), eq(Duration.ofSeconds(1)));
+    doAnswer(
+        (Answer<String>) invocationOnMock -> invocationOnMock.getArgument(0)).when(rqueueConfig)
+        .getLockKey(anyString());
+    doReturn(false).when(lockManager).acquireLock(eq(Constants.MESSAGE_LOCK_KEY_PREFIX + id), anyString(), eq(Duration.ofSeconds(1)));
     assertFalse(rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7)));
     verifyNoInteractions(rqueueMessageMetadataDao);
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -521,7 +521,7 @@ class RqueueQDetailServiceTest extends TestBase {
     List<List<Object>> response = rqueueQDetailService.getScheduledTasks();
     assertEquals(3, response.size());
     List<List<Object>> expectedResponse = new ArrayList<>();
-    List<Object> headers = Arrays.asList("Queue", "Scheduled [ZSET]", "Size");
+    List<Object> headers = Arrays.asList("Queue", "Scheduled [ZSET]", "Number of Messages");
     expectedResponse.add(headers);
     expectedResponse.add(
         Arrays.asList(queueConfig.getName(), queueConfig.getScheduledQueueName(), 100L));
@@ -539,7 +539,7 @@ class RqueueQDetailServiceTest extends TestBase {
         .executePipelined(any(RedisCallback.class));
     List<List<Object>> response = rqueueQDetailService.getWaitingTasks();
     assertEquals(3, response.size());
-    List<Object> headers = Arrays.asList("Queue", "Queue [LIST]", "Size");
+    List<Object> headers = Arrays.asList("Queue", "Queue [LIST]", "Number of Messages");
     List<Object> row = Arrays.asList(queueConfig.getName(), queueConfig.getQueueName(), 100L);
     List<Object> row2 = Arrays.asList(queueConfig2.getName(), queueConfig2.getQueueName(), 110L);
     assertEquals(Arrays.asList(headers, row, row2), response);
@@ -554,7 +554,7 @@ class RqueueQDetailServiceTest extends TestBase {
         .executePipelined(any(RedisCallback.class));
     List<List<Object>> response = rqueueQDetailService.getRunningTasks();
     assertEquals(3, response.size());
-    List<Object> headers = Arrays.asList("Queue", "Processing [ZSET]", "Size");
+    List<Object> headers = Arrays.asList("Queue", "Processing [ZSET]", "Number of Messages");
     List<Object> row =
         Arrays.asList(queueConfig.getName(), queueConfig.getProcessingQueueName(), 100L);
     List<Object> row2 =
@@ -571,7 +571,7 @@ class RqueueQDetailServiceTest extends TestBase {
         .executePipelined(any(RedisCallback.class));
     List<List<Object>> response = rqueueQDetailService.getDeadLetterTasks();
     assertEquals(3, response.size());
-    List<Object> headers = Arrays.asList("Queue", "Dead Letter Queue [LIST]", "Size");
+    List<Object> headers = Arrays.asList("Queue", "Dead Letter Queues [LIST]", "Number of Messages");
     List<Object> row = Arrays.asList(queueConfig.getName(), "test-dlq", 100L);
     List<Object> row2 = Arrays.asList(queueConfig2.getName(), "", "");
     assertEquals(Arrays.asList(headers, row, row2), response);

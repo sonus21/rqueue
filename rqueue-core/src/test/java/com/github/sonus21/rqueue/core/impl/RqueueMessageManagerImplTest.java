@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -249,34 +249,21 @@ class RqueueMessageManagerImplTest extends TestBase {
 
   @Test
   void exist() {
-    doReturn(false).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
-    assertThrows(LockCanNotBeAcquired.class,
-        () -> rqueueMessageManager.exist(queueName, messageId));
-
-    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     doReturn(messageMetadata)
         .when(rqueueMessageMetadataService)
         .getByMessageId(queueName, messageId);
     assertTrue(rqueueMessageManager.exist(queueName, messageId));
 
-    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     doReturn(null)
         .when(rqueueMessageMetadataService)
         .getByMessageId(queueName, messageId);
     assertFalse(rqueueMessageManager.exist(queueName, messageId));
-
-    doReturn(false).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
-    assertThrows(LockCanNotBeAcquired.class,
-        () -> rqueueMessageManager.exist(queueName2, priority, messageId));
   }
 
   @Test
   void existWithPriority() {
     // entry wont exist
-    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     assertFalse(rqueueMessageManager.exist(queueName2, priority, messageId));
-
-    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     doReturn(messageMetadata2)
         .when(rqueueMessageMetadataService)
         .getByMessageId(queueNameWithPriority, messageId);

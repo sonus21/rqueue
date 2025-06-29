@@ -35,10 +35,10 @@ test {
     }
 
     reports {
-        junitXml.enabled = true
-        junitXml.destination = file("$buildDir/reports/junit/xml")
-        html.enabled = System.getenv("CIRCLECI") != "true"
-        html.destination = file("$buildDir/reports/junit/html")
+        junitXml.required = true
+        junitXml.outputLocation = file("$buildDir/reports/junit/xml")
+        html.required = System.getenv("CIRCLECI") != "true"
+        html.outputLocation = file("$buildDir/reports/junit/html")
     }
 
     retry {

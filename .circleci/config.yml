@@ -124,8 +124,8 @@ executors:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx6400m
       TERM: dumb
-      ORG_GRADLE_PROJECT_sonatypeUsername: xxx
-      ORG_GRADLE_PROJECT_sonatypePassword: xxx
+      ORG_GRADLE_PROJECT_mavenCentralUsername: xxx
+      ORG_GRADLE_PROJECT_mavenCentralPassword: xxx
       USER_NAME: rqueue
       REDIS_RUNNING: "true"
 

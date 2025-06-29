@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -17,12 +17,14 @@
 package com.github.sonus21.rqueue.web.service.impl;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collection;
@@ -46,15 +48,17 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   private final RqueueMessageMetadataDao rqueueMessageMetadataDao;
   private final RqueueStringDao rqueueStringDao;
   private final RqueueLockManager lockManager;
+  private final RqueueConfig rqueueConfig;
 
   @Autowired
   public RqueueMessageMetadataServiceImpl(
       RqueueMessageMetadataDao rqueueMessageMetadataDao,
       RqueueStringDao rqueueStringDao,
-      RqueueLockManager rqueueLockManager) {
+      RqueueLockManager rqueueLockManager, RqueueConfig rqueueConfig) {
     this.rqueueMessageMetadataDao = rqueueMessageMetadataDao;
     this.rqueueStringDao = rqueueStringDao;
     this.lockManager = rqueueLockManager;
+    this.rqueueConfig = rqueueConfig;
   }
 
   @Override
@@ -93,8 +97,9 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   @Override
   public boolean deleteMessage(String queueName, String messageId, Duration duration) {
     String lockValue = UUID.randomUUID().toString();
+    String lockKey = Constants.getMessageLockName(rqueueConfig, messageId);
     try {
-      if (lockManager.acquireLock(messageId, lockValue, Duration.ofSeconds(1))) {
+      if (lockManager.acquireLock(lockKey, lockValue, Duration.ofSeconds(1))) {
         String id = RqueueMessageUtils.getMessageMetaId(queueName, messageId);
         MessageMetadata messageMetadata = rqueueMessageMetadataDao.get(id);
         if (messageMetadata == null) {
@@ -106,7 +111,7 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
         return true;
       }
     } finally {
-      lockManager.releaseLock(messageId, lockValue);
+      lockManager.releaseLock(lockKey, lockValue);
     }
     return false;
   }

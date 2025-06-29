@@ -1,10 +1,44 @@
-ext.projectDescription = "Asynchronous and scheduled task executor"
-ext.name = "Rqueue Core Java"
-buildscript {
-    apply from: "${rootDir}/gradle/code-signing.gradle"
-    apply from: "${rootDir}/gradle/packaging.gradle"
-    apply from: "${rootDir}/gradle/test-runner.gradle"
+plugins {
+    id 'com.vanniktech.maven.publish' version '0.28.0'
 }
+apply from: "${rootDir}/gradle/packaging.gradle"
+apply from: "${rootDir}/gradle/test-runner.gradle"
+apply from: "${rootDir}/gradle/code-publish.gradle"
+
+import com.vanniktech.maven.publish.SonatypeHost;
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+    pom {
+        name = "Rqueue Core Java"
+        description = "Redis asynchronous and scheduled task executor"
+        url = "https://github.com/sonus21/rqueue"
+        licenses {
+            license {
+                name = "Apache License 2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "sonus21"
+                name = "Sonu Kumar"
+                email = "sonunitw12@gmail.com"
+            }
+        }
+        scm {
+            url = "https://github.com/sonus21/rqueue"
+            connection = "scm:git:git://github.com/sonus21/rqueue.git"
+            developerConnection = "scm:git:ssh://git@github.com:sonus21/rqueue.git"
+        }
+        issueManagement {
+            system = "GitHub"
+            url = "https://github.com/sonus21/rqueue/issues"
+        }
+    }
+}
+
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
     api "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
@@ -24,7 +58,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     api "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}"
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    api "io.micrometer:micrometer-core:${microMeterVersion}", optional
+    api "io.micrometer:micrometer-core:${microMeterVersion}"
     testImplementation "io.lettuce:lettuce-core:${lettuceVersion}"
     testImplementation project(":rqueue-test-util")
 }

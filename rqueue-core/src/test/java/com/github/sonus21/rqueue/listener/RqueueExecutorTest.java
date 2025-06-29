@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -242,6 +242,7 @@ class RqueueExecutorTest extends TestBase {
 
   @Test
   void messageIsDeletedWhileExecuting() {
+    doAnswer(i->i.getArgument(0)).when(rqueueConfig).getLockKey(anyString());
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     AtomicInteger atomicInteger = new AtomicInteger(0);
@@ -298,6 +299,7 @@ class RqueueExecutorTest extends TestBase {
 
   @Test
   void handlePeriodicMessage() {
+    doAnswer(i->i.getArgument(0)).when(rqueueConfig).getLockKey(anyString());
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     long period = 10000L;
