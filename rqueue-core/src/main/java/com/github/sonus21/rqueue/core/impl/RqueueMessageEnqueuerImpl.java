@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
+import java.util.Objects;
+
 @Slf4j
 public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements RqueueMessageEnqueuer {
 
@@ -58,7 +60,10 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
 
   @Override
   public boolean enqueueUnique(String queueName, String messageId, Object message) {
-    // TODO? is using monotonic time sufficient for handling uniqueness
+    if(Objects.nonNull(rqueueMessageMetadataService.getByMessageId(queueName, messageId))){
+      log.warn("trying to enqueue duplicate message {}", messageId);
+      return false;
+    }
     return enqueue(queueName, messageId, message);
   }
 
