@@ -60,7 +60,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
 
   @Override
   public boolean enqueueUnique(String queueName, String messageId, Object message) {
-    if(Objects.nonNull(rqueueMessageMetadataService.getByMessageId(queueName, messageId))){
+    if(isMessageAlreadyExist(queueName, messageId)){
       log.warn("trying to enqueue duplicate message {}", messageId);
       return false;
     }
@@ -136,6 +136,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
   public boolean enqueueUniqueIn(
       String queueName, String messageId, Object message, long delayInMillisecond) {
     if(isMessageAlreadyExist(queueName, messageId)){
+      log.warn("trying to enqueueIn duplicate message {}", messageId);
       return false;
     }
     return enqueueIn(queueName, messageId, message, delayInMillisecond);
