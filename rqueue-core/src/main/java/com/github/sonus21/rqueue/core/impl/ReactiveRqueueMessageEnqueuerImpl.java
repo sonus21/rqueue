@@ -56,6 +56,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       Object message,
       Integer retryCount,
       Long delayInMilliSecs,
+      boolean isUnique,
       MonoConverterGenerator<T> monoConverterGenerator) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
@@ -69,24 +70,32 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
             messageHeaders);
     MonoConverter<T> monoConverter = monoConverterGenerator.create(rqueueMessage);
     try {
-      Object o1 = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
       Mono<Boolean> storeMessageResult =
-          (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true);
-      Mono<Long> longMono;
-      if (o1 instanceof Flux) {
-        longMono = ((Flux<Long>) o1).elementAt(0);
-      } else {
-        longMono = (Mono<Long>) o1;
-      }
+              (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
+      Mono<Long> longMono = storeMessageResult.flatMap(storeSuccess -> {
+        if (Boolean.TRUE.equals(storeSuccess)) {
+          Object o1 = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
+          if (o1 instanceof Flux) {
+            return ((Flux<Long>) o1).elementAt(0);
+          } else {
+            return (Mono<Long>) o1;
+          }
+        } else {
+          return Mono.error(new IllegalStateException("Failed to store message metadata"));
+        }
+      });
       return longMono.zipWith(storeMessageResult, monoConverter::call);
     } catch (Exception e) {
-      log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
+      log.error("Queue: {} Message {} could not be pushed", queueName, rqueueMessage, e);
       return Mono.error(e);
     }
   }
 
   private Mono<String> pushReactiveMessage(
-      String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
+      String queueName,
+      Object message,
+      Integer retryCount,
+      Long delayInMilliSecs) {
     return pushReactiveMessage(
         RqueueMessageUtils::buildMessage,
         queueName,
@@ -94,6 +103,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         message,
         retryCount,
         delayInMilliSecs,
+        false,
         new StrMonoConverterGenerator());
   }
 
@@ -102,7 +112,8 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       String messageId,
       Object message,
       Integer retryCount,
-      Long delayInMilliSecs) {
+      Long delayInMilliSecs,
+      boolean isUnique) {
     return pushReactiveMessage(
         RqueueMessageUtils::buildMessage,
         queueName,
@@ -110,6 +121,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         message,
         retryCount,
         delayInMilliSecs,
+        isUnique,
         new BooleanMonoConverterGenerator());
   }
 
@@ -122,6 +134,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         message,
         null,
         periodInMilliSeconds,
+        false,
         new StrMonoConverterGenerator());
   }
 
@@ -134,6 +147,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         message,
         null,
         periodInMilliSeconds,
+        false,
         new BooleanMonoConverterGenerator());
   }
 
@@ -149,7 +163,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     validateQueue(queueName);
     validateMessageId(messageId);
     validateMessage(message);
-    return pushReactiveWithMessageId(queueName, messageId, message, null, null);
+    return pushReactiveWithMessageId(queueName, messageId, message, null, null, false);
   }
 
   @Override
@@ -157,8 +171,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     validateQueue(queueName);
     validateMessageId(messageId);
     validateMessage(message);
-    // TODO uniqueness
-    return pushReactiveWithMessageId(queueName, messageId, message, null, null);
+    return pushReactiveWithMessageId(queueName, messageId, message, null, null, true);
   }
 
   @Override
@@ -176,7 +189,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     validateMessageId(messageId);
     validateMessage(message);
     validateRetryCount(retryCount);
-    return pushReactiveWithMessageId(queueName, messageId, message, retryCount, null);
+    return pushReactiveWithMessageId(queueName, messageId, message, retryCount, null, false);
   }
 
   @Override
@@ -196,7 +209,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     validateMessageId(messageId);
     validateMessage(message);
     return pushReactiveWithMessageId(
-        PriorityUtils.getQueueNameForPriority(queueName, priority), messageId, message, null, null);
+        PriorityUtils.getQueueNameForPriority(queueName, priority), messageId, message, null, null, false);
   }
 
   @Override
@@ -214,7 +227,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     validateMessageId(messageId);
     validateMessage(message);
     validateDelay(delayInMilliSecs);
-    return pushReactiveWithMessageId(queueName, messageId, message, null, delayInMilliSecs);
+    return pushReactiveWithMessageId(queueName, messageId, message, null, delayInMilliSecs, false);
   }
 
   @Override
@@ -224,8 +237,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     validateMessageId(messageId);
     validateMessage(message);
     validateDelay(delayInMillisecond);
-    // TODO unique??
-    return pushReactiveWithMessageId(queueName, messageId, message, null, delayInMillisecond);
+    return pushReactiveWithMessageId(queueName, messageId, message, null, delayInMillisecond, true);
   }
 
   @Override
@@ -246,7 +258,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     validateMessage(message);
     validateDelay(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushReactiveWithMessageId(queueName, messageId, message, retryCount, delayInMilliSecs);
+    return pushReactiveWithMessageId(queueName, messageId, message, retryCount, delayInMilliSecs, false);
   }
 
   @Override

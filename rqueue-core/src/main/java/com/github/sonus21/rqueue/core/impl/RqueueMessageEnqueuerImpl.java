@@ -47,7 +47,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
   public String enqueue(String queueName, Object message) {
     validateQueue(queueName);
     validateMessage(message);
-    return pushMessage(queueName, null, message, null, null);
+    return pushMessage(queueName, null, message, null, null,false);
   }
 
   @Override
@@ -55,16 +55,15 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateQueue(queueName);
     validateMessageId(messageId);
     validateMessage(message);
-    return pushMessage(queueName, messageId, message, null, null) != null;
+    return pushMessage(queueName, messageId, message, null, null, false) != null;
   }
 
   @Override
   public boolean enqueueUnique(String queueName, String messageId, Object message) {
-    if(isMessageAlreadyExist(queueName, messageId)){
-      log.warn("trying to enqueue duplicate message {}", messageId);
-      return false;
-    }
-    return enqueue(queueName, messageId, message);
+    validateQueue(queueName);
+    validateMessageId(messageId);
+    validateMessage(message);
+    return Objects.nonNull(pushMessage(queueName, messageId, message, null, null, true));
   }
 
   @Override
@@ -72,7 +71,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateQueue(queueName);
     validateMessage(message);
     validateRetryCount(retryCount);
-    return pushMessage(queueName, null, message, retryCount, null);
+    return pushMessage(queueName, null, message, retryCount, null, false);
   }
 
   @Override
@@ -82,7 +81,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateMessageId(messageId);
     validateMessage(message);
     validateRetryCount(retryCount);
-    return pushMessage(queueName, messageId, message, retryCount, null) != null;
+    return pushMessage(queueName, messageId, message, retryCount, null, false) != null;
   }
 
   @Override
@@ -91,7 +90,8 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validatePriority(priority);
     validateMessage(message);
     return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority), null, message, null, null);
+        PriorityUtils.getQueueNameForPriority(queueName, priority),
+            null, message, null, null, false);
   }
 
   @Override
@@ -106,7 +106,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
         messageId,
         message,
         null,
-        null)
+        null, false)
         != null;
   }
 
@@ -115,7 +115,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateQueue(queueName);
     validateMessage(message);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, null, message, null, delayInMilliSecs);
+    return pushMessage(queueName, null, message, null, delayInMilliSecs, false);
   }
 
   @Override
@@ -125,21 +125,17 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateMessageId(messageId);
     validateMessage(message);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, messageId, message, null, delayInMilliSecs) != null;
-  }
-
-  private boolean isMessageAlreadyExist(String queueName, String messageId){
-    return rqueueMessageMetadataService.getByMessageId(queueName, messageId) != null;
+    return pushMessage(queueName, messageId, message, null, delayInMilliSecs, false) != null;
   }
 
   @Override
   public boolean enqueueUniqueIn(
       String queueName, String messageId, Object message, long delayInMillisecond) {
-    if(isMessageAlreadyExist(queueName, messageId)){
-      log.warn("trying to enqueueIn duplicate message {}", messageId);
-      return false;
-    }
-    return enqueueIn(queueName, messageId, message, delayInMillisecond);
+    validateQueue(queueName);
+    validateMessageId(messageId);
+    validateMessage(message);
+    validateDelay(delayInMillisecond);
+    return Objects.nonNull(pushPeriodicMessage(queueName, messageId, message, delayInMillisecond, true));
   }
 
   @Override
@@ -149,7 +145,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateMessage(message);
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, null, message, retryCount, delayInMilliSecs);
+    return pushMessage(queueName, null, message, retryCount, delayInMilliSecs, false);
   }
 
   @Override
@@ -160,7 +156,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateMessage(message);
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, messageId, message, retryCount, delayInMilliSecs) != null;
+    return pushMessage(queueName, messageId, message, retryCount, delayInMilliSecs, false) != null;
   }
 
   @Override
@@ -168,7 +164,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateQueue(queueName);
     validateMessage(message);
     validatePeriod(period);
-    return pushPeriodicMessage(queueName, null, message, period);
+    return pushPeriodicMessage(queueName, null, message, period, false);
   }
 
   @Override
@@ -177,7 +173,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateQueue(queueName);
     validateMessage(message);
     validatePeriod(period);
-    return pushPeriodicMessage(queueName, messageId, message, period) != null;
+    return pushPeriodicMessage(queueName, messageId, message, period, false) != null;
   }
 
   @Override

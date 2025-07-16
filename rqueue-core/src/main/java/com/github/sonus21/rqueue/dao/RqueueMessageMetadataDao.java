@@ -28,11 +28,11 @@ public interface RqueueMessageMetadataDao {
 
   List<MessageMetadata> findAll(Collection<String> ids);
 
-  void save(MessageMetadata messageMetadata, Duration ttl);
+  void save(MessageMetadata messageMetadata, Duration ttl, boolean checkUniqueNess);
 
   void delete(String id);
 
   void deleteAll(Collection<String> ids);
 
-  Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration);
+  Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration, boolean isUnique);
 }

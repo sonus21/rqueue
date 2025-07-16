@@ -84,8 +84,8 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public void save(MessageMetadata messageMetadata, Duration duration) {
-    rqueueMessageMetadataDao.save(messageMetadata, duration);
+  public void save(MessageMetadata messageMetadata, Duration duration, boolean checkUnique) {
+    rqueueMessageMetadataDao.save(messageMetadata, duration, checkUnique);
   }
 
   @Override
@@ -127,8 +127,8 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration) {
-    return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration);
+  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration, boolean isUnique) {
+    return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration, isUnique);
   }
 
   @Override
