@@ -41,8 +41,8 @@ import org.springframework.util.Assert;
     properties = {
       "rqueue.retry.per.poll=20",
       "rqueue.scheduler.auto.start=true",
-      "spring.data.redis.port=6379",
-      "use.system.redis=true",
+      "spring.data.redis.port=8009",
+      "use.system.redis=false",
       "mysql.db.name=MessageDeduplicationTest",
       "rqueue.metrics.count.failure=false",
       "rqueue.metrics.count.execution=false",
