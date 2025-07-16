@@ -27,10 +27,12 @@ import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Notification;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.Assert;
 
 @SpringBootTest
 @ContextConfiguration(classes = Application.class)
@@ -57,16 +59,16 @@ class MessageDeduplicationTest extends SpringTestBase {
   @Test
   void enqueueUniqueIn() throws TimedOutException {
     Notification notification = Notification.newInstance();
-    rqueueMessageEnqueuer.enqueueUniqueIn(
-        notificationQueue, notification.getId(), notification, 1000L);
+    Assertions.assertTrue(rqueueMessageEnqueuer.enqueueUniqueIn(
+        notificationQueue, notification.getId(), notification, 1000L));
     Notification newNotification = Notification.newInstance();
     newNotification.setId(notification.getId());
     sleep(100);
-    rqueueMessageEnqueuer.enqueueUniqueIn(
-        notificationQueue, newNotification.getId(), newNotification, 1000L);
+    Assertions.assertFalse(rqueueMessageEnqueuer.enqueueUniqueIn(
+        notificationQueue, newNotification.getId(), newNotification, 1000L));
     waitFor(() -> getMessageCount(notificationQueue) == 0, 30_000, "notification to be sent");
     Notification notificationFromDb =
-        consumedMessageStore.getMessage(newNotification.getId(), Notification.class);
-    assertEquals(newNotification, notificationFromDb);
+        consumedMessageStore.getMessage(notification.getId(), Notification.class);
+    assertEquals(notification, notificationFromDb);
   }
 }
