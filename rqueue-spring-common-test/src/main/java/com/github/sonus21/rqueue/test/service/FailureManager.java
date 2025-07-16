@@ -22,14 +22,18 @@ import java.util.Random;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FailureManager {
 
-  @NonNull
-  private final FailureDetailRepository failureDetailRepository;
+  @NonNull private final FailureDetailRepository failureDetailRepository;
+
+  public void deleteAll() {
+    failureDetailRepository.deleteAll();
+  }
 
   public boolean shouldFail(String id) {
     // no entry so no fail

@@ -43,12 +43,12 @@ import org.springframework.test.context.TestPropertySource;
     properties = {
         "rqueue.retry.per.poll=1000",
         "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8023",
+        "spring.data.redis.port=6379",
         "reservation.request.dead.letter.consumer.enabled=true",
         "reservation.request.active=true",
         "list.email.queue.enabled=true",
         "mysql.db.name=MessageProcessorTest",
-        "use.system.redis=false",
+        "use.system.redis=true",
         "user.banned.queue.active=true",
     })
 @SpringBootIntegrationTest
@@ -116,6 +116,7 @@ class MessageProcessorTest extends RetryTests {
   @RetryingTest(2)
   void manualDeletionMessageProcessorTest() throws TimedOutException {
     cleanQueue(notificationQueue);
+    deleteTestData();
     Notification notification = Notification.newInstance();
     failureManager.createFailureDetail(notification.getId(), -1, 3);
     String messageId =
