@@ -136,7 +136,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     validateWithId(queueName, messageId, message);
     validateDelay(delayInMilliSecs);
     return Objects.nonNull(
-        pushPeriodicMessage(queueName, messageId, message, delayInMilliSecs, true));
+        pushMessage(queueName, messageId, message, null, delayInMilliSecs, true));
   }
 
   @Override
@@ -161,14 +161,14 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
   public String enqueuePeriodic(String queueName, Object message, long period) {
     validateBasic(queueName, message);
     validatePeriod(period);
-    return pushPeriodicMessage(queueName, null, message, period, false);
+    return pushPeriodicMessage(queueName, null, message, period);
   }
 
   @Override
   public boolean enqueuePeriodic(String queueName, String messageId, Object message, long period) {
     validateWithId(queueName, messageId, message);
     validatePeriod(period);
-    return pushPeriodicMessage(queueName, messageId, message, period, false) != null;
+    return pushPeriodicMessage(queueName, messageId, message, period) != null;
   }
 
   @Override

@@ -126,8 +126,8 @@ abstract class BaseMessageSender {
       storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
       enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
     } catch (DuplicateMessageException e) {
-      log.error(
-          "Duplicate message enqueue attempt queue: {}, messageId: {}",
+      log.warn(
+          "Duplicate message enqueue attempted queue: {}, messageId: {}",
           queueName,
           rqueueMessage.getId());
       return null;
@@ -142,8 +142,7 @@ abstract class BaseMessageSender {
       String queueName,
       String messageId,
       Object message,
-      long periodInMilliSeconds,
-      boolean isUnique) {
+      long periodInMilliSeconds) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
         buildPeriodicMessage(
@@ -155,19 +154,13 @@ abstract class BaseMessageSender {
             periodInMilliSeconds,
             messageHeaders);
     try {
-      storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, isUnique);
+      storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, false);
       enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);
-    } catch (DuplicateMessageException e) {
-      log.error(
-          "Duplicate periodic message enqueue attempt queue: {}, messageId: {}",
-          queueName,
-          rqueueMessage.getId());
-      return null;
+      return rqueueMessage.getId();
     } catch (Exception e) {
       log.error("Queue: {} Message {} could not be pushed", queueName, rqueueMessage, e);
       return null;
     }
-    return rqueueMessage.getId();
   }
 
   protected Object deleteAllMessages(QueueDetail queueDetail) {
