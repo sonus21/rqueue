@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +74,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
                   result instanceof Flux ? ((Flux<Long>) result).elementAt(0) : (Mono<Long>) result;
               return enqueueMono.map(id -> monoConverter.convert(id, true));
             }
-            return Mono.error(new IllegalStateException("Failed to store message metadata"));
+            return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
           });
     } catch (Exception e) {
       log.error(

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -51,12 +51,9 @@ abstract class BaseMessageSender {
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
-  @Autowired
-  protected RqueueStringDao rqueueStringDao;
-  @Autowired
-  protected RqueueConfig rqueueConfig;
-  @Autowired
-  protected RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Autowired protected RqueueStringDao rqueueStringDao;
+  @Autowired protected RqueueConfig rqueueConfig;
+  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
@@ -70,15 +67,13 @@ abstract class BaseMessageSender {
   }
 
   protected Object storeMessageMetadata(
-      RqueueMessage rqueueMessage, Long delayInMillis,
-      boolean reactive,
-      boolean isUnique) {
+      RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive, boolean isUnique) {
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration = rqueueConfig.getMessageDurability(delayInMillis);
     if (reactive) {
       return rqueueMessageMetadataService.saveReactive(messageMetadata, duration, isUnique);
     } else {
-        rqueueMessageMetadataService.save(messageMetadata, duration, isUnique);
+      rqueueMessageMetadataService.save(messageMetadata, duration, isUnique);
     }
     return null;
   }
@@ -128,10 +123,13 @@ abstract class BaseMessageSender {
             delayInMilliSecs,
             messageHeaders);
     try {
-        storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
-        enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
-    }catch (DuplicateMessageException e){
-      log.error("Duplicate message enqueue attempt queue: {}, messageId: {}", queueName, rqueueMessage.getId());
+      storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
+      enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
+    } catch (DuplicateMessageException e) {
+      log.error(
+          "Duplicate message enqueue attempt queue: {}, messageId: {}",
+          queueName,
+          rqueueMessage.getId());
       return null;
     } catch (Exception e) {
       log.error("Queue: {} Message {} could not be pushed", queueName, rqueueMessage.getId(), e);
@@ -157,11 +155,14 @@ abstract class BaseMessageSender {
             periodInMilliSeconds,
             messageHeaders);
     try {
-        storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, isUnique);
-        enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);
-    }catch (DuplicateMessageException e){
-        log.error("Duplicate periodic message enqueue attempt queue: {}, messageId: {}", queueName, rqueueMessage.getId());
-        return null;
+      storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, isUnique);
+      enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);
+    } catch (DuplicateMessageException e) {
+      log.error(
+          "Duplicate periodic message enqueue attempt queue: {}, messageId: {}",
+          queueName,
+          rqueueMessage.getId());
+      return null;
     } catch (Exception e) {
       log.error("Queue: {} Message {} could not be pushed", queueName, rqueueMessage, e);
       return null;
