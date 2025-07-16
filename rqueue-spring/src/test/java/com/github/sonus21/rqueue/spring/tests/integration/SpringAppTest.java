@@ -234,6 +234,9 @@ class SpringAppTest extends AllQueueMode {
     assertTrue(
         rqueueMessageEnqueuer.enqueueUniqueIn(
             emailQueue, emails[18].getId(), emails[18], Constants.ONE_MILLI));
+    assertFalse(
+            rqueueMessageEnqueuer.enqueueUniqueIn(
+                    emailQueue, emails[18].getId(), emails[18], Constants.ONE_MILLI));
 
     assertNotNull(
         rqueueMessageEnqueuer.enqueueInWithRetry(emailQueue, emails[19], 3, Constants.ONE_MILLI));

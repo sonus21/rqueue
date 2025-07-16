@@ -128,9 +128,16 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     return pushMessage(queueName, messageId, message, null, delayInMilliSecs) != null;
   }
 
+  private boolean isMessageAlreadyExist(String queueName, String messageId){
+    return rqueueMessageMetadataService.getByMessageId(queueName, messageId) != null;
+  }
+
   @Override
   public boolean enqueueUniqueIn(
       String queueName, String messageId, Object message, long delayInMillisecond) {
+    if(isMessageAlreadyExist(queueName, messageId)){
+      return false;
+    }
     return enqueueIn(queueName, messageId, message, delayInMillisecond);
   }
 
