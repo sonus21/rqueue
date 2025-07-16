@@ -8,6 +8,16 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [3.4.0] 16-July-2025
+### Fixes
+* Fixed unique enqueue message to reject the message upfront instead of identifying it later #259 
+
+
+## Release [3.3.0] 29-June-2025
+### Fixes
+# Custom Message Converter was ignored #256
+# LockKey prefix was not used #239
+
 ## Release [3.2.0] 10-July-2024
 ### Fixes
 * Fixed typo #218
