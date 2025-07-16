@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,13 +16,7 @@
 
 package com.github.sonus21.rqueue.core.impl;
 
-import static com.github.sonus21.rqueue.utils.Validator.validateDelay;
-import static com.github.sonus21.rqueue.utils.Validator.validateMessage;
-import static com.github.sonus21.rqueue.utils.Validator.validateMessageId;
-import static com.github.sonus21.rqueue.utils.Validator.validatePeriod;
-import static com.github.sonus21.rqueue.utils.Validator.validatePriority;
-import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
-import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
+import static com.github.sonus21.rqueue.utils.Validator.*;
 
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
@@ -57,7 +51,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       Integer retryCount,
       Long delayInMilliSecs,
       boolean isUnique,
-      MonoConverterGenerator<T> monoConverterGenerator) {
+      MonoConverter<T> monoConverter) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
         builder.build(
@@ -68,34 +62,39 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
             retryCount,
             delayInMilliSecs,
             messageHeaders);
-    MonoConverter<T> monoConverter = monoConverterGenerator.create(rqueueMessage);
     try {
-      Mono<Boolean> storeMessageResult =
-              (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
-      Mono<Long> longMono = storeMessageResult.flatMap(storeSuccess -> {
-        if (Boolean.TRUE.equals(storeSuccess)) {
-          Object o1 = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
-          if (o1 instanceof Flux) {
-            return ((Flux<Long>) o1).elementAt(0);
-          } else {
-            return (Mono<Long>) o1;
-          }
-        } else {
-          return Mono.error(new IllegalStateException("Failed to store message metadata"));
-        }
-      });
-      return longMono.zipWith(storeMessageResult, monoConverter::call);
+      Object mResult = storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
+      Mono<Boolean> storeResult = (Mono<Boolean>) mResult;
+      return storeResult.flatMap(
+          success -> {
+            if (Boolean.TRUE.equals(success)) {
+              Object result = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
+              Mono<Long> enqueueMono =
+                  result instanceof Flux ? ((Flux<Long>) result).elementAt(0) : (Mono<Long>) result;
+              return enqueueMono.map(id -> monoConverter.convert(id, true));
+            }
+            return Mono.error(new IllegalStateException("Failed to store message metadata"));
+          });
     } catch (Exception e) {
-      log.error("Queue: {} Message {} could not be pushed", queueName, rqueueMessage, e);
+      log.error(
+          "Failed to enqueue message [{}] to queue [{}]", rqueueMessage.getId(), queueName, e);
       return Mono.error(e);
     }
   }
 
+  private void validateBasic(String queue, Object msg) {
+    validateQueue(queue);
+    validateMessage(msg);
+  }
+
+  private void validateWithId(String queue, String id, Object msg) {
+    validateQueue(queue);
+    validateMessageId(id);
+    validateMessage(msg);
+  }
+
   private Mono<String> pushReactiveMessage(
-      String queueName,
-      Object message,
-      Integer retryCount,
-      Long delayInMilliSecs) {
+      String queueName, Object message, Integer retryCount, Long delayInMilliSecs) {
     return pushReactiveMessage(
         RqueueMessageUtils::buildMessage,
         queueName,
@@ -104,7 +103,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         retryCount,
         delayInMilliSecs,
         false,
-        new StrMonoConverterGenerator());
+        (id, success) -> id.toString());
   }
 
   private Mono<Boolean> pushReactiveWithMessageId(
@@ -122,7 +121,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         retryCount,
         delayInMilliSecs,
         isUnique,
-        new BooleanMonoConverterGenerator());
+        (id, success) -> Boolean.TRUE);
   }
 
   private Mono<String> pushReactivePeriodicMessage(
@@ -135,7 +134,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         null,
         periodInMilliSeconds,
         false,
-        new StrMonoConverterGenerator());
+        (id, success) -> id.toString());
   }
 
   private Mono<Boolean> pushReactivePeriodicMessageWithMessageId(
@@ -148,36 +147,30 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         null,
         periodInMilliSeconds,
         false,
-        new BooleanMonoConverterGenerator());
+        (id, success) -> Boolean.TRUE);
   }
 
   @Override
   public Mono<String> enqueue(String queueName, Object message) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     return pushReactiveMessage(queueName, message, null, null);
   }
 
   @Override
   public Mono<Boolean> enqueue(String queueName, String messageId, Object message) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     return pushReactiveWithMessageId(queueName, messageId, message, null, null, false);
   }
 
   @Override
   public Mono<Boolean> enqueueUnique(String queueName, String messageId, Object message) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     return pushReactiveWithMessageId(queueName, messageId, message, null, null, true);
   }
 
   @Override
   public Mono<String> enqueueWithRetry(String queueName, Object message, int retryCount) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validateRetryCount(retryCount);
     return pushReactiveMessage(queueName, message, retryCount, null);
   }
@@ -185,9 +178,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @Override
   public Mono<Boolean> enqueueWithRetry(
       String queueName, String messageId, Object message, int retryCount) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     validateRetryCount(retryCount);
     return pushReactiveWithMessageId(queueName, messageId, message, retryCount, null, false);
   }
@@ -204,18 +195,20 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @Override
   public Mono<Boolean> enqueueWithPriority(
       String queueName, String priority, String messageId, Object message) {
-    validateQueue(queueName);
+    validateWithId(queueName, messageId, message);
     validatePriority(priority);
-    validateMessageId(messageId);
-    validateMessage(message);
     return pushReactiveWithMessageId(
-        PriorityUtils.getQueueNameForPriority(queueName, priority), messageId, message, null, null, false);
+        PriorityUtils.getQueueNameForPriority(queueName, priority),
+        messageId,
+        message,
+        null,
+        null,
+        false);
   }
 
   @Override
   public Mono<String> enqueueIn(String queueName, Object message, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validateDelay(delayInMilliSecs);
     return pushReactiveMessage(queueName, message, null, delayInMilliSecs);
   }
@@ -223,9 +216,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @Override
   public Mono<Boolean> enqueueIn(
       String queueName, String messageId, Object message, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     validateDelay(delayInMilliSecs);
     return pushReactiveWithMessageId(queueName, messageId, message, null, delayInMilliSecs, false);
   }
@@ -233,9 +224,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @Override
   public Mono<Boolean> enqueueUniqueIn(
       String queueName, String messageId, Object message, long delayInMillisecond) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     validateDelay(delayInMillisecond);
     return pushReactiveWithMessageId(queueName, messageId, message, null, delayInMillisecond, true);
   }
@@ -243,8 +232,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @Override
   public Mono<String> enqueueInWithRetry(
       String queueName, Object message, int retryCount, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
     return pushReactiveMessage(queueName, message, retryCount, delayInMilliSecs);
@@ -253,18 +241,16 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @Override
   public Mono<Boolean> enqueueInWithRetry(
       String queueName, String messageId, Object message, int retryCount, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
-    validateDelay(retryCount);
+    validateWithId(queueName, messageId, message);
+    validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushReactiveWithMessageId(queueName, messageId, message, retryCount, delayInMilliSecs, false);
+    return pushReactiveWithMessageId(
+        queueName, messageId, message, retryCount, delayInMilliSecs, false);
   }
 
   @Override
   public Mono<String> enqueuePeriodic(String queueName, Object message, long periodInMilliSeconds) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validatePeriod(periodInMilliSeconds);
     return pushReactivePeriodicMessage(queueName, message, periodInMilliSeconds);
   }
@@ -272,21 +258,19 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @Override
   public Mono<Boolean> enqueuePeriodic(
       String queueName, String messageId, Object message, long periodInMilliSeconds) {
-    validateQueue(queueName);
-    validateMessage(message);
-    validateMessageId(messageId);
+    validateWithId(queueName, messageId, message);
     validatePeriod(periodInMilliSeconds);
     return pushReactivePeriodicMessageWithMessageId(
         queueName, messageId, message, periodInMilliSeconds);
   }
 
+  @FunctionalInterface
   private interface MonoConverter<T> {
-
-    T call(Long a, Boolean b);
+    T convert(Long id, Boolean success);
   }
 
+  @FunctionalInterface
   private interface MessageBuilder {
-
     RqueueMessage build(
         MessageConverter converter,
         String queueName,
@@ -295,51 +279,5 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         Integer retryCount,
         Long delay,
         MessageHeaders messageHeaders);
-  }
-
-  private interface MonoConverterGenerator<T> {
-
-    MonoConverter<T> create(RqueueMessage rqueueMessage);
-  }
-
-  private static class StrMonoConverter implements MonoConverter<String> {
-
-    private final RqueueMessage message;
-
-    private StrMonoConverter(RqueueMessage message) {
-      this.message = message;
-    }
-
-    @Override
-    public String call(Long a, Boolean b) {
-      return message.getId();
-    }
-  }
-
-  private static class BoolMonoConverter implements MonoConverter<Boolean> {
-
-    private BoolMonoConverter(RqueueMessage message) {
-    }
-
-    @Override
-    public Boolean call(Long a, Boolean b) {
-      return Boolean.TRUE;
-    }
-  }
-
-  private static class StrMonoConverterGenerator implements MonoConverterGenerator<String> {
-
-    @Override
-    public MonoConverter<String> create(RqueueMessage rqueueMessage) {
-      return new StrMonoConverter(rqueueMessage);
-    }
-  }
-
-  private static class BooleanMonoConverterGenerator implements MonoConverterGenerator<Boolean> {
-
-    @Override
-    public MonoConverter<Boolean> create(RqueueMessage rqueueMessage) {
-      return new BoolMonoConverter(rqueueMessage);
-    }
   }
 }

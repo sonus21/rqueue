@@ -107,7 +107,7 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
         }
         messageMetadata.setDeleted(true);
         messageMetadata.setDeletedOn(System.currentTimeMillis());
-        save(messageMetadata, duration);
+        save(messageMetadata, duration, false);
         return true;
       }
     } finally {
@@ -161,7 +161,7 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   public void saveMessageMetadataForQueue(
       String queueName, MessageMetadata messageMetadata, Long ttlInMillisecond) {
     messageMetadata.setUpdatedOn(System.currentTimeMillis());
-    save(messageMetadata, Duration.ofMillis(ttlInMillisecond));
+    save(messageMetadata, Duration.ofMillis(ttlInMillisecond), false);
     rqueueStringDao.addToOrderedSetWithScore(
         queueName, messageMetadata.getId(), -(System.currentTimeMillis() + ttlInMillisecond));
   }

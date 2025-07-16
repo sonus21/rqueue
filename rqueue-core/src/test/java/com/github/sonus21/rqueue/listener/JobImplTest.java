@@ -70,16 +70,11 @@ class JobImplTest extends TestBase {
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
   private final Object userMessage = "Test Object";
-  @Mock
-  private RedisConnectionFactory redisConnectionFactory;
-  @Mock
-  private RqueueMessageMetadataService messageMetadataService;
-  @Mock
-  private RqueueJobDao rqueueJobDao;
-  @Mock
-  private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock
-  private RqueueLockManager rqueueLockManager;
+  @Mock private RedisConnectionFactory redisConnectionFactory;
+  @Mock private RqueueMessageMetadataService messageMetadataService;
+  @Mock private RqueueJobDao rqueueJobDao;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueLockManager rqueueLockManager;
   private RqueueConfig rqueueConfig;
 
   @BeforeEach
@@ -199,7 +194,7 @@ class JobImplTest extends TestBase {
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
     assertEquals(JobStatus.PROCESSING, job.getStatus());
     verify(rqueueJobDao, times(1)).createJob(any(), any());
-    verify(messageMetadataService, times(1)).save(any(), any());
+    verify(messageMetadataService, times(1)).save(any(), any(), any());
     verify(rqueueJobDao, times(1)).save(any(), any());
   }
 
@@ -313,22 +308,25 @@ class JobImplTest extends TestBase {
   @Test
   void testMessageWasDeletedWhileRunning() throws IllegalAccessException {
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), any(), any());
-    MessageMetadata metadata = messageMetadata.toBuilder().deleted(true)
-        .status(MessageStatus.DELETED).build();
+    MessageMetadata metadata =
+        messageMetadata.toBuilder().deleted(true).status(MessageStatus.DELETED).build();
     doReturn(metadata).when(messageMetadataService).get(messageMetadata.getId());
     JobImpl job = instance();
     job.execute();
     job.updateMessageStatus(MessageStatus.FAILED);
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(2)).save(any(), any());
-    doAnswer(invocation -> {
-      MessageMetadata messageMetadata = invocation.getArgument(0);
-      assertTrue(messageMetadata.isDeleted());
-      assertEquals(MessageStatus.DELETED, messageMetadata.getStatus());
-      return null;
-    }).when(messageMetadataService).save(
-        any(MessageMetadata.class),
-        eq(Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute())));
-
+    doAnswer(
+            invocation -> {
+              MessageMetadata messageMetadata = invocation.getArgument(0);
+              assertTrue(messageMetadata.isDeleted());
+              assertEquals(MessageStatus.DELETED, messageMetadata.getStatus());
+              return null;
+            })
+        .when(messageMetadataService)
+        .save(
+            any(MessageMetadata.class),
+            eq(Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute())),
+            eq(false));
   }
 }
