@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -43,6 +44,7 @@ import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
@@ -193,8 +195,8 @@ class JobImplTest extends TestBase {
     job.updateMessageStatus(MessageStatus.PROCESSING);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
     assertEquals(JobStatus.PROCESSING, job.getStatus());
-    verify(rqueueJobDao, times(1)).createJob(any(), any());
-    verify(messageMetadataService, times(1)).save(any(), any(), any());
+    verify(rqueueJobDao, times(1)).createJob(any(RqueueJob.class), any(Duration.class));
+    verify(messageMetadataService, times(1)).save(any(MessageMetadata.class), any(Duration.class), anyBoolean());
     verify(rqueueJobDao, times(1)).save(any(), any());
   }
 
