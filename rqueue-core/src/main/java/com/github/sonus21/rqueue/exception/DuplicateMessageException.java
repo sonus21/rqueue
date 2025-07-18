@@ -18,22 +18,7 @@ package com.github.sonus21.rqueue.exception;
 
 public class DuplicateMessageException extends RuntimeException {
 
-    private final Object data;
-
-    public DuplicateMessageException(String message) {
-        this(message, null);
-    }
-
-    public DuplicateMessageException(String message, Object data) {
-        super(message);
-        this.data = null;
-    }
-
-    @Override
-    public String toString() {
-        if (data == null) {
-            return super.toString();
-        }
-        return super.toString() + data;
-    }
+  public DuplicateMessageException(String message) {
+    super(message);
+  }
 }
