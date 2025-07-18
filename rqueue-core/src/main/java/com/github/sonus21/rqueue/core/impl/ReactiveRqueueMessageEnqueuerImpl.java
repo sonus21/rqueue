@@ -33,6 +33,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @Slf4j
 public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
@@ -54,7 +55,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       Integer retryCount,
       Long delayInMilliSecs,
       boolean isUnique,
-      BiFunction<Long, RqueueMessage, Mono<T>> monoConverter) {
+      Function<RqueueMessage, Mono<T>> monoConverter) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
         builder.build(
@@ -82,7 +83,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
                     new IllegalStateException(
                         "Unexpected enqueue result type: " + result.getClass()));
               }
-              return enqueueMono.flatMap(time -> monoConverter.apply(time, rqueueMessage));
+              return enqueueMono.flatMap(ignore -> monoConverter.apply(rqueueMessage));
             } else {
               return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
             }
@@ -115,7 +116,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         retryCount,
         delayInMilliSecs,
         false,
-        (ignore, rqueueMessage) -> Mono.just(rqueueMessage.getId()));
+        (rqueueMessage) -> Mono.just(rqueueMessage.getId()));
   }
 
   private Mono<Boolean> pushReactiveWithMessageId(
@@ -133,7 +134,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         retryCount,
         delayInMilliSecs,
         isUnique,
-        (ignore, rqueueMessage) -> Mono.just(Boolean.TRUE));
+        (rqueueMessage) -> Mono.just(Boolean.TRUE));
   }
 
   private Mono<String> pushReactivePeriodicMessage(
@@ -146,7 +147,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         null,
         periodInMilliSeconds,
         false,
-        (ignore, rqueueMessage) -> Mono.just(rqueueMessage.getId()));
+        (rqueueMessage) -> Mono.just(rqueueMessage.getId()));
   }
 
   private Mono<Boolean> pushReactivePeriodicMessageWithMessageId(
@@ -159,7 +160,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         null,
         periodInMilliSeconds,
         false,
-        (ignore, rqueueMessage) -> Mono.just(Boolean.TRUE));
+        (rqueueMessage) -> Mono.just(Boolean.TRUE));
   }
 
   @Override
