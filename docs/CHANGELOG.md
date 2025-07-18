@@ -8,7 +8,7 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
-## Release [3.4.0] 16-July-2025
+## Release [3.4.0] 19-July-2025
 ### Fixes
 * Fixed unique enqueue message to reject the message upfront instead of identifying it later #259 
 
