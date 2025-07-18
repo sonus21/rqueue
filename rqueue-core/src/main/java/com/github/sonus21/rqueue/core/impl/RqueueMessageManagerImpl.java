@@ -115,6 +115,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
   public boolean deleteMessage(String queueName, String id) {
     RqueueMessage rqueueMessage = getRqueueMessage(queueName, id);
     if (rqueueMessage == null) {
+      log.error("Delete message failed, no such message: {}", id);
       return false;
     }
     Duration duration = rqueueConfig.getMessageDurability(rqueueMessage.getPeriod());

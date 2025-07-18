@@ -54,7 +54,8 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   public RqueueMessageMetadataServiceImpl(
       RqueueMessageMetadataDao rqueueMessageMetadataDao,
       RqueueStringDao rqueueStringDao,
-      RqueueLockManager rqueueLockManager, RqueueConfig rqueueConfig) {
+      RqueueLockManager rqueueLockManager,
+      RqueueConfig rqueueConfig) {
     this.rqueueMessageMetadataDao = rqueueMessageMetadataDao;
     this.rqueueStringDao = rqueueStringDao;
     this.lockManager = rqueueLockManager;
@@ -108,7 +109,10 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
         messageMetadata.setDeleted(true);
         messageMetadata.setDeletedOn(System.currentTimeMillis());
         save(messageMetadata, duration, false);
+        log.debug("message deleted, id: {}", id);
         return true;
+      } else {
+        log.error("Lock could not be acquired, Id: {}", messageId);
       }
     } finally {
       lockManager.releaseLock(lockKey, lockValue);
@@ -127,7 +131,8 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration, boolean isUnique) {
+  public Mono<Boolean> saveReactive(
+      MessageMetadata messageMetadata, Duration duration, boolean isUnique) {
     return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration, isUnique);
   }
 

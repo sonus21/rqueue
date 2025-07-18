@@ -32,6 +32,8 @@ import org.springframework.messaging.converter.MessageConverter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.function.BiFunction;
+
 @Slf4j
 public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     implements ReactiveRqueueMessageEnqueuer {
@@ -52,7 +54,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       Integer retryCount,
       Long delayInMilliSecs,
       boolean isUnique,
-      MonoConverter<T> monoConverter) {
+      BiFunction<Long, RqueueMessage, Mono<T>> monoConverter) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
         builder.build(
@@ -64,17 +66,26 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
             delayInMilliSecs,
             messageHeaders);
     try {
-      Object mResult = storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
-      Mono<Boolean> storeResult = (Mono<Boolean>) mResult;
+      Mono<Boolean> storeResult =
+          (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
       return storeResult.flatMap(
           success -> {
             if (Boolean.TRUE.equals(success)) {
               Object result = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
-              Mono<Long> enqueueMono =
-                  result instanceof Flux ? ((Flux<Long>) result).elementAt(0) : (Mono<Long>) result;
-              return enqueueMono.map(id -> monoConverter.convert(id, true));
+              Mono<Long> enqueueMono;
+              if (result instanceof Flux) {
+                enqueueMono = ((Flux<Long>) result).next();
+              } else if (result instanceof Mono) {
+                enqueueMono = (Mono<Long>) result;
+              } else {
+                return Mono.error(
+                    new IllegalStateException(
+                        "Unexpected enqueue result type: " + result.getClass()));
+              }
+              return enqueueMono.flatMap(time -> monoConverter.apply(time, rqueueMessage));
+            } else {
+              return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
             }
-            return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
           });
     } catch (Exception e) {
       log.error(
@@ -104,7 +115,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         retryCount,
         delayInMilliSecs,
         false,
-        (id, success) -> id.toString());
+        (ignore, rqueueMessage) -> Mono.just(rqueueMessage.getId()));
   }
 
   private Mono<Boolean> pushReactiveWithMessageId(
@@ -122,7 +133,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         retryCount,
         delayInMilliSecs,
         isUnique,
-        (id, success) -> Boolean.TRUE);
+        (ignore, rqueueMessage) -> Mono.just(Boolean.TRUE));
   }
 
   private Mono<String> pushReactivePeriodicMessage(
@@ -135,7 +146,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         null,
         periodInMilliSeconds,
         false,
-        (id, success) -> id.toString());
+        (ignore, rqueueMessage) -> Mono.just(rqueueMessage.getId()));
   }
 
   private Mono<Boolean> pushReactivePeriodicMessageWithMessageId(
@@ -148,7 +159,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
         null,
         periodInMilliSeconds,
         false,
-        (id, success) -> Boolean.TRUE);
+        (ignore, rqueueMessage) -> Mono.just(Boolean.TRUE));
   }
 
   @Override
