@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public interface RqueueMessageMetadataService {
 
   List<MessageMetadata> findAll(Collection<String> ids);
 
-  void save(MessageMetadata messageMetadata, Duration ttl);
+  void save(MessageMetadata messageMetadata, Duration ttl, boolean checkUnique);
 
   MessageMetadata getByMessageId(String queueName, String messageId);
 
@@ -42,7 +42,7 @@ public interface RqueueMessageMetadataService {
 
   MessageMetadata getOrCreateMessageMetadata(RqueueMessage rqueueMessage);
 
-  Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration ttl);
+  Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration ttl, boolean checkUnique);
 
   List<TypedTuple<MessageMetadata>> readMessageMetadataForQueue(
       String queueName, long start, long end);

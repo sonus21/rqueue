@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2022-2023 Sonu Kumar
+# Copyright (c) 2022-2025 Sonu Kumar
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # You may not use this file except in compliance with the License.
@@ -15,6 +15,6 @@
 #
 #
 
-./gradlew rqueue-core:publish
-./gradlew rqueue-spring:publish
-./gradlew rqueue-spring-boot-starter:publish
+./gradlew rqueue-core:publishToMavenCentral
+./gradlew rqueue-spring:publishToMavenCentral
+./gradlew rqueue-spring-boot-starter:publishToMavenCentral

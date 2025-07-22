@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 Sonu Kumar
+ * Copyright (c) 2019-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -39,10 +39,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ConsumedMessageStore {
 
-  @NonNull
-  private final ConsumedMessageRepository consumedMessageRepository;
-  @NonNull
-  private final ObjectMapper objectMapper;
+  @NonNull private final ConsumedMessageRepository consumedMessageRepository;
+  @NonNull private final ObjectMapper objectMapper;
+
+  public void deleteAll() {
+    consumedMessageRepository.deleteAll();
+  }
 
   public void save(BaseQueueMessage message, Object tag, String queueName)
       throws JsonProcessingException {
@@ -129,7 +131,7 @@ public class ConsumedMessageStore {
     if (messages.size() == 1) {
       return messages.get(0);
     }
-    if(messages.isEmpty()){
+    if (messages.isEmpty()) {
       throw new IllegalStateException("no message found");
     }
     throw new IllegalStateException("more than one record found");

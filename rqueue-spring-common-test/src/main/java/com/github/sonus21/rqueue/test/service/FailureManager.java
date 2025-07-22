@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -22,14 +22,18 @@ import java.util.Random;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FailureManager {
 
-  @NonNull
-  private final FailureDetailRepository failureDetailRepository;
+  @NonNull private final FailureDetailRepository failureDetailRepository;
+
+  public void deleteAll() {
+    failureDetailRepository.deleteAll();
+  }
 
   public boolean shouldFail(String id) {
     // no entry so no fail

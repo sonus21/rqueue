@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
@@ -50,12 +51,9 @@ abstract class BaseMessageSender {
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
-  @Autowired
-  protected RqueueStringDao rqueueStringDao;
-  @Autowired
-  protected RqueueConfig rqueueConfig;
-  @Autowired
-  protected RqueueMessageMetadataService rqueueMessageMetadataService;
+  @Autowired protected RqueueStringDao rqueueStringDao;
+  @Autowired protected RqueueConfig rqueueConfig;
+  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
@@ -69,13 +67,13 @@ abstract class BaseMessageSender {
   }
 
   protected Object storeMessageMetadata(
-      RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive) {
+      RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive, boolean isUnique) {
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration = rqueueConfig.getMessageDurability(delayInMillis);
     if (reactive) {
-      return rqueueMessageMetadataService.saveReactive(messageMetadata, duration);
+      return rqueueMessageMetadataService.saveReactive(messageMetadata, duration, isUnique);
     } else {
-      rqueueMessageMetadataService.save(messageMetadata, duration);
+      rqueueMessageMetadataService.save(messageMetadata, duration, isUnique);
     }
     return null;
   }
@@ -112,7 +110,8 @@ abstract class BaseMessageSender {
       String messageId,
       Object message,
       Integer retryCount,
-      Long delayInMilliSecs) {
+      Long delayInMilliSecs,
+      boolean isUnique) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
         buildMessage(
@@ -124,17 +123,26 @@ abstract class BaseMessageSender {
             delayInMilliSecs,
             messageHeaders);
     try {
+      storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
       enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
-      storeMessageMetadata(rqueueMessage, delayInMilliSecs, false);
+    } catch (DuplicateMessageException e) {
+      log.warn(
+          "Duplicate message enqueue attempted queue: {}, messageId: {}",
+          queueName,
+          rqueueMessage.getId());
+      return null;
     } catch (Exception e) {
-      log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
+      log.error("Queue: {} Message {} could not be pushed", queueName, rqueueMessage.getId(), e);
       return null;
     }
     return rqueueMessage.getId();
   }
 
   protected String pushPeriodicMessage(
-      String queueName, String messageId, Object message, long periodInMilliSeconds) {
+      String queueName,
+      String messageId,
+      Object message,
+      long periodInMilliSeconds) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage =
         buildPeriodicMessage(
@@ -146,13 +154,13 @@ abstract class BaseMessageSender {
             periodInMilliSeconds,
             messageHeaders);
     try {
+      storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, false);
       enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);
-      storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false);
+      return rqueueMessage.getId();
     } catch (Exception e) {
-      log.error("Queue: {} Message {} could not be pushed {}", queueName, rqueueMessage, e);
+      log.error("Queue: {} Message {} could not be pushed", queueName, rqueueMessage, e);
       return null;
     }
-    return rqueueMessage.getId();
   }
 
   protected Object deleteAllMessages(QueueDetail queueDetail) {

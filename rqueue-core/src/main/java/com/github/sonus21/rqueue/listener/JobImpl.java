@@ -343,7 +343,7 @@ public class JobImpl implements Job {
       Duration duration = rqueueConfig.getMessageDurability(getRqueueMessage().getPeriod());
       saveMessageMetadata(
           () -> {
-            messageMetadataService.save(getMessageMetadata(), duration);
+            messageMetadataService.save(getMessageMetadata(), duration, false);
             return null;
           });
     } else {

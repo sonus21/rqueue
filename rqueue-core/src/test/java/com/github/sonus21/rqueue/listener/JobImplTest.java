@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -43,6 +44,7 @@ import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.Execution;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
@@ -70,16 +72,11 @@ class JobImplTest extends TestBase {
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
   private final Object userMessage = "Test Object";
-  @Mock
-  private RedisConnectionFactory redisConnectionFactory;
-  @Mock
-  private RqueueMessageMetadataService messageMetadataService;
-  @Mock
-  private RqueueJobDao rqueueJobDao;
-  @Mock
-  private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock
-  private RqueueLockManager rqueueLockManager;
+  @Mock private RedisConnectionFactory redisConnectionFactory;
+  @Mock private RqueueMessageMetadataService messageMetadataService;
+  @Mock private RqueueJobDao rqueueJobDao;
+  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
+  @Mock private RqueueLockManager rqueueLockManager;
   private RqueueConfig rqueueConfig;
 
   @BeforeEach
@@ -198,8 +195,8 @@ class JobImplTest extends TestBase {
     job.updateMessageStatus(MessageStatus.PROCESSING);
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
     assertEquals(JobStatus.PROCESSING, job.getStatus());
-    verify(rqueueJobDao, times(1)).createJob(any(), any());
-    verify(messageMetadataService, times(1)).save(any(), any());
+    verify(rqueueJobDao, times(1)).createJob(any(RqueueJob.class), any(Duration.class));
+    verify(messageMetadataService, times(1)).save(any(MessageMetadata.class), any(Duration.class), anyBoolean());
     verify(rqueueJobDao, times(1)).save(any(), any());
   }
 
@@ -313,22 +310,25 @@ class JobImplTest extends TestBase {
   @Test
   void testMessageWasDeletedWhileRunning() throws IllegalAccessException {
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), any(), any());
-    MessageMetadata metadata = messageMetadata.toBuilder().deleted(true)
-        .status(MessageStatus.DELETED).build();
+    MessageMetadata metadata =
+        messageMetadata.toBuilder().deleted(true).status(MessageStatus.DELETED).build();
     doReturn(metadata).when(messageMetadataService).get(messageMetadata.getId());
     JobImpl job = instance();
     job.execute();
     job.updateMessageStatus(MessageStatus.FAILED);
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(2)).save(any(), any());
-    doAnswer(invocation -> {
-      MessageMetadata messageMetadata = invocation.getArgument(0);
-      assertTrue(messageMetadata.isDeleted());
-      assertEquals(MessageStatus.DELETED, messageMetadata.getStatus());
-      return null;
-    }).when(messageMetadataService).save(
-        any(MessageMetadata.class),
-        eq(Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute())));
-
+    doAnswer(
+            invocation -> {
+              MessageMetadata messageMetadata = invocation.getArgument(0);
+              assertTrue(messageMetadata.isDeleted());
+              assertEquals(MessageStatus.DELETED, messageMetadata.getStatus());
+              return null;
+            })
+        .when(messageMetadataService)
+        .save(
+            any(MessageMetadata.class),
+            eq(Duration.ofMinutes(rqueueConfig.getMessageDurabilityInMinute())),
+            eq(false));
   }
 }

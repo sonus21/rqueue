@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -186,6 +186,7 @@ class SpringAppTest extends AllQueueMode {
     assertTrue(enqueue(emailQueue, emails[0]));
     assertTrue(rqueueMessageEnqueuer.enqueue(emailQueue, emails[1].getId(), emails[1]));
     assertTrue(rqueueMessageEnqueuer.enqueueUnique(emailQueue, emails[2].getId(), emails[2]));
+    assertFalse(rqueueMessageEnqueuer.enqueueUnique(emailQueue, emails[2].getId(), emails[2]));
     assertNotNull(rqueueMessageEnqueuer.enqueueWithRetry(emailQueue, emails[3], 3));
     assertTrue(rqueueMessageEnqueuer.enqueueWithRetry(emailQueue, emails[4].getId(), emails[4], 3));
 
@@ -233,6 +234,9 @@ class SpringAppTest extends AllQueueMode {
     assertTrue(
         rqueueMessageEnqueuer.enqueueUniqueIn(
             emailQueue, emails[18].getId(), emails[18], Constants.ONE_MILLI));
+    assertFalse(
+            rqueueMessageEnqueuer.enqueueUniqueIn(
+                    emailQueue, emails[18].getId(), emails[18], Constants.ONE_MILLI));
 
     assertNotNull(
         rqueueMessageEnqueuer.enqueueInWithRetry(emailQueue, emails[19], 3, Constants.ONE_MILLI));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 
 package com.github.sonus21.rqueue.spring.services;
 
+import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.entity.FailureDetail;
 import com.github.sonus21.rqueue.test.repository.FailureDetailRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
@@ -109,5 +112,12 @@ public class FailureDetailRepositoryImpl implements FailureDetailRepository {
 
   @Override
   public void deleteAll() {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Session session = entityManager.unwrap(Session.class);
+    CriteriaBuilder cb = session.getCriteriaBuilder();
+    CriteriaDelete<FailureDetail> cr = cb.createCriteriaDelete(FailureDetail.class);
+    Query<?> query = session.createQuery(cr);
+    query.getSingleResult();
+    entityManager.close();
   }
 }

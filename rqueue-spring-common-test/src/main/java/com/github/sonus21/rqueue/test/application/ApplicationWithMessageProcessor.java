@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -30,12 +30,12 @@ public abstract class ApplicationWithMessageProcessor extends BaseApplication {
 
   @Bean
   public TestMessageProcessor preExecutionMessageProcessor() {
-    return new TestMessageProcessor("PreEx");
+    return new TestMessageProcessor("Pre");
   }
 
   @Bean
   public TestMessageProcessor postExecutionMessageProcessor() {
-    return new TestMessageProcessor("PostEx");
+    return new TestMessageProcessor("Post");
   }
 
   @Bean

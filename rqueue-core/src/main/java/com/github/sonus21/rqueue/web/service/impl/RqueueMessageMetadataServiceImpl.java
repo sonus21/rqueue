@@ -54,7 +54,8 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   public RqueueMessageMetadataServiceImpl(
       RqueueMessageMetadataDao rqueueMessageMetadataDao,
       RqueueStringDao rqueueStringDao,
-      RqueueLockManager rqueueLockManager, RqueueConfig rqueueConfig) {
+      RqueueLockManager rqueueLockManager,
+      RqueueConfig rqueueConfig) {
     this.rqueueMessageMetadataDao = rqueueMessageMetadataDao;
     this.rqueueStringDao = rqueueStringDao;
     this.lockManager = rqueueLockManager;
@@ -84,8 +85,8 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public void save(MessageMetadata messageMetadata, Duration duration) {
-    rqueueMessageMetadataDao.save(messageMetadata, duration);
+  public void save(MessageMetadata messageMetadata, Duration duration, boolean checkUnique) {
+    rqueueMessageMetadataDao.save(messageMetadata, duration, checkUnique);
   }
 
   @Override
@@ -107,8 +108,11 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
         }
         messageMetadata.setDeleted(true);
         messageMetadata.setDeletedOn(System.currentTimeMillis());
-        save(messageMetadata, duration);
+        save(messageMetadata, duration, false);
+        log.debug("message deleted, id: {}", id);
         return true;
+      } else {
+        log.error("Lock could not be acquired, Id: {}", messageId);
       }
     } finally {
       lockManager.releaseLock(lockKey, lockValue);
@@ -127,8 +131,9 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration) {
-    return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration);
+  public Mono<Boolean> saveReactive(
+      MessageMetadata messageMetadata, Duration duration, boolean isUnique) {
+    return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration, isUnique);
   }
 
   @Override
@@ -161,7 +166,7 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   public void saveMessageMetadataForQueue(
       String queueName, MessageMetadata messageMetadata, Long ttlInMillisecond) {
     messageMetadata.setUpdatedOn(System.currentTimeMillis());
-    save(messageMetadata, Duration.ofMillis(ttlInMillisecond));
+    save(messageMetadata, Duration.ofMillis(ttlInMillisecond), false);
     rqueueStringDao.addToOrderedSetWithScore(
         queueName, messageMetadata.getId(), -(System.currentTimeMillis() + ttlInMillisecond));
   }

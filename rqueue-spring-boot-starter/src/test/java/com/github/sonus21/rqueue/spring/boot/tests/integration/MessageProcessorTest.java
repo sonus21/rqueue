@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithMessageProcessor;
@@ -29,27 +30,27 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.Assert;
 
 @ContextConfiguration(classes = ApplicationWithMessageProcessor.class)
 @SpringBootTest
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8023",
-        "reservation.request.dead.letter.consumer.enabled=true",
-        "reservation.request.active=true",
-        "list.email.queue.enabled=true",
-        "mysql.db.name=MessageProcessorTest",
-        "use.system.redis=false",
-        "user.banned.queue.active=true",
+      "rqueue.retry.per.poll=1000",
+      "rqueue.retry.per.poll=1000",
+      "spring.data.redis.port=6379",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=MessageProcessorTest",
+      "use.system.redis=true",
+      "user.banned.queue.active=true",
     })
 @SpringBootIntegrationTest
 class MessageProcessorTest extends RetryTests {
@@ -113,19 +114,21 @@ class MessageProcessorTest extends RetryTests {
     assertEquals(0, discardMessageProcessor.count());
   }
 
-  @RetryingTest(2)
+  @Test
   void manualDeletionMessageProcessorTest() throws TimedOutException {
     cleanQueue(notificationQueue);
+    deleteTestData();
     Notification notification = Notification.newInstance();
     failureManager.createFailureDetail(notification.getId(), -1, 3);
     String messageId =
         enqueueAtGetMessageId(notificationQueue, notification, System.currentTimeMillis() + 1000L);
-    rqueueMessageManager.deleteMessage(notificationQueue, messageId);
+    assertTrue(rqueueMessageManager.deleteMessage(notificationQueue, messageId));
     waitFor(
         () -> {
           List<Object> messages = getAllMessages(notificationQueue);
           return !messages.contains(notification);
         },
+        30_000L,
         "message to be ignored");
     assertEquals(1, preExecutionMessageProcessor.count());
     assertEquals(1, manualDeletionMessageProcessor.count());

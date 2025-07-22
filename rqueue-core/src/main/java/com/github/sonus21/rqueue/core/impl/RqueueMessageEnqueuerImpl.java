@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 
+import java.util.Objects;
+
 @Slf4j
 public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements RqueueMessageEnqueuer {
 
@@ -41,128 +43,130 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
     super(messageTemplate, messageConverter, messageHeaders);
   }
 
+  private void validateBasic(String queue, Object message) {
+    validateQueue(queue);
+    validateMessage(message);
+  }
+
+  private void validateWithId(String queue, String messageId, Object message) {
+    validateQueue(queue);
+    validateMessageId(messageId);
+    validateMessage(message);
+  }
+
   @Override
   public String enqueue(String queueName, Object message) {
-    validateQueue(queueName);
-    validateMessage(message);
-    return pushMessage(queueName, null, message, null, null);
+    validateBasic(queueName, message);
+    return pushMessage(queueName, null, message, null, null, false);
   }
 
   @Override
   public boolean enqueue(String queueName, String messageId, Object message) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
-    return pushMessage(queueName, messageId, message, null, null) != null;
+    validateWithId(queueName, messageId, message);
+    return pushMessage(queueName, messageId, message, null, null, false) != null;
   }
 
   @Override
   public boolean enqueueUnique(String queueName, String messageId, Object message) {
-    // TODO? is using monotonic time sufficient for handling uniqueness
-    return enqueue(queueName, messageId, message);
+    validateWithId(queueName, messageId, message);
+    return Objects.nonNull(pushMessage(queueName, messageId, message, null, null, true));
   }
 
   @Override
   public String enqueueWithRetry(String queueName, Object message, int retryCount) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validateRetryCount(retryCount);
-    return pushMessage(queueName, null, message, retryCount, null);
+    return pushMessage(queueName, null, message, retryCount, null, false);
   }
 
   @Override
   public boolean enqueueWithRetry(
       String queueName, String messageId, Object message, int retryCount) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     validateRetryCount(retryCount);
-    return pushMessage(queueName, messageId, message, retryCount, null) != null;
+    return pushMessage(queueName, messageId, message, retryCount, null, false) != null;
   }
 
   @Override
   public String enqueueWithPriority(String queueName, String priority, Object message) {
-    validateQueue(queueName);
+    validateBasic(queueName, message);
     validatePriority(priority);
-    validateMessage(message);
     return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority), null, message, null, null);
+        PriorityUtils.getQueueNameForPriority(queueName, priority),
+        null,
+        message,
+        null,
+        null,
+        false);
   }
 
   @Override
   public boolean enqueueWithPriority(
       String queueName, String priority, String messageId, Object message) {
-    validateQueue(queueName);
+    validateWithId(queueName, messageId, message);
     validatePriority(priority);
-    validateMessageId(messageId);
-    validateMessage(message);
     return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority),
-        messageId,
-        message,
-        null,
-        null)
+            PriorityUtils.getQueueNameForPriority(queueName, priority),
+            messageId,
+            message,
+            null,
+            null,
+            false)
         != null;
   }
 
   @Override
   public String enqueueIn(String queueName, Object message, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, null, message, null, delayInMilliSecs);
+    return pushMessage(queueName, null, message, null, delayInMilliSecs, false);
   }
 
   @Override
   public boolean enqueueIn(
       String queueName, String messageId, Object message, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, messageId, message, null, delayInMilliSecs) != null;
+    return pushMessage(queueName, messageId, message, null, delayInMilliSecs, false) != null;
   }
 
   @Override
   public boolean enqueueUniqueIn(
-      String queueName, String messageId, Object message, long delayInMillisecond) {
-    return enqueueIn(queueName, messageId, message, delayInMillisecond);
+      String queueName, String messageId, Object message, long delayInMilliSecs) {
+    validateWithId(queueName, messageId, message);
+    validateDelay(delayInMilliSecs);
+    return Objects.nonNull(
+        pushMessage(queueName, messageId, message, null, delayInMilliSecs, true));
   }
 
   @Override
   public String enqueueInWithRetry(
       String queueName, Object message, int retryCount, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, null, message, retryCount, delayInMilliSecs);
+    return pushMessage(queueName, null, message, retryCount, delayInMilliSecs, false);
   }
 
   @Override
   public boolean enqueueInWithRetry(
       String queueName, String messageId, Object message, int retryCount, long delayInMilliSecs) {
-    validateQueue(queueName);
-    validateMessageId(messageId);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, messageId, message, retryCount, delayInMilliSecs) != null;
+    return pushMessage(queueName, messageId, message, retryCount, delayInMilliSecs, false) != null;
   }
 
   @Override
   public String enqueuePeriodic(String queueName, Object message, long period) {
-    validateQueue(queueName);
-    validateMessage(message);
+    validateBasic(queueName, message);
     validatePeriod(period);
     return pushPeriodicMessage(queueName, null, message, period);
   }
 
   @Override
   public boolean enqueuePeriodic(String queueName, String messageId, Object message, long period) {
-    validateMessageId(messageId);
-    validateQueue(queueName);
-    validateMessage(message);
+    validateWithId(queueName, messageId, message);
     validatePeriod(period);
     return pushPeriodicMessage(queueName, messageId, message, period) != null;
   }
