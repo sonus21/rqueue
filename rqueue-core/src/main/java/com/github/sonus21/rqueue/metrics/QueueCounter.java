@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ public class QueueCounter {
       QueueDetail queueDetail) {
     if (metricsProperties.countFailure()) {
       Counter.Builder builder =
-          Counter.builder(FAILURE_COUNT)
+          Counter.builder(metricsProperties.getMetricName(FAILURE_COUNT))
               .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
               .description("Failure count");
       Counter counter = builder.register(registry);
@@ -68,7 +68,7 @@ public class QueueCounter {
     }
     if (metricsProperties.countExecution()) {
       Counter.Builder builder =
-          Counter.builder(EXECUTION_COUNT)
+          Counter.builder(metricsProperties.getMetricName(EXECUTION_COUNT))
               .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
               .description("Task execution count");
       Counter counter = builder.register(registry);
