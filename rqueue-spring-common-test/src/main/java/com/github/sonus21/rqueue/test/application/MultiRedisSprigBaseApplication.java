@@ -27,6 +27,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import redis.embedded.RedisServer;
+import java.io.IOException;
 
 @Slf4j
 public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicConfiguration {
@@ -40,7 +41,7 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
   private RedisServer redisServer2;
 
   @PostConstruct
-  public void postConstruct() {
+  public void postConstruct() throws IOException {
     init();
     if (redisServer2 == null) {
       redisServer2 = new RedisServer(redisPort2);
@@ -50,7 +51,7 @@ public abstract class MultiRedisSprigBaseApplication extends ApplicationBasicCon
   }
 
   @PreDestroy
-  public void preDestroy() {
+  public void preDestroy() throws IOException {
     cleanup();
     if (redisServer2 != null) {
       redisServer2.stop();

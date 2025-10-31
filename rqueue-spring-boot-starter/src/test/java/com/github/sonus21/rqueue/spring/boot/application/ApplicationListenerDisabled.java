@@ -31,6 +31,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import java.io.IOException;
 
 @PropertySource("classpath:application.properties")
 @SpringBootApplication(scanBasePackages = {"com.github.sonus21.rqueue.test"})
@@ -47,7 +48,7 @@ public class ApplicationListenerDisabled extends BaseApplication {
 
   @PostConstruct
   @Override
-  public void postConstruct() {
+  public void postConstruct() throws IOException {
     init();
     monitor(redisHost, redisPort);
   }

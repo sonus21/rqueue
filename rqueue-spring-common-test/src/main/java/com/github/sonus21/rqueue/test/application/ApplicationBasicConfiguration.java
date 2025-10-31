@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.junit.BootstrapRedis;
 import com.github.sonus21.junit.RedisBootstrapperBase;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
+import java.io.IOException;
 import java.util.HashMap;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,7 @@ public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBas
   @Value("${rqueue.reactive.enabled:false}")
   protected boolean reactiveEnabled;
 
-  protected void init() {
+  protected void init() throws IOException {
     final BootstrapRedis bootstrapRedis =
         Javanna.createAnnotation(
             BootstrapRedis.class,
