@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.test.application;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
@@ -29,12 +30,12 @@ import org.springframework.util.MimeType;
 public abstract class ApplicationWithCustomMessageConverter extends ApplicationBasicConfiguration {
 
   @PostConstruct
-  public void postConstruct() {
+  public void postConstruct() throws IOException {
     init();
   }
 
   @PreDestroy
-  public void preDestroy() {
+  public void preDestroy() throws IOException {
     cleanup();
   }
 
