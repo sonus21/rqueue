@@ -54,7 +54,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
   public boolean enqueue(String queueName, Object message) {
     validateQueue(queueName);
     validateMessage(message);
-    return pushMessage(queueName, null, message, null, null) != null;
+    return pushMessage(queueName, null, message, null, null, false) != null;
   }
 
   @Override
@@ -62,7 +62,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
     validateQueue(queueName);
     validateMessage(message);
     validateRetryCount(retryCount);
-    return pushMessage(queueName, null, message, retryCount, null) != null;
+    return pushMessage(queueName, null, message, retryCount, null, false) != null;
   }
 
   @Override
@@ -71,7 +71,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
     validatePriority(priority);
     validateMessage(message);
     return pushMessage(
-            PriorityUtils.getQueueNameForPriority(queueName, priority), null, message, null, null)
+            PriorityUtils.getQueueNameForPriority(queueName, priority), null, message, null, null, false)
         != null;
   }
 
@@ -80,7 +80,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
     validateQueue(queueName);
     validateMessage(message);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, null, message, null, delayInMilliSecs) != null;
+    return pushMessage(queueName, null, message, null, delayInMilliSecs, false) != null;
   }
 
   @Override
@@ -90,7 +90,7 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
     validateMessage(message);
     validateRetryCount(retryCount);
     validateDelay(delayInMilliSecs);
-    return pushMessage(queueName, null, message, retryCount, delayInMilliSecs) != null;
+    return pushMessage(queueName, null, message, retryCount, delayInMilliSecs, false) != null;
   }
 
   @Override
@@ -105,7 +105,8 @@ public class RqueueMessageSenderImpl extends BaseMessageSender implements Rqueue
             null,
             message,
             null,
-            delayInMilliSecs)
+            delayInMilliSecs,
+        false)
         != null;
   }
 

@@ -1,38 +1,45 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
 package com.github.sonus21.rqueue.web.service.impl;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -41,15 +48,18 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   private final RqueueMessageMetadataDao rqueueMessageMetadataDao;
   private final RqueueStringDao rqueueStringDao;
   private final RqueueLockManager lockManager;
+  private final RqueueConfig rqueueConfig;
 
   @Autowired
   public RqueueMessageMetadataServiceImpl(
       RqueueMessageMetadataDao rqueueMessageMetadataDao,
       RqueueStringDao rqueueStringDao,
-      RqueueLockManager rqueueLockManager) {
+      RqueueLockManager rqueueLockManager,
+      RqueueConfig rqueueConfig) {
     this.rqueueMessageMetadataDao = rqueueMessageMetadataDao;
     this.rqueueStringDao = rqueueStringDao;
     this.lockManager = rqueueLockManager;
+    this.rqueueConfig = rqueueConfig;
   }
 
   @Override
@@ -75,8 +85,8 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public void save(MessageMetadata messageMetadata, Duration duration) {
-    rqueueMessageMetadataDao.save(messageMetadata, duration);
+  public void save(MessageMetadata messageMetadata, Duration duration, boolean checkUnique) {
+    rqueueMessageMetadataDao.save(messageMetadata, duration, checkUnique);
   }
 
   @Override
@@ -88,8 +98,9 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   @Override
   public boolean deleteMessage(String queueName, String messageId, Duration duration) {
     String lockValue = UUID.randomUUID().toString();
+    String lockKey = Constants.getMessageLockName(rqueueConfig, messageId);
     try {
-      if (lockManager.acquireLock(messageId, lockValue, Duration.ofSeconds(1))) {
+      if (lockManager.acquireLock(lockKey, lockValue, Duration.ofSeconds(1))) {
         String id = RqueueMessageUtils.getMessageMetaId(queueName, messageId);
         MessageMetadata messageMetadata = rqueueMessageMetadataDao.get(id);
         if (messageMetadata == null) {
@@ -97,11 +108,14 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
         }
         messageMetadata.setDeleted(true);
         messageMetadata.setDeletedOn(System.currentTimeMillis());
-        save(messageMetadata, duration);
+        save(messageMetadata, duration, false);
+        log.debug("message deleted, id: {}", id);
         return true;
+      } else {
+        log.error("Lock could not be acquired, Id: {}", messageId);
       }
     } finally {
-      lockManager.releaseLock(messageId, lockValue);
+      lockManager.releaseLock(lockKey, lockValue);
     }
     return false;
   }
@@ -117,8 +131,9 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   }
 
   @Override
-  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration duration) {
-    return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration);
+  public Mono<Boolean> saveReactive(
+      MessageMetadata messageMetadata, Duration duration, boolean isUnique) {
+    return rqueueMessageMetadataDao.saveReactive(messageMetadata, duration, isUnique);
   }
 
   @Override
@@ -151,7 +166,7 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
   public void saveMessageMetadataForQueue(
       String queueName, MessageMetadata messageMetadata, Long ttlInMillisecond) {
     messageMetadata.setUpdatedOn(System.currentTimeMillis());
-    save(messageMetadata, Duration.ofMillis(ttlInMillisecond));
+    save(messageMetadata, Duration.ofMillis(ttlInMillisecond), false);
     rqueueStringDao.addToOrderedSetWithScore(
         queueName, messageMetadata.getId(), -(System.currentTimeMillis() + ttlInMillisecond));
   }

@@ -1,22 +1,23 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
 package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.List;
 import org.springframework.messaging.converter.MessageConverter;
@@ -43,7 +44,7 @@ public interface RqueueMessageManager {
    * Delete all message for the given that has some priority like high,medium and low
    *
    * @param queueName queue name
-   * @param priority the priority for the queue
+   * @param priority  the priority for the queue
    * @return fail/success
    */
   default boolean deleteAllMessages(String queueName, String priority) {
@@ -65,7 +66,7 @@ public interface RqueueMessageManager {
    * method {@link #getAllMessages(String)}
    *
    * @param queueName queue name to be query for
-   * @param priority the priority of the queue
+   * @param priority  the priority of the queue
    * @return list of enqueued messages.
    */
   default List<Object> getAllMessages(String queueName, String priority) {
@@ -77,7 +78,7 @@ public interface RqueueMessageManager {
    * consumption message has a fixed lifetime.
    *
    * @param queueName queue name on which message was enqueued
-   * @param id message id
+   * @param id        message id
    * @return the enqueued message, it could be null if message is not found or it's deleted.
    * @see RqueueConfig
    */
@@ -88,8 +89,8 @@ public interface RqueueMessageManager {
    * priority queue.
    *
    * @param queueName queue name on which message was enqueued
-   * @param priority the priority of the queue
-   * @param id message id
+   * @param priority  the priority of the queue
+   * @param id        message id
    * @return the enqueued message, it could be null if message is not found or it's deleted.
    */
   default Object getMessage(String queueName, String priority, String id) {
@@ -101,17 +102,18 @@ public interface RqueueMessageManager {
    * returns true/false.
    *
    * @param queueName queue name on which message was enqueued
-   * @param id message id
+   * @param id        message id
    * @return whether the message exist or not
    */
   boolean exist(String queueName, String id);
 
   /**
-   * Extension to the method {@link #exist(String, String)}, that checks message for priority queue.
+   * Extension to the method {@link #exist(String, String)}, that checks message for priority
+   * queue.
    *
    * @param queueName queue name on which message was enqueued
-   * @param priority priority of the given queue
-   * @param id message id
+   * @param priority  priority of the given queue
+   * @param id        message id
    * @return whether the message exist or not
    */
   default boolean exist(String queueName, String priority, String id) {
@@ -122,7 +124,7 @@ public interface RqueueMessageManager {
    * Extension to the method {@link #getMessage(String, String)}, this returns internal message.
    *
    * @param queueName queue name on which message was enqueued
-   * @param id message id
+   * @param id        message id
    * @return the enqueued message
    */
   RqueueMessage getRqueueMessage(String queueName, String id);
@@ -131,8 +133,8 @@ public interface RqueueMessageManager {
    * Extension to the method {@link #getRqueueMessage(String, String)}
    *
    * @param queueName queue name on which message was enqueued
-   * @param priority the priority of the queue
-   * @param id message id
+   * @param priority  the priority of the queue
+   * @param id        message id
    * @return the enqueued message
    */
   default RqueueMessage getRqueueMessage(String queueName, String priority, String id) {
@@ -151,7 +153,7 @@ public interface RqueueMessageManager {
    * Extension to the method {@link #getAllRqueueMessage(String)}
    *
    * @param queueName queue name on which message was enqueued
-   * @param priority the priority of the queue
+   * @param priority  the priority of the queue
    * @return the enqueued message
    */
   default List<RqueueMessage> getAllRqueueMessage(String queueName, String priority) {
@@ -171,7 +173,7 @@ public interface RqueueMessageManager {
    * Delete a message that's enqueued to a queue with some priority
    *
    * @param queueName queue on which message was enqueued
-   * @param priority priority of the message like high/low/medium
+   * @param priority  priority of the message like high/low/medium
    * @param messageId messageId corresponding to this message
    * @return success/failure
    */
@@ -185,4 +187,27 @@ public interface RqueueMessageManager {
    * @return message converter that's used for message (de)serialization
    */
   MessageConverter getMessageConverter();
+
+  /**
+   * Move messages from Dead Letter queue to the destination queue. This push the messages at the
+   * FRONT of destination queue, so that it can be reprocessed as soon as possible.
+   *
+   * @param deadLetterQueueName dead letter queue name
+   * @param queueName           queue name
+   * @param maxMessages         number of messages to be moved by default move
+   *                            {@link Constants#MAX_MESSAGES} messages
+   * @return success or failure.
+   */
+  boolean moveMessageFromDeadLetterToQueue(
+      String deadLetterQueueName, String queueName, Integer maxMessages);
+
+  /**
+   * A shortcut to the method {@link #moveMessageFromDeadLetterToQueue(String, String, Integer)}
+   *
+   * @param deadLetterQueueName dead letter queue name
+   * @param queueName           queue name
+   * @return success or failure
+   */
+  boolean moveMessageFromDeadLetterToQueue(String deadLetterQueueName, String queueName);
+
 }

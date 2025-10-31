@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2021-2025 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -34,14 +34,14 @@ import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.RedisSystemException;
-import org.springframework.util.CollectionUtils;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.RedisSystemException;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @SuppressWarnings("java:S107")
@@ -336,14 +336,14 @@ public class JobImpl implements Job {
   void updateMessageStatus(MessageStatus messageStatus) {
     setMessageStatus(messageStatus);
     // We need to address these problems with message metadata
-    // 1. Message was deleted while executing, this means local copy is stale
+    // 1. The Message was deleted while executing; this means local copy is stale
     // 2. Parallel update is being made [dashboard operation, periodic job (two periodic jobs can
     // run in parallel due to failure)]
     if (!messageStatus.isTerminalState() || getRqueueMessage().isPeriodic()) {
       Duration duration = rqueueConfig.getMessageDurability(getRqueueMessage().getPeriod());
       saveMessageMetadata(
           () -> {
-            messageMetadataService.save(getMessageMetadata(), duration);
+            messageMetadataService.save(getMessageMetadata(), duration, false);
             return null;
           });
     } else {

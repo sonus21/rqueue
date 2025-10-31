@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -27,7 +27,6 @@ import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
-import com.github.sonus21.rqueue.core.RqueueMessageSender;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
@@ -57,11 +56,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 public abstract class SpringTestBase extends TestBase {
-
-  @Autowired protected RqueueMessageSender rqueueMessageSender;
   @Autowired protected RqueueMessageTemplate rqueueMessageTemplate;
   @Autowired protected RqueueConfig rqueueConfig;
-  @Autowired protected RqueueWebConfig rqueueWebConfig;
   @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   @Autowired protected ConsumedMessageStore consumedMessageStore;
   @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
@@ -258,12 +254,14 @@ public abstract class SpringTestBase extends TestBase {
     }
   }
 
+  protected void deleteTestData() {
+    consumedMessageStore.deleteAll();
+    failureManager.deleteAll();
+  }
+
   protected boolean enqueue(String queueName, Object message) {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueue(queueName, message).block() != null;
-    }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueue(queueName, message);
     }
     return rqueueMessageEnqueuer.enqueue(queueName, message) != null;
   }
@@ -272,9 +270,6 @@ public abstract class SpringTestBase extends TestBase {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueueAt(queueName, message, instant).block() != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueAt(queueName, message, instant);
-    }
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, instant) != null;
   }
 
@@ -282,18 +277,12 @@ public abstract class SpringTestBase extends TestBase {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueueAt(queueName, message, instant).block() != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueAt(queueName, message, instant);
-    }
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, instant) != null;
   }
 
   protected boolean enqueueAt(String queueName, Object message, long delay) {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueueAt(queueName, message, delay).block() != null;
-    }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueAt(queueName, message, delay);
     }
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, delay) != null;
   }
@@ -309,9 +298,6 @@ public abstract class SpringTestBase extends TestBase {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay).block() != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueIn(queueName, message, delay);
-    }
     return rqueueMessageEnqueuer.enqueueIn(queueName, message, delay) != null;
   }
 
@@ -320,18 +306,12 @@ public abstract class SpringTestBase extends TestBase {
       return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit).block()
           != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueIn(queueName, message, delay, timeUnit);
-    }
     return rqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit) != null;
   }
 
   protected boolean enqueueIn(String queueName, Object message, Duration duration) {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, duration).block() != null;
-    }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueIn(queueName, message, duration);
     }
     return rqueueMessageEnqueuer.enqueueIn(queueName, message, duration) != null;
   }
@@ -340,9 +320,6 @@ public abstract class SpringTestBase extends TestBase {
     if (reactiveEnabled) {
       return reactiveRqueueMessageEnqueuer.enqueueWithPriority(queueName, priority, message).block()
           != null;
-    }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueWithPriority(queueName, priority, message);
     }
     return rqueueMessageEnqueuer.enqueueWithPriority(queueName, priority, message) != null;
   }
@@ -355,9 +332,6 @@ public abstract class SpringTestBase extends TestBase {
               .block()
           != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, delay);
-    }
     return rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay) != null;
   }
 
@@ -368,9 +342,6 @@ public abstract class SpringTestBase extends TestBase {
               .enqueueInWithPriority(queueName, priority, message, delay, unit)
               .block()
           != null;
-    }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, delay, unit);
     }
     return rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, delay, unit)
         != null;
@@ -384,9 +355,6 @@ public abstract class SpringTestBase extends TestBase {
               .block()
           != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueInWithPriority(queueName, priority, message, duration);
-    }
     return rqueueMessageEnqueuer.enqueueInWithPriority(queueName, priority, message, duration)
         != null;
   }
@@ -399,9 +367,6 @@ public abstract class SpringTestBase extends TestBase {
               .block()
           != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueAtWithPriority(queueName, priority, message, date);
-    }
     return rqueueMessageEnqueuer.enqueueAtWithPriority(queueName, priority, message, date) != null;
   }
 
@@ -412,9 +377,6 @@ public abstract class SpringTestBase extends TestBase {
               .enqueueAtWithPriority(queueName, priority, message, date)
               .block()
           != null;
-    }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueAtWithPriority(queueName, priority, message, date);
     }
     return rqueueMessageEnqueuer.enqueueAtWithPriority(queueName, priority, message, date) != null;
   }
@@ -427,9 +389,6 @@ public abstract class SpringTestBase extends TestBase {
               .block()
           != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueAtWithPriority(queueName, priority, message, instant);
-    }
     return rqueueMessageEnqueuer.enqueueAtWithPriority(queueName, priority, message, instant)
         != null;
   }
@@ -439,18 +398,11 @@ public abstract class SpringTestBase extends TestBase {
       return reactiveRqueueMessageEnqueuer.enqueueWithRetry(queueName, message, retry).block()
           != null;
     }
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.enqueueWithRetry(queueName, message, retry);
-    }
     return rqueueMessageEnqueuer.enqueueWithRetry(queueName, message, retry) != null;
   }
 
   protected void registerQueue(String queue, String... priorities) {
-    if (random.nextBoolean()) {
-      rqueueMessageSender.registerQueue(queue, priorities);
-    } else {
-      rqueueEndpointManager.registerQueue(queue, priorities);
-    }
+    rqueueEndpointManager.registerQueue(queue, priorities);
   }
 
   protected List<RqueueMessage> getProcessingMessages(String queueName) {
@@ -459,16 +411,10 @@ public abstract class SpringTestBase extends TestBase {
   }
 
   protected List<Object> getAllMessages(String queueName) {
-    if (random.nextBoolean()) {
-      return rqueueMessageSender.getAllMessages(queueName);
-    }
     return rqueueMessageManager.getAllMessages(queueName);
   }
 
   private void deleteAllMessageInternal(String queueName) throws TimedOutException {
-    if (random.nextBoolean()) {
-      rqueueMessageSender.deleteAllMessages(queueName);
-    }
     rqueueMessageManager.deleteAllMessages(queueName);
     TimeoutUtils.waitFor(() -> getMessageCount(queueName) == 0, "message deletion");
   }

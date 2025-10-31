@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2021-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -27,10 +27,10 @@ import java.time.Duration;
 /**
  * On each execution Rqueue creates a job to track it's status and execution progress.
  *
- * <p>A job belongs to a single message poll, each message listener call creates an execution {@link
- * com.github.sonus21.rqueue.models.db.Execution} and that has a detail for specific execution.
- * Overall job status can be found using this job interface. This object is available via {@link
- * org.springframework.messaging.handler.annotation.Header} in listener method.
+ * <p>A job belongs to a single message poll, each message listener call creates an execution
+ * {@link com.github.sonus21.rqueue.models.db.Execution} and that has a detail for specific
+ * execution. Overall job status can be found using this job interface. This object is available via
+ * {@link org.springframework.messaging.handler.annotation.Header} in listener method.
  */
 public interface Job {
 
@@ -81,7 +81,7 @@ public interface Job {
    * return zero value
    *
    * @return remaining duration that this job can take, otherwise other listener will consume this
-   *     message
+   * message
    */
   Duration getVisibilityTimeout();
 
@@ -181,8 +181,8 @@ public interface Job {
    * Release this job back to the queue, the released job would be available for re-execution after
    * the duration time.
    *
-   * @param status job status
-   * @param why why do want to release this job
+   * @param status   job status
+   * @param why      why do want to release this job
    * @param duration any positive duration
    */
   void release(JobStatus status, Serializable why, Duration duration);
@@ -191,7 +191,7 @@ public interface Job {
    * Release this job back to queue, this job available for execution after one second.
    *
    * @param status what should be the job status
-   * @param why why do you want to delete this job
+   * @param why    why do you want to delete this job
    */
   void release(JobStatus status, Serializable why);
 
@@ -199,7 +199,7 @@ public interface Job {
    * Delete this job
    *
    * @param status what should be the job status
-   * @param why why do you want to delete this job
+   * @param why    why do you want to delete this job
    */
   void delete(JobStatus status, Serializable why);
 

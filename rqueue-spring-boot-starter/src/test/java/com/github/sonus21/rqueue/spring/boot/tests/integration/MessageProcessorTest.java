@@ -1,16 +1,16 @@
 /*
- *  Copyright 2022 Sonu Kumar
+ * Copyright (c) 2021-2023 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithMessageProcessor;
@@ -29,12 +30,12 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.Assert;
 
 @ContextConfiguration(classes = ApplicationWithMessageProcessor.class)
 @SpringBootTest
@@ -113,19 +114,21 @@ class MessageProcessorTest extends RetryTests {
     assertEquals(0, discardMessageProcessor.count());
   }
 
-  @RetryingTest(2)
+  @Test
   void manualDeletionMessageProcessorTest() throws TimedOutException {
     cleanQueue(notificationQueue);
+    deleteTestData();
     Notification notification = Notification.newInstance();
     failureManager.createFailureDetail(notification.getId(), -1, 3);
     String messageId =
         enqueueAtGetMessageId(notificationQueue, notification, System.currentTimeMillis() + 1000L);
-    rqueueMessageManager.deleteMessage(notificationQueue, messageId);
+    assertTrue(rqueueMessageManager.deleteMessage(notificationQueue, messageId));
     waitFor(
         () -> {
           List<Object> messages = getAllMessages(notificationQueue);
           return !messages.contains(notification);
         },
+        30_000L,
         "message to be ignored");
     assertEquals(1, preExecutionMessageProcessor.count());
     assertEquals(1, manualDeletionMessageProcessor.count());
