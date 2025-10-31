@@ -17,6 +17,7 @@
 package com.github.sonus21.junit;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -40,7 +41,7 @@ public abstract class RedisBootstrapperBase {
   protected ExecutorService executorService;
   protected List<MonitorProcess> processes = new ArrayList<>();
 
-  protected void bootstrap(BootstrapRedis bootstrapRedis) {
+  protected void bootstrap(BootstrapRedis bootstrapRedis) throws IOException {
     int monitorThreads = 0;
     if (bootstrapRedis.monitorRedis()) {
       if (bootstrapRedis.monitorThreadsCount() > 0) {
@@ -62,7 +63,7 @@ public abstract class RedisBootstrapperBase {
     }
   }
 
-  protected void cleanup() {
+  protected void cleanup() throws IOException {
     if (redisServer != null) {
       redisServer.stop();
     }
