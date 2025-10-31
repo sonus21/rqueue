@@ -1,16 +1,16 @@
 /*
- *  Copyright 2021 Sonu Kumar
+ * Copyright (c) 2020-2025 Sonu Kumar
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *         https://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -53,20 +53,20 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-      "spring.redis.port=7004",
-      "mysql.db.name=SpringAppTest",
-      "sms.queue.active=true",
-      "notification.queue.active=false",
-      "email.queue.active=true",
-      "job.queue.active=true",
-      "use.system.redis=false",
-      "priority.mode=STRICT",
-      "reservation.queue.active=true",
-      "feed.generation.queue.active=true",
-      "chat.indexing.queue.active=true",
-      "provide.executor=true",
-      "email.queue.retry.count=-1",
-      "rqueue.retry.per.poll=10"
+        "spring.redis.port=7004",
+        "mysql.db.name=SpringAppTest",
+        "sms.queue.active=true",
+        "notification.queue.active=false",
+        "email.queue.active=true",
+        "job.queue.active=true",
+        "use.system.redis=false",
+        "priority.mode=STRICT",
+        "reservation.queue.active=true",
+        "feed.generation.queue.active=true",
+        "chat.indexing.queue.active=true",
+        "provide.executor=true",
+        "email.queue.retry.count=-1",
+        "rqueue.retry.per.poll=10"
     })
 @SpringIntegrationTest
 class SpringAppTest extends AllQueueMode {
@@ -109,7 +109,7 @@ class SpringAppTest extends AllQueueMode {
     Email email1 =
         (Email)
             RqueueMessageUtils.convertMessageToObject(
-                messages.get(0), rqueueMessageSender.getMessageConverter());
+                messages.get(0), rqueueMessageManager.getMessageConverter());
     assertEquals(email.getId(), email1.getId());
   }
 
@@ -129,63 +129,64 @@ class SpringAppTest extends AllQueueMode {
     registerQueue(emailQueue);
     registerQueue(smsQueue, critical, high, low);
     Email[] emails =
-        new Email[] {
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
-          Email.newInstance(),
+        new Email[]{
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
+            Email.newInstance(),
         };
     Sms[] sms =
-        new Sms[] {
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
-          Sms.newInstance(),
+        new Sms[]{
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
+            Sms.newInstance(),
         };
 
     assertTrue(enqueue(emailQueue, emails[0]));
     assertTrue(rqueueMessageEnqueuer.enqueue(emailQueue, emails[1].getId(), emails[1]));
     assertTrue(rqueueMessageEnqueuer.enqueueUnique(emailQueue, emails[2].getId(), emails[2]));
+    assertFalse(rqueueMessageEnqueuer.enqueueUnique(emailQueue, emails[2].getId(), emails[2]));
     assertNotNull(rqueueMessageEnqueuer.enqueueWithRetry(emailQueue, emails[3], 3));
     assertTrue(rqueueMessageEnqueuer.enqueueWithRetry(emailQueue, emails[4].getId(), emails[4], 3));
 
@@ -233,6 +234,9 @@ class SpringAppTest extends AllQueueMode {
     assertTrue(
         rqueueMessageEnqueuer.enqueueUniqueIn(
             emailQueue, emails[18].getId(), emails[18], Constants.ONE_MILLI));
+    assertFalse(
+            rqueueMessageEnqueuer.enqueueUniqueIn(
+                    emailQueue, emails[18].getId(), emails[18], Constants.ONE_MILLI));
 
     assertNotNull(
         rqueueMessageEnqueuer.enqueueInWithRetry(emailQueue, emails[19], 3, Constants.ONE_MILLI));
