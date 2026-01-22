@@ -18,9 +18,6 @@ package com.github.sonus21.rqueue.converter;
 
 import static org.springframework.util.Assert.notNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
@@ -34,6 +31,9 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.SmartMessageConverter;
 import org.springframework.messaging.support.GenericMessage;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * A converter to turn the payload of a {@link Message} from serialized form to a typed String and
@@ -212,7 +212,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
         String msg = objectMapper.writeValueAsString(payload);
         Msg message = new Msg(msg, name);
         return objectMapper.writeValueAsString(message);
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         log.debug("Serialisation failed", e);
         return null;
       }

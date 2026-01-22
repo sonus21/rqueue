@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.test.application;
 
 import com.athaydes.javanna.Javanna;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.junit.BootstrapRedis;
 import com.github.sonus21.junit.RedisBootstrapperBase;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
@@ -31,6 +30,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBase {

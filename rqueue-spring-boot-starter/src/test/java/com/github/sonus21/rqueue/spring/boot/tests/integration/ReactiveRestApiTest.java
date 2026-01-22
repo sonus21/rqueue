@@ -68,6 +68,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -89,6 +90,7 @@ import reactor.core.publisher.Mono;
         "user.banned.queue.active=true",
         "spring.main.web-application-type=reactive"
     })
+@AutoConfigureWebTestClient
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class ReactiveRestApiTest extends BasicListenerTest {
