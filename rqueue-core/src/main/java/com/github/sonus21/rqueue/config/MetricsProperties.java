@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2025 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@ package com.github.sonus21.rqueue.config;
 
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * RqueueMetrics provides all possible configurations available in Rqueue library for metrics.
@@ -45,6 +48,11 @@ public abstract class MetricsProperties {
   private Count count = new Count();
 
   private Tags metricTags = Tags.empty();
+
+  /*
+   * Prefix to be used while publishing metrics.
+   */
+  private String prefix = "";
 
   /**
    * Get Tags object that can be used in metric. Tags can be either configured manually or using
@@ -72,6 +80,13 @@ public abstract class MetricsProperties {
 
   public boolean countFailure() {
     return count.isFailure();
+  }
+
+  public String getMetricName(String name) {
+    if (StringUtils.isEmpty(prefix)) {
+      return name;
+    }
+    return prefix + name;
   }
 
   @Getter
