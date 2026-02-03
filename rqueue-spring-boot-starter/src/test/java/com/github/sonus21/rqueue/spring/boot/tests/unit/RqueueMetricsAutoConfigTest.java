@@ -29,7 +29,7 @@ import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
+import org.springframework.boot.micrometer.metrics.autoconfigure.MetricsProperties;
 
 @SpringBootUnitTest
 @Slf4j

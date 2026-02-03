@@ -1,17 +1,16 @@
 plugins {
     id "org.springframework.boot" version "${springBootVersion}"
-    id "io.spring.dependency-management" version "${springDepManagementVersion}"
     id "war"
 }
 dependencies {
     implementation project(":rqueue-spring-boot-starter")
-    implementation "org.springframework.boot:spring-boot-starter-data-redis"
-    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-webmvc:${springBootVersion}"
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
     implementation "io.lettuce:lettuce-core"
-    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-    providedRuntime "org.springframework.boot:spring-boot-starter-tomcat"
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
+    providedRuntime "org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}"
 }

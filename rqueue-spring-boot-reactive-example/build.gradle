@@ -1,12 +1,14 @@
 plugins {
     id "org.springframework.boot" version "${springBootVersion}"
-    id "io.spring.dependency-management" version "${springDepManagementVersion}"
     id "war"
 }
+
+apply from: "${rootDir}/gradle/test-runner.gradle"
+
 dependencies {
-    implementation "com.github.sonus21:rqueue-spring-boot-starter:3.3.0-RELEASE"
-    implementation "org.springframework.boot:spring-boot-starter-data-redis-reactive"
-    implementation "org.springframework.boot:spring-boot-starter-webflux"
+    implementation project(":rqueue-spring-boot-starter")
+    implementation "org.springframework.boot:spring-boot-starter-data-redis-reactive:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
     implementation "io.lettuce:lettuce-core"
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
     implementation "ch.qos.logback:logback-core:${logbackVersion}"

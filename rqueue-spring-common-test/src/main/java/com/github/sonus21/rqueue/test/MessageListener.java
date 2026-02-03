@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -40,6 +39,7 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -266,7 +266,7 @@ public class MessageListener {
   }
 
   @RqueueListener(value = "${list.email.queue.name}", active = "${list.email.queue.enabled}")
-  public void onMessageEmailList(List<Email> emailList) throws JsonProcessingException {
+  public void onMessageEmailList(List<Email> emailList) throws JacksonException {
     log.info("onMessageEmailList {}", emailList);
     String consumedId = UUID.randomUUID().toString();
     for (Email email : emailList) {

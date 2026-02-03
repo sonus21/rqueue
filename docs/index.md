@@ -52,8 +52,8 @@ frameworks.
 
 ### Requirements
 
-* Spring 5+, 6+
-* Spring Boot 2+, 3+
+* Spring 5+, 6+, 7+
+* Spring Boot 2+, 3+, 4+
 * Spring Reactive
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
@@ -82,8 +82,8 @@ Redis cluster compatibility, otherwise the application may fail to start.
 ### Spring Boot
 
 {: .warning }
-Use Rqueue Spring Boot Starter 3.x for Spring Boot 3.x, and Rqueue Spring Boot Starter 2.x for
-Spring Boot 2.x.
+Use Rqueue Spring Boot Starter 4.x for Spring Boot 4.x, Rqueue Spring Boot Starter 3.x for 
+Spring Boot 3.x, and Rqueue Spring Boot Starter 2.x for Spring Boot 2.x.
 
 Get the latest version of Rqueue Spring Boot Starter from [Maven Central][Boot Maven Central]. Add
 the dependency to your project:
@@ -125,7 +125,8 @@ the dependency to your project:
 ### Spring Framework
 
 {: .warning }
-Use Rqueue Spring 3.x for Spring Framework 6.x, and Rqueue Spring 2.x for Spring Framework 5.x.
+Use Rqueue Spring 4.x for Spring Framework 7.x, Rqueue Spring 3.x for Spring Framework 6.x, 
+and Rqueue Spring 2.x for Spring Framework 5.x.
 
 Get the latest version of Rqueue Spring from [Maven Central][Maven Central]. Add the dependency to
 your project:

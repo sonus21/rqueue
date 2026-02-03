@@ -41,13 +41,15 @@ mavenPublishing {
 
 dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    api "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
-    api "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
-    api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    api "tools.jackson.core:jackson-core:${jacksonVersion}"
+    api "tools.jackson.core:jackson-databind:${jacksonVersion}"
+    api "com.fasterxml.jackson.core:jackson-annotations:${jacksonAnnotationsVersion}"
     // https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api
     api "jakarta.servlet:jakarta.servlet-api:${jakartaServletVersion}"
     // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
     api "jakarta.validation:jakarta.validation-api:${jakartaValidationApiVersion}"
+    implementation 'jakarta.el:jakarta.el-api:5.0.0'
+    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
     api "org.springframework:spring-webmvc:${springVersion}"
     api "org.springframework:spring-webflux:${springVersion}"

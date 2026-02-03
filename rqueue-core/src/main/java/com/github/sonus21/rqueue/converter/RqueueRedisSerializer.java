@@ -17,19 +17,19 @@
 package com.github.sonus21.rqueue.converter;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
-import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.support.NullValue;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 @Slf4j
 public class RqueueRedisSerializer implements RedisSerializer<Object> {
@@ -68,10 +68,12 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
     private ObjectMapper mapper;
 
     RqueueRedisSerDes() {
-      this.mapper = SerializationUtils.createObjectMapper();
-      this.mapper =
-          mapper.registerModule(new SimpleModule().addSerializer(new NullValueSerializer()));
-      this.mapper = mapper.enableDefaultTyping(DefaultTyping.NON_FINAL, As.PROPERTY);
+      this.mapper = SerializationUtils.createObjectMapper().rebuild()
+          .addModule(new SimpleModule().addSerializer(new NullValueSerializer()))
+          .activateDefaultTyping(BasicPolymorphicTypeValidator.builder()
+              .allowIfSubType(Object.class)
+              .build(), DefaultTyping.NON_FINAL, As.PROPERTY)
+          .build();
     }
 
     @Override
@@ -81,7 +83,7 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
       }
       try {
         return mapper.writeValueAsBytes(source);
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         throw new SerializationException("Could not write JSON: " + e.getMessage(), e);
       }
     }
@@ -109,11 +111,9 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
       }
 
       @Override
-      public void serialize(
-          NullValue value, JsonGenerator jsonGenerator, SerializerProvider provider)
-          throws IOException {
+      public void serialize(NullValue value, JsonGenerator jsonGenerator, SerializationContext provider) throws JacksonException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField(classIdentifier, NullValue.class.getName());
+        jsonGenerator.writeStringProperty(classIdentifier, NullValue.class.getName());
         jsonGenerator.writeEndObject();
       }
     }
