@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
+import com.github.sonus21.rqueue.listener.HardStrictPriorityPollerProperties;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
@@ -92,6 +93,8 @@ public class SimpleRqueueListenerContainerFactory {
 
   // Set priority mode for the pollers
   private PriorityMode priorityMode = PriorityMode.WEIGHTED;
+  // Set HardStrictPriorityPollerProperties for HARD_STRICT priority mode poller
+  private HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties;
 
   /**
    * Whether all beans of spring application should be inspected to find methods annotated with
@@ -348,6 +351,9 @@ public class SimpleRqueueListenerContainerFactory {
     if (messageHeaders != null) {
       messageListenerContainer.setMessageHeaders(messageHeaders);
     }
+    if (hardStrictPriorityPollerProperties != null) {
+      messageListenerContainer.setHardStrictPriorityPollerProperties(hardStrictPriorityPollerProperties);
+    }
     return messageListenerContainer;
   }
 
@@ -484,6 +490,14 @@ public class SimpleRqueueListenerContainerFactory {
   public void setMessageHeaders(MessageHeaders messageHeaders) {
     notEmpty(messageHeaders, "messageHeaders can not be empty");
     this.messageHeaders = messageHeaders;
+  }
+
+  public HardStrictPriorityPollerProperties getHardStrictPriorityPollerProperties() {
+    return this.hardStrictPriorityPollerProperties;
+  }
+
+  public void setHardStrictPriorityPollerProperties(HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties) {
+    this.hardStrictPriorityPollerProperties = hardStrictPriorityPollerProperties;
   }
 
   /**
