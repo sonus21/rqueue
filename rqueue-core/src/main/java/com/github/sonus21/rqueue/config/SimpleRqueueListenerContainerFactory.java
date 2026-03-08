@@ -496,7 +496,8 @@ public class SimpleRqueueListenerContainerFactory {
     return this.hardStrictPriorityPollerProperties;
   }
 
-  public void setHardStrictPriorityPollerProperties(HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties) {
+  public void setHardStrictPriorityPollerProperties(
+      HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties) {
     this.hardStrictPriorityPollerProperties = hardStrictPriorityPollerProperties;
   }
 

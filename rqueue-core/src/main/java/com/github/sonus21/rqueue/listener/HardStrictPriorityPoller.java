@@ -32,10 +32,9 @@ import org.slf4j.event.Level;
 import org.springframework.messaging.MessageHeaders;
 
 /**
- * Use it only with priority queues.
- * Message processing can be slow.
- * The hard strict priority algorithm is better in HardStrictPriorityPoller than in StrictPriorityPoller
- * More details see in <a href="https://github.com/sonus21/rqueue/issues/276">GitHub project issue</a>
+ * Use it only with priority queues. Message processing can be slow. The hard strict priority
+ * algorithm is better in HardStrictPriorityPoller than in StrictPriorityPoller More details see in
+ * <a href="https://github.com/sonus21/rqueue/issues/276">GitHub project issue</a>
  */
 class HardStrictPriorityPoller extends RqueueMessagePoller {
 
@@ -81,9 +80,10 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
         queueDetailList.stream()
             .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
     this.queueNameToThread = queueNameToThread;
-    this.hardStrictPriorityPollerProperties = hardStrictPriorityPollerProperties != null
-        ? hardStrictPriorityPollerProperties
-        : new HardStrictPriorityPollerProperties();
+    this.hardStrictPriorityPollerProperties =
+        hardStrictPriorityPollerProperties != null
+            ? hardStrictPriorityPollerProperties
+            : new HardStrictPriorityPollerProperties();
   }
 
   @Override
@@ -104,7 +104,8 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
             poll(-1, queue, queueDetail, queueThreadPool);
 
             if (hardStrictPriorityPollerProperties.getAfterPollSleepInterval() != null) {
-              TimeoutUtils.sleepLog(hardStrictPriorityPollerProperties.getAfterPollSleepInterval(), false);
+              TimeoutUtils.sleepLog(
+                  hardStrictPriorityPollerProperties.getAfterPollSleepInterval(), false);
             }
 
             if (existMessagesInCurrentQueueOrHigherPriorityQueue(queue, queues)) {
@@ -131,7 +132,8 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
     }
   }
 
-  boolean existMessagesInCurrentQueueOrHigherPriorityQueue(String currentQueue, List<String> queues) {
+  boolean existMessagesInCurrentQueueOrHigherPriorityQueue(
+      String currentQueue, List<String> queues) {
     for (String queue : queues) {
       if (eligibleForPolling(queue) && !isDeactivated(queue)) {
         QueueDetail queueDetail = queueNameToDetail.get(queue);
@@ -151,23 +153,33 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
   }
 
   protected boolean existAvailableMessagesForPoll(QueueDetail queueDetail) {
-    List<?> readyMessages = rqueueBeanProvider
-        .getRqueueMessageTemplate()
-        .readFromList(queueDetail.getQueueName(), 0, 0);
+    List<?> readyMessages =
+        rqueueBeanProvider
+            .getRqueueMessageTemplate()
+            .readFromList(queueDetail.getQueueName(), 0, 0);
 
     if (readyMessages != null && !readyMessages.isEmpty()) {
-      log(Level.TRACE, "readyMessages exists for queue '{}', existAvailableMessagesForPoll = true.", null, queueDetail.getName());
+      log(
+          Level.TRACE,
+          "readyMessages exists for queue '{}', existAvailableMessagesForPoll = true.",
+          null,
+          queueDetail.getName());
       return true;
     }
 
     // Only check delayed messages with score <= current time
     long currentTime = System.currentTimeMillis();
-    List<?> delayedMessages = rqueueBeanProvider
-        .getRqueueMessageTemplate()
-        .readFromZsetWithScore(queueDetail.getScheduledQueueName(), 0, currentTime);
+    List<?> delayedMessages =
+        rqueueBeanProvider
+            .getRqueueMessageTemplate()
+            .readFromZsetWithScore(queueDetail.getScheduledQueueName(), 0, currentTime);
 
     if (delayedMessages != null && !delayedMessages.isEmpty()) {
-      log(Level.TRACE, "delayedMessages exists for queue '{}', existAvailableMessagesForPoll = true.", null, queueDetail.getName());
+      log(
+          Level.TRACE,
+          "delayedMessages exists for queue '{}', existAvailableMessagesForPoll = true.",
+          null,
+          queueDetail.getName());
       return true;
     }
 
