@@ -7,44 +7,25 @@ nav_order: 1
 
 # Redis Configuration
 
-You can configure your application to use separate Redis connections for Rqueue and other
-application needs. This approach ensures complete isolation between the Redis connections and their
-usage, providing distinct environments for storing Rqueue tasks and transient states, as well as
-other application data.
+You can configure Rqueue to use a dedicated Redis connection, separate from your main 
+application's Redis usage. This isolation ensures that Rqueue's task storage and 
+transient states do not interfere with other application data, helping to manage 
+resources efficiently and prevent performance bottlenecks.
 
-By configuring separate Redis connections:
+## Customizing the Redis Connection
 
-- Rqueue can manage its tasks and transient states in Redis without interference from other
-  application components.
-- Your main application can utilize a separate Redis connection for its own data storage and
-  retrieval needs.
+Rqueue provides the flexibility to specify exactly which Redis server or cluster should 
+be used for task storage. This is done by providing a `RedisConnectionFactory` to the 
+container factory using the `setRedisConnectionFactory` method.
 
-This isolation helps in managing resources efficiently and prevents potential conflicts or
-performance issues that might arise from shared Redis usage across different parts of your
-application.
-
-## Redis Connection Configuration
-
-As an application developer using Rqueue, you have the flexibility to specify which Redis cluster or
-server should be used for storing Rqueue data. This is achieved by configuring the Redis connection
-factory via the container factory's method `setRedisConnectionFactory`.
-
-Here's how you can specify the Redis connection for Rqueue:
-
-1. Implement or configure a `RedisConnectionFactory` that points to your desired Redis cluster or
-   server.
-
-2. Set this connection factory using the `setRedisConnectionFactory` method of your Rqueue container
-   factory.
-
-This approach allows you to control where Rqueue stores its data within Redis, ensuring it aligns
-with your application's Redis configuration and deployment requirements.
+To configure a custom connection:
+1. Define a `RedisConnectionFactory` bean pointing to your target Redis instance.
+2. Register this factory with your `SimpleRqueueListenerContainerFactory`.
 
 {: .warning }
-
-When creating a Redis connection factory for Rqueue, it's essential to set `readFrom`
-to `MASTER_PREFERRED`. This ensures that the application starts correctly and operates as expected
-with the Redis setup.
+When creating a `LettuceConnectionFactory` for Rqueue, it is essential to set 
+`readFrom` to `MASTER_PREFERRED`. This ensures correct operation, especially in 
+clustered environments.
 
 ### Standalone Redis
 
@@ -81,11 +62,11 @@ public class RqueueConfiguration {
 }
  ``` 
 
-### Redis Cluster
+### Redis Cluster Configuration
 
-For Redis clusters, it's recommended to use the Lettuce client because Jedis does not
-support `EVALSHA` requests, which are often used for efficient script execution in Redis
-environments.
+For Redis Clusters, using the **Lettuce** client is recommended. Lettuce 
+supports `EVALSHA` requests, which are essential for the efficient execution 
+of the Lua scripts Rqueue uses.
 
 ```java
 
@@ -139,9 +120,9 @@ public class RqueueConfiguration {
 }
 ```
 
-### Redis Sentinel
+### Redis Sentinel Configuration
 
-Redis sentinel can be configured similar to Standalone redis.
+Configuring Redis Sentinel is similar to the standalone configuration.
 
 ```java
 
@@ -173,13 +154,11 @@ public class RedisClusterBaseApplication {
 }
 ```
 
-## Redis connection failure and retry
+## Redis Connection Failures and Retries
 
-To adjust the retry interval for failed Redis commands in Rqueue, you can configure the backoff time
-to a different value. By default, Rqueue retries failed commands after 5 seconds. You can customize
-this behavior by setting the backoff time to your desired interval. This ensures that if a Redis
-command fails, Rqueue will retry the command after the specified backoff period before attempting
-again.
+You can configure the retry interval for failed Redis commands. By default, Rqueue 
+retries failed operations after a 5-second backoff. This can be customized via the 
+`setBackOffTime` method.
 
  ```java
  class RqueueConfiguration {
@@ -195,37 +174,32 @@ again.
 }
  ```
 
-## Redis Key configuration
+## Redis Key Naming and Prefixes
 
-Rqueue utilizes multiple Redis data types such as `SET`, `ZSET`, and `LIST`. It's crucial not to
-delete or modify any Rqueue-related Redis keys, as a single mistake could result in the inadvertent
-deletion of all tasks. To mitigate this risk, Rqueue prefixes all of its keys with specific
-identifiers:
+Rqueue uses various Redis data structures like `LIST` (for simple queues), `ZSET` (for 
+scheduled and processing queues), and `SET`. It is critical not to manually delete or 
+modify Rqueue-managed keys.
 
-- **`rqueue.key.prefix`**: Prefix for every key used by Rqueue.
-- **`rqueue.cluster.mode`**: Indicates whether your Redis database operates in cluster mode or not.
-  By default, Rqueue assumes cluster mode. Switching from non-cluster to cluster mode can lead
-  to `Cross Slot` errors due to the use of Lua scripts for atomic operations.
-- **`rqueue.simple.queue.prefix:queue`**: Prefix used for the simple queue (`LIST`). By default, it
-  uses `queue`, resulting in keys like `__rq::queue::XYZ`.
-- **`rqueue.scheduled.queue.prefix`**: Prefix used for the delayed queue (`ZSET`). Default
-  configuration uses `d-queue::`, resulting in keys like `__rq::d-queue::XYZ`.
-- **`rqueue.scheduled.queue.channel.prefix`**: Prefix for Redis pub/sub channel used when moving
-  messages from the scheduled queue to the simple queue for processing. Default value
-  is `p-channel`.
-- **`rqueue.processing.queue.name.prefix`**: Prefix used for the processing queue (`ZSET`). By
-  default, it uses `p-queue::`, resulting in keys like `__rq::p-queue::XYZ`. This queue ensures
-  at-least-once message delivery.
-- **`rqueue.processing.queue.channel.prefix`**: Prefix for Redis pub/sub channel used when moving
-  messages from the processing queue back to the origin queue, triggered if a listener stops
-  unexpectedly. Default value is `p-channel`.
-- **`rqueue.queues.key.suffix`**: Key suffix used for storing all active queues. Default value
-  is `queues`.
-- **`rqueue.lock.key.prefix`**: Prefix used for locking keys. Default value is `lock::`.
-- **`rqueue.queue.stat.key.prefix`**: Prefix used for storing queue metrics. Default value
-  is `q-stat`.
-- **`rqueue.queue.config.key.prefix`**: Prefix used for storing listener configuration. Default
-  value is `q-config`.
+To prevent collisions and facilitate management, Rqueue uses several configurable 
+prefixes. All keys are by default prefixed with `__rq::`.
 
-These prefixes help Rqueue manage its interactions with Redis effectively while minimizing the risk
-of unintended data loss or corruption.
+### Key Configuration Properties
+
+- **`rqueue.key.prefix`**: The root prefix for every key used by Rqueue.
+- **`rqueue.cluster.mode`**: Specifies if Redis is in cluster mode (default: `true`). 
+  Incorrect settings can lead to `Cross Slot` errors during Lua script execution.
+- **`rqueue.simple.queue.prefix`**: Prefix for the `LIST` based queue. Default: `queue`.
+- **`rqueue.scheduled.queue.prefix`**: Prefix for the `ZSET` based scheduled queue. 
+  Default: `d-queue::`.
+- **`rqueue.scheduled.queue.channel.prefix`**: Redis Pub/Sub channel for scheduled 
+  messages. Default: `p-channel`.
+- **`rqueue.processing.queue.name.prefix`**: Prefix for the `ZSET` processing queue, 
+  ensuring at-least-once delivery. Default: `p-queue::`.
+- **`rqueue.processing.queue.channel.prefix`**: Channel for moving messages from 
+  processing back to the origin queue. Default: `p-channel`.
+- **`rqueue.queues.key.suffix`**: Suffix for the key storing all active queues. 
+  Default: `queues`.
+- **`rqueue.lock.key.prefix`**: Prefix for distributed locks. Default: `lock::`.
+- **`rqueue.queue.stat.key.prefix`**: Prefix for queue metrics. Default: `q-stat`.
+- **`rqueue.queue.config.key.prefix`**: Prefix for listener configurations. 
+  Default: `q-config`.

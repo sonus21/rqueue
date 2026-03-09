@@ -6,25 +6,26 @@ description: Dashboard for Rqueue Monitoring and Management
 permalink: /dashboard
 ---
 
-The Rqueue dashboard provides several components to monitor and manage various aspects of message
-processing.
+The Rqueue dashboard provides a comprehensive interface to monitor and manage various aspects of
+message processing.
 
-### Components of the Rqueue Dashboard
+### Dashboard Components
 
-* **Latency Graph**: Displays latency metrics for all queues or specific queues over a daily basis
-  for up to 90 days, showing minimum, maximum, and average latency.
+* **Latency Graph**: Displays latency metrics (minimum, maximum, and average) for all queues or 
+  specific ones, with a historical view of up to 90 days.
 
-* **Queue Statistics**: Provides insights into message retry counts, executions, movements to
+* **Queue Statistics**: Provides insights into message retries, executions, movements to 
   dead-letter queues, and discards due to retry limit exhaustion.
 
-* **Task Deletion**: Allows deletion of enqueued messages, whether scheduled to run, currently
-  running, or waiting to run.
+* **Task Management**: Allows for the deletion of enqueued messages, whether they are scheduled,
+  currently running, or waiting in the queue.
 
-* **Queue Insight**: Offers visibility into internal queue messages, akin to an SQS dashboard.
+* **Queue Insight**: Offers visibility into the contents of internal queues, similar to an 
+  Amazon SQS dashboard.
 
-* **Queue Management**: Facilitates moving tasks from one queue to another.
+* **Task Operations**: Facilitates moving tasks between different queues.
 
-Link to access the dashboard: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
+Access the dashboard at: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
 ## Configuration
 
@@ -51,35 +52,35 @@ public class MvcConfig implements WebMvcConfigurer {
 }
 ```
 
-### Adding Path Prefix
+### Path Prefix Configuration
 
-Rqueue endpoints and dashboards are available at `/rqueue/**`, but they can handle
-the `x-forwarded-prefix` HTTP header for custom prefixing. Configure the prefix
-using `rqueue.web.url.prefix`, for example: `rqueue.web.url.prefix=/my-application/`.
+By default, Rqueue endpoints and the dashboard are available at `/rqueue/**`. They also
+support the `x-forwarded-prefix` HTTP header for custom proxy configurations.
 
-If a path prefix is configured, ensure that static file resource handling is also configured
-accordingly, or the dashboard may not function correctly.
+You can configure a custom prefix using `rqueue.web.url.prefix`. For example:
+`rqueue.web.url.prefix=/my-application/`.
 
-Link with configured path
-prefix: [http://localhost:8080/my-application/rqueue](http://localhost:8080/my-application/rqueue)
+If you configure a path prefix, you must also ensure that static resource handling is
+updated accordingly, or the dashboard may not load correctly.
 
-## Dashboard Configurations
+Example URL with a configured prefix:
+[http://localhost:8080/my-application/rqueue](http://localhost:8080/my-application/rqueue)
 
-* `rqueue.web.enable`: Controls whether the web dashboard is enabled (default: `true`).
-* `rqueue.web.max.message.move.count`: Specifies the number of messages to move on a single request
+## Dashboard Configuration Properties
+
+* `rqueue.web.enable`: Enable or disable the web dashboard (default: `true`).
+* `rqueue.web.max.message.move.count`: Maximum number of messages to move in a single request 
   from the utility tab (default: `1000`).
-* `rqueue.web.collect.listener.stats`: Enables collection of task execution status metrics (
-  default: `false`).
-* `rqueue.web.collect.listener.stats.thread.count`: Controls the number of threads for metrics
-  aggregation.
-* `rqueue.web.statistic.history.day`: Specifies the number of days to store metrics data (
-  default: `90`).
-* `rqueue.web.collect.statistic.aggregate.event.count`: Aggregates metrics for a specified number of
-  events at once (default: `500`).
-* `rqueue.web.collect.statistic.aggregate.event.wait.time`: Specifies the wait time in seconds for
-  metrics aggregation based on event occurrence or elapsed time (default: `60` seconds).
-* `rqueue.web.collect.statistic.aggregate.shutdown.wait.time`: Sets the wait time in milliseconds
-  for force aggregation of pending events during application shutdown.
+* `rqueue.web.collect.listener.stats`: Enable collection of task execution statistics 
+  (default: `false`).
+* `rqueue.web.collect.listener.stats.thread.count`: Number of threads used for metrics aggregation.
+* `rqueue.web.statistic.history.day`: Number of days to retain metrics data (default: `90`).
+* `rqueue.web.collect.statistic.aggregate.event.count`: Number of events to aggregate in a 
+  single operation (default: `500`).
+* `rqueue.web.collect.statistic.aggregate.event.wait.time`: Wait time in seconds for metrics 
+  aggregation (default: `60`).
+* `rqueue.web.collect.statistic.aggregate.shutdown.wait.time`: Wait time in milliseconds for 
+  forced aggregation of pending events during application shutdown.
 
 ### Dashboard Screenshots
 

@@ -7,64 +7,70 @@ description: Queue Priority Setup in Rqueue
 permalink: /priority
 ---
 
-There are situations where queues need to be grouped based on priority, ensuring critical tasks are
-handled before lower priority ones. Rqueue provides two types of priority handling:
+Queue prioritization ensures that critical tasks are handled before lower-priority 
+ones. Rqueue supports two modes of priority handling:
 
-Weighted: Allows specifying different numeric priorities for queues.
-Strict: Enforces strict ordering of queues based on priority.
-To configure priority handling in Rqueue:
+1. **Weighted**: Polling frequency is based on numeric weights assigned to queues.
+2. **Strict**: Higher-priority queues are always polled first.
 
-Set priorityMode in the container factory to either STRICT or WEIGHTED.
-Use the priority field in the RqueueListener annotation to assign priorities to individual queues.
-Use the priorityGroup field to group multiple queues together. By default, any queue with a
-specified priority is added to the default priority group.
-You can categorize queues into multiple priority groups. For instance, a SMS queue might have
-sub-queues like critical, high, medium, and low, with priorities specified as priority="critical=10,
-high=6, medium=4, low=1".
-If you prefer a simpler priority mechanism, assign a numeric priority directly to each queue and its
-group. For example:
+### Configuring Priority
 
-`priority="60"`
-`priorityGroup="critical-group"`
+To enable priority handling:
+- Set `priorityMode` in the container factory to `STRICT` or `WEIGHTED`.
+- Use the `priority` field in the `@RqueueListener` annotation to assign weights or levels.
+- Use the `priorityGroup` field to group multiple related queues. By default, queues with 
+  specified priorities are added to a default group.
 
-Let's say there're three queues
+#### Examples:
+- **Sub-queues**: A single listener can handle multiple priority levels for the same 
+  logical task: `priority="critical=10,high=6,medium=4,low=1"`.
+- **Simple Numeric**: Assign a weight directly: `priority="60"`, `priorityGroup="critical-group"`.
 
-| Queue | Priority |
-|-------|----------|
-| Q1    | 6        |
-| Q2    | 4        |
-| Q3    | 2        | 
+---
 
-Weighted Priority
--
-Weighted priority operates in a round-robin manner, where each queue's polling frequency is
-determined by its assigned weight. In this example, Q1 is polled 6 times, Q2 4 times, and Q3 2 times
-before the cycle repeats. If a queue is found to have no items during polling, its weight is reduced
-by `Δ`. For instance, if Q1 has no items, its weight decreases
-by `Δ = currentWeight * (1 - (6 / (6 + 4 + 2)))`. When a queue's weight drops to or below 0, it
-becomes inactive. The weights are reinitialized when all queues are inactive.
+### Weighted Priority
 
-This algorithm is implemented in [WeightedPriorityPoller][WeightedPriorityPoller]
+Weighted priority uses a round-robin approach where the polling frequency is 
+proportional to the assigned weights.
 
-Strict Priority
--
-In strict priority mode, the poller always starts by polling from the highest priority queue, which
-is Q1 in this case. After polling, if the queue is found to have no elements, it becomes inactive
-for a designated **polling interval**. To prevent starvation, a queue can remain inactive for a
-maximum of 1 minute before becoming eligible for polling again.
+Consider three queues:
+| Queue | Weight |
+|-------|--------|
+| Q1    | 6      |
+| Q2    | 4      |
+| Q3    | 2      |
 
-This algorithm is implemented in [StrictPriorityPoller][StrictPriorityPoller]
+In one cycle, Q1 is polled 6 times, Q2 4 times, and Q3 2 times. If a queue is empty 
+during a poll, its effective weight is dynamically reduced to prevent wasting 
+resources on empty queues. Weights are reset once all queues in the group have 
+become inactive or finished their cycle.
+
+For implementation details, see [WeightedPriorityPoller][WeightedPriorityPoller].
+
+### Strict Priority
+
+In strict mode, the poller always attempts to fetch messages from the highest-priority 
+queue first.
+
+- The poller starts with Q1.
+- If Q1 is empty, it moves to Q2, then Q3.
+- If a queue is empty, it becomes inactive for the duration of the 
+  **polling interval**.
+- To prevent total starvation of lower-priority queues, inactive queues become 
+  eligible for polling again after a maximum of 1 minute, even if higher-priority 
+  queues still have work.
+
+For implementation details, see [StrictPriorityPoller][StrictPriorityPoller].
 
 ### Additional Configuration
 
-* `rqueue.add.default.queue.with.queue.level.priority`: This flag determines whether the default
-  queue should be added to listeners where a priority has been defined
-  using `priority="critical=5,high=3"`. If enabled (`true`), such queues will include an additional
-  default level. The default value for this flag is `true`.
+* **`rqueue.add.default.queue.with.queue.level.priority`**: Determines if a "default" 
+  priority level should be automatically added to listeners using the 
+  `priority="key=value"` syntax. Default: `true`.
 
-* `rqueue.default.queue.with.queue.level.priority`: This setting specifies the priority of the
-  default queue when `rqueue.add.default.queue.with.queue.level.priority` is set to `true`. By
-  default, the queue is positioned in the middle of the defined priority levels.
+* **`rqueue.default.queue.with.queue.level.priority`**: Specifies the weight/priority 
+  of the automatically added default queue. By default, it is placed in the middle 
+  of the defined priority levels.
 
 [WeightedPriorityPoller]: https://github.com/sonus21/rqueue/tree/master/rqueue-core/src/main/java/com/github/sonus21/rqueue/listener/WeightedPriorityPoller.java
 

@@ -10,9 +10,9 @@ permalink: /
 
 {: .fs-4 }
 
-Rqueue is an asynchronous task executor (worker) built for the Spring Framework based on Spring's
-messaging library, backed by Redis. It can serve as a message broker where all service code is
-within Spring/Spring Boot applications. Rqueue fully supports both Spring and Spring Boot
+Rqueue is an asynchronous task executor (worker) built for the Spring Framework. It leverages Spring's
+messaging library and is backed by Redis. Rqueue can serve as a message broker where all service code
+remains within Spring or Spring Boot applications. It fully supports both the Spring and Spring Boot
 frameworks.
 
 {: .fs-6 .fw-300 }
@@ -25,30 +25,28 @@ frameworks.
 ## Features
 
 * **Instant Delivery**: Immediate execution of messages.
-* **Message Scheduling**: Schedule messages for any arbitrary period.
-* **Unique Message Processing**: Ensures unique processing of messages based on message ID.
-* **Periodic Message Processing**: Process the same message at defined intervals.
-* **Priority Tasks**: Support for task prioritization (e.g., high, low, medium).
-* **Message Delivery Guarantee**: Ensures each message is consumed at least once, and may be retried
+* **Message Scheduling**: Schedule messages for any future time.
+* **Unique Message Processing**: Ensures unique message processing based on a message ID.
+* **Periodic Message Processing**: Process messages at defined intervals.
+* **Priority Tasks**: Support for task prioritization (e.g., high, medium, low).
+* **Guaranteed Delivery**: Ensures each message is consumed at least once, with automatic retries
   in case of worker failures or restarts.
-* **Automatic Serialization and Deserialization of Messages**.
-* **Message Multicasting**: Call multiple message listeners for each message.
-* **Batch Message Polling**: Fetch multiple messages from Redis in one operation.
-* **Metrics**: Provides insights into in-flight messages, waiting messages, and delayed messages.
-* **Competing Consumers**: Multiple workers can consume messages in parallel.
-* **Concurrency Control**: Configurable concurrency for message listeners.
+* **Automatic Serialization**: Seamless serialization and deserialization of message payloads.
+* **Message Multicasting**: Support for multiple message listeners for a single message.
+* **Batch Polling**: Efficiently fetch multiple messages from Redis in a single operation.
+* **Metrics**: Real-time insights into in-flight, waiting, and delayed messages.
+* **Competing Consumers**: Multiple workers can consume messages from the same queue in parallel.
+* **Concurrency Control**: Configurable concurrency levels for message listeners.
 * **Queue Priority**: Supports both group-level and sub-queue level priorities.
-* **Long Execution Jobs**: Check-in mechanism for long-running jobs.
-* **Execution Backoff**: Supports exponential and fixed backoff strategies.
-* **Do not retry**: Supports do not retry strategy.
-* **Middleware**: Allows integration of middleware to intercept messages before processing.
-* **Callbacks**: Supports callbacks for handling dead letter queues and discarding messages.
-* **Events**: Provides bootstrap and task execution events.
-* **Redis Connection Options**: Supports different Redis configurations including Redis Cluster and
-  Redis Sentinel.
-* **Reactive Programming**: Integrates with reactive Redis and Spring WebFlux.
-* **Web Dashboard**: Provides a web-based dashboard for managing queues and monitoring queue
-  metrics.
+* **Long-Running Jobs**: Check-in mechanism to support jobs with extended execution times.
+* **Execution Backoff**: Flexible exponential and fixed backoff strategies for retries.
+* **No-Retry Strategy**: Support for explicitly disabling retries for specific tasks.
+* **Middleware**: Intercept and process messages before they reach the listener.
+* **Callbacks**: Custom handlers for messages moved to dead letter queues or discarded.
+* **Events**: Comprehensive bootstrap and task execution lifecycle events.
+* **Flexible Redis Options**: Support for standalone, Sentinel, and Cluster Redis configurations.
+* **Reactive Support**: Full integration with Reactive Redis and Spring WebFlux.
+* **Web Dashboard**: Integrated web-based interface for queue management and monitoring.
 
 ### Requirements
 
@@ -61,32 +59,32 @@ frameworks.
 ## Getting Started
 
 {: .warning }
-All queue names are dynamic. Manually creating queues using `registerQueue` method can lead to
+Queue names are dynamic. Manually creating queues with the `registerQueue` method may cause
 inconsistencies. Queues should **only** be created when using Rqueue as a producer.
 
-### Sample Apps
+### Sample Applications
 
 {: .highlight }
-The Rqueue GitHub repository includes several sample apps for local testing and demonstration:
+The Rqueue GitHub repository includes several sample applications for local testing and demonstration:
 
 * [Rqueue Spring Boot Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example)
 * [Rqueue Spring Boot Reactive Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-reactive-example)
 * [Rqueue Spring Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example)
 
-## Project Integration
+### Project Integration
 
 {: .warning }
-When configuring the Redis connection factory, ensure to set `readFrom` to `MASTER_PREFERRED` for
-Redis cluster compatibility, otherwise the application may fail to start.
+When configuring the Redis connection factory, set `readFrom` to `MASTER_PREFERRED` for
+Redis Cluster compatibility. Failure to do so may prevent the application from starting.
 
 ### Spring Boot
 
 {: .warning }
-Use Rqueue Spring Boot Starter 4.x for Spring Boot 4.x, Rqueue Spring Boot Starter 3.x for 
-Spring Boot 3.x, and Rqueue Spring Boot Starter 2.x for Spring Boot 2.x.
+Use Rqueue Spring Boot Starter 4.x for Spring Boot 4.x, 3.x for Spring Boot 3.x, 
+and 2.x for Spring Boot 2.x.
 
-Get the latest version of Rqueue Spring Boot Starter from [Maven Central][Boot Maven Central]. Add
-the dependency to your project:
+Download the latest version from [Maven Central][Boot Maven Central] and add the 
+dependency to your project:
 
 #### Spring Boot 2.x Setup
 
@@ -125,11 +123,11 @@ the dependency to your project:
 ### Spring Framework
 
 {: .warning }
-Use Rqueue Spring 4.x for Spring Framework 7.x, Rqueue Spring 3.x for Spring Framework 6.x, 
-and Rqueue Spring 2.x for Spring Framework 5.x.
+Use Rqueue Spring 4.x for Spring Framework 7.x, 3.x for Spring Framework 6.x, 
+and 2.x for Spring Framework 5.x.
 
-Get the latest version of Rqueue Spring from [Maven Central][Maven Central]. Add the dependency to
-your project:
+Download the latest version from [Maven Central][Maven Central] and add the 
+dependency to your project:
 
 #### Spring Framework 5.x Setup
 
@@ -164,10 +162,10 @@ your project:
   ```
 
 {: .note }
-For **Spring Framework**, ensure to:
+When using the **Spring Framework**, ensure you:
 
-* Add `EnableRqueue` annotation on the main method.
-* Provide a `RedisConnectionFactory` bean.
+* Add the `@EnableRqueue` annotation to your configuration class.
+* Define a `RedisConnectionFactory` bean.
 
 ##### Example Spring Application Configuration
 
@@ -186,14 +184,13 @@ public class Application {
 
 {: .highlight }
 
-Once Rqueue is configured in Spring or Spring Boot as described above, you can start using Rqueue
-methods and annotations. The usage remains consistent whether using Spring Boot or the Spring
-framework.
+Once Rqueue is configured, you can use its methods and annotations consistently
+across both Spring and Spring Boot environments.
 
 ### Message Publishing / Task Submission
 
-All messages should be sent using the `RqueueMessageEnqueuer` bean's `enqueueXXX`, `enqueueInXXX`,
-and `enqueueAtXXX` methods. Use the appropriate method based on your use case:
+Submit tasks using the `RqueueMessageEnqueuer` bean. Use the `enqueueXXX`, `enqueueInXXX`,
+or `enqueueAtXXX` methods based on your requirements:
 
 ```java
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
@@ -229,9 +226,9 @@ public class MessageService {
 }
 ```
 
-### Worker / Consumer / Task Executor / Listener
+### Workers and Task Listeners
 
-Annotate any public method of a Spring bean with `RqueueListener` to make it a message consumer:
+Annotate any public method of a Spring bean with `@RqueueListener` to create a message consumer:
 
 ```java
 import com.github.sonus21.rqueue.annotation.RqueueListener;

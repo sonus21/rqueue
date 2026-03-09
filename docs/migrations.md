@@ -1,41 +1,75 @@
 ---
 layout: default
-title: Migration from older to new version
-description: Rqueue Dashboard
+title: Migration from Older Versions
+description: Migrating between Rqueue versions
 permalink: /migration
 ---
 
-## 2.9.0 to 2.10+
+## Migration Guide
 
-In 2.10 we changed some configuration keys used for Rqueue configuration. Following config keys were renamed.
+This guide outlines the configuration changes required when upgrading between major versions of Rqueue.
 
+---
 
-| Older                                             | New                                                 | Purpopse                                                                 |
-|---------------------------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------|
-| delayed.queue.size                                | scheduled.queue.size                                | Monitoring metrics name                                                  |
-| rqueue.scheduler.delayed.message.thread.pool.size | rqueue.scheduler.scheduled.message.thread.pool.size | used to pull message from scheduled message to normal queue              |
-| rqueue.scheduler.delayed.message.time.interval    | rqueue.scheduler.scheduled.message.time.interval    | how frequently message should be pulled from scheduled queue             |
-| rqueue.scheduled.queue.prefix                     | rqueue.delayed.queue.prefix                         | scheduled queue name prefix used in Redis                                |
-| rqueue.delayed.queue.channel.prefix               | queue.scheduled.queue.channel.prefix                | scheduled queue channel name prefix, used by Rqueue for immediate action |
+## Upgrading from 2.9.0 to 2.10+
 
+Starting with version **2.10**, several configuration keys were renamed for consistency with the
+introduction of **scheduled queues**.
 
-If you do not use these configuration keys then you can directly migrate without doing anything.
+If you are using any of the following configuration keys, please update them as shown below:
 
+| Older Configuration Key                             | New Configuration Key                                 | Purpose                                                              |
+|-----------------------------------------------------|-------------------------------------------------------|----------------------------------------------------------------------|
+| `delayed.queue.size`                                | `scheduled.queue.size`                                | Monitoring metric name                                               |
+| `rqueue.scheduler.delayed.message.thread.pool.size` | `rqueue.scheduler.scheduled.message.thread.pool.size` | Thread pool used for moving scheduled messages to the main queue     |
+| `rqueue.scheduler.delayed.message.time.interval`    | `rqueue.scheduler.scheduled.message.time.interval`    | Frequency at which scheduled messages are pulled into the main queue |
+| `rqueue.scheduled.queue.prefix`                     | `rqueue.delayed.queue.prefix`                         | Redis key prefix used for scheduled queues                           |
+| `rqueue.delayed.queue.channel.prefix`               | `rqueue.scheduled.queue.channel.prefix`               | Redis pub/sub channel prefix used for scheduled queue events         |
 
---- 
+{: .note}
+If your application does **not** use any of these configuration properties, you can upgrade to 
+**2.10+** without any changes.
 
-## 1.x to 2.x
+---
 
-Set redis key **__rq::version=1** or add `rqueue.db.version=1` in the properties file, this is
-required to handle data present in the old queues. It's safe to use version 2.x if existing queues
-do not have any tasks to process. Look for the results of following redis commands.
+## Upgrading from 1.x to 2.x
+
+When upgrading from **Rqueue 1.x to 2.x**, you must configure the Redis database version so that
+Rqueue can correctly interpret existing queue data.
+
+Choose one of the following methods:
+
+### Option 1: Redis Key
+
+Set the following key in Redis:
 
 ```
-1. LLEN <queueName> 
-2. ZCARD rqueue-delay::<queueName>
-3. ZCARD rqueue-processing::<queueName>
+
+__rq::version=1
+
+````
+
+### Option 2: Application Configuration
+
+Add the following property to your configuration:
+
+```properties
+rqueue.db.version=1
+````
+
+This setting ensures that Rqueue correctly handles data in queues created by older versions.
+
+{: .important}
+If your existing queues are empty, you can safely upgrade to **version 2.x** without 
+configuring the database version.
+
+To check if your queues contain pending tasks, run the following Redis commands:
+
+```
+LLEN <queueName>
+ZCARD rqueue-delay::<queueName>
+ZCARD rqueue-processing::<queueName>
 ```
 
-If all of these commands gives zero then all tasks have been consumed.
-
-
+If all commands return **0**, your queues are empty and you can proceed with the 
+migration without additional configuration.
