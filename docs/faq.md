@@ -6,13 +6,13 @@ description: Frequently Asked Questions about Rqueue
 permalink: /faq
 ---
 
-## How can we handle different types of messages with a single listener?
+## How can I handle different message types with a single listener?
 
-Sometimes, you may need a single message listener to handle various asynchronous tasks. To achieve
-this, define a superclass and subclasses for different message types. In your listener, enqueue
-instances of these subclasses using the superclass.
+Sometimes you may want a single listener to handle various types of tasks. You can achieve this 
+by using a common superclass for your message types. In your listener, you can then use 
+`instanceof` to distinguish between them.
 
-**Define Message Classes**
+**1. Define Message Classes**
 
 ```java
 class FancyMessage {
@@ -28,10 +28,10 @@ class OkOkFancyMessage extends FancyMessage {
 }
 ```
 
-Here, `FancyMessage` acts as a superclass for `SuperFancyMessage` and `OkOkFancyMessage`. You can
-enqueue both `SuperFancyMessage` and `OkOkFancyMessage` instances in the same queue.
+Here, `FancyMessage` is the superclass. You can enqueue both `SuperFancyMessage` and 
+`OkOkFancyMessage` instances into the same queue.
 
-**Enqueuing Process**
+**2. Enqueuing Process**
 
 ```java
 
@@ -48,7 +48,7 @@ class MyMessageEnqueuer {
 }
 ```
 
-**Message Listener**
+**3. Message Listener**
 
 ```java
 
@@ -76,10 +76,10 @@ class FancyMessageListener {
 }
 ```
 
-## How do we apply rate limiting?
+## How can I apply rate limiting?
 
-Rate limiting can be implemented using middleware. In the middleware, you can customize whether to
-allow or reject messages based on specific criteria.
+Rate limiting can be implemented using middleware. Within your middleware, you can determine 
+whether to allow or throttle messages based on your business criteria.
 
 ```java
 class MyRateLimiter implements RateLimiterMiddleware {
@@ -105,7 +105,7 @@ class MyRateLimiter implements RateLimiterMiddleware {
 }
 ```
 
-Using rate limiting middleware:
+Registering the rate limiter middleware:
 
 ```java
 
@@ -123,24 +123,25 @@ public class RqueueConfiguration {
 }
 ```
 
-## Does Rqueue support generic classes?
+## Does Rqueue support generic classes as message types?
 
-No, Rqueue does not support generic classes.
+Currently, Rqueue does not support generic classes for message serialization/deserialization.
 
-## Why are messages consumed late by a listener?
+## Why are some messages consumed late?
 
-Messages should typically be consumed promptly by listeners. Delays may occur if there are more
-messages in the queue than available listeners, or due to high processing times. To minimize delays,
-consider increasing the concurrency of your queue.
+Messages are usually consumed immediately. Delays can occur if:
+- The volume of messages exceeds the available listener capacity.
+- Task execution time is high, occupying worker threads for longer periods.
 
-For scheduled messages, you can monitor the queue details page and ensure the time left is always
-greater than `-1000 milliseconds`.
+To improve performance, consider increasing the concurrency level for your queues. 
+For scheduled messages, you can monitor the queue details on the dashboard and ensure 
+that the "time left" does not stay negative for extended periods.
 
-## How can we retrieve a job's position in the queue?
+## How can I find a job's position in the queue?
 
-Determining a job's exact position in the queue can be challenging due to parallel processing and
-Redis data structures. You can estimate the queue size by checking pending and scheduled message
-counts.
+Calculating an exact position is difficult due to parallel processing and the way Redis 
+manages data. However, you can estimate the current queue length by checking the sum of 
+pending and scheduled messages.
 
 ```java
 class TestJobPosition {
@@ -155,31 +156,29 @@ class TestJobPosition {
 }
 ```
 
-## How can we scale Rqueue to process millions of messages per hour?
+## How can I scale Rqueue to process millions of messages?
 
-To scale Rqueue for high throughput:
+To achieve high throughput:
+- Minimize the number of unique queues to reduce overhead.
+- Distribute queues across multiple listener instances.
+- Use priority groups to manage resource allocation.
+- Increase batch sizes if processing threads are underutilized.
+- Disable features like job history persistence and terminal state message durability 
+  if they are not required.
 
-- Use a minimal number of queues and utilize them efficiently.
-- Distribute queues across multiple machines.
-- Group queues using priority groups.
-- Increase batch sizes if threads are underutilized.
-- Disable unnecessary features like job persistence and immediate message deletion.
+## Rqueue is consuming too much Redis memory. How can I manage this?
 
-For optimal performance, group queues based on message rates, business verticals, and message types.
-
-## Rqueue is using a significant amount of Redis memory. How can this be managed?
-
-Rqueue stores completed jobs and messages in Redis by default. To reduce Redis memory usage, disable
-job persistence and immediate message deletion:
+By default, Rqueue stores job history in Redis. You can significantly reduce memory usage 
+by disabling job persistence and setting terminal state durability to 0:
 
 ```properties
 rqueue.job.enabled=false
 rqueue.message.durability.in-terminal-state=0
 ```
 
-## How can we consume events from the dead letter queue?
+## How can I consume messages from the dead letter queue?
 
-To consume messages from the dead letter queue:
+You can define a separate listener for the dead letter queue by specifying its name:
 
 ```java
 
