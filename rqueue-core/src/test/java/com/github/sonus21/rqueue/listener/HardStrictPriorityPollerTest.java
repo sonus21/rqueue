@@ -72,9 +72,9 @@ class HardStrictPriorityPollerTest extends TestBase {
         new HardStrictPriorityPollerProperties()
     ));
 
-    // КРИТИЧЕСКИ ВАЖНО: Разрешаем опрос очередей
+    // Allowing queue polling
     lenient().doReturn(true).when(poller).eligibleForPolling(anyString());
-    // КРИТИЧЕСКИ ВАЖНО: Запрещаем немедленный выход из цикла
+    // Disable immediate exit from the loop
     lenient().doReturn(false).when(poller).shouldExit();
   }
 
