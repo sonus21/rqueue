@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.spring.boot.tests.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.ApplicationWithCustomMessageConverter;
@@ -36,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import tools.jackson.core.JacksonException;
 
 @ContextConfiguration(classes = ApplicationWithCustomMessageConverter.class)
 @SpringBootTest
@@ -59,7 +59,7 @@ class CustomMessageConverterTest extends BasicListenerTest {
   }
 
   @Test
-  void verifyMessageStoredInDb() throws TimedOutException, JsonProcessingException {
+  void verifyMessageStoredInDb() throws TimedOutException, JacksonException {
     rqueueEndpointManager.pauseUnpauseQueue(jobQueue, true);
     TimeoutUtils.sleep(Constants.ONE_MILLI);
     List<Job> jobs = new ArrayList<>();

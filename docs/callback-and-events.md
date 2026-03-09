@@ -6,18 +6,18 @@ description: Callbacks and Events in Rqueue
 permalink: /callback-and-events
 ---
 
-Rqueue provides various types of callbacks and events for handling message processing and
-application events.
+Rqueue provides various callbacks and events to hook into message processing and 
+application lifecycles.
 
-## Message Processors/Callbacks
+## Message Processors and Callbacks
 
-Rqueue supports the following message processors, which can be used for different purposes such as
-setting up tracers or managing transactions.
+Rqueue supports several message processors. These can be used for various purposes, such as 
+setting up tracing contexts, managing transactions, or auditing.
 
-### Pre Execution Processor
+### Pre-Execution Processor
 
-This message processor is invoked before calling the handler methods. If the processor
-returns `false`, the message handler will not be called.
+The Pre-Execution Processor is invoked before a message handler is called. If the processor 
+returns `false`, the handler execution is skipped.
 
 ```java
 class RqueueConfiguration {
@@ -36,9 +36,9 @@ class RqueueConfiguration {
 }
 ```
 
-### Discard Execution Processor
+### Discard Processor
 
-This message processor is called whenever a message is discarded due to exceeding the retry limit.
+The Discard Processor is called when a message is discarded after exceeding its retry limit.
 
 ```java
 class RqueueConfiguration {
@@ -59,7 +59,7 @@ class RqueueConfiguration {
 
 ### Dead Letter Queue Processor
 
-This message processor is called whenever a message is moved to the dead letter queue.
+This processor is invoked whenever a message is moved to a dead letter queue.
 
 ```java
 class RqueueConfiguration {
@@ -80,7 +80,7 @@ class RqueueConfiguration {
 
 ### Manual Deletion Processor
 
-This message processor is called whenever a message is deleted manually.
+The Manual Deletion Processor is called whenever a message is manually deleted.
 
 ```java
 class RqueueConfiguration {
@@ -99,9 +99,9 @@ class RqueueConfiguration {
 }
 ```
 
-### Post Execution Processor
+### Post-Execution Processor
 
-This message processor is called upon successful consumption of the message.
+This processor is called after a message has been successfully consumed.
 
 ```java
 class RqueueConfiguration {
@@ -122,16 +122,16 @@ class RqueueConfiguration {
 
 ## Events
 
-Rqueue generates two types of application events: one for Rqueue container start/shutdown and
-another for task execution status.
+Rqueue generates two types of Spring Application Events: one for container lifecycle 
+(start/shutdown) and another for job execution status.
 
-### Job/Task Execution Event
+### Job/Task Execution Events
 
-Upon completion of each task, Rqueue generates `RqueueExecutionEvent`, which the application can
-listen to. This event contains a job object providing all relevant information about the job.
+After a task completes, Rqueue publishes an `RqueueExecutionEvent`. Applications can listen 
+for this event to get detailed information about job performance and outcomes.
 
-### Application Bootstrap Event
+### Container Lifecycle Events
 
-Once the RqueueListenerContainer is started, it emits `RqueueBootstrapEvent`. This event is
-generated post container shutdown and can be used for tasks such as queue registration or cleaning
-up local states.
+When the `RqueueListenerContainer` starts or stops, it publishes an `RqueueBootstrapEvent`. 
+This event can be used to perform setup or cleanup operations when the messaging system 
+initializes or shuts down.

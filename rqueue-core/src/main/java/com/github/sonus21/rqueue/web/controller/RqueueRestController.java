@@ -194,7 +194,7 @@ public class RqueueRestController extends BaseController {
   @GetMapping("aggregate-data-selector")
   @ResponseBody
   public DataSelectorResponse aggregateDataCounter(
-      @RequestParam AggregationType type, HttpServletResponse response) {
+      @RequestParam("type") AggregationType type, HttpServletResponse response) {
     if (isEnable(response)) {
       return rqueueUtilityService.aggregateDataCounter(type);
     }

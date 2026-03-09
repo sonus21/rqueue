@@ -8,31 +8,33 @@ permalink: /message-handling
 ---
 
 
-Rqueue supports two types of message handling
+Rqueue supports two modes of message delivery:
 
-* Unicast: One message is handed over to one the listener/handler/consumer
-* Multicast: One message is handed over to multiple listeners/handlers/consumers
+* **Unicast**: A message is delivered to exactly one listener/handler.
+* **Multicast**: A message is delivered to multiple listeners/handlers for the same queue.
 
-[![Message Handling](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.jpg)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/qrqueue-message-flow.jpg)
+[![Message Handling](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.jpg)](https://raw.githubusercontent.com/sonus21/rqueue/master/docs/static/rqueue-message-flow.jpg)
 
 ## Message Multicasting
 
-When multiple listeners are attached to the same queue, it's essential to designate one as the
-primary listener. This primary listener handles retries and other operations related to message
-processing. Secondary listeners are invoked alongside the primary listener whenever a message is
-received. For example, if three listeners (`L1`, `L2`, and `L3`) are registered for
-the `user-queue`, one of them must be designated as primary.
+When multiple handlers are attached to the same queue, one must be designated as the 
+**primary listener**. The primary listener is responsible for managing retries and 
+the overall message lifecycle. Secondary listeners are invoked alongside the primary 
+listener whenever a message is consumed.
 
-Designating a primary listener means that if the primary listener (`L2`, in this example) encounters
-a processing failure, it retries the message. During retries, all listeners (`L1`, `L3`, and `L2`)
-might be called again with the same message (`UserEvent1`), potentially leading to duplicate
-processing for some listeners (`L1` and `L3`), even if they successfully processed the event
-initially.
+For example, if you have three handlers (`L1`, `L2`, and `L3`) for `user-queue`, and 
+`L2` is the primary:
+- If `L2` fails, the message will be retried.
+- During the retry, **all** handlers (`L1`, `L2`, and `L3`) may be called again.
+- This can lead to duplicate processing in `L1` and `L3` even if they succeeded 
+  on the first attempt. Ensure your handlers are idempotent when using multicasting.
 
 ## Configuration
 
-Add `RqueueListener` annotation to any class, and use any of the spring stereotype annotation, so
-that a bean would be created. Annotate all listener methods in this class using `RqueueHandler`
+To use multicasting, annotate your class with `@RqueueListener` and ensure it is 
+registered as a Spring bean (e.g., using `@Component`). Then, annotate each 
+handler method with `@RqueueHandler`. Use the `primary = true` attribute on 
+exactly one `@RqueueHandler` annotation.
 
 ```java
 
@@ -74,15 +76,16 @@ public class UserBannedMessageListener {
 }
 ```
 
-## Limitation
+## Limitations and Important Considerations
 
-- **Middleware**: Middlewares are invoked globally before any handler method is called. They are not
-  called individually for each handler. It's crucial that message release is only handled by the
-  primary handler to avoid inconsistent states.
+- **Middleware**: Middleware is invoked once before any handler methods are executed. 
+  It is not called individually for each `@RqueueHandler`. Ensure that message 
+  release or status handling is managed only by the primary handler to avoid 
+  inconsistent states.
 
-- **Failure/Retry**: Failure and retry mechanisms apply exclusively to the primary handler. If the
-  primary handler fails during execution, all handlers will be retried in the subsequent attempt.
+- **Failure and Retries**: Failure and retry logic applies exclusively based on the 
+  result of the primary handler. If the primary handler fails, all handlers will 
+  be retried in the next attempt.
 
-- **Metrics/Job data**: Metrics and job data are recorded once per execution cycle. For instance,
-  even if there are multiple handlers configured, such as four in this example, it will count as a
-  single execution generating a single job record.
+- **Metrics and Job Data**: Metrics and job records are generated once per consumption 
+  cycle. Even with multiple handlers, the execution counts as a single job.

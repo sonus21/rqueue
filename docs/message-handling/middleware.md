@@ -7,19 +7,21 @@ description: Rqueue Middleware
 permalink: /middleware
 ---
 
-In many scenarios, there's a need to execute specific blocks of code repetitively. Some common use
-cases include:
+Middleware allows you to execute common logic across your message listeners. Common 
+use cases include:
 
-- Logging job details
-- Profiling listener methods
-- Initiating transactions (e.g., New Relic, database, distributed transactions, Micrometer tracer)
-- Implementing rate limiting (e.g., restricting a queue to process only 10 jobs per minute)
-- Managing concurrent job execution (e.g., ensuring a user's account updater job runs sequentially)
-- Handling permission or role changes (e.g., reacting to user bans or role updates)
+- Logging and auditing job details.
+- Profiling listener performance.
+- Managing transaction boundaries (e.g., database transactions, New Relic, 
+  distributed tracing).
+- Implementing rate limiting (e.g., restricting a queue to 10 jobs per minute).
+- Ensuring sequential job execution (e.g., forcing a specific user's tasks to run 
+  one at a time).
+- Enforcing access control or handling status changes (e.g., checking for user bans).
 
-Middleware can effectively handle these situations by configuring one or more middlewares through
-the `SimpleRqueueListenerContainerFactory` object. These middlewares are invoked in the order they
-are added, enabling structured and consistent execution of tasks across different scenarios.
+You can register one or more middleware implementations via the 
+`SimpleRqueueListenerContainerFactory`. Middleware is invoked in the order it is 
+added, providing a structured way to intercept and process messages.
 
 ```java
 public class RqueueConfiguration {

@@ -21,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @CoreUnitTest
 class RqueueMessageTest extends TestBase {
@@ -54,7 +54,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void objectEquality() throws JsonProcessingException {
+  void objectEquality() throws JacksonException {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())
@@ -69,7 +69,7 @@ class RqueueMessageTest extends TestBase {
   }
 
   @Test
-  void objectEqualityWithoutDelay() throws JsonProcessingException {
+  void objectEqualityWithoutDelay() throws JacksonException {
     RqueueMessage message =
         RqueueMessage.builder()
             .id(UUID.randomUUID().toString())

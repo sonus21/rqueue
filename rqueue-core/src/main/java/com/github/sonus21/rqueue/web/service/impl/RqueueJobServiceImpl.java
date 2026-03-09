@@ -16,8 +16,6 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.db.CheckinMessage;
@@ -37,6 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class RqueueJobServiceImpl implements RqueueJobService {
@@ -79,7 +79,7 @@ public class RqueueJobServiceImpl implements RqueueJobService {
       try {
         String data = objectMapper.writeValueAsString(job.getCheckins());
         columns.add(new TableColumn(data));
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         throw new ProcessingException(e.getMessage(), e);
       }
     }

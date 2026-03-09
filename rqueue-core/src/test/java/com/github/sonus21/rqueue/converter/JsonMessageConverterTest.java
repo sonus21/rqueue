@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import java.util.UUID;
@@ -32,6 +31,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MessageConverter;
+import tools.jackson.databind.ObjectMapper;
 
 @CoreUnitTest
 class JsonMessageConverterTest extends TestBase {
@@ -53,10 +53,13 @@ class JsonMessageConverterTest extends TestBase {
     assertEquals(testData, messageConverter.fromMessage(testDataMessage, TestData.class));
     assertEquals(testDataX, messageConverter.fromMessage(testDataXMessage, TestDataX.class));
 
-    // unknown property error
-    assertNull(messageConverter2.fromMessage(testDataXMessage, TestData.class));
+    // deserializing from type 2 to type 1
+    TestData newTestData =
+        (TestData) messageConverter2.fromMessage(testDataXMessage, TestData.class);
+    assertEquals(testDataX.id, newTestData.id);
+    assertEquals(testDataX.message, newTestData.message);
 
-    // serializing from type 1 to type 2
+    // deserializing from type 1 to type 2
     TestDataX newTestDataX =
         (TestDataX) messageConverter2.fromMessage(testDataMessage, TestDataX.class);
     assertEquals(testData.id, newTestDataX.id);

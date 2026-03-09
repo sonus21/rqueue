@@ -5,69 +5,72 @@ parent: Configuration
 nav_order: 2
 ---
 
-# Retry And Backoff
+# Retry and Backoff
 
-Rqueue is a poll-based library that sends various commands to Redis to retrieve messages. These
-commands can fail for several reasons, such as Redis being under stress, outages, connection
-timeouts, or poor internet connections. Continuous attempts to send commands can overload the Redis
-server. To mitigate this, you can configure a back-off interval, causing the poller to sleep instead
-of repeatedly sending commands. This is done by setting the `backOffTime` in
-the `SimpleRqueueListenerContainerFactory`. The default back-off time is 5 seconds.
+Rqueue is a polling-based library that interacts with Redis to retrieve messages. These 
+interactions can fail due to Redis server stress, outages, connection timeouts, or 
+network instability. To avoid overloading Redis during such failures, you can 
+configure a **back-off interval**. 
 
-## Do not retry
+When a command fails, the poller will wait for the duration specified by `backOffTime` 
+in the `SimpleRqueueListenerContainerFactory` before trying again. The default 
+back-off time is 5 seconds.
 
-In scenarios where you don't want Rqueue to retry failures, you can handle this in two ways:
+## Disabling Retries
 
-- **Using `RqueueListener` Annotation**: Add exceptions to the `doNotRetry` list within
-   the `RqueueListener` annotation. This instructs Rqueue not to retry for specific exceptions.
+If you want to prevent Rqueue from retrying specific task failures, you can use one of 
+the following methods:
+
+1. **Using the `@RqueueListener` Annotation**: Specify exceptions in the `doNotRetry` 
+   attribute. Rqueue will not retry the task if it fails with any of these exceptions.
 
 ```java
-
-public class MessageListener{
-  @RqueueListener(value = "sms", priority = "critical=10,high=8,medium=4,low=1", doNoRetry={Exception1.class, Exception2.class})
+public class MessageListener {
+  @RqueueListener(value = "sms", doNoRetry = {Exception1.class, Exception2.class})
   public void onMessage(Sms sms) {
-    log.info("Sms : {}", sms);
+    log.info("Sms: {}", sms);
   }
-    
 }
 ```
 
-- **Returning `-1` from Execution Backoff Method**: Alternatively, you can return `-1` from the
-   execution backoff method. This signals Rqueue to stop any further retry attempts for the failed
-   message. 
+2. **Returning `-1` from a Custom Backoff**: If you implement a custom 
+   `TaskExecutionBackOff`, returning `-1` signals Rqueue to stop all further retry 
+   attempts for that message.
 
-These approaches offer flexibility in managing error handling and retry policies within your
-application using Rqueue. Messages handled in this way also won't be sent to the Dead Letter Queue.
+Note: Messages handled this way are neither retried nor moved to the Dead Letter Queue.
 
-## Task Execution backoff
+## Task Execution Backoff
 
-The method consuming the message can also fail for various reasons. In such cases, the message may
-be retried, moved to a dead letter queue, or dropped. If a message needs to be retried, it can
-either be retried immediately or after some time. To retry immediately, set `rqueue.retry.per.poll`
-to a positive number like 2, which means the message will be retried twice in quick succession.
+When a message handler fails, the message can be retried immediately, delayed for a 
+future retry, moved to a dead letter queue, or dropped.
 
-If you prefer not to retry the message immediately, you can configure Rqueue to retry the message
-after a delay using an exponential or linear backoff approach, or any other strategy. By default,
-Rqueue uses a linear backoff with a delay of 5 seconds, meaning the failed message will be retried
-after 5 seconds. To customize this behavior, you can provide an implementation
-of `TaskExecutionBackoff`, or use the default implementations such as `FixedTaskExecutionBackOff`
-or `ExponentialTaskExecutionBackOff`.
+### Immediate Retries
+To retry a message immediately within the same polling cycle, set 
+`rqueue.retry.per.poll` to a positive integer (e.g., `2`). This will cause the 
+message to be retried twice in quick succession before being returned to the queue.
+
+### Delayed Retries (Exponential/Linear Backoff)
+By default, Rqueue uses a linear backoff with a 5-second delay. You can customize 
+this by providing a `TaskExecutionBackOff` implementation. Rqueue includes built-in 
+options like `FixedTaskExecutionBackOff` and `ExponentialTaskExecutionBackOff`.
 
 ```java
 public class RqueueConfiguration {
 
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
-    SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory = new SimpleRqueueListenerContainerFactory();
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     // ...
-    simpleRqueueListenerContainerFactory.setTaskExecutionBackOff(getTaskExecutionBackoff());
-    return simpleRqueueListenerContainerFactory;
+    factory.setTaskExecutionBackOff(getTaskExecutionBackoff());
+    return factory;
   }
 
   private TaskExecutionBackOff getTaskExecutionBackoff() {
-    // return TaskExecutionBackOff implementation
-    // return new FixedTaskExecutionBackOff(2_000L, 2); // 2 seconds delay and 2 retries
-    // return new ExponentialTaskExecutionBackOff(2_000L, 10*60_000L,  2, 200) 
+    // Example: 2 seconds delay, 2 retries
+    // return new FixedTaskExecutionBackOff(2_000L, 2); 
+    
+    // Example: Exponential backoff starting at 2s, max 10m
+    // return new ExponentialTaskExecutionBackOff(2_000L, 10 * 60_000L, 2, 200);
   }
 }
 ```

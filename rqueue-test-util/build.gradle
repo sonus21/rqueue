@@ -27,7 +27,7 @@ dependencies {
     api "org.springframework.data:spring-data-jpa:${springDataVersion}"
 
     // https://mvnrepository.com/artifact/org.hibernate/hibernate-core-jakarta
-    api "org.hibernate:hibernate-core-jakarta:${hibernateCoreVersion}"
+    api "org.hibernate.orm:hibernate-core:${hibernateCoreVersion}"
 
     api "com.athaydes.javanna:javanna:1.1"
 }

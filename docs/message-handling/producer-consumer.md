@@ -8,20 +8,22 @@ permalink: /producer-consumer
 ---
 
 
-The Rqueue provides an abstraction over Redis for Producer and Consumer use case. The library
-provides two types of queues for producer/consumer.
+Rqueue provides an abstraction over Redis for Producer/Consumer patterns, 
+supporting two main types of queues:
 
-* General queue (FIFO)
-* Delay queue (Priority queue)
+* **General Queue**: A standard First-In-First-Out (FIFO) queue.
+* **Delayed Queue**: A priority-based queue for scheduled tasks.
 
-Rqueue has been designed to handle different use cases and scenarios.
+Rqueue is designed to handle various messaging scenarios and high-throughput workloads.
 
-Read More about Rqueue Design at [Introducing Rqueue: Redis Queue][Introducing Rqueue]
+For a deeper dive into the architectural decisions, see 
+[Introducing Rqueue: Redis Queue][Introducing Rqueue].
 
-Rqueue Architecture
---------------------
-Rqueue Broker runs scheduled job as well as it communicates with Redis. In general Rqueue works as
-producers and consumers at the same time.
+## Rqueue Architecture
+
+The Rqueue broker handles both scheduled task management and direct communication with 
+Redis. In a standard setup, an application instance acts as both a producer and a 
+consumer.
 
 ```text
 +-----------------------+                         +------------------------+
@@ -41,12 +43,13 @@ producers and consumers at the same time.
                                   +-----+                                 
 ```  
 
-An application can operate in both producer and consumer modes. However, attempting to push a
-message to an unknown queue will result in a `QueueDoesNotExist` error. This error can be mitigated
-by using `registerQueue`, but there's a potential race condition where registered queues might get
-deleted. To prevent encountering the `QueueDoesNotExist` error again, listen
-for `RqueueBootStrapEvent` in your application and register queues only upon receiving this
-bootstrap event.
+An application can operate as both a producer and a consumer. Attempting to push a 
+message to an unknown queue will result in a `QueueDoesNotExist` error. You can 
+avoid this by using the `registerQueue` method.
+
+To prevent race conditions where queues might be deleted, it is recommended to 
+listen for the `RqueueBootstrapEvent` and register your queues once the bootstrap 
+process is complete.
 
 ```java
 
@@ -73,11 +76,12 @@ class AppMessageSender implements ApplicationListener<RqueueBootStrapEvent> {
 } 
 ```
 
-Rqueue can facilitate running consumers and producers in separate clusters without requiring changes
-to application code. This can be achieved effortlessly using the `active` flag of `RqueueListener`.
-In the producer cluster, you set `active` to `false`, while in the consumer cluster, you set
-the `active` flag to `true`. This approach allows for straightforward configuration and management
-of distinct roles within different clusters using Rqueue.
+### Split Producer/Consumer Clusters
+
+Rqueue can run producers and consumers on entirely separate clusters without changing 
+your code. This is managed using the `active` flag in `@RqueueListener`:
+- In the **Producer Cluster**, set `active = false`.
+- In the **Consumer Cluster**, set `active = true`.
 
 ```text
 +-----------------------+                         +------------------------+
@@ -95,15 +99,12 @@ of distinct roles within different clusters using Rqueue.
                                   +-----+                                 
 ```  
 
-If you have configured the producer and consumer on separate clusters, you can disable the Rqueue
-scheduler on the producer machine by setting `rqueue.scheduler.enabled=false`. This configuration
-ensures that the producer application operates solely as a producer without handling scheduling
-tasks.
+When running a dedicated producer cluster, disable the Rqueue scheduler by setting 
+`rqueue.scheduler.enabled=false`.
 
-Additionally, it's crucial to set `rqueue.system.mode=PRODUCER` to prevent
-potential `QueueDoesNotExist` errors. This setting explicitly defines the application mode as a
-producer, ensuring that it doesn't attempt to perform consumer-specific operations that might lead
-to queue-related issues in a split-cluster setup.
+Crucially, set `rqueue.system.mode=PRODUCER` to prevent `QueueDoesNotExist` errors. 
+This explicitly informs Rqueue that the application instance is only pushing 
+messages and does not need to manage the lifecycle of consumer queues.
 
 ```text
 +-----------------------+                         +------------------------+
@@ -122,51 +123,37 @@ to queue-related issues in a split-cluster setup.
                                   +-----+                                 
 ```  
 
-### Rqueue Scheduler
+### Rqueue Scheduler Configuration
 
-The Rqueue scheduler offers extensive configurability across various parameters:
+The Rqueue scheduler is highly configurable:
 
-- `rqueue.scheduler.enabled=true`: By default, the scheduler runs on all machines. You can disable
-  it globally using this flag if running on a single machine is sufficient.
-
-- `rqueue.scheduler.listener.shared=true`: Controls whether Rqueue scheduler shares the
-  RedisMessageListenerContainer for PUB/SUB communication with Redis consumers. Enabling this allows
-  efficient use of the same Redis connection for both application and Rqueue code.
-
-- `rqueue.scheduler.redis.enabled=true`: Disables event-based message movement, providing control
-  over when messages are processed.
-
-- `rqueue.scheduler.auto.start=true`: Manages thread pools for message handling. Setting this
-  to `false` uses only event-based message movement.
-
-- `rqueue.scheduler.scheduled.message.thread.pool.size=5`: Adjusts the thread pool size for handling
-  messages moved from ZSET to LIST, balancing efficiency with the number of delayed queues.
-
-- `rqueue.scheduler.processing.message.thread.pool.size=1`: Sets the thread pool size for handling
-  messages in the processing queue, ensuring reliable at-least-once message delivery.
-
-- `rqueue.scheduler.scheduled.message.time.interval=5000`: Specifies the interval for moving
-  messages from the scheduled queue to the normal queue, providing control over delayed message
-  consumption.
-
-- `rqueue.scheduler.max.message.count=100`: Limits the number of messages moved per batch from
-  scheduled/processing queues to the normal queue, optimizing processing efficiency during peak
-  loads.
-
-- `rqueue.scheduler.max.message.mover.delay=60000`: Specifies the maximum delay before retrying
-  Redis calls in case of failure, preventing system overload through exponential backoff.
-
-- `rqueue.scheduler.min.message.mover.delay=200`: Sets the minimum delay for periodic message
-  fetching, ensuring efficient processing of scheduled messages.
+- **`rqueue.scheduler.enabled=true`**: Enable or disable the scheduler globally.
+- **`rqueue.scheduler.listener.shared=true`**: Whether to share the 
+  `RedisMessageListenerContainer` between the scheduler and message consumers to 
+  save connections.
+- **`rqueue.scheduler.redis.enabled=true`**: Enable or disable event-based message movement.
+- **`rqueue.scheduler.auto.start=true`**: If `false`, the scheduler will only use 
+  Redis events for message movement instead of dedicated polling threads.
+- **`rqueue.scheduler.scheduled.message.thread.pool.size=5`**: Thread pool size for 
+  moving tasks from the scheduled queue (`ZSET`) to the main queue (`LIST`).
+- **`rqueue.scheduler.processing.message.thread.pool.size=1`**: Thread pool size for 
+  handling recovery of tasks from the processing queue.
+- **`rqueue.scheduler.scheduled.message.time.interval=5000`**: Polling interval 
+  (in ms) for moving scheduled tasks.
+- **`rqueue.scheduler.max.message.count=100`**: Max messages to move per batch.
+- **`rqueue.scheduler.max.message.mover.delay=60000`**: Maximum retry delay 
+  for Redis operations.
+- **`rqueue.scheduler.min.message.mover.delay=200`**: Minimum interval for 
+  periodic message movement.
 
 These configurations allow fine-tuning of Rqueue scheduler behavior across different operational
 scenarios.
 
-### Dead Letter Queue Consumer/Listener
+### Dead Letter Queue Consumers
 
-By default, an application cannot attach a listener to a dead letter queue. To enable dead letter
-queue listener functionality for a specific queue, set the `deadLetterQueueListenerEnabled`
-attribute of the `RqueueListener` annotation.
+By default, Rqueue does not attach listeners to dead letter queues. To enable a 
+listener for a specific dead letter queue, set `deadLetterQueueListenerEnabled = "true"` 
+in the `@RqueueListener` annotation.
 
 Example configuration
 

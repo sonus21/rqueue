@@ -18,15 +18,15 @@ package com.github.sonus21.rqueue.converter;
 
 import static org.springframework.util.Assert.notNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.utils.SerializationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * JsonMessageConverter tries to convert to JSON and from JSON to object.
@@ -37,7 +37,7 @@ import org.springframework.messaging.support.GenericMessage;
  * <p>Target class is null till the time method arguments are not resolved, once method arguments
  * are resolved then it will become non-null.
  *
- * @see MappingJackson2MessageConverter
+ * @see JacksonJsonMessageConverter
  */
 @Slf4j
 public class JsonMessageConverter implements MessageConverter {
@@ -65,7 +65,7 @@ public class JsonMessageConverter implements MessageConverter {
         return objectMapper.readValue(payload, targetClass);
       }
       return null;
-    } catch (JsonProcessingException | ClassCastException e) {
+    } catch (JacksonException | ClassCastException e) {
       log.debug("Deserialization of message {} failed", message, e);
       return null;
     }
@@ -77,7 +77,7 @@ public class JsonMessageConverter implements MessageConverter {
     try {
       String msg = objectMapper.writeValueAsString(payload);
       return new GenericMessage<>(msg);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       log.debug("Serialisation failed, Payload: {}", payload, e);
       return null;
     }

@@ -29,6 +29,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -74,7 +75,8 @@ class GenericMessageConverterTest extends TestBase {
   @Test
   void toMessageEmptyObject() {
     Message<String> m = (Message<String>) genericMessageConverter.toMessage(new Object(), null);
-    assertNull(m);
+    Object object = genericMessageConverter.fromMessage(m, null);
+    assertEquals(object, new LinkedHashMap<>());
   }
 
   @Test

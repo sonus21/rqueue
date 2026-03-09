@@ -197,7 +197,7 @@ public class ReactiveRqueueRestController extends BaseReactiveController {
   @GetMapping("aggregate-data-selector")
   @ResponseBody
   public Mono<DataSelectorResponse> aggregateDataCounter(
-      @RequestParam AggregationType type, ServerHttpResponse response) {
+      @RequestParam("type") AggregationType type, ServerHttpResponse response) {
     if (isEnabled(response)) {
       return rqueueUtilityService.reactiveAggregateDataCounter(type);
     }

@@ -2,7 +2,9 @@ plugins {
     id "application"
 }
 
-mainClassName = "rqueue.spring.example.Main"
+application {
+    mainClass = "rqueue.spring.example.Main"
+}
 
 
 dependencies {

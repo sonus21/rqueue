@@ -18,7 +18,7 @@ package rqueue.spring.example;
 
 import com.github.sonus21.rqueue.spring.EnableRqueue;
 import com.github.sonus21.rqueue.spring.RqueueMetricsProperties;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

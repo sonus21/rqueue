@@ -46,7 +46,8 @@ dependencies {
     api "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
     testImplementation project(":rqueue-spring-common-test")
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-    testImplementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-webflux-test:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-webtestclient:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-data-redis-reactive:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"

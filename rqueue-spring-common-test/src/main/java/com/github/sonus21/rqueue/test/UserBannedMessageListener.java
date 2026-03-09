@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.annotation.RqueueHandler;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.test.dto.UserBanned;
@@ -26,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
 
 @RqueueListener(value = "${user.banned.queue.name}", active = "${user.banned.queue.active}")
 @Slf4j
@@ -40,25 +40,25 @@ public class UserBannedMessageListener {
   private String userBannedQueue;
 
   @RqueueHandler
-  public void handleMessage1(UserBanned userBanned) throws JsonProcessingException {
+  public void handleMessage1(UserBanned userBanned) throws JacksonException {
     consumedMessageStore.save(userBanned, "handleMessage1", userBannedQueue);
     log.info("handleMessage1 {}", userBanned);
   }
 
   @RqueueHandler
-  public void handleMessage2(UserBanned userBanned) throws JsonProcessingException {
+  public void handleMessage2(UserBanned userBanned) throws JacksonException {
     consumedMessageStore.save(userBanned, "handleMessage2", userBannedQueue);
     log.info("handleMessage2 {}", userBanned);
   }
 
   @RqueueHandler(primary = true)
-  public void handleMessagePrimary(UserBanned userBanned) throws JsonProcessingException {
+  public void handleMessagePrimary(UserBanned userBanned) throws JacksonException {
     consumedMessageStore.save(userBanned, "handleMessagePrimary", userBannedQueue);
     log.info("handleMessagePrimary {}", userBanned);
   }
 
   @RqueueHandler
-  public void handleUserBanned(UserBanned userBanned) throws JsonProcessingException {
+  public void handleUserBanned(UserBanned userBanned) throws JacksonException {
     consumedMessageStore.save(userBanned, "handleUserBanned", userBannedQueue);
     log.info("handleUserBanned {}", userBanned);
   }

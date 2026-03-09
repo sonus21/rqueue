@@ -46,9 +46,9 @@ public class FailureDetailRepositoryImpl implements FailureDetailRepository {
     Session session = entityManager.unwrap(Session.class);
     Transaction tx = session.beginTransaction();
     if (entity.getFailureCount() == 0) {
-      session.save(entity);
+      session.persist(entity);
     } else {
-      session.update(entity);
+      session.merge(entity);
     }
     tx.commit();
     return entity;

@@ -7,13 +7,20 @@ description: Message deduplication in Rqueue
 permalink: /message-deduplication
 ---
 
-Sometimes, there's a need to schedule unique messages in a queue. In these instances, the older
-message should be discarded to ensure only the newest one is consumed. Implementing this requires
-careful consideration of what defines message uniqueness — whether it's a single `ID` field or a
-combination of multiple fields. Once identified, you can use a pre-execution message processor to
-manage the discarding of older messages before processing the latest ones.
+You may sometimes need to ensure that only unique messages are processed in a queue. 
+In such cases, when a new version of a message is scheduled, any older, pending versions 
+should be discarded.
 
-##### Enqueue Process
+To implement this, first define what makes a message unique (e.g., an ID or a 
+combination of fields). Then, use a **Pre-Execution Message Processor** to check 
+the message's uniqueness and decide whether to process or discard it.
+
+### Example: Discarding Older Messages
+
+In this scenario, we keep track of the latest enqueue time. If a polled message is 
+older than the recorded latest time, it is skipped.
+
+#### 1. Enqueue Process
 
 ```java
 interface MessageRepository {
@@ -41,7 +48,9 @@ class MessageSender {
 }
 ```
 
-UniqueMessageProcessor that implements MessageProcessor and returns false for the older messages.
+#### 2. Unique Message Processor
+
+Implement `MessageProcessor` and return `false` for older messages to skip them.
 
 ```java
 class UniqueMessageProcessor implements MessageProcessor {
@@ -64,7 +73,9 @@ class UniqueMessageProcessor implements MessageProcessor {
 }
 ```
 
-Rqueue configuration, that uses preExecutionMessageProcessor to skip messages.
+#### 3. Rqueue Configuration
+
+Register the pre-execution message processor in your configuration.
 
 ```java
 class RqueueConfiguration {
@@ -84,8 +95,10 @@ class RqueueConfiguration {
 }
 ```
 
-If your use case requires that older message should be executed while new one should be ignored than
-you can also implement that using pre execution message processor.
+### Example: Ignoring New Messages if Old Ones Exist
+
+If you prefer to execute the first message and ignore any subsequent versions 
+scheduled while the first is still pending, use this approach:
 
 ```java
 interface MessageRepository {
@@ -129,9 +142,11 @@ class UniqueMessageProcessor implements MessageProcessor {
 }
 ```
 
-##### This does not handle the following cases
+### Limitations
 
-* Multiple similar messages enqueue at the same time.
-* Multiple similar messages are trying to run at the same time.
-* Enqueuing new message when the existing one is running.
-* Enqueuing new message when the older message was discarded.
+These simple examples do not handle the following complex scenarios:
+
+- **Simultaneous Enqueuing**: Multiple similar messages enqueued at the exact same time.
+- **Concurrent Execution**: Multiple similar messages attempting to run at the same time.
+- **In-flight Messages**: Enqueuing a new message while an existing one is currently being processed.
+- **Deduplication Lag**: Enqueuing a new message shortly after an older message was discarded.

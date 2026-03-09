@@ -16,12 +16,9 @@
 
 package com.github.sonus21.rqueue.test.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.test.dto.BaseQueueMessage;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.repository.ConsumedMessageRepository;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -47,7 +46,7 @@ public class ConsumedMessageStore {
   }
 
   public void save(BaseQueueMessage message, Object tag, String queueName)
-      throws JsonProcessingException {
+      throws JacksonException {
     log.info("Queue '{}' Message: {} Tag: '{}'", queueName, message, tag);
     String tagStr;
     if (tag == null) {
@@ -91,7 +90,7 @@ public class ConsumedMessageStore {
               try {
                 T value = objectMapper.readValue(consumedMessage.getMessage(), tClass);
                 idToMessage.put(consumedMessage.getMessageId(), value);
-              } catch (JsonProcessingException e) {
+              } catch (JacksonException e) {
                 e.printStackTrace();
               }
             });

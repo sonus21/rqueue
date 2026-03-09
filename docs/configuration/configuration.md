@@ -10,17 +10,16 @@ permalink: configuration
 
 {: .no_toc }
 
-Rqueue offers many configuration settings that can be adjusted either through the application
-configuration or directly in the code.
-
-{: .fs-6 .fw-300 }
+Rqueue offers numerous configuration settings that can be adjusted either through 
+application properties or directly in code.
 
 ---
-Apart from the basic configuration, Rqueue can be heavily customized, such as adjusting the number
-of tasks executed concurrently. Additional configurations can be provided using
-the `SimpleRqueueListenerContainerFactory` class. See
-SimpleRqueueListenerContainerFactory [doc](https://javadoc.io/doc/com.github.sonus21/rqueue-core/latest/com/github/sonus21/rqueue/config/SimpleRqueueListenerContainerFactory.html)
-for more configs.
+
+Beyond basic setup, Rqueue can be highly customized, for example, by adjusting the number 
+of tasks executed concurrently. Further configurations are available via the 
+`SimpleRqueueListenerContainerFactory` class. Refer to the 
+[SimpleRqueueListenerContainerFactory Javadoc](https://javadoc.io/doc/com.github.sonus21/rqueue-core/latest/com/github/sonus21/rqueue/config/SimpleRqueueListenerContainerFactory.html) 
+for more details.
 
 ```java
 
@@ -33,23 +32,24 @@ public class RqueueConfiguration {
 }
 ```
 
-## Task or Queue Concurrency
+## Task and Queue Concurrency
 
-By default, the number of task executors is twice the number of queues. You can configure a custom
-or shared task executor using the factory's `setTaskExecutor` method. Additionally, queue
-concurrency can be set using the `RqueueListener` annotation's `concurrency` field, which can be a
-positive number like 10 or a range like 5-10. If queue concurrency is specified, each queue will use
-its own task executor to handle consumed messages; otherwise, a shared task executor is used.
+By default, the number of task executors is twice the number of queues. You can provide 
+a custom or shared task executor using the factory's `setTaskExecutor` method. 
 
-A global number of workers can be configured using the `setMaxNumWorkers` method.
-The `RqueueListener` annotation also has a `batchSize` field. By default, listeners with a
-concurrency
-set will fetch 10 messages, while others will fetch 1.
+Queue-level concurrency can be configured using the `@RqueueListener` annotation's 
+`concurrency` field. This can be a fixed number (e.g., `10`) or a range (e.g., `5-10`). 
+When specified, that queue uses its own task executor; otherwise, the shared task 
+executor is used.
+
+You can also set a global limit on workers using `setMaxNumWorkers`. The `batchSize` 
+field in `@RqueueListener` determines how many messages are fetched at once. By 
+default, listeners with explicit concurrency fetch 10 messages per poll, while others 
+fetch 1.
 
 {: .note}
-Increasing the batch size has its consequences. If your thread pool size is too low, you may
-encounter many processing jobs being rejected by the executor unless you have configured a
-large `queueCapacity`.
+Increasing the batch size can lead to task rejection if the thread pool is too small and 
+the `queueCapacity` is not sufficiently large.
 
 ```java
 class RqueueConfiguration {
@@ -82,15 +82,13 @@ class RqueueConfiguration {
 }
 ```
 
-When a custom executor is provided, it is essential to set `MaxNumWorkers` correctly. Otherwise, the
-thread pool might be over- or under-utilized. Over-utilization of the thread pool is not possible,
-as it will reject new tasks, leading to delays in message consumption. Under-utilization can be
-managed by ensuring proper configuration of the executor and adjusting the `MaxNumWorkers` setting
-appropriately.
+When providing a custom executor, it is essential to set `MaxNumWorkers` correctly to avoid 
+over- or under-utilizing the thread pool. Over-utilization can cause task rejection and 
+message consumption delays.
 
-```
+```java
 ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-threadPoolTaskExecutor.setThreadNamePrefix( "ListenerExecutor" );
+threadPoolTaskExecutor.setThreadNamePrefix("ListenerExecutor");
 threadPoolTaskExecutor.setCorePoolSize(corePoolSize);
 threadPoolTaskExecutor.setMaxPoolSize(maxPoolSize);
 threadPoolTaskExecutor.setQueueCapacity(queueCapacity);
@@ -98,51 +96,41 @@ threadPoolTaskExecutor.afterPropertiesSet();
 factory.setTaskExecutor(threadPoolTaskExecutor);
 ```
 
-In this configuration, there are three key variables: `corePoolSize`, `maxPoolSize`,
-and `queueCapacity`.
+Key configuration parameters for the executor include:
+- `corePoolSize`: The minimum number of active threads.
+- `maxPoolSize`: The maximum number of active threads.
+- `queueCapacity`: The number of tasks that can wait in the internal queue before new 
+  tasks are rejected.
 
-- `corePoolSize` signifies the lower limit of active threads.
-- `maxPoolSize` signifies the upper limit of active threads.
-- `queueCapacity` signifies that even if you have `maxPoolSize` running threads, you can
-  have `queueCapacity` tasks waiting in the queue, which can be dequeued and executed by the
-  existing threads as soon as the running threads complete their execution.
-
-If you have N queues, you can set the maximum number of workers
-as `(maxPoolSize + queueCapacity - N)`.
+With `N` queues, a common rule of thumb for setting the maximum number of workers is 
+`(maxPoolSize + queueCapacity - N)`.
 
 {: .warning}
-In this context, N threads are allocated for polling queues, but this is not a correct number when *
-*priority** is used.
+In this case, `N` represents the threads allocated for polling. However, this count 
+can vary significantly if **priorities** are used.
 
-The number of message pollers is determined by the sum of the following:
+The total number of message pollers is determined by the sum of:
+1. The number of unique priority groups.
+2. The number of queues with explicit priority settings (e.g., `"critical=5,high=2"`).
+3. The number of queues without specified priorities.
 
-1. Number of unique priority groups.
-2. Number of queues with specified priorities (e.g., `"critical=5,high=2"`).
-3. Number of queues without priority.
-
-If you prefer not to delve into the calculations, you can set the following:
-
+A safe baseline configuration without complex calculations:
 - `queueCapacity >= 2 * number of queues`
 - `maxPoolSize >= 2 * number of queues`
 - `corePoolSize >= number of queues`
--
 
 {: .note}
-Setting a non-zero `queueCapacity` can indeed lead to duplicate message problems. This occurs
-because polled messages that are waiting to be executed might have their `visibilityTimeout` expire,
-causing another message listener to pull the same message again. This scenario can result in
-duplicate processing of messages, which can impact the correctness of your application's logic. To
-mitigate this issue, it's crucial to carefully configure `queueCapacity` and `visibilityTimeout`
-settings to ensure that messages are processed correctly without duplication.
+A non-zero `queueCapacity` can lead to duplicate message processing. If a message is 
+polled and sits in the executor's queue longer than its `visibilityTimeout`, it may 
+be re-polled by another listener. Ensure your `visibilityTimeout` is long enough to 
+accommodate potential queuing delays.
 
-## Manual start of the container
+## Manual Container Management
 
-When using a container that starts automatically and offers graceful shutdown, you can control its
-automatic startup behavior using the `autoStartup` flag. If `autoStartup` is set to `false`, then
-your application needs to manually call the `start` and `stop` methods of the container to control
-its lifecycle. Additionally, for a graceful shutdown, you should call the `destroy` method when
-appropriate. This gives you finer control over when the container starts and stops within your
-application's lifecycle.
+By default, the Rqueue container starts automatically. You can control this behavior 
+using the `autoStartup` flag. If set to `false`, you must manually call the `start()` 
+and `stop()` methods of the container. For a clean shutdown, also ensure that the 
+`destroy()` method is called.
 
 ```java
 class RqueueConfiguration {
@@ -182,17 +170,16 @@ public class BootstrapController {
 }
 ```
 
-## Message converters configuration
+## Message Converter Configuration
 
-To configure the message converter, you can only use application configuration by specifying the
-property `rqueue.message.converter.provider.class=com.example.MyMessageConverterProvider`. This
-approach allows you to customize message conversion behavior using your own implementation
-of `org.springframework.messaging.converter.MessageConverter`. Typically, this customization ensures
-that messages can be converted to and from various formats smoothly within your application.
+To customize message conversion, set the property 
+`rqueue.message.converter.provider.class` to the fully qualified name of your provider 
+class. This class must implement the `MessageConverterProvider` interface and return 
+a Spring `MessageConverter`.
 
 {: .note}
-MyMessageConverterProvider class must
-implement `com.github.sonus21.rqueue.converter.MessageConverterProvider` interface.
+Your custom provider must implement 
+`com.github.sonus21.rqueue.converter.MessageConverterProvider`.
 
 ```java
 class MyMessageConverterProvider implements MessageConverterProvider {
@@ -205,30 +192,21 @@ class MyMessageConverterProvider implements MessageConverterProvider {
 }
 ```
 
-The default implementation, `DefaultMessageConverterProvider`,
-returns `DefaultRqueueMessageConverter`. While `DefaultRqueueMessageConverter` can handle encoding
-and decoding for most messages, it may encounter issues when message classes are not shared across
-applications. To avoid sharing classes as JAR files, you can opt for converters such
-as `com.github.sonus21.rqueue.converter.JsonMessageConverter`
-or `org.springframework.messaging.converter.MappingJackson2MessageConverter`. These converters
-serialize messages into JSON format, facilitating interoperability without shared class
-dependencies.
+The `DefaultRqueueMessageConverter` handles serialization for most use cases, but it 
+may fail if classes are not shared between producing and consuming applications. To 
+avoid shared dependencies, consider using JSON-based converters like 
+`com.github.sonus21.rqueue.converter.JsonMessageConverter` or Spring's 
+`MappingJackson2MessageConverter`. These serialize payloads into JSON, improving 
+interoperability.
 
-Additionally, alternatives like MessagePack or ProtoBuf can also be employed based on specific
-requirements for message serialization and deserialization. Each of these options provides
-flexibility in how messages are encoded and decoded across different systems and applications.
+Other serialization formats like MessagePack or Protocol Buffers (ProtoBuf) can also 
+be implemented based on your requirements.
 
 ## Additional Configuration
 
-- **rqueue.retry.per.poll**: This setting determines how many times a polled message should be
-  retried before declaring it dead or moving it back into the queue for subsequent retries. The
-  default value is `1`, meaning a message will be processed once initially, and if it fails, it will
-  be retried on the next poll. If you increase this value to `N`, the polled message will be retried
-  consecutively N times before it is considered failed and made available for other listeners to
-  process.
-
-This configuration allows you to control how many times Rqueue attempts to process a message before
-handling it as a failed message, giving you flexibility in managing message retries and error
-handling strategies.
+- **`rqueue.retry.per.poll`**: Determines how many times a polled message is retried 
+  immediately if processing fails, before it is moved back to the queue for a 
+  subsequent poll. The default value is `1`. If increased to `N`, the message will 
+  be retried `N` times consecutively within the same polling cycle.
 
 

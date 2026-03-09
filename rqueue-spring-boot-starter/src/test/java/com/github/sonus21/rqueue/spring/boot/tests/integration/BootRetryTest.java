@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.spring.boot.tests.integration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import tools.jackson.core.JacksonException;
 
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest
@@ -70,7 +70,7 @@ class BootRetryTest extends RetryTests {
 
   @Test
   void messageIsConsumedByDeadLetterQueueListener()
-      throws TimedOutException, JsonProcessingException {
+      throws TimedOutException, JacksonException {
     verifyMessageIsConsumedByDeadLetterQueueListener();
   }
 }

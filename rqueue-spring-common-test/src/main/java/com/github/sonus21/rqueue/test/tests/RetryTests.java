@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
@@ -33,6 +32,7 @@ import com.github.sonus21.rqueue.test.dto.ReservationRequest;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
 
 @Slf4j
 public class RetryTests extends SpringTestBase {
@@ -133,7 +133,7 @@ public class RetryTests extends SpringTestBase {
   }
 
   public void verifyMessageIsConsumedByDeadLetterQueueListener()
-      throws TimedOutException, JsonProcessingException {
+      throws TimedOutException, JacksonException {
     cleanQueue(reservationRequestQueue);
     cleanQueue(reservationRequestDeadLetterQueue);
     ReservationRequest request = ReservationRequest.newInstance();

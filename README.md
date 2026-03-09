@@ -52,9 +52,9 @@ well, where all services code is in Spring.
 
 ### Requirements
 
-* Spring 5+, 6+
+* Spring 5+, 6+, 7+
 * Java 1.8+,17
-* Spring boot 2+,3+
+* Spring boot 2+,3+,4+
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
 
@@ -98,6 +98,7 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 
 * For spring framework 5.x use rqueue-spring 2.x
 * For spring framework 6.x use rqueue-spring 3.x
+* For spring framework 7.x use rqueue-spring 4.x
 
 Get the latest one
 from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)

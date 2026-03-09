@@ -10,13 +10,14 @@ All notable user-facing changes to this project are documented in this file.
 
 ## Release [3.4.0] 22-July-2025
 ### Fixes
-* Fixed unique enqueue message to reject the message upfront instead of identifying it later #259 
+* Improved unique message enqueuing to reject duplicates upfront rather than during 
+  processing. #259 
 
 
 ## Release [3.3.0] 29-June-2025
 ### Fixes
-# Custom Message Converter was ignored #256
-# LockKey prefix was not used #239
+* Custom Message Converter was being ignored #256
+* LockKey prefix was not being used #239
 
 ## Release [3.2.0] 10-July-2024
 ### Fixes
@@ -32,17 +33,17 @@ All notable user-facing changes to this project are documented in this file.
 
 ## Release [3.1.0] 24-June-2023
 {: .highlight } 
-Migrate to this version to reduce redis resource utilization
+Migrate to this version to reduce Redis resource utilization.
 
-This will fix an important bug happening due to task multiplications. This is causing more Redis
-resource usage Please check #[193]
+This release fixes a critical bug where task multiplication caused excessive Redis 
+resource usage. For details, see issue #[193].
 
 ## Release [2.13.1] 24-June-2023
 {: .highlight }
-Migrate to this version to reduce redis resource utilization
+Migrate to this version to reduce Redis resource utilization.
 
-This will fix an important bug happening due to task multiplications. This is causing more Redis
-resource usage Please check #[193]
+This release fixes a critical bug where task multiplication caused excessive Redis 
+resource usage. For details, see issue #[193].
 
 
 ## Release [3.0.1] 17-Jan-2022
@@ -51,15 +52,13 @@ We're so excited to release Rqueue `3.0.1`. This release supports the Java 17, S
 Spring Framework 6.x
 
 ### [2.13.0] - 25-Dec-2022
-
 ### Fixes
-
 {: .highlight}
-Migrate to this version as soon as possible to avoid duplicate message consumption post deletion.
+Migrate to this version immediately to prevent duplicate message consumption after deletion.
 
-* Important fix for parallel message deletion or delete the message from message listener
-* No threads are available, improvement on message poller
-* Use System Zone ID for UI bottom screen
+* Fixed an issue with parallel message deletion or deletion from within a message listener.
+* Improved message poller efficiency when no threads are available.
+* Corrected the UI to use the system's local time zone.
 
 ### [2.12.0] - 14-Dec-2022
 
@@ -69,46 +68,40 @@ Migrate to this version as soon as possible to avoid duplicate message consumpti
 * Use System Zone ID for UI display
 
 ### [2.11.1] - 18-Nov-2022
-
+### Fixes
 {: .highlight}
-Migrate to this version as soon as possible to avoid message build up. Messages in scheduled queue
-can grow if poller is failing. Workaround is to restart the application.
+Migrate to this version immediately to prevent scheduled message buildup. Messages could 
+fail to be consumed if the poller encountered a Redis connection error.
 
-* Message mover unreliability, scheduled message were not getting consumed once redis connection
-  error occurs
-* Upgraded Jquery version
+* Improved reliability of the message mover during Redis connection errors.
+* Upgraded jQuery version.
 
 ### [2.10.2] - 16-Jul-2022
-
 ### Fixes
-
-* Message status is not enqueued only, but it should be successful, failed etc
-* Weighted queue with size 1 was not working
-* Deleted message reappears
+* Fixed message status reporting (previously only showed 'enqueued').
+* Fixed an issue where weighted queues with size 1 were not working.
+* Fixed a bug where deleted messages could reappear.
 
 ### Features
-
-* Disable Rqueue using `rqueue.enabled` flag
+* Added the `rqueue.enabled` flag to disable Rqueue if needed.
 
 ### [2.10.1] - 18-Oct-2021
 
 * Fixes for concurrency when task executor is provided see issue #[122]
 
 ### [2.10.0] - 10-Oct-2021
-
 {: .warning }
-Breaking change, if you're controlling any internal settings of Rqueue using application environment
-or configuration variable than application can break. We've renamed some config
-keys, [see](./migration#290-to-210)
+**Breaking Change**: Renamed several configuration keys. If you use custom Rqueue 
+settings, please refer to the [Migration Guide](./migration#290-to-210) to avoid 
+application failure.
 
 ### Fixes
-
-* Fixes for post processor calls (post processor calls were not made)
-* Fixes message move message count (by default 1000 messages are moved)
-* Potential issue in rename collection
-* More than one (-) sign in the dashboard
-* Fixes for server context path. Rqueue end points would be served relative to
-  x-forwarded-prefix/server.servlet.context-path
+* Fixed an issue where post-processor calls were not being triggered.
+* Corrected the default message move count in the dashboard to 1000.
+* Fixed a potential naming issue in `rename collection`.
+* Fixed a dashboard UI bug showing multiple minus signs.
+* Improved support for server context paths. Rqueue endpoints are now relative to the 
+  `x-forwarded-prefix` or `server.servlet.context-path`.
 
 ### Features
 
