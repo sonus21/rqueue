@@ -1,8 +1,8 @@
 plugins {
     id "jacoco"
-    id 'com.github.kt3k.coveralls' version '2.12.2'
     id "com.adarshr.test-logger" version "4.0.0"
     id "org.gradle.test-retry" version "1.6.4"
+    id "com.github.nbaztec.coveralls-jacoco" version "1.2.20"
 }
 
 allprojects {
@@ -166,8 +166,8 @@ clean.doLast {
     })
 }
 
-coveralls {
-    description = "Uploads the aggregated coverage report to Coveralls"
-    sourceDirs = publishedProjects.sourceSets.main.allSource.srcDirs.flatten()
-    jacocoReportPath "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+coverallsJacoco {
+    reportSourceSets = publishedProjects.collectMany {
+        it.sourceSets.main.allSource.srcDirs
+    }
 }

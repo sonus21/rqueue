@@ -194,7 +194,7 @@ redis_custer_test_steps: &redis_cluster_test_steps
 report_code_coverage_steps: &report_code_coverage_steps
   steps:
     - *attach_workspace
-    - run: ./gradlew coveralls
+    - run: ./gradlew coverallsJacoco
     - *copy_logs
     - *copy_test_results
     - *store_logs
