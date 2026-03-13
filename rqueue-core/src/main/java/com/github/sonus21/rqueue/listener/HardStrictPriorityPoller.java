@@ -153,12 +153,12 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
   }
 
   protected boolean existAvailableMessagesForPoll(QueueDetail queueDetail) {
-    List<?> readyMessages =
+    boolean readyMessagesExists =
         rqueueBeanProvider
             .getRqueueMessageTemplate()
-            .readFromList(queueDetail.getQueueName(), 0, 0);
-
-    if (readyMessages != null && !readyMessages.isEmpty()) {
+            .findFirstElementFromList(queueDetail.getQueueName())
+            .isPresent();
+    if (readyMessagesExists) {
       log(
           Level.TRACE,
           "readyMessages exists for queue '{}', existAvailableMessagesForPoll = true.",
@@ -169,17 +169,21 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
 
     // Only check delayed messages with score <= current time
     long currentTime = System.currentTimeMillis();
-    List<?> delayedMessages =
+    boolean delayedMessagesExists =
         rqueueBeanProvider
             .getRqueueMessageTemplate()
-            .readFromZsetWithScore(queueDetail.getScheduledQueueName(), 0, currentTime);
+            .findFirstElementFromZsetWithScore(queueDetail.getScheduledQueueName())
+            .filter(element -> element.getScore() <= currentTime)
+            .isPresent();
 
-    if (delayedMessages != null && !delayedMessages.isEmpty()) {
+    if (delayedMessagesExists) {
       log(
           Level.TRACE,
-          "delayedMessages exists for queue '{}', existAvailableMessagesForPoll = true.",
+          "delayedMessages exists for scheduled queue '{}' and currentTime '{}',"
+              + " existAvailableMessagesForPoll = true.",
           null,
-          queueDetail.getName());
+          queueDetail.getScheduledQueueName(),
+          currentTime);
       return true;
     }
 
