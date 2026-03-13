@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import reactor.core.publisher.Flux;
@@ -92,4 +93,10 @@ public interface RqueueMessageTemplate {
 
   Flux<Long> addReactiveMessageWithDelay(
       String scheduledQueueName, String scheduledQueueChannelName, RqueueMessage rqueueMessage);
+
+  Optional<RqueueMessage> findFirstElementFromList(String name);
+
+  Optional<RqueueMessage> findFirstElementFromZset(String name);
+
+  Optional<TypedTuple<RqueueMessage>> findFirstElementFromZsetWithScore(String name);
 }

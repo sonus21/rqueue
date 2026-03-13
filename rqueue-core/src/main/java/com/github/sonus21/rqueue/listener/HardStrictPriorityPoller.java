@@ -151,23 +151,37 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
   }
 
   protected boolean existAvailableMessagesForPoll(QueueDetail queueDetail) {
-    List<?> readyMessages = rqueueBeanProvider
-        .getRqueueMessageTemplate()
-        .readFromList(queueDetail.getQueueName(), 0, 0);
-
-    if (readyMessages != null && !readyMessages.isEmpty()) {
-      log(Level.TRACE, "readyMessages exists for queue '{}', existAvailableMessagesForPoll = true.", null, queueDetail.getName());
+    boolean readyMessagesExists =
+        rqueueBeanProvider
+            .getRqueueMessageTemplate()
+            .findFirstElementFromList(queueDetail.getQueueName())
+            .isPresent();
+    if (readyMessagesExists) {
+      log(
+          Level.TRACE,
+          "readyMessages exists for queue '{}', existAvailableMessagesForPoll = true.",
+          null,
+          queueDetail.getName());
       return true;
     }
 
     // Only check delayed messages with score <= current time
     long currentTime = System.currentTimeMillis();
-    List<?> delayedMessages = rqueueBeanProvider
-        .getRqueueMessageTemplate()
-        .readFromZsetWithScore(queueDetail.getScheduledQueueName(), 0, currentTime);
+    boolean delayedMessagesExists =
+        rqueueBeanProvider
+            .getRqueueMessageTemplate()
+            .findFirstElementFromZsetWithScore(queueDetail.getScheduledQueueName())
+            .filter(element -> element.getScore() <= currentTime)
+            .isPresent();
 
-    if (delayedMessages != null && !delayedMessages.isEmpty()) {
-      log(Level.TRACE, "delayedMessages exists for queue '{}', existAvailableMessagesForPoll = true.", null, queueDetail.getName());
+    if (delayedMessagesExists) {
+      log(
+          Level.TRACE,
+          "delayedMessages exists for scheduled queue '{}' and currentTime '{}',"
+              + " existAvailableMessagesForPoll = true.",
+          null,
+          queueDetail.getScheduledQueueName(),
+          currentTime);
       return true;
     }
 

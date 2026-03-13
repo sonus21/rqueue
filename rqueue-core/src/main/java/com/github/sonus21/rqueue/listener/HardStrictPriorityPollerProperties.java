@@ -11,6 +11,7 @@ public class HardStrictPriorityPollerProperties {
   }
 
   public void setAfterPollSleepInterval(Long afterPollSleepInterval) {
+    validateTimeInterval(afterPollSleepInterval);
     this.afterPollSleepInterval = afterPollSleepInterval;
   }
 
@@ -19,6 +20,14 @@ public class HardStrictPriorityPollerProperties {
   }
 
   public void setSemaphoreWaitTime(Long semaphoreWaitTime) {
+    validateTimeInterval(semaphoreWaitTime);
     this.semaphoreWaitTime = semaphoreWaitTime;
+  }
+
+  private void validateTimeInterval(Long value) {
+    if (value == null || value > 0) {
+      return;
+    }
+    throw new IllegalArgumentException("Value must be positive: " + value);
   }
 }
