@@ -50,8 +50,8 @@ frameworks.
 
 ### Requirements
 
-* Spring 6+
-* Spring Boot 3+
+* Spring 6+, 7+
+* Spring Boot 3+, 4+
 * Java 21+
 * Spring Reactive
 * Lettuce client for Redis cluster
@@ -81,16 +81,16 @@ Redis Cluster compatibility. Failure to do so may prevent the application from s
 ### Spring Boot
 
 {: .warning }
-Use Rqueue Spring Boot Starter 3.x for Spring Boot 3.x.
+Use Rqueue Spring Boot Starter 4.x for Spring Boot 4.x, and 3.x for Spring Boot 3.x.
 
 Download the latest version from [Maven Central][Boot Maven Central] and add the 
 dependency to your project:
 
-#### Spring Boot 3.x Setup
+#### Spring Boot 4.x Setup
 
 * Gradle
   ```groovy
-  implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.0.0-RELEASE'
+  implementation 'com.github.sonus21:rqueue-spring-boot-starter:4.0.0-RELEASE'
   ```
 
 * Maven
@@ -98,7 +98,7 @@ dependency to your project:
   <dependency>
       <groupId>com.github.sonus21</groupId>
       <artifactId>rqueue-spring-boot-starter</artifactId>
-      <version>3.0.0-RELEASE</version>
+      <version>4.0.0-RELEASE</version>
   </dependency>
   ```
 
@@ -107,16 +107,16 @@ dependency to your project:
 ### Spring Framework
 
 {: .warning }
-Use Rqueue Spring 3.x for Spring Framework 6.x.
+Use Rqueue Spring 4.x for Spring Framework 7.x, and 3.x for Spring Framework 6.x.
 
 Download the latest version from [Maven Central][Maven Central] and add the 
 dependency to your project:
 
-#### Spring Framework 6.x Setup
+#### Spring Framework 7.x Setup
 
 * Gradle
   ```groovy
-  implementation 'com.github.sonus21:rqueue-spring:3.0.0-RELEASE'
+  implementation 'com.github.sonus21:rqueue-spring:4.0.0-RELEASE'
   ```
 
 * Maven
@@ -124,7 +124,7 @@ dependency to your project:
   <dependency>
       <groupId>com.github.sonus21</groupId>
       <artifactId>rqueue-spring</artifactId>
-      <version>3.0.0-RELEASE</version>
+      <version>4.0.0-RELEASE</version>
   </dependency>
   ```
 

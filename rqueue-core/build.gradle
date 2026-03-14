@@ -53,7 +53,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
     api "org.springframework:spring-webmvc:${springVersion}"
     api "org.springframework:spring-webflux:${springVersion}"
-    api "io.pebbletemplates:pebble-spring6:${pebbleVersion}"
+    api "io.pebbletemplates:pebble-spring7:${pebbleVersion}"
     api "io.seruco.encoding:base62:${serucoEncodingVersion}"
     // https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     api "org.apache.commons:commons-collections4:${apacheCommonCollectionVerion}"

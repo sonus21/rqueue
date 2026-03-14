@@ -46,10 +46,10 @@ This release fixes a critical bug where task multiplication caused excessive Red
 resource usage. For details, see issue #[193].
 
 
-## Release [3.0.0] 17-Jan-2022
+## Release [4.0.0] 17-Jan-2022
 
-We're so excited to release Rqueue `3.0.0`. This release supports Java 21,
-Spring Boot 3.x and Spring Framework 6.x.
+We're so excited to release Rqueue `4.0.0`. This release supports Java 21,
+Spring Boot 4.x and Spring Framework 7.x.
 
 ### [2.13.0] - 25-Dec-2022
 ### Fixes
@@ -382,7 +382,7 @@ Breaking change, for migration [see](./migration#1x-to-2x)
 
 [2.13.1]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/2.13.1-RELEASE
 
-[3.0.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/3.0.0-RELEASE
+[4.0.0]: https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core/4.0.0-RELEASE
 
 [122]: https://github.com/sonus21/rqueue/issues/122
 [193]: https://github.com/sonus21/rqueue/issues/193

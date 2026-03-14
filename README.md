@@ -54,7 +54,7 @@ well, where all services code is in Spring.
 
 * Spring 5+, 6+, 7+
 * Java 1.8+,17, 21
-* Spring boot 2+,3+
+* Spring boot 2+,3+,4+
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
 
@@ -69,6 +69,7 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 **NOTE:**
 
 * For Spring Boot 3.x use Rqueue 3.x
+* For Spring Boot 4.x use Rqueue 4.x
 
 Get the latest one
 from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
@@ -76,14 +77,14 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.0.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:4.0.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>3.0.0-RELEASE</version>
+        <version>4.0.0-RELEASE</version>
     </dependency>
     ```
 
@@ -96,6 +97,7 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 **NOTE**
 
 * For Spring Framework 6.x use Rqueue 3.x
+* For Spring Framework 7.x use Rqueue 4.x
 
 Get the latest one
 from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
@@ -103,14 +105,14 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:3.0.0-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:4.0.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>3.0.0-RELEASE</version>
+       <version>4.0.0-RELEASE</version>
      </dependency>
     ```
 * Add annotation `EnableRqueue` on application config class
