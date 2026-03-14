@@ -61,7 +61,8 @@ class ProducerOnlyTest extends BasicListenerTest {
   @Test
   void queueCount() {
     log.info("Rqueue System Mode {}", rqueueConfig.getMode());
-    assertEquals(35, EndpointRegistry.getRegisteredQueueCount(), rqueueConfig.getMode().toString());
+    assertEquals(
+        35, EndpointRegistry.getRegisteredQueueCount(), rqueueConfig.getMode().toString());
     for (int i = 0; i < 10; i++) {
       String queueName = "new_queue_" + i;
       // no listeners are attached so enqueue any thing

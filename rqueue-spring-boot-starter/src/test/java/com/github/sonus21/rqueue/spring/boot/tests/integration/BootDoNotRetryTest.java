@@ -38,15 +38,15 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8024",
-        "reservation.request.dead.letter.consumer.enabled=true",
-        "reservation.request.active=true",
-        "list.email.queue.enabled=true",
-        "mysql.db.name=BootDoNotRetryTest",
-        "record.failed.execution=true",
-        "use.system.redis=false",
-        "donot.retry=true"
+      "rqueue.retry.per.poll=1000",
+      "spring.data.redis.port=8024",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=BootDoNotRetryTest",
+      "record.failed.execution=true",
+      "use.system.redis=false",
+      "donot.retry=true"
     })
 @SpringBootIntegrationTest
 class BootDoNotRetryTest extends RetryTests {
@@ -69,8 +69,8 @@ class BootDoNotRetryTest extends RetryTests {
           return !messages.contains(job);
         },
         "message should be deleted from internal storage");
-    ConsumedMessage message = consumedMessageStore.getConsumedMessage(job.getId(),
-        MessageListener.FAILED_TAG);
+    ConsumedMessage message =
+        consumedMessageStore.getConsumedMessage(job.getId(), MessageListener.FAILED_TAG);
     assertEquals(1, message.getCount());
     List<ConsumedMessage> messages = consumedMessageStore.getAllMessages(job.getId());
     assertEquals(1, messages.size());

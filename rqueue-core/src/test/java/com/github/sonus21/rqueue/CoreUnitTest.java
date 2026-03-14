@@ -25,13 +25,9 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Tag("unit")
 @Tag("core")
 @ExtendWith({MockitoExtension.class, TestTracerExtension.class})
-public @interface CoreUnitTest {
-
-
-}
+public @interface CoreUnitTest {}

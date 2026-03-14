@@ -50,12 +50,10 @@ class ContextMiddlewareTest extends TestBase {
   void handle() throws Exception {
     ContextMiddleware contextMiddleware = job -> DefaultContext.EMPTY;
     AtomicInteger atomicInteger = new AtomicInteger();
-    contextMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    contextMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     assertEquals(1, atomicInteger.get());
   }
 }

@@ -58,14 +58,14 @@ public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
   }
 
   @Override
-  public void save(MessageMetadata messageMetadata, Duration duration,boolean checkUniqueNess) {
+  public void save(MessageMetadata messageMetadata, Duration duration, boolean checkUniqueNess) {
     Assert.notNull(messageMetadata.getId(), "messageMetadata id cannot be null");
-    if(checkUniqueNess){
-        Boolean value = template.setIfAbsent(messageMetadata.getId(), messageMetadata, duration);
-        if(Boolean.FALSE.equals(value)){
-            throw new DuplicateMessageException(messageMetadata.getId());
-        }
-        return;
+    if (checkUniqueNess) {
+      Boolean value = template.setIfAbsent(messageMetadata.getId(), messageMetadata, duration);
+      if (Boolean.FALSE.equals(value)) {
+        throw new DuplicateMessageException(messageMetadata.getId());
+      }
+      return;
     }
     template.set(messageMetadata.getId(), messageMetadata, duration);
   }
@@ -81,10 +81,14 @@ public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
   }
 
   @Override
-  public Mono<Boolean> saveReactive(MessageMetadata messageMetadata, Duration ttl, boolean isUnique) {
+  public Mono<Boolean> saveReactive(
+      MessageMetadata messageMetadata, Duration ttl, boolean isUnique) {
     Assert.notNull(messageMetadata.getId(), "messageMetadata id cannot be null");
-    if(isUnique){
-        return reactiveRedisTemplate.template().opsForValue().setIfAbsent(messageMetadata.getId(), messageMetadata, ttl);
+    if (isUnique) {
+      return reactiveRedisTemplate
+          .template()
+          .opsForValue()
+          .setIfAbsent(messageMetadata.getId(), messageMetadata, ttl);
     }
     return reactiveRedisTemplate
         .template()

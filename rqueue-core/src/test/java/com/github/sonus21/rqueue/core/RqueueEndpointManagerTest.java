@@ -34,16 +34,17 @@ class RqueueEndpointManagerTest extends TestBase {
 
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   private RqueueEndpointManager rqueueEndpointManager;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueEndpointManager =
-        new RqueueEndpointManagerImpl(
-            rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
+    rqueueEndpointManager = new RqueueEndpointManagerImpl(
+        rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
 
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     EndpointRegistry.delete();

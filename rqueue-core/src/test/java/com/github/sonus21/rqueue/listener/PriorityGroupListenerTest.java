@@ -63,18 +63,25 @@ class PriorityGroupListenerTest extends TestBase {
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
   private static final long VISIBILITY_TIMEOUT = 900000L;
+
   @Mock
   private RqueueMessageHandler rqueueMessageHandler;
+
   @Mock
   private RedisConnectionFactory redisConnectionFactory;
+
   @Mock
   private ApplicationEventPublisher applicationEventPublisher;
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   private RqueueBeanProvider beanProvider;
 
   @BeforeEach
@@ -123,17 +130,15 @@ class PriorityGroupListenerTest extends TestBase {
     TestTaskExecutor taskExecutor = new TestTaskExecutor();
     taskExecutor.afterPropertiesSet();
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           fastQueueCounter.incrementAndGet();
-          return Collections.singletonList(
-              RqueueMessage.builder()
-                  .queueName(fastQueue)
-                  .message("fastQueueMessage")
-                  .processAt(System.currentTimeMillis())
-                  .queuedTime(System.nanoTime())
-                  .id(UUID.randomUUID().toString())
-                  .build());
+          return Collections.singletonList(RqueueMessage.builder()
+              .queueName(fastQueue)
+              .message("fastQueueMessage")
+              .processAt(System.currentTimeMillis())
+              .queuedTime(System.nanoTime())
+              .id(UUID.randomUUID().toString())
+              .build());
         })
         .when(rqueueMessageTemplate)
         .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);

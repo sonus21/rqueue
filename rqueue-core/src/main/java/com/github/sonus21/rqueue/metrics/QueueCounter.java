@@ -59,18 +59,16 @@ public class QueueCounter {
       MeterRegistry registry,
       QueueDetail queueDetail) {
     if (metricsProperties.countFailure()) {
-      Counter.Builder builder =
-          Counter.builder(metricsProperties.getMetricName(FAILURE_COUNT))
-              .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
-              .description("Failure count");
+      Counter.Builder builder = Counter.builder(metricsProperties.getMetricName(FAILURE_COUNT))
+          .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
+          .description("Failure count");
       Counter counter = builder.register(registry);
       queueNameToFailureCounter.put(queueDetail.getName(), counter);
     }
     if (metricsProperties.countExecution()) {
-      Counter.Builder builder =
-          Counter.builder(metricsProperties.getMetricName(EXECUTION_COUNT))
-              .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
-              .description("Task execution count");
+      Counter.Builder builder = Counter.builder(metricsProperties.getMetricName(EXECUTION_COUNT))
+          .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
+          .description("Task execution count");
       Counter counter = builder.register(registry);
       queueNameToExecutionCounter.put(queueDetail.getName(), counter);
     }

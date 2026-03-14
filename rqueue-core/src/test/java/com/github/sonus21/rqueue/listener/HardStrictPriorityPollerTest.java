@@ -33,9 +33,14 @@ import org.springframework.messaging.MessageHeaders;
 @CoreUnitTest
 class HardStrictPriorityPollerTest extends TestBase {
 
-  @Mock private RqueueBeanProvider rqueueBeanProvider;
-  @Mock private QueueStateMgr queueStateMgr;
-  @Mock private PostProcessingHandler postProcessingHandler;
+  @Mock
+  private RqueueBeanProvider rqueueBeanProvider;
+
+  @Mock
+  private QueueStateMgr queueStateMgr;
+
+  @Mock
+  private PostProcessingHandler postProcessingHandler;
 
   private final String highPriorityQueue = "high-priority-" + UUID.randomUUID();
   private final String lowPriorityQueue = "low-priority-" + UUID.randomUUID();
@@ -55,20 +60,18 @@ class HardStrictPriorityPollerTest extends TestBase {
     queueNameToThread.put(highPriorityQueue, mock(QueueThreadPool.class));
     queueNameToThread.put(lowPriorityQueue, mock(QueueThreadPool.class));
 
-    poller =
-        spy(
-            new HardStrictPriorityPoller(
-                "test-group",
-                queueDetails,
-                queueNameToThread,
-                rqueueBeanProvider,
-                queueStateMgr,
-                Collections.emptyList(),
-                50L,
-                50L,
-                postProcessingHandler,
-                new MessageHeaders(Collections.emptyMap()),
-                new HardStrictPriorityPollerProperties()));
+    poller = spy(new HardStrictPriorityPoller(
+        "test-group",
+        queueDetails,
+        queueNameToThread,
+        rqueueBeanProvider,
+        queueStateMgr,
+        Collections.emptyList(),
+        50L,
+        50L,
+        postProcessingHandler,
+        new MessageHeaders(Collections.emptyMap()),
+        new HardStrictPriorityPollerProperties()));
 
     // Allowing queue polling
     lenient().doReturn(true).when(poller).eligibleForPolling(anyString());
@@ -114,22 +117,20 @@ class HardStrictPriorityPollerTest extends TestBase {
     // High Priority always has messages
     lenient().doReturn(true).when(poller).existAvailableMessagesForPoll(highDetail);
     lenient()
-        .doAnswer(
-            invocation -> {
-              highQueuePollCount.incrementAndGet();
-              return 1;
-            })
+        .doAnswer(invocation -> {
+          highQueuePollCount.incrementAndGet();
+          return 1;
+        })
         .when(poller)
         .poll(anyInt(), eq(highPriorityQueue), eq(highDetail), any());
 
     // Low Priority also has messages
     lenient().doReturn(true).when(poller).existAvailableMessagesForPoll(lowDetail);
     lenient()
-        .doAnswer(
-            invocation -> {
-              lowQueuePollCount.incrementAndGet();
-              return 1;
-            })
+        .doAnswer(invocation -> {
+          lowQueuePollCount.incrementAndGet();
+          return 1;
+        })
         .when(poller)
         .poll(anyInt(), eq(lowPriorityQueue), eq(lowDetail), any());
 
@@ -157,11 +158,10 @@ class HardStrictPriorityPollerTest extends TestBase {
     // Low has messages
     lenient().doReturn(true).when(poller).existAvailableMessagesForPoll(lowDetail);
     lenient()
-        .doAnswer(
-            invocation -> {
-              lowQueuePollCount.incrementAndGet();
-              return 1;
-            })
+        .doAnswer(invocation -> {
+          lowQueuePollCount.incrementAndGet();
+          return 1;
+        })
         .when(poller)
         .poll(anyInt(), eq(lowPriorityQueue), eq(lowDetail), any());
 

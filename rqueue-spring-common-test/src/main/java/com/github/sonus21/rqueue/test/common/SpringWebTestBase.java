@@ -34,20 +34,20 @@ public abstract class SpringWebTestBase extends SpringTestBase {
 
   protected WebClient webClient;
   protected MockMvc mockMvc;
+
   @Autowired
   protected ObjectMapper mapper;
+
   @Autowired
   ApplicationContext applicationContext;
 
   @BeforeEach
   public void init() {
     if (reactiveEnabled) {
-      webClient =
-          WebClient.builder()
-              .clientConnector(
-                  new HttpHandlerConnector(
-                      WebHttpHandlerBuilder.applicationContext(applicationContext).build()))
-              .build();
+      webClient = WebClient.builder()
+          .clientConnector(new HttpHandlerConnector(
+              WebHttpHandlerBuilder.applicationContext(applicationContext).build()))
+          .build();
     } else {
       this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
     }

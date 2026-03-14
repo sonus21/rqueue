@@ -33,8 +33,7 @@ public final class RqueueMessageUtils {
 
   private static final String META_DATA_KEY_PREFIX = "__rq::m-mdata::";
 
-  private RqueueMessageUtils() {
-  }
+  private RqueueMessageUtils() {}
 
   public static String getMessageMetaId(String queueName, String messageId) {
     return META_DATA_KEY_PREFIX + queueName + REDIS_KEY_SEPARATOR + messageId;
@@ -72,15 +71,14 @@ public final class RqueueMessageUtils {
     } else {
       throw new MessageConversionException("Message payload is neither String nor byte[]");
     }
-    RqueueMessage rqueueMessage =
-        RqueueMessage.builder()
-            .id(UUID.randomUUID().toString())
-            .queueName(queueName)
-            .message(strMessage)
-            .processAt(processAt)
-            .retryCount(retryCount)
-            .period(period)
-            .build();
+    RqueueMessage rqueueMessage = RqueueMessage.builder()
+        .id(UUID.randomUUID().toString())
+        .queueName(queueName)
+        .message(strMessage)
+        .processAt(processAt)
+        .retryCount(retryCount)
+        .period(period)
+        .build();
     if (messageId != null) {
       rqueueMessage.setId(messageId);
     }
@@ -113,15 +111,14 @@ public final class RqueueMessageUtils {
     } else {
       throw new MessageConversionException("Message payload is neither String nor byte[]");
     }
-    RqueueMessage rqueueMessage =
-        RqueueMessage.builder()
-            .retryCount(retryCount)
-            .queuedTime(queuedTime)
-            .id(UUID.randomUUID().toString())
-            .queueName(queueName)
-            .message(strMessage)
-            .processAt(processAt)
-            .build();
+    RqueueMessage rqueueMessage = RqueueMessage.builder()
+        .retryCount(retryCount)
+        .queuedTime(queuedTime)
+        .id(UUID.randomUUID().toString())
+        .queueName(queueName)
+        .message(strMessage)
+        .processAt(processAt)
+        .build();
     if (messageId != null) {
       rqueueMessage.setId(messageId);
     }

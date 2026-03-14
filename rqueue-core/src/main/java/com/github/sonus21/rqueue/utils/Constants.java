@@ -56,8 +56,7 @@ public final class Constants {
   public static final String QUEUE_CRUD_LOCK_KEY_PREFIX = "q-crud::";
   public static final String MESSAGE_LOCK_KEY_PREFIX = "msg::";
 
-  private Constants() {
-  }
+  private Constants() {}
 
   public static String getQueueCrudLockKey(RqueueConfig rqueueConfig, String queueName) {
     return rqueueConfig.getLockKey(QUEUE_CRUD_LOCK_KEY_PREFIX + queueName);

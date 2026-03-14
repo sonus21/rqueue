@@ -36,10 +36,11 @@ public final class TestUtils extends TestBase {
 
   public static RqueueMessageTemplate rqueueMessageTemplate(
       RedisConnectionFactory redisConnectionFactory,
-      RedisTemplate<String, ?> redisTemplate, DefaultScriptExecutor<String> scriptExecutor)
+      RedisTemplate<String, ?> redisTemplate,
+      DefaultScriptExecutor<String> scriptExecutor)
       throws IllegalAccessException {
-    RqueueMessageTemplate rqueueMessageTemplate = new RqueueMessageTemplateImpl(
-        redisConnectionFactory, null);
+    RqueueMessageTemplate rqueueMessageTemplate =
+        new RqueueMessageTemplateImpl(redisConnectionFactory, null);
     FieldUtils.writeField(rqueueMessageTemplate, "redisTemplate", redisTemplate, true);
     if (scriptExecutor != null) {
       FieldUtils.writeField(rqueueMessageTemplate, "scriptExecutor", scriptExecutor, true);
@@ -49,7 +50,8 @@ public final class TestUtils extends TestBase {
 
   public static QueueConfig createQueueConfig(
       String name, int numRetry, long visibilityTimeout, String dlq) {
-    QueueConfig queueConfig = createQueueDetail(name, numRetry, visibilityTimeout, dlq).toConfig();
+    QueueConfig queueConfig =
+        createQueueDetail(name, numRetry, visibilityTimeout, dlq).toConfig();
     queueConfig.setId(getQueueConfigKey(name));
     return queueConfig;
   }

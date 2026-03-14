@@ -61,15 +61,12 @@ class StrictPriorityPoller extends RqueueMessagePoller {
         postProcessingHandler,
         messageHeaders);
     List<QueueDetail> queueDetailList = new ArrayList<>(queueDetails);
-    queueDetailList.sort(
-        (o1, o2) ->
-            o2.getPriority().get(Constants.DEFAULT_PRIORITY_KEY)
-                - o1.getPriority().get(Constants.DEFAULT_PRIORITY_KEY));
+    queueDetailList.sort((o1, o2) -> o2.getPriority().get(Constants.DEFAULT_PRIORITY_KEY)
+        - o1.getPriority().get(Constants.DEFAULT_PRIORITY_KEY));
     this.queues = queueDetailList.stream().map(QueueDetail::getName).collect(Collectors.toList());
     queues.forEach(queue -> this.lastFetchedTime.put(queue, 0L));
-    this.queueNameToDetail =
-        queueDetailList.stream()
-            .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
+    this.queueNameToDetail = queueDetailList.stream()
+        .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
     this.queueNameToThread = queueNameToThread;
   }
 

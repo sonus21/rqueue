@@ -40,9 +40,9 @@ import lombok.ToString;
 @Table(
     name = "consumed_messages",
     uniqueConstraints = {
-        @UniqueConstraint(
-            name = "message_id_and_tag_unique",
-            columnNames = {"message_id", "tag"})
+      @UniqueConstraint(
+          name = "message_id_and_tag_unique",
+          columnNames = {"message_id", "tag"})
     })
 public class ConsumedMessage {
 

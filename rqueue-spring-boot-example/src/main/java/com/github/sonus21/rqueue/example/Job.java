@@ -28,5 +28,4 @@ public class Job {
   private String id;
   private String message;
   private String messageId;
-
 }

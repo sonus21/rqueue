@@ -74,16 +74,22 @@ import org.springframework.messaging.converter.MessageConverter;
 class RqueueQDetailServiceTest extends TestBase {
 
   private final MessageConverter messageConverter = new GenericMessageConverter();
+
   @Mock
   private RedisTemplate<?, ?> redisTemplate;
+
   @Mock
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueSystemManagerService rqueueSystemManagerService;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   private RqueueQDetailService rqueueQDetailService;
   private QueueConfig queueConfig;
   private QueueConfig queueConfig2;
@@ -94,13 +100,12 @@ class RqueueQDetailServiceTest extends TestBase {
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
-    rqueueQDetailService =
-        new RqueueQDetailServiceImpl(
-            stringRqueueRedisTemplate,
-            rqueueMessageTemplate,
-            rqueueSystemManagerService,
-            rqueueMessageMetadataService,
-            rqueueConfig);
+    rqueueQDetailService = new RqueueQDetailServiceImpl(
+        stringRqueueRedisTemplate,
+        rqueueMessageTemplate,
+        rqueueSystemManagerService,
+        rqueueMessageMetadataService,
+        rqueueConfig);
     queueConfig = createQueueConfig("test", 10, 10000L, "test-dlq");
     queueConfig2 = createQueueConfig("test2", 10, 10000L, null);
     queueConfigList = Arrays.asList(queueConfig, queueConfig2);
@@ -115,22 +120,18 @@ class RqueueQDetailServiceTest extends TestBase {
     doReturn(12L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test");
     doReturn(5L).when(stringRqueueRedisTemplate).getZsetSize("__rq::p-queue::test");
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = new ArrayList<>();
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.RUNNING, new RedisDataDetail("__rq::p-queue::test", DataType.ZSET, 5)));
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.SCHEDULED, new RedisDataDetail("__rq::d-queue::test", DataType.ZSET, 12)));
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.DEAD,
-            new RedisDataDetail(
-                queueConfig.getDeadLetterQueues().stream().findFirst().get().getName(),
-                DataType.LIST,
-                11)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.RUNNING, new RedisDataDetail("__rq::p-queue::test", DataType.ZSET, 5)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.SCHEDULED, new RedisDataDetail("__rq::d-queue::test", DataType.ZSET, 12)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.DEAD,
+        new RedisDataDetail(
+            queueConfig.getDeadLetterQueues().stream().findFirst().get().getName(),
+            DataType.LIST,
+            11)));
     assertEquals(
         queueRedisDataDetails, rqueueQDetailService.getQueueDataStructureDetail(queueConfig));
   }
@@ -142,37 +143,30 @@ class RqueueQDetailServiceTest extends TestBase {
     doReturn(12L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test");
     doReturn(5L).when(stringRqueueRedisTemplate).getZsetSize("__rq::p-queue::test");
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = new ArrayList<>();
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.RUNNING, new RedisDataDetail("__rq::p-queue::test", DataType.ZSET, 5)));
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.SCHEDULED, new RedisDataDetail("__rq::d-queue::test", DataType.ZSET, 12)));
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.DEAD,
-            new RedisDataDetail(
-                queueConfig.getDeadLetterQueues().stream().findFirst().get().getName(),
-                DataType.LIST,
-                11)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.RUNNING, new RedisDataDetail("__rq::p-queue::test", DataType.ZSET, 5)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.SCHEDULED, new RedisDataDetail("__rq::d-queue::test", DataType.ZSET, 12)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.DEAD,
+        new RedisDataDetail(
+            queueConfig.getDeadLetterQueues().stream().findFirst().get().getName(),
+            DataType.LIST,
+            11)));
 
     doReturn(5L).when(stringRqueueRedisTemplate).getListSize("__rq::queue::test2");
     doReturn(2L).when(stringRqueueRedisTemplate).getZsetSize("__rq::p-queue::test2");
     doReturn(8L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test2");
 
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails2 = new ArrayList<>();
-    queueRedisDataDetails2.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.PENDING, new RedisDataDetail("__rq::queue::test2", DataType.LIST, 5)));
-    queueRedisDataDetails2.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.RUNNING, new RedisDataDetail("__rq::p-queue::test2", DataType.ZSET, 2)));
-    queueRedisDataDetails2.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.SCHEDULED, new RedisDataDetail("__rq::d-queue::test2", DataType.ZSET, 8)));
+    queueRedisDataDetails2.add(new HashMap.SimpleEntry<>(
+        NavTab.PENDING, new RedisDataDetail("__rq::queue::test2", DataType.LIST, 5)));
+    queueRedisDataDetails2.add(new HashMap.SimpleEntry<>(
+        NavTab.RUNNING, new RedisDataDetail("__rq::p-queue::test2", DataType.ZSET, 2)));
+    queueRedisDataDetails2.add(new HashMap.SimpleEntry<>(
+        NavTab.SCHEDULED, new RedisDataDetail("__rq::d-queue::test2", DataType.ZSET, 8)));
 
     Map<String, List<Entry<NavTab, RedisDataDetail>>> map = new HashMap<>();
     map.put("test", queueRedisDataDetails);
@@ -206,12 +200,11 @@ class RqueueQDetailServiceTest extends TestBase {
     for (RqueueMessage message : rqueueMessages) {
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(
-          new TableColumn(
-              TableColumnType.DISPLAY,
-              message.toString(),
-              Collections.singletonList(
-                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+      l.add(new TableColumn(
+          TableColumnType.DISPLAY,
+          message.toString(),
+          Collections.singletonList(
+              new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
 
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
@@ -242,12 +235,11 @@ class RqueueQDetailServiceTest extends TestBase {
       message.setReEnqueuedAt(System.currentTimeMillis());
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(
-          new TableColumn(
-              TableColumnType.DISPLAY,
-              message.toString(),
-              Collections.singletonList(
-                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+      l.add(new TableColumn(
+          TableColumnType.DISPLAY,
+          message.toString(),
+          Collections.singletonList(
+              new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
 
       l.add(new TableColumn("Simple"));
       lists.add(new TableRow(l));
@@ -290,12 +282,11 @@ class RqueueQDetailServiceTest extends TestBase {
       RqueueMessage message = rqueueMessages.get(i);
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(
-          new TableColumn(
-              TableColumnType.DISPLAY,
-              message.toString(),
-              Collections.singletonList(
-                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+      l.add(new TableColumn(
+          TableColumnType.DISPLAY,
+          message.toString(),
+          Collections.singletonList(
+              new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
       l.add(new TableColumn("Simple"));
       if (i >= 5) {
         l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
@@ -333,12 +324,11 @@ class RqueueQDetailServiceTest extends TestBase {
     for (RqueueMessage message : rqueueMessages) {
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(
-          new TableColumn(
-              TableColumnType.DISPLAY,
-              message.toString(),
-              Collections.singletonList(
-                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+      l.add(new TableColumn(
+          TableColumnType.DISPLAY,
+          message.toString(),
+          Collections.singletonList(
+              new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
       lists.add(new TableRow(l));
@@ -349,9 +339,8 @@ class RqueueQDetailServiceTest extends TestBase {
 
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromZset("__rq::d-queue::test", 0, 9);
-    DataViewResponse response =
-        rqueueQDetailService.getExplorePageData(
-            "test", "__rq::d-queue::test", DataType.ZSET, 0, 10);
+    DataViewResponse response = rqueueQDetailService.getExplorePageData(
+        "test", "__rq::d-queue::test", DataType.ZSET, 0, 10);
     // clear time left
     for (TableRow tableRow : response.getRows()) {
       tableRow.getColumns().remove(3);
@@ -377,12 +366,11 @@ class RqueueQDetailServiceTest extends TestBase {
     for (RqueueMessage message : rqueueMessages) {
       List<TableColumn> l = new ArrayList<>();
       l.add(new TableColumn(message.getId()));
-      l.add(
-          new TableColumn(
-              TableColumnType.DISPLAY,
-              message.toString(),
-              Collections.singletonList(
-                  new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
+      l.add(new TableColumn(
+          TableColumnType.DISPLAY,
+          message.toString(),
+          Collections.singletonList(
+              new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, message.getId()))));
 
       l.add(new TableColumn("Simple"));
       l.add(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
@@ -390,16 +378,14 @@ class RqueueQDetailServiceTest extends TestBase {
     }
     expectedResponse.setRows(lists);
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
-    doReturn(
-        rqueueMessages.stream()
+    doReturn(rqueueMessages.stream()
             .map(e -> new DefaultTypedTuple<>(e, (double) System.currentTimeMillis() + 100L))
             .collect(Collectors.toList()))
         .when(rqueueMessageTemplate)
         .readFromZsetWithScore("__rq::p-queue::test", 0, 9);
 
-    DataViewResponse response =
-        rqueueQDetailService.getExplorePageData(
-            "test", "__rq::p-queue::test", DataType.ZSET, 0, 10);
+    DataViewResponse response = rqueueQDetailService.getExplorePageData(
+        "test", "__rq::p-queue::test", DataType.ZSET, 0, 10);
     // clear time left
     for (TableRow tableRow : response.getRows()) {
       tableRow.getColumns().remove(3);
@@ -426,9 +412,8 @@ class RqueueQDetailServiceTest extends TestBase {
   void viewDataList() {
     List<Object> objects = new ArrayList<>();
     objects.add("Test");
-    objects.add(
-        RqueueMessageUtils.buildMessage(
-            messageConverter, "jobs", null, "buildMessage", null, null, null));
+    objects.add(RqueueMessageUtils.buildMessage(
+        messageConverter, "jobs", null, "buildMessage", null, null, null));
     objects.add(null);
     doReturn(objects).when(stringRqueueRedisTemplate).lrange("jobs", 0, 9);
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.LIST, null, 0, 10);
@@ -446,11 +431,10 @@ class RqueueQDetailServiceTest extends TestBase {
   void viewDataZset() {
     Set<TypedTuple<Object>> objects = new HashSet<>();
     objects.add(new DefaultTypedTuple<>("Test", 100.0));
-    objects.add(
-        new DefaultTypedTuple<>(
-            RqueueMessageUtils.buildMessage(
-                messageConverter, "jobs", null, "buildMessage", null, null, null),
-            200.0));
+    objects.add(new DefaultTypedTuple<>(
+        RqueueMessageUtils.buildMessage(
+            messageConverter, "jobs", null, "buildMessage", null, null, null),
+        200.0));
 
     List<TableRow> tableRows = new ArrayList<>();
     for (TypedTuple<Object> typedTuple : objects) {
@@ -477,9 +461,8 @@ class RqueueQDetailServiceTest extends TestBase {
   void viewDataSet() {
     Set<Object> objects = new HashSet<>();
     objects.add("Test");
-    objects.add(
-        RqueueMessageUtils.buildMessage(
-            messageConverter, "jobs", null, "Test object", null, null, null));
+    objects.add(RqueueMessageUtils.buildMessage(
+        messageConverter, "jobs", null, "Test object", null, null, null));
     List<TableRow> tableRows = new ArrayList<>();
     for (Object object : objects) {
       tableRows.add(new TableRow(new TableColumn(String.valueOf(object))));
@@ -571,7 +554,8 @@ class RqueueQDetailServiceTest extends TestBase {
         .executePipelined(any(RedisCallback.class));
     List<List<Object>> response = rqueueQDetailService.getDeadLetterTasks();
     assertEquals(3, response.size());
-    List<Object> headers = Arrays.asList("Queue", "Dead Letter Queues [LIST]", "Number of Messages");
+    List<Object> headers =
+        Arrays.asList("Queue", "Dead Letter Queues [LIST]", "Number of Messages");
     List<Object> row = Arrays.asList(queueConfig.getName(), "test-dlq", 100L);
     List<Object> row2 = Arrays.asList(queueConfig2.getName(), "", "");
     assertEquals(Arrays.asList(headers, row, row2), response);

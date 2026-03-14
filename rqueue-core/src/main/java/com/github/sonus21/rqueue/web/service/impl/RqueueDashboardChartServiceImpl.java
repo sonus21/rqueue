@@ -262,10 +262,9 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
 
   private List<List<Serializable>> createChartData(
       String title, List<ChartDataType> chartDataTypeList, Map<Integer, TasksStat> idToTasksStat) {
-    List<Entry<Integer, TasksStat>> entries =
-        idToTasksStat.entrySet().stream()
-            .sorted((o1, o2) -> o2.getKey() - o1.getKey())
-            .collect(Collectors.toList());
+    List<Entry<Integer, TasksStat>> entries = idToTasksStat.entrySet().stream()
+        .sorted((o1, o2) -> o2.getKey() - o1.getKey())
+        .collect(Collectors.toList());
     List<List<Serializable>> rows = new ArrayList<>();
     rows.add(getHeader(title, chartDataTypeList));
     for (Entry<Integer, TasksStat> entry : entries) {
@@ -278,13 +277,12 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
       int numberOfDays,
       List<QueueStatistics> queueStatisticsList,
       List<ChartDataType> chartDataTypeList) {
-    Map<Integer, TasksStat> monthToChartDataType =
-        aggregateData(
-            (date, today) ->
-                (int) Math.floor((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 30.0f),
-            queueStatisticsList,
-            chartDataTypeList,
-            getCount(numberOfDays, Constants.DAYS_IN_A_MONTH));
+    Map<Integer, TasksStat> monthToChartDataType = aggregateData(
+        (date, today) ->
+            (int) Math.floor((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 30.0f),
+        queueStatisticsList,
+        chartDataTypeList,
+        getCount(numberOfDays, Constants.DAYS_IN_A_MONTH));
     return createChartData("Monthly", chartDataTypeList, monthToChartDataType);
   }
 
@@ -292,12 +290,11 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
       int numberOfDays,
       List<QueueStatistics> queueStatisticsList,
       List<ChartDataType> chartDataTypes) {
-    Map<Integer, TasksStat> dayToChartDataType =
-        aggregateData(
-            (date, today) -> (int) (today.toEpochDay() - LocalDate.parse(date).toEpochDay()),
-            queueStatisticsList,
-            chartDataTypes,
-            getCount(numberOfDays, 1));
+    Map<Integer, TasksStat> dayToChartDataType = aggregateData(
+        (date, today) -> (int) (today.toEpochDay() - LocalDate.parse(date).toEpochDay()),
+        queueStatisticsList,
+        chartDataTypes,
+        getCount(numberOfDays, 1));
     return createChartData("Daily", chartDataTypes, dayToChartDataType);
   }
 
@@ -312,13 +309,12 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
       int numberOfDays,
       List<QueueStatistics> queueStatisticsList,
       List<ChartDataType> chartDataTypeList) {
-    Map<Integer, TasksStat> weekToChartDataType =
-        aggregateData(
-            (date, today) ->
-                (int) Math.floor((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 7.0f),
-            queueStatisticsList,
-            chartDataTypeList,
-            getCount(numberOfDays, Constants.DAYS_IN_A_WEEK));
+    Map<Integer, TasksStat> weekToChartDataType = aggregateData(
+        (date, today) ->
+            (int) Math.floor((today.toEpochDay() - LocalDate.parse(date).toEpochDay()) / 7.0f),
+        queueStatisticsList,
+        chartDataTypeList,
+        getCount(numberOfDays, Constants.DAYS_IN_A_WEEK));
     return createChartData("Weekly", chartDataTypeList, weekToChartDataType);
   }
 
@@ -345,12 +341,11 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
 
   private ChartDataResponse getQueueStats(ChartDataRequest chartDataRequest) {
     Collection<String> ids = getQueueStatsId(chartDataRequest);
-    List<List<Serializable>> rows =
-        getChartData(
-            chartDataRequest.numberOfDays(rqueueWebConfig),
-            ids,
-            chartDataRequest.getAggregationType(),
-            chartDataRequest.getDateTypes());
+    List<List<Serializable>> rows = getChartData(
+        chartDataRequest.numberOfDays(rqueueWebConfig),
+        ids,
+        chartDataRequest.getAggregationType(),
+        chartDataRequest.getDateTypes());
     ChartDataResponse response = new ChartDataResponse();
     response.setData(rows);
     response.setHTitle(chartDataRequest.getAggregationType().getDescription());
@@ -378,12 +373,11 @@ public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartServ
 
   private ChartDataResponse getQueueLatency(ChartDataRequest chartDataRequest) {
     Collection<String> ids = getQueueStatsId(chartDataRequest);
-    List<List<Serializable>> rows =
-        getChartData(
-            chartDataRequest.numberOfDays(rqueueWebConfig),
-            ids,
-            chartDataRequest.getAggregationType(),
-            Collections.singletonList(ChartDataType.EXECUTION));
+    List<List<Serializable>> rows = getChartData(
+        chartDataRequest.numberOfDays(rqueueWebConfig),
+        ids,
+        chartDataRequest.getAggregationType(),
+        Collections.singletonList(ChartDataType.EXECUTION));
     ChartDataResponse response = new ChartDataResponse();
     response.setData(rows);
     response.setHTitle(chartDataRequest.getAggregationType().getDescription());

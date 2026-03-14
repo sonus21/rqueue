@@ -30,8 +30,7 @@ import org.springframework.lang.NonNull;
 
 public final class ValueResolver {
 
-  private ValueResolver() {
-  }
+  private ValueResolver() {}
 
   @SuppressWarnings("unchecked")
   public static <T> T parseStringUsingSpel(String val, Class<?> t) {
@@ -91,9 +90,8 @@ public final class ValueResolver {
       if (exprResolver == null) {
         return name;
       }
-      Object result =
-          exprResolver.evaluate(
-              placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
+      Object result = exprResolver.evaluate(
+          placeholdersResolved, new BeanExpressionContext(configurableBeanFactory, null));
       if (result != null) {
         return result;
       }

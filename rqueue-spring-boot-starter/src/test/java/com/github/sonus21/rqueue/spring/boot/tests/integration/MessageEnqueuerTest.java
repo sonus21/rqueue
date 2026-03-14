@@ -40,26 +40,26 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=8008",
-        "mysql.db.name=MessageEnqueuerTest",
-        "rqueue.metrics.count.failure=false",
-        "rqueue.metrics.count.execution=false",
-        "sms.queue.active=true",
-        "sms.queue.group=sms-test",
-        "notification.queue.active=true",
-        "email.queue.active=true",
-        "job.queue.active=true",
-        "priority.mode=STRICT",
-        "reservation.queue.active=true",
-        "reservation.queue.group=",
-        "feed.generation.queue.active=true",
-        "feed.generation.queue.group=",
-        "chat.indexing.queue.active=true",
-        "chat.indexing.queue.group=",
-        "sms.queue.concurrency=5",
-        "reservation.queue.concurrency=2",
-        "feed.generation.queue.concurrency=1-5",
-        "chat.indexing.queue.concurrency=3-5"
+      "spring.data.redis.port=8008",
+      "mysql.db.name=MessageEnqueuerTest",
+      "rqueue.metrics.count.failure=false",
+      "rqueue.metrics.count.execution=false",
+      "sms.queue.active=true",
+      "sms.queue.group=sms-test",
+      "notification.queue.active=true",
+      "email.queue.active=true",
+      "job.queue.active=true",
+      "priority.mode=STRICT",
+      "reservation.queue.active=true",
+      "reservation.queue.group=",
+      "feed.generation.queue.active=true",
+      "feed.generation.queue.group=",
+      "chat.indexing.queue.active=true",
+      "chat.indexing.queue.group=",
+      "sms.queue.concurrency=5",
+      "reservation.queue.concurrency=2",
+      "feed.generation.queue.concurrency=1-5",
+      "chat.indexing.queue.concurrency=3-5"
     })
 @SpringBootIntegrationTest
 class MessageEnqueuerTest extends SpringTestBase {
@@ -74,9 +74,8 @@ class MessageEnqueuerTest extends SpringTestBase {
   @Test
   void enqueueWithRetryWithMessageId() throws TimedOutException {
     ChatIndexing chatIndexing = ChatIndexing.newInstance();
-    assertTrue(
-        rqueueMessageEnqueuer.enqueueWithRetry(
-            chatIndexingQueue, chatIndexing.getId(), chatIndexing, 3));
+    assertTrue(rqueueMessageEnqueuer.enqueueWithRetry(
+        chatIndexingQueue, chatIndexing.getId(), chatIndexing, 3));
     waitFor(() -> getMessageCount(chatIndexingQueue) == 0, "ChatIndexing to be done");
   }
 
@@ -97,9 +96,8 @@ class MessageEnqueuerTest extends SpringTestBase {
   @Test
   void enqueueInWithRetryWithMessageId() throws TimedOutException {
     Notification notification = Notification.newInstance();
-    assertTrue(
-        rqueueMessageEnqueuer.enqueueInWithRetry(
-            notificationQueue, notification.getId(), notification, 3, 1000));
+    assertTrue(rqueueMessageEnqueuer.enqueueInWithRetry(
+        notificationQueue, notification.getId(), notification, 3, 1000));
     waitFor(() -> getMessageCount(notificationQueue) == 0, "notification to be consumed");
   }
 
@@ -114,12 +112,11 @@ class MessageEnqueuerTest extends SpringTestBase {
   @Test
   void enqueueAtWithMessageId() throws TimedOutException {
     FeedGeneration feedGeneration = FeedGeneration.newInstance();
-    assertTrue(
-        rqueueMessageEnqueuer.enqueueAt(
-            feedGenerationQueue,
-            feedGeneration.getId(),
-            feedGeneration,
-            System.currentTimeMillis() + 1000));
+    assertTrue(rqueueMessageEnqueuer.enqueueAt(
+        feedGenerationQueue,
+        feedGeneration.getId(),
+        feedGeneration,
+        System.currentTimeMillis() + 1000));
     waitFor(() -> getMessageCount(feedGenerationQueue) == 0, "Feed to be generated");
   }
 }

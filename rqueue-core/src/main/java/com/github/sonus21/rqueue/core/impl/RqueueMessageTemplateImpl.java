@@ -66,10 +66,9 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
     if (reactiveRedisConnectionFactory != null) {
       this.reactiveRedisTemplate =
           new ReactiveRqueueRedisTemplate<>(reactiveRedisConnectionFactory);
-      this.reactiveScriptExecutor =
-          new DefaultReactiveScriptExecutor<>(
-              reactiveRedisConnectionFactory,
-              RedisUtils.redisSerializationContextProvider.getSerializationContext());
+      this.reactiveScriptExecutor = new DefaultReactiveScriptExecutor<>(
+          reactiveRedisConnectionFactory,
+          RedisUtils.redisSerializationContextProvider.getSerializationContext());
     } else {
       this.reactiveScriptExecutor = null;
       this.reactiveRedisTemplate = null;
@@ -89,13 +88,12 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
     }
     long currentTime = System.currentTimeMillis();
     RedisScript<List<RqueueMessage>> script = getScript(ScriptType.DEQUEUE_MESSAGE);
-    List<RqueueMessage> messages =
-        scriptExecutor.execute(
-            script,
-            Arrays.asList(queueName, processingQueueName, processingChannelName),
-            currentTime,
-            currentTime + visibilityTimeout,
-            count);
+    List<RqueueMessage> messages = scriptExecutor.execute(
+        script,
+        Arrays.asList(queueName, processingQueueName, processingChannelName),
+        currentTime,
+        currentTime + visibilityTimeout,
+        count);
     log.debug("Pop Queue: {}, N: {}, Messages: {}", queueName, count, messages);
     return messages;
   }
@@ -153,13 +151,12 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
         tgtZsetName,
         tgt);
     RedisScript<Long> script = getScript(ScriptType.MOVE_MESSAGE_TO_ZSET);
-    Long response =
-        scriptExecutor.execute(
-            script,
-            Arrays.asList(srcZsetName, tgtZsetName),
-            src,
-            tgt,
-            System.currentTimeMillis() + delay);
+    Long response = scriptExecutor.execute(
+        script,
+        Arrays.asList(srcZsetName, tgtZsetName),
+        src,
+        tgt,
+        System.currentTimeMillis() + delay);
     if (response == null) {
       log.error("Duplicate processing for the message {}", src);
     }
@@ -247,9 +244,8 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
     int remainingMessages = maxMessage;
     while (messagesInList > 0 && remainingMessages > 0) {
       long messageCount = Math.min(remainingMessages, Constants.MAX_MESSAGES);
-      messagesInList =
-          scriptExecutor.execute(
-              script, Arrays.asList(sourceList, destinationZset), messageCount, score);
+      messagesInList = scriptExecutor.execute(
+          script, Arrays.asList(sourceList, destinationZset), messageCount, score);
       remainingMessages -= messageCount;
     }
     return new MessageMoveResult(maxMessage - remainingMessages, true);
@@ -267,13 +263,8 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
     int remainingMessages = maxMessage;
     while (messageInZset > 0 && remainingMessages > 0) {
       long messageCount = Math.min(remainingMessages, Constants.MAX_MESSAGES);
-      messageInZset =
-          scriptExecutor.execute(
-              script,
-              Arrays.asList(sourceZset, destinationZset),
-              messageCount,
-              newScore,
-              fixedScore);
+      messageInZset = scriptExecutor.execute(
+          script, Arrays.asList(sourceZset, destinationZset), messageCount, newScore, fixedScore);
       remainingMessages -= messageCount;
     }
     return new MessageMoveResult(maxMessage - remainingMessages, true);

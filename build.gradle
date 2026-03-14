@@ -185,7 +185,7 @@ coverallsJacoco {
 
 def javaFormatSources = providers.provider {
     files(subprojects.collect { subproject ->
-        subproject.fileTree(dir: subproject.projectDir) {
+        subproject.fileTree(subproject.projectDir) {
             include "src/**/*.java"
         }
     }).files.findAll { it.exists() }
@@ -196,6 +196,13 @@ tasks.register("formatJava", JavaExec) {
     description = "Formats all Java sources with Palantir Java Format."
     classpath = configurations.palantirJavaFormat
     mainClass = "com.palantir.javaformat.java.Main"
+    jvmArgs(
+            "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    )
     doFirst {
         args = ["--replace"] + javaFormatSources.get().collect { it.absolutePath }
     }
@@ -206,6 +213,13 @@ tasks.register("checkFormatJava", JavaExec) {
     description = "Checks whether all Java sources are formatted with Palantir Java Format."
     classpath = configurations.palantirJavaFormat
     mainClass = "com.palantir.javaformat.java.Main"
+    jvmArgs(
+            "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    )
     doFirst {
         args = ["--dry-run", "--set-exit-if-changed"] + javaFormatSources.get().collect { it.absolutePath }
     }

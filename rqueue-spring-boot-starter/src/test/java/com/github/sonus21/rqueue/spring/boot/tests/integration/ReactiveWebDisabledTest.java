@@ -51,17 +51,17 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8018",
-        "reservation.request.dead.letter.consumer.enabled=true",
-        "reservation.request.active=true",
-        "list.email.queue.enabled=true",
-        "mysql.db.name=ReactiveWebDisabledTest",
-        "use.system.redis=false",
-        "user.banned.queue.active=true",
-        "spring.main.web-application-type=reactive",
-        "rqueue.reactive.enabled=true",
-        "rqueue.web.enable=false",
+      "rqueue.retry.per.poll=1000",
+      "spring.data.redis.port=8018",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=ReactiveWebDisabledTest",
+      "use.system.redis=false",
+      "user.banned.queue.active=true",
+      "spring.main.web-application-type=reactive",
+      "rqueue.reactive.enabled=true",
+      "rqueue.web.enable=false",
     })
 @AutoConfigureWebTestClient
 @SpringBootIntegrationTest
@@ -74,16 +74,16 @@ class ReactiveWebDisabledTest extends BasicListenerTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-          "",
-          "/queues",
-          "/running",
-          "/scheduled",
-          "/dead",
-          "/pending",
-          "/utility",
-          "/queues/test-queue",
-          "/api/v1/aggregate-data-selector?type=WEEKLY",
-          "/api/v1/jobs?message-id=1234567890"
+        "",
+        "/queues",
+        "/running",
+        "/scheduled",
+        "/dead",
+        "/pending",
+        "/utility",
+        "/queues/test-queue",
+        "/api/v1/aggregate-data-selector?type=WEEKLY",
+        "/api/v1/jobs?message-id=1234567890"
       })
   void testPath(String path) throws Exception {
     this.webTestClient

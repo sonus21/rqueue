@@ -54,14 +54,12 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @SuppressWarnings("unchecked")
   public Map<String, List<Object>> readFromLists(List<String> keys) {
     Map<String, List<Object>> out = new HashMap<>();
-    List<Object> redisOut =
-        RedisUtils.executePipeLine(
-            redisTemplate.getRedisTemplate(),
-            ((connection, keySerializer, valueSerializer) -> {
-              for (String key : keys) {
-                connection.lRange(Objects.requireNonNull(keySerializer.serialize(key)), 0, -1);
-              }
-            }));
+    List<Object> redisOut = RedisUtils.executePipeLine(
+        redisTemplate.getRedisTemplate(), ((connection, keySerializer, valueSerializer) -> {
+          for (String key : keys) {
+            connection.lRange(Objects.requireNonNull(keySerializer.serialize(key)), 0, -1);
+          }
+        }));
     for (int i = 0; i < keys.size(); i++) {
       List<Object> values = (List<Object>) redisOut.get(i);
       if (!CollectionUtils.isEmpty(values)) {
@@ -79,8 +77,7 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   @Override
   public void appendToListWithListExpiry(String listName, String data, Duration duration) {
     RedisUtils.executePipeLine(
-        redisTemplate.getRedisTemplate(),
-        (connection, keySerializer, valueSerializer) -> {
+        redisTemplate.getRedisTemplate(), (connection, keySerializer, valueSerializer) -> {
           byte[] key = keySerializer.serialize(listName);
           byte[] value = valueSerializer.serialize(data);
           connection.rPush(key, value);
@@ -127,8 +124,7 @@ public class RqueueStringDaoImpl implements RqueueStringDao {
   public Object deleteAndSet(
       Collection<String> keysToBeRemoved, Map<String, Object> objectsToBeStored) {
     return RedisUtils.executePipeLine(
-        redisTemplate.getRedisTemplate(),
-        ((connection, keySerializer, valueSerializer) -> {
+        redisTemplate.getRedisTemplate(), ((connection, keySerializer, valueSerializer) -> {
           // potential cross slot error
           for (String key : keysToBeRemoved) {
             connection.del(keySerializer.serialize(key));

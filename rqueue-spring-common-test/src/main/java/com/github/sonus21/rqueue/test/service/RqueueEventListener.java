@@ -38,5 +38,4 @@ public class RqueueEventListener {
   public void listen(RqueueExecutionEvent event) {
     executionEvents.add(event);
   }
-
 }

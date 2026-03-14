@@ -59,8 +59,7 @@ public final class RqueueMessageHeaders {
   private static final MessageHeaders emptyMessageHeaders =
       new MessageHeaders(Collections.emptyMap());
 
-  private RqueueMessageHeaders() {
-  }
+  private RqueueMessageHeaders() {}
 
   public static MessageHeaders emptyMessageHeaders() {
     return emptyMessageHeaders;

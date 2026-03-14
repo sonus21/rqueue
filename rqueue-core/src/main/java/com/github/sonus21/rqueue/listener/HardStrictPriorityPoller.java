@@ -70,20 +70,16 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
     this.rqueueBeanProvider = rqueueBeanProvider;
     // Sort queues by priority once during initialization
     List<QueueDetail> queueDetailList = new ArrayList<>(queueDetails);
-    queueDetailList.sort(
-        (o1, o2) ->
-            o2.getPriority().get(Constants.DEFAULT_PRIORITY_KEY)
-                - o1.getPriority().get(Constants.DEFAULT_PRIORITY_KEY));
+    queueDetailList.sort((o1, o2) -> o2.getPriority().get(Constants.DEFAULT_PRIORITY_KEY)
+        - o1.getPriority().get(Constants.DEFAULT_PRIORITY_KEY));
 
     this.queues = queueDetailList.stream().map(QueueDetail::getName).collect(Collectors.toList());
-    this.queueNameToDetail =
-        queueDetailList.stream()
-            .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
+    this.queueNameToDetail = queueDetailList.stream()
+        .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
     this.queueNameToThread = queueNameToThread;
-    this.hardStrictPriorityPollerProperties =
-        hardStrictPriorityPollerProperties != null
-            ? hardStrictPriorityPollerProperties
-            : new HardStrictPriorityPollerProperties();
+    this.hardStrictPriorityPollerProperties = hardStrictPriorityPollerProperties != null
+        ? hardStrictPriorityPollerProperties
+        : new HardStrictPriorityPollerProperties();
   }
 
   @Override
@@ -153,11 +149,10 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
   }
 
   protected boolean existAvailableMessagesForPoll(QueueDetail queueDetail) {
-    boolean readyMessagesExists =
-        rqueueBeanProvider
-            .getRqueueMessageTemplate()
-            .findFirstElementFromList(queueDetail.getQueueName())
-            .isPresent();
+    boolean readyMessagesExists = rqueueBeanProvider
+        .getRqueueMessageTemplate()
+        .findFirstElementFromList(queueDetail.getQueueName())
+        .isPresent();
     if (readyMessagesExists) {
       log(
           Level.TRACE,
@@ -169,12 +164,11 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
 
     // Only check delayed messages with score <= current time
     long currentTime = System.currentTimeMillis();
-    boolean delayedMessagesExists =
-        rqueueBeanProvider
-            .getRqueueMessageTemplate()
-            .findFirstElementFromZsetWithScore(queueDetail.getScheduledQueueName())
-            .filter(element -> element.getScore() <= currentTime)
-            .isPresent();
+    boolean delayedMessagesExists = rqueueBeanProvider
+        .getRqueueMessageTemplate()
+        .findFirstElementFromZsetWithScore(queueDetail.getScheduledQueueName())
+        .filter(element -> element.getScore() <= currentTime)
+        .isPresent();
 
     if (delayedMessagesExists) {
       log(

@@ -84,8 +84,10 @@ public class RqueueMessageListenerContainer
   private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue =
       new ConcurrentHashMap<>();
   private final Map<String, QueueThreadPool> queueThreadMap = new ConcurrentHashMap<>();
+
   @Autowired
   protected RqueueBeanProvider rqueueBeanProvider;
+
   List<Middleware> middlewares;
   private MessageProcessor discardMessageProcessor;
   private MessageProcessor deadLetterQueueMessageProcessor;
@@ -265,10 +267,9 @@ public class RqueueMessageListenerContainer
 
   private void initializeThreadMapForNonDefaultExecutor(
       List<QueueDetail> registeredActiveQueueDetail) {
-    List<QueueDetail> queueDetails =
-        registeredActiveQueueDetail.stream()
-            .filter(e -> !e.isSystemGenerated())
-            .collect(Collectors.toList());
+    List<QueueDetail> queueDetails = registeredActiveQueueDetail.stream()
+        .filter(e -> !e.isSystemGenerated())
+        .collect(Collectors.toList());
     List<QueueDetail> withoutConcurrency = new ArrayList<>();
     for (QueueDetail queueDetail : queueDetails) {
       if (queueDetail.getConcurrency().isValid()) {
@@ -283,18 +284,17 @@ public class RqueueMessageListenerContainer
 
   private void initialize() {
     initializeQueue();
-    this.postProcessingHandler =
-        new PostProcessingHandler(
-            rqueueBeanProvider.getRqueueWebConfig(),
-            rqueueBeanProvider.getApplicationEventPublisher(),
-            rqueueMessageTemplate,
-            taskExecutionBackOff,
-            new MessageProcessorHandler(
-                manualDeletionMessageProcessor,
-                deadLetterQueueMessageProcessor,
-                discardMessageProcessor,
-                postExecutionMessageProcessor),
-            rqueueBeanProvider.getRqueueSystemConfigDao());
+    this.postProcessingHandler = new PostProcessingHandler(
+        rqueueBeanProvider.getRqueueWebConfig(),
+        rqueueBeanProvider.getApplicationEventPublisher(),
+        rqueueMessageTemplate,
+        taskExecutionBackOff,
+        new MessageProcessorHandler(
+            manualDeletionMessageProcessor,
+            deadLetterQueueMessageProcessor,
+            discardMessageProcessor,
+            postExecutionMessageProcessor),
+        rqueueBeanProvider.getRqueueSystemConfigDao());
     this.rqueueBeanProvider.setPreExecutionMessageProcessor(preExecutionMessageProcessor);
   }
 
@@ -373,10 +373,9 @@ public class RqueueMessageListenerContainer
 
   public AsyncTaskExecutor createDefaultTaskExecutor(
       List<QueueDetail> registeredActiveQueueDetail) {
-    List<QueueDetail> queueDetails =
-        registeredActiveQueueDetail.stream()
-            .filter(e -> !e.isSystemGenerated())
-            .collect(Collectors.toList());
+    List<QueueDetail> queueDetails = registeredActiveQueueDetail.stream()
+        .filter(e -> !e.isSystemGenerated())
+        .collect(Collectors.toList());
     List<QueueDetail> withoutConcurrency = new ArrayList<>();
     for (QueueDetail queueDetail : queueDetails) {
       if (queueDetail.getConcurrency().getMin() > 0) {
@@ -410,26 +409,25 @@ public class RqueueMessageListenerContainer
       priorityGroup = Constants.DEFAULT_PRIORITY_GROUP;
     }
     RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
-    QueueDetail queueDetail =
-        QueueDetail.builder()
-            .name(queue)
-            .queueName(rqueueConfig.getQueueName(queue))
-            .processingQueueName(rqueueConfig.getProcessingQueueName(queue))
-            .completedQueueName(rqueueConfig.getCompletedQueueName(queue))
-            .scheduledQueueName(rqueueConfig.getScheduledQueueName(queue))
-            .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queue))
-            .scheduledQueueChannelName(rqueueConfig.getScheduledQueueChannelName(queue))
-            .deadLetterQueueName(mappingInformation.getDeadLetterQueueName())
-            .visibilityTimeout(mappingInformation.getVisibilityTimeout())
-            .deadLetterConsumerEnabled(mappingInformation.isDeadLetterConsumerEnabled())
-            .concurrency(mappingInformation.getConcurrency())
-            .batchSize(mappingInformation.getBatchSize())
-            .active(mappingInformation.isActive())
-            .numRetry(numRetry)
-            .priority(priority)
-            .priorityGroup(priorityGroup)
-            .doNotRetry(mappingInformation.getDoNotRetry())
-            .build();
+    QueueDetail queueDetail = QueueDetail.builder()
+        .name(queue)
+        .queueName(rqueueConfig.getQueueName(queue))
+        .processingQueueName(rqueueConfig.getProcessingQueueName(queue))
+        .completedQueueName(rqueueConfig.getCompletedQueueName(queue))
+        .scheduledQueueName(rqueueConfig.getScheduledQueueName(queue))
+        .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queue))
+        .scheduledQueueChannelName(rqueueConfig.getScheduledQueueChannelName(queue))
+        .deadLetterQueueName(mappingInformation.getDeadLetterQueueName())
+        .visibilityTimeout(mappingInformation.getVisibilityTimeout())
+        .deadLetterConsumerEnabled(mappingInformation.isDeadLetterConsumerEnabled())
+        .concurrency(mappingInformation.getConcurrency())
+        .batchSize(mappingInformation.getBatchSize())
+        .active(mappingInformation.isActive())
+        .numRetry(numRetry)
+        .priority(priority)
+        .priorityGroup(priorityGroup)
+        .doNotRetry(mappingInformation.getDoNotRetry())
+        .build();
     List<QueueDetail> queueDetails;
     if (queueDetail.getPriority().size() <= 1) {
       queueDetails = Collections.singletonList(queueDetail);
@@ -503,48 +501,42 @@ public class RqueueMessageListenerContainer
     Map<String, QueueThreadPool> queueThread = getQueueThreadMap(groupName, queueDetails);
     Future<?> future;
     if (getPriorityMode() == PriorityMode.STRICT) {
-      future =
-          taskExecutor.submit(
-              new StrictPriorityPoller(
-                  StringUtils.groupName(groupName),
-                  queueDetails,
-                  queueThread,
-                  rqueueBeanProvider,
-                  queueStateMgr,
-                  getMiddleWares(),
-                  pollingInterval,
-                  backOffTime,
-                  postProcessingHandler,
-                  getMessageHeaders()));
+      future = taskExecutor.submit(new StrictPriorityPoller(
+          StringUtils.groupName(groupName),
+          queueDetails,
+          queueThread,
+          rqueueBeanProvider,
+          queueStateMgr,
+          getMiddleWares(),
+          pollingInterval,
+          backOffTime,
+          postProcessingHandler,
+          getMessageHeaders()));
     } else if (getPriorityMode() == PriorityMode.HARD_STRICT) {
-      future =
-          taskExecutor.submit(
-              new HardStrictPriorityPoller(
-                  StringUtils.groupName(groupName),
-                  queueDetails,
-                  queueThread,
-                  rqueueBeanProvider,
-                  queueStateMgr,
-                  getMiddleWares(),
-                  pollingInterval,
-                  backOffTime,
-                  postProcessingHandler,
-                  getMessageHeaders(),
-                  getHardStrictPriorityPollerProperties()));
+      future = taskExecutor.submit(new HardStrictPriorityPoller(
+          StringUtils.groupName(groupName),
+          queueDetails,
+          queueThread,
+          rqueueBeanProvider,
+          queueStateMgr,
+          getMiddleWares(),
+          pollingInterval,
+          backOffTime,
+          postProcessingHandler,
+          getMessageHeaders(),
+          getHardStrictPriorityPollerProperties()));
     } else {
-      future =
-          taskExecutor.submit(
-              new WeightedPriorityPoller(
-                  StringUtils.groupName(groupName),
-                  queueDetails,
-                  queueThread,
-                  rqueueBeanProvider,
-                  queueStateMgr,
-                  getMiddleWares(),
-                  pollingInterval,
-                  backOffTime,
-                  postProcessingHandler,
-                  getMessageHeaders()));
+      future = taskExecutor.submit(new WeightedPriorityPoller(
+          StringUtils.groupName(groupName),
+          queueDetails,
+          queueThread,
+          rqueueBeanProvider,
+          queueStateMgr,
+          getMiddleWares(),
+          pollingInterval,
+          backOffTime,
+          postProcessingHandler,
+          getMessageHeaders()));
     }
     scheduledFutureByQueue.put(groupName, future);
   }
@@ -557,17 +549,16 @@ public class RqueueMessageListenerContainer
     QueueConfig config = rqueueBeanProvider.getRqueueSystemConfigDao().getConfigByName(queueName);
     queueStateMgr.pauseQueueIfRequired(config);
     QueueThreadPool queueThreadPool = queueThreadMap.get(queueName);
-    DefaultRqueuePoller messagePoller =
-        new DefaultRqueuePoller(
-            queueDetail,
-            queueThreadPool,
-            rqueueBeanProvider,
-            queueStateMgr,
-            getMiddleWares(),
-            pollingInterval,
-            backOffTime,
-            postProcessingHandler,
-            getMessageHeaders());
+    DefaultRqueuePoller messagePoller = new DefaultRqueuePoller(
+        queueDetail,
+        queueThreadPool,
+        rqueueBeanProvider,
+        queueStateMgr,
+        getMiddleWares(),
+        pollingInterval,
+        backOffTime,
+        postProcessingHandler,
+        getMessageHeaders());
     Future<?> future = getTaskExecutor().submit(messagePoller);
     scheduledFutureByQueue.put(queueName, future);
   }

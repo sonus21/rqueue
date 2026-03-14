@@ -45,12 +45,10 @@ class LoggingMiddlewareTest extends TestBase {
     LoggingMiddleware loggingMiddleware = new LoggingMiddleware();
     doReturn(RqueueMessageTestUtils.createMessage("test-queue")).when(job).getRqueueMessage();
     AtomicInteger atomicInteger = new AtomicInteger();
-    loggingMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    loggingMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     assertEquals(1, atomicInteger.get());
   }
 }

@@ -306,13 +306,11 @@ public class SimpleRqueueListenerContainerFactory {
     notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
     notNull(messageConverterProvider, "messageConverterProvider must not be null");
     if (rqueueMessageTemplate == null) {
-      rqueueMessageTemplate =
-          new RqueueMessageTemplateImpl(
-              getRedisConnectionFactory(), getReactiveRedisConnectionFactory());
+      rqueueMessageTemplate = new RqueueMessageTemplateImpl(
+          getRedisConnectionFactory(), getReactiveRedisConnectionFactory());
     }
-    RqueueMessageListenerContainer messageListenerContainer =
-        new RqueueMessageListenerContainer(
-            getRqueueMessageHandler(messageConverterProvider), rqueueMessageTemplate);
+    RqueueMessageListenerContainer messageListenerContainer = new RqueueMessageListenerContainer(
+        getRqueueMessageHandler(messageConverterProvider), rqueueMessageTemplate);
     messageListenerContainer.setAutoStartup(autoStartup);
     if (taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(taskExecutor);
@@ -352,7 +350,8 @@ public class SimpleRqueueListenerContainerFactory {
       messageListenerContainer.setMessageHeaders(messageHeaders);
     }
     if (hardStrictPriorityPollerProperties != null) {
-      messageListenerContainer.setHardStrictPriorityPollerProperties(hardStrictPriorityPollerProperties);
+      messageListenerContainer.setHardStrictPriorityPollerProperties(
+          hardStrictPriorityPollerProperties);
     }
     return messageListenerContainer;
   }

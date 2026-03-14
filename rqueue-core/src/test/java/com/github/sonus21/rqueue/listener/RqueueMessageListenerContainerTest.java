@@ -79,22 +79,31 @@ class RqueueMessageListenerContainerTest extends TestBase {
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
   private static final long VISIBILITY_TIMEOUT = 900000L;
+
   @Mock
   private RqueueMessageHandler rqueueMessageHandler;
+
   @Mock
   private RedisConnectionFactory redisConnectionFactory;
+
   @Mock
   private ApplicationEventPublisher applicationEventPublisher;
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
   @Mock
   private RqueueLockManager rqueueLockManager;
+
   private RqueueMessageListenerContainer container;
   private RqueueBeanProvider beanProvider;
 
@@ -237,16 +246,14 @@ class RqueueMessageListenerContainerTest extends TestBase {
 
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     AtomicInteger slowQueueCounter = new AtomicInteger(0);
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           fastQueueCounter.incrementAndGet();
           return null;
         })
         .when(rqueueMessageTemplate)
         .pop(fastQueue, fastProcessingQueue, fastProcessingQueueChannel, VISIBILITY_TIMEOUT, 1);
 
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           slowQueueCounter.incrementAndGet();
           return null;
         })
@@ -264,14 +271,13 @@ class RqueueMessageListenerContainerTest extends TestBase {
   void messageFetcherRetryWorking() throws Exception {
     AtomicInteger fastQueueCounter = new AtomicInteger(0);
     String fastQueueMessage = "This is fast queue";
-    RqueueMessage message =
-        RqueueMessage.builder()
-            .id(UUID.randomUUID().toString())
-            .queueName(fastQueue)
-            .message(fastQueueMessage)
-            .processAt(System.currentTimeMillis())
-            .queuedTime(System.nanoTime())
-            .build();
+    RqueueMessage message = RqueueMessage.builder()
+        .id(UUID.randomUUID().toString())
+        .queueName(fastQueue)
+        .message(fastQueueMessage)
+        .processAt(System.currentTimeMillis())
+        .queuedTime(System.nanoTime())
+        .build();
     StaticApplicationContext applicationContext = new StaticApplicationContext();
     applicationContext.registerSingleton("messageHandler", RqueueMessageHandler.class);
     applicationContext.registerSingleton("fastMessageListener", FastMessageListener.class);
@@ -281,10 +287,10 @@ class RqueueMessageListenerContainerTest extends TestBase {
     messageHandler.afterPropertiesSet();
     Map<String, MessageMetadata> messageMetadataMap = new ConcurrentHashMap<>();
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
-    doAnswer(i -> messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService)
+    doAnswer(i -> messageMetadataMap.get(i.getArgument(0)))
+        .when(rqueueMessageMetadataService)
         .get(any());
-    doAnswer(
-        i -> {
+    doAnswer(i -> {
           RqueueMessage rqueueMessage = i.getArgument(0);
           MessageMetadata messageMetadata =
               new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
@@ -297,8 +303,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     beanProvider.setRqueueMessageHandler(messageHandler);
     RqueueMessageListenerContainer container = new TestListenerContainer(messageHandler);
 
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           if (fastQueueCounter.get() < 2) {
             if (fastQueueCounter.incrementAndGet() == 1) {
               throw new RedisCommandExecutionException("Some error occurred");
@@ -343,8 +348,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     String fastQueueMessage = "This is fast queue";
     String slowQueueMessage = "This is slow queue";
     Map<String, MessageMetadata> messageMetadataMap = new ConcurrentHashMap<>();
-    doAnswer(
-        i -> {
+    doAnswer(i -> {
           RqueueMessage rqueueMessage = i.getArgument(0);
           MessageMetadata messageMetadata =
               new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
@@ -353,38 +357,35 @@ class RqueueMessageListenerContainerTest extends TestBase {
         })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
-    doAnswer(i -> messageMetadataMap.get(i.getArgument(0))).when(rqueueMessageMetadataService)
+    doAnswer(i -> messageMetadataMap.get(i.getArgument(0)))
+        .when(rqueueMessageMetadataService)
         .get(any());
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           if (slowQueueCounter.get() == 0) {
             slowQueueCounter.incrementAndGet();
-            return Collections.singletonList(
-                RqueueMessage.builder()
-                    .queueName(slowQueue)
-                    .message(slowQueueMessage)
-                    .processAt(System.currentTimeMillis())
-                    .queuedTime(System.nanoTime())
-                    .id(UUID.randomUUID().toString())
-                    .build());
+            return Collections.singletonList(RqueueMessage.builder()
+                .queueName(slowQueue)
+                .message(slowQueueMessage)
+                .processAt(System.currentTimeMillis())
+                .queuedTime(System.nanoTime())
+                .id(UUID.randomUUID().toString())
+                .build());
           }
           return null;
         })
         .when(rqueueMessageTemplate)
         .pop(slowQueue, slowProcessingQueue, slowProcessingChannel, VISIBILITY_TIMEOUT, 1);
 
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           if (fastQueueCounter.get() == 0) {
             fastQueueCounter.incrementAndGet();
-            return Collections.singletonList(
-                RqueueMessage.builder()
-                    .queueName(fastQueue)
-                    .message(fastQueueMessage)
-                    .processAt(System.currentTimeMillis())
-                    .queuedTime(System.nanoTime())
-                    .id(UUID.randomUUID().toString())
-                    .build());
+            return Collections.singletonList(RqueueMessage.builder()
+                .queueName(fastQueue)
+                .message(fastQueueMessage)
+                .processAt(System.currentTimeMillis())
+                .queuedTime(System.nanoTime())
+                .id(UUID.randomUUID().toString())
+                .build());
           }
           return null;
         })
@@ -522,8 +523,7 @@ class RqueueMessageListenerContainerTest extends TestBase {
     }
 
     @Override
-    public void publishEvent(Object event) {
-    }
+    public void publishEvent(Object event) {}
   }
 
   private class TestListenerContainer extends RqueueMessageListenerContainer {

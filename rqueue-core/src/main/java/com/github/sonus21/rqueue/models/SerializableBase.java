@@ -27,6 +27,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode
 @JsonInclude(Include.NON_NULL)
-public abstract class SerializableBase implements Serializable {
-
-}
+public abstract class SerializableBase implements Serializable {}

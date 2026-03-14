@@ -16,16 +16,16 @@
 
 package com.github.sonus21.rqueue.listener;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import org.junit.jupiter.api.Test;
 import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 @CoreUnitTest
 class QueueDetailTest extends TestBase {
@@ -41,21 +41,20 @@ class QueueDetailTest extends TestBase {
   @Test
   void toConfig() {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test");
-    QueueConfig expectedConfig =
-        QueueConfig.builder()
-            .name(queueDetail.getName())
-            .numRetry(queueDetail.getNumRetry())
-            .queueName(queueDetail.getQueueName())
-            .scheduledQueueName(queueDetail.getScheduledQueueName())
-            .completedQueueName(queueDetail.getCompletedQueueName())
-            .processingQueueName(queueDetail.getProcessingQueueName())
-            .visibilityTimeout(queueDetail.getVisibilityTimeout())
-            .deadLetterQueues(new LinkedList<>())
-            .concurrency(queueDetail.getConcurrency().toMinMax())
-            .priority(queueDetail.getPriority())
-            .priorityGroup(queueDetail.getPriorityGroup())
-            .systemGenerated(queueDetail.isSystemGenerated())
-            .build();
+    QueueConfig expectedConfig = QueueConfig.builder()
+        .name(queueDetail.getName())
+        .numRetry(queueDetail.getNumRetry())
+        .queueName(queueDetail.getQueueName())
+        .scheduledQueueName(queueDetail.getScheduledQueueName())
+        .completedQueueName(queueDetail.getCompletedQueueName())
+        .processingQueueName(queueDetail.getProcessingQueueName())
+        .visibilityTimeout(queueDetail.getVisibilityTimeout())
+        .deadLetterQueues(new LinkedList<>())
+        .concurrency(queueDetail.getConcurrency().toMinMax())
+        .priority(queueDetail.getPriority())
+        .priorityGroup(queueDetail.getPriorityGroup())
+        .systemGenerated(queueDetail.isSystemGenerated())
+        .build();
 
     QueueConfig queueConfig = queueDetail.toConfig();
     assertNotNull(queueConfig.getUpdatedOn());
@@ -81,41 +80,39 @@ class QueueDetailTest extends TestBase {
     QueueDetail queueDetail = TestUtils.createQueueDetail("test", priority, 3, 1000L, null);
     List<QueueDetail> queueDetails = queueDetail.expandQueueDetail(true, -1);
     priority.put(Constants.DEFAULT_PRIORITY_KEY, 5);
-    QueueDetail queueDetail2 =
-        QueueDetail.builder()
-            .name(queueDetail.getName() + "_critical")
-            .numRetry(queueDetail.getNumRetry())
-            .queueName(queueDetail.getQueueName() + "_critical")
-            .scheduledQueueName(queueDetail.getScheduledQueueName() + "_critical")
-            .completedQueueName(queueDetail.getCompletedQueueName() + "_critical")
-            .scheduledQueueChannelName(queueDetail.getScheduledQueueChannelName() + "_critical")
-            .processingQueueName(queueDetail.getProcessingQueueName() + "_critical")
-            .processingQueueChannelName(queueDetail.getProcessingQueueChannelName() + "_critical")
-            .visibilityTimeout(queueDetail.getVisibilityTimeout())
-            .concurrency(queueDetail.getConcurrency())
-            .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, 10))
-            .priorityGroup(queueDetail.getName())
-            .active(true)
-            .systemGenerated(true)
-            .build();
+    QueueDetail queueDetail2 = QueueDetail.builder()
+        .name(queueDetail.getName() + "_critical")
+        .numRetry(queueDetail.getNumRetry())
+        .queueName(queueDetail.getQueueName() + "_critical")
+        .scheduledQueueName(queueDetail.getScheduledQueueName() + "_critical")
+        .completedQueueName(queueDetail.getCompletedQueueName() + "_critical")
+        .scheduledQueueChannelName(queueDetail.getScheduledQueueChannelName() + "_critical")
+        .processingQueueName(queueDetail.getProcessingQueueName() + "_critical")
+        .processingQueueChannelName(queueDetail.getProcessingQueueChannelName() + "_critical")
+        .visibilityTimeout(queueDetail.getVisibilityTimeout())
+        .concurrency(queueDetail.getConcurrency())
+        .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, 10))
+        .priorityGroup(queueDetail.getName())
+        .active(true)
+        .systemGenerated(true)
+        .build();
 
-    QueueDetail queueDetail3 =
-        QueueDetail.builder()
-            .name(queueDetail.getName() + "_high")
-            .numRetry(queueDetail.getNumRetry())
-            .queueName(queueDetail.getQueueName() + "_high")
-            .completedQueueName(queueDetail.getCompletedQueueName() + "_high")
-            .scheduledQueueName(queueDetail.getScheduledQueueName() + "_high")
-            .scheduledQueueChannelName(queueDetail.getScheduledQueueChannelName() + "_high")
-            .processingQueueName(queueDetail.getProcessingQueueName() + "_high")
-            .processingQueueChannelName(queueDetail.getProcessingQueueChannelName() + "_high")
-            .visibilityTimeout(queueDetail.getVisibilityTimeout())
-            .concurrency(queueDetail.getConcurrency())
-            .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, 5))
-            .priorityGroup(queueDetail.getName())
-            .systemGenerated(true)
-            .active(true)
-            .build();
+    QueueDetail queueDetail3 = QueueDetail.builder()
+        .name(queueDetail.getName() + "_high")
+        .numRetry(queueDetail.getNumRetry())
+        .queueName(queueDetail.getQueueName() + "_high")
+        .completedQueueName(queueDetail.getCompletedQueueName() + "_high")
+        .scheduledQueueName(queueDetail.getScheduledQueueName() + "_high")
+        .scheduledQueueChannelName(queueDetail.getScheduledQueueChannelName() + "_high")
+        .processingQueueName(queueDetail.getProcessingQueueName() + "_high")
+        .processingQueueChannelName(queueDetail.getProcessingQueueChannelName() + "_high")
+        .visibilityTimeout(queueDetail.getVisibilityTimeout())
+        .concurrency(queueDetail.getConcurrency())
+        .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, 5))
+        .priorityGroup(queueDetail.getName())
+        .systemGenerated(true)
+        .active(true)
+        .build();
 
     assertEquals(3, queueDetails.size());
     assertEquals(queueDetail3, queueDetails.get(0));

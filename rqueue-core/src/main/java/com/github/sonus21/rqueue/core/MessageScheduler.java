@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
-import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,14 +48,17 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-public abstract class MessageScheduler implements DisposableBean,
-    ApplicationListener<RqueueBootstrapEvent> {
+public abstract class MessageScheduler
+    implements DisposableBean, ApplicationListener<RqueueBootstrapEvent> {
 
   private final Object monitor = new Object();
+
   @Autowired
   protected RqueueSchedulerConfig rqueueSchedulerConfig;
+
   @Autowired
   protected RqueueConfig rqueueConfig;
+
   private RedisScript<Long> redisScript;
   private DefaultScriptExecutor<String> defaultScriptExecutor;
   private Map<String, Boolean> queueRunningState;
@@ -66,12 +69,14 @@ public abstract class MessageScheduler implements DisposableBean,
   protected RedisScheduleTriggerHandler redisScheduleTriggerHandler;
 
   private ThreadPoolTaskScheduler scheduler;
+
   @Autowired
   private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
 
   @Autowired
   @Qualifier("rqueueRedisLongTemplate")
   private RedisTemplate<String, Long> redisTemplate;
+
   private Map<String, Integer> errorCount;
 
   protected abstract Logger getLogger();
@@ -152,13 +157,13 @@ public abstract class MessageScheduler implements DisposableBean,
           scheduledFuture,
           rqueueSchedulerConfig.getTerminationWaitTime(),
           "An exception occurred while stopping scheduler queue '{}'",
-          queueName
-      );
+          queueName);
     }
   }
 
   private void stopQueue(String queueName) {
-    Assert.isTrue(queueRunningState.containsKey(queueName),
+    Assert.isTrue(
+        queueRunningState.containsKey(queueName),
         "Queue with name '" + queueName + "' does not exist");
     queueRunningState.put(queueName, false);
   }
@@ -305,7 +310,7 @@ public abstract class MessageScheduler implements DisposableBean,
 
     private Object[] scriptArgs() {
       long currentTime = System.currentTimeMillis();
-      return new Object[]{currentTime, getMessageCount(), processingQueue ? 1 : 0};
+      return new Object[] {currentTime, getMessageCount(), processingQueue ? 1 : 0};
     }
 
     private boolean shouldSkip(long currentTime) {
@@ -342,5 +347,4 @@ public abstract class MessageScheduler implements DisposableBean,
       return this.name;
     }
   }
-
 }

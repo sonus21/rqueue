@@ -31,17 +31,16 @@ public final class StackTraceUtil {
     for (int i = 2; printed < frameCount && i < elements.length; i++) {
       StackTraceElement element = elements[i];
       String className = element.getClassName();
-      if (className.startsWith("org.springframework.aop") ||
-          className.startsWith("org.springframework.cglib.proxy")) {
+      if (className.startsWith("org.springframework.aop")
+          || className.startsWith("org.springframework.cglib.proxy")) {
         continue;
       }
       if (element.getMethodName().startsWith("invoke")) {
         continue;
       }
-      log.info("{} {} {}", element.getClassName(), element.getMethodName(),
-          element.getLineNumber());
+      log.info(
+          "{} {} {}", element.getClassName(), element.getMethodName(), element.getLineNumber());
       printed += 1;
     }
   }
-
 }

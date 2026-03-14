@@ -45,16 +45,22 @@ import org.springframework.messaging.converter.MessageConverter;
 class RqueueMessageConfigTest extends TestBase {
 
   private final List<MessageConverter> messageConverterList = new ArrayList<>();
+
   @Mock
   RqueueMessageHandler rqueueMessageHandler;
+
   @Mock
   private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
+
   @Mock
   private BeanFactory beanFactory;
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RedisConnectionFactory redisConnectionFactory;
+
   @InjectMocks
   private RqueueListenerConfig rqueueMessageConfig;
 
@@ -86,7 +92,8 @@ class RqueueMessageConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertEquals(rqueueMessageHandler.hashCode(), messageConfig.rqueueMessageHandler().hashCode());
+    assertEquals(
+        rqueueMessageHandler.hashCode(), messageConfig.rqueueMessageHandler().hashCode());
   }
 
   @Test

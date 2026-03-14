@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.utils;
 
-
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -25,8 +24,7 @@ public final class SerializationUtils {
 
   public static final byte[] EMPTY_ARRAY = new byte[0];
 
-  private SerializationUtils() {
-  }
+  private SerializationUtils() {}
 
   public static boolean isEmpty(byte[] bytes) {
     return bytes == null || bytes.length == 0;

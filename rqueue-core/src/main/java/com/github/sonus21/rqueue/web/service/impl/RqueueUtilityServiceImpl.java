@@ -95,9 +95,8 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       booleanResponse.setMessage("Queue config not found!");
       return booleanResponse;
     }
-    booleanResponse.setValue(
-        messageMetadataService.deleteMessage(
-            queueName, id, Duration.ofDays(Constants.DAYS_IN_A_MONTH)));
+    booleanResponse.setValue(messageMetadataService.deleteMessage(
+        queueName, id, Duration.ofDays(Constants.DAYS_IN_A_MONTH)));
     return booleanResponse;
   }
 
@@ -117,9 +116,8 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     }
     MessageMoveResult result;
     if (messageMoveRequest.getSrcType() == DataType.ZSET) {
-      result =
-          rqueueMessageTemplate.moveMessageZsetToZset(
-              src, dst, requestMessageCount, scoreInMilli, fixedScore);
+      result = rqueueMessageTemplate.moveMessageZsetToZset(
+          src, dst, requestMessageCount, scoreInMilli, fixedScore);
     } else {
       result =
           rqueueMessageTemplate.moveMessageListToZset(src, dst, requestMessageCount, scoreInMilli);
@@ -173,12 +171,11 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     }
     return new BooleanResponse(
         MessageSweeper.getInstance(rqueueConfig, rqueueMessageTemplate, messageMetadataService)
-            .deleteAllMessages(
-                MessageDeleteRequest.builder()
-                    .dataName(dataName)
-                    .queueName(queueName)
-                    .dataType(type)
-                    .build()));
+            .deleteAllMessages(MessageDeleteRequest.builder()
+                .dataName(dataName)
+                .queueName(queueName)
+                .dataType(type)
+                .build()));
   }
 
   private boolean shouldFetchVersionDetail() {
@@ -258,7 +255,7 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
 
   private List<Pair<String, String>> getDailyDateCounter() {
     List<Pair<String, String>> dateSelector = new LinkedList<>();
-    int[] dates = new int[]{1, 2, 3, 4, 6, 7};
+    int[] dates = new int[] {1, 2, 3, 4, 6, 7};
     int step = 15;
     int stepAfter = 15;
     int i = 1;

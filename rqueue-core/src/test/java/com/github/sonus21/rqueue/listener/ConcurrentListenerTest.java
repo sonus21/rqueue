@@ -65,22 +65,31 @@ class ConcurrentListenerTest extends TestBase {
   private static final String fastProcessingQueueChannel =
       "rqueue-processing-channel::" + fastQueue;
   private static final long executionTime = 50L;
+
   @Mock
   private RqueueMessageHandler rqueueMessageHandler;
+
   @Mock
   private RedisConnectionFactory redisConnectionFactory;
+
   @Mock
   private ApplicationEventPublisher applicationEventPublisher;
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Mock
   private RqueueLockManager rqueueLockManager;
+
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
   private RqueueBeanProvider beanProvider;
 
   @BeforeEach
@@ -120,22 +129,19 @@ class ConcurrentListenerTest extends TestBase {
     AtomicInteger pollCounter = new AtomicInteger(0);
     Map<String, MessageMetadata> messageMetadataMap = new HashMap<>();
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
-    doAnswer(
-        i -> {
+    doAnswer(i -> {
           RqueueMessage rqueueMessage = i.getArgument(0);
-          MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage,
-              MessageStatus.ENQUEUED);
+          MessageMetadata messageMetadata =
+              new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
           messageMetadataMap.put(messageMetadata.getId(), messageMetadata);
           return messageMetadata;
         })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
-    doAnswer(
-        i -> messageMetadataMap.get(i.getArgument(0)))
+    doAnswer(i -> messageMetadataMap.get(i.getArgument(0)))
         .when(rqueueMessageMetadataService)
         .get(any());
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           if (1 == pollCounter.incrementAndGet()) {
             firstCallAt.set(System.currentTimeMillis());
           }
@@ -143,14 +149,13 @@ class ConcurrentListenerTest extends TestBase {
           List<RqueueMessage> rqueueMessageList = new LinkedList<>();
           for (int i = 0; i < count; i++) {
             int id = producerMessageCounter.incrementAndGet();
-            RqueueMessage rqueueMessage =
-                RqueueMessage.builder()
-                    .message("Message ::" + id + "::" + i)
-                    .id(UUID.randomUUID().toString())
-                    .queueName(fastQueue)
-                    .processAt(System.currentTimeMillis())
-                    .queuedTime(System.currentTimeMillis())
-                    .build();
+            RqueueMessage rqueueMessage = RqueueMessage.builder()
+                .message("Message ::" + id + "::" + i)
+                .id(UUID.randomUUID().toString())
+                .queueName(fastQueue)
+                .processAt(System.currentTimeMillis())
+                .queuedTime(System.currentTimeMillis())
+                .build();
             rqueueMessageList.add(rqueueMessage);
           }
           lastCalledAt.set(System.currentTimeMillis());

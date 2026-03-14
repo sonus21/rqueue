@@ -18,17 +18,16 @@ package com.github.sonus21.rqueue.core;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.google.common.annotations.VisibleForTesting;
-import org.slf4j.Logger;
-import org.springframework.data.redis.connection.Message;
-import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.listener.ChannelTopic;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.springframework.data.redis.connection.Message;
+import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.listener.ChannelTopic;
 
 class RedisScheduleTriggerHandler {
 
@@ -41,17 +40,23 @@ class RedisScheduleTriggerHandler {
 
   @VisibleForTesting
   Map<String, Long> queueNameToLastRunTime;
+
   @VisibleForTesting
   Map<String, Future<?>> queueNameToFuture;
+
   @VisibleForTesting
   Map<String, String> channelNameToQueueName;
+
   @VisibleForTesting
   MessageListener messageListener;
 
-  RedisScheduleTriggerHandler(Logger logger,
+  RedisScheduleTriggerHandler(
+      Logger logger,
       RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
-      RqueueSchedulerConfig rqueueSchedulerConfig, List<String> queueNames,
-      Function<String, Future<?>> scheduler, Function<String, String> channelNameProducer) {
+      RqueueSchedulerConfig rqueueSchedulerConfig,
+      List<String> queueNames,
+      Function<String, Future<?>> scheduler,
+      Function<String, String> channelNameProducer) {
     this.queueNames = queueNames;
     this.rqueueSchedulerConfig = rqueueSchedulerConfig;
     this.rqueueRedisListenerContainerFactory = rqueueRedisListenerContainerFactory;
@@ -80,8 +85,12 @@ class RedisScheduleTriggerHandler {
 
   void stopQueue(String queueName) {
     Future<?> future = queueNameToFuture.get(queueName);
-    ThreadUtils.waitForTermination(logger, future, rqueueSchedulerConfig.getTerminationWaitTime(),
-        "An exception occurred while stopping scheduler queue '{}'", queueName);
+    ThreadUtils.waitForTermination(
+        logger,
+        future,
+        rqueueSchedulerConfig.getTerminationWaitTime(),
+        "An exception occurred while stopping scheduler queue '{}'",
+        queueName);
     queueNameToLastRunTime.put(queueName, 0L);
     queueNameToFuture.remove(queueName);
     unsubscribeFromRedis(queueName);
@@ -90,8 +99,8 @@ class RedisScheduleTriggerHandler {
   private void unsubscribeFromRedis(String queueName) {
     String channelName = channelNameProducer.apply(queueName);
     logger.debug("Queue {} unsubscribe from channel {}", queueName, channelName);
-    rqueueRedisListenerContainerFactory.removeMessageListener(messageListener,
-        new ChannelTopic(channelName));
+    rqueueRedisListenerContainerFactory.removeMessageListener(
+        messageListener, new ChannelTopic(channelName));
     channelNameToQueueName.put(channelName, queueName);
   }
 
@@ -99,14 +108,13 @@ class RedisScheduleTriggerHandler {
     String channelName = channelNameProducer.apply(queueName);
     channelNameToQueueName.put(channelName, queueName);
     logger.debug("Queue {} subscribe to channel {}", queueName, channelName);
-    rqueueRedisListenerContainerFactory.addMessageListener(messageListener,
-        new ChannelTopic(channelName));
+    rqueueRedisListenerContainerFactory.addMessageListener(
+        messageListener, new ChannelTopic(channelName));
   }
 
   protected long getMinDelay() {
     return rqueueSchedulerConfig.minMessageMoveDelay();
   }
-
 
   /**
    * This MessageListener listen the event from Redis, its expected that the event should be only
@@ -126,8 +134,8 @@ class RedisScheduleTriggerHandler {
     private void handleMessage(String queueName, long startTime) {
       long currentTime = System.currentTimeMillis();
       if (startTime > currentTime) {
-        logger.warn("Received message body is not correct queue: {}, time: {}", queueName,
-            startTime);
+        logger.warn(
+            "Received message body is not correct queue: {}, time: {}", queueName, startTime);
         return;
       }
       long lastRunTime = queueNameToLastRunTime.get(queueName);

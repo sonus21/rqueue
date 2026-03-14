@@ -48,25 +48,32 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 @CoreUnitTest
 class RqueueMessageMetadataServiceTest extends TestBase {
 
   private final String queueName = "test-queue";
-  @Mock private RqueueMessageMetadataDao rqueueMessageMetadataDao;
-  @Mock private RqueueStringDao rqueueStringDao;
-  @Mock private RqueueLockManager lockManager;
-  @Mock private RqueueConfig rqueueConfig;
+
+  @Mock
+  private RqueueMessageMetadataDao rqueueMessageMetadataDao;
+
+  @Mock
+  private RqueueStringDao rqueueStringDao;
+
+  @Mock
+  private RqueueLockManager lockManager;
+
+  @Mock
+  private RqueueConfig rqueueConfig;
+
   private RqueueMessageMetadataService rqueueMessageMetadataService;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageMetadataService =
-        new RqueueMessageMetadataServiceImpl(
-            rqueueMessageMetadataDao, rqueueStringDao, lockManager, rqueueConfig);
+    rqueueMessageMetadataService = new RqueueMessageMetadataServiceImpl(
+        rqueueMessageMetadataDao, rqueueStringDao, lockManager, rqueueConfig);
   }
 
   @Test
@@ -102,13 +109,12 @@ class RqueueMessageMetadataServiceTest extends TestBase {
         .when(lockManager)
         .acquireLock(
             eq(Constants.MESSAGE_LOCK_KEY_PREFIX + id), anyString(), eq(Duration.ofSeconds(1)));
-    doAnswer(
-            invocation -> {
-              MessageMetadata metadata = invocation.getArgument(0);
-              assertTrue(metadata.isDeleted());
-              assertNotNull(metadata.getDeletedOn());
-              return null;
-            })
+    doAnswer(invocation -> {
+          MessageMetadata metadata = invocation.getArgument(0);
+          assertTrue(metadata.isDeleted());
+          assertNotNull(metadata.getDeletedOn());
+          return null;
+        })
         .when(rqueueMessageMetadataDao)
         .save(any(), eq(Duration.ofDays(7)), eq(false));
     assertTrue(rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7)));
@@ -124,20 +130,18 @@ class RqueueMessageMetadataServiceTest extends TestBase {
         .when(lockManager)
         .acquireLock(
             eq(Constants.MESSAGE_LOCK_KEY_PREFIX + id), anyString(), eq(Duration.ofSeconds(1)));
-    MessageMetadata metadata =
-        new MessageMetadata(
-            RqueueMessageUtils.getMessageMetaId(queueName, id), MessageStatus.ENQUEUED);
+    MessageMetadata metadata = new MessageMetadata(
+        RqueueMessageUtils.getMessageMetaId(queueName, id), MessageStatus.ENQUEUED);
     metadata.setDeleted(false);
     doReturn(metadata)
         .when(rqueueMessageMetadataDao)
         .get(RqueueMessageUtils.getMessageMetaId(queueName, id));
-    doAnswer(
-            invocation -> {
-              MessageMetadata metadataBeingSaved = invocation.getArgument(0);
-              assertTrue(metadataBeingSaved.isDeleted());
-              assertNotNull(metadataBeingSaved.getDeletedOn());
-              return null;
-            })
+    doAnswer(invocation -> {
+          MessageMetadata metadataBeingSaved = invocation.getArgument(0);
+          assertTrue(metadataBeingSaved.isDeleted());
+          assertNotNull(metadataBeingSaved.getDeletedOn());
+          return null;
+        })
         .when(rqueueMessageMetadataDao)
         .save(any(), eq(Duration.ofDays(7)), eq(false));
     assertTrue(rqueueMessageMetadataService.deleteMessage(queueName, id, Duration.ofDays(7)));

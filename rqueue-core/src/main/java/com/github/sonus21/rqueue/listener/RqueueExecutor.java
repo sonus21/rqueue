@@ -76,15 +76,10 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private Object getUserMessage() {
-    Message<String> tmpMessage =
-        MessageBuilder.createMessage(
-            rqueueMessage.getMessage(),
-            buildMessageHeaders(
-                queueDetail.getName(),
-                rqueueMessage,
-                null,
-                null,
-                rqueueMessage.getMessageHeaders()));
+    Message<String> tmpMessage = MessageBuilder.createMessage(
+        rqueueMessage.getMessage(),
+        buildMessageHeaders(
+            queueDetail.getName(), rqueueMessage, null, null, rqueueMessage.getMessageHeaders()));
     // here error can occur when message can not be deserialized without target class information
     try {
       return RqueueMessageUtils.convertMessageToObject(
@@ -99,18 +94,17 @@ class RqueueExecutor extends MessageContainerBase {
     MessageMetadata messageMetadata =
         beanProvider.getRqueueMessageMetadataService().getOrCreateMessageMetadata(rqueueMessage);
     this.userMessage = getUserMessage();
-    this.job =
-        new JobImpl(
-            beanProvider.getRqueueConfig(),
-            beanProvider.getRqueueMessageMetadataService(),
-            beanProvider.getRqueueJobDao(),
-            beanProvider.getRqueueMessageTemplate(),
-            beanProvider.getRqueueLockManager(),
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            userMessage,
-            postProcessingHandler);
+    this.job = new JobImpl(
+        beanProvider.getRqueueConfig(),
+        beanProvider.getRqueueMessageMetadataService(),
+        beanProvider.getRqueueJobDao(),
+        beanProvider.getRqueueMessageTemplate(),
+        beanProvider.getRqueueLockManager(),
+        queueDetail,
+        messageMetadata,
+        rqueueMessage,
+        userMessage,
+        postProcessingHandler);
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }
 
@@ -145,17 +139,20 @@ class RqueueExecutor extends MessageContainerBase {
     boolean deleted = messageMetadata.isDeleted();
     if (!deleted) {
       // fetch latest from DB
-      MessageMetadata newMessageMetadata =
-          beanProvider
-              .getRqueueMessageMetadataService()
-              .getOrCreateMessageMetadata(job.getRqueueMessage());
+      MessageMetadata newMessageMetadata = beanProvider
+          .getRqueueMessageMetadataService()
+          .getOrCreateMessageMetadata(job.getRqueueMessage());
       messageMetadata.merge(newMessageMetadata);
     }
     deleted = messageMetadata.isDeleted();
     if (deleted) {
       if (rqueueMessage.isPeriodic()) {
-        log(Level.INFO, "Periodic Message {} having period {} has been deleted", null,
-            rqueueMessage.getId(), rqueueMessage.getPeriod());
+        log(
+            Level.INFO,
+            "Periodic Message {} having period {} has been deleted",
+            null,
+            rqueueMessage.getId(),
+            rqueueMessage.getPeriod());
       } else {
         log(Level.INFO, "Message {} has been deleted", null, rqueueMessage.getId());
       }
@@ -170,7 +167,7 @@ class RqueueExecutor extends MessageContainerBase {
   private boolean isOldMessage() {
     return job.getMessageMetadata().getRqueueMessage() != null
         && job.getMessageMetadata().getRqueueMessage().getQueuedTime()
-        != job.getRqueueMessage().getQueuedTime();
+            != job.getRqueueMessage().getQueuedTime();
   }
 
   private int getRetryCount() {
@@ -215,7 +212,8 @@ class RqueueExecutor extends MessageContainerBase {
       long executionTime = System.currentTimeMillis() - startTime;
       log(
           Level.WARN,
-          "Message listener is taking longer time [Queue: {}, TaskStatus: {}] MaxAllowedTime: {}, ExecutionTime: {}",
+          "Message listener is taking longer time [Queue: {}, TaskStatus: {}] MaxAllowedTime: {},"
+              + " ExecutionTime: {}",
           null,
           job.getQueueDetail().getName(),
           status,
@@ -239,14 +237,10 @@ class RqueueExecutor extends MessageContainerBase {
     if (currentIndex == middlewares.size()) {
       new HandlerMiddleware(beanProvider.getRqueueMessageHandler()).handle(job, null);
     } else {
-      middlewares
-          .get(currentIndex)
-          .handle(
-              job,
-              () -> {
-                callMiddlewares(currentIndex + 1, middlewares, job);
-                return null;
-              });
+      middlewares.get(currentIndex).handle(job, () -> {
+        callMiddlewares(currentIndex + 1, middlewares, job);
+        return null;
+      });
     }
   }
 
@@ -278,11 +272,10 @@ class RqueueExecutor extends MessageContainerBase {
     }
   }
 
-
   private boolean shouldRetry(long maxProcessingTime, int retryCount, int failureCount) {
-    if (retryCount > 0 &&
-        ExecutionStatus.FAILED.equals(status) &&
-        System.currentTimeMillis() < maxProcessingTime) {
+    if (retryCount > 0
+        && ExecutionStatus.FAILED.equals(status)
+        && System.currentTimeMillis() < maxProcessingTime) {
       boolean doNoRetry = queueDetail.isDoNotRetryError(error);
       // it should not be retried based on the exception list
       if (doNoRetry) {
@@ -346,10 +339,9 @@ class RqueueExecutor extends MessageContainerBase {
     if (isMessageDeleted()) {
       return;
     }
-    RqueueMessage newMessage =
-        job.getRqueueMessage().toBuilder()
-            .processAt(job.getRqueueMessage().nextProcessAt())
-            .build();
+    RqueueMessage newMessage = job.getRqueueMessage().toBuilder()
+        .processAt(job.getRqueueMessage().nextProcessAt())
+        .build();
     String messageKey = getScheduledMessageKey(newMessage);
     long expiryInSeconds = getTtlForScheduledMessageKey(newMessage);
     log(

@@ -66,8 +66,12 @@ class QueueConfigTest extends TestBase {
 
   @Test
   void builder() {
-    QueueConfig queueConfig =
-        QueueConfig.builder().id("__rq::q").name("q").visibilityTimeout(100L).numRetry(100).build();
+    QueueConfig queueConfig = QueueConfig.builder()
+        .id("__rq::q")
+        .name("q")
+        .visibilityTimeout(100L)
+        .numRetry(100)
+        .build();
     assertEquals("__rq::q", queueConfig.getId());
     assertEquals("q", queueConfig.getName());
     assertEquals(100L, queueConfig.getVisibilityTimeout());

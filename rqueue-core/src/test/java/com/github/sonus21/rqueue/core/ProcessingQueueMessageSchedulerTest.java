@@ -43,12 +43,16 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
+
   @Mock
   private RedisTemplate<String, Long> redisTemplate;
+
   @Mock
   private RqueueSchedulerConfig rqueueSchedulerConfig;
+
   @Mock
   private RedisMessageListenerContainer redisMessageListenerContainer;
+
   @InjectMocks
   private ProcessingQueueMessageScheduler messageScheduler;
 
@@ -64,7 +68,8 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
 
   @Test
   void getChannelName() {
-    assertEquals(slowQueueDetail.getProcessingQueueChannelName(),
+    assertEquals(
+        slowQueueDetail.getProcessingQueueChannelName(),
         messageScheduler.getChannelName(slowQueue));
   }
 
@@ -76,21 +81,24 @@ class ProcessingQueueMessageSchedulerTest extends TestBase {
   @Test
   void getNextScheduleTimeSlowQueue() {
     long currentTime = System.currentTimeMillis();
-    assertThat(messageScheduler.getNextScheduleTime(slowQueue, currentTime, null),
+    assertThat(
+        messageScheduler.getNextScheduleTime(slowQueue, currentTime, null),
         greaterThanOrEqualTo(currentTime + 100000));
-    assertEquals(currentTime + 1000L,
+    assertEquals(
+        currentTime + 1000L,
         messageScheduler.getNextScheduleTime(slowQueue, currentTime, currentTime + 1000L));
   }
 
   @Test
   void getNextScheduleTimeFastQueue() {
     long currentTime = System.currentTimeMillis();
-    assertThat(messageScheduler.getNextScheduleTime(fastQueue, currentTime, null),
+    assertThat(
+        messageScheduler.getNextScheduleTime(fastQueue, currentTime, null),
         greaterThanOrEqualTo(currentTime + 200000));
-    assertEquals(currentTime + 1000L,
+    assertEquals(
+        currentTime + 1000L,
         messageScheduler.getNextScheduleTime(fastQueue, currentTime, currentTime + 1000L));
   }
-
 
   static class ProcessingQTestMessageScheduler extends ProcessingQueueMessageScheduler {
 

@@ -29,11 +29,10 @@ import com.github.sonus21.rqueue.utils.PrefixLogger;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
+import java.io.Serializable;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.context.ApplicationEventPublisher;
-
-import java.io.Serializable;
 
 @Slf4j
 @SuppressWarnings("java:S107")
@@ -62,15 +61,12 @@ class PostProcessingHandler extends PrefixLogger {
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
   }
 
-  long backOff(RqueueMessage rqueueMessage, Object userMessage, int failureCount,
-      Throwable throwable) {
+  long backOff(
+      RqueueMessage rqueueMessage, Object userMessage, int failureCount, Throwable throwable) {
     return taskExecutionBackoff.nextBackOff(userMessage, rqueueMessage, failureCount, throwable);
   }
 
-  void handle(JobImpl job,
-      ExecutionStatus status,
-      int failureCount,
-      Throwable throwable) {
+  void handle(JobImpl job, ExecutionStatus status, int failureCount, Throwable throwable) {
     try {
       switch (status) {
         case QUEUE_INACTIVE:
@@ -143,8 +139,7 @@ class PostProcessingHandler extends PrefixLogger {
       RqueueMessage newMessage,
       long delay) {
     RedisUtils.executePipeLine(
-        rqueueMessageTemplate.getTemplate(),
-        (connection, keySerializer, valueSerializer) -> {
+        rqueueMessageTemplate.getTemplate(), (connection, keySerializer, valueSerializer) -> {
           byte[] newMessageBytes = valueSerializer.serialize(newMessage);
           byte[] oldMessageBytes = valueSerializer.serialize(oldMessage);
           byte[] processingQueueNameBytes =
@@ -170,7 +165,8 @@ class PostProcessingHandler extends PrefixLogger {
         job.getRqueueMessage(),
         job.getQueueDetail().getDeadLetterQueueName());
     RqueueMessage rqueueMessage = job.getRqueueMessage();
-    RqueueMessage newMessage = rqueueMessage.toBuilder().failureCount(failureCount).build();
+    RqueueMessage newMessage =
+        rqueueMessage.toBuilder().failureCount(failureCount).build();
     newMessage.updateReEnqueuedAt();
     QueueDetail queueDetail = job.getQueueDetail();
     Object userMessage = job.getMessage();
@@ -284,9 +280,8 @@ class PostProcessingHandler extends PrefixLogger {
     } else {
       int maxRetryCount = getMaxRetryCount(job.getRqueueMessage(), job.getQueueDetail());
       if (failureCount < maxRetryCount) {
-        long delay =
-            taskExecutionBackoff.nextBackOff(job.getMessage(), job.getRqueueMessage(), failureCount,
-                throwable);
+        long delay = taskExecutionBackoff.nextBackOff(
+            job.getMessage(), job.getRqueueMessage(), failureCount, throwable);
         if (delay == TaskExecutionBackOff.STOP) {
           handleRetryExceededMessage(job, failureCount, throwable);
         } else {

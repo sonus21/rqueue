@@ -52,15 +52,13 @@ public abstract class AllQueueMode extends SpringTestBase {
     enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
     enqueueWithPriority(smsQueue, "low", Sms.newInstance());
     TimeoutUtils.waitFor(
-        () ->
-            getMessageCount(
-                Arrays.asList(
-                    smsQueue,
-                    smsQueue + "_critical",
-                    smsQueue + "_high",
-                    smsQueue + "_medium",
-                    smsQueue + "_low"))
-                == 0,
+        () -> getMessageCount(Arrays.asList(
+                smsQueue,
+                smsQueue + "_critical",
+                smsQueue + "_high",
+                smsQueue + "_medium",
+                smsQueue + "_low"))
+            == 0,
         20 * Constants.ONE_MILLI,
         "multi level queues to drain");
   }

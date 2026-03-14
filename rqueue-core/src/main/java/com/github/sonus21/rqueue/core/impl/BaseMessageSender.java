@@ -51,9 +51,15 @@ abstract class BaseMessageSender {
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
-  @Autowired protected RqueueStringDao rqueueStringDao;
-  @Autowired protected RqueueConfig rqueueConfig;
-  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
+
+  @Autowired
+  protected RqueueStringDao rqueueStringDao;
+
+  @Autowired
+  protected RqueueConfig rqueueConfig;
+
+  @Autowired
+  protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
@@ -113,15 +119,14 @@ abstract class BaseMessageSender {
       Long delayInMilliSecs,
       boolean isUnique) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage =
-        buildMessage(
-            messageConverter,
-            queueName,
-            messageId,
-            message,
-            retryCount,
-            delayInMilliSecs,
-            messageHeaders);
+    RqueueMessage rqueueMessage = buildMessage(
+        messageConverter,
+        queueName,
+        messageId,
+        message,
+        retryCount,
+        delayInMilliSecs,
+        messageHeaders);
     try {
       storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
       enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
@@ -139,20 +144,16 @@ abstract class BaseMessageSender {
   }
 
   protected String pushPeriodicMessage(
-      String queueName,
-      String messageId,
-      Object message,
-      long periodInMilliSeconds) {
+      String queueName, String messageId, Object message, long periodInMilliSeconds) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage =
-        buildPeriodicMessage(
-            messageConverter,
-            queueName,
-            messageId,
-            message,
-            null,
-            periodInMilliSeconds,
-            messageHeaders);
+    RqueueMessage rqueueMessage = buildPeriodicMessage(
+        messageConverter,
+        queueName,
+        messageId,
+        message,
+        null,
+        periodInMilliSeconds,
+        messageHeaders);
     try {
       storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, false);
       enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);
@@ -165,7 +166,8 @@ abstract class BaseMessageSender {
 
   protected Object deleteAllMessages(QueueDetail queueDetail) {
     return MessageSweeper.getInstance(rqueueConfig, messageTemplate, rqueueMessageMetadataService)
-        .deleteAllMessages(MessageDeleteRequest.builder().queueDetail(queueDetail).build());
+        .deleteAllMessages(
+            MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
   protected void registerQueueInternal(String queueName, String... priorities) {
@@ -177,33 +179,30 @@ abstract class BaseMessageSender {
       priorityMap.put(priority, 1);
     }
 
-    QueueDetail queueDetail =
-        QueueDetail.builder()
-            .name(queueName)
-            .active(false)
-            .queueName(rqueueConfig.getQueueName(queueName))
-            .scheduledQueueName(rqueueConfig.getScheduledQueueName(queueName))
-            .scheduledQueueChannelName(rqueueConfig.getScheduledQueueChannelName(queueName))
-            .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
-            .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
-            .priority(priorityMap)
-            .build();
+    QueueDetail queueDetail = QueueDetail.builder()
+        .name(queueName)
+        .active(false)
+        .queueName(rqueueConfig.getQueueName(queueName))
+        .scheduledQueueName(rqueueConfig.getScheduledQueueName(queueName))
+        .scheduledQueueChannelName(rqueueConfig.getScheduledQueueChannelName(queueName))
+        .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
+        .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
+        .priority(priorityMap)
+        .build();
     EndpointRegistry.register(queueDetail);
     for (String priority : priorities) {
       String suffix = PriorityUtils.getSuffix(priority);
-      queueDetail =
-          QueueDetail.builder()
-              .name(queueName + suffix)
-              .active(false)
-              .queueName(rqueueConfig.getQueueName(queueName) + suffix)
-              .scheduledQueueName(rqueueConfig.getScheduledQueueName(queueName) + suffix)
-              .scheduledQueueChannelName(
-                  rqueueConfig.getScheduledQueueChannelName(queueName) + suffix)
-              .processingQueueName(rqueueConfig.getProcessingQueueName(queueName) + suffix)
-              .processingQueueChannelName(
-                  rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)
-              .priority(Collections.singletonMap(DEFAULT_PRIORITY_KEY, 1))
-              .build();
+      queueDetail = QueueDetail.builder()
+          .name(queueName + suffix)
+          .active(false)
+          .queueName(rqueueConfig.getQueueName(queueName) + suffix)
+          .scheduledQueueName(rqueueConfig.getScheduledQueueName(queueName) + suffix)
+          .scheduledQueueChannelName(rqueueConfig.getScheduledQueueChannelName(queueName) + suffix)
+          .processingQueueName(rqueueConfig.getProcessingQueueName(queueName) + suffix)
+          .processingQueueChannelName(
+              rqueueConfig.getProcessingQueueChannelName(queueName) + suffix)
+          .priority(Collections.singletonMap(DEFAULT_PRIORITY_KEY, 1))
+          .build();
       EndpointRegistry.register(queueDetail);
     }
   }

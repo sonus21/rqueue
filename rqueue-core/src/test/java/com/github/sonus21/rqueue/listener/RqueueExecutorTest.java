@@ -72,27 +72,37 @@ class RqueueExecutorTest extends TestBase {
   private final TaskExecutionBackOff taskBackOff = new FixedTaskExecutionBackOff();
   private final String queueName = "test-queue";
   private final Object payload = "test message";
+
   @Mock
   private RqueueLockManager rqueueLockManager;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Mock
   private RqueueJobDao rqueueJobDao;
 
   @Mock
   private RqueueMessageHandler messageHandler;
+
   @Mock
   private QueueStateMgr queueStateMgr;
+
   @Mock
   private RqueueBeanProvider rqueueBeanProvider;
+
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Mock
   private RedisTemplate<String, RqueueMessage> redisTemplate;
+
   @Mock
   private ApplicationEventPublisher applicationEventPublisher;
+
   @Mock
   private RqueueMessageTemplate messageTemplate;
 
@@ -104,26 +114,24 @@ class RqueueExecutorTest extends TestBase {
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
     MessageConverter messageConverter = new GenericMessageConverter();
-    rqueueMessage =
-        RqueueMessageUtils.buildMessage(
-            messageConverter,
-            queueName,
-            null,
-            payload,
-            null,
-            null,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    rqueueMessage = RqueueMessageUtils.buildMessage(
+        messageConverter,
+        queueName,
+        null,
+        payload,
+        null,
+        null,
+        RqueueMessageHeaders.emptyMessageHeaders());
     defaultMessageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     MessageProcessorHandler messageProcessorHandler =
         new MessageProcessorHandler(null, deadLetterProcessor, discardProcessor, null);
-    postProcessingHandler =
-        new PostProcessingHandler(
-            rqueueWebConfig,
-            applicationEventPublisher,
-            messageTemplate,
-            taskBackOff,
-            messageProcessorHandler,
-            rqueueSystemConfigDao);
+    postProcessingHandler = new PostProcessingHandler(
+        rqueueWebConfig,
+        applicationEventPublisher,
+        messageTemplate,
+        taskBackOff,
+        messageProcessorHandler,
+        rqueueSystemConfigDao);
     doReturn(rqueueMessageMetadataService)
         .when(rqueueBeanProvider)
         .getRqueueMessageMetadataService();
@@ -147,16 +155,17 @@ class RqueueExecutorTest extends TestBase {
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any(RqueueMessage.class));
-    doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService)
+    doReturn(defaultMessageMetadata)
+        .when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
     new RqueueExecutor(
-        rqueueBeanProvider,
-        queueStateMgr,
-        null,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        queueThreadPool)
+            rqueueBeanProvider,
+            queueStateMgr,
+            null,
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     assertEquals(1, discardProcessor.getCount());
   }
@@ -173,19 +182,21 @@ class RqueueExecutorTest extends TestBase {
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any(RqueueMessage.class));
-    doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService)
+    doReturn(defaultMessageMetadata)
+        .when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
-    doReturn(Collections.emptyList()).when(redisTemplate)
+    doReturn(Collections.emptyList())
+        .when(redisTemplate)
         .executePipelined(any(RedisCallback.class));
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     new RqueueExecutor(
-        rqueueBeanProvider,
-        queueStateMgr,
-        null,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        queueThreadPool)
+            rqueueBeanProvider,
+            queueStateMgr,
+            null,
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     assertEquals(1, deadLetterProcessor.getCount());
   }
@@ -198,17 +209,18 @@ class RqueueExecutorTest extends TestBase {
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any(RqueueMessage.class));
-    doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService)
+    doReturn(defaultMessageMetadata)
+        .when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-        rqueueBeanProvider,
-        queueStateMgr,
-        null,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        queueThreadPool)
+            rqueueBeanProvider,
+            queueStateMgr,
+            null,
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageTemplate, times(1))
         .moveMessageWithDelay(
@@ -229,28 +241,27 @@ class RqueueExecutorTest extends TestBase {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(eq(rqueueMessage));
     new RqueueExecutor(
-        rqueueBeanProvider,
-        queueStateMgr,
-        null,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        queueThreadPool)
+            rqueueBeanProvider,
+            queueStateMgr,
+            null,
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
   }
 
   @Test
   void messageIsDeletedWhileExecuting() {
-    doAnswer(i->i.getArgument(0)).when(rqueueConfig).getLockKey(anyString());
+    doAnswer(i -> i.getArgument(0)).when(rqueueConfig).getLockKey(anyString());
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     AtomicInteger atomicInteger = new AtomicInteger(0);
     doReturn(preProcessMessageProcessor).when(rqueueBeanProvider).getPreExecutionMessageProcessor();
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     doReturn(2).when(rqueueConfig).getRetryPerPoll();
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           if (atomicInteger.get() < 2) {
             atomicInteger.incrementAndGet();
             return messageMetadata;
@@ -260,17 +271,18 @@ class RqueueExecutorTest extends TestBase {
         })
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(rqueueMessage);
-    doReturn(messageMetadata).when(rqueueMessageMetadataService)
+    doReturn(messageMetadata)
+        .when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-        rqueueBeanProvider,
-        queueStateMgr,
-        null,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        queueThreadPool)
+            rqueueBeanProvider,
+            queueStateMgr,
+            null,
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
   }
@@ -284,13 +296,13 @@ class RqueueExecutorTest extends TestBase {
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
     new RqueueExecutor(
-        rqueueBeanProvider,
-        queueStateMgr,
-        null,
-        postProcessingHandler,
-        rqueueMessage,
-        queueDetail,
-        queueThreadPool)
+            rqueueBeanProvider,
+            queueStateMgr,
+            null,
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
     verify(messageTemplate, times(1))
@@ -299,40 +311,42 @@ class RqueueExecutorTest extends TestBase {
 
   @Test
   void handlePeriodicMessage() {
-    doAnswer(i->i.getArgument(0)).when(rqueueConfig).getLockKey(anyString());
+    doAnswer(i -> i.getArgument(0)).when(rqueueConfig).getLockKey(anyString());
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     long period = 10000L;
-    RqueueMessage periodicMessage =
-        rqueueMessage.toBuilder().period(period).processAt(System.currentTimeMillis()).build();
+    RqueueMessage periodicMessage = rqueueMessage.toBuilder()
+        .period(period)
+        .processAt(System.currentTimeMillis())
+        .build();
     RqueueMessage newMessage =
         periodicMessage.toBuilder().processAt(periodicMessage.nextProcessAt()).build();
-    String messageKey =
-        "__rq::queue::"
-            + queueName
-            + Constants.REDIS_KEY_SEPARATOR
-            + periodicMessage.getId()
-            + Constants.REDIS_KEY_SEPARATOR
-            + "sch"
-            + Constants.REDIS_KEY_SEPARATOR
-            + newMessage.getProcessAt();
+    String messageKey = "__rq::queue::"
+        + queueName
+        + Constants.REDIS_KEY_SEPARATOR
+        + periodicMessage.getId()
+        + Constants.REDIS_KEY_SEPARATOR
+        + "sch"
+        + Constants.REDIS_KEY_SEPARATOR
+        + newMessage.getProcessAt();
     doReturn(1).when(rqueueConfig).getRetryPerPoll();
     doReturn(preProcessMessageProcessor).when(rqueueBeanProvider).getPreExecutionMessageProcessor();
     doReturn(messageTemplate).when(rqueueBeanProvider).getRqueueMessageTemplate();
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
-    doReturn(defaultMessageMetadata).when(rqueueMessageMetadataService)
+    doReturn(defaultMessageMetadata)
+        .when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
     doThrow(new MessagingException("Failing on purpose")).when(messageHandler).handleMessage(any());
     new RqueueExecutor(
-        rqueueBeanProvider,
-        queueStateMgr,
-        null,
-        postProcessingHandler,
-        periodicMessage,
-        queueDetail,
-        queueThreadPool)
+            rqueueBeanProvider,
+            queueStateMgr,
+            null,
+            postProcessingHandler,
+            periodicMessage,
+            queueDetail,
+            queueThreadPool)
         .run();
     verify(messageTemplate, times(1))
         .scheduleMessage(

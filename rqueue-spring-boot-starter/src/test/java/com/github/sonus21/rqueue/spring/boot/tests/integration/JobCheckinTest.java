@@ -46,14 +46,14 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=8015",
-        "mysql.db.name=JobCheckinTest",
-        "long.running.job.queue.active=true",
-        "use.system.redis=false",
-        "monitor.enabled=false",
-        "rqueue.retry.per.poll=4",
-        "periodic.job.queue.active=true",
-        "checkin.enabled=true",
+      "spring.data.redis.port=8015",
+      "mysql.db.name=JobCheckinTest",
+      "long.running.job.queue.active=true",
+      "use.system.redis=false",
+      "monitor.enabled=false",
+      "rqueue.retry.per.poll=4",
+      "periodic.job.queue.active=true",
+      "checkin.enabled=true",
     })
 @SpringBootIntegrationTest
 class JobCheckinTest extends SpringTestBase {
@@ -93,10 +93,14 @@ class JobCheckinTest extends SpringTestBase {
     assertFalse(rqueueJobs.get(0).getCheckins().isEmpty());
     assertTrue(rqueueJobs.get(0).getCheckins().size() > 1);
     assertEquals(4, rqueueJobs.get(0).getExecutions().size());
-    assertEquals(ExecutionStatus.FAILED, rqueueJobs.get(0).getExecutions().get(0).getStatus());
-    assertEquals(ExecutionStatus.FAILED, rqueueJobs.get(0).getExecutions().get(1).getStatus());
-    assertEquals(ExecutionStatus.FAILED, rqueueJobs.get(0).getExecutions().get(2).getStatus());
-    assertEquals(ExecutionStatus.SUCCESSFUL, rqueueJobs.get(0).getExecutions().get(3).getStatus());
+    assertEquals(
+        ExecutionStatus.FAILED, rqueueJobs.get(0).getExecutions().get(0).getStatus());
+    assertEquals(
+        ExecutionStatus.FAILED, rqueueJobs.get(0).getExecutions().get(1).getStatus());
+    assertEquals(
+        ExecutionStatus.FAILED, rqueueJobs.get(0).getExecutions().get(2).getStatus());
+    assertEquals(
+        ExecutionStatus.SUCCESSFUL, rqueueJobs.get(0).getExecutions().get(3).getStatus());
     assertNotNull(rqueueJobs.get(0).getExecutions().get(0).getError());
     assertNotNull(rqueueJobs.get(0).getExecutions().get(1).getError());
     assertNotNull(rqueueJobs.get(0).getExecutions().get(2).getError());

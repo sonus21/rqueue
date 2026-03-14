@@ -43,8 +43,7 @@ public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
    * Create an instance with an interval of {@value #DEFAULT_INTERVAL} ms and maximum value of
    * retries.
    */
-  public FixedTaskExecutionBackOff() {
-  }
+  public FixedTaskExecutionBackOff() {}
 
   /**
    * Create an instance.

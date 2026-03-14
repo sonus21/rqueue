@@ -53,18 +53,20 @@ class RedisScriptFactoryTest extends TestBase {
   @Test
   @TestQueue(
       value = {
-          "testExpiredMessageMoverWithFailureQueue",
-          "__rq::p-queue::testExpiredMessageMoverWithFailureQueue"
+        "testExpiredMessageMoverWithFailureQueue",
+        "__rq::p-queue::testExpiredMessageMoverWithFailureQueue"
       })
   void expiredMessageMoverWithFailureQueue() {
     String queueName = "testExpiredMessageMoverWithFailureQueue";
     String zsetName = "__rq::p-queue::testExpiredMessageMoverWithFailureQueue";
-    RqueueMessage rqueueMessage1 = RqueueMessage.builder().message("Test message 1").build();
+    RqueueMessage rqueueMessage1 =
+        RqueueMessage.builder().message("Test message 1").build();
     RqueueMessage rqueueMessage2 =
         RqueueMessage.builder().message("Test message 2").failureCount(1).build();
     RqueueMessage rqueueMessage3 =
         RqueueMessage.builder().message("Test message 3").failureCount(110).build();
-    RqueueMessage rqueueMessage4 = RqueueMessage.builder().message("Test message 4").build();
+    RqueueMessage rqueueMessage4 =
+        RqueueMessage.builder().message("Test message 4").build();
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage1, 1000);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage2, 1500);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage3, 2000);
@@ -89,12 +91,14 @@ class RedisScriptFactoryTest extends TestBase {
   void expiredMessageMover() {
     String queueName = "testExpiredMessageMover";
     String zsetName = "__rq::d-queue::testExpiredMessageMover";
-    RqueueMessage rqueueMessage1 = RqueueMessage.builder().message("Test message 1").build();
+    RqueueMessage rqueueMessage1 =
+        RqueueMessage.builder().message("Test message 1").build();
     RqueueMessage rqueueMessage2 =
         RqueueMessage.builder().message("Test message 2").failureCount(1).build();
     RqueueMessage rqueueMessage3 =
         RqueueMessage.builder().message("Test message 3").failureCount(110).build();
-    RqueueMessage rqueueMessage4 = RqueueMessage.builder().message("Test message 4").build();
+    RqueueMessage rqueueMessage4 =
+        RqueueMessage.builder().message("Test message 4").build();
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage1, 1000);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage2, 1500);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage3, 2000);
@@ -118,8 +122,10 @@ class RedisScriptFactoryTest extends TestBase {
   @TestQueue("testDeleteIfSame")
   void deleteIfSame() {
     String key = "testDeleteIfSame";
-    RqueueMessage rqueueMessage = RqueueMessage.builder().message("Test message 1").build();
-    RqueueMessage rqueueMessage2 = RqueueMessage.builder().message("Test message 2").build();
+    RqueueMessage rqueueMessage =
+        RqueueMessage.builder().message("Test message 1").build();
+    RqueueMessage rqueueMessage2 =
+        RqueueMessage.builder().message("Test message 2").build();
     RedisScript<Boolean> script = RedisScriptFactory.getScript(ScriptType.DELETE_IF_SAME);
     RqueueRedisTemplate<RqueueMessage> template =
         new RqueueMessageTemplateImpl(redisConnectionFactory, null);
@@ -152,7 +158,8 @@ class RedisScriptFactoryTest extends TestBase {
     RqueueMessageTemplate template = new RqueueMessageTemplateImpl(redisConnectionFactory, null);
     LinkedList<RqueueMessage> rqueueMessageList = new LinkedList<>();
     for (int i = 0; i < 55; i++) {
-      RqueueMessage rqueueMessage = RqueueMessage.builder().message("Test message " + i).build();
+      RqueueMessage rqueueMessage =
+          RqueueMessage.builder().message("Test message " + i).build();
       rqueueMessage.setId(UUID.randomUUID().toString());
       template.addMessage(queue, rqueueMessage);
       rqueueMessageList.add(rqueueMessage);

@@ -67,7 +67,5 @@ class MetricsPropertiesTest extends TestBase {
     assertTrue(metricProperties.countFailure());
   }
 
-  static class MetricProperties extends MetricsProperties {
-
-  }
+  static class MetricProperties extends MetricsProperties {}
 }

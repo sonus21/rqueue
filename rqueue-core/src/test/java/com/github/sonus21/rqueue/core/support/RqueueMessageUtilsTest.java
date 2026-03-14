@@ -46,25 +46,21 @@ class RqueueMessageUtilsTest extends TestBase {
   private final String queue = "test-queue";
   DefaultRqueueMessageConverter messageConverter = new DefaultRqueueMessageConverter();
   DefaultRqueueMessageConverter messageConverter2 =
-      new DefaultRqueueMessageConverter(
-          ImmutableList.of(
-              new GenericMessageConverter(),
-              new StringMessageConverter(),
-              new NoMessageConverter()));
+      new DefaultRqueueMessageConverter(ImmutableList.of(
+          new GenericMessageConverter(), new StringMessageConverter(), new NoMessageConverter()));
 
   @Test
   void buildPeriodicMessage() {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
-    RqueueMessage message =
-        RqueueMessageUtils.buildPeriodicMessage(
-            messageConverter,
-            queue,
-            null,
-            email,
-            null,
-            10_000L,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage message = RqueueMessageUtils.buildPeriodicMessage(
+        messageConverter,
+        queue,
+        null,
+        email,
+        null,
+        10_000L,
+        RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(10_000L, message.getPeriod());
     long now = System.currentTimeMillis();
     assertTrue(
@@ -73,11 +69,9 @@ class RqueueMessageUtilsTest extends TestBase {
     assertEquals(0, message.getQueuedTime());
     assertNotNull(message.getId());
     assertNotNull(message.getMessage());
-    String convertedMessage =
-        (String)
-            messageConverter
-                .toMessage(email, RqueueMessageHeaders.emptyMessageHeaders(), null)
-                .getPayload();
+    String convertedMessage = (String) messageConverter
+        .toMessage(email, RqueueMessageHeaders.emptyMessageHeaders(), null)
+        .getPayload();
     assertEquals(convertedMessage, message.getMessage());
   }
 
@@ -86,15 +80,14 @@ class RqueueMessageUtilsTest extends TestBase {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
     long startTimeInNano = System.nanoTime();
-    RqueueMessage message =
-        RqueueMessageUtils.buildMessage(
-            messageConverter,
-            queue,
-            null,
-            email,
-            null,
-            null,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage message = RqueueMessageUtils.buildMessage(
+        messageConverter,
+        queue,
+        null,
+        email,
+        null,
+        null,
+        RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(0, message.getPeriod());
     long now = System.currentTimeMillis();
     long nowNano = System.nanoTime();
@@ -105,11 +98,9 @@ class RqueueMessageUtilsTest extends TestBase {
     assertNotNull(message.getMessage());
     assertNull(message.getRetryCount());
     assertEquals(0, message.getFailureCount());
-    String convertedMessage =
-        (String)
-            messageConverter
-                .toMessage(email, RqueueMessageHeaders.emptyMessageHeaders(), null)
-                .getPayload();
+    String convertedMessage = (String) messageConverter
+        .toMessage(email, RqueueMessageHeaders.emptyMessageHeaders(), null)
+        .getPayload();
     assertEquals(convertedMessage, message.getMessage());
   }
 
@@ -118,15 +109,14 @@ class RqueueMessageUtilsTest extends TestBase {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
     long startTimeInNano = System.nanoTime();
-    RqueueMessage message =
-        RqueueMessageUtils.buildMessage(
-            messageConverter,
-            queue,
-            null,
-            email,
-            3,
-            10_000L,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage message = RqueueMessageUtils.buildMessage(
+        messageConverter,
+        queue,
+        null,
+        email,
+        3,
+        10_000L,
+        RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(0, message.getPeriod());
     long now = System.currentTimeMillis();
     long nowNano = System.nanoTime();
@@ -138,11 +128,9 @@ class RqueueMessageUtilsTest extends TestBase {
     assertNotNull(message.getMessage());
     assertEquals(3, message.getRetryCount());
     assertEquals(0, message.getFailureCount());
-    String convertedMessage =
-        (String)
-            messageConverter
-                .toMessage(email, RqueueMessageHeaders.emptyMessageHeaders(), null)
-                .getPayload();
+    String convertedMessage = (String) messageConverter
+        .toMessage(email, RqueueMessageHeaders.emptyMessageHeaders(), null)
+        .getPayload();
     assertEquals(convertedMessage, message.getMessage());
   }
 

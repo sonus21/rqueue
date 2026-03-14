@@ -53,12 +53,10 @@ public class RqueueJobServiceImpl implements RqueueJobService {
   private TableRow getTableRow(RqueueJob job) throws ProcessingException {
     List<TableColumn> columns = new LinkedList<>();
     columns.add(new TableColumn(job.getId()));
-    columns.add(
-        new TableColumn(
-            String.format(
-                "%s/%s",
-                DateTimeUtils.formatMilliToString(job.getCreatedAt()),
-                DateTimeUtils.formatMilliToString(job.getUpdatedAt()))));
+    columns.add(new TableColumn(String.format(
+        "%s/%s",
+        DateTimeUtils.formatMilliToString(job.getCreatedAt()),
+        DateTimeUtils.formatMilliToString(job.getUpdatedAt()))));
     if (job.getLastCheckinAt() == 0) {
       columns.add(new TableColumn(""));
     } else {
@@ -94,17 +92,16 @@ public class RqueueJobServiceImpl implements RqueueJobService {
       response.setCode(0);
       response.setMessage("No jobs found");
     } else {
-      jobList.sort(
-          (o1, o2) -> {
-            long diff = o1.getUpdatedAt() - o2.getUpdatedAt();
-            if (diff == 0) {
-              return 0;
-            }
-            if (diff > 0) {
-              return 1;
-            }
-            return -1;
-          });
+      jobList.sort((o1, o2) -> {
+        long diff = o1.getUpdatedAt() - o2.getUpdatedAt();
+        if (diff == 0) {
+          return 0;
+        }
+        if (diff > 0) {
+          return 1;
+        }
+        return -1;
+      });
       response.setHeaders(
           Arrays.asList("Id", "StartTime/EndTime", "Last Checkin", "Error", "Status", "CheckIns"));
       for (RqueueJob job : jobList) {

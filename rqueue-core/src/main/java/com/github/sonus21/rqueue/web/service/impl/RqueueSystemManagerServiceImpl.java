@@ -70,11 +70,10 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   }
 
   private List<String> queueKeys(QueueConfig queueConfig) {
-    List<String> keys =
-        newArrayList(
-            queueConfig.getQueueName(),
-            queueConfig.getProcessingQueueName(),
-            rqueueConfig.getQueueStatisticsKey(queueConfig.getName()));
+    List<String> keys = newArrayList(
+        queueConfig.getQueueName(),
+        queueConfig.getProcessingQueueName(),
+        rqueueConfig.getQueueStatisticsKey(queueConfig.getName()));
     keys.add(queueConfig.getScheduledQueueName());
     if (queueConfig.hasDeadLetterQueue()) {
       for (DeadLetterQueue queue : queueConfig.getDeadLetterQueues()) {

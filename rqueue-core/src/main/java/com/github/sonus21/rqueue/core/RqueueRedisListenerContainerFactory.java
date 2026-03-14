@@ -34,6 +34,7 @@ public class RqueueRedisListenerContainerFactory
 
   @Autowired
   private RqueueSchedulerConfig rqueueSchedulerConfig;
+
   @Autowired
   private RqueueConfig rqueueConfig;
 

@@ -41,12 +41,10 @@ public class ApplicationWithTaskExecutionBackoff extends BaseApplicationWithBack
 
   public static void restart() {
     ApplicationArguments args = context.getBean(ApplicationArguments.class);
-    Thread thread =
-        new Thread(
-            () -> {
-              context.close();
-              context = SpringApplication.run(Application.class, args.getSourceArgs());
-            });
+    Thread thread = new Thread(() -> {
+      context.close();
+      context = SpringApplication.run(Application.class, args.getSourceArgs());
+    });
     thread.setContextClassLoader(mainThreadClassLoader);
     thread.setDaemon(false);
     thread.start();

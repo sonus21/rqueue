@@ -58,18 +58,16 @@ public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBas
 
   protected void init() throws IOException {
     final BootstrapRedis bootstrapRedis =
-        Javanna.createAnnotation(
-            BootstrapRedis.class,
-            new HashMap<String, Object>() {
-              private static final long serialVersionUID = -786051705319430908L;
+        Javanna.createAnnotation(BootstrapRedis.class, new HashMap<String, Object>() {
+          private static final long serialVersionUID = -786051705319430908L;
 
-              {
-                put("port", redisPort);
-                put("monitorRedis", monitoringEnabled);
-                put("monitorThreadsCount", monitorThreads);
-                put("systemRedis", useSystemRedis);
-              }
-            });
+          {
+            put("port", redisPort);
+            put("monitorRedis", monitoringEnabled);
+            put("monitorThreadsCount", monitorThreads);
+            put("systemRedis", useSystemRedis);
+          }
+        });
     super.bootstrap(bootstrapRedis);
   }
 

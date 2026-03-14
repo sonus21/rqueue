@@ -95,8 +95,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     addNavData(model, NavTab.QUEUES);
     model.addAttribute("title", "Queues");
     List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
-    List<Entry<String, List<Entry<NavTab, RedisDataDetail>>>> queueNameConfigs =
-        new ArrayList<>(rqueueQDetailService.getQueueDataStructureDetails(queueConfigs).entrySet());
+    List<Entry<String, List<Entry<NavTab, RedisDataDetail>>>> queueNameConfigs = new ArrayList<>(
+        rqueueQDetailService.getQueueDataStructureDetails(queueConfigs).entrySet());
     queueNameConfigs.sort(Entry.comparingByKey());
     model.addAttribute("queues", queueConfigs);
     model.addAttribute("queueConfigs", queueNameConfigs);

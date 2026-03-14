@@ -81,7 +81,9 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
     if (Objects.isNull(lastNotAvailableAt)) {
       lastNotAvailableAt = System.currentTimeMillis();
     } else if (System.currentTimeMillis() - lastNotAvailableAt > maxNotAvailableDelay) {
-      log(Level.ERROR, "deadlock?? frozen?? stuck?? No Threads are available in last {}",
+      log(
+          Level.ERROR,
+          "deadlock?? frozen?? stuck?? No Threads are available in last {}",
           null,
           Duration.ofMillis(maxNotAvailableDelay));
     }

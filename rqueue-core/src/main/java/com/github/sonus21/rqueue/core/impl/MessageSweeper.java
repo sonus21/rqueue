@@ -199,10 +199,9 @@ public class MessageSweeper {
 
     public void delete(DeleteJobData data) {
       for (List<String> subIds : ListUtils.partition(getMessageIds(data), batchSize)) {
-        List<String> messageMetaIds =
-            subIds.stream()
-                .map(e -> RqueueMessageUtils.getMessageMetaId(queueName, e))
-                .collect(Collectors.toList());
+        List<String> messageMetaIds = subIds.stream()
+            .map(e -> RqueueMessageUtils.getMessageMetaId(queueName, e))
+            .collect(Collectors.toList());
         rqueueMessageMetadataService.deleteAll(messageMetaIds);
         log.debug("Deleted {} messages meta", messageMetaIds.size());
       }

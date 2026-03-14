@@ -47,14 +47,19 @@ class RqueueListenerAutoConfigTest extends TestBase {
 
   @Mock
   private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
+
   @Mock
   private BeanFactory beanFactory;
+
   @Mock
   private RqueueMessageTemplate messageTemplate;
+
   @Mock
   private RqueueMessageHandler rqueueMessageHandler;
+
   @Mock
   private RedisConnectionFactory redisConnectionFactory;
+
   @InjectMocks
   private RqueueListenerAutoConfig rqueueMessageAutoConfig;
 
@@ -87,7 +92,8 @@ class RqueueListenerAutoConfigTest extends TestBase {
         true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     assertEquals(
-        rqueueMessageHandler.hashCode(), messageAutoConfig.rqueueMessageHandler().hashCode());
+        rqueueMessageHandler.hashCode(),
+        messageAutoConfig.rqueueMessageHandler().hashCode());
   }
 
   @Test

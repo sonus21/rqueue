@@ -77,10 +77,10 @@ import org.springframework.test.web.servlet.MvcResult;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=7001",
-        "mysql.db.name=RqueueRestController",
-        "max.workers.count=40",
-        "rqueue.web.statistic.history.day=180"
+      "spring.data.redis.port=7001",
+      "mysql.db.name=RqueueRestController",
+      "max.workers.count=40",
+      "rqueue.web.statistic.history.day=180"
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
@@ -107,13 +107,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   void verifyChartLatencyData() throws Exception {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.LATENCY, AggregationType.DAILY);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/chart")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(chartDataRequest)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/chart")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(chartDataRequest)))
+        .andReturn();
     String response = result.getResponse().getContentAsString();
     ChartDataResponse dataResponse = mapper.readValue(response, ChartDataResponse.class);
     assertNull(dataResponse.getMessage());
@@ -124,13 +122,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
   void verifyChartStatsData() throws Exception {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.STATS, AggregationType.DAILY);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/chart")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(chartDataRequest)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/chart")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(chartDataRequest)))
+        .andReturn();
     String response = result.getResponse().getContentAsString();
     ChartDataResponse dataResponse = mapper.readValue(response, ChartDataResponse.class);
     assertNull(dataResponse.getMessage());
@@ -145,13 +141,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     request.setSrc(jobQueue);
     request.setName(queueDetail.getCompletedQueueName());
 
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/queue-data")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/queue-data")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(request)))
+        .andReturn();
 
     DataViewResponse dataViewResponse =
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
@@ -160,11 +154,10 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertEquals(20, dataViewResponse.getRows().size());
     assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
     assertEquals(
-        Collections.singletonList(
-            new Action(
-                ActionType.DELETE,
-                String.format(
-                    "Completed messages for queue '%s'", queueDetail.getCompletedQueueName()))),
+        Collections.singletonList(new Action(
+            ActionType.DELETE,
+            String.format(
+                "Completed messages for queue '%s'", queueDetail.getCompletedQueueName()))),
         dataViewResponse.getActions());
   }
 
@@ -176,22 +169,19 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     request.setSrc(emailQueue);
     request.setName(emailDeadLetterQueue);
 
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/queue-data")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/queue-data")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(request)))
+        .andReturn();
 
     DataViewResponse dataViewResponse =
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
     assertEquals(
-        Collections.singletonList(
-            new Action(
-                ActionType.DELETE, String.format("dead letter queue '%s'", emailDeadLetterQueue))),
+        Collections.singletonList(new Action(
+            ActionType.DELETE, String.format("dead letter queue '%s'", emailDeadLetterQueue))),
         dataViewResponse.getActions());
     assertEquals(20, dataViewResponse.getRows().size());
     assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
@@ -208,13 +198,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     request.setSrc(emailQueue);
     request.setName(rqueueConfig.getScheduledQueueName(emailQueue));
 
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/queue-data")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/queue-data")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(request)))
+        .andReturn();
 
     DataViewResponse dataViewResponse =
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
@@ -237,13 +225,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     request.setSrc(emailQueue);
     request.setName(processingSet);
 
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/queue-data")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/queue-data")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(request)))
+        .andReturn();
 
     DataViewResponse dataViewResponse =
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
@@ -261,13 +247,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     DataDeleteRequest request = new DataDeleteRequest();
     request.setQueueName(emailQueue);
     request.setDatasetName(emailDeadLetterQueue);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/delete-queue-part")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/delete-queue-part")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(request)))
+        .andReturn();
     BooleanResponse booleanResponse =
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
     assertNull(booleanResponse.getMessage());
@@ -283,13 +267,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     enqueue(Email.newInstance(), emailDeadLetterQueue);
     DataTypeRequest request = new DataTypeRequest();
     request.setName(emailDeadLetterQueue);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/data-type")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/data-type")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(request)))
+        .andReturn();
     StringResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), StringResponse.class);
     assertNull(response.getMessage());
@@ -302,13 +284,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     MessageMoveRequest request =
         new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/move-data")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/move-data")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(request)))
+        .andReturn();
     MessageMoveResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), MessageMoveResponse.class);
     assertNull(response.getMessage());
@@ -323,13 +303,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     DateViewRequest dateViewRequest = new DateViewRequest();
     dateViewRequest.setName(emailDeadLetterQueue);
     dateViewRequest.setType(DataType.LIST);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/view-data")
-                    .content(mapper.writeValueAsBytes(dateViewRequest))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/view-data")
+            .content(mapper.writeValueAsBytes(dateViewRequest))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
     DataViewResponse dataViewResponse =
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertEquals(0, dataViewResponse.getCode());
@@ -345,13 +323,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     DataTypeRequest request = new DataTypeRequest();
     request.setName(jobQueue);
     System.out.println(new String(mapper.writeValueAsBytes(request)));
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/delete-queue")
-                    .content(mapper.writeValueAsBytes(request))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/delete-queue")
+            .content(mapper.writeValueAsBytes(request))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
     BaseResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), BaseResponse.class);
     assertEquals(0, response.getCode());
@@ -363,26 +339,22 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     Email email = Email.newInstance();
     deleteMessageListener.clear();
     enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
-    RqueueMessage message =
-        rqueueMessageTemplate
-            .readFromZset(rqueueConfig.getScheduledQueueName(emailQueue), 0, -1)
-            .get(0);
+    RqueueMessage message = rqueueMessageTemplate
+        .readFromZset(rqueueConfig.getScheduledQueueName(emailQueue), 0, -1)
+        .get(0);
     MessageDeleteRequest request = new MessageDeleteRequest();
     request.setMessageId(message.getId());
     request.setQueueName(emailQueue);
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/delete-message")
-                    .content(mapper.writeValueAsBytes(request))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(post("/rqueue/api/v1/delete-message")
+            .content(mapper.writeValueAsBytes(request))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
     BooleanResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), BooleanResponse.class);
     assertEquals(0, response.getCode());
-    Object metadata =
-        stringRqueueRedisTemplate.get(
-            RqueueMessageUtils.getMessageMetaId(emailQueue, message.getId()));
+    Object metadata = stringRqueueRedisTemplate.get(
+        RqueueMessageUtils.getMessageMetaId(emailQueue, message.getId()));
     assertTrue(((MessageMetadata) metadata).isDeleted());
     TimeoutUtils.waitFor(
         () -> {
@@ -404,13 +376,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "notifications to be sent");
     String messageId = messageIds.get(random.nextInt(messageIds.size()));
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                get("/rqueue/api/v1/jobs")
-                    .param("message-id", messageId)
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(get("/rqueue/api/v1/jobs")
+            .param("message-id", messageId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
     DataViewResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertEquals(0, response.getCode());
@@ -422,13 +392,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
       assertEquals(TableColumnType.DISPLAY, column.getType());
     }
 
-    result =
-        this.mockMvc
-            .perform(
-                get("/rqueue/api/v1/jobs")
-                    .param("message-id", UUID.randomUUID().toString())
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    result = this.mockMvc
+        .perform(get("/rqueue/api/v1/jobs")
+            .param("message-id", UUID.randomUUID().toString())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
 
     response = mapper.readValue(result.getResponse().getContentAsString(), DataViewResponse.class);
     assertEquals(0, response.getCode());
@@ -439,13 +407,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
 
   @Test
   void aggregatorSelector() throws Exception {
-    MvcResult result =
-        this.mockMvc
-            .perform(
-                get("/rqueue/api/v1/aggregate-data-selector")
-                    .param("type", AggregationType.DAILY.name())
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    MvcResult result = this.mockMvc
+        .perform(get("/rqueue/api/v1/aggregate-data-selector")
+            .param("type", AggregationType.DAILY.name())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
 
     DataSelectorResponse response =
         mapper.readValue(result.getResponse().getContentAsString(), DataSelectorResponse.class);
@@ -453,13 +419,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertEquals("Select Number of Days", response.getTitle());
     assertEquals(19, response.getData().size());
 
-    result =
-        this.mockMvc
-            .perform(
-                get("/rqueue/api/v1/aggregate-data-selector")
-                    .param("type", AggregationType.WEEKLY.name())
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    result = this.mockMvc
+        .perform(get("/rqueue/api/v1/aggregate-data-selector")
+            .param("type", AggregationType.WEEKLY.name())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
 
     response =
         mapper.readValue(result.getResponse().getContentAsString(), DataSelectorResponse.class);
@@ -467,13 +431,11 @@ class RqueueRestControllerTest extends SpringWebTestBase {
     assertEquals("Select Number of Weeks", response.getTitle());
     assertEquals(27, response.getData().size(), result.getResponse().getContentAsString());
 
-    result =
-        this.mockMvc
-            .perform(
-                get("/rqueue/api/v1/aggregate-data-selector")
-                    .param("type", AggregationType.MONTHLY.name())
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+    result = this.mockMvc
+        .perform(get("/rqueue/api/v1/aggregate-data-selector")
+            .param("type", AggregationType.MONTHLY.name())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
 
     response =
         mapper.readValue(result.getResponse().getContentAsString(), DataSelectorResponse.class);

@@ -52,13 +52,10 @@ public abstract class MessageChannelTests extends SpringTestBase {
     assertTrue(
         stringRqueueRedisTemplate.getListSize(rqueueConfig.getQueueName(emailQueue)) >= 200,
         "Messages are correctly moved");
-    assertEquals(
-        200 + 1L,
-        getMessageCount(emailQueue),
-        () -> {
-          printQueueStats(emailQueue);
-          return "message count is not correct";
-        });
+    assertEquals(200 + 1L, getMessageCount(emailQueue), () -> {
+      printQueueStats(emailQueue);
+      return "message count is not correct";
+    });
   }
 
   /**

@@ -35,8 +35,10 @@ class RqueueLockManagerImplTest extends TestBase {
 
   private final String lockKey = "test-key";
   private final String lockValue = "test-value";
+
   @Mock
   private RqueueStringDao rqueueStringDao;
+
   private RqueueLockManager rqueueLockManager;
 
   @BeforeEach

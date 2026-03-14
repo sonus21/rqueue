@@ -54,11 +54,8 @@ public abstract class ApplicationWithCustomMessageConverter extends ApplicationB
       simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
           redisConnectionFactory);
     }
-    MessageHeaders messageHeaders =
-        new MessageHeaders(
-            Collections.singletonMap(
-                MessageHeaders.CONTENT_TYPE,
-                new MimeType("application", "json", StandardCharsets.UTF_8)));
+    MessageHeaders messageHeaders = new MessageHeaders(Collections.singletonMap(
+        MessageHeaders.CONTENT_TYPE, new MimeType("application", "json", StandardCharsets.UTF_8)));
     simpleRqueueListenerContainerFactory.setMessageHeaders(messageHeaders);
     return simpleRqueueListenerContainerFactory;
   }

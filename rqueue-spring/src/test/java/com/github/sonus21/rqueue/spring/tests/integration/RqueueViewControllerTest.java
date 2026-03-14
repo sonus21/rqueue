@@ -42,11 +42,11 @@ import org.springframework.ui.ModelMap;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=7002",
-        "mysql.db.name=RqueueViewControllerTest",
-        "max.workers.count=40",
-        "notification.queue.active=false",
-        "rqueue.web.statistic.history.day=180",
+      "spring.data.redis.port=7002",
+      "mysql.db.name=RqueueViewControllerTest",
+      "max.workers.count=40",
+      "notification.queue.active=false",
+      "rqueue.web.statistic.history.day=180",
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")

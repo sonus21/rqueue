@@ -168,9 +168,8 @@ public abstract class RqueueListenerBaseConfig {
     if (simpleRqueueListenerContainerFactory.getRqueueMessageTemplate() != null) {
       return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
     }
-    simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(
-        new RqueueMessageTemplateImpl(
-            rqueueConfig.getConnectionFactory(), rqueueConfig.getReactiveRedisConnectionFactory()));
+    simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(new RqueueMessageTemplateImpl(
+        rqueueConfig.getConnectionFactory(), rqueueConfig.getReactiveRedisConnectionFactory()));
     return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
   }
 
@@ -266,7 +265,7 @@ public abstract class RqueueListenerBaseConfig {
       RqueueConfig rqueueConfig,
       RqueueBeanProvider rqueueBeanProvider,
       @Qualifier("stringRqueueRedisTemplate")
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueInternalPubSubChannel(
         rqueueRedisListenerContainerFactory,
         rqueueMessageListenerContainer,

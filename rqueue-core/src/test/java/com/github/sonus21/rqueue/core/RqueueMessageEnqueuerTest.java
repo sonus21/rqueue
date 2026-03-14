@@ -43,20 +43,23 @@ class RqueueMessageEnqueuerTest extends TestBase {
   private final String slowQueue = "slow-queue";
   private final String deadLetterQueueName = "dead-test-queue";
   private final String message = "Test Message";
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageEnqueuer =
-        new RqueueMessageEnqueuerImpl(
-            rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
+    rqueueMessageEnqueuer = new RqueueMessageEnqueuerImpl(
+        rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
     EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
     writeField(rqueueMessageEnqueuer, "rqueueConfig", rqueueConfig, true);
@@ -112,5 +115,4 @@ class RqueueMessageEnqueuerTest extends TestBase {
             any(RqueueMessage.class));
     assertNotNull(rqueueMessageEnqueuer.enqueueInWithRetry(queueName, message, 3, 1000L));
   }
-
 }

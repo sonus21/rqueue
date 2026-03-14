@@ -132,10 +132,9 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
       String lockKey = Constants.getQueueCrudLockKey(rqueueConfig, request.getName());
       String lockValue = UUID.randomUUID().toString();
       try {
-        boolean acquired =
-            rqueueBeanProvider
-                .getRqueueLockManager()
-                .acquireLock(lockKey, lockValue, Duration.ofMillis(100));
+        boolean acquired = rqueueBeanProvider
+            .getRqueueLockManager()
+            .acquireLock(lockKey, lockValue, Duration.ofMillis(100));
         if (acquired) {
           rqueueMessageListenerContainer.pauseUnpauseQueue(request.getName(), request.isPause());
         }

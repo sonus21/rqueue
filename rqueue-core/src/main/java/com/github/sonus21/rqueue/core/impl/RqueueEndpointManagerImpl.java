@@ -43,6 +43,7 @@ public class RqueueEndpointManagerImpl extends BaseMessageSender implements Rque
 
   @Autowired
   private RqueueUtilityService rqueueUtilityService;
+
   @Autowired
   private RqueueSystemConfigDao rqueueSystemConfigDao;
 

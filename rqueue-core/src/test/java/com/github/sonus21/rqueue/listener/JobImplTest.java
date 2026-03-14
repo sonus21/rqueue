@@ -72,11 +72,22 @@ class JobImplTest extends TestBase {
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
   private final Object userMessage = "Test Object";
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private RqueueMessageMetadataService messageMetadataService;
-  @Mock private RqueueJobDao rqueueJobDao;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueLockManager rqueueLockManager;
+
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+
+  @Mock
+  private RqueueMessageMetadataService messageMetadataService;
+
+  @Mock
+  private RqueueJobDao rqueueJobDao;
+
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+
+  @Mock
+  private RqueueLockManager rqueueLockManager;
+
   private RqueueConfig rqueueConfig;
 
   @BeforeEach
@@ -196,7 +207,8 @@ class JobImplTest extends TestBase {
     assertEquals(MessageStatus.PROCESSING, job.getMessageMetadata().getStatus());
     assertEquals(JobStatus.PROCESSING, job.getStatus());
     verify(rqueueJobDao, times(1)).createJob(any(RqueueJob.class), any(Duration.class));
-    verify(messageMetadataService, times(1)).save(any(MessageMetadata.class), any(Duration.class), anyBoolean());
+    verify(messageMetadataService, times(1))
+        .save(any(MessageMetadata.class), any(Duration.class), anyBoolean());
     verify(rqueueJobDao, times(1)).save(any(), any());
   }
 
@@ -318,13 +330,12 @@ class JobImplTest extends TestBase {
     job.updateMessageStatus(MessageStatus.FAILED);
     verify(rqueueJobDao, times(1)).createJob(any(), any());
     verify(rqueueJobDao, times(2)).save(any(), any());
-    doAnswer(
-            invocation -> {
-              MessageMetadata messageMetadata = invocation.getArgument(0);
-              assertTrue(messageMetadata.isDeleted());
-              assertEquals(MessageStatus.DELETED, messageMetadata.getStatus());
-              return null;
-            })
+    doAnswer(invocation -> {
+          MessageMetadata messageMetadata = invocation.getArgument(0);
+          assertTrue(messageMetadata.isDeleted());
+          assertEquals(MessageStatus.DELETED, messageMetadata.getStatus());
+          return null;
+        })
         .when(messageMetadataService)
         .save(
             any(MessageMetadata.class),

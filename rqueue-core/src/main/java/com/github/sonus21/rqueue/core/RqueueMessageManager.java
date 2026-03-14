@@ -209,5 +209,4 @@ public interface RqueueMessageManager {
    * @return success or failure
    */
   boolean moveMessageFromDeadLetterToQueue(String deadLetterQueueName, String queueName);
-
 }

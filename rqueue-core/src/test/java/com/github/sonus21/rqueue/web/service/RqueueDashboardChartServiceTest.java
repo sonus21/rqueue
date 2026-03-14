@@ -56,25 +56,28 @@ import org.mockito.MockitoAnnotations;
 class RqueueDashboardChartServiceTest extends TestBase {
 
   private final List<String> queues = new ArrayList<>();
+
   @Mock
   private RqueueQStatsDao rqueueQStatsDao;
+
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RqueueSystemManagerService rqueueSystemManagerService;
+
   private RqueueDashboardChartService rqueueDashboardChartService;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
-    rqueueDashboardChartService =
-        new RqueueDashboardChartServiceImpl(
-            rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
+    rqueueDashboardChartService = new RqueueDashboardChartServiceImpl(
+        rqueueQStatsDao, rqueueConfig, rqueueWebConfig, rqueueSystemManagerService);
     doReturn(180).when(rqueueWebConfig).getHistoryDay();
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-stat::" + name;
         })
@@ -171,7 +174,8 @@ class RqueueDashboardChartServiceTest extends TestBase {
       list.add(ChartDataType.MOVED_TO_DLQ.getDescription());
       list.add(ChartDataType.RETRIED.getDescription());
     } else {
-      assertEquals(1 + chartDataRequest.getDateTypes().size(), response.getData().get(0).size());
+      assertEquals(
+          1 + chartDataRequest.getDateTypes().size(), response.getData().get(0).size());
       for (ChartDataType d : chartDataRequest.getDateTypes()) {
         list.add(d.getDescription());
       }

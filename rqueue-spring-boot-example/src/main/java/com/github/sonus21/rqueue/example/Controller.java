@@ -51,7 +51,6 @@ public class Controller {
     return "Message sent successfully, message id " + messageId;
   }
 
-
   private String getQueue(String queue) {
     if (queue == null) {
       return "job-queue";
@@ -99,5 +98,4 @@ public class Controller {
     job.setMessageId(messageId);
     return job.toString();
   }
-
 }

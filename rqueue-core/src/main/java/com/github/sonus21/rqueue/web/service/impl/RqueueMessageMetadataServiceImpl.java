@@ -145,20 +145,17 @@ public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataSe
         metaIds.stream().collect(Collectors.toMap(TypedTuple::getValue, TypedTuple::getScore));
     List<MessageMetadata> messageMetadata = findAll(metaIdToScoreMap.keySet());
     return messageMetadata.stream()
-        .map(
-            metadata -> {
-              Double score = metaIdToScoreMap.get(metadata.getId());
-              if (score == null) {
-                return null;
-              } else {
-                return new DefaultTypedTuple<>(metadata, score);
-              }
-            })
+        .map(metadata -> {
+          Double score = metaIdToScoreMap.get(metadata.getId());
+          if (score == null) {
+            return null;
+          } else {
+            return new DefaultTypedTuple<>(metadata, score);
+          }
+        })
         .filter(Objects::nonNull)
-        .sorted(
-            Comparator.comparingLong(
-                (DefaultTypedTuple<MessageMetadata> e1) ->
-                    -(Objects.requireNonNull(e1.getValue()).getUpdatedOn())))
+        .sorted(Comparator.comparingLong((DefaultTypedTuple<MessageMetadata> e1) ->
+            -(Objects.requireNonNull(e1.getValue()).getUpdatedOn())))
         .collect(Collectors.toList());
   }
 

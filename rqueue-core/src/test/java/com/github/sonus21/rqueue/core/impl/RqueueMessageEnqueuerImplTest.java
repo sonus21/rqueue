@@ -48,12 +48,16 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Mock
   private RqueueMessageTemplate messageTemplate;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @BeforeAll
@@ -73,8 +77,8 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
     rqueueMessageEnqueuer =
         new RqueueMessageEnqueuerImpl(messageTemplate, messageConverter, messageHeaders);
     FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueConfig", rqueueConfig, true);
-    FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueMessageMetadataService",
-        rqueueMessageMetadataService, true);
+    FieldUtils.writeField(
+        rqueueMessageEnqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
   }
 
   @Test

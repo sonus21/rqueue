@@ -1,5 +1,12 @@
 package com.github.sonus21.rqueue.core;
 
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
+import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -12,6 +19,8 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.TestTaskScheduler;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,15 +32,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.connection.DefaultMessage;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
-import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 
 @CoreUnitTest
 @Slf4j
@@ -41,14 +41,19 @@ class RedisAndNormalSchedulingTest extends TestBase {
   private final String fastQueue = "fast-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
+
   @Mock
   private RqueueSchedulerConfig rqueueSchedulerConfig;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RedisTemplate<String, Long> redisTemplate;
+
   @Mock
   private RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory;
+
   @InjectMocks
   private TestScheduledQueueMessageScheduler messageScheduler;
 
@@ -67,7 +72,7 @@ class RedisAndNormalSchedulingTest extends TestBase {
     AtomicBoolean generateMessage = new AtomicBoolean(true);
     long totalTime = 2000L;
     long minDelay = 10L;
-    //25% buffer due to short polling intervals, IN CI it runs slowly
+    // 25% buffer due to short polling intervals, IN CI it runs slowly
     double buffer = 0.25;
     String channelName = messageScheduler.getChannelName(slowQueue);
     doReturn(1).when(rqueueSchedulerConfig).getScheduledMessageThreadPoolSize();
@@ -95,13 +100,16 @@ class RedisAndNormalSchedulingTest extends TestBase {
     scheduler.submit(messageGenerator);
     AtomicInteger counter = new AtomicInteger(0);
     doAnswer(invocation -> {
-      counter.incrementAndGet();
-      sleep(5);
-      return System.currentTimeMillis() - Constants.DEFAULT_SCRIPT_EXECUTION_TIME;
-    }).when(redisTemplate).execute(any(RedisCallback.class));
+          counter.incrementAndGet();
+          sleep(5);
+          return System.currentTimeMillis() - Constants.DEFAULT_SCRIPT_EXECUTION_TIME;
+        })
+        .when(redisTemplate)
+        .execute(any(RedisCallback.class));
 
     try (MockedStatic<ThreadUtils> threadUtils = Mockito.mockStatic(ThreadUtils.class)) {
-      threadUtils.when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
+      threadUtils
+          .when(() -> ThreadUtils.createTaskScheduler(1, "scheduledQueueMsgScheduler-", 60))
           .thenReturn(scheduler);
       messageScheduler.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
       waitFor(() -> scheduler.submittedTasks() >= 2, "one start task to be submitted");
@@ -114,8 +122,11 @@ class RedisAndNormalSchedulingTest extends TestBase {
       messageScheduler.destroy();
       int ranJobs = counter.get();
       int jobCount = scheduler.submittedTasks();
-      log.info("Expected Job={}, Ran Jobs={}, Submitted Jobs={}",
-          expectedMessageMoveCalls, ranJobs, jobCount);
+      log.info(
+          "Expected Job={}, Ran Jobs={}, Submitted Jobs={}",
+          expectedMessageMoveCalls,
+          ranJobs,
+          jobCount);
       assertTrue(jobCount >= ranJobs);
       assertTrue(jobCount >= expectedMessageMoveCalls);
     }

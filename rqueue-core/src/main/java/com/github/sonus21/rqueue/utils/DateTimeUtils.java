@@ -28,10 +28,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DateTimeUtils {
 
-  private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
-      "yyyy-MM-dd HH:mm");
-  private static final DateTimeFormatter dateTimeFormatterWithSecond = DateTimeFormatter.ofPattern(
-      "yyyy-MM-dd HH:mm:ss");
+  private static final DateTimeFormatter dateTimeFormatter =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+  private static final DateTimeFormatter dateTimeFormatterWithSecond =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   private static String hourString(long hour) {
     if (hour > 1) {

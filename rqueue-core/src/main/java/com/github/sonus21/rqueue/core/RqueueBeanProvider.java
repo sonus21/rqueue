@@ -36,14 +36,19 @@ public class RqueueBeanProvider {
 
   @Autowired
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Autowired
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Autowired
   private RqueueJobDao rqueueJobDao;
+
   @Autowired
   private RqueueWebConfig rqueueWebConfig;
+
   @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
+
   @Autowired
   private RqueueLockManager rqueueLockManager;
 
@@ -54,8 +59,10 @@ public class RqueueBeanProvider {
   private RqueueMessageHandler rqueueMessageHandler;
 
   private MessageProcessor preExecutionMessageProcessor;
+
   @Autowired
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Autowired
   private RqueueConfig rqueueConfig;
 }

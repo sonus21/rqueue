@@ -36,8 +36,10 @@ public class FailureDetail {
   // if minFailureCount is -1 then fail always
   @Column
   private int minFailureCount;
+
   @Column
   private int maxFailureCount;
+
   @Column
   private int failureCount;
 }

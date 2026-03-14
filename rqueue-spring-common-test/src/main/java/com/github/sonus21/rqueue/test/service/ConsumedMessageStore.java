@@ -38,15 +38,17 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class ConsumedMessageStore {
 
-  @NonNull private final ConsumedMessageRepository consumedMessageRepository;
-  @NonNull private final ObjectMapper objectMapper;
+  @NonNull
+  private final ConsumedMessageRepository consumedMessageRepository;
+
+  @NonNull
+  private final ObjectMapper objectMapper;
 
   public void deleteAll() {
     consumedMessageRepository.deleteAll();
   }
 
-  public void save(BaseQueueMessage message, Object tag, String queueName)
-      throws JacksonException {
+  public void save(BaseQueueMessage message, Object tag, String queueName) throws JacksonException {
     log.info("Queue '{}' Message: {} Tag: '{}'", queueName, message, tag);
     String tagStr;
     if (tag == null) {
@@ -83,17 +85,14 @@ public class ConsumedMessageStore {
 
   public <T> Map<String, T> getMessages(Collection<String> messageIds, Class<T> tClass) {
     Map<String, T> idToMessage = new HashMap<>();
-    getMessages(messageIds)
-        .values()
-        .forEach(
-            consumedMessage -> {
-              try {
-                T value = objectMapper.readValue(consumedMessage.getMessage(), tClass);
-                idToMessage.put(consumedMessage.getMessageId(), value);
-              } catch (JacksonException e) {
-                e.printStackTrace();
-              }
-            });
+    getMessages(messageIds).values().forEach(consumedMessage -> {
+      try {
+        T value = objectMapper.readValue(consumedMessage.getMessage(), tClass);
+        idToMessage.put(consumedMessage.getMessageId(), value);
+      } catch (JacksonException e) {
+        e.printStackTrace();
+      }
+    });
     return idToMessage;
   }
 

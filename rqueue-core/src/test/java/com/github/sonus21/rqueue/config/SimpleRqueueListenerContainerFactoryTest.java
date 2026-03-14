@@ -84,9 +84,8 @@ class SimpleRqueueListenerContainerFactoryTest extends TestBase {
 
   @Test
   void getRqueueMessageHandler() {
-    assertNotNull(
-        simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
-            new DefaultMessageConverterProvider()));
+    assertNotNull(simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
+        new DefaultMessageConverterProvider()));
   }
 
   @Test

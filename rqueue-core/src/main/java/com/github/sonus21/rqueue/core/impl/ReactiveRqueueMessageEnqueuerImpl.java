@@ -26,14 +26,12 @@ import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 @Slf4j
 public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
@@ -57,37 +55,34 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       boolean isUnique,
       Function<RqueueMessage, Mono<T>> monoConverter) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage =
-        builder.build(
-            messageConverter,
-            queueName,
-            messageId,
-            message,
-            retryCount,
-            delayInMilliSecs,
-            messageHeaders);
+    RqueueMessage rqueueMessage = builder.build(
+        messageConverter,
+        queueName,
+        messageId,
+        message,
+        retryCount,
+        delayInMilliSecs,
+        messageHeaders);
     try {
       Mono<Boolean> storeResult =
           (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
-      return storeResult.flatMap(
-          success -> {
-            if (Boolean.TRUE.equals(success)) {
-              Object result = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
-              Mono<Long> enqueueMono;
-              if (result instanceof Flux) {
-                enqueueMono = ((Flux<Long>) result).next();
-              } else if (result instanceof Mono) {
-                enqueueMono = (Mono<Long>) result;
-              } else {
-                return Mono.error(
-                    new IllegalStateException(
-                        "Unexpected enqueue result type: " + result.getClass()));
-              }
-              return enqueueMono.flatMap(ignore -> monoConverter.apply(rqueueMessage));
-            } else {
-              return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
-            }
-          });
+      return storeResult.flatMap(success -> {
+        if (Boolean.TRUE.equals(success)) {
+          Object result = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
+          Mono<Long> enqueueMono;
+          if (result instanceof Flux) {
+            enqueueMono = ((Flux<Long>) result).next();
+          } else if (result instanceof Mono) {
+            enqueueMono = (Mono<Long>) result;
+          } else {
+            return Mono.error(
+                new IllegalStateException("Unexpected enqueue result type: " + result.getClass()));
+          }
+          return enqueueMono.flatMap(ignore -> monoConverter.apply(rqueueMessage));
+        } else {
+          return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
+        }
+      });
     } catch (Exception e) {
       log.error(
           "Failed to enqueue message [{}] to queue [{}]", rqueueMessage.getId(), queueName, e);

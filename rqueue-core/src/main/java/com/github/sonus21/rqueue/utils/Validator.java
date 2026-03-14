@@ -20,8 +20,7 @@ import static org.springframework.util.Assert.notNull;
 
 public final class Validator {
 
-  private Validator() {
-  }
+  private Validator() {}
 
   public static void validateMessage(Object message) {
     notNull(message, "message cannot be null");
@@ -60,10 +59,9 @@ public final class Validator {
 
   public static void validatePeriod(long period) {
     if (period < Constants.MINIMUM_JOB_PERIOD) {
-      throw new IllegalArgumentException(
-          "period must be greater than or equal to "
-              + Constants.MINIMUM_JOB_PERIOD
-              + " Milliseconds");
+      throw new IllegalArgumentException("period must be greater than or equal to "
+          + Constants.MINIMUM_JOB_PERIOD
+          + " Milliseconds");
     }
   }
 }

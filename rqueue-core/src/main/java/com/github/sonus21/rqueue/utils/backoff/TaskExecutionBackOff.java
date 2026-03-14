@@ -47,8 +47,8 @@ public interface TaskExecutionBackOff {
    * @param throwable     the exception that has occurred
    * @return backoff in the millisecond.
    */
-  default long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount,
-      Throwable throwable) {
+  default long nextBackOff(
+      Object message, RqueueMessage rqueueMessage, int failureCount, Throwable throwable) {
     return nextBackOff(message, rqueueMessage, failureCount);
   }
 }

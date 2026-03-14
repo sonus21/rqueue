@@ -38,15 +38,14 @@ public class HandlerMiddleware implements Middleware {
   public void handle(Job job, Callable<Void> next) throws Exception {
     Execution execution = job.getLatestExecution();
     RqueueMessage rqueueMessage = job.getRqueueMessage();
-    Message<?> message =
-        MessageBuilder.createMessage(
-            rqueueMessage.getMessage(),
-            buildMessageHeaders(
-                job.getQueueDetail().getName(),
-                rqueueMessage,
-                job,
-                execution,
-                rqueueMessage.getMessageHeaders()));
+    Message<?> message = MessageBuilder.createMessage(
+        rqueueMessage.getMessage(),
+        buildMessageHeaders(
+            job.getQueueDetail().getName(),
+            rqueueMessage,
+            job,
+            execution,
+            rqueueMessage.getMessageHeaders()));
     rqueueMessageHandler.handleMessage(message);
   }
 }

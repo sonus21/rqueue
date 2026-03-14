@@ -31,6 +31,4 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @Tag("unit")
 @Tag("springUnit")
 @ExtendWith({MockitoExtension.class, TestTracerExtension.class})
-public @interface SpringUnitTest {
-
-}
+public @interface SpringUnitTest {}

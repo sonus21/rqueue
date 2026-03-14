@@ -38,7 +38,9 @@ public class Execution extends SerializableBase {
   private long startTime;
   private long endTime;
   private String error;
+
   @JsonIgnore
   private Throwable exception;
+
   private ExecutionStatus status;
 }

@@ -32,13 +32,13 @@ import tools.jackson.core.JacksonException;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8016",
-        "reservation.request.dead.letter.consumer.enabled=true",
-        "reservation.request.active=true",
-        "list.email.queue.enabled=true",
-        "mysql.db.name=BootRetryTest",
-        "use.system.redis=false",
+      "rqueue.retry.per.poll=1000",
+      "spring.data.redis.port=8016",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=BootRetryTest",
+      "use.system.redis=false",
     })
 @SpringBootIntegrationTest
 class BootRetryTest extends RetryTests {
@@ -69,8 +69,7 @@ class BootRetryTest extends RetryTests {
   }
 
   @Test
-  void messageIsConsumedByDeadLetterQueueListener()
-      throws TimedOutException, JacksonException {
+  void messageIsConsumedByDeadLetterQueueListener() throws TimedOutException, JacksonException {
     verifyMessageIsConsumedByDeadLetterQueueListener();
   }
 }

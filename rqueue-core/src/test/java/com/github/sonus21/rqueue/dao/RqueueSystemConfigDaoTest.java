@@ -49,10 +49,13 @@ class RqueueSystemConfigDaoTest extends TestBase {
   private final String queueName = "job";
   private final String configKey = TestUtils.getQueueConfigKey(queueName);
   private final QueueConfig queueConfig = TestUtils.createQueueConfig(queueName);
+
   @Mock
   private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   private RqueueSystemConfigDao rqueueSystemConfigDao;
 
   @BeforeEach
@@ -82,9 +85,8 @@ class RqueueSystemConfigDaoTest extends TestBase {
 
   @Test
   void findAllQConfig() {
-    List<String> keys =
-        Arrays.asList(
-            TestUtils.getQueueConfigKey(queueName), TestUtils.getQueueConfigKey("notification"));
+    List<String> keys = Arrays.asList(
+        TestUtils.getQueueConfigKey(queueName), TestUtils.getQueueConfigKey("notification"));
     doReturn(Arrays.asList(queueConfig, null)).when(rqueueRedisTemplate).mget(keys);
     assertEquals(
         Collections.singletonList(queueConfig), rqueueSystemConfigDao.findAllQConfig(keys));
@@ -93,8 +95,7 @@ class RqueueSystemConfigDaoTest extends TestBase {
   @Test
   void saveAllQConfig() {
     QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification");
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           Map<String, QueueConfig> configMap = new HashMap<>();
           configMap.put(queueConfig.getId(), queueConfig);
           configMap.put(queueConfig2.getId(), queueConfig2);
@@ -134,8 +135,7 @@ class RqueueSystemConfigDaoTest extends TestBase {
     doReturn(queueConfig).when(rqueueRedisTemplate).get(configKey);
     rqueueSystemConfigDao.getQConfig(configKey, false);
     QueueConfig updatedConfig = queueConfig.toBuilder().paused(true).build();
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           Map<String, QueueConfig> configMap = new HashMap<>();
           configMap.put(updatedConfig.getId(), updatedConfig);
           assertEquals(configMap, invocation.getArgument(0));
@@ -153,8 +153,7 @@ class RqueueSystemConfigDaoTest extends TestBase {
     doReturn(queueConfig).when(rqueueRedisTemplate).get(configKey);
     rqueueSystemConfigDao.getQConfig(configKey, false);
     QueueConfig updatedConfig = queueConfig.toBuilder().paused(true).build();
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           Map<String, QueueConfig> configMap = new HashMap<>();
           configMap.put(updatedConfig.getId(), updatedConfig);
           assertEquals(configMap, invocation.getArgument(0));

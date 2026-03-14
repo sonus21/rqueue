@@ -18,12 +18,12 @@ package com.github.sonus21.rqueue.test.application;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import java.io.IOException;
 
 @Slf4j
 public abstract class BaseApplication extends ApplicationBasicConfiguration {

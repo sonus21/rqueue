@@ -22,8 +22,7 @@ import java.util.Set;
 
 public final class PriorityUtils {
 
-  private PriorityUtils() {
-  }
+  private PriorityUtils() {}
 
   public static Set<String> getNamesFromPriority(String queueName, Map<String, Integer> priority) {
     Set<String> keys = new HashSet<>();

@@ -62,9 +62,8 @@ public class TestStatLoggerExtension implements TestWatcher, AfterAllCallback {
 
   @Override
   public void afterAll(ExtensionContext context) throws Exception {
-    Map<TestResultStatus, Long> summary =
-        testResultsStatus.stream()
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    Map<TestResultStatus, Long> summary = testResultsStatus.stream()
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
     log.info("Test result summary for {} {}", context.getDisplayName(), summary.toString());
   }

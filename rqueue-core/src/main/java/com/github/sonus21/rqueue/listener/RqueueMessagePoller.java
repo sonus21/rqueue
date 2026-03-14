@@ -72,15 +72,14 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
       QueueThreadPool queueThreadPool, QueueDetail queueDetail, RqueueMessage message) {
     message.setMessageHeaders(messageHeaders);
     try {
-      queueThreadPool.execute(
-          new RqueueExecutor(
-              rqueueBeanProvider,
-              queueStateMgr,
-              middlewares,
-              postProcessingHandler,
-              message,
-              queueDetail,
-              queueThreadPool));
+      queueThreadPool.execute(new RqueueExecutor(
+          rqueueBeanProvider,
+          queueStateMgr,
+          middlewares,
+          postProcessingHandler,
+          message,
+          queueDetail,
+          queueThreadPool));
     } catch (Exception e) {
       if (e instanceof TaskRejectedException) {
         queueThreadPool.taskRejected(queueDetail, message);
@@ -103,7 +102,6 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
   protected boolean hasAvailableThreads(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     return queueThreadPool.availableThreads() > 0;
   }
-
 
   protected int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     int batchSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
@@ -152,8 +150,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     }
   }
 
-  void poll(int index, String queue, QueueDetail queueDetail,
-      QueueThreadPool queueThreadPool) {
+  void poll(int index, String queue, QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     log(Level.TRACE, "Polling queue {}", null, queue);
     int batchSize = getBatchSize(queueDetail, queueThreadPool);
     boolean acquired;

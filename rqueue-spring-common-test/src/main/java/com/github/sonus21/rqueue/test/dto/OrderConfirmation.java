@@ -37,9 +37,8 @@ public class OrderConfirmation extends BaseQueueMessage {
   private long timestamp;
 
   public static OrderConfirmation newInstance() {
-    OrderConfirmation orderConfirmation =
-        new OrderConfirmation(
-            UUID.randomUUID().toString(), UUID.randomUUID().toString(), System.currentTimeMillis());
+    OrderConfirmation orderConfirmation = new OrderConfirmation(
+        UUID.randomUUID().toString(), UUID.randomUUID().toString(), System.currentTimeMillis());
     orderConfirmation.setId(UUID.randomUUID().toString());
     return orderConfirmation;
   }
