@@ -23,6 +23,8 @@
 
 * Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
 
+* Format Java sources before opening the PR with `./gradlew formatJava`.
+
 
 #### **Did you fix whitespace, format code, or make a purely cosmetic patch?**
 

@@ -5,6 +5,14 @@ plugins {
     id "com.github.nbaztec.coveralls-jacoco" version "1.2.20"
 }
 
+configurations {
+    palantirJavaFormat
+}
+
+dependencies {
+    palantirJavaFormat "com.palantir.javaformat:palantir-java-format:2.69.0"
+}
+
 allprojects {
     apply plugin: "idea"
     apply plugin: "java-library"
@@ -173,4 +181,36 @@ coverallsJacoco {
     reportSourceSets = publishedProjects.collectMany {
         it.sourceSets.main.allSource.srcDirs
     }
+}
+
+def javaFormatSources = providers.provider {
+    files(subprojects.collect { subproject ->
+        subproject.fileTree(dir: subproject.projectDir) {
+            include "src/**/*.java"
+        }
+    }).files.findAll { it.exists() }
+}
+
+tasks.register("formatJava", JavaExec) {
+    group = "formatting"
+    description = "Formats all Java sources with Palantir Java Format."
+    classpath = configurations.palantirJavaFormat
+    mainClass = "com.palantir.javaformat.java.Main"
+    doFirst {
+        args = ["--replace"] + javaFormatSources.get().collect { it.absolutePath }
+    }
+}
+
+tasks.register("checkFormatJava", JavaExec) {
+    group = "verification"
+    description = "Checks whether all Java sources are formatted with Palantir Java Format."
+    classpath = configurations.palantirJavaFormat
+    mainClass = "com.palantir.javaformat.java.Main"
+    doFirst {
+        args = ["--dry-run", "--set-exit-if-changed"] + javaFormatSources.get().collect { it.absolutePath }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(tasks.named("checkFormatJava"))
 }

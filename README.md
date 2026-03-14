@@ -326,7 +326,7 @@ gradle to start with. In root `build.gradle` file comment out spring related ver
 environment variables for Spring versions. You can use [module, class and other diagrams](https://sourcespy.com/github/sonus21rqueue/) 
 to familiarise yourself with the project.
 
-**Please format your code with Google Java formatter.**
+**Please format your code with Palantir Java Format using `./gradlew formatJava`.**
 
 ## Links
 

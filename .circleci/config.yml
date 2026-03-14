@@ -95,8 +95,8 @@ aliases:
 executors:
   rqueue-executor:
     machine:
-      image: ubuntu-2204:current
-    resource_class: xlarge
+      image: ubuntu-2204:2022.10.2
+    resource_class: large
 
     working_directory: ~/repo
 
