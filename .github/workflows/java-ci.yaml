@@ -3,8 +3,17 @@ name: Java CI
 on:
   push:
     branches:
-      - main
-      - 2.x
+      - master
+    paths:
+      - "**/*.java"
+      - "**/*.gradle"
+      - "**/*.gradle.kts"
+      - "gradle.properties"
+      - "settings.gradle"
+      - "settings.gradle.kts"
+      - "gradle/**"
+      - "gradlew"
+      - "gradlew.bat"
   pull_request:
 
 permissions:
