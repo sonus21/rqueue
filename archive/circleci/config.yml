@@ -1,0 +1,251 @@
+# Archived CircleCI configuration kept for reference after migration to GitHub Actions.
+# Active CI lives under .github/workflows/.
+#
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2.1
+
+aliases:
+  attach_workspace: &attach_workspace
+    attach_workspace:
+      at: .
+
+  environment: &environment
+    environment:
+      RQUEUE_REACTIVE_ENABLED: "false"
+
+  reactive_environment: &reactive_environment
+    environment:
+      RQUEUE_REACTIVE_ENABLED: "true"
+
+
+  persist_to_workspace: &persist_to_workspace
+    persist_to_workspace:
+      root: .
+      paths:
+        - .
+
+  redis_dep: &redis_dep
+    run:
+      name: Install Dependencies
+      command: |
+        sudo apt -y install redis-server
+        redis-cli --version
+
+  redis_cluster_setup: &redis_cluster_setup
+    run:
+      name: Setup Redis Cluster
+      background: true
+      command: |
+        mkdir 9000 9001 9002 9003 9004 9005
+        printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
+        printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
+        printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
+        printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
+        printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
+        printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+        cd 9000 && redis-server ./redis.conf &
+        cd 9001 && redis-server ./redis.conf &
+        cd 9002 && redis-server ./redis.conf &
+        cd 9003 && redis-server ./redis.conf &
+        cd 9004 && redis-server ./redis.conf &
+        cd 9005 && redis-server ./redis.conf &
+        sleep 30
+        redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1 --cluster-yes
+
+
+  copy_logs: &copy_logs
+    run:
+      name: Copy Log Files
+      when: always
+      command: |
+        mkdir log || true
+        test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
+        test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
+        test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
+        test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
+        test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
+        test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
+
+  copy_test_results: &copy_test_results
+    run:
+      name: Copy Test Result Files
+      when: always
+      command: |
+        mkdir test-results || true
+        test -d rqueue-spring-boot-starter/build/reports/junit/xml && cp -r rqueue-spring-boot-starter/build/reports/junit/xml test-results
+        test -d rqueue-spring/build/reports/junit/xml && cp -r rqueue-spring/build/reports/junit/xml test-results
+        test -d rqueue-core/build/reports/junit/xml && cp -r rqueue-core/build/reports/junit/xml test-results
+
+  store_logs: &store_logs
+    store_artifacts:
+      path: log/
+  store_test_results: &store_test_results
+    store_test_results:
+      path: test-results
+
+
+  default: &default
+    executor: rqueue-executor
+    <<: *environment
+
+  reactive: &reactive
+    executor: rqueue-executor
+    <<: *reactive_environment
+
+executors:
+  rqueue-executor:
+    machine:
+      image: ubuntu-2204:2022.10.2
+    resource_class: large
+
+    working_directory: ~/repo
+
+    environment:
+      JVM_OPTS: -Xmx8g
+      TERM: dumb
+      ORG_GRADLE_PROJECT_mavenCentralUsername: xxx
+      ORG_GRADLE_PROJECT_mavenCentralPassword: xxx
+      USER_NAME: rqueue
+      REDIS_RUNNING: "true"
+
+java_21: &java_21
+  run:
+    name: Use Java 21
+    command: |
+      sudo apt-get update
+      sudo apt-get install -y openjdk-21-jdk
+      java -version
+      javac -version
+
+build_steps: &build_steps
+  steps:
+    - checkout
+    - *java_21
+    - restore_cache:
+        keys:
+          - v1-dependencies-{{ checksum "build.gradle" }}
+          - v1-dependencies-
+    - run: ./gradlew dependencies
+    - save_cache:
+        paths:
+          - ~/.gradle
+        key: v1-dependencies-{{ checksum "build.gradle" }}
+    - run: ./gradlew compileJava
+    - run: ./gradlew compileTestJava
+    - persist_to_workspace:
+        root: .
+        paths:
+          - .
+
+unit_test_steps: &unit_test_steps
+  steps:
+    - *attach_workspace
+    - *java_21
+    - run: ./gradlew codeCoverageReport -DincludeTags=unit
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+producer_test_steps: &producer_test_steps
+  steps:
+    - *attach_workspace
+    - *java_21
+    - *redis_dep
+    - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+integration_test_steps: &integration_test_steps
+  steps:
+    - *attach_workspace
+    - *java_21
+    - *redis_dep
+    - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+redis_custer_test_steps: &redis_cluster_test_steps
+  steps:
+    - *attach_workspace
+    - *java_21
+    - *redis_dep
+    - *redis_cluster_setup
+    - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster
+    - *persist_to_workspace
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+report_code_coverage_steps: &report_code_coverage_steps
+  steps:
+    - *attach_workspace
+    - *java_21
+    - run: ./gradlew coverallsJacoco
+    - *copy_logs
+    - *copy_test_results
+    - *store_logs
+    - *store_test_results
+
+jobs:
+  build:
+    <<: *default
+    <<: *build_steps
+
+  unit_test:
+    <<: *default
+    <<: *unit_test_steps
+
+  producer_only_test:
+    <<: *default
+    <<: *producer_test_steps
+
+  integration_test:
+    <<: *default
+    <<: *integration_test_steps
+
+  reactive_integration_test:
+    <<: *reactive
+    <<: *integration_test_steps
+
+  redis_custer_test:
+    <<: *default
+    <<: *redis_cluster_test_steps
+
+  report_code_coverage:
+    <<: *default
+    <<: *report_code_coverage_steps
+
+workflows:
+  main:
+    jobs:
+      - build
+      - unit_test:
+          requires:
+            - build
+      - producer_only_test:
+          requires:
+            - unit_test
+      - integration_test:
+          requires:
+            - producer_only_test
+      - redis_custer_test:
+          requires:
+            - integration_test
+      - reactive_integration_test:
+          requires:
+            - redis_custer_test
+      - report_code_coverage:
+          requires:
+            - reactive_integration_test
