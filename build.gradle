@@ -131,7 +131,7 @@ def publishedProjects = subprojects.findAll({ subproject ->
 })
 
 task codeCoverageReport(type: JacocoReport, group: "verification", description: "Generate code coverage report") {
-    executionData fileTree(project.rootDir.absolutePath).include("**/build/reports/jacoco/*.exec")
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/reports/jacoco/*.exec", "**/coverage-artifacts/**/*.exec")
 
     publishedProjects.each {
         sourceSets it.sourceSets.main
@@ -144,7 +144,7 @@ task codeCoverageReport(type: JacocoReport, group: "verification", description: 
         xml.outputLocation = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
     }
 
-    afterEvaluate {
+    doFirst {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it,
                     exclude: [
@@ -161,6 +161,38 @@ task codeCoverageReport(type: JacocoReport, group: "verification", description: 
     dependsOn(subprojects*.test)
     doLast {}
     test.useTestNG()
+}
+
+tasks.register("coverageReportOnly", JacocoReport) {
+    group = "verification"
+    description = "Generate code coverage report from existing JaCoCo execution data."
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/reports/jacoco/*.exec", "**/coverage-artifacts/**/*.exec")
+
+    publishedProjects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = true
+        xml.outputLocation = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+    }
+
+    doFirst {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it,
+                    exclude: [
+                            "com/github/sonus21/rqueue/exception",
+                            "com/github/sonus21/rqueue/models/response",
+                            "com/github/sonus21/rqueue/core/RqueueMessageSender*",
+                            "com/github/sonus21/rqueue/utils/PrefixLogger*",
+                            "com/github/sonus21/rqueue/utils/StackTraceUtil*",
+                            "com/github/sonus21/rqueue/core/ScheduledTaskDetail*",
+                    ]
+            )
+        }))
+    }
 }
 
 

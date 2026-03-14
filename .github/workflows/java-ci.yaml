@@ -14,14 +14,15 @@ concurrency:
   group: java-ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  REDIS_RUNNING: "true"
+  USER_NAME: rqueue
+  TERM: dumb
+  JVM_OPTS: -Xmx8g
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      REDIS_RUNNING: "true"
-      USER_NAME: rqueue
-      TERM: dumb
-      JVM_OPTS: -Xmx8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,11 +49,6 @@ jobs:
   unit_test:
     needs: build
     runs-on: ubuntu-latest
-    env:
-      REDIS_RUNNING: "true"
-      USER_NAME: rqueue
-      TERM: dumb
-      JVM_OPTS: -Xmx8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,26 +64,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
-        run: ./gradlew codeCoverageReport -DincludeTags=unit
+        run: ./gradlew test -DincludeTags=unit
 
-      - name: Collect logs
-        if: always()
-        run: |
-          mkdir -p log
-          test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
-          test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
-          test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
-          test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
-          test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
-          test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
-
-      - name: Upload logs
+      - name: Upload JaCoCo exec data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-logs
-          path: log/
-          if-no-files-found: ignore
+          name: coverage-unit
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
 
       - name: Upload JUnit reports
         if: always()
@@ -101,13 +86,8 @@ jobs:
           if-no-files-found: ignore
 
   producer_only_test:
-    needs: unit_test
+    needs: build
     runs-on: ubuntu-latest
-    env:
-      REDIS_RUNNING: "true"
-      USER_NAME: rqueue
-      TERM: dumb
-      JVM_OPTS: -Xmx8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -129,26 +109,15 @@ jobs:
           redis-cli --version
 
       - name: Run producer-only tests
-        run: ./gradlew codeCoverageReport -DincludeTags=producerOnly
+        run: ./gradlew test -DincludeTags=producerOnly
 
-      - name: Collect logs
-        if: always()
-        run: |
-          mkdir -p log
-          test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
-          test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
-          test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
-          test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
-          test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
-          test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
-
-      - name: Upload logs
+      - name: Upload JaCoCo exec data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: producer-test-logs
-          path: log/
-          if-no-files-found: ignore
+          name: coverage-producer
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
 
       - name: Upload JUnit reports
         if: always()
@@ -162,13 +131,8 @@ jobs:
           if-no-files-found: ignore
 
   integration_test:
-    needs: producer_only_test
+    needs: build
     runs-on: ubuntu-latest
-    env:
-      REDIS_RUNNING: "true"
-      USER_NAME: rqueue
-      TERM: dumb
-      JVM_OPTS: -Xmx8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -190,26 +154,15 @@ jobs:
           redis-cli --version
 
       - name: Run integration tests
-        run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
+        run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
 
-      - name: Collect logs
-        if: always()
-        run: |
-          mkdir -p log
-          test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
-          test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
-          test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
-          test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
-          test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
-          test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
-
-      - name: Upload logs
+      - name: Upload JaCoCo exec data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-test-logs
-          path: log/
-          if-no-files-found: ignore
+          name: coverage-integration
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
 
       - name: Upload JUnit reports
         if: always()
@@ -223,13 +176,8 @@ jobs:
           if-no-files-found: ignore
 
   redis_cluster_test:
-    needs: integration_test
+    needs: build
     runs-on: ubuntu-latest
-    env:
-      REDIS_RUNNING: "true"
-      USER_NAME: rqueue
-      TERM: dumb
-      JVM_OPTS: -Xmx8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -269,26 +217,15 @@ jobs:
           yes yes | redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1
 
       - name: Run Redis cluster tests
-        run: ./gradlew codeCoverageReport -DincludeTags=redisCluster
+        run: ./gradlew test -DincludeTags=redisCluster
 
-      - name: Collect logs
-        if: always()
-        run: |
-          mkdir -p log
-          test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
-          test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
-          test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
-          test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
-          test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
-          test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
-
-      - name: Upload logs
+      - name: Upload JaCoCo exec data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: redis-cluster-test-logs
-          path: log/
-          if-no-files-found: ignore
+          name: coverage-redis-cluster
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
 
       - name: Upload JUnit reports
         if: always()
@@ -302,13 +239,9 @@ jobs:
           if-no-files-found: ignore
 
   reactive_integration_test:
-    needs: redis_cluster_test
+    needs: build
     runs-on: ubuntu-latest
     env:
-      REDIS_RUNNING: "true"
-      USER_NAME: rqueue
-      TERM: dumb
-      JVM_OPTS: -Xmx8g
       RQUEUE_REACTIVE_ENABLED: "true"
     steps:
       - name: Checkout
@@ -331,26 +264,15 @@ jobs:
           redis-cli --version
 
       - name: Run reactive integration tests
-        run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
+        run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
 
-      - name: Collect logs
-        if: always()
-        run: |
-          mkdir -p log
-          test -f rqueue-core/log/monitor.log && cp rqueue-core/log/monitor.log log/core-monitor.log
-          test -f rqueue-core/log/test.log && cp rqueue-core/log/test.log log/core-test.log
-          test -f rqueue-spring-boot-starter/log/monitor.log && cp rqueue-spring-boot-starter/log/monitor.log log/boot-monitor.log
-          test -f rqueue-spring-boot-starter/log/test.log && cp rqueue-spring-boot-starter/log/test.log log/boot-test.log
-          test -f rqueue-spring/log/monitor.log && cp rqueue-spring/log/monitor.log log/spring-monitor.log
-          test -f rqueue-spring/log/test.log && cp rqueue-spring/log/test.log log/spring-test.log
-
-      - name: Upload logs
+      - name: Upload JaCoCo exec data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: reactive-integration-test-logs
-          path: log/
-          if-no-files-found: ignore
+          name: coverage-reactive
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
 
       - name: Upload JUnit reports
         if: always()
@@ -363,15 +285,14 @@ jobs:
             rqueue-core/build/reports/junit/xml
           if-no-files-found: ignore
 
-  report_code_coverage:
-    needs: reactive_integration_test
-    if: github.event_name == 'push'
+  coverage_report:
+    needs:
+      - unit_test
+      - producer_only_test
+      - integration_test
+      - redis_cluster_test
+      - reactive_integration_test
     runs-on: ubuntu-latest
-    env:
-      REDIS_RUNNING: "true"
-      USER_NAME: rqueue
-      TERM: dumb
-      JVM_OPTS: -Xmx8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -386,5 +307,21 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Generate coverage report
-        run: ./gradlew coverallsJacoco
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-artifacts
+          merge-multiple: false
+
+      - name: Generate merged coverage report
+        run: ./gradlew coverageReportOnly
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            build/reports/jacoco/test/jacocoTestReport.xml
+            build/reports/jacoco/coverageReportOnly/html
+          if-no-files-found: ignore
