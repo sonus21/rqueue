@@ -12,7 +12,7 @@ This sample project should be used only for spring-boot reactive/webflux project
 #### Requirements
 
 * Redis
-* Java 8
+* Java 21
 * Gradle
 
 Run boot app as

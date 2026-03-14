@@ -22,7 +22,7 @@ import com.github.sonus21.rqueue.utils.SerializationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.JacksonJsonMessageConverter;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 import tools.jackson.core.JacksonException;
@@ -37,7 +37,7 @@ import tools.jackson.databind.ObjectMapper;
  * <p>Target class is null till the time method arguments are not resolved, once method arguments
  * are resolved then it will become non-null.
  *
- * @see JacksonJsonMessageConverter
+ * @see MappingJackson2MessageConverter
  */
 @Slf4j
 public class JsonMessageConverter implements MessageConverter {

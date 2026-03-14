@@ -12,7 +12,7 @@ This sample project should be used only for spring-boot application.
 #### Requirements
 
 * Redis
-* Java 8
+* Java 21
 * Gradle
 
 Run boot app as
@@ -37,6 +37,5 @@ It has three APIs to play with
 
 Application MessageListener logs the job in console, so we can see in the console what's happening
 with the scheduled job.
-
 
 

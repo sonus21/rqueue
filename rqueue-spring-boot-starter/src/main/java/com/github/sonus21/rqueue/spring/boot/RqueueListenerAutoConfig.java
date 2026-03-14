@@ -34,7 +34,7 @@ import com.github.sonus21.rqueue.utils.condition.RqueueEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
-import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Conditional;
@@ -42,7 +42,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 
 @Configuration
-@AutoConfigureAfter(DataRedisAutoConfiguration.class)
+@AutoConfigureAfter(RedisAutoConfiguration.class)
 @ComponentScan({"com.github.sonus21.rqueue.web", "com.github.sonus21.rqueue.dao"})
 @Conditional({RqueueEnabled.class})
 public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {

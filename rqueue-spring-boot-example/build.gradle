@@ -5,7 +5,7 @@ plugins {
 dependencies {
     implementation project(":rqueue-spring-boot-starter")
     implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
-    implementation "org.springframework.boot:spring-boot-starter-webmvc:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic

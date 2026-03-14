@@ -13,8 +13,11 @@ allprojects {
     apply plugin: "org.gradle.test-retry"
 
     java {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     repositories {
@@ -24,10 +27,10 @@ allprojects {
 }
 
 ext {
-    springBootVersion = "4.0.1"
-    springVersion = "7.0.3"
-    springDataVersion = "4.0.2"
-    microMeterVersion = "1.16.2"
+    springBootVersion = "3.5.0"
+    springVersion = "6.2.0"
+    springDataVersion = "3.5.0"
+    microMeterVersion = "1.15.0"
 
     // logging dependencies
     lombokVersion = "1.18.42"
@@ -72,7 +75,7 @@ ext {
 
 subprojects {
     group = "com.github.sonus21"
-    version = "4.0.0-RELEASE"
+    version = "3.0.0-RELEASE"
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging

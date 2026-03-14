@@ -13,7 +13,7 @@ spring-boot refer to one of the following samples
 #### Requirements
 
 * Redis
-* Java 8
+* Java 21
 * Gradle
 
 Run Spring app as
