@@ -49,7 +49,7 @@ ext {
     jupiterVersion = "5.5.0"
     mockitoVersion = "3.5.0"
     hamcrestVersion = "2.2"
-    jacocoVersion = "0.8.8"
+    jacocoVersion = "0.8.12"
     embeddedRedisVersion = "1.4.3"
     h2Version = "2.1.214"
     tomcatVersion = "10.1.4"
@@ -130,33 +130,38 @@ def publishedProjects = subprojects.findAll({ subproject ->
     subproject.pluginManager.hasPlugin("java") && !subproject.name.endsWith("example") && !subproject.name.contains("test")
 })
 
+def coverageExcludes = [
+        "com/github/sonus21/rqueue/exception",
+        "com/github/sonus21/rqueue/models/response",
+        "com/github/sonus21/rqueue/core/RqueueMessageSender*",
+        "com/github/sonus21/rqueue/utils/PrefixLogger*",
+        "com/github/sonus21/rqueue/utils/StackTraceUtil*",
+        "com/github/sonus21/rqueue/core/ScheduledTaskDetail*",
+]
+
+def filteredCoverageClassDirectories = providers.provider {
+    files(publishedProjects.collect { subproject ->
+        subproject.sourceSets.main.output.classesDirs.files.collect { classesDir ->
+            fileTree(classesDir) {
+                exclude coverageExcludes
+            }
+        }
+    })
+}
+
 task codeCoverageReport(type: JacocoReport, group: "verification", description: "Generate code coverage report") {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/reports/jacoco/*.exec", "**/coverage-artifacts/**/*.exec")
 
     publishedProjects.each {
         sourceSets it.sourceSets.main
     }
+    classDirectories.setFrom(filteredCoverageClassDirectories)
 
     reports {
         xml.required = System.getenv("CIRCLECI") == "true"
         csv.required = false
         html.required = System.getenv("CIRCLECI") != "true"
         xml.outputLocation = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-    }
-
-    doFirst {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it,
-                    exclude: [
-                            "com/github/sonus21/rqueue/exception",
-                            "com/github/sonus21/rqueue/models/response",
-                            "com/github/sonus21/rqueue/core/RqueueMessageSender*",
-                            "com/github/sonus21/rqueue/utils/PrefixLogger*",
-                            "com/github/sonus21/rqueue/utils/StackTraceUtil*",
-                            "com/github/sonus21/rqueue/core/ScheduledTaskDetail*",
-                    ]
-            )
-        }))
     }
     dependsOn(subprojects*.test)
     doLast {}
@@ -171,27 +176,13 @@ tasks.register("coverageReportOnly", JacocoReport) {
     publishedProjects.each {
         sourceSets it.sourceSets.main
     }
+    classDirectories.setFrom(filteredCoverageClassDirectories)
 
     reports {
         xml.required = true
         csv.required = false
         html.required = true
         xml.outputLocation = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-    }
-
-    doFirst {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it,
-                    exclude: [
-                            "com/github/sonus21/rqueue/exception",
-                            "com/github/sonus21/rqueue/models/response",
-                            "com/github/sonus21/rqueue/core/RqueueMessageSender*",
-                            "com/github/sonus21/rqueue/utils/PrefixLogger*",
-                            "com/github/sonus21/rqueue/utils/StackTraceUtil*",
-                            "com/github/sonus21/rqueue/core/ScheduledTaskDetail*",
-                    ]
-            )
-        }))
     }
 }
 

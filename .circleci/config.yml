@@ -140,6 +140,7 @@ build_steps: &build_steps
 unit_test_steps: &unit_test_steps
   steps:
     - *attach_workspace
+    - *java_21
     - run: ./gradlew codeCoverageReport -DincludeTags=unit
     - *persist_to_workspace
     - *copy_logs
@@ -150,6 +151,7 @@ unit_test_steps: &unit_test_steps
 producer_test_steps: &producer_test_steps
   steps:
     - *attach_workspace
+    - *java_21
     - *redis_dep
     - run: ./gradlew codeCoverageReport -DincludeTags=producerOnly
     - *persist_to_workspace
@@ -161,6 +163,7 @@ producer_test_steps: &producer_test_steps
 integration_test_steps: &integration_test_steps
   steps:
     - *attach_workspace
+    - *java_21
     - *redis_dep
     - run: ./gradlew codeCoverageReport -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
     - *persist_to_workspace
@@ -172,6 +175,7 @@ integration_test_steps: &integration_test_steps
 redis_custer_test_steps: &redis_cluster_test_steps
   steps:
     - *attach_workspace
+    - *java_21
     - *redis_dep
     - *redis_cluster_setup
     - run: ./gradlew codeCoverageReport -DincludeTags=redisCluster
@@ -184,6 +188,7 @@ redis_custer_test_steps: &redis_cluster_test_steps
 report_code_coverage_steps: &report_code_coverage_steps
   steps:
     - *attach_workspace
+    - *java_21
     - run: ./gradlew coverallsJacoco
     - *copy_logs
     - *copy_test_results

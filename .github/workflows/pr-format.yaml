@@ -30,6 +30,13 @@ jobs:
           java-version: "21"
           cache: gradle
 
+      - name: Expose Java 21 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
