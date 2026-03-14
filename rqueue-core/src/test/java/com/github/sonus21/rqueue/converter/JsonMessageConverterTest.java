@@ -38,8 +38,9 @@ import tools.jackson.databind.json.JsonMapper;
 @CoreUnitTest
 class JsonMessageConverterTest extends TestBase {
 
-  private final ObjectMapper objectMapper =
-      JsonMapper.builder().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).build();
+  private final ObjectMapper objectMapper = JsonMapper.builder()
+      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+      .build();
   private final MessageConverter messageConverter = new JsonMessageConverter();
   private final MessageConverter messageConverter2 = new JsonMessageConverter(objectMapper);
 
