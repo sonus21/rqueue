@@ -106,6 +106,7 @@ public class RqueueMessageListenerContainer
   private int phase = Integer.MAX_VALUE;
   private PriorityMode priorityMode;
   private MessageHeaders messageHeaders;
+  private HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -515,6 +516,21 @@ public class RqueueMessageListenerContainer
                   backOffTime,
                   postProcessingHandler,
                   getMessageHeaders()));
+    } else if (getPriorityMode() == PriorityMode.HARD_STRICT) {
+      future =
+          taskExecutor.submit(
+              new HardStrictPriorityPoller(
+                  StringUtils.groupName(groupName),
+                  queueDetails,
+                  queueThread,
+                  rqueueBeanProvider,
+                  queueStateMgr,
+                  getMiddleWares(),
+                  pollingInterval,
+                  backOffTime,
+                  postProcessingHandler,
+                  getMessageHeaders(),
+                  getHardStrictPriorityPollerProperties()));
     } else {
       future =
           taskExecutor.submit(
@@ -710,6 +726,15 @@ public class RqueueMessageListenerContainer
 
   public void setMessageHeaders(MessageHeaders messageHeaders) {
     this.messageHeaders = messageHeaders;
+  }
+
+  public HardStrictPriorityPollerProperties getHardStrictPriorityPollerProperties() {
+    return this.hardStrictPriorityPollerProperties;
+  }
+
+  public void setHardStrictPriorityPollerProperties(
+      HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties) {
+    this.hardStrictPriorityPollerProperties = hardStrictPriorityPollerProperties;
   }
 
   class QueueStateMgr {

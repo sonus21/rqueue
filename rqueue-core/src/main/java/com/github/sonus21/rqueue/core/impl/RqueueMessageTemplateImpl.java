@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
@@ -342,5 +343,20 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   @Override
   public Long removeElementFromZset(String zsetName, RqueueMessage rqueueMessage) {
     return super.removeFromZset(zsetName, rqueueMessage);
+  }
+
+  @Override
+  public Optional<RqueueMessage> findFirstElementFromList(String name) {
+    return readFromList(name, 0, 0).stream().findFirst();
+  }
+
+  @Override
+  public Optional<RqueueMessage> findFirstElementFromZset(String name) {
+    return readFromZset(name, 0, 0).stream().findFirst();
+  }
+
+  @Override
+  public Optional<TypedTuple<RqueueMessage>> findFirstElementFromZsetWithScore(String name) {
+    return readFromZsetWithScore(name, 0, 0).stream().findFirst();
   }
 }
