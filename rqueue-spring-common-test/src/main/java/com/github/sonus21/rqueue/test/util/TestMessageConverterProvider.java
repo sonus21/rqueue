@@ -16,14 +16,14 @@
 
 package com.github.sonus21.rqueue.test.util;
 
+import com.github.sonus21.rqueue.converter.JsonMessageConverter;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
 public class TestMessageConverterProvider implements MessageConverterProvider {
 
   @Override
   public MessageConverter getConverter() {
-    return new MappingJackson2MessageConverter();
+    return new JsonMessageConverter();
   }
 }

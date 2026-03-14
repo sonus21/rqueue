@@ -196,7 +196,7 @@ The `DefaultRqueueMessageConverter` handles serialization for most use cases, bu
 may fail if classes are not shared between producing and consuming applications. To 
 avoid shared dependencies, consider using JSON-based converters like 
 `com.github.sonus21.rqueue.converter.JsonMessageConverter` or Spring's 
-`MappingJackson2MessageConverter`. These serialize payloads into JSON, improving 
+`JacksonJsonMessageConverter`. These serialize payloads into JSON, improving 
 interoperability.
 
 Other serialization formats like MessagePack or Protocol Buffers (ProtoBuf) can also 
@@ -208,5 +208,4 @@ be implemented based on your requirements.
   immediately if processing fails, before it is moved back to the queue for a 
   subsequent poll. The default value is `1`. If increased to `N`, the message will 
   be retried `N` times consecutively within the same polling cycle.
-
 
