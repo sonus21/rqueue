@@ -269,8 +269,8 @@ Micrometer based dashboard for queue
 
 ## Status
 
-Rqueue is stable and production ready, it's processing 100K+ messages daily in production
-environment.
+Rqueue is stable and production ready, processing millions of messages daily in production
+environments.
 **Some of the Rqueue Users**
 
 <a href="https://airtel.africa" target="_blank">
