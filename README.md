@@ -1,6 +1,6 @@
 <div>
    <img  align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue-core/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
-   <h1 style="float:left">Rqueue: Redis Queue, Task Queue, Scheduled Queue for Spring and Spring Boot</h1>
+   <h1 style="float:left">Rqueue: Redis-Backed Job Queue and Scheduler for Spring and Spring Boot</h1>
 </div>
 
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
@@ -8,9 +8,10 @@
 [![Javadoc](https://javadoc.io/badge2/com.github.sonus21/rqueue-core/javadoc.svg)](https://javadoc.io/doc/com.github.sonus21/rqueue-core)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**Rqueue** is an asynchronous task executor(worker) built for spring and spring-boot framework based
-on the spring framework's messaging library backed by Redis. It can be used as message broker as
-well, where all services code is in Spring.
+**Rqueue** is a Redis-backed job queue and producer-consumer system for Spring and Spring Boot. It
+supports both producers and consumers for background jobs, scheduled tasks, and event-driven
+workflows, similar to Sidekiq or Celery, but fully integrated into the Spring programming model with
+annotation-driven APIs and minimal setup.
 
 <br/>
 
@@ -18,36 +19,40 @@ well, where all services code is in Spring.
 
 ## Features
 
-* **Instant delivery** : Instant execute this message in the background
-* **Message scheduling** : A message can be scheduled for any arbitrary period
-* **Unique message** : Unique message processing for a queue based on the message id
-* **Periodic message** : Process same message at certain interval
-* **Priority tasks** : task having some special priority like high, low, medium
-* **Message delivery** : It's guaranteed that a message is consumed **at least once**.  (Message
-  would be consumed by a worker more than once due to the failure in the underlying
-  worker/restart-process etc, otherwise exactly one delivery)
-* **Message retry** : Message would be retried automatically on application crash/failure/restart
-  etc.
-* **Automatic message serialization and deserialization**
-* **Message Multicasting** : Call multiple message listeners on every message
-* **Batch Message Polling** : Fetch multiple messages from Redis at once
-* **Metrics** : In flight messages, waiting for consumption and scheduled messages
-* **Competing Consumers** : multiple messages can be consumed in parallel by different
-  workers/listeners.
-* **Concurrency** : Concurrency of any listener can be configured
-* **Queue Priority** :
-  * Group level queue priority(weighted and strict)
-  * Sub queue priority(weighted and strict)
-* **Long execution job** : Long running jobs can check in periodically.
-* **Execution Backoff** : Exponential and fixed back off (default fixed back off)
-* **Middleware** :  Add one or more middleware, middlewares are called before listener method.
-* **Callbacks** : Callbacks for dead letter queue, discard etc
-* **Events** : 1. Bootstrap event 2. Task execution event.
-* **Redis connection** : A different redis setup can be used for Rqueue
-* **Redis cluster** : Redis cluster can be used with Lettuce client.
-* **Redis Sentinel** : Redis sentinel can be used with Rqueue.
-* **Reactive Programming** : Supports reactive Redis and spring webflux
-* **Web Dashboard** :  Web dashboard to manage a queue and queue insights including latency
+* **Job execution**
+  * Run background jobs asynchronously
+  * Schedule jobs for any future time
+  * Run periodic jobs at fixed intervals
+  * Guarantee at-least-once delivery
+  * Retry failed jobs automatically with fixed or exponential backoff
+
+* **Queues and routing**
+  * Deduplicate messages using message IDs
+  * Process priority workloads such as high, medium, and low
+  * Prioritize workloads with group-level queue priority and weighted, strict, or hard strict ordering
+  * Fan out the same message to multiple listeners
+  * Poll messages in batches for higher throughput
+
+* **Consumers and scale**
+  * Use annotation-driven listeners with Spring beans
+  * Get started with just the dependency in Spring Boot applications
+  * Run multiple competing consumers in parallel
+  * Configure listener concurrency per worker
+  * Support long-running jobs with periodic check-ins
+  * Serialize and deserialize message payloads automatically
+
+* **Operations and extensibility**
+  * Add middleware before listener execution
+  * Use callbacks for dead-letter, discard, and related flows
+  * Subscribe to bootstrap and task execution events
+  * Monitor in-flight, queued, and scheduled messages with metrics
+  * Use the built-in web dashboard for queue visibility and latency insights
+
+* **Redis and platform support**
+  * Use a separate Redis setup for Rqueue if needed
+  * Support Redis standalone, Sentinel, and Cluster setups
+  * Work with Lettuce for Redis Cluster
+  * Support reactive Redis and Spring WebFlux
 
 ### Requirements
 
@@ -318,7 +323,6 @@ signing.secretKeyRingFile=/Users/sonu/.gnupg/secring.gpg generate this as `gpg -
 
 * Please report bug,question,feature(s)
   to [issue](https://github.com/sonus21/rqueue/issues/new/choose) tracker.
-* Ask question on StackOverflow using [#rqueue](https://stackoverflow.com/tags/rqueue) tag
 
 ## Contribution
 
@@ -337,10 +341,6 @@ to familiarise yourself with the project.
 * Maven Central:
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring)
   * [https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-spring-boot-starter)
-  
-* StackOverflow: [https://stackoverflow.com/tags/rqueue](https://stackoverflow.com/tags/rqueue)
-* Discord: https://discord.gg/2hgQZXS2
-* Project Progress: [https://github.com/sonus21/rqueue/projects/3](https://github.com/sonus21/rqueue/projects/3)
 
 ## License
 

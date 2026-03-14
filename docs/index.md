@@ -6,14 +6,14 @@ description: Rqueue Redis Based Async Message Processor
 permalink: /
 ---
 
-# Rqueue | Redis Queue For Spring Framework
+# Rqueue | Redis-Backed Job Queue and Scheduler For Spring Framework
 
 {: .fs-4 }
 
-Rqueue is an asynchronous task executor (worker) built for the Spring Framework. It leverages Spring's
-messaging library and is backed by Redis. Rqueue can serve as a message broker where all service code
-remains within Spring or Spring Boot applications. It fully supports both the Spring and Spring Boot
-frameworks.
+Rqueue is a Redis-backed job queue and producer-consumer system for Spring and Spring Boot. It
+supports both producers and consumers for background jobs, scheduled tasks, and event-driven
+workflows, similar to Sidekiq or Celery, while staying fully integrated with the Spring programming
+model through annotation-driven APIs and minimal setup.
 
 {: .fs-6 .fw-300 }
 
@@ -24,29 +24,40 @@ frameworks.
 
 ## Features
 
-* **Instant Delivery**: Immediate execution of messages.
-* **Message Scheduling**: Schedule messages for any future time.
-* **Unique Message Processing**: Ensures unique message processing based on a message ID.
-* **Periodic Message Processing**: Process messages at defined intervals.
-* **Priority Tasks**: Support for task prioritization (e.g., high, medium, low).
-* **Guaranteed Delivery**: Ensures each message is consumed at least once, with automatic retries
-  in case of worker failures or restarts.
-* **Automatic Serialization**: Seamless serialization and deserialization of message payloads.
-* **Message Multicasting**: Support for multiple message listeners for a single message.
-* **Batch Polling**: Efficiently fetch multiple messages from Redis in a single operation.
-* **Metrics**: Real-time insights into in-flight, waiting, and delayed messages.
-* **Competing Consumers**: Multiple workers can consume messages from the same queue in parallel.
-* **Concurrency Control**: Configurable concurrency levels for message listeners.
-* **Queue Priority**: Supports both group-level and sub-queue level priorities.
-* **Long-Running Jobs**: Check-in mechanism to support jobs with extended execution times.
-* **Execution Backoff**: Flexible exponential and fixed backoff strategies for retries.
-* **No-Retry Strategy**: Support for explicitly disabling retries for specific tasks.
-* **Middleware**: Intercept and process messages before they reach the listener.
-* **Callbacks**: Custom handlers for messages moved to dead letter queues or discarded.
-* **Events**: Comprehensive bootstrap and task execution lifecycle events.
-* **Flexible Redis Options**: Support for standalone, Sentinel, and Cluster Redis configurations.
-* **Reactive Support**: Full integration with Reactive Redis and Spring WebFlux.
-* **Web Dashboard**: Integrated web-based interface for queue management and monitoring.
+* **Job execution**
+  * Run background jobs asynchronously
+  * Schedule jobs for any future time
+  * Run periodic jobs at fixed intervals
+  * Guarantee at-least-once delivery
+  * Retry failed jobs automatically with fixed or exponential backoff
+  * Disable retries for selected workloads when needed
+
+* **Queues and routing**
+  * Deduplicate messages using message IDs
+  * Process priority workloads such as high, medium, and low
+  * Prioritize workloads with group-level queue priority and weighted, strict, or hard strict ordering
+  * Fan out the same message to multiple listeners
+  * Poll messages in batches for higher throughput
+
+* **Consumers and scale**
+  * Use annotation-driven listeners with Spring beans
+  * Get started with just the dependency in Spring Boot applications
+  * Run multiple competing consumers in parallel
+  * Configure listener concurrency per worker
+  * Support long-running jobs with periodic check-ins
+  * Serialize and deserialize message payloads automatically
+
+* **Operations and extensibility**
+  * Add middleware before listener execution
+  * Use callbacks for dead-letter, discard, and related flows
+  * Subscribe to bootstrap and task execution events
+  * Monitor in-flight, queued, and scheduled messages with metrics
+  * Use the built-in web dashboard for queue visibility and monitoring
+
+* **Redis and platform support**
+  * Support Redis standalone, Sentinel, and Cluster setups
+  * Support reactive Redis and Spring WebFlux
+  * Keep Redis configuration flexible for different deployment models
 
 ### Requirements
 
