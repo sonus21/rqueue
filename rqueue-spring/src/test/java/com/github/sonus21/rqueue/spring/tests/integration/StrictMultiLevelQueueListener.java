@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -31,15 +31,15 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=7007",
-        "mysql.db.name=StrictMultiLevelQueueListener",
-        "max.workers.count=10",
-        "sms.queue.active=true",
-        "notification.queue.active=false",
-        "email.queue.active=false",
-        "job.queue.active=false",
-        "use.system.redis=false",
-        "priority.mode=STRICT",
+      "spring.data.redis.port=7007",
+      "mysql.db.name=StrictMultiLevelQueueListener",
+      "max.workers.count=10",
+      "sms.queue.active=true",
+      "notification.queue.active=false",
+      "email.queue.active=false",
+      "job.queue.active=false",
+      "use.system.redis=false",
+      "priority.mode=STRICT",
     })
 @SpringIntegrationTest
 class StrictMultiLevelQueueListener extends MultiLevelQueueTest {

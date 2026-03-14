@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.test.application.BaseApplication;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,7 +32,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import java.io.IOException;
 
 @PropertySource("classpath:application.properties")
 @SpringBootApplication(scanBasePackages = {"com.github.sonus21.rqueue.test"})
@@ -67,8 +67,7 @@ public class ApplicationListenerDisabled extends BaseApplication {
     }
     return new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate) {
       @Override
-      protected void startQueue(String queueName, QueueDetail queueDetail) {
-      }
+      protected void startQueue(String queueName, QueueDetail queueDetail) {}
     };
   }
 }

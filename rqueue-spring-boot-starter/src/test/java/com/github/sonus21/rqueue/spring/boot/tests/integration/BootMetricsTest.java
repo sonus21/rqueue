@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -33,13 +33,13 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=20",
-        "rqueue.scheduler.auto.start=false",
-        "spring.data.redis.port=8003",
-        "mysql.db.name=test4",
-        "rqueue.metrics.count.failure=true",
-        "rqueue.metrics.count.execution=true",
-        "sms.queue.active=true"
+      "rqueue.retry.per.poll=20",
+      "rqueue.scheduler.auto.start=false",
+      "spring.data.redis.port=8003",
+      "mysql.db.name=test4",
+      "rqueue.metrics.count.failure=true",
+      "rqueue.metrics.count.execution=true",
+      "sms.queue.active=true"
     })
 @SpringBootIntegrationTest
 @EnabledIfEnvironmentVariable(named = "CI", matches = "true")

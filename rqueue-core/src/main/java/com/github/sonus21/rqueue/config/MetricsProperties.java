@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2025 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -18,11 +18,9 @@ package com.github.sonus21.rqueue.config;
 
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;

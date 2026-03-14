@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.condition.RqueueEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -69,7 +68,6 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
       RqueueConfig rqueueConfig, RqueueMessageHandler rqueueMessageHandler) {
     return getMessageTemplate(rqueueConfig);
   }
-
 
   @Bean
   @ConditionalOnMissingBean

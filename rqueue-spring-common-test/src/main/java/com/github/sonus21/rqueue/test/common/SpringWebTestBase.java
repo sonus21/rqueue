@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -34,20 +34,20 @@ public abstract class SpringWebTestBase extends SpringTestBase {
 
   protected WebClient webClient;
   protected MockMvc mockMvc;
+
   @Autowired
   protected ObjectMapper mapper;
+
   @Autowired
   ApplicationContext applicationContext;
 
   @BeforeEach
   public void init() {
     if (reactiveEnabled) {
-      webClient =
-          WebClient.builder()
-              .clientConnector(
-                  new HttpHandlerConnector(
-                      WebHttpHandlerBuilder.applicationContext(applicationContext).build()))
-              .build();
+      webClient = WebClient.builder()
+          .clientConnector(new HttpHandlerConnector(
+              WebHttpHandlerBuilder.applicationContext(applicationContext).build()))
+          .build();
     } else {
       this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
     }

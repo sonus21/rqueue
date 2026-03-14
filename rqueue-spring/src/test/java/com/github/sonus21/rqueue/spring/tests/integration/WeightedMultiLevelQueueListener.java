@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -31,14 +31,14 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=7006",
-        "mysql.db.name=WeightedMultiLevelQueueListener",
-        "sms.queue.active=true",
-        "notification.queue.active=false",
-        "email.queue.active=false",
-        "job.queue.active=false",
-        "use.system.redis=false",
-        "priority.mode=WEIGHTED",
+      "spring.data.redis.port=7006",
+      "mysql.db.name=WeightedMultiLevelQueueListener",
+      "sms.queue.active=true",
+      "notification.queue.active=false",
+      "email.queue.active=false",
+      "job.queue.active=false",
+      "use.system.redis=false",
+      "priority.mode=WEIGHTED",
     })
 @SpringIntegrationTest
 class WeightedMultiLevelQueueListener extends MultiLevelQueueTest {

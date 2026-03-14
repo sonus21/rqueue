@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -60,32 +60,38 @@ class RqueueUtilityServiceTest extends TestBase {
 
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueMessageMetadataService messageMetadataService;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RqueueStringDao rqueueStringDao;
+
   @Mock
   private RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
+
   private RqueueUtilityService rqueueUtilityService;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
-    rqueueUtilityService =
-        new RqueueUtilityServiceImpl(
-            rqueueConfig,
-            rqueueWebConfig,
-            rqueueStringDao,
-            rqueueSystemConfigDao,
-            rqueueMessageTemplate,
-            messageMetadataService,
-            rqueueInternalPubSubChannel);
+    rqueueUtilityService = new RqueueUtilityServiceImpl(
+        rqueueConfig,
+        rqueueWebConfig,
+        rqueueStringDao,
+        rqueueSystemConfigDao,
+        rqueueMessageTemplate,
+        messageMetadataService,
+        rqueueInternalPubSubChannel);
   }
 
   @Test

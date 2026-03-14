@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -60,8 +60,7 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
    * interval of {@value #DEFAULT_MAX_INTERVAL}, multiplier of {@value #DEFAULT_MULTIPLIER} and
    * default unlimited retries.
    */
-  public ExponentialTaskExecutionBackOff() {
-  }
+  public ExponentialTaskExecutionBackOff() {}
 
   /**
    * Create an instance.
@@ -104,11 +103,10 @@ public class ExponentialTaskExecutionBackOff implements TaskExecutionBackOff {
 
   private void checkMultiplier(double multiplier) {
     if (multiplier < 1) {
-      throw new IllegalArgumentException(
-          "Invalid multiplier '"
-              + multiplier
-              + "'. Should be greater than "
-              + "or equal to 1. A multiplier of 1 is equivalent to a fixed interval.");
+      throw new IllegalArgumentException("Invalid multiplier '"
+          + multiplier
+          + "'. Should be greater than "
+          + "or equal to 1. A multiplier of 1 is equivalent to a fixed interval.");
     }
   }
 

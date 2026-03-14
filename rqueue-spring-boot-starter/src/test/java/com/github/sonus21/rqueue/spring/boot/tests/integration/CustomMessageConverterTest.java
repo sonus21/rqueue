@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -42,13 +42,13 @@ import tools.jackson.core.JacksonException;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8010",
-        "reservation.request.active=true",
-        "mysql.db.name=CustomMessageConverterTest",
-        "use.system.redis=false",
-        "monitor.enabled=true",
-        "rqueue.message.converter.provider.class=com.github.sonus21.rqueue.test.util.TestMessageConverterProvider",
+      "rqueue.retry.per.poll=1000",
+      "spring.data.redis.port=8010",
+      "reservation.request.active=true",
+      "mysql.db.name=CustomMessageConverterTest",
+      "use.system.redis=false",
+      "monitor.enabled=true",
+      "rqueue.message.converter.provider.class=com.github.sonus21.rqueue.test.util.TestMessageConverterProvider",
     })
 @SpringBootIntegrationTest
 class CustomMessageConverterTest extends BasicListenerTest {

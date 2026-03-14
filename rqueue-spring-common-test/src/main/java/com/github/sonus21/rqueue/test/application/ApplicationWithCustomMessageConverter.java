@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -54,11 +54,8 @@ public abstract class ApplicationWithCustomMessageConverter extends ApplicationB
       simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
           redisConnectionFactory);
     }
-    MessageHeaders messageHeaders =
-        new MessageHeaders(
-            Collections.singletonMap(
-                MessageHeaders.CONTENT_TYPE,
-                new MimeType("application", "json", StandardCharsets.UTF_8)));
+    MessageHeaders messageHeaders = new MessageHeaders(Collections.singletonMap(
+        MessageHeaders.CONTENT_TYPE, new MimeType("application", "json", StandardCharsets.UTF_8)));
     simpleRqueueListenerContainerFactory.setMessageHeaders(messageHeaders);
     return simpleRqueueListenerContainerFactory;
   }

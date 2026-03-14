@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -26,10 +26,9 @@ import org.aspectj.lang.annotation.Pointcut;
 @Slf4j
 public class ControllerProfiler {
 
-  @Pointcut(
-      "execution(* com.github.sonus21.rqueue.*.controller..*.*(..))||execution(* com.github.sonus21.rqueue.*.Controller.*(..))")
-  public void controller() {
-  }
+  @Pointcut("execution(* com.github.sonus21.rqueue.*.controller..*.*(..))||execution(*"
+      + " com.github.sonus21.rqueue.*.Controller.*(..))")
+  public void controller() {}
 
   @Around("controller()")
   public Object profile(ProceedingJoinPoint pjp) throws Throwable {

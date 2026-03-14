@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -65,28 +65,35 @@ import org.mockito.MockitoAnnotations;
 class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
 
   private final String queueName = "test-queue";
+
   @Mock
   private RqueueQStatsDao rqueueQStatsDao;
+
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
   @Mock
   private RqueueLockManager rqueueLockManager;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Mock
   private RqueueJobDao rqueueJobDao;
+
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   private RqueueJobMetricsAggregatorService rqueueJobMetricsAggregatorService;
 
   @BeforeEach
   public void initService() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueJobMetricsAggregatorService =
-        new RqueueJobMetricsAggregatorService(
-            rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
+    rqueueJobMetricsAggregatorService = new RqueueJobMetricsAggregatorService(
+        rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();
     doReturn(100).when(rqueueWebConfig).getAggregateEventWaitTimeInSecond();
@@ -103,29 +110,27 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
 
   private RqueueExecutionEvent generateTaskEventWithStatus(MessageStatus status) {
     double r = Math.random();
-    RqueueMessage rqueueMessage =
-        RqueueMessage.builder()
-            .queueName("test-queue")
-            .message("test")
-            .processAt(System.currentTimeMillis())
-            .queuedTime(System.nanoTime())
-            .build();
+    RqueueMessage rqueueMessage = RqueueMessage.builder()
+        .queueName("test-queue")
+        .message("test")
+        .processAt(System.currentTimeMillis())
+        .queuedTime(System.nanoTime())
+        .build();
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, status);
     messageMetadata.setTotalExecutionTime(10 + (long) r * 10000);
     rqueueMessage.setFailureCount((int) r * 10);
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
-    Job job =
-        new JobImpl(
-            rqueueConfig,
-            rqueueMessageMetadataService,
-            rqueueJobDao,
-            rqueueMessageTemplate,
-            rqueueLockManager,
-            queueDetail,
-            messageMetadata,
-            rqueueMessage,
-            null,
-            null);
+    Job job = new JobImpl(
+        rqueueConfig,
+        rqueueMessageMetadataService,
+        rqueueJobDao,
+        rqueueMessageTemplate,
+        rqueueLockManager,
+        queueDetail,
+        messageMetadata,
+        rqueueMessage,
+        null,
+        null);
     return new RqueueExecutionEvent(job);
   }
 
@@ -184,8 +189,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
         .when(rqueueLockManager)
         .acquireLock(eq("__rq::lock::" + id), anyString(), eq(Duration.ofMillis(500L)));
     List<QueueStatistics> queueStatistics = new ArrayList<>();
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           queueStatistics.add(invocation.getArgument(0));
           return null;
         })

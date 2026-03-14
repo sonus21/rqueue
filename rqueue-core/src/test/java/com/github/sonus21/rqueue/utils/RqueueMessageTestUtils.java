@@ -30,7 +30,6 @@ public class RqueueMessageTestUtils {
     return createMessage(new DefaultRqueueMessageConverter(), queueName);
   }
 
-
   public static RqueueMessage createMessage(MessageConverter messageConverter, String queue) {
     return RqueueMessageUtils.generateMessage(messageConverter, queue);
   }

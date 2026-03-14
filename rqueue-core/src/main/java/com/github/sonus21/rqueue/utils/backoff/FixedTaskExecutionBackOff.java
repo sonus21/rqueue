@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -43,8 +43,7 @@ public class FixedTaskExecutionBackOff implements TaskExecutionBackOff {
    * Create an instance with an interval of {@value #DEFAULT_INTERVAL} ms and maximum value of
    * retries.
    */
-  public FixedTaskExecutionBackOff() {
-  }
+  public FixedTaskExecutionBackOff() {}
 
   /**
    * Create an instance.

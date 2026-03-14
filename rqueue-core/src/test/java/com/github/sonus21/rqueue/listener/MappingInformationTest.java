@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -30,76 +30,71 @@ class MappingInformationTest extends TestBase {
 
   @Test
   void testToString() {
-    MappingInformation mappingInformation =
-        MappingInformation.builder()
-            .queueNames(Collections.singleton("test-queue"))
-            .active(true)
-            .build();
+    MappingInformation mappingInformation = MappingInformation.builder()
+        .queueNames(Collections.singleton("test-queue"))
+        .active(true)
+        .build();
     assertEquals("test-queue", mappingInformation.toString());
   }
 
   @Test
   void isValidNoQueue() {
-    MappingInformation mappingInformation =
-        MappingInformation.builder().active(true).queueNames(Collections.emptySet()).build();
+    MappingInformation mappingInformation = MappingInformation.builder()
+        .active(true)
+        .queueNames(Collections.emptySet())
+        .build();
     assertFalse(mappingInformation.isValid());
   }
 
   @Test
   void isValidInvalidVisibilityTimeout() {
-    MappingInformation mappingInformation =
-        MappingInformation.builder()
-            .active(true)
-            .queueNames(Collections.emptySet())
-            .visibilityTimeout(100)
-            .build();
+    MappingInformation mappingInformation = MappingInformation.builder()
+        .active(true)
+        .queueNames(Collections.emptySet())
+        .visibilityTimeout(100)
+        .build();
     assertFalse(mappingInformation.isValid());
   }
 
   @Test
   void isValid() {
-    MappingInformation mappingInformation =
-        MappingInformation.builder()
-            .active(true)
-            .queueNames(Collections.singleton("test"))
-            .visibilityTimeout(1101)
-            .build();
+    MappingInformation mappingInformation = MappingInformation.builder()
+        .active(true)
+        .queueNames(Collections.singleton("test"))
+        .visibilityTimeout(1101)
+        .build();
     assertTrue(mappingInformation.isValid());
   }
 
   @Test
   void equality() {
-    MappingInformation mappingInformation =
-        MappingInformation.builder()
-            .active(true)
-            .queueNames(Collections.singleton("test"))
-            .visibilityTimeout(1101)
-            .build();
+    MappingInformation mappingInformation = MappingInformation.builder()
+        .active(true)
+        .queueNames(Collections.singleton("test"))
+        .visibilityTimeout(1101)
+        .build();
 
-    MappingInformation mappingInformation1 =
-        MappingInformation.builder()
-            .active(false)
-            .queueNames(Collections.singleton("test"))
-            .visibilityTimeout(1201)
-            .build();
+    MappingInformation mappingInformation1 = MappingInformation.builder()
+        .active(false)
+        .queueNames(Collections.singleton("test"))
+        .visibilityTimeout(1201)
+        .build();
     assertEquals(mappingInformation, mappingInformation1);
   }
 
   @Test
   void compare() {
-    MappingInformation mappingInformation =
-        MappingInformation.builder()
-            .active(true)
-            .queueNames(Collections.singleton("test"))
-            .visibilityTimeout(1101)
-            .build();
+    MappingInformation mappingInformation = MappingInformation.builder()
+        .active(true)
+        .queueNames(Collections.singleton("test"))
+        .visibilityTimeout(1101)
+        .build();
 
-    MappingInformation mappingInformation1 =
-        MappingInformation.builder()
-            .active(false)
-            .queueNames(Collections.singleton("test"))
-            .visibilityTimeout(1201)
-            .build();
+    MappingInformation mappingInformation1 = MappingInformation.builder()
+        .active(false)
+        .queueNames(Collections.singleton("test"))
+        .visibilityTimeout(1201)
+        .build();
     assertEquals(0, mappingInformation.compareTo(mappingInformation1));
   }
 }

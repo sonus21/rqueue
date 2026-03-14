@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -101,50 +101,43 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     Long pending = stringRqueueRedisTemplate.getListSize(queueConfig.getQueueName());
     String processingQueueName = queueConfig.getProcessingQueueName();
     Long running = stringRqueueRedisTemplate.getZsetSize(processingQueueName);
-    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails =
-        newArrayList(
-            new HashMap.SimpleEntry<>(
-                NavTab.PENDING,
-                new RedisDataDetail(
-                    queueConfig.getQueueName(), DataType.LIST, pending == null ? 0 : pending)),
-            new HashMap.SimpleEntry<>(
-                NavTab.RUNNING,
-                new RedisDataDetail(
-                    processingQueueName, DataType.ZSET, running == null ? 0 : running)));
+    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList(
+        new HashMap.SimpleEntry<>(
+            NavTab.PENDING,
+            new RedisDataDetail(
+                queueConfig.getQueueName(), DataType.LIST, pending == null ? 0 : pending)),
+        new HashMap.SimpleEntry<>(
+            NavTab.RUNNING,
+            new RedisDataDetail(
+                processingQueueName, DataType.ZSET, running == null ? 0 : running)));
     String scheduledQueueName = queueConfig.getScheduledQueueName();
     Long scheduled = stringRqueueRedisTemplate.getZsetSize(scheduledQueueName);
-    queueRedisDataDetails.add(
-        new HashMap.SimpleEntry<>(
-            NavTab.SCHEDULED,
-            new RedisDataDetail(
-                scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
+    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+        NavTab.SCHEDULED,
+        new RedisDataDetail(scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
     if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
       for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
         if (!dlq.isConsumerEnabled()) {
           Long dlqSize = stringRqueueRedisTemplate.getListSize(dlq.getName());
-          queueRedisDataDetails.add(
-              new HashMap.SimpleEntry<>(
-                  NavTab.DEAD,
-                  new RedisDataDetail(
-                      dlq.getName(), DataType.LIST, dlqSize == null ? 0 : dlqSize)));
+          queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+              NavTab.DEAD,
+              new RedisDataDetail(dlq.getName(), DataType.LIST, dlqSize == null ? 0 : dlqSize)));
         } else {
           // TODO should we redirect to the queue page?
-          queueRedisDataDetails.add(
-              new HashMap.SimpleEntry<>(
-                  NavTab.DEAD, new RedisDataDetail(dlq.getName(), DataType.LIST, -1)));
+          queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+              NavTab.DEAD, new RedisDataDetail(dlq.getName(), DataType.LIST, -1)));
         }
       }
     }
     if (rqueueConfig.messageInTerminalStateShouldBeStored()
         && !StringUtils.isEmpty(queueConfig.getCompletedQueueName())) {
       Long completed = stringRqueueRedisTemplate.getZsetSize(queueConfig.getCompletedQueueName());
-      queueRedisDataDetails.add(
-          new HashMap.SimpleEntry<>(
-              NavTab.COMPLETED,
-              new RedisDataDetail(
-                  queueConfig.getCompletedQueueName(),
-                  DataType.ZSET,
-                  completed == null ? 0 : completed)));
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+          NavTab.COMPLETED,
+          new RedisDataDetail(
+              queueConfig.getCompletedQueueName(),
+              DataType.ZSET,
+              completed == null ? 0 : completed)));
     }
     return queueRedisDataDetails;
   }
@@ -210,12 +203,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       msgIdToDeleted.put(id, messageMetadata.isDeleted());
     }
     return rqueueMessages.stream()
-        .map(
-            e ->
-                rowBuilder.row(
-                    e.getValue(),
-                    msgIdToDeleted.getOrDefault(e.getValue().getId(), false),
-                    e.getScore()))
+        .map(e -> rowBuilder.row(
+            e.getValue(), msgIdToDeleted.getOrDefault(e.getValue().getId(), false), e.getScore()))
         .collect(Collectors.toList());
   }
 
@@ -256,25 +245,21 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     switch (type) {
       case ZSET:
         if (scheduledQueue) {
-          response.setRows(
-              buildRows(
-                  readFromZset(name, pageNumber, itemPerPage), new ZsetRowBuilder(true, false)));
+          response.setRows(buildRows(
+              readFromZset(name, pageNumber, itemPerPage), new ZsetRowBuilder(true, false)));
         } else if (completionQueue) {
-          response.setRows(
-              buildRows(
-                  readFromMessageMetadataStore(name, pageNumber, itemPerPage),
-                  new ZsetRowBuilder(false, true)));
+          response.setRows(buildRows(
+              readFromMessageMetadataStore(name, pageNumber, itemPerPage),
+              new ZsetRowBuilder(false, true)));
         } else {
-          response.setRows(
-              buildRows(
-                  readFromZetWithScore(name, pageNumber, itemPerPage),
-                  new ZsetRowBuilder(false, false)));
+          response.setRows(buildRows(
+              readFromZetWithScore(name, pageNumber, itemPerPage),
+              new ZsetRowBuilder(false, false)));
         }
         break;
       case LIST:
-        response.setRows(
-            buildRows(
-                readFromList(name, pageNumber, itemPerPage), new ListRowBuilder(deadLetterQueue)));
+        response.setRows(buildRows(
+            readFromList(name, pageNumber, itemPerPage), new ListRowBuilder(deadLetterQueue)));
         break;
       default:
         throw new UnknownSwitchCase(type.name());
@@ -292,11 +277,9 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       return Collections.emptyList();
     }
     return mes.stream()
-        .map(
-            e ->
-                new DefaultTypedTuple<>(
-                    Objects.requireNonNull(e.getValue()).getRqueueMessage(),
-                    (double) e.getValue().getUpdatedOn()))
+        .map(e -> new DefaultTypedTuple<>(
+            Objects.requireNonNull(e.getValue()).getRqueueMessage(),
+            (double) e.getValue().getUpdatedOn()))
         .collect(Collectors.toList());
   }
 
@@ -333,11 +316,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     } else {
       response.setHeaders(Arrays.asList("Value", "Score"));
       for (TypedTuple<String> tuple : stringRqueueRedisTemplate.zrangeWithScore(name, start, end)) {
-        tableRows.add(
-            new TableRow(
-                Arrays.asList(
-                    new TableColumn(String.valueOf(tuple.getValue())),
-                    new TableColumn(tuple.getScore()))));
+        tableRows.add(new TableRow(Arrays.asList(
+            new TableColumn(String.valueOf(tuple.getValue())), new TableColumn(tuple.getScore()))));
       }
     }
     response.setRows(tableRows);
@@ -409,21 +389,19 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {
-      result =
-          RedisUtils.executePipeLine(
-              stringRqueueRedisTemplate.getRedisTemplate(),
-              ((connection, keySerializer, valueSerializer) -> {
-                for (QueueConfig queueConfig : queueConfigs) {
-                  connection.zCard(keySerializer.serialize(queueConfig.getProcessingQueueName()));
-                }
-              }));
+      result = RedisUtils.executePipeLine(
+          stringRqueueRedisTemplate.getRedisTemplate(),
+          ((connection, keySerializer, valueSerializer) -> {
+            for (QueueConfig queueConfig : queueConfigs) {
+              connection.zCard(keySerializer.serialize(queueConfig.getProcessingQueueName()));
+            }
+          }));
     }
     rows.add(Arrays.asList("Queue", "Processing [ZSET]", "Number of Messages"));
     for (int i = 0; i < queueConfigs.size(); i++) {
       QueueConfig queueConfig = queueConfigs.get(i);
-      rows.add(
-          Arrays.asList(
-              queueConfig.getName(), queueConfig.getProcessingQueueName(), result.get(i)));
+      rows.add(Arrays.asList(
+          queueConfig.getName(), queueConfig.getProcessingQueueName(), result.get(i)));
     }
     return rows;
   }
@@ -434,14 +412,13 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {
-      result =
-          RedisUtils.executePipeLine(
-              stringRqueueRedisTemplate.getRedisTemplate(),
-              ((connection, keySerializer, valueSerializer) -> {
-                for (QueueConfig queueConfig : queueConfigs) {
-                  connection.lLen(keySerializer.serialize(queueConfig.getQueueName()));
-                }
-              }));
+      result = RedisUtils.executePipeLine(
+          stringRqueueRedisTemplate.getRedisTemplate(),
+          ((connection, keySerializer, valueSerializer) -> {
+            for (QueueConfig queueConfig : queueConfigs) {
+              connection.lLen(keySerializer.serialize(queueConfig.getQueueName()));
+            }
+          }));
     }
     rows.add(Arrays.asList("Queue", "Queue [LIST]", "Number of Messages"));
     for (int i = 0; i < queueConfigs.size(); i++) {
@@ -457,14 +434,13 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigs)) {
-      result =
-          RedisUtils.executePipeLine(
-              stringRqueueRedisTemplate.getRedisTemplate(),
-              ((connection, keySerializer, valueSerializer) -> {
-                for (QueueConfig queueConfig : queueConfigs) {
-                  connection.zCard(keySerializer.serialize(queueConfig.getScheduledQueueName()));
-                }
-              }));
+      result = RedisUtils.executePipeLine(
+          stringRqueueRedisTemplate.getRedisTemplate(),
+          ((connection, keySerializer, valueSerializer) -> {
+            for (QueueConfig queueConfig : queueConfigs) {
+              connection.zCard(keySerializer.serialize(queueConfig.getScheduledQueueName()));
+            }
+          }));
     }
     rows.add(Arrays.asList("Queue", "Scheduled [ZSET]", "Number of Messages"));
     for (int i = 0; i < queueConfigs.size(); i++) {
@@ -488,8 +464,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         String name = Constants.BLANK;
         if (i == 0
             || !queueConfig
-            .getQueueName()
-            .equals(queueConfigAndDlq.get(i - 1).getKey().getQueueName())) {
+                .getQueueName()
+                .equals(queueConfigAndDlq.get(i - 1).getKey().getQueueName())) {
           name = queueConfig.getName();
         }
         rows.add(Arrays.asList(name, entry.getValue(), result.get(j++)));
@@ -513,16 +489,15 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<List<Object>> rows = new ArrayList<>();
     List<Object> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigAndDlq)) {
-      result =
-          RedisUtils.executePipeLine(
-              stringRqueueRedisTemplate.getRedisTemplate(),
-              ((connection, keySerializer, valueSerializer) -> {
-                for (Entry<QueueConfig, String> entry : queueConfigAndDlq) {
-                  if (!entry.getValue().isEmpty()) {
-                    connection.lLen(keySerializer.serialize(entry.getValue()));
-                  }
-                }
-              }));
+      result = RedisUtils.executePipeLine(
+          stringRqueueRedisTemplate.getRedisTemplate(),
+          ((connection, keySerializer, valueSerializer) -> {
+            for (Entry<QueueConfig, String> entry : queueConfigAndDlq) {
+              if (!entry.getValue().isEmpty()) {
+                connection.lLen(keySerializer.serialize(entry.getValue()));
+              }
+            }
+          }));
     }
     rows.add(Arrays.asList("Queue", "Dead Letter Queues [LIST]", "Number of Messages"));
     addRows(result, rows, queueConfigAndDlq);
@@ -546,9 +521,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     default TableRow getRow(RqueueMessage rqueueMessage) {
       TableRow row = new TableRow(new TableColumn(rqueueMessage.getId()));
       TableColumn column = new TableColumn(rqueueMessage.toString());
-      column.setMeta(
-          Collections.singletonList(
-              new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, rqueueMessage.getId())));
+      column.setMeta(Collections.singletonList(
+          new RowColumnMeta(RowColumnMetaType.JOBS_BUTTON, rqueueMessage.getId())));
       row.addColumn(column);
       if (rqueueMessage.isPeriodic()) {
         row.addColumn(new TableColumn("Periodic(" + rqueueMessage.getPeriod() + ")Ms"));
@@ -602,19 +576,14 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     public TableRow row(RqueueMessage rqueueMessage, boolean deleted, Double score) {
       TableRow row = getRow(rqueueMessage);
       if (scheduledQueue) {
-        row.addColumn(
-            new TableColumn(
-                DateTimeUtils.milliToHumanRepresentation(
-                    rqueueMessage.getProcessAt() - currentTime)));
+        row.addColumn(new TableColumn(
+            DateTimeUtils.milliToHumanRepresentation(rqueueMessage.getProcessAt() - currentTime)));
       } else if (completionQueue) {
-        row.addColumn(
-            new TableColumn(
-                DateTimeUtils.milliToHumanRepresentation(
-                    System.currentTimeMillis() - score.longValue())));
+        row.addColumn(new TableColumn(DateTimeUtils.milliToHumanRepresentation(
+            System.currentTimeMillis() - score.longValue())));
       } else {
-        row.addColumn(
-            new TableColumn(
-                DateTimeUtils.milliToHumanRepresentation(score.longValue() - currentTime)));
+        row.addColumn(new TableColumn(
+            DateTimeUtils.milliToHumanRepresentation(score.longValue() - currentTime)));
       }
       if (!completionQueue) {
         if (!deleted) {

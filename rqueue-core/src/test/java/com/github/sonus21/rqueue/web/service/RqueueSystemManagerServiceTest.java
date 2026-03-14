@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -55,23 +55,27 @@ class RqueueSystemManagerServiceTest extends TestBase {
   private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue, 900000L);
   private final QueueConfig slowQueueConfig = slowQueueDetail.toConfig();
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RqueueStringDao rqueueStringDao;
+
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   private RqueueSystemManagerService rqueueSystemManagerService;
   private Set<String> queues;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
-    rqueueSystemManagerService =
-        new RqueueSystemManagerServiceImpl(
-            rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
+    rqueueSystemManagerService = new RqueueSystemManagerServiceImpl(
+        rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
     queues = new HashSet<>();
     queues.add(slowQueue);
     queues.add(fastQueue);
@@ -105,8 +109,7 @@ class RqueueSystemManagerServiceTest extends TestBase {
 
   @Test
   void getQueueConfigs() {
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-config::" + name;
         })
@@ -125,8 +128,7 @@ class RqueueSystemManagerServiceTest extends TestBase {
 
   @Test
   void getSortedQueueConfigs() {
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-config::" + name;
         })
@@ -136,11 +138,10 @@ class RqueueSystemManagerServiceTest extends TestBase {
     doReturn(new ArrayList<>(queues)).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
-        .findAllQConfig(
-            queues.stream()
-                .map(TestUtils::getQueueConfigKey)
-                .sorted()
-                .collect(Collectors.toList()));
+        .findAllQConfig(queues.stream()
+            .map(TestUtils::getQueueConfigKey)
+            .sorted()
+            .collect(Collectors.toList()));
     assertEquals(
         Arrays.asList(fastQueueConfig, slowQueueConfig),
         rqueueSystemManagerService.getSortedQueueConfigs());
@@ -148,8 +149,7 @@ class RqueueSystemManagerServiceTest extends TestBase {
 
   @Test
   void getQueueConfig() {
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-config::" + name;
         })

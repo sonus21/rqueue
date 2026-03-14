@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2025 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.spring.services;
 
-import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.entity.FailureDetail;
 import com.github.sonus21.rqueue.test.repository.FailureDetailRepository;
 import jakarta.persistence.EntityManager;
@@ -95,20 +94,16 @@ public class FailureDetailRepositoryImpl implements FailureDetailRepository {
   }
 
   @Override
-  public void deleteById(String s) {
-  }
+  public void deleteById(String s) {}
 
   @Override
-  public void delete(FailureDetail entity) {
-  }
+  public void delete(FailureDetail entity) {}
 
   @Override
-  public void deleteAllById(Iterable<? extends String> strings) {
-  }
+  public void deleteAllById(Iterable<? extends String> strings) {}
 
   @Override
-  public void deleteAll(Iterable<? extends FailureDetail> entities) {
-  }
+  public void deleteAll(Iterable<? extends FailureDetail> entities) {}
 
   @Override
   public void deleteAll() {

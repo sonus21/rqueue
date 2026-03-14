@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.utils;
 
-
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -25,8 +24,7 @@ public final class SerializationUtils {
 
   public static final byte[] EMPTY_ARRAY = new byte[0];
 
-  private SerializationUtils() {
-  }
+  private SerializationUtils() {}
 
   public static boolean isEmpty(byte[] bytes) {
     return bytes == null || bytes.length == 0;

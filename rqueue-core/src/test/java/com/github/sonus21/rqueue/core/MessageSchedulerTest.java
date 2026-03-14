@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -47,14 +47,19 @@ class MessageSchedulerTest extends TestBase {
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
   private final QueueDetail fastQueueDetail = TestUtils.createQueueDetail(fastQueue);
   private final Map<String, QueueDetail> queueNameToQueueDetail = new HashMap<>();
+
   @Mock
   private RqueueSchedulerConfig rqueueSchedulerConfig;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RedisMessageListenerContainer rqueueRedisMessageListenerContainer;
+
   @Mock
   private RedisTemplate<String, Long> redisTemplate;
+
   @InjectMocks
   private TestScheduledQueueMessageScheduler messageScheduler;
 

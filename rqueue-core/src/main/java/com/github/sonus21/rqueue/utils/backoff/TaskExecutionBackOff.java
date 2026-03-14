@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -47,8 +47,8 @@ public interface TaskExecutionBackOff {
    * @param throwable     the exception that has occurred
    * @return backoff in the millisecond.
    */
-  default long nextBackOff(Object message, RqueueMessage rqueueMessage, int failureCount,
-      Throwable throwable) {
+  default long nextBackOff(
+      Object message, RqueueMessage rqueueMessage, int failureCount, Throwable throwable) {
     return nextBackOff(message, rqueueMessage, failureCount);
   }
 }

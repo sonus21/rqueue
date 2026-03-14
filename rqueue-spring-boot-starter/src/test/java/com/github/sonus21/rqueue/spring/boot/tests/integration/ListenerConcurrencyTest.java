@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -34,15 +34,15 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.job.durability.in-terminal-state=0",
-        "rqueue.job.enabled=false",
-        "rqueue.retry.per.poll=1",
-        "spring.data.redis.port=8022",
-        "job.queue.active=false",
-        "notification.queue.active=false",
-        "email.queue.active=false",
-        "sms.queue.concurrency=20-40",
-        "sms.queue.active=true",
+      "rqueue.job.durability.in-terminal-state=0",
+      "rqueue.job.enabled=false",
+      "rqueue.retry.per.poll=1",
+      "spring.data.redis.port=8022",
+      "job.queue.active=false",
+      "notification.queue.active=false",
+      "email.queue.active=false",
+      "sms.queue.concurrency=20-40",
+      "sms.queue.active=true",
     })
 @SpringBootIntegrationTest
 @LocalTest

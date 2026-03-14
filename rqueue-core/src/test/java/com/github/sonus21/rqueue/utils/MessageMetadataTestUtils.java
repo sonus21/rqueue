@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.utils;
 
-
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -30,8 +29,8 @@ public class MessageMetadataTestUtils {
 
   public static MessageMetadata createMessageMetadata(
       MessageConverter messageConverter, String queue) {
-    return new MessageMetadata(RqueueMessageTestUtils.createMessage(messageConverter, queue),
-        MessageStatus.ENQUEUED);
+    return new MessageMetadata(
+        RqueueMessageTestUtils.createMessage(messageConverter, queue), MessageStatus.ENQUEUED);
   }
 
   public static MessageMetadata createMessageMetadata(
@@ -41,5 +40,4 @@ public class MessageMetadataTestUtils {
         .get(0);
     return new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
   }
-
 }

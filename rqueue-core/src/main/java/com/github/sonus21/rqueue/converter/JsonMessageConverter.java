@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import com.github.sonus21.rqueue.utils.SerializationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 import tools.jackson.core.JacksonException;
@@ -37,7 +36,7 @@ import tools.jackson.databind.ObjectMapper;
  * <p>Target class is null till the time method arguments are not resolved, once method arguments
  * are resolved then it will become non-null.
  *
- * @see JacksonJsonMessageConverter
+ * @see org.springframework.messaging.converter.JacksonJsonMessageConverter
  */
 @Slf4j
 public class JsonMessageConverter implements MessageConverter {

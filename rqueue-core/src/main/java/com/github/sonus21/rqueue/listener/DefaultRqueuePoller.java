@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -81,7 +81,9 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
     if (Objects.isNull(lastNotAvailableAt)) {
       lastNotAvailableAt = System.currentTimeMillis();
     } else if (System.currentTimeMillis() - lastNotAvailableAt > maxNotAvailableDelay) {
-      log(Level.ERROR, "deadlock?? frozen?? stuck?? No Threads are available in last {}",
+      log(
+          Level.ERROR,
+          "deadlock?? frozen?? stuck?? No Threads are available in last {}",
           null,
           Duration.ofMillis(maxNotAvailableDelay));
     }

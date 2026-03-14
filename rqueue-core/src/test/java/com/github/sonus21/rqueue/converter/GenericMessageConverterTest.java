@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -88,16 +88,14 @@ class GenericMessageConverterTest extends TestBase {
 
   @Test
   void toMessageSet() {
-    assertNull(
-        genericMessageConverter.toMessage(
-            Collections.singleton("Foo"), RqueueMessageHeaders.emptyMessageHeaders()));
+    assertNull(genericMessageConverter.toMessage(
+        Collections.singleton("Foo"), RqueueMessageHeaders.emptyMessageHeaders()));
   }
 
   @Test
   void toMessageEmptyList() {
-    assertNull(
-        genericMessageConverter.toMessage(
-            Collections.emptyList(), RqueueMessageHeaders.emptyMessageHeaders()));
+    assertNull(genericMessageConverter.toMessage(
+        Collections.emptyList(), RqueueMessageHeaders.emptyMessageHeaders()));
   }
 
   @Test
@@ -227,8 +225,7 @@ class GenericMessageConverterTest extends TestBase {
   @Test
   @Disabled
   void foo() {
-    MappingRegistrar<?> m = new MappingRegistrar<MultiGenericTestDataSameType<String>>() {
-    };
+    MappingRegistrar<?> m = new MappingRegistrar<MultiGenericTestDataSameType<String>>() {};
     m.seeIt();
     MultiGenericTestDataSameType<String> m2 = new MultiGenericTestDataSameType<>();
     m2.seeIt();
@@ -328,10 +325,9 @@ class GenericMessageConverterTest extends TestBase {
 
       if (type instanceof TypeVariable) {
         Type[] bounds = ((TypeVariable<?>) type).getBounds();
-        String s =
-            Arrays.stream(bounds)
-                .map(Type::getTypeName)
-                .collect(Collectors.joining(", ", "[", "]"));
+        String s = Arrays.stream(bounds)
+            .map(Type::getTypeName)
+            .collect(Collectors.joining(", ", "[", "]"));
         System.out.print(s);
       }
 

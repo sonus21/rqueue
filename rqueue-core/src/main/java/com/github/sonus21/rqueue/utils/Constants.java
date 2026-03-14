@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -56,8 +56,7 @@ public final class Constants {
   public static final String QUEUE_CRUD_LOCK_KEY_PREFIX = "q-crud::";
   public static final String MESSAGE_LOCK_KEY_PREFIX = "msg::";
 
-  private Constants() {
-  }
+  private Constants() {}
 
   public static String getQueueCrudLockKey(RqueueConfig rqueueConfig, String queueName) {
     return rqueueConfig.getLockKey(QUEUE_CRUD_LOCK_KEY_PREFIX + queueName);

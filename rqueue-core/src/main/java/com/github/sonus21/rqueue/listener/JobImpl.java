@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -143,9 +143,8 @@ public class JobImpl implements Job {
 
   @Override
   public Duration getVisibilityTimeout() {
-    Long score =
-        rqueueMessageTemplate.getScore(
-            queueDetail.getProcessingQueueName(), rqueueJob.getRqueueMessage());
+    Long score = rqueueMessageTemplate.getScore(
+        queueDetail.getProcessingQueueName(), rqueueJob.getRqueueMessage());
     if (score == null || score <= 0) {
       return Duration.ZERO;
     }
@@ -341,24 +340,22 @@ public class JobImpl implements Job {
     // run in parallel due to failure)]
     if (!messageStatus.isTerminalState() || getRqueueMessage().isPeriodic()) {
       Duration duration = rqueueConfig.getMessageDurability(getRqueueMessage().getPeriod());
-      saveMessageMetadata(
-          () -> {
-            messageMetadataService.save(getMessageMetadata(), duration, false);
-            return null;
-          });
+      saveMessageMetadata(() -> {
+        messageMetadataService.save(getMessageMetadata(), duration, false);
+        return null;
+      });
     } else {
       long ttl = rqueueConfig.getMessageDurabilityInMinute();
       if (ttl <= 0 || !rqueueConfig.messageInTerminalStateShouldBeStored()) {
         this.messageMetadataService.delete(rqueueJob.getMessageMetadata().getId());
       } else {
-        saveMessageMetadata(
-            () -> {
-              messageMetadataService.saveMessageMetadataForQueue(
-                  queueDetail.getCompletedQueueName(),
-                  getMessageMetadata(),
-                  rqueueConfig.messageDurabilityInTerminalStateInMillisecond());
-              return null;
-            });
+        saveMessageMetadata(() -> {
+          messageMetadataService.saveMessageMetadataForQueue(
+              queueDetail.getCompletedQueueName(),
+              getMessageMetadata(),
+              rqueueConfig.messageDurabilityInTerminalStateInMillisecond());
+          return null;
+        });
       }
     }
     save();

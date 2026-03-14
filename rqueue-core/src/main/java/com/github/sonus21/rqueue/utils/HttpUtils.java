@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -26,8 +26,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public final class HttpUtils {
 
-  private HttpUtils() {
-  }
+  private HttpUtils() {}
 
   private static SimpleClientHttpRequestFactory getRequestFactory(RqueueConfig rqueueConfig) {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -36,10 +35,9 @@ public final class HttpUtils {
     if (StringUtils.isEmpty(rqueueConfig.getProxyHost())) {
       return requestFactory;
     }
-    Proxy proxy =
-        new Proxy(
-            rqueueConfig.getProxyType(),
-            new InetSocketAddress(rqueueConfig.getProxyHost(), rqueueConfig.getProxyPort()));
+    Proxy proxy = new Proxy(
+        rqueueConfig.getProxyType(),
+        new InetSocketAddress(rqueueConfig.getProxyHost(), rqueueConfig.getProxyPort()));
     requestFactory.setProxy(proxy);
     return requestFactory;
   }

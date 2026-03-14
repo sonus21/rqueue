@@ -50,8 +50,9 @@ frameworks.
 
 ### Requirements
 
-* Spring 5+, 6+, 7+
-* Spring Boot 2+, 3+, 4+
+* Spring 6+, 7+
+* Spring Boot 3+, 4+
+* Java 21+
 * Spring Reactive
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
@@ -80,17 +81,16 @@ Redis Cluster compatibility. Failure to do so may prevent the application from s
 ### Spring Boot
 
 {: .warning }
-Use Rqueue Spring Boot Starter 4.x for Spring Boot 4.x, 3.x for Spring Boot 3.x, 
-and 2.x for Spring Boot 2.x.
+Use Rqueue Spring Boot Starter 4.x for Spring Boot 4.x, and 3.x for Spring Boot 3.x.
 
 Download the latest version from [Maven Central][Boot Maven Central] and add the 
 dependency to your project:
 
-#### Spring Boot 2.x Setup
+#### Spring Boot 4.x Setup
 
 * Gradle
   ```groovy
-  implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'
+  implementation 'com.github.sonus21:rqueue-spring-boot-starter:4.0.0-RELEASE'
   ```
 
 * Maven
@@ -98,23 +98,7 @@ dependency to your project:
   <dependency>
       <groupId>com.github.sonus21</groupId>
       <artifactId>rqueue-spring-boot-starter</artifactId>
-      <version>2.13.1-RELEASE</version>
-  </dependency>
-  ```
-
-#### Spring Boot 3.x Setup
-
-* Gradle
-  ```groovy
-  implementation 'com.github.sonus21:rqueue-spring-boot-starter:3.1.0-RELEASE'
-  ```
-
-* Maven
-  ```xml
-  <dependency>
-      <groupId>com.github.sonus21</groupId>
-      <artifactId>rqueue-spring-boot-starter</artifactId>
-      <version>3.1.0-RELEASE</version>
+      <version>4.0.0-RELEASE</version>
   </dependency>
   ```
 
@@ -123,17 +107,16 @@ dependency to your project:
 ### Spring Framework
 
 {: .warning }
-Use Rqueue Spring 4.x for Spring Framework 7.x, 3.x for Spring Framework 6.x, 
-and 2.x for Spring Framework 5.x.
+Use Rqueue Spring 4.x for Spring Framework 7.x, and 3.x for Spring Framework 6.x.
 
 Download the latest version from [Maven Central][Maven Central] and add the 
 dependency to your project:
 
-#### Spring Framework 5.x Setup
+#### Spring Framework 7.x Setup
 
 * Gradle
   ```groovy
-  implementation 'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'
+  implementation 'com.github.sonus21:rqueue-spring:4.0.0-RELEASE'
   ```
 
 * Maven
@@ -141,23 +124,7 @@ dependency to your project:
   <dependency>
       <groupId>com.github.sonus21</groupId>
       <artifactId>rqueue-spring</artifactId>
-      <version>2.13.1-RELEASE</version>
-  </dependency>
-  ```
-
-#### Spring Framework 6.x Setup
-
-* Gradle
-  ```groovy
-  implementation 'com.github.sonus21:rqueue-spring:3.1.0-RELEASE'
-  ```
-
-* Maven
-  ```xml
-  <dependency>
-      <groupId>com.github.sonus21</groupId>
-      <artifactId>rqueue-spring</artifactId>
-      <version>3.1.0-RELEASE</version>
+      <version>4.0.0-RELEASE</version>
   </dependency>
   ```
 

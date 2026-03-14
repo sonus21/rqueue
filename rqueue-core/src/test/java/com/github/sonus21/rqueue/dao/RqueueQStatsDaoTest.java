@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -46,8 +46,10 @@ class RqueueQStatsDaoTest extends TestBase {
 
   @Mock
   private RqueueRedisTemplate<QueueStatistics> rqueueRedisTemplate;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   private RqueueQStatsDao rqueueQStatsDao;
 
   @BeforeEach
@@ -58,8 +60,7 @@ class RqueueQStatsDaoTest extends TestBase {
 
   @Test
   void findById() {
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-stat::" + name;
         })
@@ -75,17 +76,15 @@ class RqueueQStatsDaoTest extends TestBase {
 
   @Test
   void findAll() {
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-stat::" + name;
         })
         .when(rqueueConfig)
         .getQueueStatisticsKey(anyString());
-    List<String> keys =
-        Arrays.asList(
-            rqueueConfig.getQueueStatisticsKey("job"),
-            rqueueConfig.getQueueStatisticsKey("notification"));
+    List<String> keys = Arrays.asList(
+        rqueueConfig.getQueueStatisticsKey("job"),
+        rqueueConfig.getQueueStatisticsKey("notification"));
     QueueStatistics queueStatistics = new QueueStatistics();
     doReturn(Arrays.asList(null, queueStatistics)).when(rqueueRedisTemplate).mget(keys);
     assertEquals(Collections.singletonList(queueStatistics), rqueueQStatsDao.findAll(keys));
@@ -104,8 +103,7 @@ class RqueueQStatsDaoTest extends TestBase {
 
   @Test
   void save() {
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-stat::" + name;
         })

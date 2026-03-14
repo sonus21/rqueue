@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -42,11 +42,11 @@ import org.springframework.ui.ModelMap;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=7002",
-        "mysql.db.name=RqueueViewControllerTest",
-        "max.workers.count=40",
-        "notification.queue.active=false",
-        "rqueue.web.statistic.history.day=180",
+      "spring.data.redis.port=7002",
+      "mysql.db.name=RqueueViewControllerTest",
+      "max.workers.count=40",
+      "notification.queue.active=false",
+      "rqueue.web.statistic.history.day=180",
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")

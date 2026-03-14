@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -52,9 +52,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @WebAppConfiguration
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=7003",
-        "mysql.db.name=RqueueRestController",
-        "rqueue.web.enable=false"
+      "spring.data.redis.port=7003",
+      "mysql.db.name=RqueueRestController",
+      "rqueue.web.enable=false"
     })
 @SpringIntegrationTest
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
@@ -63,24 +63,23 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
   @ParameterizedTest
   @ValueSource(
       strings = {
-          "",
-          "/queues",
-          "/running",
-          "/scheduled",
-          "/dead",
-          "/pending",
-          "/utility",
-          "/queues/test-queue",
-          "/api/v1/aggregate-data-selector?type=WEEKLY",
-          "/api/v1/jobs?message-id=1234567890"
+        "",
+        "/queues",
+        "/running",
+        "/scheduled",
+        "/dead",
+        "/pending",
+        "/utility",
+        "/queues/test-queue",
+        "/api/v1/aggregate-data-selector?type=WEEKLY",
+        "/api/v1/jobs?message-id=1234567890"
       })
   void pathTester(String path) throws Exception {
-    assertNull(
-        this.mockMvc
-            .perform(get("/rqueue" + path))
-            .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
-            .andReturn()
-            .getModelAndView());
+    assertNull(this.mockMvc
+        .perform(get("/rqueue" + path))
+        .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
+        .andReturn()
+        .getModelAndView());
   }
 
   @Test
@@ -90,10 +89,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/chart")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(chartDataRequest)))
+            .perform(post("/rqueue/api/v1/chart")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(chartDataRequest)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -109,10 +107,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/queue-data")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
+            .perform(post("/rqueue/api/v1/queue-data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -127,10 +124,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/delete-queue-part")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
+            .perform(post("/rqueue/api/v1/delete-queue-part")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -144,10 +140,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/data-type")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(request)))
+            .perform(post("/rqueue/api/v1/data-type")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -161,10 +156,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/move-data")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request)))
+            .perform(post("/rqueue/api/v1/move-data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -179,10 +173,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/view-data")
-                    .content(mapper.writeValueAsBytes(dateViewRequest))
-                    .contentType(MediaType.APPLICATION_JSON))
+            .perform(post("/rqueue/api/v1/view-data")
+                .content(mapper.writeValueAsBytes(dateViewRequest))
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -196,10 +189,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/delete-queue")
-                    .content(mapper.writeValueAsBytes(request))
-                    .contentType(MediaType.APPLICATION_JSON))
+            .perform(post("/rqueue/api/v1/delete-queue")
+                .content(mapper.writeValueAsBytes(request))
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()
@@ -215,10 +207,9 @@ class RqueueWebDisabledTest extends SpringWebTestBase {
     assertEquals(
         "",
         this.mockMvc
-            .perform(
-                post("/rqueue/api/v1/delete-message")
-                    .content(mapper.writeValueAsBytes(request))
-                    .contentType(MediaType.APPLICATION_JSON))
+            .perform(post("/rqueue/api/v1/delete-message")
+                .content(mapper.writeValueAsBytes(request))
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is(HttpServletResponse.SC_SERVICE_UNAVAILABLE))
             .andReturn()
             .getResponse()

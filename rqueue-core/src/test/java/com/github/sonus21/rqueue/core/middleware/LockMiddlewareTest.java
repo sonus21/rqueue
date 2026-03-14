@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -48,25 +48,22 @@ class LockMiddlewareTest extends TestBase {
   void handleLockIsNotAcquired() throws Exception {
     AtomicInteger atomicInteger = new AtomicInteger();
     AtomicInteger releaseLockCounter = new AtomicInteger();
-    LockMiddleware lockMiddleware =
-        new LockMiddleware() {
-          @Override
-          public String acquireLock(Job job) {
-            return null;
-          }
+    LockMiddleware lockMiddleware = new LockMiddleware() {
+      @Override
+      public String acquireLock(Job job) {
+        return null;
+      }
 
-          @Override
-          public void releaseLock(Job job, String lockIdentifier) {
-            releaseLockCounter.incrementAndGet();
-          }
-        };
+      @Override
+      public void releaseLock(Job job, String lockIdentifier) {
+        releaseLockCounter.incrementAndGet();
+      }
+    };
 
-    lockMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     verify(job, times(1))
         .release(JobStatus.FAILED, LockMiddleware.REASON, lockMiddleware.releaseIn(job));
     assertEquals(1, releaseLockCounter.get());
@@ -77,26 +74,23 @@ class LockMiddlewareTest extends TestBase {
   void handleLockIsAcquired() throws Exception {
     AtomicInteger atomicInteger = new AtomicInteger();
     AtomicInteger releaseLockCounter = new AtomicInteger();
-    LockMiddleware lockMiddleware =
-        new LockMiddleware() {
-          @Override
-          public String acquireLock(Job job) {
-            return "test-lock";
-          }
+    LockMiddleware lockMiddleware = new LockMiddleware() {
+      @Override
+      public String acquireLock(Job job) {
+        return "test-lock";
+      }
 
-          @Override
-          public void releaseLock(Job job, String lockIdentifier) {
-            releaseLockCounter.incrementAndGet();
-            assertEquals(lockIdentifier, "test-lock");
-          }
-        };
+      @Override
+      public void releaseLock(Job job, String lockIdentifier) {
+        releaseLockCounter.incrementAndGet();
+        assertEquals(lockIdentifier, "test-lock");
+      }
+    };
 
-    lockMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     verifyNoInteractions(job);
     assertEquals(1, releaseLockCounter.get());
     assertEquals(1, atomicInteger.get());
@@ -106,31 +100,28 @@ class LockMiddlewareTest extends TestBase {
   void handleLockIsNotAcquireReleaseIn() throws Exception {
     AtomicInteger atomicInteger = new AtomicInteger();
     AtomicInteger releaseLockCounter = new AtomicInteger();
-    LockMiddleware lockMiddleware =
-        new LockMiddleware() {
-          @Override
-          public String acquireLock(Job job) {
-            return null;
-          }
+    LockMiddleware lockMiddleware = new LockMiddleware() {
+      @Override
+      public String acquireLock(Job job) {
+        return null;
+      }
 
-          @Override
-          public void releaseLock(Job job, String lockIdentifier) {
-            releaseLockCounter.incrementAndGet();
-            assertNull(lockIdentifier);
-          }
+      @Override
+      public void releaseLock(Job job, String lockIdentifier) {
+        releaseLockCounter.incrementAndGet();
+        assertNull(lockIdentifier);
+      }
 
-          @Override
-          public Duration releaseIn(Job job) {
-            return Duration.ofMinutes(10);
-          }
-        };
+      @Override
+      public Duration releaseIn(Job job) {
+        return Duration.ofMinutes(10);
+      }
+    };
 
-    lockMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     verify(job, times(1)).release(JobStatus.FAILED, LockMiddleware.REASON, Duration.ofMinutes(10));
     assertEquals(1, releaseLockCounter.get());
     assertEquals(0, atomicInteger.get());

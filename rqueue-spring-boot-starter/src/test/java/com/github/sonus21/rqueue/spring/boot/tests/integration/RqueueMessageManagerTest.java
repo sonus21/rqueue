@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -37,9 +37,9 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "use.system.redis=false",
-        "spring.data.redis.port=8014",
-        "monitor.enabled=true",
+      "use.system.redis=false",
+      "spring.data.redis.port=8014",
+      "monitor.enabled=true",
     })
 @SpringBootIntegrationTest
 @Tag("local")
@@ -57,12 +57,10 @@ class RqueueMessageManagerTest extends SpringTestBase {
         30_000L,
         500L,
         "all messages to be deleted",
-        () -> {
-        });
+        () -> {});
     TimeoutUtils.waitFor(
-        () ->
-            CollectionUtils.isEmpty(
-                stringRqueueRedisTemplate.getRedisTemplate().keys("__rq::m-mdata::*")),
+        () -> CollectionUtils.isEmpty(
+            stringRqueueRedisTemplate.getRedisTemplate().keys("__rq::m-mdata::*")),
         15_000L,
         "metadata deletion");
   }

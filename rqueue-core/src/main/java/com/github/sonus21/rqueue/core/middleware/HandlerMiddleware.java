@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -38,15 +38,14 @@ public class HandlerMiddleware implements Middleware {
   public void handle(Job job, Callable<Void> next) throws Exception {
     Execution execution = job.getLatestExecution();
     RqueueMessage rqueueMessage = job.getRqueueMessage();
-    Message<?> message =
-        MessageBuilder.createMessage(
-            rqueueMessage.getMessage(),
-            buildMessageHeaders(
-                job.getQueueDetail().getName(),
-                rqueueMessage,
-                job,
-                execution,
-                rqueueMessage.getMessageHeaders()));
+    Message<?> message = MessageBuilder.createMessage(
+        rqueueMessage.getMessage(),
+        buildMessageHeaders(
+            job.getQueueDetail().getName(),
+            rqueueMessage,
+            job,
+            execution,
+            rqueueMessage.getMessageHeaders()));
     rqueueMessageHandler.handleMessage(message);
   }
 }

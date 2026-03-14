@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -58,18 +58,16 @@ public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBas
 
   protected void init() throws IOException {
     final BootstrapRedis bootstrapRedis =
-        Javanna.createAnnotation(
-            BootstrapRedis.class,
-            new HashMap<String, Object>() {
-              private static final long serialVersionUID = -786051705319430908L;
+        Javanna.createAnnotation(BootstrapRedis.class, new HashMap<String, Object>() {
+          private static final long serialVersionUID = -786051705319430908L;
 
-              {
-                put("port", redisPort);
-                put("monitorRedis", monitoringEnabled);
-                put("monitorThreadsCount", monitorThreads);
-                put("systemRedis", useSystemRedis);
-              }
-            });
+          {
+            put("port", redisPort);
+            put("monitorRedis", monitoringEnabled);
+            put("monitorThreadsCount", monitorThreads);
+            put("systemRedis", useSystemRedis);
+          }
+        });
     super.bootstrap(bootstrapRedis);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -61,23 +61,27 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
   private final QueueConfig fastQueueConfig = fastQueueDetail.toConfig();
   private final QueueDetail normalQueueDetail =
       TestUtils.createQueueDetail(normalQueue, 3, 100000L, "normal-dlq");
+
   @Mock
   private RqueueStringDao rqueueStringDao;
+
   @Mock
   private RqueueSystemConfigDao rqueueSystemConfigDao;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   private RqueueSystemManagerServiceImpl rqueueSystemManagerService;
 
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
-    rqueueSystemManagerService =
-        new RqueueSystemManagerServiceImpl(
-            rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
+    rqueueSystemManagerService = new RqueueSystemManagerServiceImpl(
+        rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
     fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
     EndpointRegistry.register(slowQueueDetail);
@@ -116,16 +120,14 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
   @Test
   void onApplicationEventStartCreateAllQueueConfigs() {
     doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-config::" + name;
         })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           if (slowQueue.equals(invocation.getArgument(1))) {
             assertEquals(fastQueue, invocation.getArgument(2));
           } else if (fastQueue.equals(invocation.getArgument(1))) {
@@ -137,8 +139,7 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
         })
         .when(rqueueStringDao)
         .appendToSet(eq(TestUtils.getQueuesKey()), any());
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           List<QueueConfig> queueConfigs = invocation.getArgument(0);
           assertEquals(2, queueConfigs.size());
           int slowId = 0, fastId = 1;
@@ -161,35 +162,30 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
   void onApplicationEventStartCreateAndUpdateQueueConfigs() {
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
     EndpointRegistry.register(normalQueueDetail);
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-config::" + name;
         })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
-    QueueConfig fastQueueConfig =
-        TestUtils.createQueueConfig(
-            fastQueue, fastQueueDetail.getNumRetry(), fastQueueDetail.getVisibilityTimeout(), null);
+    QueueConfig fastQueueConfig = TestUtils.createQueueConfig(
+        fastQueue, fastQueueDetail.getNumRetry(), fastQueueDetail.getVisibilityTimeout(), null);
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(anyCollection());
 
-    QueueConfig expectedFastQueueConfig =
-        TestUtils.createQueueConfig(
-            fastQueue,
-            fastQueueDetail.getNumRetry(),
-            fastQueueDetail.getVisibilityTimeout(),
-            fastQueueDetail.getDeadLetterQueueName());
-    QueueConfig normalQueueConfig =
-        TestUtils.createQueueConfig(
-            normalQueue,
-            normalQueueDetail.getNumRetry(),
-            normalQueueDetail.getVisibilityTimeout(),
-            normalQueueDetail.getDeadLetterQueueName());
+    QueueConfig expectedFastQueueConfig = TestUtils.createQueueConfig(
+        fastQueue,
+        fastQueueDetail.getNumRetry(),
+        fastQueueDetail.getVisibilityTimeout(),
+        fastQueueDetail.getDeadLetterQueueName());
+    QueueConfig normalQueueConfig = TestUtils.createQueueConfig(
+        normalQueue,
+        normalQueueDetail.getNumRetry(),
+        normalQueueDetail.getVisibilityTimeout(),
+        normalQueueDetail.getDeadLetterQueueName());
 
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           List<QueueConfig> queueConfigs = invocation.getArgument(0);
           assertEquals(2, queueConfigs.size());
           int normalId = 0, fastId = 1;

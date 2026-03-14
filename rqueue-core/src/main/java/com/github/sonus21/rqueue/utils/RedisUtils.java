@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -34,40 +34,37 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public final class RedisUtils {
 
   @SuppressWarnings({"java:S1104", "java:S1444"})
-  public static RedisTemplateProvider redisTemplateProvider =
-      new RedisTemplateProvider() {
-        @Override
-        public <V> RedisTemplate<String, V> getRedisTemplate(
-            RedisConnectionFactory redisConnectionFactory) {
-          RedisTemplate<String, V> redisTemplate = new RedisTemplate<>();
-          StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-          RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
-          redisTemplate.setConnectionFactory(redisConnectionFactory);
-          redisTemplate.setKeySerializer(stringRedisSerializer);
-          redisTemplate.setValueSerializer(rqueueRedisSerializer);
-          redisTemplate.setHashKeySerializer(stringRedisSerializer);
-          redisTemplate.setHashValueSerializer(rqueueRedisSerializer);
-          return redisTemplate;
-        }
-      };
+  public static RedisTemplateProvider redisTemplateProvider = new RedisTemplateProvider() {
+    @Override
+    public <V> RedisTemplate<String, V> getRedisTemplate(
+        RedisConnectionFactory redisConnectionFactory) {
+      RedisTemplate<String, V> redisTemplate = new RedisTemplate<>();
+      StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+      RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
+      redisTemplate.setConnectionFactory(redisConnectionFactory);
+      redisTemplate.setKeySerializer(stringRedisSerializer);
+      redisTemplate.setValueSerializer(rqueueRedisSerializer);
+      redisTemplate.setHashKeySerializer(stringRedisSerializer);
+      redisTemplate.setHashValueSerializer(rqueueRedisSerializer);
+      return redisTemplate;
+    }
+  };
 
   @SuppressWarnings({"java:S1104", "java:S1444"})
-  public static RedisSerializationContextProvider redisSerializationContextProvider =
-      () -> {
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
-        RedisSerializationContextBuilder<String, Object> redisSerializationContextBuilder =
-            RedisSerializationContext.newSerializationContext();
-        redisSerializationContextBuilder =
-            redisSerializationContextBuilder.key(stringRedisSerializer);
-        redisSerializationContextBuilder =
-            redisSerializationContextBuilder.value(rqueueRedisSerializer);
-        redisSerializationContextBuilder =
-            redisSerializationContextBuilder.hashKey(stringRedisSerializer);
-        redisSerializationContextBuilder =
-            redisSerializationContextBuilder.hashValue(rqueueRedisSerializer);
-        return redisSerializationContextBuilder.build();
-      };
+  public static RedisSerializationContextProvider redisSerializationContextProvider = () -> {
+    StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+    RqueueRedisSerializer rqueueRedisSerializer = new RqueueRedisSerializer();
+    RedisSerializationContextBuilder<String, Object> redisSerializationContextBuilder =
+        RedisSerializationContext.newSerializationContext();
+    redisSerializationContextBuilder = redisSerializationContextBuilder.key(stringRedisSerializer);
+    redisSerializationContextBuilder =
+        redisSerializationContextBuilder.value(rqueueRedisSerializer);
+    redisSerializationContextBuilder =
+        redisSerializationContextBuilder.hashKey(stringRedisSerializer);
+    redisSerializationContextBuilder =
+        redisSerializationContextBuilder.hashValue(rqueueRedisSerializer);
+    return redisSerializationContextBuilder.build();
+  };
 
   @SuppressWarnings({"java:S1104", "java:S1444"})
   public static ReactiveRedisTemplateProvider reactiveRedisTemplateProvider =
@@ -80,8 +77,7 @@ public final class RedisUtils {
         }
       };
 
-  private RedisUtils() {
-  }
+  private RedisUtils() {}
 
   public static <V> RedisTemplate<String, V> getRedisTemplate(
       RedisConnectionFactory redisConnectionFactory) {
@@ -96,16 +92,13 @@ public final class RedisUtils {
   @SuppressWarnings("unchecked")
   public static <V> List<Object> executePipeLine(
       RedisTemplate<String, V> template, RedisPipelineCallback callback) {
-    return template.executePipelined(
-        (RedisCallback<Object>)
-            connection -> {
-              RedisSerializer<String> keySerializer =
-                  (RedisSerializer<String>) template.getKeySerializer();
-              RedisSerializer<Object> valueSerializer =
-                  (RedisSerializer<Object>) template.getValueSerializer();
-              callback.doInRedis(connection, keySerializer, valueSerializer);
-              return null;
-            });
+    return template.executePipelined((RedisCallback<Object>) connection -> {
+      RedisSerializer<String> keySerializer = (RedisSerializer<String>) template.getKeySerializer();
+      RedisSerializer<Object> valueSerializer =
+          (RedisSerializer<Object>) template.getValueSerializer();
+      callback.doInRedis(connection, keySerializer, valueSerializer);
+      return null;
+    });
   }
 
   public static void setVersion(
@@ -131,12 +124,10 @@ public final class RedisUtils {
     if (dbVersion > 0) {
       return dbVersion;
     }
-    List<Object> result =
-        RedisUtils.executePipeLine(
-            rqueueRedisTemplate.getRedisTemplate(),
-            ((connection, keySerializer, valueSerializer) ->
-                connection.eval(
-                    "return #redis.pcall('keys', 'rqueue-*')".getBytes(), ReturnType.INTEGER, 0)));
+    List<Object> result = RedisUtils.executePipeLine(
+        rqueueRedisTemplate.getRedisTemplate(),
+        ((connection, keySerializer, valueSerializer) -> connection.eval(
+            "return #redis.pcall('keys', 'rqueue-*')".getBytes(), ReturnType.INTEGER, 0)));
     Long count = (Long) result.get(0);
     if (count != null && count > 0L) {
       rqueueRedisTemplate.set(versionKey, 1);

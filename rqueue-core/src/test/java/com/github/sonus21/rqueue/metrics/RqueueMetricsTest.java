@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -44,8 +44,7 @@ import org.mockito.MockitoAnnotations;
 @CoreUnitTest
 class RqueueMetricsTest extends TestBase {
 
-  private final MetricsProperties metricsProperties = new MetricsProperties() {
-  };
+  private final MetricsProperties metricsProperties = new MetricsProperties() {};
   private final String simpleQueue = "simple-queue";
   private final String scheduledQueue = "scheduled-queue";
   private final String deadLetterQueue = "dlq";
@@ -53,8 +52,10 @@ class RqueueMetricsTest extends TestBase {
   private final QueueDetail scheduledQueueDetail = TestUtils.createQueueDetail(scheduledQueue);
   private final QueueDetail simpleQueueDetail =
       TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
+
   @Mock
   private RqueueStringDao rqueueStringDao;
+
   @Mock
   private QueueCounter queueCounter;
 
@@ -76,7 +77,9 @@ class RqueueMetricsTest extends TestBase {
     Tags tags = Tags.of("queue", name);
     assertEquals(queueSize, registry.get("queue.size").tags(tags).gauge().value(), 0);
     assertEquals(
-        processingQueueSize, registry.get("processing.queue.size").tags(tags).gauge().value(), 0);
+        processingQueueSize,
+        registry.get("processing.queue.size").tags(tags).gauge().value(),
+        0);
     try {
       double val = registry.get("dead.letter.queue.size").tags(tags).gauge().value();
       assertEquals(deadLetterQueueCount, val, 0);
@@ -122,8 +125,7 @@ class RqueueMetricsTest extends TestBase {
 
   @Test
   void queueStatistics() throws IllegalAccessException {
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String zsetName = invocation.getArgument(0);
           if (zsetName.equals(scheduledQueueDetail.getScheduledQueueName())) {
             return 5L;
@@ -139,8 +141,7 @@ class RqueueMetricsTest extends TestBase {
         .when(rqueueStringDao)
         .getSortedSetSize(anyString());
 
-    doAnswer(
-        invocation -> {
+    doAnswer(invocation -> {
           String listName = invocation.getArgument(0);
           if (listName.equals(simpleQueueDetail.getQueueName())) {
             return 100L;

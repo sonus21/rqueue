@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -46,8 +46,10 @@ class RedisLockMiddlewareTest extends TestBase {
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final String key = "job-xxx";
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
   @Mock
   private Job job;
+
   @Mock
   private RqueueRedisTemplate<String> redisTemplate;
 
@@ -60,67 +62,58 @@ class RedisLockMiddlewareTest extends TestBase {
   @Test
   void handleLockCouldNotAcquireLock() throws Exception {
     doReturn(queueDetail).when(job).getQueueDetail();
-    RedisLockMiddleware lockMiddleware =
-        new RedisLockMiddleware(redisTemplate) {
-          @Override
-          protected String getLockIdentifier(Job job) {
-            return job.getId();
-          }
-        };
+    RedisLockMiddleware lockMiddleware = new RedisLockMiddleware(redisTemplate) {
+      @Override
+      protected String getLockIdentifier(Job job) {
+        return job.getId();
+      }
+    };
     doReturn(false).when(redisTemplate).setIfAbsent(key, "1", queueDetail.visibilityDuration());
-    lockMiddleware.handle(
-        job,
-        () -> {
-          fail("lock is acquired");
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      fail("lock is acquired");
+      return null;
+    });
     verify(redisTemplate, times(0)).delete(key);
   }
 
   @Test
   void handleAcquireLock() throws Exception {
     doReturn(queueDetail).when(job).getQueueDetail();
-    RedisLockMiddleware lockMiddleware =
-        new RedisLockMiddleware(redisTemplate) {
-          @Override
-          protected String getLockIdentifier(Job job) {
-            return job.getId();
-          }
-        };
+    RedisLockMiddleware lockMiddleware = new RedisLockMiddleware(redisTemplate) {
+      @Override
+      protected String getLockIdentifier(Job job) {
+        return job.getId();
+      }
+    };
     doReturn(true).when(redisTemplate).setIfAbsent(key, "1", queueDetail.visibilityDuration());
     AtomicInteger atomicInteger = new AtomicInteger();
-    lockMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     verify(redisTemplate, times(1)).delete(key);
     assertEquals(1, atomicInteger.get());
   }
 
   @Test
   void lockCouldNotAcquiredWithDifferentReleaseTime() throws Exception {
-    RedisLockMiddleware lockMiddleware =
-        new RedisLockMiddleware(redisTemplate) {
-          @Override
-          protected String getLockIdentifier(Job job) {
-            return job.getId();
-          }
+    RedisLockMiddleware lockMiddleware = new RedisLockMiddleware(redisTemplate) {
+      @Override
+      protected String getLockIdentifier(Job job) {
+        return job.getId();
+      }
 
-          @Override
-          protected Duration getLockDuration(Job job) {
-            return Duration.ofSeconds(5);
-          }
-        };
+      @Override
+      protected Duration getLockDuration(Job job) {
+        return Duration.ofSeconds(5);
+      }
+    };
     doReturn(true).when(redisTemplate).setIfAbsent(key, "1", Duration.ofSeconds(5));
     AtomicInteger atomicInteger = new AtomicInteger();
-    lockMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     verify(redisTemplate, times(1)).delete(key);
     assertEquals(1, atomicInteger.get());
   }
@@ -132,15 +125,13 @@ class RedisLockMiddlewareTest extends TestBase {
     AtomicInteger lockCounter = new AtomicInteger();
     doReturn(queueDetail).when(job).getQueueDetail();
 
-    RedisLockMiddleware lockMiddleware =
-        new RedisLockMiddleware(redisTemplate) {
-          @Override
-          protected String getLockIdentifier(Job job) {
-            return job.getId();
-          }
-        };
-    doAnswer(
-        invocation -> {
+    RedisLockMiddleware lockMiddleware = new RedisLockMiddleware(redisTemplate) {
+      @Override
+      protected String getLockIdentifier(Job job) {
+        return job.getId();
+      }
+    };
+    doAnswer(invocation -> {
           int val = lockCounter.incrementAndGet();
           if (val == 1) {
             return Boolean.TRUE;
@@ -149,29 +140,23 @@ class RedisLockMiddlewareTest extends TestBase {
         })
         .when(redisTemplate)
         .setIfAbsent(key, "1", queueDetail.visibilityDuration());
-    lockMiddleware.handle(
-        job,
-        () -> {
-          executor.submit(
-              () -> {
-                atomicInteger.incrementAndGet();
-                TimeoutUtils.sleep(5 * Constants.ONE_MILLI);
-                terminationCounter.incrementAndGet();
-              });
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      executor.submit(() -> {
+        atomicInteger.incrementAndGet();
+        TimeoutUtils.sleep(5 * Constants.ONE_MILLI);
+        terminationCounter.incrementAndGet();
+      });
+      return null;
+    });
 
-    lockMiddleware.handle(
-        job,
-        () -> {
-          executor.submit(
-              () -> {
-                atomicInteger.incrementAndGet();
-                TimeoutUtils.sleep(5 * Constants.ONE_MILLI);
-                terminationCounter.incrementAndGet();
-              });
-          return null;
-        });
+    lockMiddleware.handle(job, () -> {
+      executor.submit(() -> {
+        atomicInteger.incrementAndGet();
+        TimeoutUtils.sleep(5 * Constants.ONE_MILLI);
+        terminationCounter.incrementAndGet();
+      });
+      return null;
+    });
     TimeoutUtils.waitFor(() -> lockCounter.get() == 2, "both lock method to be called");
     TimeoutUtils.waitFor(() -> atomicInteger.get() >= 1, "method to be executed");
     TimeoutUtils.waitFor(() -> terminationCounter.get() >= 1, "handler to terminate");

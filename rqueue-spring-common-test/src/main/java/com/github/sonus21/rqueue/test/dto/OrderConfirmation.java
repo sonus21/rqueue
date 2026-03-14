@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -37,9 +37,8 @@ public class OrderConfirmation extends BaseQueueMessage {
   private long timestamp;
 
   public static OrderConfirmation newInstance() {
-    OrderConfirmation orderConfirmation =
-        new OrderConfirmation(
-            UUID.randomUUID().toString(), UUID.randomUUID().toString(), System.currentTimeMillis());
+    OrderConfirmation orderConfirmation = new OrderConfirmation(
+        UUID.randomUUID().toString(), UUID.randomUUID().toString(), System.currentTimeMillis());
     orderConfirmation.setId(UUID.randomUUID().toString());
     return orderConfirmation;
   }

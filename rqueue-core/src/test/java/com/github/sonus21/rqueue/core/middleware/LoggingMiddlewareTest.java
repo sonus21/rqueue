@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -45,12 +45,10 @@ class LoggingMiddlewareTest extends TestBase {
     LoggingMiddleware loggingMiddleware = new LoggingMiddleware();
     doReturn(RqueueMessageTestUtils.createMessage("test-queue")).when(job).getRqueueMessage();
     AtomicInteger atomicInteger = new AtomicInteger();
-    loggingMiddleware.handle(
-        job,
-        () -> {
-          atomicInteger.incrementAndGet();
-          return null;
-        });
+    loggingMiddleware.handle(job, () -> {
+      atomicInteger.incrementAndGet();
+      return null;
+    });
     assertEquals(1, atomicInteger.get());
   }
 }

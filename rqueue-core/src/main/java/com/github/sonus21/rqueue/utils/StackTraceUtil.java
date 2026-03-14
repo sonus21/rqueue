@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Sonu Kumar
+ * Copyright (c) 2022-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -31,17 +31,16 @@ public final class StackTraceUtil {
     for (int i = 2; printed < frameCount && i < elements.length; i++) {
       StackTraceElement element = elements[i];
       String className = element.getClassName();
-      if (className.startsWith("org.springframework.aop") ||
-          className.startsWith("org.springframework.cglib.proxy")) {
+      if (className.startsWith("org.springframework.aop")
+          || className.startsWith("org.springframework.cglib.proxy")) {
         continue;
       }
       if (element.getMethodName().startsWith("invoke")) {
         continue;
       }
-      log.info("{} {} {}", element.getClassName(), element.getMethodName(),
-          element.getLineNumber());
+      log.info(
+          "{} {} {}", element.getClassName(), element.getMethodName(), element.getLineNumber());
       printed += 1;
     }
   }
-
 }

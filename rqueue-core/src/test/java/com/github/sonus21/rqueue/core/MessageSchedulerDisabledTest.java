@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -48,10 +48,13 @@ class MessageSchedulerDisabledTest extends TestBase {
 
   private final String slowQueue = "slow-queue";
   private final QueueDetail slowQueueDetail = TestUtils.createQueueDetail(slowQueue);
+
   @Mock
   private RqueueSchedulerConfig rqueueSchedulerConfig;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   @Mock
   private RedisTemplate<String, Long> redisTemplate;
 

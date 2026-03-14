@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -70,11 +70,10 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
   }
 
   private List<String> queueKeys(QueueConfig queueConfig) {
-    List<String> keys =
-        newArrayList(
-            queueConfig.getQueueName(),
-            queueConfig.getProcessingQueueName(),
-            rqueueConfig.getQueueStatisticsKey(queueConfig.getName()));
+    List<String> keys = newArrayList(
+        queueConfig.getQueueName(),
+        queueConfig.getProcessingQueueName(),
+        rqueueConfig.getQueueStatisticsKey(queueConfig.getName()));
     keys.add(queueConfig.getScheduledQueueName());
     if (queueConfig.hasDeadLetterQueue()) {
       for (DeadLetterQueue queue : queueConfig.getDeadLetterQueues()) {

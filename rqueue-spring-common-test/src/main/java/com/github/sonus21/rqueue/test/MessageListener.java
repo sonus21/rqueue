@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.github.sonus21.rqueue.test;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -25,13 +27,6 @@ import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
 import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import jakarta.annotation.PostConstruct;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Payload;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.List;
@@ -39,9 +34,14 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import tools.jackson.core.JacksonException;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @com.github.sonus21.rqueue.annotation.MessageListener
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -50,10 +50,13 @@ public class MessageListener {
 
   @NonNull
   private final ConsumedMessageStore consumedMessageStore;
+
   @NonNull
   private final FailureManager failureManager;
+
   @NonNull
   private final RqueueConfig rqueueConfig;
+
   private ScheduledExecutorService scheduledExecutorService;
 
   @Value("${job.queue.name}")
@@ -111,7 +114,6 @@ public class MessageListener {
     public DoNotRetryException(String message) {
       super(message);
     }
-
   }
 
   public static class DoNotRetry2Exception extends Exception {
@@ -119,7 +121,6 @@ public class MessageListener {
     public DoNotRetry2Exception(String message) {
       super(message);
     }
-
   }
 
   @RqueueListener(

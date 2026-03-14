@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
-import com.github.sonus21.rqueue.exception.LockCanNotBeAcquired;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
@@ -34,7 +33,6 @@ import com.github.sonus21.rqueue.utils.Constants;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
@@ -82,9 +80,8 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
     if (rqueueMessage == null) {
       return null;
     }
-    Message<String> message =
-        MessageBuilder.createMessage(
-            rqueueMessage.getMessage(), RqueueMessageHeaders.emptyMessageHeaders());
+    Message<String> message = MessageBuilder.createMessage(
+        rqueueMessage.getMessage(), RqueueMessageHeaders.emptyMessageHeaders());
     return messageConverter.fromMessage(message, null);
   }
 

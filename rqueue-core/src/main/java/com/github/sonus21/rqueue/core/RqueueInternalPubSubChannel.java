@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -132,10 +132,9 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
       String lockKey = Constants.getQueueCrudLockKey(rqueueConfig, request.getName());
       String lockValue = UUID.randomUUID().toString();
       try {
-        boolean acquired =
-            rqueueBeanProvider
-                .getRqueueLockManager()
-                .acquireLock(lockKey, lockValue, Duration.ofMillis(100));
+        boolean acquired = rqueueBeanProvider
+            .getRqueueLockManager()
+            .acquireLock(lockKey, lockValue, Duration.ofMillis(100));
         if (acquired) {
           rqueueMessageListenerContainer.pauseUnpauseQueue(request.getName(), request.isPause());
         }

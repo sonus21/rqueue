@@ -3,7 +3,6 @@
    <h1 style="float:left">Rqueue: Redis Queue, Task Queue, Scheduled Queue for Spring and Spring Boot</h1>
 </div>
 
-[![Build Status](https://circleci.com/gh/sonus21/rqueue/tree/master.svg?style=shield)](https://circleci.com/gh/sonus21/rqueue/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.sonus21/rqueue-core)](https://repo1.maven.org/maven2/com/github/sonus21/rqueue-core)
 [![Javadoc](https://javadoc.io/badge2/com.github.sonus21/rqueue-core/javadoc.svg)](https://javadoc.io/doc/com.github.sonus21/rqueue-core)
@@ -53,7 +52,7 @@ well, where all services code is in Spring.
 ### Requirements
 
 * Spring 5+, 6+, 7+
-* Java 1.8+,17
+* Java 1.8+,17, 21
 * Spring boot 2+,3+,4+
 * Lettuce client for Redis cluster
 * Read master preference for Redis cluster
@@ -68,8 +67,8 @@ Release Version: [Maven central](https://search.maven.org/search?q=g:com.github.
 
 **NOTE:**
 
-* For spring boot 2.x use Rqueue 2.x
-* For spring boot 3.x use Rqueue 3.x
+* For Spring Boot 3.x use Rqueue 3.x
+* For Spring Boot 4.x use Rqueue 4.x
 
 Get the latest one
 from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring-boot-starter)
@@ -77,14 +76,14 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 * Add dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring-boot-starter:2.13.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring-boot-starter:4.0.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
         <groupId>com.github.sonus21</groupId>
         <artifactId>rqueue-spring-boot-starter</artifactId>
-        <version>2.13.1-RELEASE</version>
+        <version>4.0.0-RELEASE</version>
     </dependency>
     ```
 
@@ -96,9 +95,8 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 
 **NOTE**
 
-* For spring framework 5.x use rqueue-spring 2.x
-* For spring framework 6.x use rqueue-spring 3.x
-* For spring framework 7.x use rqueue-spring 4.x
+* For Spring Framework 6.x use Rqueue 3.x
+* For Spring Framework 7.x use Rqueue 4.x
 
 Get the latest one
 from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AND%20a:rqueue-spring)
@@ -106,14 +104,14 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
 * Add Dependency
   * Gradle
     ```groovy
-        implementation 'com.github.sonus21:rqueue-spring:2.13.1-RELEASE'
+        implementation 'com.github.sonus21:rqueue-spring:4.0.0-RELEASE'
     ```
   * Maven
     ```xml
      <dependency>
        <groupId>com.github.sonus21</groupId>
        <artifactId>rqueue-spring</artifactId>
-       <version>2.13.1-RELEASE</version>
+       <version>4.0.0-RELEASE</version>
      </dependency>
     ```
 * Add annotation `EnableRqueue` on application config class
@@ -329,7 +327,7 @@ gradle to start with. In root `build.gradle` file comment out spring related ver
 environment variables for Spring versions. You can use [module, class and other diagrams](https://sourcespy.com/github/sonus21rqueue/) 
 to familiarise yourself with the project.
 
-**Please format your code with Google Java formatter.**
+**Please format your code with Palantir Java Format using `./gradlew formatJava`.**
 
 ## Links
 

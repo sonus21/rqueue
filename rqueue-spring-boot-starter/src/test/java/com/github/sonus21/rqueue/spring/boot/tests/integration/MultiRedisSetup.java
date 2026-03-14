@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -31,11 +31,11 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8005",
-        "spring.data.redis2.port=8006",
-        "spring.data.redis2.host=localhost",
-        "monitor.enabled=true",
+      "rqueue.retry.per.poll=1000",
+      "spring.data.redis.port=8005",
+      "spring.data.redis2.port=8006",
+      "spring.data.redis2.host=localhost",
+      "monitor.enabled=true",
     })
 @SpringBootIntegrationTest
 class MultiRedisSetup extends RetryTests {

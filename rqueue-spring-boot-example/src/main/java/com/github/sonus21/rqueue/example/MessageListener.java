@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -32,8 +32,10 @@ import org.springframework.stereotype.Component;
 public class MessageListener {
 
   private static final Random random = new Random();
+
   @Autowired
   private RqueueMessageManager rqueueMessageManager;
+
   @Value("${job.fail.percentage:0}")
   private int percentageFailure;
 
@@ -65,19 +67,30 @@ public class MessageListener {
     execute("simple: {}", message, false);
   }
 
-  @RqueueListener(value = {"${rqueue.delay.queue}",
-      "${rqueue.delay2.queue}"}, numRetries = "${rqueue.delay.queue.retries}", visibilityTimeout = "60*60*1000")
+  @RqueueListener(
+      value = {"${rqueue.delay.queue}", "${rqueue.delay2.queue}"},
+      numRetries = "${rqueue.delay.queue.retries}",
+      visibilityTimeout = "60*60*1000")
   public void onMessage(String message) {
     execute("delay: {}", message, true);
   }
 
-  @RqueueListener(value = "job-queue", deadLetterQueue = "job-morgue", numRetries = "2", deadLetterQueueListenerEnabled = "false", concurrency = "10-20")
+  @RqueueListener(
+      value = "job-queue",
+      deadLetterQueue = "job-morgue",
+      numRetries = "2",
+      deadLetterQueueListenerEnabled = "false",
+      concurrency = "10-20")
   public void onJobMessage(Job job) {
     execute("job-queue: {}", job, true);
   }
 
-
-  @RqueueListener(value = "sch-job-queue", deadLetterQueue = "job-morgue", numRetries = "2", deadLetterQueueListenerEnabled = "false", concurrency = "1-3")
+  @RqueueListener(
+      value = "sch-job-queue",
+      deadLetterQueue = "job-morgue",
+      numRetries = "2",
+      deadLetterQueueListenerEnabled = "false",
+      concurrency = "1-3")
   public void onSchJobMessage(Job job, @Header(RqueueMessageHeaders.ID) String messageId) {
     execute("sch-job-queue: {}", job, false);
     count += 1;
@@ -86,7 +99,6 @@ public class MessageListener {
       log.info("Message {}  delete result is {}", messageId, result);
     }
   }
-
 
   @RqueueListener(value = "job-morgue", numRetries = "1", concurrency = "1-3")
   public void onJobDlqMessage(Job job) {

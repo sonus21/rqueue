@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -25,6 +25,4 @@ import org.junit.jupiter.api.Tag;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Tag("local")
-public @interface LocalTest {
-
-}
+public @interface LocalTest {}

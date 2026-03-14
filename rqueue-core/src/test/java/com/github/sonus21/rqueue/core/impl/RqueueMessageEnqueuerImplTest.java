@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -48,12 +48,16 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
+
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Mock
   private RqueueMessageTemplate messageTemplate;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
 
   @BeforeAll
@@ -73,8 +77,8 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
     rqueueMessageEnqueuer =
         new RqueueMessageEnqueuerImpl(messageTemplate, messageConverter, messageHeaders);
     FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueConfig", rqueueConfig, true);
-    FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueMessageMetadataService",
-        rqueueMessageMetadataService, true);
+    FieldUtils.writeField(
+        rqueueMessageEnqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
   }
 
   @Test

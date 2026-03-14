@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -165,16 +165,14 @@ public class RqueueRedisTemplate<V extends Serializable> {
     }
     log.debug(
         "Pipeline result: {}",
-        RedisUtils.executePipeLine(
-            redisTemplate,
-            (connection, keySerializer, valueSerializer) -> {
-              for (int i = 0; i < srcKeys.size(); i++) {
-                // TODO fix cross slot error?
-                byte[] src = keySerializer.serialize(srcKeys.get(i));
-                byte[] dst = keySerializer.serialize(dstKeys.get(i));
-                connection.rename(src, dst);
-              }
-            }));
+        RedisUtils.executePipeLine(redisTemplate, (connection, keySerializer, valueSerializer) -> {
+          for (int i = 0; i < srcKeys.size(); i++) {
+            // TODO fix cross slot error?
+            byte[] src = keySerializer.serialize(srcKeys.get(i));
+            byte[] dst = keySerializer.serialize(dstKeys.get(i));
+            connection.rename(src, dst);
+          }
+        }));
     if (srcKeys.size() != oldKeys.size()) {
       List<String> diff = new LinkedList<>(oldKeys);
       diff.removeAll(srcKeys);

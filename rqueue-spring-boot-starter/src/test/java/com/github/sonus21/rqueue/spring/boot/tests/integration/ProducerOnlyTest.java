@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -61,7 +61,8 @@ class ProducerOnlyTest extends BasicListenerTest {
   @Test
   void queueCount() {
     log.info("Rqueue System Mode {}", rqueueConfig.getMode());
-    assertEquals(35, EndpointRegistry.getRegisteredQueueCount(), rqueueConfig.getMode().toString());
+    assertEquals(
+        35, EndpointRegistry.getRegisteredQueueCount(), rqueueConfig.getMode().toString());
     for (int i = 0; i < 10; i++) {
       String queueName = "new_queue_" + i;
       // no listeners are attached so enqueue any thing

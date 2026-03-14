@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -80,15 +80,15 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1000",
-        "spring.data.redis.port=8019",
-        "reservation.request.dead.letter.consumer.enabled=true",
-        "reservation.request.active=true",
-        "list.email.queue.enabled=true",
-        "mysql.db.name=ReactiveRestApiTest",
-        "use.system.redis=false",
-        "user.banned.queue.active=true",
-        "spring.main.web-application-type=reactive"
+      "rqueue.retry.per.poll=1000",
+      "spring.data.redis.port=8019",
+      "reservation.request.dead.letter.consumer.enabled=true",
+      "reservation.request.active=true",
+      "list.email.queue.enabled=true",
+      "mysql.db.name=ReactiveRestApiTest",
+      "use.system.redis=false",
+      "user.banned.queue.active=true",
+      "spring.main.web-application-type=reactive"
     })
 @AutoConfigureWebTestClient
 @SpringBootIntegrationTest
@@ -97,8 +97,10 @@ class ReactiveRestApiTest extends BasicListenerTest {
 
   @Autowired
   private WebTestClient webTestClient;
+
   @Autowired
   private RqueueConfig rqueueConfig;
+
   @Autowired
   private DeleteMessageListener deleteMessageListener;
 
@@ -120,21 +122,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
   void verifyChartLatency() {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.LATENCY, AggregationType.DAILY);
-    ChartDataResponse dataResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/chart")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Mono.just(chartDataRequest), ChartDataRequest.class)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(ChartDataResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    ChartDataResponse dataResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/chart")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Mono.just(chartDataRequest), ChartDataRequest.class)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(ChartDataResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(dataResponse.getMessage());
     assertEquals(0, dataResponse.getCode());
     assertEquals(91, dataResponse.getData().size());
@@ -146,52 +147,49 @@ class ReactiveRestApiTest extends BasicListenerTest {
     request.setType(DataType.ZSET);
     request.setSrc(jobQueue);
     request.setName(queueDetail.getCompletedQueueName());
-    DataViewResponse dataViewResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/queue-data")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), QueueExploreRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataViewResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    DataViewResponse dataViewResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/queue-data")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), QueueExploreRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataViewResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
     assertEquals(20, dataViewResponse.getRows().size());
     assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
     assertEquals(
-        Collections.singletonList(
-            new Action(
-                ActionType.DELETE,
-                String.format(
-                    "Completed messages for queue '%s'", queueDetail.getCompletedQueueName()))),
+        Collections.singletonList(new Action(
+            ActionType.DELETE,
+            String.format(
+                "Completed messages for queue '%s'", queueDetail.getCompletedQueueName()))),
         dataViewResponse.getActions());
   }
 
   void verifyChartStats() throws Exception {
     ChartDataRequest chartDataRequest =
         new ChartDataRequest(ChartType.STATS, AggregationType.DAILY);
-    ChartDataResponse dataResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/chart")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Mono.just(chartDataRequest), ChartDataRequest.class)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(ChartDataResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    ChartDataResponse dataResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/chart")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Mono.just(chartDataRequest), ChartDataRequest.class)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(ChartDataResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(dataResponse.getMessage());
     assertEquals(0, dataResponse.getCode());
     assertEquals(91, dataResponse.getData().size());
@@ -204,27 +202,25 @@ class ReactiveRestApiTest extends BasicListenerTest {
     request.setType(DataType.LIST);
     request.setSrc(emailQueue);
     request.setName(emailDeadLetterQueue);
-    DataViewResponse dataViewResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/queue-data")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), QueueExploreRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataViewResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    DataViewResponse dataViewResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/queue-data")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), QueueExploreRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataViewResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
     assertEquals(
-        Collections.singletonList(
-            new Action(
-                ActionType.DELETE, String.format("dead letter queue '%s'", emailDeadLetterQueue))),
+        Collections.singletonList(new Action(
+            ActionType.DELETE, String.format("dead letter queue '%s'", emailDeadLetterQueue))),
         dataViewResponse.getActions());
     assertEquals(20, dataViewResponse.getRows().size());
     assertEquals(4, dataViewResponse.getRows().get(0).getColumns().size());
@@ -240,21 +236,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
     request.setType(DataType.ZSET);
     request.setSrc(emailQueue);
     request.setName(rqueueConfig.getScheduledQueueName(emailQueue));
-    DataViewResponse dataViewResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/queue-data")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), QueueExploreRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataViewResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    DataViewResponse dataViewResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/queue-data")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), QueueExploreRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataViewResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
     assertEquals(1, dataViewResponse.getActions().size());
@@ -274,21 +269,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
     request.setSrc(emailQueue);
     request.setName(processingSet);
 
-    DataViewResponse dataViewResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/queue-data")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), QueueExploreRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataViewResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    DataViewResponse dataViewResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/queue-data")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), QueueExploreRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataViewResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(dataViewResponse.getMessage());
     assertEquals(0, dataViewResponse.getCode());
     assertEquals(0, dataViewResponse.getActions().size());
@@ -303,21 +297,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
     DataDeleteRequest request = new DataDeleteRequest();
     request.setQueueName(emailQueue);
     request.setDatasetName(emailDeadLetterQueue);
-    BooleanResponse booleanResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/delete-queue-part")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), DataDeleteRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(BooleanResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    BooleanResponse booleanResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/delete-queue-part")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), DataDeleteRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(BooleanResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(booleanResponse.getMessage());
     assertEquals(0, booleanResponse.getCode());
     assertTrue(booleanResponse.isValue());
@@ -331,21 +324,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
     enqueue(Email.newInstance(), emailDeadLetterQueue);
     DataTypeRequest request = new DataTypeRequest();
     request.setName(emailDeadLetterQueue);
-    StringResponse response =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/data-type")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), DataTypeRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(StringResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    StringResponse response = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/data-type")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), DataTypeRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(StringResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(response.getMessage());
     assertEquals(0, response.getCode());
     assertEquals("LIST", response.getVal());
@@ -356,21 +348,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
     enqueue(emailDeadLetterQueue, i -> Email.newInstance(), 30, true);
     MessageMoveRequest request =
         new MessageMoveRequest(emailDeadLetterQueue, DataType.LIST, emailQueue, DataType.LIST);
-    MessageMoveResponse response =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/move-data")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), MessageMoveRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(MessageMoveResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    MessageMoveResponse response = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/move-data")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), MessageMoveRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(MessageMoveResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertNull(response.getMessage());
     assertEquals(0, response.getCode());
     assertEquals(100, response.getNumberOfMessageTransferred());
@@ -383,21 +374,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
     DateViewRequest dateViewRequest = new DateViewRequest();
     dateViewRequest.setName(emailDeadLetterQueue);
     dateViewRequest.setType(DataType.LIST);
-    DataViewResponse dataViewResponse =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/view-data")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(dateViewRequest), DateViewRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataViewResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    DataViewResponse dataViewResponse = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/view-data")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(dateViewRequest), DateViewRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataViewResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertEquals(0, dataViewResponse.getCode());
     assertEquals(Collections.emptyList(), dataViewResponse.getActions());
     assertEquals(20, dataViewResponse.getRows().size());
@@ -410,21 +400,20 @@ class ReactiveRestApiTest extends BasicListenerTest {
     }
     DataTypeRequest request = new DataTypeRequest();
     request.setName(jobQueue);
-    BaseResponse response =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/delete-queue")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), DataTypeRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(BaseResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    BaseResponse response = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/delete-queue")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), DataTypeRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(BaseResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertEquals(0, response.getCode());
     assertEquals("Queue deleted", response.getMessage());
   }
@@ -434,32 +423,29 @@ class ReactiveRestApiTest extends BasicListenerTest {
     Email email = Email.newInstance();
     deleteMessageListener.clear();
     enqueueIn(emailQueue, email, 10 * Constants.ONE_MILLI);
-    RqueueMessage message =
-        rqueueMessageTemplate
-            .readFromZset(rqueueConfig.getScheduledQueueName(emailQueue), 0, -1)
-            .get(0);
+    RqueueMessage message = rqueueMessageTemplate
+        .readFromZset(rqueueConfig.getScheduledQueueName(emailQueue), 0, -1)
+        .get(0);
     MessageDeleteRequest request = new MessageDeleteRequest();
     request.setMessageId(message.getId());
     request.setQueueName(emailQueue);
-    BaseResponse response =
-        this.webTestClient
-            .post()
-            .uri("/rqueue/api/v1/delete-message")
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(Mono.just(request), MessageDeleteRequest.class)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(BooleanResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    BaseResponse response = this.webTestClient
+        .post()
+        .uri("/rqueue/api/v1/delete-message")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(Mono.just(request), MessageDeleteRequest.class)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(BooleanResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertEquals(0, response.getCode());
-    Object metadata =
-        stringRqueueRedisTemplate.get(
-            RqueueMessageUtils.getMessageMetaId(emailQueue, message.getId()));
+    Object metadata = stringRqueueRedisTemplate.get(
+        RqueueMessageUtils.getMessageMetaId(emailQueue, message.getId()));
     assertTrue(((MessageMetadata) metadata).isDeleted());
     TimeoutUtils.waitFor(
         () -> {
@@ -481,19 +467,18 @@ class ReactiveRestApiTest extends BasicListenerTest {
         Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI,
         "notifications to be sent");
     String messageId = messageIds.get(random.nextInt(messageIds.size()));
-    DataViewResponse response =
-        this.webTestClient
-            .get()
-            .uri("/rqueue/api/v1/jobs?message-id=" + messageId)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataViewResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    DataViewResponse response = this.webTestClient
+        .get()
+        .uri("/rqueue/api/v1/jobs?message-id=" + messageId)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataViewResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertEquals(0, response.getCode());
     assertEquals(6, response.getHeaders().size());
     assertEquals(1, response.getRows().size());
@@ -502,19 +487,18 @@ class ReactiveRestApiTest extends BasicListenerTest {
       assertNotNull(column.getValue(), column.toString());
       assertEquals(TableColumnType.DISPLAY, column.getType());
     }
-    response =
-        this.webTestClient
-            .get()
-            .uri("/rqueue/api/v1/jobs?message-id=" + UUID.randomUUID().toString())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataViewResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    response = this.webTestClient
+        .get()
+        .uri("/rqueue/api/v1/jobs?message-id=" + UUID.randomUUID().toString())
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataViewResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertEquals(0, response.getCode());
     assertEquals("No jobs found", response.getMessage());
     assertNull(response.getHeaders());
@@ -523,19 +507,18 @@ class ReactiveRestApiTest extends BasicListenerTest {
 
   @Test
   void aggregateDataSelector() throws Exception {
-    DataSelectorResponse response =
-        this.webTestClient
-            .get()
-            .uri("/rqueue/api/v1/aggregate-data-selector?type=" + AggregationType.WEEKLY)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .is2xxSuccessful()
-            .returnResult(DataSelectorResponse.class)
-            .getResponseBody()
-            .collectList()
-            .block()
-            .get(0);
+    DataSelectorResponse response = this.webTestClient
+        .get()
+        .uri("/rqueue/api/v1/aggregate-data-selector?type=" + AggregationType.WEEKLY)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful()
+        .returnResult(DataSelectorResponse.class)
+        .getResponseBody()
+        .collectList()
+        .block()
+        .get(0);
     assertEquals(0, response.getCode());
     assertEquals("Select Number of Weeks", response.getTitle());
     assertEquals(14, response.getData().size());

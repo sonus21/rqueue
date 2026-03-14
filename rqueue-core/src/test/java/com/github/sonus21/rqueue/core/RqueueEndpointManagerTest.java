@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -34,16 +34,17 @@ class RqueueEndpointManagerTest extends TestBase {
 
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
+
   @Mock
   private RqueueConfig rqueueConfig;
+
   private RqueueEndpointManager rqueueEndpointManager;
 
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueEndpointManager =
-        new RqueueEndpointManagerImpl(
-            rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
+    rqueueEndpointManager = new RqueueEndpointManagerImpl(
+        rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
 
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     EndpointRegistry.delete();

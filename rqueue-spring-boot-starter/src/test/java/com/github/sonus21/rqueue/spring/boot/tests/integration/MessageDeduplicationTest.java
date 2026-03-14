@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.util.Assert;
 
 @SpringBootTest
 @ContextConfiguration(classes = Application.class)
@@ -60,15 +59,13 @@ class MessageDeduplicationTest extends SpringTestBase {
   @Test
   void enqueueUniqueIn() throws TimedOutException {
     Notification notification = Notification.newInstance();
-    Assertions.assertTrue(
-        rqueueMessageEnqueuer.enqueueUniqueIn(
-            notificationQueue, notification.getId(), notification, 1000L));
+    Assertions.assertTrue(rqueueMessageEnqueuer.enqueueUniqueIn(
+        notificationQueue, notification.getId(), notification, 1000L));
     Notification newNotification = Notification.newInstance();
     newNotification.setId(notification.getId());
     sleep(100);
-    Assertions.assertFalse(
-        rqueueMessageEnqueuer.enqueueUniqueIn(
-            notificationQueue, newNotification.getId(), newNotification, 1000L));
+    Assertions.assertFalse(rqueueMessageEnqueuer.enqueueUniqueIn(
+        notificationQueue, newNotification.getId(), newNotification, 1000L));
     waitFor(() -> getMessageCount(notificationQueue) == 0, 60_000, "notification to be sent");
     Notification notificationFromDb =
         consumedMessageStore.getMessage(notification.getId(), Notification.class);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.converter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.CompositeMessageConverter;
+import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.SmartMessageConverter;
@@ -40,6 +41,7 @@ import org.springframework.messaging.converter.StringMessageConverter;
  * @see CompositeMessageConverter
  * @see SmartMessageConverter
  * @see DefaultRqueueMessageConverter
+ * @see JacksonJsonMessageConverter
  * @see MappingJackson2MessageConverter
  */
 public interface MessageConverterProvider {

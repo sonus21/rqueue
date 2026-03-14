@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -39,8 +39,7 @@ public final class EndpointRegistry {
   private static final Object lock = new Object();
   private static final Map<String, QueueDetail> queueNameToDetail = new HashMap<>();
 
-  private EndpointRegistry() {
-  }
+  private EndpointRegistry() {}
 
   /**
    * Get QueueDetail for the given queue. If queue is having priority than it should be called with
@@ -95,11 +94,10 @@ public final class EndpointRegistry {
 
   public static List<String> getActiveQueues() {
     synchronized (lock) {
-      List<String> queues =
-          queueNameToDetail.values().stream()
-              .filter(QueueDetail::isActive)
-              .map(QueueDetail::getName)
-              .collect(Collectors.toList());
+      List<String> queues = queueNameToDetail.values().stream()
+          .filter(QueueDetail::isActive)
+          .map(QueueDetail::getName)
+          .collect(Collectors.toList());
       lock.notifyAll();
       return queues;
     }
@@ -107,10 +105,9 @@ public final class EndpointRegistry {
 
   public static List<QueueDetail> getActiveQueueDetails() {
     synchronized (lock) {
-      List<QueueDetail> queueDetails =
-          queueNameToDetail.values().stream()
-              .filter(QueueDetail::isActive)
-              .collect(Collectors.toList());
+      List<QueueDetail> queueDetails = queueNameToDetail.values().stream()
+          .filter(QueueDetail::isActive)
+          .collect(Collectors.toList());
       lock.notifyAll();
       return queueDetails;
     }
@@ -118,10 +115,9 @@ public final class EndpointRegistry {
 
   public static Map<String, QueueDetail> getActiveQueueMap() {
     synchronized (lock) {
-      Map<String, QueueDetail> queueDetails =
-          queueNameToDetail.values().stream()
-              .filter(QueueDetail::isActive)
-              .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
+      Map<String, QueueDetail> queueDetails = queueNameToDetail.values().stream()
+          .filter(QueueDetail::isActive)
+          .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
       lock.notifyAll();
       return queueDetails;
     }

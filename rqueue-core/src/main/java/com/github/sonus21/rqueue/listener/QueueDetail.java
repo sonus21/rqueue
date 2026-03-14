@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -52,8 +52,10 @@ public class QueueDetail extends SerializableBase {
   private final long visibilityTimeout;
   private final String name;
   private final int numRetry;
+
   @Builder.Default
   private final QueueType type = QueueType.QUEUE;
+
   private final String queueName;
   private final String deadLetterQueueName;
   private final boolean deadLetterConsumerEnabled;
@@ -80,23 +82,22 @@ public class QueueDetail extends SerializableBase {
   }
 
   public QueueConfig toConfig() {
-    QueueConfig queueConfig =
-        QueueConfig.builder()
-            .name(name)
-            .numRetry(numRetry)
-            .queueName(queueName)
-            .scheduledQueueName(scheduledQueueName)
-            .processingQueueName(processingQueueName)
-            .completedQueueName(completedQueueName)
-            .visibilityTimeout(visibilityTimeout)
-            .createdOn(System.currentTimeMillis())
-            .updatedOn(System.currentTimeMillis())
-            .deadLetterQueues(new LinkedList<>())
-            .concurrency(concurrency.toMinMax())
-            .priority(Collections.unmodifiableMap(priority))
-            .priorityGroup(priorityGroup)
-            .systemGenerated(systemGenerated)
-            .build();
+    QueueConfig queueConfig = QueueConfig.builder()
+        .name(name)
+        .numRetry(numRetry)
+        .queueName(queueName)
+        .scheduledQueueName(scheduledQueueName)
+        .processingQueueName(processingQueueName)
+        .completedQueueName(completedQueueName)
+        .visibilityTimeout(visibilityTimeout)
+        .createdOn(System.currentTimeMillis())
+        .updatedOn(System.currentTimeMillis())
+        .deadLetterQueues(new LinkedList<>())
+        .concurrency(concurrency.toMinMax())
+        .priority(Collections.unmodifiableMap(priority))
+        .priorityGroup(priorityGroup)
+        .systemGenerated(systemGenerated)
+        .build();
     if (isDlqSet()) {
       queueConfig.addDeadLetterQueue(getDeadLetterQueue());
     }

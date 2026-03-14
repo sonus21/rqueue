@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -31,8 +31,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public final class ThreadUtils {
 
-  private ThreadUtils() {
-  }
+  private ThreadUtils() {}
 
   public static ThreadPoolTaskScheduler createTaskScheduler(
       int poolSize, String threadPrefix, int terminationTime) {

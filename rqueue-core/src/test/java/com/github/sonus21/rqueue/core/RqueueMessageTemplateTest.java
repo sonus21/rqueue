@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -42,29 +42,33 @@ import org.springframework.data.redis.core.script.DefaultScriptExecutor;
 class RqueueMessageTemplateTest extends TestBase {
 
   private final String queueName = "test-queue";
-  private final RqueueMessage message =
-      RqueueMessage.builder()
-          .queuedTime(System.nanoTime())
-          .id(UUID.randomUUID().toString())
-          .queueName(queueName)
-          .message("This is a test message")
-          .processAt(System.currentTimeMillis())
-          .build();
+  private final RqueueMessage message = RqueueMessage.builder()
+      .queuedTime(System.nanoTime())
+      .id(UUID.randomUUID().toString())
+      .queueName(queueName)
+      .message("This is a test message")
+      .processAt(System.currentTimeMillis())
+      .build();
+
   @Mock
   private RedisConnectionFactory redisConnectionFactory;
+
   @Mock
   private RedisTemplate<String, RqueueMessage> redisTemplate;
+
   @Mock
   private ListOperations<String, RqueueMessage> listOperations;
+
   @Mock
   private DefaultScriptExecutor<String> scriptExecutor;
+
   private RqueueMessageTemplate rqueueMessageTemplate;
 
   @BeforeEach
   public void init() throws Exception {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageTemplate = TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate,
-        scriptExecutor);
+    rqueueMessageTemplate =
+        TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate, scriptExecutor);
   }
 
   @Test

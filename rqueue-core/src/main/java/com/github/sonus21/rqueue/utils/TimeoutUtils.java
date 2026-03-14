@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -33,14 +33,12 @@ public final class TimeoutUtils {
   public static final long EXECUTION_TIME = 10_000L;
   public static final long SLEEP_TIME = 100L;
 
-  private TimeoutUtils() {
-  }
+  private TimeoutUtils() {}
 
   public static void waitFor(
       BooleanSupplier callback, long waitTimeInMilliSeconds, String description)
       throws TimedOutException {
-    waitFor(callback, waitTimeInMilliSeconds, SLEEP_TIME, description, () -> {
-    });
+    waitFor(callback, waitTimeInMilliSeconds, SLEEP_TIME, description, () -> {});
   }
 
   public static void waitFor(BooleanSupplier callback, String description)

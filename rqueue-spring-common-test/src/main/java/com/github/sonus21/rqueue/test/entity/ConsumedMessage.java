@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -40,9 +40,9 @@ import lombok.ToString;
 @Table(
     name = "consumed_messages",
     uniqueConstraints = {
-        @UniqueConstraint(
-            name = "message_id_and_tag_unique",
-            columnNames = {"message_id", "tag"})
+      @UniqueConstraint(
+          name = "message_id_and_tag_unique",
+          columnNames = {"message_id", "tag"})
     })
 public class ConsumedMessage {
 

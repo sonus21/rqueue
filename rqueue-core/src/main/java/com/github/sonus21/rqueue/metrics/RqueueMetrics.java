@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -41,10 +41,13 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
   private static final String DEAD_LETTER_QUEUE_SIZE = "dead.letter.queue.size";
   private final QueueCounter queueCounter;
+
   @Autowired
   private MetricsProperties metricsProperties;
+
   @Autowired
   private MeterRegistry meterRegistry;
+
   @Autowired
   private RqueueStringDao rqueueStringDao;
 
@@ -67,24 +70,33 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
 
   private void monitor() {
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
-      Tags queueTags = Tags.concat(metricsProperties.getMetricTags(), "queue",
-          queueDetail.getName());
-      Gauge.builder(metricsProperties.getMetricName(QUEUE_SIZE), queueDetail,
+      Tags queueTags =
+          Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getName());
+      Gauge.builder(
+              metricsProperties.getMetricName(QUEUE_SIZE),
+              queueDetail,
               c -> size(queueDetail.getQueueName(), false))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
-          .description("The number of entries in this queue").register(meterRegistry);
-      Gauge.builder(metricsProperties.getMetricName(PROCESSING_QUEUE_SIZE), queueDetail,
+          .description("The number of entries in this queue")
+          .register(meterRegistry);
+      Gauge.builder(
+              metricsProperties.getMetricName(PROCESSING_QUEUE_SIZE),
+              queueDetail,
               c -> size(queueDetail.getProcessingQueueName(), true))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getProcessingQueueName()))
-          .description("The number of entries in the processing queue").register(meterRegistry);
-      Gauge.builder(metricsProperties.getMetricName(SCHEDULED_QUEUE_SIZE), queueDetail,
+          .description("The number of entries in the processing queue")
+          .register(meterRegistry);
+      Gauge.builder(
+              metricsProperties.getMetricName(SCHEDULED_QUEUE_SIZE),
+              queueDetail,
               c -> size(queueDetail.getScheduledQueueName(), true))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getScheduledQueueName()))
           .description("The number of entries waiting in the scheduled queue")
           .register(meterRegistry);
       if (queueDetail.isDlqSet()) {
         Builder<QueueDetail> builder = Gauge.builder(
-            metricsProperties.getMetricName(DEAD_LETTER_QUEUE_SIZE), queueDetail,
+            metricsProperties.getMetricName(DEAD_LETTER_QUEUE_SIZE),
+            queueDetail,
             c -> size(queueDetail.getDeadLetterQueueName(), false));
         builder.tags(queueTags);
         builder.description("The number of entries in the dead letter queue");

@@ -8,15 +8,18 @@ permalink: /priority
 ---
 
 Queue prioritization ensures that critical tasks are handled before lower-priority 
-ones. Rqueue supports two modes of priority handling:
+ones. Rqueue supports three modes of priority handling:
 
 1. **Weighted**: Polling frequency is based on numeric weights assigned to queues.
-2. **Strict**: Higher-priority queues are always polled first.
+2. **Strict**: Higher-priority queues are polled first, but starvation is considered
+   so lower-priority queues still get polling opportunities.
+3. **Hard Strict**: Messages are always fetched from the highest-priority queue first,
+   moving top-down only when that queue has no available message.
 
 ### Configuring Priority
 
 To enable priority handling:
-- Set `priorityMode` in the container factory to `STRICT` or `WEIGHTED`.
+- Set `priorityMode` in the container factory to `WEIGHTED`, `STRICT`, or `HARD_STRICT`.
 - Use the `priority` field in the `@RqueueListener` annotation to assign weights or levels.
 - Use the `priorityGroup` field to group multiple related queues. By default, queues with 
   specified priorities are added to a default group.
@@ -49,18 +52,31 @@ For implementation details, see [WeightedPriorityPoller][WeightedPriorityPoller]
 
 ### Strict Priority
 
-In strict mode, the poller always attempts to fetch messages from the highest-priority 
-queue first.
+In strict mode, the poller prefers the highest-priority queue first, but it also
+considers starvation so every queue continues to get polling chances over time.
 
 - The poller starts with Q1.
 - If Q1 is empty, it moves to Q2, then Q3.
-- If a queue is empty, it becomes inactive for the duration of the 
+- If a queue is empty, it becomes inactive for the duration of the
   **polling interval**.
-- To prevent total starvation of lower-priority queues, inactive queues become 
-  eligible for polling again after a maximum of 1 minute, even if higher-priority 
-  queues still have work.
+- If messages are not fetched from a lower-priority queue for a certain interval,
+  that queue becomes eligible again so it can be polled even while higher-priority
+  queues continue to receive traffic.
+- This gives lower-priority queues a chance to make progress and prevents permanent
+  starvation.
 
 For implementation details, see [StrictPriorityPoller][StrictPriorityPoller].
+
+### Hard Strict Priority
+
+In hard strict mode, the poller always follows a top-down priority order.
+
+- The poller starts with the highest-priority queue.
+- It continues to fetch from that queue as long as messages are available.
+- It moves to the next queue only when the current higher-priority queue has no
+  message available.
+- This approach keeps the queue order fully top-down and may starve lower-priority
+  queues while higher-priority queues continue to receive traffic.
 
 ### Additional Configuration
 

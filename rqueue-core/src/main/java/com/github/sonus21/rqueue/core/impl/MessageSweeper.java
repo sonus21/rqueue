@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -199,10 +199,9 @@ public class MessageSweeper {
 
     public void delete(DeleteJobData data) {
       for (List<String> subIds : ListUtils.partition(getMessageIds(data), batchSize)) {
-        List<String> messageMetaIds =
-            subIds.stream()
-                .map(e -> RqueueMessageUtils.getMessageMetaId(queueName, e))
-                .collect(Collectors.toList());
+        List<String> messageMetaIds = subIds.stream()
+            .map(e -> RqueueMessageUtils.getMessageMetaId(queueName, e))
+            .collect(Collectors.toList());
         rqueueMessageMetadataService.deleteAll(messageMetaIds);
         log.debug("Deleted {} messages meta", messageMetaIds.size());
       }

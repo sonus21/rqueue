@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -45,10 +45,10 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "rqueue.retry.per.poll=1",
-        "spring.data.redis.port=8021",
-        "mysql.db.name=PauseUnpauseTest",
-        "use.system.redis=false",
+      "rqueue.retry.per.poll=1",
+      "spring.data.redis.port=8021",
+      "mysql.db.name=PauseUnpauseTest",
+      "use.system.redis=false",
     })
 @SpringBootIntegrationTest
 @Tag("redisCluster")
@@ -56,6 +56,7 @@ class PauseUnpauseTest extends SpringTestBase {
 
   @Autowired
   private PauseUnpauseEventListener eventListener;
+
   @Autowired
   private RqueueUtilityService rqueueUtilityService;
 
@@ -63,7 +64,8 @@ class PauseUnpauseTest extends SpringTestBase {
   void onMessageNotification() throws TimedOutException {
     enqueue(notificationQueue, (i) -> Notification.newInstance(), 500, false);
     TimeoutUtils.waitFor(
-        () -> consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size() > 10,
+        () ->
+            consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size() > 10,
         "10 messages to be consumed");
 
     log.info("Requesting to pause queue {}", notificationQueue);
@@ -72,18 +74,22 @@ class PauseUnpauseTest extends SpringTestBase {
     rqueueUtilityService.pauseUnpauseQueue(pauseRequest);
     TimeoutUtils.waitFor(() -> eventListener.getEventList().size() == 1, "pause event");
     TimeoutUtils.sleep(Constants.ONE_MILLI);
-    int messageCount = consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size();
+    int messageCount =
+        consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size();
     AtomicValueHolder<Integer> holder = new AtomicValueHolder<>(messageCount);
     TimeoutUtils.waitFor(
         () -> {
-          int newCount = consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size();
+          int newCount = consumedMessageStore
+              .getConsumedMessagesForQueue(notificationQueue)
+              .size();
           boolean eq = holder.get() == newCount;
           holder.set(newCount);
           return eq;
         },
         "message consumer to stopped");
     TimeoutUtils.sleep(Constants.ONE_MILLI);
-    messageCount = consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size();
+    messageCount =
+        consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size();
     assertEquals(holder.get(), messageCount);
 
     log.info("Re-request to pause queue {}", pauseRequest);
@@ -100,7 +106,9 @@ class PauseUnpauseTest extends SpringTestBase {
 
     TimeoutUtils.waitFor(
         () -> {
-          int newCount = consumedMessageStore.getConsumedMessagesForQueue(notificationQueue).size();
+          int newCount = consumedMessageStore
+              .getConsumedMessagesForQueue(notificationQueue)
+              .size();
           boolean neq = holder.get() != newCount;
           holder.set(newCount);
           return neq;

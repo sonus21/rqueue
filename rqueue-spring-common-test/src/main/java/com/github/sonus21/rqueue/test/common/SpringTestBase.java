@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -19,14 +19,11 @@ package com.github.sonus21.rqueue.test.common;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
-import com.github.sonus21.rqueue.core.RqueueMessageManager;
-import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
@@ -58,24 +55,50 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 public abstract class SpringTestBase extends TestBase {
-  @Autowired protected RqueueMessageTemplate rqueueMessageTemplate;
-  @Autowired protected RqueueConfig rqueueConfig;
-  @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  @Autowired protected ConsumedMessageStore consumedMessageStore;
-  @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
-  @Autowired protected FailureManager failureManager;
-  @Autowired protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
-  @Autowired protected RqueueEventListener rqueueEventListener;
+  @Autowired
+  protected RqueueMessageTemplate rqueueMessageTemplate;
+
+  @Autowired
+  protected RqueueConfig rqueueConfig;
+
+  @Autowired
+  protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+
+  @Autowired
+  protected ConsumedMessageStore consumedMessageStore;
+
+  @Autowired
+  protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
+
+  @Autowired
+  protected FailureManager failureManager;
+
+  @Autowired
+  protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
+
+  @Autowired
+  protected RqueueEventListener rqueueEventListener;
 
   @Autowired(required = false)
   protected ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer;
 
-  @Autowired protected RqueueEndpointManager rqueueEndpointManager;
-  @Autowired protected RqueueMessageManager rqueueMessageManager;
-  @Autowired protected RqueueJobDao rqueueJobDao;
-  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Autowired protected ObjectMapper objectMapper;
-  @Autowired protected RqueueQueueMetrics rqueueQueueMetrics;
+  @Autowired
+  protected RqueueEndpointManager rqueueEndpointManager;
+
+  @Autowired
+  protected RqueueMessageManager rqueueMessageManager;
+
+  @Autowired
+  protected RqueueJobDao rqueueJobDao;
+
+  @Autowired
+  protected RqueueMessageMetadataService rqueueMessageMetadataService;
+
+  @Autowired
+  protected ObjectMapper objectMapper;
+
+  @Autowired
+  protected RqueueQueueMetrics rqueueQueueMetrics;
 
   @Value("${email.queue.name}")
   protected String emailQueue;
@@ -135,9 +158,8 @@ public abstract class SpringTestBase extends TestBase {
   protected boolean reactiveEnabled;
 
   protected void enqueue(Object message, String queueName) {
-    RqueueMessage rqueueMessage =
-        RqueueMessageUtils.buildMessage(
-            rqueueMessageManager.getMessageConverter(), queueName, null, message, null, null, null);
+    RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+        rqueueMessageManager.getMessageConverter(), queueName, null, message, null, null, null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
   }
 
@@ -145,15 +167,14 @@ public abstract class SpringTestBase extends TestBase {
     for (int i = 0; i < n; i++) {
       Object message = factory.next(i);
       if (useMessageTemplate) {
-        RqueueMessage rqueueMessage =
-            RqueueMessageUtils.buildMessage(
-                rqueueMessageManager.getMessageConverter(),
-                queueName,
-                null,
-                message,
-                null,
-                null,
-                rqueueMessageListenerContainer.getMessageHeaders());
+        RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+            rqueueMessageManager.getMessageConverter(),
+            queueName,
+            null,
+            message,
+            null,
+            null,
+            rqueueMessageListenerContainer.getMessageHeaders());
         rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
       } else {
         enqueue(queueName, message);
@@ -167,15 +188,14 @@ public abstract class SpringTestBase extends TestBase {
       Object message = factory.next(i);
       long delay = delayFunc.getDelay(i);
       if (useMessageTemplate) {
-        RqueueMessage rqueueMessage =
-            RqueueMessageUtils.buildMessage(
-                rqueueMessageManager.getMessageConverter(),
-                queueName,
-                null,
-                message,
-                null,
-                delay,
-                null);
+        RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+            rqueueMessageManager.getMessageConverter(),
+            queueName,
+            null,
+            message,
+            null,
+            delay,
+            null);
         rqueueMessageTemplate.addToZset(queueName, rqueueMessage, rqueueMessage.getProcessAt());
       } else {
         enqueueIn(queueName, message, delay);
@@ -184,9 +204,8 @@ public abstract class SpringTestBase extends TestBase {
   }
 
   protected void enqueueIn(Object message, String zsetName, long delay) {
-    RqueueMessage rqueueMessage =
-        RqueueMessageUtils.buildMessage(
-            rqueueMessageManager.getMessageConverter(), zsetName, null, message, null, delay, null);
+    RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+        rqueueMessageManager.getMessageConverter(), zsetName, null, message, null, delay, null);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
   }
 
@@ -270,14 +289,20 @@ public abstract class SpringTestBase extends TestBase {
 
   protected boolean enqueueAt(String queueName, Object message, Date instant) {
     if (reactiveEnabled) {
-      return reactiveRqueueMessageEnqueuer.enqueueAt(queueName, message, instant).block() != null;
+      return reactiveRqueueMessageEnqueuer
+              .enqueueAt(queueName, message, instant)
+              .block()
+          != null;
     }
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, instant) != null;
   }
 
   protected boolean enqueueAt(String queueName, Object message, Instant instant) {
     if (reactiveEnabled) {
-      return reactiveRqueueMessageEnqueuer.enqueueAt(queueName, message, instant).block() != null;
+      return reactiveRqueueMessageEnqueuer
+              .enqueueAt(queueName, message, instant)
+              .block()
+          != null;
     }
     return rqueueMessageEnqueuer.enqueueAt(queueName, message, instant) != null;
   }
@@ -305,7 +330,9 @@ public abstract class SpringTestBase extends TestBase {
 
   protected boolean enqueueIn(String queueName, Object message, long delay, TimeUnit timeUnit) {
     if (reactiveEnabled) {
-      return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit).block()
+      return reactiveRqueueMessageEnqueuer
+              .enqueueIn(queueName, message, delay, timeUnit)
+              .block()
           != null;
     }
     return rqueueMessageEnqueuer.enqueueIn(queueName, message, delay, timeUnit) != null;
@@ -313,14 +340,19 @@ public abstract class SpringTestBase extends TestBase {
 
   protected boolean enqueueIn(String queueName, Object message, Duration duration) {
     if (reactiveEnabled) {
-      return reactiveRqueueMessageEnqueuer.enqueueIn(queueName, message, duration).block() != null;
+      return reactiveRqueueMessageEnqueuer
+              .enqueueIn(queueName, message, duration)
+              .block()
+          != null;
     }
     return rqueueMessageEnqueuer.enqueueIn(queueName, message, duration) != null;
   }
 
   protected boolean enqueueWithPriority(String queueName, String priority, Object message) {
     if (reactiveEnabled) {
-      return reactiveRqueueMessageEnqueuer.enqueueWithPriority(queueName, priority, message).block()
+      return reactiveRqueueMessageEnqueuer
+              .enqueueWithPriority(queueName, priority, message)
+              .block()
           != null;
     }
     return rqueueMessageEnqueuer.enqueueWithPriority(queueName, priority, message) != null;
@@ -397,7 +429,9 @@ public abstract class SpringTestBase extends TestBase {
 
   protected boolean enqueueWithRetry(String queueName, Object message, int retry) {
     if (reactiveEnabled) {
-      return reactiveRqueueMessageEnqueuer.enqueueWithRetry(queueName, message, retry).block()
+      return reactiveRqueueMessageEnqueuer
+              .enqueueWithRetry(queueName, message, retry)
+              .block()
           != null;
     }
     return rqueueMessageEnqueuer.enqueueWithRetry(queueName, message, retry) != null;

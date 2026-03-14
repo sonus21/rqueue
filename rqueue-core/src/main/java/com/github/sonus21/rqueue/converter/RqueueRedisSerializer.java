@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -68,11 +68,15 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
     private ObjectMapper mapper;
 
     RqueueRedisSerDes() {
-      this.mapper = SerializationUtils.createObjectMapper().rebuild()
+      this.mapper = SerializationUtils.createObjectMapper()
+          .rebuild()
           .addModule(new SimpleModule().addSerializer(new NullValueSerializer()))
-          .activateDefaultTyping(BasicPolymorphicTypeValidator.builder()
-              .allowIfSubType(Object.class)
-              .build(), DefaultTyping.NON_FINAL, As.PROPERTY)
+          .activateDefaultTyping(
+              BasicPolymorphicTypeValidator.builder()
+                  .allowIfSubType(Object.class)
+                  .build(),
+              DefaultTyping.NON_FINAL,
+              As.PROPERTY)
           .build();
     }
 
@@ -111,7 +115,9 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
       }
 
       @Override
-      public void serialize(NullValue value, JsonGenerator jsonGenerator, SerializationContext provider) throws JacksonException {
+      public void serialize(
+          NullValue value, JsonGenerator jsonGenerator, SerializationContext provider)
+          throws JacksonException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringProperty(classIdentifier, NullValue.class.getName());
         jsonGenerator.writeEndObject();

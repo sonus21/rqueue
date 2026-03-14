@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -45,13 +45,13 @@ import org.springframework.test.context.TestPropertySource;
 @Slf4j
 @TestPropertySource(
     properties = {
-        "spring.data.redis.port=8013",
-        "mysql.db.name=PeriodicMessageTest",
-        "rqueue.metrics.count.failure=false",
-        "rqueue.metrics.count.execution=false",
-        "periodic.job.queue.active=true",
-        "use.system.redis=false",
-        "monitor.enabled=false"
+      "spring.data.redis.port=8013",
+      "mysql.db.name=PeriodicMessageTest",
+      "rqueue.metrics.count.failure=false",
+      "rqueue.metrics.count.execution=false",
+      "periodic.job.queue.active=true",
+      "use.system.redis=false",
+      "monitor.enabled=false"
     })
 @SpringBootIntegrationTest
 class PeriodicMessageTest extends SpringTestBase {
@@ -95,7 +95,6 @@ class PeriodicMessageTest extends SpringTestBase {
     rqueueMessageManager.deleteMessage(periodicJobQueue, messageId);
   }
 
-
   @Test
   void testPeriodicMessageDelete() throws TimedOutException, InterruptedException {
     rqueueEventListener.clearQueue();
@@ -125,11 +124,11 @@ class PeriodicMessageTest extends SpringTestBase {
     assertEquals(l.get(0), consumedMessageStore.getConsumedMessageCount(job.getId()));
     assertTrue(
         // already scheduled job
-        1 + l.get(1) == rqueueEventListener.getEventCount() ||
+        1 + l.get(1) == rqueueEventListener.getEventCount()
+            ||
             // deleted just now, so no future scheduling
             l.get(1) == rqueueEventListener.getEventCount(),
-        () -> String.format("Event Count does not match %d %d", rqueueEventListener.getEventCount(),
-            l.get(1))
-    );
+        () -> String.format(
+            "Event Count does not match %d %d", rqueueEventListener.getEventCount(), l.get(1)));
   }
 }

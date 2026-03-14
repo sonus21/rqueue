@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -35,8 +35,10 @@ import lombok.ToString;
 public class QueueStatistics extends SerializableBase {
 
   private static final long serialVersionUID = -4931206278693499365L;
+
   @EqualsAndHashCode.Include
   private String id;
+
   private Long startEpochDate;
   private Map<String, Long> tasksMovedToDeadLetter;
   private Map<String, Long> tasksDiscarded;

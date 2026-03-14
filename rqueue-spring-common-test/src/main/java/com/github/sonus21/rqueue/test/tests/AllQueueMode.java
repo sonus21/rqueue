@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -52,15 +52,13 @@ public abstract class AllQueueMode extends SpringTestBase {
     enqueueWithPriority(smsQueue, "medium", Sms.newInstance());
     enqueueWithPriority(smsQueue, "low", Sms.newInstance());
     TimeoutUtils.waitFor(
-        () ->
-            getMessageCount(
-                Arrays.asList(
-                    smsQueue,
-                    smsQueue + "_critical",
-                    smsQueue + "_high",
-                    smsQueue + "_medium",
-                    smsQueue + "_low"))
-                == 0,
+        () -> getMessageCount(Arrays.asList(
+                smsQueue,
+                smsQueue + "_critical",
+                smsQueue + "_high",
+                smsQueue + "_medium",
+                smsQueue + "_low"))
+            == 0,
         20 * Constants.ONE_MILLI,
         "multi level queues to drain");
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -66,8 +66,12 @@ class QueueConfigTest extends TestBase {
 
   @Test
   void builder() {
-    QueueConfig queueConfig =
-        QueueConfig.builder().id("__rq::q").name("q").visibilityTimeout(100L).numRetry(100).build();
+    QueueConfig queueConfig = QueueConfig.builder()
+        .id("__rq::q")
+        .name("q")
+        .visibilityTimeout(100L)
+        .numRetry(100)
+        .build();
     assertEquals("__rq::q", queueConfig.getId());
     assertEquals("q", queueConfig.getName());
     assertEquals(100L, queueConfig.getVisibilityTimeout());

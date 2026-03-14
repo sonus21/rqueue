@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -84,27 +84,25 @@ public abstract class RedisBootstrapperBase {
 
   protected void monitor(String host, int port) {
     log.info("Monitor {}:{}", host, port);
-    executorService.submit(
-        () -> {
-          try {
-            Process process =
-                Runtime.getRuntime()
-                    .exec("redis-cli " + " -h " + host + " -p " + port + " monitor");
-            List<String> lines = new LinkedList<>();
-            MonitorProcess monitorProcess =
-                new MonitorProcess(process, new RedisNode(host, port), lines);
-            processes.add(monitorProcess);
-            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            while (process.isAlive()) {
-              String s = br.readLine();
-              if (s != null) {
-                lines.add(s);
-              }
-            }
-          } catch (Exception e) {
-            monitorLogger.error("Process call failed", e);
+    executorService.submit(() -> {
+      try {
+        Process process =
+            Runtime.getRuntime().exec("redis-cli " + " -h " + host + " -p " + port + " monitor");
+        List<String> lines = new LinkedList<>();
+        MonitorProcess monitorProcess =
+            new MonitorProcess(process, new RedisNode(host, port), lines);
+        processes.add(monitorProcess);
+        BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        while (process.isAlive()) {
+          String s = br.readLine();
+          if (s != null) {
+            lines.add(s);
           }
-        });
+        }
+      } catch (Exception e) {
+        monitorLogger.error("Process call failed", e);
+      }
+    });
   }
 
   @AllArgsConstructor

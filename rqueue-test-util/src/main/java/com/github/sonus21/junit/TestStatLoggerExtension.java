@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -62,9 +62,8 @@ public class TestStatLoggerExtension implements TestWatcher, AfterAllCallback {
 
   @Override
   public void afterAll(ExtensionContext context) throws Exception {
-    Map<TestResultStatus, Long> summary =
-        testResultsStatus.stream()
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    Map<TestResultStatus, Long> summary = testResultsStatus.stream()
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
     log.info("Test result summary for {} {}", context.getDisplayName(), summary.toString());
   }

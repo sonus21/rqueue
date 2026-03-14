@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -51,10 +51,13 @@ public abstract class ApplicationWithMessageProcessor extends BaseApplication {
   @Bean
   public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory(
       @Qualifier("preExecutionMessageProcessor") TestMessageProcessor preExecutionMessageProcessor,
-      @Qualifier("postExecutionMessageProcessor") TestMessageProcessor postExecutionMessageProcessor,
-      @Qualifier("manualDeletionMessageProcessor") TestMessageProcessor manualDeletionMessageProcessor,
+      @Qualifier("postExecutionMessageProcessor")
+          TestMessageProcessor postExecutionMessageProcessor,
+      @Qualifier("manualDeletionMessageProcessor")
+          TestMessageProcessor manualDeletionMessageProcessor,
       @Qualifier("discardMessageProcessor") TestMessageProcessor discardMessageProcessor,
-      @Qualifier("deadLetterQueueMessageProcessor") TestMessageProcessor deadLetterQueueMessageProcessor) {
+      @Qualifier("deadLetterQueueMessageProcessor")
+          TestMessageProcessor deadLetterQueueMessageProcessor) {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setInspectAllBean(false);
     factory.setPreExecutionMessageProcessor(preExecutionMessageProcessor);

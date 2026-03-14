@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -66,8 +66,8 @@ public class MessageMetadata extends SerializableBase {
     }
     if (other.isDeleted() && !this.isDeleted()) {
       this.deleted = true;
-      if (MessageStatus.DELETED.equals(other.getStatus()) && !MessageStatus.DELETED.equals(
-          this.getStatus())) {
+      if (MessageStatus.DELETED.equals(other.getStatus())
+          && !MessageStatus.DELETED.equals(this.getStatus())) {
         this.status = MessageStatus.DELETED;
         if (this.updatedOn < other.updatedOn) {
           this.updatedOn = other.updatedOn;

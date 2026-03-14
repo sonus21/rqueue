@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class TestRunner {
 
-  private TestRunner() {
-  }
+  private TestRunner() {}
 
   public static void run(Test test, Test failureCallback) throws Exception {
     run(test, null, failureCallback, 0);

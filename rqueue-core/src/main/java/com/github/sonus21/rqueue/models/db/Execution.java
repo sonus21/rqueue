@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -38,7 +38,9 @@ public class Execution extends SerializableBase {
   private long startTime;
   private long endTime;
   private String error;
+
   @JsonIgnore
   private Throwable exception;
+
   private ExecutionStatus status;
 }

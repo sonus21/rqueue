@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ public abstract class MetricTest extends SpringTestBase {
 
   @Autowired
   protected MeterRegistry meterRegistry;
+
   @Autowired
   protected RqueueQueueMetrics rqueueQueueMetrics;
 
@@ -63,25 +64,23 @@ public abstract class MetricTest extends SpringTestBase {
     }
 
     waitFor(
-        () ->
-            meterRegistry
+        () -> meterRegistry
                 .get("scheduled.queue.size")
                 .tag("rqueue", "test")
                 .tag("queue", notificationQueue)
                 .gauge()
                 .value()
-                > 0,
+            > 0,
         60000,
         "stats collection");
     waitFor(
-        () ->
-            meterRegistry
+        () -> meterRegistry
                 .get("queue.size")
                 .tag("rqueue", "test")
                 .tag("queue", notificationQueue)
                 .gauge()
                 .value()
-                > 0,
+            > 0,
         60000,
         "Message in original queue");
     deleteAllMessages(notificationQueue);
@@ -96,24 +95,22 @@ public abstract class MetricTest extends SpringTestBase {
     enqueue(jobQueue, job);
 
     waitFor(
-        () ->
-            meterRegistry
+        () -> meterRegistry
                 .get("dead.letter.queue.size")
                 .tags("rqueue", "test")
                 .tags("queue", emailQueue)
                 .gauge()
                 .value()
-                == 10,
+            == 10,
         "stats collection");
     waitFor(
-        () ->
-            meterRegistry
+        () -> meterRegistry
                 .get("processing.queue.size")
                 .tags("rqueue", "test")
                 .tags("queue", jobQueue)
                 .gauge()
                 .value()
-                == 1,
+            == 1,
         30 * Constants.ONE_MILLI,
         "processing queue message");
   }
@@ -124,38 +121,35 @@ public abstract class MetricTest extends SpringTestBase {
     failureManager.createFailureDetail(job.getId(), 1, 1);
     enqueue(jobQueue, job);
     waitFor(
-        () ->
-            meterRegistry
+        () -> meterRegistry
                 .get("failure.count")
                 .tags("rqueue", "test")
                 .tags("queue", jobQueue)
                 .counter()
                 .count()
-                >= 1,
+            >= 1,
         30000,
         "job process",
         () -> printQueueStats(newArrayList(jobQueue, emailQueue, notificationQueue)));
     waitFor(
-        () ->
-            meterRegistry
+        () -> meterRegistry
                 .get("execution.count")
                 .tags("rqueue", "test")
                 .tags("queue", emailQueue)
                 .counter()
                 .count()
-                == 1,
+            == 1,
         "message process",
         () -> printQueueStats(newArrayList(jobQueue, emailQueue, notificationQueue)));
 
     waitFor(
-        () ->
-            meterRegistry
+        () -> meterRegistry
                 .get("failure.count")
                 .tags("rqueue", "test")
                 .tags("queue", emailQueue)
                 .counter()
                 .count()
-                == 0,
+            == 0,
         "stats collection");
   }
 

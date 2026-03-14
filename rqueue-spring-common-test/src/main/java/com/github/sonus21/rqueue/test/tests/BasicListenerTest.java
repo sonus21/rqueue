@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -67,24 +67,20 @@ public abstract class BasicListenerTest extends SpringTestBase {
     enqueueIn(listEmailQueue, scheduledEmails, 1, TimeUnit.SECONDS);
     TimeoutUtils.waitFor(
         () -> getMessageCount(listEmailQueue) == 0, "waiting for email list queue to drain");
-    Collection<ConsumedMessage> messages =
-        consumedMessageStore.getConsumedMessages(
-            emails.stream().map(Email::getId).collect(Collectors.toList()));
-    Collection<ConsumedMessage> scheduledMessages =
-        consumedMessageStore.getConsumedMessages(
-            scheduledEmails.stream().map(Email::getId).collect(Collectors.toList()));
+    Collection<ConsumedMessage> messages = consumedMessageStore.getConsumedMessages(
+        emails.stream().map(Email::getId).collect(Collectors.toList()));
+    Collection<ConsumedMessage> scheduledMessages = consumedMessageStore.getConsumedMessages(
+        scheduledEmails.stream().map(Email::getId).collect(Collectors.toList()));
     assertEquals(n, messages.size());
     assertEquals(n, scheduledEmails.size());
-    Set<String> scheduledTags =
-        scheduledMessages.stream()
-            .map(ConsumedMessage::getTag)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-    Set<String> simpleTags =
-        messages.stream()
-            .map(ConsumedMessage::getTag)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
+    Set<String> scheduledTags = scheduledMessages.stream()
+        .map(ConsumedMessage::getTag)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+    Set<String> simpleTags = messages.stream()
+        .map(ConsumedMessage::getTag)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
     assertEquals(1, scheduledTags.size());
     assertEquals(1, simpleTags.size());
   }

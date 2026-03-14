@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -47,8 +47,11 @@ public class TestMessageProcessor implements MessageProcessor {
 
   @Override
   public boolean process(Job job) {
-    log.info("{}MessageProcessor called queued {} with {}", name,
-        job.getRqueueMessage().getQueueName(), job.getRqueueMessage());
+    log.info(
+        "{}MessageProcessor called queued {} with {}",
+        name,
+        job.getRqueueMessage().getQueueName(),
+        job.getRqueueMessage());
     rqueueMessageList.add(
         new RqueueMessageEnvelop(job.getRqueueMessage(), System.currentTimeMillis()));
     return true;
