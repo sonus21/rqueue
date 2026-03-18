@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.converter;
 import static org.springframework.util.Assert.notNull;
 
 import com.github.sonus21.rqueue.utils.SerializationUtils;
+import java.lang.reflect.Field;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.List;
@@ -37,8 +38,8 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * A converter to turn the payload of a {@link Message} from serialized form to a typed String and
- * vice versa. This class does not support generic class except {@link List},even for list the
- * entries should be non generic.
+ * vice versa. Supports {@link List} and single-level generic envelope types (e.g. {@code Event<T>})
+ * where type parameters are non-generic and can be resolved from non-null field values.
  */
 @Slf4j
 public class GenericMessageConverter implements SmartMessageConverter {
@@ -137,7 +138,12 @@ public class GenericMessageConverter implements SmartMessageConverter {
         if (payload.isEmpty()) {
           return null;
         }
-        String itemClassName = getClassName(((List<?>) payload).get(0));
+        Object firstItem = ((List<?>) payload).get(0);
+        // Only support non-generic item classes in lists to avoid ambiguous encoding
+        if (firstItem.getClass().getTypeParameters().length > 0) {
+          return null;
+        }
+        String itemClassName = getClassName(firstItem);
         if (itemClassName == null) {
           return null;
         }
@@ -146,12 +152,40 @@ public class GenericMessageConverter implements SmartMessageConverter {
       return null;
     }
 
-    private String getGenericFieldBasedClassName(Class<?> clazz) {
+    private Class<?> resolveTypeVariable(Class<?> clazz, TypeVariable<?> tv, Object payload) {
+      // TypeVariable instances are scoped to the class that declares them, so
+      // field.getGenericType().equals(tv) can only match fields declared on clazz itself.
+      // Superclass fields reference their own TypeVariable instances, which are distinct objects.
+      for (Field field : clazz.getDeclaredFields()) {
+        if (field.getGenericType().equals(tv)) {
+          field.setAccessible(true);
+          try {
+            Object value = field.get(payload);
+            if (value != null) {
+              return value.getClass();
+            }
+          } catch (IllegalAccessException e) {
+            log.debug("Cannot access field {}", field.getName(), e);
+          }
+        }
+      }
+      return null;
+    }
+
+    private String getGenericFieldBasedClassName(Class<?> clazz, Object payload) {
       TypeVariable<?>[] typeVariables = clazz.getTypeParameters();
       if (typeVariables.length == 0) {
         return clazz.getName();
       }
-      return null;
+      StringBuilder sb = new StringBuilder(clazz.getName());
+      for (TypeVariable<?> tv : typeVariables) {
+        Class<?> resolved = resolveTypeVariable(clazz, tv, payload);
+        if (resolved == null || resolved.getTypeParameters().length > 0) {
+          return null;
+        }
+        sb.append('#').append(resolved.getName());
+      }
+      return sb.toString();
     }
 
     private String getClassName(Object payload) {
@@ -160,7 +194,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
       if (payload instanceof Collection) {
         return getClassNameForCollection(name, (Collection<?>) payload);
       }
-      return getGenericFieldBasedClassName(payloadClass);
+      return getGenericFieldBasedClassName(payloadClass, payload);
     }
 
     private JavaType getTargetType(Msg msg) throws ClassNotFoundException {
