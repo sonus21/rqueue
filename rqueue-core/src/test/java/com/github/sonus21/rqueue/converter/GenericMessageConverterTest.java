@@ -116,11 +116,43 @@ class GenericMessageConverterTest extends TestBase {
   }
 
   @Test
-  void genericMessageToReturnNull() {
+  void genericEnvelopeToAndFromMessage() {
     GenericTestData<Comment> data = new GenericTestData<>(10, comment);
     Message message =
         genericMessageConverter.toMessage(data, RqueueMessageHeaders.emptyMessageHeaders());
+    GenericTestData<Comment> fromMessage =
+        (GenericTestData<Comment>) genericMessageConverter.fromMessage(message, null);
+    assertEquals(data, fromMessage);
+  }
+
+  @Test
+  void envelopeEventToAndFromMessage() {
+    Event<Comment> event = new Event<>("evt-1", comment);
+    Message message =
+        genericMessageConverter.toMessage(event, RqueueMessageHeaders.emptyMessageHeaders());
+    Event<Comment> fromMessage =
+        (Event<Comment>) genericMessageConverter.fromMessage(message, null);
+    assertEquals(event, fromMessage);
+  }
+
+  @Test
+  void envelopeEventWithNullPayloadToReturnNull() {
+    Event<Comment> event = new Event<>("evt-1", null);
+    Message message =
+        genericMessageConverter.toMessage(event, RqueueMessageHeaders.emptyMessageHeaders());
     assertNull(message);
+  }
+
+  @Test
+  void envelopeEventWithInheritedTypeToAndFromMessage() {
+    // T=Notification extends Alert extends BaseAlert — runtime class is Notification
+    Notification notification = new Notification("n-1", "hello", 42);
+    Event<Notification> event = new Event<>("evt-2", notification);
+    Message message =
+        genericMessageConverter.toMessage(event, RqueueMessageHeaders.emptyMessageHeaders());
+    Event<Notification> fromMessage =
+        (Event<Notification>) genericMessageConverter.fromMessage(message, null);
+    assertEquals(event, fromMessage);
   }
 
   @Test
@@ -378,5 +410,51 @@ class GenericMessageConverterTest extends TestBase {
 
     private Integer index;
     private MultiGenericTestData<Comment, Email> data;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Event<T> {
+
+    private String id;
+    private T payload;
+  }
+
+  // Three-level hierarchy: Notification extends Alert extends BaseAlert
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class BaseAlert {
+
+    private String id;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Alert extends BaseAlert {
+
+    private String message;
+
+    public Alert(String id, String message) {
+      super(id);
+      this.message = message;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Notification extends Alert {
+
+    private int priority;
+
+    public Notification(String id, String message, int priority) {
+      super(id, message);
+      this.priority = priority;
+    }
   }
 }
