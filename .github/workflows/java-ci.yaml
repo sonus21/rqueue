@@ -1,0 +1,385 @@
+name: Java CI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**/*.java"
+      - "**/*.gradle"
+      - "**/*.gradle.kts"
+      - "gradle.properties"
+      - "settings.gradle"
+      - "settings.gradle.kts"
+      - "gradle/**"
+      - "gradlew"
+      - "gradlew.bat"
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: java-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REDIS_RUNNING: "true"
+  USER_NAME: rqueue
+  TERM: dumb
+  JVM_OPTS: -Xmx8g
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Expose Java 17 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Resolve dependencies
+        run: ./gradlew dependencies
+
+      - name: Compile main sources
+        run: ./gradlew compileJava
+
+      - name: Compile test sources
+        run: ./gradlew compileTestJava
+
+  unit_test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Expose Java 17 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests
+        run: ./gradlew test -DincludeTags=unit
+
+      - name: Upload JaCoCo exec data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            rqueue-spring-boot-starter/build/reports/junit/xml
+            rqueue-spring/build/reports/junit/xml
+            rqueue-core/build/reports/junit/xml
+          if-no-files-found: ignore
+
+  producer_only_test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Expose Java 17 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server
+          redis-cli --version
+
+      - name: Run producer-only tests
+        run: ./gradlew test -DincludeTags=producerOnly
+
+      - name: Upload JaCoCo exec data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-producer
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: producer-test-results
+          path: |
+            rqueue-spring-boot-starter/build/reports/junit/xml
+            rqueue-spring/build/reports/junit/xml
+            rqueue-core/build/reports/junit/xml
+          if-no-files-found: ignore
+
+  integration_test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Expose Java 17 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server
+          redis-cli --version
+
+      - name: Run integration tests
+        run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
+
+      - name: Upload JaCoCo exec data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            rqueue-spring-boot-starter/build/reports/junit/xml
+            rqueue-spring/build/reports/junit/xml
+            rqueue-core/build/reports/junit/xml
+          if-no-files-found: ignore
+
+  redis_cluster_test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Expose Java 17 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server
+          redis-cli --version
+
+      - name: Setup Redis Cluster
+        run: |
+          mkdir 9000 9001 9002 9003 9004 9005
+          printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
+          printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
+          printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
+          printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
+          printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
+          printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+          (cd 9000 && redis-server ./redis.conf) &
+          (cd 9001 && redis-server ./redis.conf) &
+          (cd 9002 && redis-server ./redis.conf) &
+          (cd 9003 && redis-server ./redis.conf) &
+          (cd 9004 && redis-server ./redis.conf) &
+          (cd 9005 && redis-server ./redis.conf) &
+          sleep 30
+          yes yes | redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1
+
+      - name: Run Redis cluster tests
+        run: ./gradlew test -DincludeTags=redisCluster
+
+      - name: Upload JaCoCo exec data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-redis-cluster
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redis-cluster-test-results
+          path: |
+            rqueue-spring-boot-starter/build/reports/junit/xml
+            rqueue-spring/build/reports/junit/xml
+            rqueue-core/build/reports/junit/xml
+          if-no-files-found: ignore
+
+  reactive_integration_test:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      RQUEUE_REACTIVE_ENABLED: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Expose Java 17 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server
+          redis-cli --version
+
+      - name: Run reactive integration tests
+        run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
+
+      - name: Upload JaCoCo exec data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reactive
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reactive-integration-test-results
+          path: |
+            rqueue-spring-boot-starter/build/reports/junit/xml
+            rqueue-spring/build/reports/junit/xml
+            rqueue-core/build/reports/junit/xml
+          if-no-files-found: ignore
+
+  coverage_report:
+    needs:
+      - unit_test
+      - producer_only_test
+      - integration_test
+      - redis_cluster_test
+      - reactive_integration_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Expose Java 17 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-artifacts
+          merge-multiple: false
+
+      - name: Generate merged coverage report
+        run: ./gradlew coverageReportOnly
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            build/reports/jacoco/test/jacocoTestReport.xml
+            build/reports/jacoco/coverageReportOnly/html
+          if-no-files-found: ignore

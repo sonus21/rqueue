@@ -146,7 +146,7 @@ class GenericMessageConverterTest extends TestBase {
   @Test
   void envelopeEventWithInheritedTypeToAndFromMessage() {
     // T=Notification extends Alert extends BaseAlert — runtime class is Notification
-    Notification notification = new Notification("n-1", "hello", 42);
+    Notification notification = new Notification(42);
     Event<Notification> event = new Event<>("evt-2", notification);
     Message message =
         genericMessageConverter.toMessage(event, RqueueMessageHeaders.emptyMessageHeaders());
@@ -431,30 +431,18 @@ class GenericMessageConverterTest extends TestBase {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Alert extends BaseAlert {
 
     private String message;
-
-    public Alert(String id, String message) {
-      super(id);
-      this.message = message;
-    }
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Notification extends Alert {
 
     private int priority;
-
-    public Notification(String id, String message, int priority) {
-      super(id, message);
-      this.priority = priority;
-    }
   }
 }
