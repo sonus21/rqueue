@@ -172,13 +172,13 @@ public class BootstrapController {
 
 ## Message Converter Configuration
 
-To customize message conversion, set the property 
-`rqueue.message.converter.provider.class` to the fully qualified name of your provider 
-class. This class must implement the `MessageConverterProvider` interface and return 
+To customize message conversion, set the property
+`rqueue.message.converter.provider.class` to the fully qualified name of your provider
+class. This class must implement the `MessageConverterProvider` interface and return
 a Spring `MessageConverter`.
 
 {: .note}
-Your custom provider must implement 
+Your custom provider must implement
 `com.github.sonus21.rqueue.converter.MessageConverterProvider`.
 
 ```java
@@ -186,21 +186,61 @@ class MyMessageConverterProvider implements MessageConverterProvider {
 
   @Override
   public MessageConverter getConverter() {
-    // here any message converter can be returned except null 
+    // here any message converter can be returned except null
     return new MyMessageConverter();
   }
 }
 ```
 
-The `DefaultRqueueMessageConverter` handles serialization for most use cases, but it 
-may fail if classes are not shared between producing and consuming applications. To 
-avoid shared dependencies, consider using JSON-based converters like 
-`com.github.sonus21.rqueue.converter.JsonMessageConverter` or Spring's 
-`JacksonJsonMessageConverter`. These serialize payloads into JSON, improving 
+The `DefaultRqueueMessageConverter` handles serialization for most use cases, but it
+may fail if classes are not shared between producing and consuming applications. To
+avoid shared dependencies, consider using JSON-based converters like
+`com.github.sonus21.rqueue.converter.JsonMessageConverter` or Spring's
+`JacksonJsonMessageConverter`. These serialize payloads into JSON, improving
 interoperability.
 
-Other serialization formats like MessagePack or Protocol Buffers (ProtoBuf) can also 
+Other serialization formats like MessagePack or Protocol Buffers (ProtoBuf) can also
 be implemented based on your requirements.
+
+### Generic Envelope Types
+
+`GenericMessageConverter` (used by the default converter) supports **single-level
+generic envelope types** such as `Event<T>`. The type parameter is resolved at
+serialization time by inspecting the runtime class of the field value that corresponds
+to `T`.
+
+```java
+// A generic envelope type
+public class Event<T> {
+  private String id;
+  private T payload;
+  // getters/setters ...
+}
+
+// Enqueue
+Event<Order> event = new Event<>("evt-123", order);
+rqueueMessageEnqueuer.enqueue("order-queue", event);
+
+// Consume
+@RqueueListener(value = "order-queue")
+public void onEvent(Event<Order> event) { ... }
+```
+
+The serialized form encodes both the envelope class and the type parameter:
+
+```
+{"msg":"...","name":"com.example.Event#com.example.Order"}
+```
+
+**Constraints:**
+
+- The type parameter `T` must be a **non-generic** concrete class (e.g. `Order`, not
+  `List<Order>`).
+- At least one field of type `T` on the envelope class must be **non-null** at
+  serialization time, so the runtime type can be determined.
+- For `List<T>`, items must also be non-generic concrete classes. Envelopes like
+  `List<Event<Order>>` are not supported.
+- Multi-level nesting (e.g. `Wrapper<Event<T>>`) is not supported.
 
 ## Additional Configuration
 

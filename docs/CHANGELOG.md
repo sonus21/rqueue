@@ -8,10 +8,36 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [4.0.0.RC1] 18-Mar-2026
+
+{: .highlight}
+This is a release candidate for 4.0.0. It targets Spring Boot 4.x and Spring Framework 7.x.
+Please test thoroughly before using in production.
+
+### Features
+* **Spring Boot 4.x support** — compatible with Spring Boot 4.0.1 and above.
+* **Spring Framework 7.x support** — built against Spring Framework 7.0.3, taking
+  advantage of the updated messaging and context APIs.
+* **Java 21 baseline** — Java 21 is now the minimum supported runtime.
+* **Jackson 3.x support** — updated serialization layer to use Jackson 3.x
+  (`tools.jackson` packages).
+* **Lettuce 7.x support** — Redis client updated to Lettuce 7.2.x.
+* `GenericMessageConverter` now supports generic envelope types such as `Event<T>`.
+  The type parameter is resolved from the runtime class of the corresponding field
+  value, enabling transparent round-trip serialization without requiring a custom
+  message converter.
+
+### Migration Notes
+* Requires Java 21+.
+* Requires Spring Boot 4.x / Spring Framework 7.x. Not backward compatible with
+  Spring Boot 3.x — use the 3.x release line for older Spring Boot versions.
+* Jackson package namespace changed from `com.fasterxml.jackson` to `tools.jackson`
+  in Jackson 3.x. Update any custom `ObjectMapper` configuration accordingly.
+
 ## Release [3.4.0] 22-July-2025
 ### Fixes
-* Improved unique message enqueuing to reject duplicates upfront rather than during 
-  processing. #259 
+* Improved unique message enqueuing to reject duplicates upfront rather than during
+  processing. #259
 
 
 ## Release [3.3.0] 29-June-2025
