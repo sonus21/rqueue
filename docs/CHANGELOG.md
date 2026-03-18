@@ -8,6 +8,14 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [3.4.1] 18-March-2026
+### Features
+* Backported `HARD_STRICT` priority mode from #279 for stricter priority queue polling on the 3.x line
+* Added typed/generic message parameter support — listeners can now declare strongly-typed message parameters and rely on `GenericMessageConverter` for automatic deserialization
+
+### Fixes
+* Optimized hard-strict polling queue availability checks to avoid full list and sorted-set reads
+
 ## Release [3.4.0] 22-July-2025
 ### Fixes
 * Fixed unique enqueue message to reject the message upfront instead of identifying it later #259 

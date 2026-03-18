@@ -148,8 +148,8 @@ class RqueueMessageUtilsTest extends TestBase {
 
   @Test
   void buildMessageNull() {
+    // id is null so the type parameter T cannot be resolved, making conversion fail
     GenericClass<String> genericClass = new GenericClass<>();
-    genericClass.id = UUID.randomUUID().toString();
     try {
       RqueueMessageUtils.buildMessage(
           messageConverter,
@@ -167,8 +167,8 @@ class RqueueMessageUtilsTest extends TestBase {
 
   @Test
   void buildPeriodicMessageNull() {
+    // id is null so the type parameter T cannot be resolved, making conversion fail
     GenericClass<String> genericClass = new GenericClass<>();
-    genericClass.id = UUID.randomUUID().toString();
     try {
       RqueueMessageUtils.buildPeriodicMessage(
           messageConverter,
@@ -186,8 +186,9 @@ class RqueueMessageUtilsTest extends TestBase {
 
   @Test
   void buildMessageReturnInvalidType() {
+    // id is null so GenericMessageConverter returns null; falls through to NoMessageConverter
+    // which wraps the object in a GenericMessage with a non-String/non-byte[] payload
     GenericClass<String> genericClass = new GenericClass<>();
-    genericClass.id = UUID.randomUUID().toString();
     try {
       RqueueMessageUtils.buildMessage(
           messageConverter2,
@@ -205,8 +206,9 @@ class RqueueMessageUtilsTest extends TestBase {
 
   @Test
   void buildPeriodicMessageReturnInvalidType() {
+    // id is null so GenericMessageConverter returns null; falls through to NoMessageConverter
+    // which wraps the object in a GenericMessage with a non-String/non-byte[] payload
     GenericClass<String> genericClass = new GenericClass<>();
-    genericClass.id = UUID.randomUUID().toString();
     try {
       RqueueMessageUtils.buildPeriodicMessage(
           messageConverter2,
