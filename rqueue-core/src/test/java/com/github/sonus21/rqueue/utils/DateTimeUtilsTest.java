@@ -88,7 +88,8 @@ class DateTimeUtilsTest extends TestBase {
 
   @Test
   void formatMilliToReadableString() {
-    assertEquals("26 Apr, 1970 at 05:46 PM", DateTimeUtils.formatMilliToReadableString(10000000000L));
+    assertEquals(
+        "26 Apr, 1970 at 05:46 PM", DateTimeUtils.formatMilliToReadableString(10000000000L));
     assertEquals("", DateTimeUtils.formatMilliToReadableString(null));
   }
 

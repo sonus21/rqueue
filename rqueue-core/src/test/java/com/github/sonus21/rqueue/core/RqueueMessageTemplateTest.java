@@ -64,15 +64,14 @@ class RqueueMessageTemplateTest extends TestBase {
   @BeforeEach
   public void init() throws Exception {
     MockitoAnnotations.openMocks(this);
-    redisTemplate =
-        new RedisTemplate<>() {
-          @Override
-          public ListOperations<String, RqueueMessage> opsForList() {
-            return listOperations;
-          }
-        };
-    rqueueMessageTemplate = TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate,
-        scriptExecutor);
+    redisTemplate = new RedisTemplate<>() {
+      @Override
+      public ListOperations<String, RqueueMessage> opsForList() {
+        return listOperations;
+      }
+    };
+    rqueueMessageTemplate =
+        TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate, scriptExecutor);
   }
 
   @Test

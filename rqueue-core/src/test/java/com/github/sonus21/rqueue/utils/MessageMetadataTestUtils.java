@@ -36,8 +36,13 @@ public class MessageMetadataTestUtils {
   public static MessageMetadata createMessageMetadata(
       MessageConverter messageConverter, String queue, Object message) {
     RqueueMessage rqueueMessage = RqueueMessageUtils.generateMessages(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, message, queue, null,
-            null, 1)
+            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+            messageConverter,
+            message,
+            queue,
+            null,
+            null,
+            1)
         .get(0);
     return new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
   }

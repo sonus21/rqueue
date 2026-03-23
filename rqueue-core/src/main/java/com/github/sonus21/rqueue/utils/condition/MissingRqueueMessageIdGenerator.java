@@ -30,7 +30,8 @@ public class MissingRqueueMessageIdGenerator implements Condition {
       return true;
     }
     ListableBeanFactory beanFactory = (ListableBeanFactory) context.getBeanFactory();
-    String[] beanNames = beanFactory.getBeanNamesForType(RqueueMessageIdGenerator.class, false, false);
+    String[] beanNames =
+        beanFactory.getBeanNamesForType(RqueueMessageIdGenerator.class, false, false);
     return beanNames.length == 0;
   }
 }

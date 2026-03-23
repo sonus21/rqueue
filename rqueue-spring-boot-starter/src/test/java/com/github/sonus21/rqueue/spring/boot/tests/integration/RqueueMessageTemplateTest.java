@@ -108,11 +108,16 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void getScore() {
     String tgtZset = "getScoreZSet";
     MessageConverter converter = new DefaultRqueueMessageConverter();
-    RqueueMessage message = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
-    RqueueMessage message2 = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
-    RqueueMessage message3 = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
-    RqueueMessage message4 = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
-    RqueueMessage message5 = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message2 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message3 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message4 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message5 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
     long score = System.currentTimeMillis();
     rqueueMessageTemplate.addToZset(tgtZset, message2, score);
     rqueueMessageTemplate.addToZset(tgtZset, message3, 0);
@@ -129,9 +134,12 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void updateScore() {
     String tgtZset = "updateScoreZSet";
     MessageConverter converter = new DefaultRqueueMessageConverter();
-    RqueueMessage message = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
-    RqueueMessage message2 = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
-    RqueueMessage message3 = RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message2 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message3 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
     long score = System.currentTimeMillis();
     rqueueMessageTemplate.addToZset(tgtZset, message, score);
     assertTrue(rqueueMessageTemplate.addScore(tgtZset, message, 10_000));

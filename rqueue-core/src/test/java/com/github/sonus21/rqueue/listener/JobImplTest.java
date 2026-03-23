@@ -68,9 +68,8 @@ class JobImplTest extends TestBase {
 
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
-  private final RqueueMessage rqueueMessage =
-      RqueueMessageUtils.generateMessage(
-          RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, queueDetail.getName());
+  private final RqueueMessage rqueueMessage = RqueueMessageUtils.generateMessage(
+      RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, queueDetail.getName());
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
   private final Object userMessage = "Test Object";

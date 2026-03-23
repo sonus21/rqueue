@@ -56,16 +56,15 @@ class RqueueMessageUtilsTest extends TestBase {
   void buildPeriodicMessage() {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
-    RqueueMessage message =
-        RqueueMessageUtils.buildPeriodicMessage(
-            FIXED_MESSAGE_ID_GENERATOR,
-            messageConverter,
-            queue,
-            null,
-            email,
-            null,
-            10_000L,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage message = RqueueMessageUtils.buildPeriodicMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
+        messageConverter,
+        queue,
+        null,
+        email,
+        null,
+        10_000L,
+        RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(10_000L, message.getPeriod());
     long now = System.currentTimeMillis();
     assertTrue(
@@ -85,16 +84,15 @@ class RqueueMessageUtilsTest extends TestBase {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
     long startTimeInNano = System.nanoTime();
-    RqueueMessage message =
-        RqueueMessageUtils.buildMessage(
-            FIXED_MESSAGE_ID_GENERATOR,
-            messageConverter,
-            queue,
-            null,
-            email,
-            null,
-            null,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage message = RqueueMessageUtils.buildMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
+        messageConverter,
+        queue,
+        null,
+        email,
+        null,
+        null,
+        RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(0, message.getPeriod());
     long now = System.currentTimeMillis();
     long nowNano = System.nanoTime();
@@ -115,16 +113,15 @@ class RqueueMessageUtilsTest extends TestBase {
   void buildMessageUsesProvidedMessageIdGenerator() {
     Email email = Email.newInstance();
 
-    RqueueMessage message =
-        RqueueMessageUtils.buildMessage(
-            FIXED_MESSAGE_ID_GENERATOR,
-            messageConverter,
-            queue,
-            null,
-            email,
-            null,
-            null,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage message = RqueueMessageUtils.buildMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
+        messageConverter,
+        queue,
+        null,
+        email,
+        null,
+        null,
+        RqueueMessageHeaders.emptyMessageHeaders());
 
     assertEquals("fixed-id", message.getId());
   }
@@ -134,16 +131,15 @@ class RqueueMessageUtilsTest extends TestBase {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
     long startTimeInNano = System.nanoTime();
-    RqueueMessage message =
-        RqueueMessageUtils.buildMessage(
-            FIXED_MESSAGE_ID_GENERATOR,
-            messageConverter,
-            queue,
-            null,
-            email,
-            3,
-            10_000L,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage message = RqueueMessageUtils.buildMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
+        messageConverter,
+        queue,
+        null,
+        email,
+        3,
+        10_000L,
+        RqueueMessageHeaders.emptyMessageHeaders());
     assertEquals(0, message.getPeriod());
     long now = System.currentTimeMillis();
     long nowNano = System.nanoTime();

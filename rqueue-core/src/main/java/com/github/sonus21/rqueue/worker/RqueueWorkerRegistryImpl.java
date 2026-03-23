@@ -104,7 +104,8 @@ public class RqueueWorkerRegistryImpl
   }
 
   @Override
-  public void recordQueueCapacityExhausted(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
+  public void recordQueueCapacityExhausted(
+      QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     if (!rqueueConfig.isWorkerRegistryEnabled()) {
       return;
     }
@@ -112,17 +113,15 @@ public class RqueueWorkerRegistryImpl
     long now = System.currentTimeMillis();
     refreshWorkerInfoIfRequired(now);
     lastCapacityExhaustedAtByQueue.put(registryQueueName, now);
-    capacityExhaustedCountByQueue.compute(
-        registryQueueName,
-        (key, count) -> {
-          if (count == null) {
-            return 1L;
-          }
-          if (count == Long.MAX_VALUE) {
-            return Long.MAX_VALUE;
-          }
-          return count + 1L;
-        });
+    capacityExhaustedCountByQueue.compute(registryQueueName, (key, count) -> {
+      if (count == null) {
+        return 1L;
+      }
+      if (count == Long.MAX_VALUE) {
+        return Long.MAX_VALUE;
+      }
+      return count + 1L;
+    });
     if (!queueHeartbeatRequired(registryQueueName, now)) {
       return;
     }
@@ -162,7 +161,8 @@ public class RqueueWorkerRegistryImpl
           continue;
         }
         // Lazy cleanup for entries that are far older than the queue hash retention window.
-        if (now - metadata.getLastPollAt() > rqueueConfig.getWorkerRegistryQueueTtl().toMillis()) {
+        if (now - metadata.getLastPollAt()
+            > rqueueConfig.getWorkerRegistryQueueTtl().toMillis()) {
           toDelete.add(entry.getKey());
           continue;
         }
@@ -184,24 +184,27 @@ public class RqueueWorkerRegistryImpl
       String workerId = entry.getKey();
       RqueueWorkerPollerMetadata metadata = entry.getValue();
       RqueueWorkerInfo workerInfo = workerInfoById.get(workerId);
-      long lastActivityAt = Math.max(metadata.getLastPollAt(),
-          metadata.getLastCapacityExhaustedAt() == null ? 0 : metadata.getLastCapacityExhaustedAt());
+      long lastActivityAt = Math.max(
+          metadata.getLastPollAt(),
+          metadata.getLastCapacityExhaustedAt() == null
+              ? 0
+              : metadata.getLastCapacityExhaustedAt());
       boolean stale = now - lastActivityAt > staleAfter || workerInfo == null;
-      rows.add(
-          RqueueWorkerPollerView.builder()
-              .queue(queueName)
-              .workerId(workerId)
-              .host(workerInfo == null ? "unknown" : workerInfo.getHost())
-              .pid(workerInfo == null ? "" : workerInfo.getPid())
-              .status(stale ? "STALE" : "ACTIVE")
-              .lastPollAt(metadata.getLastPollAt())
-              .lastPollAge(formatAge(now, metadata.getLastPollAt() == 0 ? null : metadata.getLastPollAt()))
-              .lastMessageAt(metadata.getLastMessageAt())
-              .lastMessageAge(formatAge(now, metadata.getLastMessageAt()))
-              .lastCapacityExhaustedAt(metadata.getLastCapacityExhaustedAt())
-              .lastCapacityExhaustedAge(formatAge(now, metadata.getLastCapacityExhaustedAt()))
-              .capacityExhaustedCount(metadata.getCapacityExhaustedCount())
-              .build());
+      rows.add(RqueueWorkerPollerView.builder()
+          .queue(queueName)
+          .workerId(workerId)
+          .host(workerInfo == null ? "unknown" : workerInfo.getHost())
+          .pid(workerInfo == null ? "" : workerInfo.getPid())
+          .status(stale ? "STALE" : "ACTIVE")
+          .lastPollAt(metadata.getLastPollAt())
+          .lastPollAge(
+              formatAge(now, metadata.getLastPollAt() == 0 ? null : metadata.getLastPollAt()))
+          .lastMessageAt(metadata.getLastMessageAt())
+          .lastMessageAge(formatAge(now, metadata.getLastMessageAt()))
+          .lastCapacityExhaustedAt(metadata.getLastCapacityExhaustedAt())
+          .lastCapacityExhaustedAge(formatAge(now, metadata.getLastCapacityExhaustedAt()))
+          .capacityExhaustedCount(metadata.getCapacityExhaustedCount())
+          .build());
     }
     rows.sort(Comparator.comparingLong(RqueueWorkerPollerView::getLastPollAt).reversed());
     return rows;
@@ -220,22 +223,22 @@ public class RqueueWorkerRegistryImpl
   }
 
   private void refreshWorkerInfoIfRequired(long now) {
-    if (now - lastWorkerHeartbeatAt < rqueueConfig.getWorkerRegistryWorkerHeartbeatInterval().toMillis()) {
+    if (now - lastWorkerHeartbeatAt
+        < rqueueConfig.getWorkerRegistryWorkerHeartbeatInterval().toMillis()) {
       return;
     }
     refreshWorkerInfo(now);
   }
 
   private void refreshWorkerInfo(long now) {
-    RqueueWorkerInfo workerInfo =
-        RqueueWorkerInfo.builder()
-            .workerId(workerId)
-            .host(host)
-            .pid(pid)
-            .version(rqueueConfig.getLibVersion())
-            .startedAt(startedAt)
-            .lastSeenAt(now)
-            .build();
+    RqueueWorkerInfo workerInfo = RqueueWorkerInfo.builder()
+        .workerId(workerId)
+        .host(host)
+        .pid(pid)
+        .version(rqueueConfig.getLibVersion())
+        .startedAt(startedAt)
+        .lastSeenAt(now)
+        .build();
     workerTemplate.set(
         rqueueConfig.getWorkerRegistryKey(workerId),
         workerInfo,
@@ -248,7 +251,8 @@ public class RqueueWorkerRegistryImpl
     if (lastHeartbeat == null) {
       return true;
     }
-    return now - lastHeartbeat >= rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
+    return now - lastHeartbeat
+        >= rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
   }
 
   private void refreshQueueTtlIfRequired(String queueName, long now) {

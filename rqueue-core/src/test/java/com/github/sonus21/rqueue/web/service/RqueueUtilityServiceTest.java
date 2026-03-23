@@ -31,8 +31,8 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
-import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
@@ -66,6 +66,7 @@ class RqueueUtilityServiceTest extends TestBase {
 
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
   private RqueueMessageTemplate rqueueMessageTemplate;
 
   @Mock
@@ -76,6 +77,7 @@ class RqueueUtilityServiceTest extends TestBase {
 
   @Mock
   private RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
+
   private final RqueueConfig rqueueConfig = new RqueueConfig(null, null, false, 2);
   private RqueueUtilityService rqueueUtilityService;
 
@@ -126,14 +128,13 @@ class RqueueUtilityServiceTest extends TestBase {
     assertEquals(1, response.getCode());
     assertEquals("Message not found!", response.getMessage());
 
-    RqueueMessage rqueueMessage =
-        RqueueMessage.builder()
-            .id(id)
-            .queueName("notification")
-            .message("test")
-            .queuedTime(System.nanoTime())
-            .processAt(System.currentTimeMillis())
-            .build();
+    RqueueMessage rqueueMessage = RqueueMessage.builder()
+        .id(id)
+        .queueName("notification")
+        .message("test")
+        .queuedTime(System.nanoTime())
+        .processAt(System.currentTimeMillis())
+        .build();
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     doReturn(messageMetadata).when(messageMetadataService).getByMessageId("notification", id);
     doReturn(0L)

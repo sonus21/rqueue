@@ -45,6 +45,7 @@ public class RqueueConfig {
 
   @Getter
   private static final String brokerId = UUID.randomUUID().toString();
+
   private static final AtomicLong counter = new AtomicLong(1);
   private final RedisConnectionFactory connectionFactory;
   private final ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;

@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.worker;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
@@ -60,14 +61,13 @@ class RqueueWorkerRegistryImplTest extends TestBase {
     MockitoAnnotations.openMocks(this);
     redisTemplate.setConnectionFactory(Mockito.mock(RedisConnectionFactory.class));
     originalRedisTemplateProvider = RedisUtils.redisTemplateProvider;
-    RedisUtils.redisTemplateProvider =
-        new RedisUtils.RedisTemplateProvider() {
-          @Override
-          public <V> RedisTemplate<String, V> getRedisTemplate(
-              RedisConnectionFactory redisConnectionFactory) {
-            return (RedisTemplate<String, V>) redisTemplate;
-          }
-        };
+    RedisUtils.redisTemplateProvider = new RedisUtils.RedisTemplateProvider() {
+      @Override
+      public <V> RedisTemplate<String, V> getRedisTemplate(
+          RedisConnectionFactory redisConnectionFactory) {
+        return (RedisTemplate<String, V>) redisTemplate;
+      }
+    };
     workerTemplate = new TestWorkerTemplate();
     stringTemplate = new TestStringTemplate();
   }
@@ -89,24 +89,21 @@ class RqueueWorkerRegistryImplTest extends TestBase {
 
     long now = System.currentTimeMillis();
     String workerId = "worker-1";
-    RqueueWorkerPollerMetadata metadata =
-        RqueueWorkerPollerMetadata.builder()
-            .workerId(workerId)
-            .lastPollAt(now - Duration.ofSeconds(40).toMillis())
-            .lastCapacityExhaustedAt(now)
-            .capacityExhaustedCount(2L)
-            .build();
+    RqueueWorkerPollerMetadata metadata = RqueueWorkerPollerMetadata.builder()
+        .workerId(workerId)
+        .lastPollAt(now - Duration.ofSeconds(40).toMillis())
+        .lastCapacityExhaustedAt(now)
+        .capacityExhaustedCount(2L)
+        .build();
     stringTemplate.values =
         Collections.singletonMap(workerId, objectMapper.writeValueAsString(metadata));
-    workerTemplate.values =
-        Collections.singletonList(
-            RqueueWorkerInfo.builder()
-                .workerId(workerId)
-                .host("host-1")
-                .pid("123")
-                .startedAt(now - Duration.ofMinutes(5).toMillis())
-                .lastSeenAt(now)
-                .build());
+    workerTemplate.values = Collections.singletonList(RqueueWorkerInfo.builder()
+        .workerId(workerId)
+        .host("host-1")
+        .pid("123")
+        .startedAt(now - Duration.ofMinutes(5).toMillis())
+        .lastSeenAt(now)
+        .build());
 
     List<RqueueWorkerPollerView> workers = registry.getQueueWorkers("test");
 
@@ -132,22 +129,21 @@ class RqueueWorkerRegistryImplTest extends TestBase {
         new java.util.concurrent.ConcurrentHashMap<>(
             Collections.singletonMap("test-queue", Long.MAX_VALUE)));
 
-    QueueDetail queueDetail =
-        QueueDetail.builder()
-            .name("test-queue")
-            .queueName("test-queue")
-            .processingQueueName("test-queue-processing")
-            .processingQueueChannelName("test-queue-processing-channel")
-            .scheduledQueueName("test-queue-scheduled")
-            .scheduledQueueChannelName("test-queue-scheduled-channel")
-            .completedQueueName("test-queue-completed")
-            .active(true)
-            .visibilityTimeout(1000L)
-            .batchSize(1)
-            .numRetry(3)
-            .concurrency(new Concurrency(1, 1))
-            .priority(Collections.emptyMap())
-            .build();
+    QueueDetail queueDetail = QueueDetail.builder()
+        .name("test-queue")
+        .queueName("test-queue")
+        .processingQueueName("test-queue-processing")
+        .processingQueueChannelName("test-queue-processing-channel")
+        .scheduledQueueName("test-queue-scheduled")
+        .scheduledQueueChannelName("test-queue-scheduled-channel")
+        .completedQueueName("test-queue-completed")
+        .active(true)
+        .visibilityTimeout(1000L)
+        .batchSize(1)
+        .numRetry(3)
+        .concurrency(new Concurrency(1, 1))
+        .priority(Collections.emptyMap())
+        .build();
 
     registry.recordQueueCapacityExhausted(
         queueDetail,

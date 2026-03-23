@@ -53,9 +53,15 @@ abstract class BaseMessageSender {
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
   protected final RqueueMessageIdGenerator messageIdGenerator;
-  @Autowired protected RqueueStringDao rqueueStringDao;
-  @Autowired protected RqueueConfig rqueueConfig;
-  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
+
+  @Autowired
+  protected RqueueStringDao rqueueStringDao;
+
+  @Autowired
+  protected RqueueConfig rqueueConfig;
+
+  @Autowired
+  protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
@@ -118,16 +124,15 @@ abstract class BaseMessageSender {
       Long delayInMilliSecs,
       boolean isUnique) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage =
-        buildMessage(
-            messageIdGenerator,
-            messageConverter,
-            queueName,
-            messageId,
-            message,
-            retryCount,
-            delayInMilliSecs,
-            messageHeaders);
+    RqueueMessage rqueueMessage = buildMessage(
+        messageIdGenerator,
+        messageConverter,
+        queueName,
+        messageId,
+        message,
+        retryCount,
+        delayInMilliSecs,
+        messageHeaders);
     try {
       storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
       enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
@@ -147,16 +152,15 @@ abstract class BaseMessageSender {
   protected String pushPeriodicMessage(
       String queueName, String messageId, Object message, long periodInMilliSeconds) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage =
-        buildPeriodicMessage(
-            messageIdGenerator,
-            messageConverter,
-            queueName,
-            messageId,
-            message,
-            null,
-            periodInMilliSeconds,
-            messageHeaders);
+    RqueueMessage rqueueMessage = buildPeriodicMessage(
+        messageIdGenerator,
+        messageConverter,
+        queueName,
+        messageId,
+        message,
+        null,
+        periodInMilliSeconds,
+        messageHeaders);
     try {
       storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, false);
       enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);

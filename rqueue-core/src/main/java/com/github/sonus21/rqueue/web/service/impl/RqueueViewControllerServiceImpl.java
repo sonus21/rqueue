@@ -39,7 +39,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
@@ -144,16 +143,15 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
       List<RqueueWorkerPollerView> queueWorkers =
           rqueueQDetailService.getQueueWorkers(queueConfig.getName());
       for (RqueueWorkerPollerView queueWorker : queueWorkers) {
-        RqueueWorkerView workerView =
-            workerIdToView.getOrDefault(
-                queueWorker.getWorkerId(),
-                RqueueWorkerView.builder()
-                    .workerId(queueWorker.getWorkerId())
-                    .host(queueWorker.getHost())
-                    .pid(queueWorker.getPid())
-                    .lastPollAt(queueWorker.getLastPollAt())
-                    .lastPollAge(queueWorker.getLastPollAge())
-                    .build());
+        RqueueWorkerView workerView = workerIdToView.getOrDefault(
+            queueWorker.getWorkerId(),
+            RqueueWorkerView.builder()
+                .workerId(queueWorker.getWorkerId())
+                .host(queueWorker.getHost())
+                .pid(queueWorker.getPid())
+                .lastPollAt(queueWorker.getLastPollAt())
+                .lastPollAge(queueWorker.getLastPollAge())
+                .build());
         workerView.setHost(queueWorker.getHost());
         workerView.setPid(queueWorker.getPid());
         if (queueWorker.getLastPollAt() > workerView.getLastPollAt()) {
@@ -170,21 +168,20 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
       }
     }
     List<RqueueWorkerView> allWorkers = new ArrayList<>(workerIdToView.values());
-    allWorkers.forEach(
-        e -> {
-          e.getPollers().sort(Comparator.comparing(RqueueWorkerPollerView::getQueue));
-          int recentCapacityExhaustedQueues = 0;
-          long recentThreshold =
-              2L * rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
-          for (RqueueWorkerPollerView poller : e.getPollers()) {
-            Long lastCapacityExhaustedAt = poller.getLastCapacityExhaustedAt();
-            if (lastCapacityExhaustedAt != null
-                && System.currentTimeMillis() - lastCapacityExhaustedAt <= recentThreshold) {
-              recentCapacityExhaustedQueues += 1;
-            }
-          }
-          e.setRecentCapacityExhaustedQueues(recentCapacityExhaustedQueues);
-        });
+    allWorkers.forEach(e -> {
+      e.getPollers().sort(Comparator.comparing(RqueueWorkerPollerView::getQueue));
+      int recentCapacityExhaustedQueues = 0;
+      long recentThreshold =
+          2L * rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
+      for (RqueueWorkerPollerView poller : e.getPollers()) {
+        Long lastCapacityExhaustedAt = poller.getLastCapacityExhaustedAt();
+        if (lastCapacityExhaustedAt != null
+            && System.currentTimeMillis() - lastCapacityExhaustedAt <= recentThreshold) {
+          recentCapacityExhaustedQueues += 1;
+        }
+      }
+      e.setRecentCapacityExhaustedQueues(recentCapacityExhaustedQueues);
+    });
     allWorkers.sort(Comparator.comparingLong(RqueueWorkerView::getLastPollAt).reversed());
     int pageSize = Math.max(1, rqueueWebConfig.getWorkerPageSize());
     int totalPages = Math.max(1, (allWorkers.size() + pageSize - 1) / pageSize);
@@ -227,15 +224,13 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute(
         "staleQueueWorkers",
         queueWorkers.stream().filter(e -> "STALE".equals(e.getStatus())).count());
-    long recentThreshold = 2L * rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
+    long recentThreshold =
+        2L * rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
     model.addAttribute(
         "queueWorkerRecentCapacityExhausted",
         queueWorkers.stream()
-            .filter(
-                e ->
-                    e.getLastCapacityExhaustedAt() != null
-                        && System.currentTimeMillis() - e.getLastCapacityExhaustedAt()
-                        <= recentThreshold)
+            .filter(e -> e.getLastCapacityExhaustedAt() != null
+                && System.currentTimeMillis() - e.getLastCapacityExhaustedAt() <= recentThreshold)
             .count());
   }
 

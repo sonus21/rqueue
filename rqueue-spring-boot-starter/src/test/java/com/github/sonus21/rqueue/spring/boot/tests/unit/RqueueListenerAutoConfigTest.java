@@ -122,9 +122,8 @@ class RqueueListenerAutoConfigTest extends TestBase {
     doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(
-        messageAutoConfig.rqueueMessageEnqueuer(
-            rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
+    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(
+        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
   }
 
@@ -138,12 +137,10 @@ class RqueueListenerAutoConfigTest extends TestBase {
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
-    assertNotNull(
-        messageAutoConfig.rqueueMessageEnqueuer(
-            rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
-    RqueueMessageEnqueuer messageSender =
-        messageAutoConfig.rqueueMessageEnqueuer(
-            rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator());
+    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(
+        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
+    RqueueMessageEnqueuer messageSender = messageAutoConfig.rqueueMessageEnqueuer(
+        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
   }
