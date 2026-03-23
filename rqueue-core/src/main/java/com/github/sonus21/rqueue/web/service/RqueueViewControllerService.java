@@ -22,7 +22,9 @@ public interface RqueueViewControllerService {
 
   void index(Model model, String forwardedFor);
 
-  void queues(Model model, String xForwardedPrefix);
+  void queues(Model model, String xForwardedPrefix, int pageNumber);
+
+  void workers(Model model, String xForwardedPrefix, int pageNumber);
 
   void queueDetail(Model model, String xForwardedPrefix, String queueName);
 

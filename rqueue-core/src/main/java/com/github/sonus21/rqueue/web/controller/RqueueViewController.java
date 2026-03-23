@@ -29,6 +29,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
@@ -66,11 +67,29 @@ public class RqueueViewController extends BaseController {
   }
 
   @GetMapping("queues")
-  public View queues(Model model, HttpServletRequest request, HttpServletResponse response)
+  public View queues(
+      Model model,
+      @RequestParam(name = "page", defaultValue = "1") int pageNumber,
+      HttpServletRequest request,
+      HttpServletResponse response)
       throws Exception {
     if (isEnable(response)) {
-      rqueueViewControllerService.queues(model, xForwardedPrefix(request));
+      rqueueViewControllerService.queues(model, xForwardedPrefix(request), pageNumber);
       return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
+    }
+    return null;
+  }
+
+  @GetMapping("workers")
+  public View workers(
+      Model model,
+      @RequestParam(name = "page", defaultValue = "1") int pageNumber,
+      HttpServletRequest request,
+      HttpServletResponse response)
+      throws Exception {
+    if (isEnable(response)) {
+      rqueueViewControllerService.workers(model, xForwardedPrefix(request), pageNumber);
+      return rqueueViewResolver.resolveViewName("workers", Locale.ENGLISH);
     }
     return null;
   }

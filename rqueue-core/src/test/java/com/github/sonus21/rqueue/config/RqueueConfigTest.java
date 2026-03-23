@@ -17,9 +17,11 @@
 package com.github.sonus21.rqueue.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +43,8 @@ class RqueueConfigTest extends TestBase {
     rqueueConfig.setLockKeyPrefix("lock::");
     rqueueConfig.setQueueConfigKeyPrefix("q-config::");
     rqueueConfig.setQueueStatKeyPrefix("q-stat::");
+    rqueueConfig.setWorkerRegistryKeyPrefix("worker::");
+    rqueueConfig.setWorkerRegistryQueueKeyPrefix("q-pollers::");
   }
 
   @BeforeEach
@@ -116,5 +120,38 @@ class RqueueConfigTest extends TestBase {
     assertEquals("__rq::q-config::test", rqueueConfigVersion1.getQueueConfigKey("test"));
     assertEquals("__rq::q-config::test", rqueueConfigVersion2.getQueueConfigKey("test"));
     assertEquals("__rq::q-config::test", rqueueConfigVersion2ClusterMode.getQueueConfigKey("test"));
+  }
+
+  @Test
+  void getWorkerRegistryKey() {
+    assertEquals("__rq::worker::test", rqueueConfigVersion1.getWorkerRegistryKey("test"));
+    assertEquals("__rq::worker::test", rqueueConfigVersion2.getWorkerRegistryKey("test"));
+    assertEquals(
+        "__rq::worker::test", rqueueConfigVersion2ClusterMode.getWorkerRegistryKey("test"));
+  }
+
+  @Test
+  void getWorkerRegistryQueueKey() {
+    assertEquals("__rq::q-pollers::test", rqueueConfigVersion1.getWorkerRegistryQueueKey("test"));
+    assertEquals("__rq::q-pollers::test", rqueueConfigVersion2.getWorkerRegistryQueueKey("test"));
+    assertEquals(
+        "__rq::q-pollers::{test}",
+        rqueueConfigVersion2ClusterMode.getWorkerRegistryQueueKey("test"));
+  }
+
+  @Test
+  void workerRegistryProperties() {
+    rqueueConfigVersion2.setWorkerRegistryEnabled(true);
+    rqueueConfigVersion2.setWorkerRegistryWorkerTtlInSeconds(300);
+    rqueueConfigVersion2.setWorkerRegistryWorkerHeartbeatIntervalInSeconds(60);
+    rqueueConfigVersion2.setWorkerRegistryQueueTtlInSeconds(3600);
+    rqueueConfigVersion2.setWorkerRegistryQueueHeartbeatIntervalInSeconds(15);
+    assertTrue(rqueueConfigVersion2.isWorkerRegistryEnabled());
+    assertEquals(Duration.ofSeconds(300), rqueueConfigVersion2.getWorkerRegistryWorkerTtl());
+    assertEquals(
+        Duration.ofSeconds(60), rqueueConfigVersion2.getWorkerRegistryWorkerHeartbeatInterval());
+    assertEquals(Duration.ofSeconds(3600), rqueueConfigVersion2.getWorkerRegistryQueueTtl());
+    assertEquals(
+        Duration.ofSeconds(15), rqueueConfigVersion2.getWorkerRegistryQueueHeartbeatInterval());
   }
 }

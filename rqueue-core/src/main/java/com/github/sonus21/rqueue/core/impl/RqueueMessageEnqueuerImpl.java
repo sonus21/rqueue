@@ -25,6 +25,7 @@ import static com.github.sonus21.rqueue.utils.Validator.validateQueue;
 import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
 
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.Objects;
@@ -39,7 +40,19 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    super(messageTemplate, messageConverter, messageHeaders);
+    this(
+        messageTemplate,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
+  }
+
+  public RqueueMessageEnqueuerImpl(
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders,
+      RqueueMessageIdGenerator messageIdGenerator) {
+    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   private void validateBasic(String queue, Object message) {

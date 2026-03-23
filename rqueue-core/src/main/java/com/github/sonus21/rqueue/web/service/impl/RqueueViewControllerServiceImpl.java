@@ -24,6 +24,8 @@ import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
+import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerView;
+import com.github.sonus21.rqueue.models.registry.RqueueWorkerView;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
@@ -32,8 +34,12 @@ import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
@@ -89,17 +95,110 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
   }
 
+  private <T> List<T> getPage(List<T> items, int pageNumber, int pageSize) {
+    if (items.isEmpty()) {
+      return items;
+    }
+    int page = Math.max(1, pageNumber);
+    int start = (page - 1) * pageSize;
+    if (start >= items.size()) {
+      start = ((items.size() - 1) / pageSize) * pageSize;
+    }
+    int end = Math.min(start + pageSize, items.size());
+    return items.subList(start, end);
+  }
+
   @Override
-  public void queues(Model model, String xForwardedPrefix) {
+  public void queues(Model model, String xForwardedPrefix, int pageNumber) {
     addBasicDetails(model, xForwardedPrefix);
     addNavData(model, NavTab.QUEUES);
     model.addAttribute("title", "Queues");
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
+    List<QueueConfig> allQueueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
+    int pageSize = Math.max(1, rqueueWebConfig.getQueuePageSize());
+    int totalPages = Math.max(1, (allQueueConfigs.size() + pageSize - 1) / pageSize);
+    int currentPage = Math.max(1, Math.min(pageNumber, totalPages));
+    List<QueueConfig> queueConfigs = getPage(allQueueConfigs, currentPage, pageSize);
     List<Entry<String, List<Entry<NavTab, RedisDataDetail>>>> queueNameConfigs = new ArrayList<>(
         rqueueQDetailService.getQueueDataStructureDetails(queueConfigs).entrySet());
     queueNameConfigs.sort(Entry.comparingByKey());
     model.addAttribute("queues", queueConfigs);
     model.addAttribute("queueConfigs", queueNameConfigs);
+    model.addAttribute("currentPage", currentPage);
+    model.addAttribute("totalPages", totalPages);
+    model.addAttribute("hasPreviousPage", currentPage > 1);
+    model.addAttribute("hasNextPage", currentPage < totalPages);
+    model.addAttribute("previousPage", Math.max(1, currentPage - 1));
+    model.addAttribute("nextPage", Math.min(totalPages, currentPage + 1));
+    model.addAttribute("queuePageSize", pageSize);
+    model.addAttribute("totalQueueCount", allQueueConfigs.size());
+  }
+
+  @Override
+  public void workers(Model model, String xForwardedPrefix, int pageNumber) {
+    addBasicDetails(model, xForwardedPrefix);
+    addNavData(model, NavTab.WORKERS);
+    model.addAttribute("title", "Workers");
+    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
+    Map<String, RqueueWorkerView> workerIdToView = new LinkedHashMap<>();
+    for (QueueConfig queueConfig : queueConfigs) {
+      List<RqueueWorkerPollerView> queueWorkers =
+          rqueueQDetailService.getQueueWorkers(queueConfig.getName());
+      for (RqueueWorkerPollerView queueWorker : queueWorkers) {
+        RqueueWorkerView workerView =
+            workerIdToView.getOrDefault(
+                queueWorker.getWorkerId(),
+                RqueueWorkerView.builder()
+                    .workerId(queueWorker.getWorkerId())
+                    .host(queueWorker.getHost())
+                    .pid(queueWorker.getPid())
+                    .lastPollAt(queueWorker.getLastPollAt())
+                    .lastPollAge(queueWorker.getLastPollAge())
+                    .build());
+        workerView.setHost(queueWorker.getHost());
+        workerView.setPid(queueWorker.getPid());
+        if (queueWorker.getLastPollAt() > workerView.getLastPollAt()) {
+          workerView.setLastPollAt(queueWorker.getLastPollAt());
+          workerView.setLastPollAge(queueWorker.getLastPollAge());
+        }
+        if ("ACTIVE".equals(queueWorker.getStatus())) {
+          workerView.setActiveQueues(workerView.getActiveQueues() + 1);
+        } else {
+          workerView.setStaleQueues(workerView.getStaleQueues() + 1);
+        }
+        workerView.getPollers().add(queueWorker);
+        workerIdToView.put(queueWorker.getWorkerId(), workerView);
+      }
+    }
+    List<RqueueWorkerView> allWorkers = new ArrayList<>(workerIdToView.values());
+    allWorkers.forEach(
+        e -> {
+          e.getPollers().sort(Comparator.comparing(RqueueWorkerPollerView::getQueue));
+          int recentCapacityExhaustedQueues = 0;
+          long recentThreshold =
+              2L * rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
+          for (RqueueWorkerPollerView poller : e.getPollers()) {
+            Long lastCapacityExhaustedAt = poller.getLastCapacityExhaustedAt();
+            if (lastCapacityExhaustedAt != null
+                && System.currentTimeMillis() - lastCapacityExhaustedAt <= recentThreshold) {
+              recentCapacityExhaustedQueues += 1;
+            }
+          }
+          e.setRecentCapacityExhaustedQueues(recentCapacityExhaustedQueues);
+        });
+    allWorkers.sort(Comparator.comparingLong(RqueueWorkerView::getLastPollAt).reversed());
+    int pageSize = Math.max(1, rqueueWebConfig.getWorkerPageSize());
+    int totalPages = Math.max(1, (allWorkers.size() + pageSize - 1) / pageSize);
+    int currentPage = Math.max(1, Math.min(pageNumber, totalPages));
+    List<RqueueWorkerView> workers = getPage(allWorkers, currentPage, pageSize);
+    model.addAttribute("workers", workers);
+    model.addAttribute("currentPage", currentPage);
+    model.addAttribute("totalPages", totalPages);
+    model.addAttribute("hasPreviousPage", currentPage > 1);
+    model.addAttribute("hasNextPage", currentPage < totalPages);
+    model.addAttribute("previousPage", Math.max(1, currentPage - 1));
+    model.addAttribute("nextPage", Math.min(totalPages, currentPage + 1));
+    model.addAttribute("workerPageSize", pageSize);
+    model.addAttribute("totalWorkerCount", allWorkers.size());
   }
 
   @Override
@@ -108,6 +207,7 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     List<NavTab> queueActions = rqueueQDetailService.getNavTabs(queueConfig);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetail =
         rqueueQDetailService.getQueueDataStructureDetail(queueConfig);
+    List<RqueueWorkerPollerView> queueWorkers = rqueueQDetailService.getQueueWorkers(queueName);
     addBasicDetails(model, xForwardedPrefix);
     addNavData(model, NavTab.QUEUES);
     model.addAttribute("title", "Queue: " + queueName);
@@ -119,6 +219,24 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("queueActions", queueActions);
     model.addAttribute("queueRedisDataDetails", queueRedisDataDetail);
     model.addAttribute("config", queueConfig);
+    model.addAttribute("workerRegistryEnabled", rqueueConfig.isWorkerRegistryEnabled());
+    model.addAttribute("queueWorkers", queueWorkers);
+    model.addAttribute(
+        "activeQueueWorkers",
+        queueWorkers.stream().filter(e -> "ACTIVE".equals(e.getStatus())).count());
+    model.addAttribute(
+        "staleQueueWorkers",
+        queueWorkers.stream().filter(e -> "STALE".equals(e.getStatus())).count());
+    long recentThreshold = 2L * rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
+    model.addAttribute(
+        "queueWorkerRecentCapacityExhausted",
+        queueWorkers.stream()
+            .filter(
+                e ->
+                    e.getLastCapacityExhaustedAt() != null
+                        && System.currentTimeMillis() - e.getLastCapacityExhaustedAt()
+                        <= recentThreshold)
+            .count());
   }
 
   @Override

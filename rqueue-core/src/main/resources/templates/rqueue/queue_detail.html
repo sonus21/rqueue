@@ -1,7 +1,7 @@
 {% extends 'base' %}
 {% block main %}
 <!--
-  ~ Copyright (c) 2025 Sonu Kumar
+  ~ Copyright (c) 2025-2026 Sonu Kumar
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ You may not use this file except in compliance with the License.
@@ -36,9 +36,33 @@
         {{ queueName }}
         {% else %}
         <td>{{config.name}}</td>
-        <td>{{config.concurrency.min}},{{config.concurrency.max}}</td>
-        <td>{{config.numRetry}}</td>
-        <td>{{config.visibilityTimeout}}</td>
+        <td>
+          {% if config.concurrency.min == -1 and config.concurrency.max == -1 %}
+          <span aria-label="Unbounded concurrency"
+                class="queue-detail-infinity"
+                data-placement="top"
+                data-toggle="tooltip"
+                title="Unbounded concurrency">
+            <i class="bx bx-infinite"></i>
+          </span>
+          {% else %}
+          {{config.concurrency.min}},{{config.concurrency.max}}
+          {% endif %}
+        </td>
+        <td>
+          {% if config.unlimitedRetry %}
+          <span aria-label="Unlimited retries"
+                class="queue-detail-infinity"
+                data-placement="top"
+                data-toggle="tooltip"
+                title="Unlimited retries">
+            <i class="bx bx-infinite"></i>
+          </span>
+          {% else %}
+          {{config.numRetry}}
+          {% endif %}
+        </td>
+        <td>{{duration(config.visibilityTimeout)}}</td>
         <td>
           {{ dlq(config.deadLetterQueues) }}
         </td>
@@ -69,13 +93,83 @@
         </td>
         <td>{{queueData.value.type}}</td>
         <td>{{queueData.value.name}}</td>
-        <td>{{queueData.value.size}}</td>
+        <td>
+          {% if queueData.value.size < 0 %}
+          Queue-backed
+          {% else %}
+          {{queueData.value.size}}
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+<hr/>
+{% if workerRegistryEnabled %}
+<div class="container">
+  <h4>Queue Pollers</h4>
+  <div class="row table-responsive">
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Active Pollers</th>
+        <th>Stale Pollers</th>
+        <th>Recent Exhaustion</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>{{activeQueueWorkers}}</td>
+        <td>{{staleQueueWorkers}}</td>
+        <td>{{queueWorkerRecentCapacityExhausted}}</td>
+      </tr>
+      </tbody>
+    </table>
+    {% if queueWorkers is empty %}
+    <div class="alert alert-secondary w-100" role="alert">
+      No poller heartbeat is available for this queue yet.
+    </div>
+    {% else %}
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Worker Id</th>
+        <th>Status</th>
+        <th>Host</th>
+        <th>Pid</th>
+        <th>Last Poll</th>
+        <th>Last Poll Age</th>
+        <th>Last Message</th>
+        <th>Last Message Age</th>
+        <th>Last Exhausted</th>
+        <th>Exhausted Age</th>
+        <th>Exhausted Count</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for worker in queueWorkers %}
+      <tr>
+        <td>{{worker.workerId}}</td>
+        <td>{{worker.status}}</td>
+        <td>{{worker.host}}</td>
+        <td>{{worker.pid}}</td>
+        <td>{% if worker.lastPollAt > 0 %}{{ time(worker.lastPollAt) }}{% endif %}</td>
+        <td>{{worker.lastPollAge}}</td>
+        <td>{{ time(worker.lastMessageAt) }}</td>
+        <td>{{worker.lastMessageAge}}</td>
+        <td>{{ time(worker.lastCapacityExhaustedAt) }}</td>
+        <td>{{worker.lastCapacityExhaustedAge}}</td>
+        <td>{{worker.capacityExhaustedCount}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 <hr/>
 {% include 'stats_chart' %}
 <hr/>
@@ -110,4 +204,3 @@
 
 </script>
 {% endblock %}
-

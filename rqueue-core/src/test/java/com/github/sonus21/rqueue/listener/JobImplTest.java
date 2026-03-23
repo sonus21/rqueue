@@ -48,6 +48,7 @@ import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
@@ -68,7 +69,8 @@ class JobImplTest extends TestBase {
   private final QueueDetail queueDetail = TestUtils.createQueueDetail("test-queue");
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   private final RqueueMessage rqueueMessage =
-      RqueueMessageUtils.generateMessage(messageConverter, queueDetail.getName());
+      RqueueMessageUtils.generateMessage(
+          RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, queueDetail.getName());
   private final MessageMetadata messageMetadata =
       new MessageMetadata(rqueueMessage, MessageStatus.PROCESSING);
   private final Object userMessage = "Test Object";

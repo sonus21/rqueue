@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.core.impl;
 
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
@@ -51,7 +52,19 @@ public class RqueueEndpointManagerImpl extends BaseMessageSender implements Rque
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    super(messageTemplate, messageConverter, messageHeaders);
+    this(
+        messageTemplate,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
+  }
+
+  public RqueueEndpointManagerImpl(
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders,
+      RqueueMessageIdGenerator messageIdGenerator) {
+    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @Override

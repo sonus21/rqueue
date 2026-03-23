@@ -22,6 +22,7 @@ import static org.springframework.util.Assert.notNull;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
@@ -50,7 +51,19 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    super(messageTemplate, messageConverter, messageHeaders);
+    this(
+        messageTemplate,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
+  }
+
+  public RqueueMessageManagerImpl(
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders,
+      RqueueMessageIdGenerator messageIdGenerator) {
+    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @Override

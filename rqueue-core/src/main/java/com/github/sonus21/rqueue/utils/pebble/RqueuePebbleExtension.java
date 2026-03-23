@@ -28,6 +28,8 @@ public class RqueuePebbleExtension extends AbstractExtension {
     Map<String, Function> map = new HashMap<>();
     map.put(DeadLetterQueuesFunction.FUNCTION_NAME, new DeadLetterQueuesFunction());
     map.put(DateTimeFunction.FUNCTION_NAME, new DateTimeFunction());
+    map.put(DurationFunction.FUNCTION_NAME, new DurationFunction());
+    map.put(ReadableDateTimeFunction.FUNCTION_NAME, new ReadableDateTimeFunction());
     map.put(DefaultFunction.FUNCTION_NAME, new DefaultFunction());
     return map;
   }

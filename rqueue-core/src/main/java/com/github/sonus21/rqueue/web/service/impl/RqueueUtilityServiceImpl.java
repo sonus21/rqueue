@@ -21,6 +21,7 @@ import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
@@ -29,6 +30,7 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.Pair;
+import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.DataType;
@@ -97,6 +99,44 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     }
     booleanResponse.setValue(messageMetadataService.deleteMessage(
         queueName, id, Duration.ofDays(Constants.DAYS_IN_A_MONTH)));
+    return booleanResponse;
+  }
+
+  @Override
+  public BooleanResponse enqueueMessage(String queueName, String id, String position) {
+    BooleanResponse booleanResponse = new BooleanResponse();
+    QueueConfig queueConfig = rqueueSystemConfigDao.getConfigByName(queueName, true);
+    if (queueConfig == null) {
+      booleanResponse.setCode(1);
+      booleanResponse.setMessage("Queue config not found!");
+      return booleanResponse;
+    }
+    if (StringUtils.isEmpty(queueConfig.getScheduledQueueName())) {
+      booleanResponse.setCode(1);
+      booleanResponse.setMessage("Scheduled queue not found!");
+      return booleanResponse;
+    }
+    MessageMetadata messageMetadata = messageMetadataService.getByMessageId(queueName, id);
+    if (messageMetadata == null || messageMetadata.getRqueueMessage() == null) {
+      booleanResponse.setCode(1);
+      booleanResponse.setMessage("Message not found!");
+      return booleanResponse;
+    }
+    RqueueMessage rqueueMessage = messageMetadata.getRqueueMessage();
+    Long removed =
+        rqueueMessageTemplate.removeElementFromZset(
+            queueConfig.getScheduledQueueName(), rqueueMessage);
+    if (removed == null || removed == 0) {
+      booleanResponse.setCode(1);
+      booleanResponse.setMessage("Message is not available in the scheduled queue.");
+      return booleanResponse;
+    }
+    if ("FRONT".equalsIgnoreCase(position)) {
+      rqueueMessageTemplate.addMessageAtFront(queueConfig.getQueueName(), rqueueMessage);
+    } else {
+      rqueueMessageTemplate.addMessage(queueConfig.getQueueName(), rqueueMessage);
+    }
+    booleanResponse.setValue(true);
     return booleanResponse;
   }
 
@@ -219,6 +259,12 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   @Override
   public Mono<BooleanResponse> deleteReactiveMessage(String queueName, String messageId) {
     return Mono.just(deleteMessage(queueName, messageId));
+  }
+
+  @Override
+  public Mono<BooleanResponse> enqueueReactiveMessage(
+      String queueName, String messageId, String position) {
+    return Mono.just(enqueueMessage(queueName, messageId, position));
   }
 
   @Override

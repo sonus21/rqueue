@@ -49,6 +49,8 @@ public interface RqueueMessageTemplate {
 
   Long addMessage(String queueName, RqueueMessage rqueueMessage);
 
+  Long addMessageAtFront(String queueName, RqueueMessage rqueueMessage);
+
   Boolean addToZset(String zsetName, RqueueMessage rqueueMessage, long score);
 
   List<RqueueMessage> getAllMessages(

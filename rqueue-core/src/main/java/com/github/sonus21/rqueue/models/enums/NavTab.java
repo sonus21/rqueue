@@ -24,6 +24,7 @@ import lombok.Getter;
 @Getter
 public enum NavTab {
   QUEUES("Queues"),
+  WORKERS("Workers"),
   DEAD("Dead"),
   RUNNING("Running"),
   PENDING("Pending"),

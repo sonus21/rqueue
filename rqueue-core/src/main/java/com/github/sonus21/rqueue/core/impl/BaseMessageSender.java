@@ -26,6 +26,7 @@ import static org.springframework.util.Assert.notNull;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -51,25 +52,23 @@ abstract class BaseMessageSender {
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
-
-  @Autowired
-  protected RqueueStringDao rqueueStringDao;
-
-  @Autowired
-  protected RqueueConfig rqueueConfig;
-
-  @Autowired
-  protected RqueueMessageMetadataService rqueueMessageMetadataService;
+  protected final RqueueMessageIdGenerator messageIdGenerator;
+  @Autowired protected RqueueStringDao rqueueStringDao;
+  @Autowired protected RqueueConfig rqueueConfig;
+  @Autowired protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
-      MessageHeaders messageHeaders) {
+      MessageHeaders messageHeaders,
+      RqueueMessageIdGenerator messageIdGenerator) {
     notNull(messageTemplate, "messageTemplate cannot be null");
     notNull(messageConverter, "messageConverter cannot be null");
+    notNull(messageIdGenerator, "messageIdGenerator cannot be null");
     this.messageTemplate = messageTemplate;
     this.messageConverter = messageConverter;
     this.messageHeaders = messageHeaders;
+    this.messageIdGenerator = messageIdGenerator;
   }
 
   protected Object storeMessageMetadata(
@@ -119,14 +118,16 @@ abstract class BaseMessageSender {
       Long delayInMilliSecs,
       boolean isUnique) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage = buildMessage(
-        messageConverter,
-        queueName,
-        messageId,
-        message,
-        retryCount,
-        delayInMilliSecs,
-        messageHeaders);
+    RqueueMessage rqueueMessage =
+        buildMessage(
+            messageIdGenerator,
+            messageConverter,
+            queueName,
+            messageId,
+            message,
+            retryCount,
+            delayInMilliSecs,
+            messageHeaders);
     try {
       storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
       enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
@@ -146,14 +147,16 @@ abstract class BaseMessageSender {
   protected String pushPeriodicMessage(
       String queueName, String messageId, Object message, long periodInMilliSeconds) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage = buildPeriodicMessage(
-        messageConverter,
-        queueName,
-        messageId,
-        message,
-        null,
-        periodInMilliSeconds,
-        messageHeaders);
+    RqueueMessage rqueueMessage =
+        buildPeriodicMessage(
+            messageIdGenerator,
+            messageConverter,
+            queueName,
+            messageId,
+            message,
+            null,
+            periodInMilliSeconds,
+            messageHeaders);
     try {
       storeMessageMetadata(rqueueMessage, periodInMilliSeconds, false, false);
       enqueue(queueDetail, rqueueMessage, periodInMilliSeconds, false);

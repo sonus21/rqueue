@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2023 Sonu Kumar
+  ~ Copyright (c) 2023-2026 Sonu Kumar
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ You may not use this file except in compliance with the License.
@@ -16,31 +16,40 @@
 
 <div class="modal fade" id="explore-queue">
   <div class="modal-dialog modal-data-explorer modal-lg modal-dialog-centered" role="document">
-    <div class="modal-content">
+    <div class="modal-content explorer-modal-content">
       <!-- Modal Header -->
-      <div class="modal-header">
-        <h4 class="modal-title" id="explorer-title">Queue: <b>{{queueName}}</b></h4>
-        <button class="close" data-dismiss="modal" type="button">&times;</button>
+      <div class="modal-header explorer-modal-header">
+        <div class="explorer-modal-heading">
+          <span class="explorer-modal-kicker">Queue Explorer</span>
+          <h4 class="modal-title" id="explorer-title">Queue: <b>{{queueName}}</b></h4>
+        </div>
+        <button aria-label="Close" class="close explorer-modal-close" data-dismiss="modal"
+                type="button">&times;</button>
       </div>
       <!-- Modal body -->
-      <div class="modal-body">
-        <div class="queue-nav container">
-          <label for="page-size">Number of items</label>
-          <select id="page-size">
-            <option selected value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-          <button class="btn btn-danger btn-delete-all btn-sm display-none" id="clear-queue"
-                  type="button">Delete All
-          </button>
-          <button class="btn btn-info btn-sm btn-poll float-right" id="poll-queue-btn">Poll</button>
+      <div class="modal-body explorer-modal-body">
+        <div class="explorer-toolbar">
+          <div class="explorer-toolbar-left">
+            <label class="explorer-select-group" for="page-size">
+              <span class="explorer-control-label">Rows</span>
+              <select id="page-size">
+                <option selected value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+          </div>
+          <div class="explorer-toolbar-actions">
+            <button class="btn btn-danger btn-delete-all btn-sm display-none" id="clear-queue"
+                    type="button">Delete All
+            </button>
+            <button class="btn btn-info btn-sm btn-poll" id="poll-queue-btn" type="button">Refresh</button>
+          </div>
         </div>
-        <hr/>
-        <div class="container">
-          <div class="row  table-responsive" id="explore-data-table">
-            <table class="table table-bordered">
+        <div class="explorer-table-shell">
+          <div class="table-responsive explorer-table-wrap" id="explore-data-table">
+            <table class="table table-bordered explorer-table">
               <thead>
               <tr id="table-header">
                 <th></th>
@@ -52,16 +61,12 @@
         </div>
       </div>
       <!-- Modal footer -->
-      <div class="modal-footer data-explorer-footer">
-        <div>
-          <button class="btn btn-info" id="previous-page-button" type="button">
+      <div class="modal-footer data-explorer-footer explorer-modal-footer">
+        <div class="explorer-pagination">
+          <button class="btn btn-outline-secondary" id="previous-page-button" type="button">
             Previous
           </button>
-        </div>
-        <div class="text-center">
-          <span id="display-page-number"></span>
-        </div>
-        <div>
+          <span class="explorer-page-indicator" id="display-page-number"></span>
           <button class="btn btn-info" id="next-page-button" type="button">Next
           </button>
         </div>

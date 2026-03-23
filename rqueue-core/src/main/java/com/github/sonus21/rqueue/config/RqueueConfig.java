@@ -43,6 +43,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @Configuration
 public class RqueueConfig {
 
+  @Getter
   private static final String brokerId = UUID.randomUUID().toString();
   private static final AtomicLong counter = new AtomicLong(1);
   private final RedisConnectionFactory connectionFactory;
@@ -139,9 +140,26 @@ public class RqueueConfig {
   @Value("${rqueue.completed.job.cleanup.interval:30000}")
   private long completedJobCleanupIntervalInMs;
 
-  public static String getBrokerId() {
-    return brokerId;
-  }
+  @Value("${rqueue.worker.registry.enabled:true}")
+  private boolean workerRegistryEnabled;
+
+  @Value("${rqueue.worker.registry.worker.ttl:300}")
+  private long workerRegistryWorkerTtlInSeconds;
+
+  @Value("${rqueue.worker.registry.worker.heartbeat.interval:60}")
+  private long workerRegistryWorkerHeartbeatIntervalInSeconds;
+
+  @Value("${rqueue.worker.registry.queue.ttl:3600}")
+  private long workerRegistryQueueTtlInSeconds;
+
+  @Value("${rqueue.worker.registry.queue.heartbeat.interval:15}")
+  private long workerRegistryQueueHeartbeatIntervalInSeconds;
+
+  @Value("${rqueue.worker.registry.key.prefix:worker::}")
+  private String workerRegistryKeyPrefix;
+
+  @Value("${rqueue.worker.registry.queue.key.prefix:q-pollers::}")
+  private String workerRegistryQueueKeyPrefix;
 
   public boolean messageInTerminalStateShouldBeStored() {
     return getMessageDurabilityInTerminalStateInSecond() > 0;
@@ -294,6 +312,14 @@ public class RqueueConfig {
     return prefix + jobsCollectionNamePrefix + messageId;
   }
 
+  public String getWorkerRegistryKey(String workerId) {
+    return prefix + workerRegistryKeyPrefix + workerId;
+  }
+
+  public String getWorkerRegistryQueueKey(String queueName) {
+    return prefix + workerRegistryQueueKeyPrefix + getTaggedName(queueName);
+  }
+
   public String getDelDataName(String queueName) {
     return prefix
         + delPrefix
@@ -305,6 +331,22 @@ public class RqueueConfig {
 
   public Duration getJobDurabilityInTerminalState() {
     return Duration.ofSeconds(jobDurabilityInTerminalStateInSecond);
+  }
+
+  public Duration getWorkerRegistryWorkerTtl() {
+    return Duration.ofSeconds(workerRegistryWorkerTtlInSeconds);
+  }
+
+  public Duration getWorkerRegistryWorkerHeartbeatInterval() {
+    return Duration.ofSeconds(workerRegistryWorkerHeartbeatIntervalInSeconds);
+  }
+
+  public Duration getWorkerRegistryQueueTtl() {
+    return Duration.ofSeconds(workerRegistryQueueTtlInSeconds);
+  }
+
+  public Duration getWorkerRegistryQueueHeartbeatInterval() {
+    return Duration.ofSeconds(workerRegistryQueueHeartbeatIntervalInSeconds);
   }
 
   public String getLibVersion() {

@@ -22,16 +22,19 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DateTimeUtils {
 
-  private static final DateTimeFormatter dateTimeFormatter =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-  private static final DateTimeFormatter dateTimeFormatterWithSecond =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+  private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
+      "yyyy-MM-dd HH:mm");
+  private static final DateTimeFormatter dateTimeFormatterWithSecond = DateTimeFormatter.ofPattern(
+      "yyyy-MM-dd HH:mm:ss");
+  private static final DateTimeFormatter readableDateTimeFormatter =
+      DateTimeFormatter.ofPattern("dd MMM, yyyy 'at' hh:mm a", Locale.ENGLISH);
 
   private static String hourString(long hour) {
     if (hour > 1) {
@@ -123,6 +126,69 @@ public final class DateTimeUtils {
     Instant instant = Instant.ofEpochMilli(milli);
     ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
     return zonedDateTime.format(dateTimeFormatter);
+  }
+
+  public static String formatMilliToReadableString(Long milli) {
+    if (milli == null) {
+      return "";
+    }
+    Instant instant = Instant.ofEpochMilli(milli);
+    ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+    return zonedDateTime.format(readableDateTimeFormatter);
+  }
+
+  public static String formatMilliToCompactDuration(Long milli) {
+    if (milli == null) {
+      return "";
+    }
+    long millis = milli;
+    long absMillis = Math.abs(millis);
+    String prefix = millis < 0 ? "- " : "";
+    if (absMillis < Constants.ONE_MILLI) {
+      return prefix + absMillis + " ms";
+    }
+    if (absMillis < 2L * Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI) {
+      long seconds = absMillis / Constants.ONE_MILLI;
+      return prefix + seconds + " sec";
+    }
+    if (absMillis < Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI
+        && absMillis % (Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI) == 0) {
+      long minutes = absMillis / (Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
+      return prefix + minutes + " min";
+    }
+    if (absMillis < Constants.HOURS_IN_A_DAY
+            * Constants.MINUTES_IN_AN_HOUR
+            * Constants.SECONDS_IN_A_MINUTE
+            * Constants.ONE_MILLI
+        && absMillis
+            % (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI)
+            == 0) {
+      long hours =
+          absMillis
+              / (Constants.MINUTES_IN_AN_HOUR
+                  * Constants.SECONDS_IN_A_MINUTE
+                  * Constants.ONE_MILLI);
+      return prefix + hours + " hr";
+    }
+    long totalSeconds = absMillis / Constants.ONE_MILLI;
+    long hours = totalSeconds / (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE);
+    long minutes =
+        (totalSeconds % (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE))
+            / Constants.SECONDS_IN_A_MINUTE;
+    long seconds = totalSeconds % Constants.SECONDS_IN_A_MINUTE;
+    if (hours > 0) {
+      if (minutes > 0) {
+        return prefix + hours + " hr " + minutes + " min";
+      }
+      return prefix + hours + " hr";
+    }
+    if (minutes > 0) {
+      if (seconds > 0) {
+        return prefix + minutes + " min " + seconds + " sec";
+      }
+      return prefix + minutes + " min";
+    }
+    return prefix + totalSeconds + " sec";
   }
 
   public static LocalDate localDateFromMilli(long millis) {

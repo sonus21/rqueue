@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
+import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import lombok.Getter;
 import lombok.Setter;
@@ -54,6 +55,9 @@ public class RqueueBeanProvider {
 
   @Autowired(required = false)
   private RqueueMetricsCounter rqueueMetricsCounter;
+
+  @Autowired(required = false)
+  private RqueueWorkerRegistry rqueueWorkerRegistry;
 
   @Autowired
   private RqueueMessageHandler rqueueMessageHandler;

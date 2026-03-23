@@ -43,6 +43,7 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -114,14 +115,16 @@ class RqueueExecutorTest extends TestBase {
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
     MessageConverter messageConverter = new GenericMessageConverter();
-    rqueueMessage = RqueueMessageUtils.buildMessage(
-        messageConverter,
-        queueName,
-        null,
-        payload,
-        null,
-        null,
-        RqueueMessageHeaders.emptyMessageHeaders());
+    rqueueMessage =
+        RqueueMessageUtils.buildMessage(
+            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+            messageConverter,
+            queueName,
+            null,
+            payload,
+            null,
+            null,
+            RqueueMessageHeaders.emptyMessageHeaders());
     defaultMessageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     MessageProcessorHandler messageProcessorHandler =
         new MessageProcessorHandler(null, deadLetterProcessor, discardProcessor, null);

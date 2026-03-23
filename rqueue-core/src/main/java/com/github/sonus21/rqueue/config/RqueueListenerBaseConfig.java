@@ -25,15 +25,20 @@ import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
+import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
+import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
+import com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl;
 import com.github.sonus21.rqueue.utils.RedisUtils;
+import com.github.sonus21.rqueue.utils.condition.MissingRqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
 import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
@@ -152,6 +157,12 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
+  @Conditional(MissingRqueueMessageIdGenerator.class)
+  public RqueueMessageIdGenerator rqueueMessageIdGenerator() {
+    return new UuidV4RqueueMessageIdGenerator();
+  }
+
+  @Bean
   public RqueueSchedulerConfig rqueueSchedulerConfig() {
     return new RqueueSchedulerConfig();
   }
@@ -213,6 +224,11 @@ public abstract class RqueueListenerBaseConfig {
   @Bean
   public RqueueStringDao rqueueStringDao(RqueueConfig rqueueConfig) {
     return new RqueueStringDaoImpl(rqueueConfig);
+  }
+
+  @Bean
+  public RqueueWorkerRegistry rqueueWorkerRegistry(RqueueConfig rqueueConfig) {
+    return new RqueueWorkerRegistryImpl(rqueueConfig);
   }
 
   @Bean

@@ -31,13 +31,16 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
+import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
+import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.models.response.BooleanResponse;
@@ -63,22 +66,17 @@ class RqueueUtilityServiceTest extends TestBase {
 
   @Mock
   private RqueueWebConfig rqueueWebConfig;
-
-  @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
 
   @Mock
   private RqueueMessageMetadataService messageMetadataService;
 
   @Mock
-  private RqueueConfig rqueueConfig;
-
-  @Mock
   private RqueueStringDao rqueueStringDao;
 
   @Mock
   private RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
-
+  private final RqueueConfig rqueueConfig = new RqueueConfig(null, null, false, 2);
   private RqueueUtilityService rqueueUtilityService;
 
   @BeforeEach
@@ -107,6 +105,57 @@ class RqueueUtilityServiceTest extends TestBase {
     assertEquals(0, response.getCode());
     assertNull(response.getMessage());
     verify(messageMetadataService, times(1)).deleteMessage("notification", id, Duration.ofDays(30));
+  }
+
+  @Test
+  void enqueueMessage() {
+    String id = UUID.randomUUID().toString();
+    BaseResponse response = rqueueUtilityService.enqueueMessage("notification", id, "REAR");
+    assertEquals(1, response.getCode());
+    assertEquals("Queue config not found!", response.getMessage());
+
+    QueueConfig queueConfig = createQueueConfig("notification", 3, 10000L, null);
+    queueConfig.setScheduledQueueName("");
+    doReturn(queueConfig).when(rqueueSystemConfigDao).getConfigByName("notification", true);
+    response = rqueueUtilityService.enqueueMessage("notification", id, "REAR");
+    assertEquals(1, response.getCode());
+    assertEquals("Scheduled queue not found!", response.getMessage());
+
+    queueConfig.setScheduledQueueName("__rq::d-queue::notification");
+    response = rqueueUtilityService.enqueueMessage("notification", id, "REAR");
+    assertEquals(1, response.getCode());
+    assertEquals("Message not found!", response.getMessage());
+
+    RqueueMessage rqueueMessage =
+        RqueueMessage.builder()
+            .id(id)
+            .queueName("notification")
+            .message("test")
+            .queuedTime(System.nanoTime())
+            .processAt(System.currentTimeMillis())
+            .build();
+    MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
+    doReturn(messageMetadata).when(messageMetadataService).getByMessageId("notification", id);
+    doReturn(0L)
+        .when(rqueueMessageTemplate)
+        .removeElementFromZset("__rq::d-queue::notification", rqueueMessage);
+    response = rqueueUtilityService.enqueueMessage("notification", id, "REAR");
+    assertEquals(1, response.getCode());
+    assertEquals("Message is not available in the scheduled queue.", response.getMessage());
+
+    doReturn(1L)
+        .when(rqueueMessageTemplate)
+        .removeElementFromZset("__rq::d-queue::notification", rqueueMessage);
+    response = rqueueUtilityService.enqueueMessage("notification", id, "REAR");
+    assertEquals(0, response.getCode());
+    assertTrue(((BooleanResponse) response).isValue());
+    verify(rqueueMessageTemplate, times(1)).addMessage("__rq::queue::notification", rqueueMessage);
+
+    response = rqueueUtilityService.enqueueMessage("notification", id, "FRONT");
+    assertEquals(0, response.getCode());
+    assertTrue(((BooleanResponse) response).isValue());
+    verify(rqueueMessageTemplate, times(1))
+        .addMessageAtFront("__rq::queue::notification", rqueueMessage);
   }
 
   @Test

@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
@@ -121,7 +122,9 @@ class RqueueListenerAutoConfigTest extends TestBase {
     doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(rqueueMessageHandler, messageTemplate));
+    assertNotNull(
+        messageAutoConfig.rqueueMessageEnqueuer(
+            rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
   }
 
@@ -135,9 +138,12 @@ class RqueueListenerAutoConfigTest extends TestBase {
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
-    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(rqueueMessageHandler, messageTemplate));
+    assertNotNull(
+        messageAutoConfig.rqueueMessageEnqueuer(
+            rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
     RqueueMessageEnqueuer messageSender =
-        messageAutoConfig.rqueueMessageEnqueuer(rqueueMessageHandler, messageTemplate);
+        messageAutoConfig.rqueueMessageEnqueuer(
+            rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
   }
