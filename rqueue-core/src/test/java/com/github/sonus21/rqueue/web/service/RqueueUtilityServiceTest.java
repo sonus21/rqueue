@@ -66,6 +66,8 @@ class RqueueUtilityServiceTest extends TestBase {
 
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
+  @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
 
   @Mock

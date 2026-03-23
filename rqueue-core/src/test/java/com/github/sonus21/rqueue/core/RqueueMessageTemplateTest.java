@@ -53,6 +53,7 @@ class RqueueMessageTemplateTest extends TestBase {
   @Mock
   private RedisConnectionFactory redisConnectionFactory;
 
+  @Mock
   private ListOperations<String, RqueueMessage> listOperations;
 
   @Mock

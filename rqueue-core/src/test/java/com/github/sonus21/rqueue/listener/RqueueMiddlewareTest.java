@@ -70,6 +70,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -328,19 +329,26 @@ class RqueueMiddlewareTest extends TestBase {
         })
         .when(messageHandler)
         .handleMessage(any());
-    Executor executor = Executors.newSingleThreadExecutor();
+    ExecutorService executor = Executors.newFixedThreadPool(4);
     long startTime = System.currentTimeMillis();
-    for (RqueueMessage message : messages) {
-      executor.execute(new RqueueExecutor(
-          rqueueBeanProvider,
-          queueStateMgr,
-          newArrayList(logMiddleware, testRateLimiter),
-          postProcessingHandler,
-          message,
-          queueDetail,
-          queueThreadPool));
+    try {
+      for (RqueueMessage message : messages) {
+        executor.execute(new RqueueExecutor(
+            rqueueBeanProvider,
+            queueStateMgr,
+            newArrayList(logMiddleware, testRateLimiter),
+            postProcessingHandler,
+            message,
+            queueDetail,
+            queueThreadPool));
+      }
+      TimeoutUtils.waitFor(
+          () -> testRateLimiter.jobs.size() == jobCount,
+          20_000L,
+          "all jobs to proceed");
+    } finally {
+      executor.shutdownNow();
     }
-    TimeoutUtils.waitFor(() -> testRateLimiter.jobs.size() == jobCount, "all jobs to proceed");
     long endTime = System.currentTimeMillis();
     // we need to round since rate is at second resolution and execution in millis so we round this
     // to next second
