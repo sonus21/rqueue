@@ -39,6 +39,7 @@ public final class SerializationUtils {
   public static ObjectMapper createObjectMapper() {
     return JsonMapper.builder()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .findAndAddModules()
         .build();
   }
 }
