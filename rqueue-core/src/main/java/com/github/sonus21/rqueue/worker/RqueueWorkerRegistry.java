@@ -23,7 +23,8 @@ import java.util.List;
 
 public interface RqueueWorkerRegistry {
 
-  void recordQueuePoll(QueueDetail queueDetail, QueueThreadPool queueThreadPool, boolean messageReceived);
+  void recordQueuePoll(
+      QueueDetail queueDetail, QueueThreadPool queueThreadPool, boolean messageReceived);
 
   void recordQueueCapacityExhausted(QueueDetail queueDetail, QueueThreadPool queueThreadPool);
 

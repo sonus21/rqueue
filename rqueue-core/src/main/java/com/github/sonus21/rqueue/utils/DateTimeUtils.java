@@ -29,10 +29,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DateTimeUtils {
 
-  private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
-      "yyyy-MM-dd HH:mm");
-  private static final DateTimeFormatter dateTimeFormatterWithSecond = DateTimeFormatter.ofPattern(
-      "yyyy-MM-dd HH:mm:ss");
+  private static final DateTimeFormatter dateTimeFormatter =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+  private static final DateTimeFormatter dateTimeFormatterWithSecond =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
   private static final DateTimeFormatter readableDateTimeFormatter =
       DateTimeFormatter.ofPattern("dd MMM, yyyy 'at' hh:mm a", Locale.ENGLISH);
 
@@ -151,30 +151,30 @@ public final class DateTimeUtils {
       long seconds = absMillis / Constants.ONE_MILLI;
       return prefix + seconds + " sec";
     }
-    if (absMillis < Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI
+    if (absMillis
+            < Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI
         && absMillis % (Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI) == 0) {
       long minutes = absMillis / (Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
       return prefix + minutes + " min";
     }
-    if (absMillis < Constants.HOURS_IN_A_DAY
-            * Constants.MINUTES_IN_AN_HOUR
-            * Constants.SECONDS_IN_A_MINUTE
-            * Constants.ONE_MILLI
+    if (absMillis
+            < Constants.HOURS_IN_A_DAY
+                * Constants.MINUTES_IN_AN_HOUR
+                * Constants.SECONDS_IN_A_MINUTE
+                * Constants.ONE_MILLI
         && absMillis
-            % (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI)
+                % (Constants.MINUTES_IN_AN_HOUR
+                    * Constants.SECONDS_IN_A_MINUTE
+                    * Constants.ONE_MILLI)
             == 0) {
-      long hours =
-          absMillis
-              / (Constants.MINUTES_IN_AN_HOUR
-                  * Constants.SECONDS_IN_A_MINUTE
-                  * Constants.ONE_MILLI);
+      long hours = absMillis
+          / (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE * Constants.ONE_MILLI);
       return prefix + hours + " hr";
     }
     long totalSeconds = absMillis / Constants.ONE_MILLI;
     long hours = totalSeconds / (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE);
-    long minutes =
-        (totalSeconds % (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE))
-            / Constants.SECONDS_IN_A_MINUTE;
+    long minutes = (totalSeconds % (Constants.MINUTES_IN_AN_HOUR * Constants.SECONDS_IN_A_MINUTE))
+        / Constants.SECONDS_IN_A_MINUTE;
     long seconds = totalSeconds % Constants.SECONDS_IN_A_MINUTE;
     if (hours > 0) {
       if (minutes > 0) {

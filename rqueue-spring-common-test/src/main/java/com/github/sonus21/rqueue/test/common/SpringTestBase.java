@@ -60,14 +60,29 @@ public abstract class SpringTestBase extends TestBase {
   private static final RqueueMessageIdGenerator MESSAGE_ID_GENERATOR =
       new UuidV4RqueueMessageIdGenerator();
 
-  @Autowired protected RqueueMessageTemplate rqueueMessageTemplate;
-  @Autowired protected RqueueConfig rqueueConfig;
-  @Autowired protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
-  @Autowired protected ConsumedMessageStore consumedMessageStore;
-  @Autowired protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
-  @Autowired protected FailureManager failureManager;
-  @Autowired protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
-  @Autowired protected RqueueEventListener rqueueEventListener;
+  @Autowired
+  protected RqueueMessageTemplate rqueueMessageTemplate;
+
+  @Autowired
+  protected RqueueConfig rqueueConfig;
+
+  @Autowired
+  protected RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+
+  @Autowired
+  protected ConsumedMessageStore consumedMessageStore;
+
+  @Autowired
+  protected RqueueMessageListenerContainer rqueueMessageListenerContainer;
+
+  @Autowired
+  protected FailureManager failureManager;
+
+  @Autowired
+  protected RqueueMessageEnqueuer rqueueMessageEnqueuer;
+
+  @Autowired
+  protected RqueueEventListener rqueueEventListener;
 
   @Autowired(required = false)
   protected ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer;
@@ -148,10 +163,15 @@ public abstract class SpringTestBase extends TestBase {
   protected boolean reactiveEnabled;
 
   protected void enqueue(Object message, String queueName) {
-    RqueueMessage rqueueMessage =
-        RqueueMessageUtils.buildMessage(
-            MESSAGE_ID_GENERATOR,
-            rqueueMessageManager.getMessageConverter(), queueName, null, message, null, null, null);
+    RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+        MESSAGE_ID_GENERATOR,
+        rqueueMessageManager.getMessageConverter(),
+        queueName,
+        null,
+        message,
+        null,
+        null,
+        null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
   }
 
@@ -159,16 +179,15 @@ public abstract class SpringTestBase extends TestBase {
     for (int i = 0; i < n; i++) {
       Object message = factory.next(i);
       if (useMessageTemplate) {
-        RqueueMessage rqueueMessage =
-            RqueueMessageUtils.buildMessage(
-                MESSAGE_ID_GENERATOR,
-                rqueueMessageManager.getMessageConverter(),
-                queueName,
-                null,
-                message,
-                null,
-                null,
-                rqueueMessageListenerContainer.getMessageHeaders());
+        RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+            MESSAGE_ID_GENERATOR,
+            rqueueMessageManager.getMessageConverter(),
+            queueName,
+            null,
+            message,
+            null,
+            null,
+            rqueueMessageListenerContainer.getMessageHeaders());
         rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
       } else {
         enqueue(queueName, message);
@@ -182,16 +201,15 @@ public abstract class SpringTestBase extends TestBase {
       Object message = factory.next(i);
       long delay = delayFunc.getDelay(i);
       if (useMessageTemplate) {
-        RqueueMessage rqueueMessage =
-            RqueueMessageUtils.buildMessage(
-                MESSAGE_ID_GENERATOR,
-                rqueueMessageManager.getMessageConverter(),
-                queueName,
-                null,
-                message,
-                null,
-                delay,
-                null);
+        RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+            MESSAGE_ID_GENERATOR,
+            rqueueMessageManager.getMessageConverter(),
+            queueName,
+            null,
+            message,
+            null,
+            delay,
+            null);
         rqueueMessageTemplate.addToZset(queueName, rqueueMessage, rqueueMessage.getProcessAt());
       } else {
         enqueueIn(queueName, message, delay);
@@ -200,10 +218,15 @@ public abstract class SpringTestBase extends TestBase {
   }
 
   protected void enqueueIn(Object message, String zsetName, long delay) {
-    RqueueMessage rqueueMessage =
-        RqueueMessageUtils.buildMessage(
-            MESSAGE_ID_GENERATOR,
-            rqueueMessageManager.getMessageConverter(), zsetName, null, message, null, delay, null);
+    RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+        MESSAGE_ID_GENERATOR,
+        rqueueMessageManager.getMessageConverter(),
+        zsetName,
+        null,
+        message,
+        null,
+        delay,
+        null);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
   }
 

@@ -52,9 +52,9 @@ import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
-import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
+import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
@@ -127,16 +127,15 @@ class RqueueMiddlewareTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueMessage =
-        RqueueMessageUtils.buildMessage(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-            messageConverter,
-            queueName,
-            null,
-            payload,
-            null,
-            null,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    rqueueMessage = RqueueMessageUtils.buildMessage(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+        messageConverter,
+        queueName,
+        null,
+        payload,
+        null,
+        null,
+        RqueueMessageHeaders.emptyMessageHeaders());
     defaultMessageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     MessageProcessorHandler messageProcessorHandler =
         new MessageProcessorHandler(null, job -> true, job -> true, null);
@@ -236,16 +235,15 @@ class RqueueMiddlewareTest extends TestBase {
         .when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
-    RqueueMessage rqueueMessage1 =
-        RqueueMessageUtils.buildMessage(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-            messageConverter,
-            queueName,
-            null,
-            payload,
-            null,
-            null,
-            RqueueMessageHeaders.emptyMessageHeaders());
+    RqueueMessage rqueueMessage1 = RqueueMessageUtils.buildMessage(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+        messageConverter,
+        queueName,
+        null,
+        payload,
+        null,
+        null,
+        RqueueMessageHeaders.emptyMessageHeaders());
     permissionMiddleware.allowedMessageIds.add(rqueueMessage.getId());
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage1, MessageStatus.ENQUEUED);
     doAnswer(invocation -> {
@@ -300,16 +298,15 @@ class RqueueMiddlewareTest extends TestBase {
     List<RqueueMessage> messages = new ArrayList<>();
     int jobCount = 100;
     for (int i = 0; i < jobCount; i++) {
-      RqueueMessage message =
-          RqueueMessageUtils.buildMessage(
-              RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-              messageConverter,
-              queueName,
-              null,
-              payload,
-              null,
-              null,
-              RqueueMessageHeaders.emptyMessageHeaders());
+      RqueueMessage message = RqueueMessageUtils.buildMessage(
+          RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+          messageConverter,
+          queueName,
+          null,
+          payload,
+          null,
+          null,
+          RqueueMessageHeaders.emptyMessageHeaders());
       MessageMetadata messageMetadata = new MessageMetadata(message, MessageStatus.ENQUEUED);
       messages.add(message);
       map.put(message.getId(), messageMetadata);

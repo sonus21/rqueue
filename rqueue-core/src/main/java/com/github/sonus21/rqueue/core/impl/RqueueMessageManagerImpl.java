@@ -51,11 +51,7 @@ public class RqueueMessageManagerImpl extends BaseMessageSender implements Rqueu
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(
-        messageTemplate,
-        messageConverter,
-        messageHeaders,
-        new UuidV4RqueueMessageIdGenerator());
+    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
   }
 
   public RqueueMessageManagerImpl(

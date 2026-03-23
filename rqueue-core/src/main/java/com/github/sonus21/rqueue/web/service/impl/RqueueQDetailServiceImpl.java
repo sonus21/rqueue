@@ -597,12 +597,11 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       }
       if (!completionQueue) {
         if (!deleted) {
-          row.addColumn(
-              new TableColumn(
-                  TableColumnType.ACTION,
-                  scheduledQueue && !rqueueMessage.isPeriodic()
-                      ? ActionType.ENQUEUE
-                      : ActionType.DELETE));
+          row.addColumn(new TableColumn(
+              TableColumnType.ACTION,
+              scheduledQueue && !rqueueMessage.isPeriodic()
+                  ? ActionType.ENQUEUE
+                  : ActionType.DELETE));
         } else {
           row.addColumn(new TableColumn(Constants.BLANK));
         }

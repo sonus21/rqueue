@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -49,8 +48,8 @@ import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
-import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
+import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,8 +75,10 @@ import org.springframework.messaging.converter.MessageConverter;
 class RqueueQDetailServiceTest extends TestBase {
 
   private final MessageConverter messageConverter = new GenericMessageConverter();
+
   @Mock
   private RedisTemplate<String, Object> redisTemplate;
+
   @Mock
   private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
 
@@ -89,8 +90,10 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
+
   @Mock
   private RqueueWorkerRegistry rqueueWorkerRegistry;
+
   private RqueueQDetailService rqueueQDetailService;
   private QueueConfig queueConfig;
   private QueueConfig queueConfig2;
@@ -101,14 +104,13 @@ class RqueueQDetailServiceTest extends TestBase {
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
-    rqueueQDetailService =
-        new RqueueQDetailServiceImpl(
-            stringRqueueRedisTemplate,
-            rqueueMessageTemplate,
-            rqueueSystemManagerService,
-            rqueueMessageMetadataService,
-            rqueueConfig,
-            rqueueWorkerRegistry);
+    rqueueQDetailService = new RqueueQDetailServiceImpl(
+        stringRqueueRedisTemplate,
+        rqueueMessageTemplate,
+        rqueueSystemManagerService,
+        rqueueMessageMetadataService,
+        rqueueConfig,
+        rqueueWorkerRegistry);
     queueConfig = createQueueConfig("test", 10, 10000L, "test-dlq");
     queueConfig2 = createQueueConfig("test2", 10, 10000L, null);
     queueConfigList = Arrays.asList(queueConfig, queueConfig2);
@@ -190,9 +192,8 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getExplorePageDataQueue() {
-    List<RqueueMessage> rqueueMessages =
-        RqueueMessageUtils.generateMessages(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 10);
+    List<RqueueMessage> rqueueMessages = RqueueMessageUtils.generateMessages(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
     headers.add("Id");
@@ -225,9 +226,8 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getExplorePageDataDeadLetterQueue() {
-    List<RqueueMessage> rqueueMessages =
-        RqueueMessageUtils.generateMessages(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 10);
+    List<RqueueMessage> rqueueMessages = RqueueMessageUtils.generateMessages(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
     headers.add("Id");
@@ -266,9 +266,8 @@ class RqueueQDetailServiceTest extends TestBase {
   void getExplorePageDataTypeQueueDeleteFewItems() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
-    List<RqueueMessage> rqueueMessages =
-        RqueueMessageUtils.generateMessages(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 10);
+    List<RqueueMessage> rqueueMessages = RqueueMessageUtils.generateMessages(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 10);
     List<MessageMetadata> messageMetadata = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       RqueueMessage message = rqueueMessages.get(i);
@@ -316,9 +315,8 @@ class RqueueQDetailServiceTest extends TestBase {
   void getExplorePageDataTypeScheduledQueue() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
-    List<RqueueMessage> rqueueMessages =
-        RqueueMessageUtils.generateMessages(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 100000, 10);
+    List<RqueueMessage> rqueueMessages = RqueueMessageUtils.generateMessages(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 100000, 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
     headers.add("Id");
@@ -359,9 +357,8 @@ class RqueueQDetailServiceTest extends TestBase {
   void getExplorePageDataTypeProcessingQueue() {
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
-    List<RqueueMessage> rqueueMessages =
-        RqueueMessageUtils.generateMessages(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 100000, 10);
+    List<RqueueMessage> rqueueMessages = RqueueMessageUtils.generateMessages(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR, messageConverter, "test", 100000, 10);
     DataViewResponse expectedResponse = new DataViewResponse();
     List<String> headers = new ArrayList<>();
     headers.add("Id");
@@ -420,10 +417,15 @@ class RqueueQDetailServiceTest extends TestBase {
   void viewDataList() {
     List<Object> objects = new ArrayList<>();
     objects.add("Test");
-    objects.add(
-        RqueueMessageUtils.buildMessage(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-            messageConverter, "jobs", null, "buildMessage", null, null, null));
+    objects.add(RqueueMessageUtils.buildMessage(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+        messageConverter,
+        "jobs",
+        null,
+        "buildMessage",
+        null,
+        null,
+        null));
     objects.add(null);
     doReturn(objects).when(stringRqueueRedisTemplate).lrange("jobs", 0, 9);
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.LIST, null, 0, 10);
@@ -441,12 +443,17 @@ class RqueueQDetailServiceTest extends TestBase {
   void viewDataZset() {
     Set<TypedTuple<Object>> objects = new HashSet<>();
     objects.add(new DefaultTypedTuple<>("Test", 100.0));
-    objects.add(
-        new DefaultTypedTuple<>(
-            RqueueMessageUtils.buildMessage(
-                RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-                messageConverter, "jobs", null, "buildMessage", null, null, null),
-            200.0));
+    objects.add(new DefaultTypedTuple<>(
+        RqueueMessageUtils.buildMessage(
+            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+            messageConverter,
+            "jobs",
+            null,
+            "buildMessage",
+            null,
+            null,
+            null),
+        200.0));
 
     List<TableRow> tableRows = new ArrayList<>();
     for (TypedTuple<Object> typedTuple : objects) {
@@ -473,10 +480,15 @@ class RqueueQDetailServiceTest extends TestBase {
   void viewDataSet() {
     Set<Object> objects = new HashSet<>();
     objects.add("Test");
-    objects.add(
-        RqueueMessageUtils.buildMessage(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-            messageConverter, "jobs", null, "Test object", null, null, null));
+    objects.add(RqueueMessageUtils.buildMessage(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+        messageConverter,
+        "jobs",
+        null,
+        "Test object",
+        null,
+        null,
+        null));
     List<TableRow> tableRows = new ArrayList<>();
     for (Object object : objects) {
       tableRows.add(new TableRow(new TableColumn(String.valueOf(object))));

@@ -123,9 +123,8 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
       return booleanResponse;
     }
     RqueueMessage rqueueMessage = messageMetadata.getRqueueMessage();
-    Long removed =
-        rqueueMessageTemplate.removeElementFromZset(
-            queueConfig.getScheduledQueueName(), rqueueMessage);
+    Long removed = rqueueMessageTemplate.removeElementFromZset(
+        queueConfig.getScheduledQueueName(), rqueueMessage);
     if (removed == null || removed == 0) {
       booleanResponse.setCode(1);
       booleanResponse.setMessage("Message is not available in the scheduled queue.");

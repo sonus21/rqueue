@@ -105,8 +105,9 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
 
   protected void recordCapacityExhausted(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     if (rqueueBeanProvider.getRqueueWorkerRegistry() != null) {
-      rqueueBeanProvider.getRqueueWorkerRegistry().recordQueueCapacityExhausted(
-          queueDetail, queueThreadPool);
+      rqueueBeanProvider
+          .getRqueueWorkerRegistry()
+          .recordQueueCapacityExhausted(queueDetail, queueThreadPool);
     }
   }
 

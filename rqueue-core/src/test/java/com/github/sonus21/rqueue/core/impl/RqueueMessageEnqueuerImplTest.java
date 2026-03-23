@@ -27,9 +27,9 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
-import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
@@ -63,6 +63,7 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
 
   @Mock
   private RqueueMessageTemplate messageTemplate;
+
   private RqueueConfig rqueueConfig;
 
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
@@ -83,12 +84,11 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
     MockitoAnnotations.openMocks(this);
     rqueueConfig = new RqueueConfig(null, null, true, 2);
     rqueueConfig.setMessageDurabilityInMinute(10080);
-    rqueueMessageEnqueuer =
-        new RqueueMessageEnqueuerImpl(
-            messageTemplate, messageConverter, messageHeaders, FIXED_MESSAGE_ID_GENERATOR);
+    rqueueMessageEnqueuer = new RqueueMessageEnqueuerImpl(
+        messageTemplate, messageConverter, messageHeaders, FIXED_MESSAGE_ID_GENERATOR);
     FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueConfig", rqueueConfig, true);
-    FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueMessageMetadataService",
-        rqueueMessageMetadataService, true);
+    FieldUtils.writeField(
+        rqueueMessageEnqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
     doNothing().when(rqueueMessageMetadataService).save(any(), any(), anyBoolean());
   }
 
@@ -156,9 +156,10 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
   void enqueueUsesInjectedMessageIdGenerator() {
     rqueueMessageEnqueuer.enqueue(queue, "test-message");
 
-    ArgumentCaptor<MessageMetadata> messageMetadataCaptor = ArgumentCaptor.forClass(
-        MessageMetadata.class);
+    ArgumentCaptor<MessageMetadata> messageMetadataCaptor =
+        ArgumentCaptor.forClass(MessageMetadata.class);
     verify(rqueueMessageMetadataService).save(messageMetadataCaptor.capture(), any(), anyBoolean());
-    assertEquals("custom-id", messageMetadataCaptor.getValue().getRqueueMessage().getId());
+    assertEquals(
+        "custom-id", messageMetadataCaptor.getValue().getRqueueMessage().getId());
   }
 }

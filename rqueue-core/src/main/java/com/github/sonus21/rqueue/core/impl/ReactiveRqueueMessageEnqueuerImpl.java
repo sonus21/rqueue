@@ -42,11 +42,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(
-        messageTemplate,
-        messageConverter,
-        messageHeaders,
-        new UuidV4RqueueMessageIdGenerator());
+    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
   }
 
   public ReactiveRqueueMessageEnqueuerImpl(
@@ -68,16 +64,15 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       boolean isUnique,
       Function<RqueueMessage, Mono<T>> monoConverter) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
-    RqueueMessage rqueueMessage =
-        builder.build(
-            messageIdGenerator,
-            messageConverter,
-            queueName,
-            messageId,
-            message,
-            retryCount,
-            delayInMilliSecs,
-            messageHeaders);
+    RqueueMessage rqueueMessage = builder.build(
+        messageIdGenerator,
+        messageConverter,
+        queueName,
+        messageId,
+        message,
+        retryCount,
+        delayInMilliSecs,
+        messageHeaders);
     try {
       Mono<Boolean> storeResult =
           (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
