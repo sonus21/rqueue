@@ -8,6 +8,30 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [4.0.0.RC2] 24-Mar-2026
+
+{: .highlight}
+This is a release candidate for 4.0.0. It targets Spring Boot 4.x and Spring Framework 7.x.
+Please test thoroughly before using in production.
+
+### Features
+* **Pluggable message ID generation** — added `RqueueMessageIdGenerator` with a
+  default UUIDv4 implementation so applications can override message ID generation
+  with a custom bean, including time-ordered strategies such as UUIDv7.
+* **Worker registry for dashboard visibility** — added an optional
+  `rqueue.worker.registry.enabled` registry that tracks worker metadata and
+  queue-level poller activity for dashboard use.
+* **Workers dashboard page** — added a dedicated workers view showing worker
+  identity, queue pollers, last poll activity, and recent capacity exhaustion.
+* **Queue and workers pagination** — added server-side pagination for dashboard
+  queue and worker listings, with configurable page sizes.
+* **Dashboard enqueue controls for scheduled messages** — messages in scheduled
+  queues can now be moved back to the main queue from the dashboard, including
+  explicit front/rear enqueue options for non-periodic messages.
+* **Dashboard refresh and usability improvements** — refreshed queue, worker, and
+  explorer UI with improved layouts, duration formatting, feedback modals, and
+  more readable queue metadata.
+
 ## Release [4.0.0.RC1] 18-Mar-2026
 
 {: .highlight}

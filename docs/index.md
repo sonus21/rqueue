@@ -52,7 +52,8 @@ model through annotation-driven APIs and minimal setup.
   * Use callbacks for dead-letter, discard, and related flows
   * Subscribe to bootstrap and task execution events
   * Monitor in-flight, queued, and scheduled messages with metrics
-  * Use the built-in web dashboard for queue visibility and monitoring
+  * Use the built-in web dashboard for queue visibility, worker activity, and message operations
+  * Override message ID generation with a custom `RqueueMessageIdGenerator` bean
 
 * **Redis and platform support**
   * Support Redis standalone, Sentinel, and Cluster setups

@@ -25,6 +25,12 @@ message processing.
 
 * **Task Operations**: Facilitates moving tasks between different queues.
 
+* **Worker Visibility**: Shows which worker is polling a queue, when it last polled,
+  and whether the queue recently ran out of execution capacity.
+
+* **Scheduled Message Recovery**: Allows non-periodic scheduled messages to be moved
+  back to the main queue from the dashboard, either at the front or rear.
+
 Access the dashboard at: [http://localhost:8080/rqueue](http://localhost:8080/rqueue)
 
 ## Configuration
@@ -71,6 +77,8 @@ Example URL with a configured prefix:
 * `rqueue.web.enable`: Enable or disable the web dashboard (default: `true`).
 * `rqueue.web.max.message.move.count`: Maximum number of messages to move in a single request 
   from the utility tab (default: `1000`).
+* `rqueue.web.queue.page.size`: Number of queue cards shown per page (default: `12`).
+* `rqueue.web.worker.page.size`: Number of worker cards shown per page (default: `10`).
 * `rqueue.web.collect.listener.stats`: Enable collection of task execution statistics 
   (default: `false`).
 * `rqueue.web.collect.listener.stats.thread.count`: Number of threads used for metrics aggregation.
@@ -81,6 +89,40 @@ Example URL with a configured prefix:
   aggregation (default: `60`).
 * `rqueue.web.collect.statistic.aggregate.shutdown.wait.time`: Wait time in milliseconds for 
   forced aggregation of pending events during application shutdown.
+
+## Worker Registry
+
+The dashboard can optionally maintain lightweight worker metadata in Redis to show:
+
+- worker host and process ID
+- queue-level polling activity
+- recent queue capacity exhaustion
+- worker and queue drill-down views
+
+This feature is controlled by the following properties:
+
+- `rqueue.worker.registry.enabled`
+- `rqueue.worker.registry.worker.ttl`
+- `rqueue.worker.registry.worker.heartbeat.interval`
+- `rqueue.worker.registry.queue.ttl`
+- `rqueue.worker.registry.queue.heartbeat.interval`
+
+{: .note}
+The worker registry is intended for dashboard visibility. Instance-level liveness
+should still be monitored through your infrastructure or platform health checks.
+
+## Queue Explorer Actions
+
+The queue explorer supports queue-specific administrative actions:
+
+- delete pending, running, dead-letter, or scheduled messages
+- move messages between Redis collections from the Utility tab
+- enqueue scheduled messages back to the main queue
+
+For scheduled messages:
+
+- periodic messages can be deleted, but are not offered queue-to-front or queue-to-rear actions
+- non-periodic scheduled messages can be queued to the front or rear of the main queue
 
 ### Dashboard Screenshots
 
