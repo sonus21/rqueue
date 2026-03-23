@@ -69,7 +69,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
@@ -340,9 +339,7 @@ class RqueueMiddlewareTest extends TestBase {
             queueThreadPool));
       }
       TimeoutUtils.waitFor(
-          () -> testRateLimiter.jobs.size() == jobCount,
-          20_000L,
-          "all jobs to proceed");
+          () -> testRateLimiter.jobs.size() == jobCount, 20_000L, "all jobs to proceed");
     } finally {
       executor.shutdownNow();
     }
