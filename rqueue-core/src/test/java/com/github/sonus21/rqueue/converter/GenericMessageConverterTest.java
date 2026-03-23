@@ -42,6 +42,15 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 @SuppressWarnings("unchecked")
 @CoreUnitTest
@@ -113,6 +122,16 @@ class GenericMessageConverterTest extends TestBase {
         genericMessageConverter.toMessage(dataList, RqueueMessageHeaders.emptyMessageHeaders());
     List<Comment> fromMessage = (List<Comment>) genericMessageConverter.fromMessage(message, null);
     assertEquals(dataList, fromMessage);
+  }
+
+  @Test
+  void toAndFromMessageUsingServiceLoadedModules() {
+    ServiceLoadedPayload payload = ServiceLoadedPayload.of("module-backed");
+    Message<String> message = (Message<String>)
+        genericMessageConverter.toMessage(payload, RqueueMessageHeaders.emptyMessageHeaders());
+    ServiceLoadedPayload fromMessage =
+        (ServiceLoadedPayload) genericMessageConverter.fromMessage(message, null);
+    assertEquals(payload, fromMessage);
   }
 
   @Test
@@ -454,6 +473,77 @@ class GenericMessageConverterTest extends TestBase {
     public Notification(String id, String message, int priority) {
       super(id, message);
       this.priority = priority;
+    }
+  }
+
+  public static class ServiceLoadedPayload {
+
+    private final String value;
+
+    private ServiceLoadedPayload(String value) {
+      this.value = value;
+    }
+
+    public static ServiceLoadedPayload of(String value) {
+      return new ServiceLoadedPayload(value);
+    }
+
+    String value() {
+      return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof ServiceLoadedPayload)) {
+        return false;
+      }
+      ServiceLoadedPayload that = (ServiceLoadedPayload) o;
+      return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(value);
+    }
+  }
+
+  public static class ServiceLoadedPayloadModule extends SimpleModule {
+
+    public ServiceLoadedPayloadModule() {
+      addSerializer(ServiceLoadedPayload.class, new ServiceLoadedPayloadSerializer());
+      addDeserializer(ServiceLoadedPayload.class, new ServiceLoadedPayloadDeserializer());
+    }
+
+    private static class ServiceLoadedPayloadSerializer
+        extends StdSerializer<ServiceLoadedPayload> {
+
+      private ServiceLoadedPayloadSerializer() {
+        super(ServiceLoadedPayload.class);
+      }
+
+      @Override
+      public void serialize(
+          ServiceLoadedPayload value, JsonGenerator jsonGenerator, SerializationContext provider)
+          throws JacksonException {
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringProperty("value", value.value());
+        jsonGenerator.writeEndObject();
+      }
+    }
+
+    private static class ServiceLoadedPayloadDeserializer
+        extends StdDeserializer<ServiceLoadedPayload> {
+
+      private ServiceLoadedPayloadDeserializer() {
+        super(ServiceLoadedPayload.class);
+      }
+
+      @Override
+      public ServiceLoadedPayload deserialize(JsonParser jsonParser, DeserializationContext context)
+          throws JacksonException {
+        JsonNode node = jsonParser.readValueAsTree();
+        return ServiceLoadedPayload.of(node.get("value").asText());
+      }
     }
   }
 }
