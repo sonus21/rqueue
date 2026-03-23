@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.google.common.collect.ImmutableList;
 import java.util.UUID;
@@ -43,6 +44,8 @@ import org.springframework.messaging.support.GenericMessage;
 @CoreUnitTest
 class RqueueMessageUtilsTest extends TestBase {
 
+  private static final RqueueMessageIdGenerator FIXED_MESSAGE_ID_GENERATOR = () -> "fixed-id";
+
   private final String queue = "test-queue";
   DefaultRqueueMessageConverter messageConverter = new DefaultRqueueMessageConverter();
   DefaultRqueueMessageConverter messageConverter2 =
@@ -54,6 +57,7 @@ class RqueueMessageUtilsTest extends TestBase {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
     RqueueMessage message = RqueueMessageUtils.buildPeriodicMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
         messageConverter,
         queue,
         null,
@@ -81,6 +85,7 @@ class RqueueMessageUtilsTest extends TestBase {
     long startTime = System.currentTimeMillis();
     long startTimeInNano = System.nanoTime();
     RqueueMessage message = RqueueMessageUtils.buildMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
         messageConverter,
         queue,
         null,
@@ -105,11 +110,29 @@ class RqueueMessageUtilsTest extends TestBase {
   }
 
   @Test
+  void buildMessageUsesProvidedMessageIdGenerator() {
+    Email email = Email.newInstance();
+
+    RqueueMessage message = RqueueMessageUtils.buildMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
+        messageConverter,
+        queue,
+        null,
+        email,
+        null,
+        null,
+        RqueueMessageHeaders.emptyMessageHeaders());
+
+    assertEquals("fixed-id", message.getId());
+  }
+
+  @Test
   void buildMessageWithDelay() {
     Email email = Email.newInstance();
     long startTime = System.currentTimeMillis();
     long startTimeInNano = System.nanoTime();
     RqueueMessage message = RqueueMessageUtils.buildMessage(
+        FIXED_MESSAGE_ID_GENERATOR,
         messageConverter,
         queue,
         null,
@@ -140,6 +163,7 @@ class RqueueMessageUtilsTest extends TestBase {
     GenericClass<String> genericClass = new GenericClass<>();
     try {
       RqueueMessageUtils.buildMessage(
+          FIXED_MESSAGE_ID_GENERATOR,
           messageConverter,
           queue,
           null,
@@ -159,6 +183,7 @@ class RqueueMessageUtilsTest extends TestBase {
     GenericClass<String> genericClass = new GenericClass<>();
     try {
       RqueueMessageUtils.buildPeriodicMessage(
+          FIXED_MESSAGE_ID_GENERATOR,
           messageConverter,
           queue,
           null,
@@ -179,6 +204,7 @@ class RqueueMessageUtilsTest extends TestBase {
     GenericClass<String> genericClass = new GenericClass<>();
     try {
       RqueueMessageUtils.buildMessage(
+          FIXED_MESSAGE_ID_GENERATOR,
           messageConverter2,
           queue,
           null,
@@ -199,6 +225,7 @@ class RqueueMessageUtilsTest extends TestBase {
     GenericClass<String> genericClass = new GenericClass<>();
     try {
       RqueueMessageUtils.buildPeriodicMessage(
+          FIXED_MESSAGE_ID_GENERATOR,
           messageConverter2,
           queue,
           null,

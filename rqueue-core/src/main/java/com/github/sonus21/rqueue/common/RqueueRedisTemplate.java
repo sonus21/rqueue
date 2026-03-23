@@ -66,6 +66,10 @@ public class RqueueRedisTemplate<V extends Serializable> {
     return redisTemplate.opsForList().rightPush(listName, val);
   }
 
+  public Long lpush(String listName, V val) {
+    return redisTemplate.opsForList().leftPush(listName, val);
+  }
+
   public Long addToSet(String setName, V... values) {
     return redisTemplate.opsForSet().add(setName, values);
   }
@@ -96,6 +100,23 @@ public class RqueueRedisTemplate<V extends Serializable> {
 
   public void set(String key, V val, Duration duration) {
     redisTemplate.opsForValue().set(key, val, duration.toMillis(), TimeUnit.MILLISECONDS);
+  }
+
+  public void putHashValue(String key, String hashKey, V val) {
+    redisTemplate.opsForHash().put(key, hashKey, val);
+  }
+
+  @SuppressWarnings("unchecked")
+  public Map<String, V> getHashEntries(String key) {
+    return (Map<String, V>) (Map<?, ?>) redisTemplate.opsForHash().entries(key);
+  }
+
+  public Long deleteHashValues(String key, String... hashKeys) {
+    return redisTemplate.opsForHash().delete(key, (Object[]) hashKeys);
+  }
+
+  public Boolean expire(String key, Duration duration) {
+    return redisTemplate.expire(key, duration.toMillis(), TimeUnit.MILLISECONDS);
   }
 
   public Boolean setIfAbsent(String lockKey, V val, Duration duration) {

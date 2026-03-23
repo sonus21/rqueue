@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sonu Kumar
+ * Copyright (c) 2023-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package com.github.sonus21.rqueue.utils;
 
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
+import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -26,11 +28,14 @@ import org.springframework.messaging.converter.MessageConverter;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RqueueMessageTestUtils {
 
+  public static final RqueueMessageIdGenerator MESSAGE_ID_GENERATOR =
+      new UuidV4RqueueMessageIdGenerator();
+
   public static RqueueMessage createMessage(String queueName) {
     return createMessage(new DefaultRqueueMessageConverter(), queueName);
   }
 
   public static RqueueMessage createMessage(MessageConverter messageConverter, String queue) {
-    return RqueueMessageUtils.generateMessage(messageConverter, queue);
+    return RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, messageConverter, queue);
   }
 }

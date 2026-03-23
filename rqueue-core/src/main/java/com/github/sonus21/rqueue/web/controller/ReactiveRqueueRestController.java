@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.models.request.DataDeleteRequest;
 import com.github.sonus21.rqueue.models.request.DataTypeRequest;
 import com.github.sonus21.rqueue.models.request.DateViewRequest;
 import com.github.sonus21.rqueue.models.request.MessageDeleteRequest;
+import com.github.sonus21.rqueue.models.request.MessageEnqueueRequest;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
 import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.request.QueueExploreRequest;
@@ -139,6 +140,17 @@ public class ReactiveRqueueRestController extends BaseReactiveController {
     if (isEnabled(response)) {
       return rqueueUtilityService.deleteReactiveMessage(
           request.getQueueName(), request.getMessageId());
+    }
+    return null;
+  }
+
+  @PostMapping("enqueue-message")
+  @ResponseBody
+  public Mono<BooleanResponse> enqueueMessage(
+      @RequestBody @Valid MessageEnqueueRequest request, ServerHttpResponse response) {
+    if (isEnabled(response)) {
+      return rqueueUtilityService.enqueueReactiveMessage(
+          request.getQueueName(), request.getMessageId(), request.getPosition());
     }
     return null;
   }

@@ -54,6 +54,7 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
+import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
@@ -68,7 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,6 +127,7 @@ class RqueueMiddlewareTest extends TestBase {
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
     rqueueMessage = RqueueMessageUtils.buildMessage(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
         messageConverter,
         queueName,
         null,
@@ -233,9 +235,10 @@ class RqueueMiddlewareTest extends TestBase {
         .get(defaultMessageMetadata.getId());
     QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
     RqueueMessage rqueueMessage1 = RqueueMessageUtils.buildMessage(
+        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
         messageConverter,
-        null,
         queueName,
+        null,
         payload,
         null,
         null,
@@ -295,6 +298,7 @@ class RqueueMiddlewareTest extends TestBase {
     int jobCount = 100;
     for (int i = 0; i < jobCount; i++) {
       RqueueMessage message = RqueueMessageUtils.buildMessage(
+          RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
           messageConverter,
           queueName,
           null,
@@ -321,19 +325,24 @@ class RqueueMiddlewareTest extends TestBase {
         })
         .when(messageHandler)
         .handleMessage(any());
-    Executor executor = Executors.newSingleThreadExecutor();
+    ExecutorService executor = Executors.newFixedThreadPool(4);
     long startTime = System.currentTimeMillis();
-    for (RqueueMessage message : messages) {
-      executor.execute(new RqueueExecutor(
-          rqueueBeanProvider,
-          queueStateMgr,
-          newArrayList(logMiddleware, testRateLimiter),
-          postProcessingHandler,
-          message,
-          queueDetail,
-          queueThreadPool));
+    try {
+      for (RqueueMessage message : messages) {
+        executor.execute(new RqueueExecutor(
+            rqueueBeanProvider,
+            queueStateMgr,
+            newArrayList(logMiddleware, testRateLimiter),
+            postProcessingHandler,
+            message,
+            queueDetail,
+            queueThreadPool));
+      }
+      TimeoutUtils.waitFor(
+          () -> testRateLimiter.jobs.size() == jobCount, 20_000L, "all jobs to proceed");
+    } finally {
+      executor.shutdownNow();
     }
-    TimeoutUtils.waitFor(() -> testRateLimiter.jobs.size() == jobCount, "all jobs to proceed");
     long endTime = System.currentTimeMillis();
     // we need to round since rate is at second resolution and execution in millis so we round this
     // to next second

@@ -30,6 +30,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.result.view.View;
 import org.springframework.web.reactive.result.view.ViewResolver;
 import reactor.core.publisher.Mono;
@@ -67,10 +68,14 @@ public class ReactiveRqueueViewController extends BaseReactiveController {
   }
 
   @GetMapping("queues")
-  public Mono<View> queues(Model model, ServerHttpRequest request, ServerHttpResponse response)
+  public Mono<View> queues(
+      Model model,
+      @RequestParam(name = "page", defaultValue = "1") int pageNumber,
+      ServerHttpRequest request,
+      ServerHttpResponse response)
       throws Exception {
     if (isEnabled(response)) {
-      rqueueViewControllerService.queues(model, xForwardedPrefix(request));
+      rqueueViewControllerService.queues(model, xForwardedPrefix(request), pageNumber);
       return rqueueViewResolver.resolveViewName("queues", Locale.ENGLISH);
     }
     return null;
@@ -86,6 +91,20 @@ public class ReactiveRqueueViewController extends BaseReactiveController {
     if (isEnabled(response)) {
       rqueueViewControllerService.queueDetail(model, xForwardedPrefix(request), queueName);
       return rqueueViewResolver.resolveViewName("queue_detail", Locale.ENGLISH);
+    }
+    return null;
+  }
+
+  @GetMapping("workers")
+  public Mono<View> workers(
+      Model model,
+      @RequestParam(name = "page", defaultValue = "1") int pageNumber,
+      ServerHttpRequest request,
+      ServerHttpResponse response)
+      throws Exception {
+    if (isEnabled(response)) {
+      rqueueViewControllerService.workers(model, xForwardedPrefix(request), pageNumber);
+      return rqueueViewResolver.resolveViewName("workers", Locale.ENGLISH);
     }
     return null;
   }

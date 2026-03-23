@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.config.RqueueListenerBaseConfig;
 import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
@@ -72,41 +73,53 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @Bean
   @ConditionalOnMissingBean
   public RqueueMessageManager rqueueMessageManager(
-      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
+      RqueueMessageHandler rqueueMessageHandler,
+      RqueueMessageTemplate rqueueMessageTemplate,
+      RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageManagerImpl(
         rqueueMessageTemplate,
         rqueueMessageHandler.getMessageConverter(),
-        simpleRqueueListenerContainerFactory.getMessageHeaders());
+        simpleRqueueListenerContainerFactory.getMessageHeaders(),
+        rqueueMessageIdGenerator);
   }
 
   @Bean
   @ConditionalOnMissingBean
   public RqueueEndpointManager rqueueEndpointManager(
-      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
+      RqueueMessageHandler rqueueMessageHandler,
+      RqueueMessageTemplate rqueueMessageTemplate,
+      RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueEndpointManagerImpl(
         rqueueMessageTemplate,
         rqueueMessageHandler.getMessageConverter(),
-        simpleRqueueListenerContainerFactory.getMessageHeaders());
+        simpleRqueueListenerContainerFactory.getMessageHeaders(),
+        rqueueMessageIdGenerator);
   }
 
   @Bean
   @ConditionalOnMissingBean
   public RqueueMessageEnqueuer rqueueMessageEnqueuer(
-      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
+      RqueueMessageHandler rqueueMessageHandler,
+      RqueueMessageTemplate rqueueMessageTemplate,
+      RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
         rqueueMessageHandler.getMessageConverter(),
-        simpleRqueueListenerContainerFactory.getMessageHeaders());
+        simpleRqueueListenerContainerFactory.getMessageHeaders(),
+        rqueueMessageIdGenerator);
   }
 
   @Bean
   @ConditionalOnMissingBean
   @Conditional(ReactiveEnabled.class)
   public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
-      RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
+      RqueueMessageHandler rqueueMessageHandler,
+      RqueueMessageTemplate rqueueMessageTemplate,
+      RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new ReactiveRqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
         rqueueMessageHandler.getMessageConverter(),
-        simpleRqueueListenerContainerFactory.getMessageHeaders());
+        simpleRqueueListenerContainerFactory.getMessageHeaders(),
+        rqueueMessageIdGenerator);
   }
 }

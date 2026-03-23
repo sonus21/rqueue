@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sonu Kumar
+ * Copyright (c) 2023-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -36,7 +36,13 @@ public class MessageMetadataTestUtils {
   public static MessageMetadata createMessageMetadata(
       MessageConverter messageConverter, String queue, Object message) {
     RqueueMessage rqueueMessage = RqueueMessageUtils.generateMessages(
-            messageConverter, message, queue, null, null, 1)
+            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
+            messageConverter,
+            message,
+            queue,
+            null,
+            null,
+            1)
         .get(0);
     return new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
   }

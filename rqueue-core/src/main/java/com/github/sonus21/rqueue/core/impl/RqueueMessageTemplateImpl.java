@@ -130,6 +130,12 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   }
 
   @Override
+  public Long addMessageAtFront(String listName, RqueueMessage rqueueMessage) {
+    log.debug("AddMessageAtFront Queue: {}, Message: {}", listName, rqueueMessage);
+    return lpush(listName, rqueueMessage);
+  }
+
+  @Override
   public Mono<Long> addReactiveMessage(String listName, RqueueMessage rqueueMessage) {
     log.debug("AddReactiveMessage Queue: {}, Message: {}", listName, rqueueMessage);
     return reactiveRedisTemplate.template().opsForList().rightPush(listName, rqueueMessage);

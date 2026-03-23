@@ -92,6 +92,7 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
 
   void poll() {
     if (!hasAvailableThreads(queueDetail, queueThreadPool)) {
+      recordCapacityExhausted(queueDetail, queueThreadPool);
       logNotAvailable();
       TimeoutUtils.sleepLog(pollingInterval, false);
     } else {

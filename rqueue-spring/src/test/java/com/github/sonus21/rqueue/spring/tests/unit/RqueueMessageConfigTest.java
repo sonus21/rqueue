@@ -26,6 +26,7 @@ import com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.RqueueListenerConfig;
 import com.github.sonus21.rqueue.spring.tests.SpringUnitTest;
@@ -119,7 +120,8 @@ class RqueueMessageConfigTest extends TestBase {
     doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerConfig messageConfig = new RqueueListenerConfig();
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageConfig.rqueueMessageEnqueuer(rqueueMessageHandler, rqueueMessageTemplate));
+    assertNotNull(messageConfig.rqueueMessageEnqueuer(
+        rqueueMessageHandler, rqueueMessageTemplate, new UuidV4RqueueMessageIdGenerator()));
     assertEquals(factory.getRqueueMessageTemplate().hashCode(), rqueueMessageTemplate.hashCode());
   }
 }

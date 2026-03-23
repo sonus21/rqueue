@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.spring.boot.application.Application;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
@@ -43,6 +44,8 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {"use.system.redis=false", "spring.data.redis.port:8004"})
 @SpringBootIntegrationTest
 class RqueueMessageTemplateTest extends SpringTestBase {
+  private static final UuidV4RqueueMessageIdGenerator MESSAGE_ID_GENERATOR =
+      new UuidV4RqueueMessageIdGenerator();
 
   @Test
   void moveMessageFromDeadLetterQueueToOriginalQueue() {
@@ -105,11 +108,16 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void getScore() {
     String tgtZset = "getScoreZSet";
     MessageConverter converter = new DefaultRqueueMessageConverter();
-    RqueueMessage message = RqueueMessageUtils.generateMessage(converter, tgtZset);
-    RqueueMessage message2 = RqueueMessageUtils.generateMessage(converter, tgtZset);
-    RqueueMessage message3 = RqueueMessageUtils.generateMessage(converter, tgtZset);
-    RqueueMessage message4 = RqueueMessageUtils.generateMessage(converter, tgtZset);
-    RqueueMessage message5 = RqueueMessageUtils.generateMessage(converter, tgtZset);
+    RqueueMessage message =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message2 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message3 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message4 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message5 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
     long score = System.currentTimeMillis();
     rqueueMessageTemplate.addToZset(tgtZset, message2, score);
     rqueueMessageTemplate.addToZset(tgtZset, message3, 0);
@@ -126,9 +134,12 @@ class RqueueMessageTemplateTest extends SpringTestBase {
   void updateScore() {
     String tgtZset = "updateScoreZSet";
     MessageConverter converter = new DefaultRqueueMessageConverter();
-    RqueueMessage message = RqueueMessageUtils.generateMessage(converter, tgtZset);
-    RqueueMessage message2 = RqueueMessageUtils.generateMessage(converter, tgtZset);
-    RqueueMessage message3 = RqueueMessageUtils.generateMessage(converter, tgtZset);
+    RqueueMessage message =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message2 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
+    RqueueMessage message3 =
+        RqueueMessageUtils.generateMessage(MESSAGE_ID_GENERATOR, converter, tgtZset);
     long score = System.currentTimeMillis();
     rqueueMessageTemplate.addToZset(tgtZset, message, score);
     assertTrue(rqueueMessageTemplate.addScore(tgtZset, message, 10_000));

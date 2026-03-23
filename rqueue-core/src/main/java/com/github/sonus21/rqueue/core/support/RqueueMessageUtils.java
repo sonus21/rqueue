@@ -19,10 +19,10 @@ package com.github.sonus21.rqueue.core.support;
 import static com.github.sonus21.rqueue.utils.Constants.REDIS_KEY_SEPARATOR;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConversionException;
@@ -50,6 +50,7 @@ public final class RqueueMessageUtils {
   }
 
   public static RqueueMessage buildPeriodicMessage(
+      RqueueMessageIdGenerator messageIdGenerator,
       MessageConverter converter,
       String queueName,
       String messageId,
@@ -72,7 +73,7 @@ public final class RqueueMessageUtils {
       throw new MessageConversionException("Message payload is neither String nor byte[]");
     }
     RqueueMessage rqueueMessage = RqueueMessage.builder()
-        .id(UUID.randomUUID().toString())
+        .id(messageIdGenerator.generate())
         .queueName(queueName)
         .message(strMessage)
         .processAt(processAt)
@@ -86,6 +87,7 @@ public final class RqueueMessageUtils {
   }
 
   public static RqueueMessage buildMessage(
+      RqueueMessageIdGenerator messageIdGenerator,
       MessageConverter converter,
       String queueName,
       String messageId,
@@ -114,7 +116,7 @@ public final class RqueueMessageUtils {
     RqueueMessage rqueueMessage = RqueueMessage.builder()
         .retryCount(retryCount)
         .queuedTime(queuedTime)
-        .id(UUID.randomUUID().toString())
+        .id(messageIdGenerator.generate())
         .queueName(queueName)
         .message(strMessage)
         .processAt(processAt)
@@ -126,21 +128,39 @@ public final class RqueueMessageUtils {
   }
 
   public static List<RqueueMessage> generateMessages(
-      MessageConverter converter, String queueName, int count) {
-    return generateMessages(converter, UUID.randomUUID().toString(), queueName, null, null, count);
+      RqueueMessageIdGenerator messageIdGenerator,
+      MessageConverter converter,
+      String queueName,
+      int count) {
+    return generateMessages(
+        messageIdGenerator, converter, messageIdGenerator.generate(), queueName, null, null, count);
   }
 
-  public static RqueueMessage generateMessage(MessageConverter converter, String queueName) {
-    return generateMessages(converter, UUID.randomUUID().toString(), queueName, null, null, 1)
+  public static RqueueMessage generateMessage(
+      RqueueMessageIdGenerator messageIdGenerator, MessageConverter converter, String queueName) {
+    return generateMessages(
+            messageIdGenerator, converter, messageIdGenerator.generate(), queueName, null, null, 1)
         .get(0);
   }
 
   public static List<RqueueMessage> generateMessages(
-      MessageConverter converter, String queueName, long delay, int count) {
-    return generateMessages(converter, UUID.randomUUID().toString(), queueName, null, delay, count);
+      RqueueMessageIdGenerator messageIdGenerator,
+      MessageConverter converter,
+      String queueName,
+      long delay,
+      int count) {
+    return generateMessages(
+        messageIdGenerator,
+        converter,
+        messageIdGenerator.generate(),
+        queueName,
+        null,
+        delay,
+        count);
   }
 
   public static List<RqueueMessage> generateMessages(
+      RqueueMessageIdGenerator messageIdGenerator,
       MessageConverter converter,
       Object object,
       String queueName,
@@ -149,7 +169,8 @@ public final class RqueueMessageUtils {
       int count) {
     List<RqueueMessage> messages = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      messages.add(buildMessage(converter, queueName, null, object, retryCount, delay, null));
+      messages.add(buildMessage(
+          messageIdGenerator, converter, queueName, null, object, retryCount, delay, null));
     }
     return messages;
   }

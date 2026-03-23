@@ -103,6 +103,14 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
     return queueThreadPool.availableThreads() > 0;
   }
 
+  protected void recordCapacityExhausted(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
+    if (rqueueBeanProvider.getRqueueWorkerRegistry() != null) {
+      rqueueBeanProvider
+          .getRqueueWorkerRegistry()
+          .recordQueueCapacityExhausted(queueDetail, queueThreadPool);
+    }
+  }
+
   protected int getBatchSize(QueueDetail queueDetail, QueueThreadPool queueThreadPool) {
     int batchSize = Math.min(queueDetail.getBatchSize(), queueThreadPool.availableThreads());
     batchSize = Math.max(batchSize, Constants.MIN_BATCH_SIZE);
@@ -132,6 +140,11 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
         List<RqueueMessage> messages = getMessages(queueDetail, batchSize);
         log(Level.TRACE, "Queue: {} Fetched Msgs {}", null, queue, messages);
         int messageCount = CollectionUtils.isEmpty(messages) ? 0 : messages.size();
+        if (rqueueBeanProvider.getRqueueWorkerRegistry() != null) {
+          rqueueBeanProvider
+              .getRqueueWorkerRegistry()
+              .recordQueuePoll(queueDetail, queueThreadPool, messageCount > 0);
+        }
         // free additional requested threads e.g 10 requested but only 5 messages are there
         queueThreadPool.release(batchSize - messageCount);
         if (messageCount > 0) {
@@ -162,6 +175,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
       return;
     }
     if (!acquired) {
+      recordCapacityExhausted(queueDetail, queueThreadPool);
       deactivate(index, queue, DeactivateType.SEMAPHORE_UNAVAILABLE);
       return;
     }

@@ -21,6 +21,7 @@ import static com.github.sonus21.rqueue.utils.Validator.*;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.DuplicateMessageException;
@@ -41,7 +42,15 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    super(messageTemplate, messageConverter, messageHeaders);
+    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+  }
+
+  public ReactiveRqueueMessageEnqueuerImpl(
+      RqueueMessageTemplate messageTemplate,
+      MessageConverter messageConverter,
+      MessageHeaders messageHeaders,
+      RqueueMessageIdGenerator messageIdGenerator) {
+    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @SuppressWarnings("unchecked")
@@ -56,6 +65,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       Function<RqueueMessage, Mono<T>> monoConverter) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage = builder.build(
+        messageIdGenerator,
         messageConverter,
         queueName,
         messageId,
@@ -280,6 +290,7 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
   @FunctionalInterface
   private interface MessageBuilder {
     RqueueMessage build(
+        RqueueMessageIdGenerator messageIdGenerator,
         MessageConverter converter,
         String queueName,
         String messageId,

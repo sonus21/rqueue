@@ -31,6 +31,8 @@ public interface RqueueUtilityService {
 
   BooleanResponse deleteMessage(String queueName, String id);
 
+  BooleanResponse enqueueMessage(String queueName, String id, String position);
+
   MessageMoveResponse moveMessage(MessageMoveRequest messageMoveRequest);
 
   BooleanResponse makeEmpty(String queueName, String dataName);
@@ -42,6 +44,8 @@ public interface RqueueUtilityService {
   Mono<BooleanResponse> makeEmptyReactive(String queueName, String datasetName);
 
   Mono<BooleanResponse> deleteReactiveMessage(String queueName, String messageId);
+
+  Mono<BooleanResponse> enqueueReactiveMessage(String queueName, String messageId, String position);
 
   Mono<StringResponse> getReactiveDataType(String name);
 

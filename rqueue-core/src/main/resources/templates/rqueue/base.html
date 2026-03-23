@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2020-2023 Sonu Kumar
+  ~ Copyright (c) 2020-2026 Sonu Kumar
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ You may not use this file except in compliance with the License.
@@ -45,6 +45,12 @@
           <a href="{{urlPrefix}}rqueue/queues">
             <i class='bx bx-coin-stack'></i>
             <span>Queues</span>
+          </a>
+        </li>
+        <li class="{% if workersActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/workers">
+            <i class='bx bx-user-pin'></i>
+            <span>Workers</span>
           </a>
         </li>
         <li class="{% if runningActive %}active{% endif %}">

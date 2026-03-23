@@ -24,8 +24,10 @@ import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
@@ -55,6 +57,9 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 public abstract class SpringTestBase extends TestBase {
+  private static final RqueueMessageIdGenerator MESSAGE_ID_GENERATOR =
+      new UuidV4RqueueMessageIdGenerator();
+
   @Autowired
   protected RqueueMessageTemplate rqueueMessageTemplate;
 
@@ -159,7 +164,14 @@ public abstract class SpringTestBase extends TestBase {
 
   protected void enqueue(Object message, String queueName) {
     RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
-        rqueueMessageManager.getMessageConverter(), queueName, null, message, null, null, null);
+        MESSAGE_ID_GENERATOR,
+        rqueueMessageManager.getMessageConverter(),
+        queueName,
+        null,
+        message,
+        null,
+        null,
+        null);
     rqueueMessageTemplate.addMessage(queueName, rqueueMessage);
   }
 
@@ -168,6 +180,7 @@ public abstract class SpringTestBase extends TestBase {
       Object message = factory.next(i);
       if (useMessageTemplate) {
         RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+            MESSAGE_ID_GENERATOR,
             rqueueMessageManager.getMessageConverter(),
             queueName,
             null,
@@ -189,6 +202,7 @@ public abstract class SpringTestBase extends TestBase {
       long delay = delayFunc.getDelay(i);
       if (useMessageTemplate) {
         RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
+            MESSAGE_ID_GENERATOR,
             rqueueMessageManager.getMessageConverter(),
             queueName,
             null,
@@ -205,7 +219,14 @@ public abstract class SpringTestBase extends TestBase {
 
   protected void enqueueIn(Object message, String zsetName, long delay) {
     RqueueMessage rqueueMessage = RqueueMessageUtils.buildMessage(
-        rqueueMessageManager.getMessageConverter(), zsetName, null, message, null, delay, null);
+        MESSAGE_ID_GENERATOR,
+        rqueueMessageManager.getMessageConverter(),
+        zsetName,
+        null,
+        message,
+        null,
+        delay,
+        null);
     rqueueMessageTemplate.addToZset(zsetName, rqueueMessage, rqueueMessage.getProcessAt());
   }
 

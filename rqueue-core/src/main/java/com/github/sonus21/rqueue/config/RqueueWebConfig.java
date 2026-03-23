@@ -48,6 +48,12 @@ public class RqueueWebConfig {
   @Value("${rqueue.web.max.message.move.count:1000}")
   private int maxMessageMoveCount;
 
+  @Value("${rqueue.web.queue.page.size:12}")
+  private int queuePageSize;
+
+  @Value("${rqueue.web.worker.page.size:10}")
+  private int workerPageSize;
+
   /**
    * Whether queue stats should be collected or not. When this flag is disabled, metric data won't
    * be available in the dashboard.

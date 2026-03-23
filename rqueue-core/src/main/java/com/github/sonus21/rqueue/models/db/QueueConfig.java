@@ -173,4 +173,9 @@ public class QueueConfig extends SerializableBase {
   public boolean hasDeadLetterQueue() {
     return !CollectionUtils.isEmpty(deadLetterQueues);
   }
+
+  @JsonIgnore
+  public boolean isUnlimitedRetry() {
+    return numRetry == Integer.MAX_VALUE;
+  }
 }

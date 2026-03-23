@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Sonu Kumar
+ * Copyright (c) 2020-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -37,6 +37,41 @@ function showError(message) {
   $("#global-error-message").text(message);
 }
 
+function showInfoModal(title, message, variant, onClose) {
+  let modalEl = $('#info-modal');
+  let contentEl = modalEl.find('.modal-content');
+  let okButton = modalEl.find('.btn');
+  modalEl.off('hidden.bs.modal.info');
+  contentEl.removeClass('modal-info-success modal-info-warning modal-info-danger');
+  if (variant !== undefined && variant !== null && variant !== '') {
+    contentEl.addClass('modal-info-' + variant);
+  }
+  $('#info-modal-title').text(title);
+  $('#info-modal-body').html(message);
+  okButton.removeClass('btn-success btn-warning btn-danger btn-info');
+  switch (variant) {
+    case 'success':
+      okButton.addClass('btn-success');
+      break;
+    case 'warning':
+      okButton.addClass('btn-warning');
+      break;
+    case 'danger':
+      okButton.addClass('btn-danger');
+      break;
+    default:
+      okButton.addClass('btn-info');
+      break;
+  }
+  if (onClose !== undefined) {
+    modalEl.on('hidden.bs.modal.info', function () {
+      modalEl.off('hidden.bs.modal.info');
+      onClose();
+    });
+  }
+  modalEl.modal('show');
+}
+
 function ajaxRequest(url, type, payload, successHandler, failureHandler) {
   $.ajax({
     url: url,
@@ -60,10 +95,11 @@ function json(data) {
 
 function reloadHandler(response) {
   if (response.code === 0) {
-    alert("Success!")
-    window.location.replace(window.location.href);
+    showInfoModal('Success', 'Operation completed successfully.', 'success', function () {
+      window.location.replace(window.location.href);
+    });
   } else {
-    alert("Failed:" + response.message + " Please retry!");
+    showInfoModal('Action Failed', response.message + ' Please retry!', 'danger');
     console.log(response);
   }
 }
@@ -188,7 +224,7 @@ function displayHeader(response, displayPageNumberEl, pageSize) {
 function constructTable(table, className) {
   // table : { headers: ["item", "score"], "rows: [{"columns":[{type:, value:, meta:[]}]}] }
   //
-  let tableEl = $('<table>').addClass(className);
+  let tableEl = $('<table>').addClass(className + ' explorer-inline-table');
   let thead = $('<thead>');
   let headers = table.headers;
   let rows = table.rows;
@@ -204,7 +240,24 @@ function constructTable(table, className) {
     for (let j = 0; j < columns.length; j++) {
       let column = columns[j];
       if (column.type === 'DISPLAY') {
-        tr.append($('<td>').text(column.value))
+        let td = $('<td>');
+        if (headers[j] === 'STARTTIME/ENDTIME' && typeof column.value === 'string'
+            && column.value.indexOf('/') !== -1) {
+          let timestamps = column.value.split('/', 2);
+          let stack = $('<div>').addClass('jobs-time-stack');
+          stack.append(
+              $('<div>').addClass('jobs-time-label').text('Start'))
+          stack.append(
+              $('<div>').addClass('jobs-time-value').text(timestamps[0]))
+          stack.append(
+              $('<div>').addClass('jobs-time-label').text('End'))
+          stack.append(
+              $('<div>').addClass('jobs-time-value').text(timestamps[1]))
+          td.append(stack);
+        } else {
+          td.text(column.value)
+        }
+        tr.append(td)
       } else {
         console.log("unknown column type", column);
       }
@@ -242,7 +295,7 @@ function jobsButton() {
         el.parent().append(jobsDivCloser);
         el.parent().append(jobsDiv);
       } else {
-        alert("Failed:" + response.message + " Please retry!");
+        showInfoModal('Action Failed', response.message + ' Please retry!', 'danger');
         console.log(response);
       }
     },
@@ -255,7 +308,10 @@ function renderColumn(column) {
   if (column.type === 'DISPLAY') {
     if (column.meta !== undefined) {
       let div = $('<div>');
-      div.append($('<p>').text(column.value));
+      div.append(
+          $('<pre>')
+              .addClass('explorer-message-block')
+              .append($('<code>').text(column.value)));
       for (let i = 0; i < column.meta.length; i++) {
         let meta = column.meta[i];
         switch (meta.type) {
@@ -272,12 +328,33 @@ function renderColumn(column) {
       td.text(column.value);
     }
   } else if (column.type === 'ACTION') {
+    let actionGroup = $('<div>').addClass('explorer-action-group');
     if (column.value === 'DELETE') {
-      td.append(
-          $('<a>').addClass('delete-message-btn btn-danger').text('Delete'));
+      actionGroup.append(
+          $('<button>')
+              .attr('type', 'button')
+              .addClass('delete-message-btn btn btn-danger btn-sm')
+              .text('Delete'));
+    } else if (column.value === 'ENQUEUE') {
+      actionGroup.append(
+          $('<button>')
+              .attr('type', 'button')
+              .addClass('enqueue-message-btn btn btn-info btn-sm')
+              .text('Queue to Front'));
+      actionGroup.append(
+          $('<button>')
+              .attr('type', 'button')
+              .addClass('enqueue-rear-message-btn btn btn-secondary btn-sm')
+              .text('Queue to Rear'));
+      actionGroup.append(
+          $('<button>')
+              .attr('type', 'button')
+              .addClass('delete-message-btn btn btn-danger btn-sm')
+              .text('Delete'));
     } else {
       console.log("Unknown value for action" + column.value);
     }
+    td.append(actionGroup);
   }
   return td;
 }
@@ -358,7 +435,7 @@ function updateDataType(element, callback) {
             callback();
           }
         } else {
-          alert("Failed:" + response.message + " Please retry!");
+          showInfoModal('Action Failed', response.message + ' Please retry!', 'danger');
           console.log(response);
         }
       },
@@ -431,7 +508,7 @@ $('#move-button').on("click", function () {
   let dstType = getDstType();
   let srcType = getSourceType();
   if (srcType === null) {
-    alert("Source cannot be empty.");
+    showInfoModal('Missing Source', 'Source cannot be empty.', 'warning');
     return;
   }
   let payload = {
@@ -454,7 +531,7 @@ $('#move-button').on("click", function () {
     } else if (type === 'ABS') {
       other['fixedScore'] = true;
     } else {
-      alert("You must select priority type");
+      showInfoModal('Missing Priority Type', 'You must select priority type.', 'warning');
       throw type;
     }
   }
@@ -462,9 +539,9 @@ $('#move-button').on("click", function () {
   ajaxRequest(getAbsoluteUrl('rqueue/api/v1/move-data'), 'POST', payload,
       function (response) {
         if (response.code === 0) {
-          alert("Message transfer success");
+          showInfoModal('Transfer Complete', 'Message transfer completed successfully.', 'success');
         } else {
-          alert(response.message);
+          showInfoModal('Transfer Failed', response.message, 'danger');
         }
       },
       errorHandler);
@@ -500,9 +577,41 @@ function deleteMessage() {
   ajaxRequest(getAbsoluteUrl('rqueue/api/v1/delete-message'), 'POST', payload,
       function (response) {
         if (response.code === 0) {
+          showInfoModal('Message Deleted', 'The selected message was deleted.', 'success');
           refreshPage();
         } else {
-          alert("Failed:" + response.message + " Please retry!");
+          showInfoModal('Action Failed', response.message + ' Please retry!', 'danger');
+          console.log(response);
+        }
+      },
+      errorHandler);
+}
+
+function enqueueMessage() {
+  enqueueMessageAtPosition($($(this).parent()).parent(), 'FRONT');
+}
+
+function enqueueRearMessage() {
+  enqueueMessageAtPosition($($(this).parent()).parent(), 'REAR');
+}
+
+function enqueueMessageAtPosition(rowEl, position) {
+  let id = $(rowEl.children()[0]).text();
+  let payload = {
+    "queue": queueName,
+    "message_id": id,
+    "position": position
+  }
+  ajaxRequest(getAbsoluteUrl('rqueue/api/v1/enqueue-message'), 'POST', payload,
+      function (response) {
+        if (response.code === 0) {
+          showInfoModal(
+              'Message Queued',
+              position === 'FRONT' ? 'Message queued to the front.' : 'Message queued to the rear.',
+              'success');
+          refreshPage();
+        } else {
+          showInfoModal('Action Failed', response.message + ' Please retry!', 'danger');
           console.log(response);
         }
       },
@@ -526,9 +635,10 @@ function makeQueueEmpty() {
       function (response) {
         if (response.code === 0) {
           currentPage = 0;
+          showInfoModal('Queue Cleared', 'Selected queue data was deleted.', 'success');
           refreshPage();
         } else {
-          alert("Failed:" + response.message + " Please retry!");
+          showInfoModal('Action Failed', response.message + ' Please retry!', 'danger');
           console.log(response);
         }
       }, errorHandler);
@@ -569,6 +679,8 @@ $(document).on('click', '#next-page-button', nextPage);
 $(document).on('click', '#poll-queue-btn', pollQueue);
 $(document).on('click', '#clear-queue', deleteAll);
 $(document).on('click', '.delete-message-btn', deleteMessage);
+$(document).on('click', '.enqueue-message-btn', enqueueMessage);
+$(document).on('click', '.enqueue-rear-message-btn', enqueueRearMessage);
 $(document).on('click', '#view-data', exploreData);
 $(document).on('click', '.data-explorer', exploreData);
 $(document).on('click', '.jobs-btn', jobsButton);

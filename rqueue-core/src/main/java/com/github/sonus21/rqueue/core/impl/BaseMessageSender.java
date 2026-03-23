@@ -26,6 +26,7 @@ import static org.springframework.util.Assert.notNull;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -51,6 +52,7 @@ abstract class BaseMessageSender {
   protected final MessageHeaders messageHeaders;
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
+  protected final RqueueMessageIdGenerator messageIdGenerator;
 
   @Autowired
   protected RqueueStringDao rqueueStringDao;
@@ -64,12 +66,15 @@ abstract class BaseMessageSender {
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
-      MessageHeaders messageHeaders) {
+      MessageHeaders messageHeaders,
+      RqueueMessageIdGenerator messageIdGenerator) {
     notNull(messageTemplate, "messageTemplate cannot be null");
     notNull(messageConverter, "messageConverter cannot be null");
+    notNull(messageIdGenerator, "messageIdGenerator cannot be null");
     this.messageTemplate = messageTemplate;
     this.messageConverter = messageConverter;
     this.messageHeaders = messageHeaders;
+    this.messageIdGenerator = messageIdGenerator;
   }
 
   protected Object storeMessageMetadata(
@@ -120,6 +125,7 @@ abstract class BaseMessageSender {
       boolean isUnique) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage = buildMessage(
+        messageIdGenerator,
         messageConverter,
         queueName,
         messageId,
@@ -147,6 +153,7 @@ abstract class BaseMessageSender {
       String queueName, String messageId, Object message, long periodInMilliSeconds) {
     QueueDetail queueDetail = EndpointRegistry.get(queueName);
     RqueueMessage rqueueMessage = buildPeriodicMessage(
+        messageIdGenerator,
         messageConverter,
         queueName,
         messageId,

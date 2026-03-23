@@ -16,7 +16,12 @@
 
 package com.github.sonus21.rqueue.core.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -24,9 +29,11 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
+import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
@@ -36,6 +43,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.messaging.MessageHeaders;
@@ -46,6 +54,7 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
 
   private static final String queue = "test-queue";
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
+  private static final RqueueMessageIdGenerator FIXED_MESSAGE_ID_GENERATOR = () -> "custom-id";
   MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
 
@@ -55,7 +64,6 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
   @Mock
   private RqueueMessageTemplate messageTemplate;
 
-  @Mock
   private RqueueConfig rqueueConfig;
 
   private RqueueMessageEnqueuer rqueueMessageEnqueuer;
@@ -74,11 +82,14 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageEnqueuer =
-        new RqueueMessageEnqueuerImpl(messageTemplate, messageConverter, messageHeaders);
+    rqueueConfig = new RqueueConfig(null, null, true, 2);
+    rqueueConfig.setMessageDurabilityInMinute(10080);
+    rqueueMessageEnqueuer = new RqueueMessageEnqueuerImpl(
+        messageTemplate, messageConverter, messageHeaders, FIXED_MESSAGE_ID_GENERATOR);
     FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(
         rqueueMessageEnqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
+    doNothing().when(rqueueMessageMetadataService).save(any(), any(), anyBoolean());
   }
 
   @Test
@@ -139,5 +150,16 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
         () -> rqueueMessageEnqueuer.enqueuePeriodic(null, id, "test", 5 * Constants.ONE_MILLI));
 
     rqueueMessageEnqueuer.enqueuePeriodic(queue, id, "test-message", 5 * Constants.ONE_MILLI);
+  }
+
+  @Test
+  void enqueueUsesInjectedMessageIdGenerator() {
+    rqueueMessageEnqueuer.enqueue(queue, "test-message");
+
+    ArgumentCaptor<MessageMetadata> messageMetadataCaptor =
+        ArgumentCaptor.forClass(MessageMetadata.class);
+    verify(rqueueMessageMetadataService).save(messageMetadataCaptor.capture(), any(), anyBoolean());
+    assertEquals(
+        "custom-id", messageMetadataCaptor.getValue().getRqueueMessage().getId());
   }
 }

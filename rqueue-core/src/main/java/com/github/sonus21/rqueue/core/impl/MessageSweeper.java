@@ -42,9 +42,7 @@ import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public class MessageSweeper {
-
   private static MessageSweeper messageSweeper;
-
   private final ExecutorService executorService;
   private final RqueueMessageTemplate messageTemplate;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;

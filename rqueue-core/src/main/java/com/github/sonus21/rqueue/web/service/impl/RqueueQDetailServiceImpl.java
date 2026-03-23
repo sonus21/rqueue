@@ -32,6 +32,7 @@ import com.github.sonus21.rqueue.models.enums.ActionType;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.enums.TableColumnType;
+import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerView;
 import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
@@ -46,6 +47,7 @@ import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
+import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,6 +73,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   private final RqueueSystemManagerService rqueueSystemManagerService;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
   private final RqueueConfig rqueueConfig;
+  private final RqueueWorkerRegistry rqueueWorkerRegistry;
 
   @Autowired
   public RqueueQDetailServiceImpl(
@@ -78,12 +81,14 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       RqueueMessageTemplate rqueueMessageTemplate,
       RqueueSystemManagerService rqueueSystemManagerService,
       RqueueMessageMetadataService rqueueMessageMetadataService,
-      RqueueConfig rqueueConfig) {
+      RqueueConfig rqueueConfig,
+      RqueueWorkerRegistry rqueueWorkerRegistry) {
     this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.rqueueSystemManagerService = rqueueSystemManagerService;
     this.rqueueMessageMetadataService = rqueueMessageMetadataService;
     this.rqueueConfig = rqueueConfig;
+    this.rqueueWorkerRegistry = rqueueWorkerRegistry;
   }
 
   @Override
@@ -374,9 +379,9 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       headers.add("Time Left");
     }
     if (deadLetterQueue) {
-      headers.add("AddedOn");
+      headers.add("Added On");
     } else if (completedQueue) {
-      headers.add("CompletedOn");
+      headers.add("Completed On");
     } else {
       headers.add("Action");
     }
@@ -505,6 +510,11 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   }
 
   @Override
+  public List<RqueueWorkerPollerView> getQueueWorkers(String queueName) {
+    return rqueueWorkerRegistry.getQueueWorkers(queueName);
+  }
+
+  @Override
   public Mono<DataViewResponse> getReactiveExplorePageData(
       String src, String name, DataType type, int pageNumber, int itemPerPage) {
     return Mono.just(getExplorePageData(src, name, type, pageNumber, itemPerPage));
@@ -587,7 +597,11 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       }
       if (!completionQueue) {
         if (!deleted) {
-          row.addColumn(new TableColumn(TableColumnType.ACTION, ActionType.DELETE));
+          row.addColumn(new TableColumn(
+              TableColumnType.ACTION,
+              scheduledQueue && !rqueueMessage.isPeriodic()
+                  ? ActionType.ENQUEUE
+                  : ActionType.DELETE));
         } else {
           row.addColumn(new TableColumn(Constants.BLANK));
         }

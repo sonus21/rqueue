@@ -54,28 +54,38 @@ class RqueueMessageTemplateTest extends TestBase {
   private RedisConnectionFactory redisConnectionFactory;
 
   @Mock
-  private RedisTemplate<String, RqueueMessage> redisTemplate;
-
-  @Mock
   private ListOperations<String, RqueueMessage> listOperations;
 
   @Mock
   private DefaultScriptExecutor<String> scriptExecutor;
 
   private RqueueMessageTemplate rqueueMessageTemplate;
+  private RedisTemplate<String, RqueueMessage> redisTemplate;
 
   @BeforeEach
   public void init() throws Exception {
     MockitoAnnotations.openMocks(this);
+    redisTemplate = new RedisTemplate<>() {
+      @Override
+      public ListOperations<String, RqueueMessage> opsForList() {
+        return listOperations;
+      }
+    };
     rqueueMessageTemplate =
         TestUtils.rqueueMessageTemplate(redisConnectionFactory, redisTemplate, scriptExecutor);
   }
 
   @Test
   void add() {
-    doReturn(listOperations).when(redisTemplate).opsForList();
     doReturn(1L).when(listOperations).rightPush(queueName, message);
     rqueueMessageTemplate.addMessage(queueName, message);
+  }
+
+  @Test
+  void addAtFront() {
+    doReturn(1L).when(listOperations).leftPush(queueName, message);
+    rqueueMessageTemplate.addMessageAtFront(queueName, message);
+    verify(listOperations, times(1)).leftPush(queueName, message);
   }
 
   @Test

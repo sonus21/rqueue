@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.web.service;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
+import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerView;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import java.util.List;
@@ -48,6 +49,8 @@ public interface RqueueQDetailService {
   List<List<Object>> getScheduledTasks();
 
   List<List<Object>> getDeadLetterTasks();
+
+  List<RqueueWorkerPollerView> getQueueWorkers(String queueName);
 
   Mono<DataViewResponse> getReactiveExplorePageData(
       String src, String name, DataType type, int pageNumber, int itemPerPage);

@@ -85,4 +85,22 @@ class DateTimeUtilsTest extends TestBase {
     assertEquals("1970-04-26 17:46", DateTimeUtils.formatMilliToString(10000000000L));
     assertEquals("", DateTimeUtils.formatMilliToString(null));
   }
+
+  @Test
+  void formatMilliToReadableString() {
+    assertEquals(
+        "26 Apr, 1970 at 05:46 PM", DateTimeUtils.formatMilliToReadableString(10000000000L));
+    assertEquals("", DateTimeUtils.formatMilliToReadableString(null));
+  }
+
+  @Test
+  void formatMilliToCompactDuration() {
+    assertEquals("90 sec", DateTimeUtils.formatMilliToCompactDuration(90000L));
+    assertEquals("15 min", DateTimeUtils.formatMilliToCompactDuration(900000L));
+    assertEquals("1 hr", DateTimeUtils.formatMilliToCompactDuration(3600000L));
+    assertEquals("1 hr 1 min", DateTimeUtils.formatMilliToCompactDuration(3660000L));
+    assertEquals("- 15 min", DateTimeUtils.formatMilliToCompactDuration(-900000L));
+    assertEquals("999 ms", DateTimeUtils.formatMilliToCompactDuration(999L));
+    assertEquals("", DateTimeUtils.formatMilliToCompactDuration(null));
+  }
 }
