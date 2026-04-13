@@ -22,10 +22,10 @@ allprojects {
 
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(17)
         }
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     repositories {
@@ -83,7 +83,7 @@ ext {
 
 subprojects {
     group = "com.github.sonus21"
-    version = "4.0.0-RC2"
+    version = "4.0.0-RC3"
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging
