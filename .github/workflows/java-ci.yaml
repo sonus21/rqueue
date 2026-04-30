@@ -336,6 +336,55 @@ jobs:
             rqueue-core/build/reports/junit/xml
           if-no-files-found: ignore
 
+  nats_integration_test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Expose Java 21 to Gradle toolchains
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_JAVA_INSTALLATIONS_PATHS=$JAVA_HOME" >> "$GITHUB_ENV"
+          java -version
+          javac -version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Docker is preinstalled on ubuntu-latest runners; Testcontainers picks it up
+      # automatically. No Redis is needed for this job — every test under @Tag("nats")
+      # talks to a JetStream container via Testcontainers (or runs as a pure unit test).
+      - name: Run NATS tests
+        run: ./gradlew :rqueue-nats:test :rqueue-spring-boot-starter:test :rqueue-spring:test -DincludeTags=nats
+
+      - name: Upload JaCoCo exec data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-nats
+          path: "**/build/reports/jacoco/*.exec"
+          if-no-files-found: error
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nats-test-results
+          path: |
+            rqueue-nats/build/reports/junit/xml
+            rqueue-spring-boot-starter/build/reports/junit/xml
+            rqueue-spring/build/reports/junit/xml
+          if-no-files-found: ignore
+
   coverage_report:
     needs:
       - unit_test
@@ -343,6 +392,7 @@ jobs:
       - integration_test
       - redis_cluster_test
       - reactive_integration_test
+      - nats_integration_test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

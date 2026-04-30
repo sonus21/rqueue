@@ -17,6 +17,7 @@ import io.nats.client.api.ConsumerInfo;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
+@NatsIntegrationTest
 class JetStreamMessageBrokerPeekIT extends AbstractJetStreamIT {
 
   @Test

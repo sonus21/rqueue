@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -69,6 +70,8 @@ import org.testcontainers.utility.DockerImageName;
     classes = NatsBackendEndToEndIT.TestApp.class,
     properties = {"rqueue.backend=nats"})
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("integration")
+@Tag("nats")
 class NatsBackendEndToEndIT {
 
   @Container

@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.Test;
 
+@NatsIntegrationTest
 class JetStreamMessageBrokerCompetingConsumersIT extends AbstractJetStreamIT {
 
   @Test

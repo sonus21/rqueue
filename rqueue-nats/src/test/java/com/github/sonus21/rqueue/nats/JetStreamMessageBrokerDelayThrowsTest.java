@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
 /** Unit tests that exercise pure-Java code paths (no docker container needed). */
+@NatsUnitTest
 class JetStreamMessageBrokerDelayThrowsTest {
 
   private JetStreamMessageBroker newBroker() {

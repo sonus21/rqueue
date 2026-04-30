@@ -24,11 +24,14 @@ import com.github.sonus21.rqueue.nats.JetStreamMessageBroker;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Tag("unit")
+@Tag("nats")
 class RqueueNatsListenerConfigTest {
 
   @Configuration

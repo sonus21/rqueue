@@ -16,6 +16,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
+@NatsIntegrationTest
 class JetStreamMessageBrokerPubSubIT extends AbstractJetStreamIT {
 
   @Test

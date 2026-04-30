@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
+@NatsIntegrationTest
 class JetStreamMessageBrokerRetryDlqIT extends AbstractJetStreamIT {
 
   @Test

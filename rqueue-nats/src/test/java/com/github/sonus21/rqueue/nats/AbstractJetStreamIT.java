@@ -29,6 +29,7 @@ import org.testcontainers.utility.DockerImageName;
  * skips these tests automatically.
  */
 @Testcontainers(disabledWithoutDocker = true)
+@NatsIntegrationTest
 abstract class AbstractJetStreamIT {
 
   @Container

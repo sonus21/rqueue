@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
+@NatsIntegrationTest
 class JetStreamMessageBrokerIndependentConsumersIT extends AbstractJetStreamIT {
 
   @Test

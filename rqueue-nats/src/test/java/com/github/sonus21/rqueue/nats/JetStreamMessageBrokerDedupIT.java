@@ -15,6 +15,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import org.junit.jupiter.api.Test;
 
+@NatsIntegrationTest
 class JetStreamMessageBrokerDedupIT extends AbstractJetStreamIT {
 
   @Test
