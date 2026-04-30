@@ -170,11 +170,10 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
 
   @Override
   public Mono<Boolean> saveReactive(MessageMetadata m, Duration ttl, boolean checkUnique) {
-    return Mono.fromCallable(
-        () -> {
-          save(m, ttl, checkUnique);
-          return Boolean.TRUE;
-        });
+    return Mono.fromCallable(() -> {
+      save(m, ttl, checkUnique);
+      return Boolean.TRUE;
+    });
   }
 
   @Override
