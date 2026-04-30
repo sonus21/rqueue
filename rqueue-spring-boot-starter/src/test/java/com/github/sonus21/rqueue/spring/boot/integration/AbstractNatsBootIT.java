@@ -15,11 +15,11 @@
  */
 package com.github.sonus21.rqueue.spring.boot.integration;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
@@ -45,13 +45,20 @@ abstract class AbstractNatsBootIT {
   static final String EXTERNAL_NATS_URL =
       System.getenv().getOrDefault("NATS_URL", "nats://127.0.0.1:4222");
 
-  @Container
-  static final GenericContainer<?> NATS = USE_EXTERNAL_NATS
-      ? null
-      : new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
-          .withCommand("-js")
-          .withExposedPorts(4222)
-          .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
+  static GenericContainer<?> NATS;
+
+  @BeforeAll
+  static void startNats() {
+    if (USE_EXTERNAL_NATS || NATS != null) {
+      return;
+    }
+    NATS = new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
+        .withCommand("-js")
+        .withExposedPorts(4222)
+        .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
+    NATS.start();
+    Runtime.getRuntime().addShutdownHook(new Thread(NATS::stop));
+  }
 
   @DynamicPropertySource
   static void natsProps(DynamicPropertyRegistry r) {
@@ -60,7 +67,10 @@ abstract class AbstractNatsBootIT {
     } else {
       r.add(
           "rqueue.nats.connection.url",
-          () -> "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222));
+          () -> {
+            startNats();
+            return "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222);
+          });
     }
   }
 }

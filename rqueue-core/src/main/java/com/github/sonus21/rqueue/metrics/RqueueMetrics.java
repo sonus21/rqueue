@@ -48,8 +48,7 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   @Autowired
   private MeterRegistry meterRegistry;
 
-  // Redis-only — null when rqueue.backend=nats; size() returns 0 in that case.
-  @Autowired(required = false)
+  @Autowired
   private RqueueStringDao rqueueStringDao;
 
   public RqueueMetrics(QueueCounter queueCounter) {
@@ -57,20 +56,8 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   }
 
   private long size(String name, boolean isZset) {
-    if (rqueueStringDao == null) {
-      // No Redis available (e.g. rqueue.backend=nats); these metrics are Redis-shaped.
-      return 0;
-    }
-    Long val;
-    if (!isZset) {
-      val = rqueueStringDao.getListSize(name);
-    } else {
-      val = rqueueStringDao.getSortedSetSize(name);
-    }
-    if (val == null) {
-      return 0;
-    }
-    return val;
+    Long val = isZset ? rqueueStringDao.getSortedSetSize(name) : rqueueStringDao.getListSize(name);
+    return val == null ? 0 : val;
   }
 
   private void monitor() {

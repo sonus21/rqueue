@@ -54,15 +54,13 @@ abstract class BaseMessageSender {
   protected final RqueueMessageTemplate messageTemplate;
   protected final RqueueMessageIdGenerator messageIdGenerator;
 
-  // Redis-only collaborators — absent when rqueue.backend=nats. Methods that touch them
-  // already short-circuit on the broker capability flag, so a null is safe.
-  @Autowired(required = false)
+  @Autowired
   protected RqueueStringDao rqueueStringDao;
 
   @Autowired
   protected RqueueConfig rqueueConfig;
 
-  @Autowired(required = false)
+  @Autowired
   protected RqueueMessageMetadataService rqueueMessageMetadataService;
 
   BaseMessageSender(

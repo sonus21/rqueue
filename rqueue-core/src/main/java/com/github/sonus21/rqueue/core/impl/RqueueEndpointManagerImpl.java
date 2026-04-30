@@ -42,12 +42,10 @@ import org.springframework.util.CollectionUtils;
 
 public class RqueueEndpointManagerImpl extends BaseMessageSender implements RqueueEndpointManager {
 
-  // Both Redis-only — absent on the NATS backend; the dashboard / system-config endpoints
-  // they back are gated by RedisBackendCondition and won't be invoked when these are null.
-  @Autowired(required = false)
+  @Autowired
   private RqueueUtilityService rqueueUtilityService;
 
-  @Autowired(required = false)
+  @Autowired
   private RqueueSystemConfigDao rqueueSystemConfigDao;
 
   public RqueueEndpointManagerImpl(

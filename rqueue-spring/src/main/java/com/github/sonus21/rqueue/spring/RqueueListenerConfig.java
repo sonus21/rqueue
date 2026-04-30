@@ -44,7 +44,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 
 @Configuration
-@ComponentScan({"com.github.sonus21.rqueue.web", "com.github.sonus21.rqueue.dao"})
+@ComponentScan({
+  "com.github.sonus21.rqueue.web",
+  "com.github.sonus21.rqueue.dao",
+  "com.github.sonus21.rqueue.common.impl"
+})
 public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
   @Bean

@@ -44,7 +44,12 @@ import org.springframework.context.annotation.DependsOn;
 
 @Configuration
 @AutoConfigureAfter(DataRedisAutoConfiguration.class)
-@ComponentScan({"com.github.sonus21.rqueue.web", "com.github.sonus21.rqueue.dao"})
+@ComponentScan({
+  "com.github.sonus21.rqueue.web",
+  "com.github.sonus21.rqueue.dao",
+  // Pick up backend-conditional impls (e.g. NatsRqueueLockManager) under common/impl too.
+  "com.github.sonus21.rqueue.common.impl"
+})
 @Conditional({RqueueEnabled.class})
 public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
 

@@ -35,14 +35,13 @@ import org.springframework.context.ApplicationEventPublisher;
 @Setter
 public class RqueueBeanProvider {
 
-  // Redis-only collaborators — absent on the NATS backend path; consumers must null-check.
-  @Autowired(required = false)
+  @Autowired
   private RqueueMessageMetadataService rqueueMessageMetadataService;
 
-  @Autowired(required = false)
+  @Autowired
   private RqueueSystemConfigDao rqueueSystemConfigDao;
 
-  @Autowired(required = false)
+  @Autowired
   private RqueueJobDao rqueueJobDao;
 
   @Autowired
@@ -51,7 +50,7 @@ public class RqueueBeanProvider {
   @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
 
-  @Autowired(required = false)
+  @Autowired
   private RqueueLockManager rqueueLockManager;
 
   @Autowired(required = false)
