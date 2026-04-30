@@ -35,5 +35,14 @@ import org.springframework.context.annotation.Import;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({RqueueListenerConfig.class})
-public @interface EnableRqueue {}
+@Import({RqueueBackendImportSelector.class})
+public @interface EnableRqueue {
+
+  /**
+   * Backend to use. Defaults to {@link Backend#AUTO} which keeps the existing Redis behavior
+   * unless the jnats client is on the classpath and {@code rqueue.backend=nats} is set.
+   *
+   * @return the chosen backend selector
+   */
+  Backend backend() default Backend.AUTO;
+}
