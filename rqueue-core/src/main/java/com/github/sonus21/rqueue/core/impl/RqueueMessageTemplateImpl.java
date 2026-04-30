@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.RedisScriptFactory.ScriptType;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.RedisUtils;
@@ -57,6 +58,10 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
   private final DefaultScriptExecutor<String> scriptExecutor;
   private final ReactiveScriptExecutor<String> reactiveScriptExecutor;
   private final ReactiveRqueueRedisTemplate<RqueueMessage> reactiveRedisTemplate;
+  // Optional broker delegate. When non-null, callers may opt into routing through the SPI.
+  // For backward compatibility, the existing constructors leave this null and behavior is
+  // bit-for-bit identical to the pre-SPI implementation.
+  private MessageBroker messageBroker;
 
   public RqueueMessageTemplateImpl(
       RedisConnectionFactory redisConnectionFactory,
@@ -73,6 +78,26 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       this.reactiveScriptExecutor = null;
       this.reactiveRedisTemplate = null;
     }
+  }
+
+  /**
+   * Additive overload that accepts an optional {@link MessageBroker}. The broker is stored but
+   * delegation is opt-in; existing constructors and call paths remain unchanged.
+   */
+  public RqueueMessageTemplateImpl(
+      RedisConnectionFactory redisConnectionFactory,
+      ReactiveRedisConnectionFactory reactiveRedisConnectionFactory,
+      MessageBroker messageBroker) {
+    this(redisConnectionFactory, reactiveRedisConnectionFactory);
+    this.messageBroker = messageBroker;
+  }
+
+  public MessageBroker getMessageBroker() {
+    return messageBroker;
+  }
+
+  public void setMessageBroker(MessageBroker messageBroker) {
+    this.messageBroker = messageBroker;
   }
 
   @Override

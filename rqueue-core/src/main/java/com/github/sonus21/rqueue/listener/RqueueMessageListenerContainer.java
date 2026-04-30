@@ -27,6 +27,7 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -109,6 +110,10 @@ public class RqueueMessageListenerContainer
   private PriorityMode priorityMode;
   private MessageHeaders messageHeaders;
   private HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties;
+  // Optional pluggable backend. Additive in Phase 1: when null (current code path), behavior is
+  // unchanged. When set, capabilities() may gate scheduler/handler dispatch wiring; the Redis
+  // broker reports REDIS_DEFAULTS so the gated branches still match existing semantics.
+  private MessageBroker messageBroker;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -146,6 +151,42 @@ public class RqueueMessageListenerContainer
 
   public RqueueMessageHandler getRqueueMessageHandler() {
     return rqueueMessageHandler;
+  }
+
+  /**
+   * Returns the optional {@link MessageBroker} backing this container, or {@code null} if the
+   * container is using the legacy Redis-backed code path.
+   */
+  public MessageBroker getMessageBroker() {
+    return messageBroker;
+  }
+
+  /**
+   * Optionally set a {@link MessageBroker}. Additive in Phase 1: when not set (default), the
+   * container behaves exactly as before. When set, capability flags may gate scheduler and handler
+   * dispatch wiring. The default Redis broker reports {@code REDIS_DEFAULTS} so all gated branches
+   * resolve to the existing behavior.
+   *
+   * @param messageBroker broker SPI instance, or {@code null}
+   */
+  public void setMessageBroker(MessageBroker messageBroker) {
+    this.messageBroker = messageBroker;
+  }
+
+  /**
+   * Whether scheduler startup should run for this container. Returns {@code true} for the legacy
+   * (no broker) path and for brokers that advertise scheduled introspection support.
+   */
+  public boolean isScheduledIntrospectionEnabled() {
+    return messageBroker == null || messageBroker.capabilities().supportsScheduledIntrospection();
+  }
+
+  /**
+   * Whether the primary {@link RqueueMessageHandler} dispatch path is enabled. Returns {@code true}
+   * for the legacy (no broker) path and for brokers that advertise primary handler dispatch.
+   */
+  public boolean isPrimaryHandlerDispatchEnabled() {
+    return messageBroker == null || messageBroker.capabilities().usesPrimaryHandlerDispatch();
   }
 
   public Integer getMaxNumWorkers() {
