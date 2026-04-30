@@ -59,12 +59,16 @@
             <span>Running</span>
           </a>
         </li>
+        {# Hidden when the active broker reports !supportsScheduledIntrospection (e.g. JetStream).
+           Defaults to visible (hideScheduledPanel == null/false) for the Redis backend. #}
+        {% if not hideScheduledPanel %}
         <li class="{% if scheduledActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/scheduled">
             <i class='bx bxs-hourglass'></i>
             <span>Scheduled</span>
           </a>
         </li>
+        {% endif %}
         <li class="{% if pendingActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/pending">
             <i class='bx bx-spreadsheet'></i>

@@ -21,9 +21,12 @@ import static com.google.common.collect.Lists.newArrayList;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -75,6 +78,15 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   private final RqueueConfig rqueueConfig;
   private final RqueueWorkerRegistry rqueueWorkerRegistry;
 
+  /**
+   * Optional broker SPI. When set (non-Redis backend), the dashboard prefers
+   * {@link MessageBroker#size(QueueDetail)} and
+   * {@link MessageBroker#peek(QueueDetail, long, long)} for read paths instead of
+   * the Redis DAOs. {@code @Autowired(required = false)} keeps the Redis-only path
+   * unchanged when no broker is configured.
+   */
+  private MessageBroker messageBroker;
+
   @Autowired
   public RqueueQDetailServiceImpl(
       @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate,
@@ -91,6 +103,40 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     this.rqueueWorkerRegistry = rqueueWorkerRegistry;
   }
 
+  @Autowired(required = false)
+  public void setMessageBroker(MessageBroker messageBroker) {
+    this.messageBroker = messageBroker;
+  }
+
+
+  /**
+   * Visible for tests and pluggable backends.
+   */
+  public MessageBroker getMessageBroker() {
+    return messageBroker;
+  }
+
+  /**
+   * Resolves a {@link QueueDetail} for the given queue name. Returns {@code null} when no
+   * detail is registered (e.g. shutdown / late init); callers should fall back to the Redis
+   * path in that case.
+   */
+  private QueueDetail lookupQueueDetail(String queueName) {
+    try {
+      return EndpointRegistry.get(queueName);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private boolean brokerHidesScheduled() {
+    return messageBroker != null && !messageBroker.capabilities().supportsScheduledIntrospection();
+  }
+
+  private boolean brokerHidesCron() {
+    return messageBroker != null && !messageBroker.capabilities().supportsCronJobs();
+  }
+
   @Override
   public Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
       List<QueueConfig> queueConfig) {
@@ -103,7 +149,15 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (queueConfig == null) {
       return Collections.emptyList();
     }
-    Long pending = stringRqueueRedisTemplate.getListSize(queueConfig.getQueueName());
+    // Route size lookup through the broker SPI when configured (non-Redis backend).
+    QueueDetail brokerQueueDetail =
+        messageBroker != null ? lookupQueueDetail(queueConfig.getName()) : null;
+    Long pending;
+    if (brokerQueueDetail != null) {
+      pending = messageBroker.size(brokerQueueDetail);
+    } else {
+      pending = stringRqueueRedisTemplate.getListSize(queueConfig.getQueueName());
+    }
     String processingQueueName = queueConfig.getProcessingQueueName();
     Long running = stringRqueueRedisTemplate.getZsetSize(processingQueueName);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList(
@@ -116,10 +170,15 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
             new RedisDataDetail(
                 processingQueueName, DataType.ZSET, running == null ? 0 : running)));
     String scheduledQueueName = queueConfig.getScheduledQueueName();
-    Long scheduled = stringRqueueRedisTemplate.getZsetSize(scheduledQueueName);
-    queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-        NavTab.SCHEDULED,
-        new RedisDataDetail(scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
+    // When the broker doesn't support scheduled introspection (e.g. JetStream), suppress
+    // the SCHEDULED nav tab entry entirely so the dashboard doesn't query an absent ZSET.
+    if (!brokerHidesScheduled()) {
+      Long scheduled = stringRqueueRedisTemplate.getZsetSize(scheduledQueueName);
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+          NavTab.SCHEDULED,
+          new RedisDataDetail(
+              scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
+    }
     if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
       for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
         if (!dlq.isConsumerEnabled()) {
@@ -152,7 +211,10 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     List<NavTab> navTabs = new ArrayList<>();
     if (queueConfig != null) {
       navTabs.add(NavTab.PENDING);
-      navTabs.add(NavTab.SCHEDULED);
+      // Hide SCHEDULED tab for brokers without scheduled-queue introspection support.
+      if (!brokerHidesScheduled()) {
+        navTabs.add(NavTab.SCHEDULED);
+      }
       navTabs.add(NavTab.RUNNING);
       if (queueConfig.hasDeadLetterQueue()) {
         navTabs.add(NavTab.DEAD);
@@ -244,9 +306,32 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     boolean deadLetterQueue = queueConfig.isDeadLetterQueue(name);
     boolean scheduledQueue = queueConfig.getScheduledQueueName().equals(name);
     boolean completionQueue = name.equals(queueConfig.getCompletedQueueName());
+    // Surface broker capability hints so the UI can hide the corresponding panels.
+    response.setHideScheduledPanel(brokerHidesScheduled());
+    response.setHideCronJobs(brokerHidesCron());
+    // When the broker does not support scheduled-queue introspection, return an empty
+    // result set for the scheduled tab. The hideScheduledPanel flag (above) tells the
+    // frontend to grey out / hide the panel.
+    if (scheduledQueue && brokerHidesScheduled()) {
+      response.setRows(Collections.emptyList());
+      return response;
+    }
     setHeadersIfRequired(deadLetterQueue, completionQueue, type, response, pageNumber);
     addActionsIfRequired(
         src, name, type, scheduledQueue, deadLetterQueue, completionQueue, response);
+    // Prefer broker.peek() for the ready (LIST) queue when a non-Redis broker is configured.
+    if (type == DataType.LIST && !deadLetterQueue && messageBroker != null) {
+      QueueDetail qd = lookupQueueDetail(queueConfig.getName());
+      if (qd != null) {
+        long offset = (long) pageNumber * itemPerPage;
+        List<RqueueMessage> peeked = messageBroker.peek(qd, offset, itemPerPage);
+        List<TypedTuple<RqueueMessage>> tuples = peeked.stream()
+            .map(m -> (TypedTuple<RqueueMessage>) new DefaultTypedTuple<>(m, null))
+            .collect(Collectors.toList());
+        response.setRows(buildRows(tuples, new ListRowBuilder(false)));
+        return response;
+      }
+    }
     switch (type) {
       case ZSET:
         if (scheduledQueue) {
