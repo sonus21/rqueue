@@ -52,27 +52,25 @@ import org.springframework.stereotype.Component;
         + "dispatcher per queue.")
 class NatsRetryAndDlqE2EIT extends AbstractNatsBootIT {
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
 
-  @Autowired FailingListener listener;
+  @Autowired
+  FailingListener listener;
 
-  @Autowired JetStreamManagement jsm;
+  @Autowired
+  JetStreamManagement jsm;
 
   @Test
   void exhaustedMessageLandsOnDlqStream() {
     enqueuer.enqueue("failing", "boom");
 
-    Awaitility.await()
-        .atMost(Duration.ofSeconds(60))
-        .until(() -> listener.attempts.get() >= 2);
+    Awaitility.await().atMost(Duration.ofSeconds(60)).until(() -> listener.attempts.get() >= 2);
 
-    Awaitility.await()
-        .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              StreamInfo dlq = jsm.getStreamInfo("rqueue-failing-dlq");
-              assertThat(dlq.getStreamState().getMsgCount()).isGreaterThanOrEqualTo(1);
-            });
+    Awaitility.await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+      StreamInfo dlq = jsm.getStreamInfo("rqueue-failing-dlq");
+      assertThat(dlq.getStreamState().getMsgCount()).isGreaterThanOrEqualTo(1);
+    });
   }
 
   @SpringBootApplication(
