@@ -33,3 +33,4 @@ hs_err_pid*
 /*/log
 
 .DS_Store.claude/
+.claude/
