@@ -26,11 +26,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
-import com.github.sonus21.rqueue.redis.RedisUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
+import com.github.sonus21.rqueue.redis.RedisUnitTest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
