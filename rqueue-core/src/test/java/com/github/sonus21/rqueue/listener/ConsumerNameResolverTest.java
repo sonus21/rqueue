@@ -39,7 +39,7 @@ class ConsumerNameResolverTest extends TestBase {
     Method m = Sample.class.getMethod("defaultName");
     RqueueListener ann = m.getAnnotation(RqueueListener.class);
     assertEquals(
-        "rqueue-q1-mybean#defaultName",
+        "rqueue-q1-mybean_defaultName",
         ConsumerNameResolver.resolveConsumerName(ann, "mybean", "defaultName", "q1"));
   }
 
@@ -55,6 +55,19 @@ class ConsumerNameResolverTest extends TestBase {
   @Test
   void nullAnnotationFallsBackToDefault() {
     assertEquals(
-        "rqueue-qX-bean#m", ConsumerNameResolver.resolveConsumerName(null, "bean", "m", "qX"));
+        "rqueue-qX-bean_m", ConsumerNameResolver.resolveConsumerName(null, "bean", "m", "qX"));
+  }
+
+  /**
+   * NATS / JetStream durable consumer names are restricted to {@code [A-Za-z0-9_-]}. Nested-class
+   * beans (which carry {@code $}) and the original {@code #} separator broke consumer creation,
+   * so the resolver collapses any character outside that set to {@code _}.
+   */
+  @Test
+  void sanitizesIllegalCharactersInBeanAndMethodNames() {
+    String resolved =
+        ConsumerNameResolver.resolveConsumerName(
+            null, "Outer$Inner.bean", "method.with$weird#chars", "q1");
+    assertEquals("rqueue-q1-Outer_Inner_bean_method_with_weird_chars", resolved);
   }
 }
