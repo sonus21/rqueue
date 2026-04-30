@@ -44,6 +44,7 @@ public abstract class AbstractJetStreamIT {
    * external-NATS path can leave it null without tripping the extension.
    */
   protected static GenericContainer<?> NATS;
+
   protected static Connection connection;
 
   @BeforeAll
