@@ -75,8 +75,7 @@ public class NatsRqueueQueueMetricsProvider implements RqueueQueueMetricsProvide
   @Override
   public long getDeadLetterMessageCount(String queueName) {
     QueueDetail q = EndpointRegistry.get(queueName);
-    String dlqStream =
-        config.getStreamPrefix() + q.getName() + config.getDlqStreamSuffix();
+    String dlqStream = config.getStreamPrefix() + q.getName() + config.getDlqStreamSuffix();
     try {
       StreamInfo info = jsm.getStreamInfo(dlqStream);
       return info.getStreamState().getMsgCount();

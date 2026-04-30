@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.spring.boot;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueListenerBaseConfig;
 import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
@@ -28,14 +29,12 @@ import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.redis.config.RqueueRedisListenerConfig;
 import com.github.sonus21.rqueue.redis.metrics.RedisRqueueQueueMetricsProvider;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.condition.RqueueEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -47,6 +46,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Configuration
 @AutoConfigureAfter(DataRedisAutoConfiguration.class)

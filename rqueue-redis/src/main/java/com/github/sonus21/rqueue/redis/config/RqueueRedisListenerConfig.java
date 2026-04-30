@@ -78,7 +78,8 @@ public class RqueueRedisListenerConfig {
       RqueueMessageListenerContainer rqueueMessageListenerContainer,
       RqueueConfig rqueueConfig,
       RqueueBeanProvider rqueueBeanProvider,
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+      @Qualifier("stringRqueueRedisTemplate")
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueInternalPubSubChannel(
         rqueueRedisListenerContainerFactory,
         rqueueMessageListenerContainer,

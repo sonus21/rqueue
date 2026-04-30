@@ -28,7 +28,6 @@ import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.condition.MissingRqueueMessageIdGenerator;
@@ -42,14 +41,12 @@ import io.pebbletemplates.spring.extension.SpringExtension;
 import io.pebbletemplates.spring.reactive.PebbleReactiveViewResolver;
 import io.pebbletemplates.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.servlet.ViewResolver;
 
 /**
@@ -275,5 +272,4 @@ public abstract class RqueueListenerBaseConfig {
   public RqueueBeanProvider rqueueBeanProvider() {
     return new RqueueBeanProvider();
   }
-
 }
