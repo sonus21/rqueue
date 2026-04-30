@@ -26,25 +26,41 @@ import org.testcontainers.utility.DockerImageName;
 /**
  * Common Testcontainers + dynamic-property boilerplate for NATS-backed end-to-end tests.
  *
+ * <p>Mirrors the existing Redis test pattern (see {@code RedisRunning} / {@code REDIS_RUNNING}):
+ * when the {@code NATS_RUNNING} environment variable is set the tests assume an externally
+ * managed nats-server is reachable at {@code NATS_URL} (default {@code nats://127.0.0.1:4222})
+ * and skip Testcontainers entirely. CI sets {@code NATS_RUNNING=true} after starting nats-server
+ * via apt; local dev leaves it unset and falls back to Testcontainers, which itself skips
+ * gracefully when Docker isn't available.
+ *
  * <p>Subclasses declare their own {@code @SpringBootApplication} test config (typically excluding
  * Redis auto-config, see {@link NatsBackendEndToEndIT} for the reference pattern) and any
- * {@code @RqueueListener} beans they need. The container is lifecycle-managed by the
- * {@link Testcontainers} extension and shared across all tests in a single subclass.
+ * {@code @RqueueListener} beans they need.
  */
 @Testcontainers(disabledWithoutDocker = true)
 abstract class AbstractNatsBootIT {
 
+  static final boolean USE_EXTERNAL_NATS = System.getenv("NATS_RUNNING") != null;
+
+  static final String EXTERNAL_NATS_URL =
+      System.getenv().getOrDefault("NATS_URL", "nats://127.0.0.1:4222");
+
   @Container
-  static final GenericContainer<?> NATS = new GenericContainer<>(
-          DockerImageName.parse("nats:2.10-alpine"))
-      .withCommand("-js")
-      .withExposedPorts(4222)
-      .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
+  static final GenericContainer<?> NATS = USE_EXTERNAL_NATS
+      ? null
+      : new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
+          .withCommand("-js")
+          .withExposedPorts(4222)
+          .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
 
   @DynamicPropertySource
   static void natsProps(DynamicPropertyRegistry r) {
-    r.add(
-        "rqueue.nats.connection.url",
-        () -> "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222));
+    if (USE_EXTERNAL_NATS) {
+      r.add("rqueue.nats.connection.url", () -> EXTERNAL_NATS_URL);
+    } else {
+      r.add(
+          "rqueue.nats.connection.url",
+          () -> "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222));
+    }
   }
 }

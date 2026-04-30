@@ -33,60 +33,34 @@ import org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoCo
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 /**
- * End-to-end integration test wiring a Spring Boot application against a Testcontainers-managed
- * NATS JetStream instance via {@code rqueue.backend=nats}, an {@link RqueueListener}, and the
- * default {@link RqueueMessageEnqueuer}. It exercises the full intended path:
+ * End-to-end integration test wiring a Spring Boot application against a NATS JetStream
+ * instance via {@code rqueue.backend=nats}, an {@link RqueueListener}, and the default
+ * {@link RqueueMessageEnqueuer}. It exercises the full intended path:
  *
  * <pre>
  *   Enqueue -> JetStreamMessageBroker.enqueue -> JetStream stream
  *           -> BrokerMessagePoller.pop -> @RqueueListener invocation -> broker.ack
  * </pre>
  *
+ * <p>The NATS instance is supplied by {@link AbstractNatsBootIT}: when {@code NATS_RUNNING=true}
+ * (CI), the test connects to a locally running nats-server; otherwise it falls back to a
+ * Testcontainers-managed container, which itself skips gracefully without Docker.
+ *
  * <p>Boots without any Redis at all: every Redis-shaped bean (config DAOs, dashboard controllers,
  * pub/sub channel, schedulers) is gated by {@code @Conditional(RedisBackendCondition.class)} and
  * stays out of the context when {@code rqueue.backend=nats}. {@code DataRedisAutoConfiguration}
- * is excluded so Spring Boot doesn't try to wire a Lettuce client either. The whole produce-and-
- * consume loop runs through JetStream.
- *
- * <p>The {@link TestListener} is explicitly imported (rather than relying on package scan) so the
- * listener is reachable regardless of where the test harness places the {@code @SpringBootTest}'s
- * scan root.
+ * is excluded so Spring Boot doesn't try to wire a Lettuce client either.
  */
 @SpringBootTest(
     classes = NatsBackendEndToEndIT.TestApp.class,
     properties = {"rqueue.backend=nats"})
-@Testcontainers(disabledWithoutDocker = true)
 @Tag("nats")
-class NatsBackendEndToEndIT {
+class NatsBackendEndToEndIT extends AbstractNatsBootIT {
 
-  @Container
-  static final GenericContainer<?> NATS = new GenericContainer<>(
-          DockerImageName.parse("nats:2.10-alpine"))
-      .withCommand("-js")
-      .withExposedPorts(4222)
-      .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
-
-  @DynamicPropertySource
-  static void registerProps(DynamicPropertyRegistry r) {
-    r.add(
-        "rqueue.nats.connection.url",
-        () -> "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222));
-  }
-
-  @Autowired
-  RqueueMessageEnqueuer enqueuer;
-
-  @Autowired
-  TestListener listener;
+  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired TestListener listener;
 
   @Test
   void enqueueIsReceivedByListener() throws Exception {

@@ -360,11 +360,41 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Docker is preinstalled on ubuntu-latest runners; Testcontainers picks it up
-      # automatically. No Redis is needed for this job — every test under @Tag("nats")
-      # talks to a JetStream container via Testcontainers (or runs as a pure unit test).
+      # Install + start nats-server directly (not via Docker — mirrors how the other CI
+      # jobs install redis-server). Tests detect NATS_RUNNING and connect to localhost
+      # instead of pulling a Testcontainers image.
+      - name: Install nats-server
+        run: |
+          NATS_VERSION=v2.10.22
+          curl -sSL "https://github.com/nats-io/nats-server/releases/download/${NATS_VERSION}/nats-server-${NATS_VERSION}-linux-amd64.tar.gz" \
+            | tar -xz -C /tmp
+          sudo mv "/tmp/nats-server-${NATS_VERSION}-linux-amd64/nats-server" /usr/local/bin/nats-server
+          nats-server --version
+
+      - name: Start nats-server
+        run: |
+          mkdir -p /tmp/jetstream
+          nohup nats-server -js -sd /tmp/jetstream -p 4222 > /tmp/nats.log 2>&1 &
+          for i in $(seq 1 20); do
+            if (echo > /dev/tcp/127.0.0.1/4222) 2>/dev/null; then
+              echo "nats-server ready after ${i}s"; break
+            fi
+            sleep 1
+          done
+
       - name: Run NATS tests
+        env:
+          NATS_RUNNING: "true"
+          NATS_URL: nats://127.0.0.1:4222
         run: ./gradlew :rqueue-nats:test :rqueue-spring-boot-starter:test :rqueue-spring:test -DincludeTags=nats
+
+      - name: Upload nats-server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nats-server-log
+          path: /tmp/nats.log
+          if-no-files-found: ignore
 
       - name: Upload JaCoCo exec data
         if: always()
