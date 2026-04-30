@@ -92,6 +92,12 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   private final MultiValueMap<MappingInformation, HandlerMethodWithPrimary> handlerMethods =
       new LinkedMultiValueMap<>(64);
 
+  // Phase 3: when set to false (NATS-style brokers), the "exactly one primary per queue"
+  // validation in afterPropertiesSet() is skipped and a single WARN is logged listing queues
+  // with multiple handlers. Defaults to true to preserve Redis semantics.
+  private boolean primaryHandlerDispatchEnabled = true;
+  private static volatile boolean rqueueHandlerWarnLogged = false;
+
   public RqueueMessageHandler(final MessageConverter messageConverter, boolean inspectAllBean) {
     notNull(messageConverter, "messageConverter cannot be null");
     this.messageConverter = messageConverter;
@@ -136,9 +142,44 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return new ArrayList<>(getCustomReturnValueHandlers());
   }
 
+  /**
+   * Capability flag set by the listener container when a non-Redis broker is active. When
+   * {@code false}, the {@code @RqueueHandler} primary validation is skipped because secondary
+   * handler dispatch is not honored by such brokers.
+   */
+  public void setPrimaryHandlerDispatchEnabled(boolean primaryHandlerDispatchEnabled) {
+    this.primaryHandlerDispatchEnabled = primaryHandlerDispatchEnabled;
+  }
+
+  public boolean isPrimaryHandlerDispatchEnabled() {
+    return primaryHandlerDispatchEnabled;
+  }
+
   @Override
   public void afterPropertiesSet() {
     super.afterPropertiesSet();
+    if (!primaryHandlerDispatchEnabled) {
+      // NATS-style backend: secondary handler dispatch is not supported; warn once with the
+      // queues that have multiple handler methods so users can convert them to listeners.
+      if (!rqueueHandlerWarnLogged) {
+        for (Entry<String, MappingInformation> e : destinationLookup.entrySet()) {
+          List<HandlerMethodWithPrimary> methods = handlerMethods.get(e.getValue());
+          if (methods != null && methods.size() > 1) {
+            int secondary = (int) methods.stream().filter(m -> !m.primary).count();
+            if (secondary > 0) {
+              log.warn(
+                  "@RqueueHandler is not honored by the NATS backend; the {} secondary handler "
+                      + "methods on queue '{}' will not receive messages. Convert them to "
+                      + "@RqueueListener with their own consumerName.",
+                  secondary,
+                  e.getKey());
+              rqueueHandlerWarnLogged = true;
+            }
+          }
+        }
+      }
+      return;
+    }
     for (Entry<String, MappingInformation> e : destinationLookup.entrySet()) {
       List<HandlerMethodWithPrimary> handlerMethodWithPrimaries = handlerMethods.get(e.getValue());
       if (handlerMethodWithPrimaries.size() > 1) {

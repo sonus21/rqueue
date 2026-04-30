@@ -342,14 +342,80 @@ public class RqueueMessageListenerContainer
   @Override
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
+      // Propagate broker capability into the handler before its afterPropertiesSet runs the
+      // primary-validation. The handler is wired through Spring lifecycle separately, but if
+      // it's already been initialized this is a no-op for the primary path; the handler will
+      // re-check its flag when validating.
+      rqueueMessageHandler.setPrimaryHandlerDispatchEnabled(isPrimaryHandlerDispatchEnabled());
       RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
       initializeQueueRegistry();
+      if (!isPrimaryHandlerDispatchEnabled()) {
+        validateConsumerNameUniqueness();
+      }
       if (rqueueConfig.isProducer()) {
         log.info("Producer mode nothing to do...");
       } else {
         initialize();
       }
       lifecycleMgr.notifyAll();
+    }
+  }
+
+  /**
+   * Phase 3 cross-handler validation for capability-gated brokers (NATS / JetStream).
+   *
+   * <p>Walks every {@code @RqueueListener} method in the handler map and computes
+   * {@code (queueName, consumerName)} pairs via {@link ConsumerNameResolver}. If any pair
+   * collides across distinct {@code bean#method} owners, throws {@link IllegalStateException}
+   * listing the offenders so boot fails fast.
+   */
+  private void validateConsumerNameUniqueness() {
+    Map<String, String> seen = new HashMap<>();
+    List<String> collisions = new ArrayList<>();
+    for (Entry<MappingInformation, List<RqueueMessageHandler.HandlerMethodWithPrimary>> e :
+        rqueueMessageHandler.getHandlerMethodMap().entrySet()) {
+      MappingInformation mapping = e.getKey();
+      for (RqueueMessageHandler.HandlerMethodWithPrimary hmp : e.getValue()) {
+        Object beanRef = hmp.method.getBean();
+        String beanName =
+            beanRef instanceof String
+                ? (String) beanRef
+                : beanRef.getClass().getSimpleName();
+        String methodName = hmp.method.getMethod().getName();
+        com.github.sonus21.rqueue.annotation.RqueueListener ann =
+            org.springframework.core.annotation.AnnotationUtils.findAnnotation(
+                hmp.method.getMethod(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
+        if (ann == null) {
+          ann =
+              org.springframework.core.annotation.AnnotationUtils.findAnnotation(
+                  hmp.method.getBeanType(),
+                  com.github.sonus21.rqueue.annotation.RqueueListener.class);
+        }
+        for (String queue : mapping.getQueueNames()) {
+          String consumerName =
+              ConsumerNameResolver.resolveConsumerName(ann, beanName, methodName, queue);
+          String key = queue + "::" + consumerName;
+          String prior = seen.putIfAbsent(key, beanName + "#" + methodName);
+          if (prior != null) {
+            collisions.add(
+                "queue='"
+                    + queue
+                    + "' consumerName='"
+                    + consumerName
+                    + "' between "
+                    + prior
+                    + " and "
+                    + beanName
+                    + "#"
+                    + methodName);
+          }
+        }
+      }
+    }
+    if (!collisions.isEmpty()) {
+      throw new IllegalStateException(
+          "Duplicate (queueName, consumerName) pairs across @RqueueListener methods: "
+              + String.join("; ", collisions));
     }
   }
 
