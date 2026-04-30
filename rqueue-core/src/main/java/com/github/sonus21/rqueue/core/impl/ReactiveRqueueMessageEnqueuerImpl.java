@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -38,6 +39,10 @@ import reactor.core.publisher.Mono;
 public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     implements ReactiveRqueueMessageEnqueuer {
 
+  // Optional broker delegate. When non-null, reactive enqueue routes through
+  // MessageBroker.enqueueReactive instead of the reactive Redis template path.
+  private MessageBroker messageBroker;
+
   public ReactiveRqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
       MessageConverter messageConverter,
@@ -51,6 +56,20 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
     super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
+  }
+
+  /**
+   * Set an optional {@link MessageBroker} delegate. When non-null, reactive enqueue calls route
+   * through {@link MessageBroker#enqueueReactive(QueueDetail, RqueueMessage)} instead of the legacy
+   * reactive Redis template path. Existing Redis users that do not configure a broker keep the
+   * original behavior.
+   */
+  public void setMessageBroker(MessageBroker messageBroker) {
+    this.messageBroker = messageBroker;
+  }
+
+  public MessageBroker getMessageBroker() {
+    return messageBroker;
   }
 
   @SuppressWarnings("unchecked")
@@ -78,6 +97,18 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
           (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
       return storeResult.flatMap(success -> {
         if (Boolean.TRUE.equals(success)) {
+          if (messageBroker != null) {
+            Mono<Void> brokerMono;
+            if (delayInMilliSecs == null
+                || delayInMilliSecs <= com.github.sonus21.rqueue.utils.Constants.MIN_DELAY) {
+              brokerMono = messageBroker.enqueueReactive(queueDetail, rqueueMessage);
+            } else {
+              brokerMono =
+                  messageBroker.enqueueWithDelayReactive(
+                      queueDetail, rqueueMessage, delayInMilliSecs);
+            }
+            return brokerMono.then(Mono.defer(() -> monoConverter.apply(rqueueMessage)));
+          }
           Object result = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
           Mono<Long> enqueueMono;
           if (result instanceof Flux) {

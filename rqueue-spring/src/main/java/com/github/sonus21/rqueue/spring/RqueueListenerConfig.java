@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.QueueCounter;
@@ -120,11 +121,18 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
-      RqueueMessageIdGenerator rqueueMessageIdGenerator) {
-    return new ReactiveRqueueMessageEnqueuerImpl(
-        rqueueMessageTemplate,
-        rqueueMessageHandler.getMessageConverter(),
-        simpleRqueueListenerContainerFactory.getMessageHeaders(),
-        rqueueMessageIdGenerator);
+      RqueueMessageIdGenerator rqueueMessageIdGenerator,
+      org.springframework.beans.factory.ObjectProvider<MessageBroker> messageBrokerProvider) {
+    ReactiveRqueueMessageEnqueuerImpl impl =
+        new ReactiveRqueueMessageEnqueuerImpl(
+            rqueueMessageTemplate,
+            rqueueMessageHandler.getMessageConverter(),
+            simpleRqueueListenerContainerFactory.getMessageHeaders(),
+            rqueueMessageIdGenerator);
+    MessageBroker broker = messageBrokerProvider.getIfAvailable();
+    if (broker != null) {
+      impl.setMessageBroker(broker);
+    }
+    return impl;
   }
 }

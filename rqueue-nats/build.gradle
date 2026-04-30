@@ -49,4 +49,5 @@ dependencies {
     testImplementation project(":rqueue-test-util")
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation "io.projectreactor:reactor-test:${projectReactorReactorTestVersion}"
 }
