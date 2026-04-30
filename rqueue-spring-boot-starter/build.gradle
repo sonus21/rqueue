@@ -61,4 +61,5 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
 }
