@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -58,30 +57,14 @@ import org.testcontainers.utility.DockerImageName;
  * auto-config classes on {@link TestApp} (rather than via property) keeps the exclusion local to
  * this test and visible to readers.
  *
- * <h2>Disabled: enqueue path is not yet routed through {@link com.github.sonus21.rqueue.core.spi.MessageBroker}</h2>
+ * <h2>Producer path</h2>
  *
- * Phases 1-4 + 3.5 wired the consumer side end-to-end ({@code BrokerMessagePoller} pops from
- * JetStream, deserializes via the configured converter, dispatches via reflection, and acks).
- * The producer side, however, still flows through {@code BaseMessageSender#enqueue} which calls
- * {@code RqueueMessageTemplate.addMessage(...)} (Redis RPUSH) and
- * {@code RqueueMessageMetadataService.save(...)} (Redis SET) unconditionally. There is no branch
- * yet that delegates to {@code MessageBroker.enqueue(QueueDetail, RqueueMessage)} when a non-Redis
- * broker is wired, and no escape from the Redis-backed metadata store. Until that delegation
- * lands, this test cannot pass without a Redis instance, defeating the whole point of running
- * Boot with {@code rqueue.backend=nats}.
- *
- * <p>Tracking item: route producer enqueue through {@code MessageBroker} when
- * {@code messageBroker.capabilities().usesPrimaryHandlerDispatch() == false}, and gate the
- * Redis-backed metadata store on the same flag.
- *
- * <p>This test is intentionally kept on disk (compiled, but {@link Disabled}) so the wiring fix
- * has a ready-made acceptance test and does not need to be reconstructed from scratch.
+ * The sync producer flows through {@code BaseMessageSender#enqueue} which now delegates to
+ * {@code MessageBroker.enqueue(QueueDetail, RqueueMessage)} when the active broker advertises
+ * {@code !usesPrimaryHandlerDispatch()}, and {@code storeMessageMetadata} short-circuits on the
+ * same flag so no Redis HASH write is attempted. Together with the broker-driven poller this
+ * exercises the full produce-and-consume loop without touching Redis.
  */
-@Disabled(
-    "Blocked: producer enqueue path (BaseMessageSender#enqueue + RqueueMessageMetadataService) "
-        + "is not yet routed through MessageBroker. With rqueue.backend=nats and no Redis "
-        + "instance, the first enqueue throws because addMessage / metadata save still hit Redis. "
-        + "Re-enable once enqueue delegation to MessageBroker.enqueue is wired.")
 @SpringBootTest(
     classes = NatsBackendEndToEndIT.TestApp.class,
     properties = {"rqueue.backend=nats"})
