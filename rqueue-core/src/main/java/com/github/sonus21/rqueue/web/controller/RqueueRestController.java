@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.web.controller;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
@@ -54,9 +57,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Conditional({RedisBackendCondition.class, ReactiveDisabled.class})
 @RestController
 @RequestMapping(path = "${rqueue.web.url.prefix:}rqueue/api/v1")
-@Conditional(ReactiveDisabled.class)
 public class RqueueRestController extends BaseController {
 
   private final RqueueDashboardChartService rqueueDashboardChartService;

@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.dao.impl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import com.github.sonus21.rqueue.common.ReactiveRqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -31,6 +34,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
 
+@Conditional(RedisBackendCondition.class)
 @Repository
 public class RqueueMessageMetadataDaoImpl implements RqueueMessageMetadataDao {
 

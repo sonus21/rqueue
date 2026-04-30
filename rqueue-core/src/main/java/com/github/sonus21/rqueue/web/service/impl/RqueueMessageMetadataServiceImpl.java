@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -41,6 +44,7 @@ import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+@Conditional(RedisBackendCondition.class)
 @Service
 @Slf4j
 public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataService {

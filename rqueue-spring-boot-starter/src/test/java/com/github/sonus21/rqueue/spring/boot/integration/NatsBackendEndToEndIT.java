@@ -19,18 +19,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
-import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
+import org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -40,7 +39,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import redis.embedded.RedisServer;
 
 /**
  * End-to-end integration test wiring a Spring Boot application against a Testcontainers-managed
@@ -52,14 +50,11 @@ import redis.embedded.RedisServer;
  *           -> BrokerMessagePoller.pop -> @RqueueListener invocation -> broker.ack
  * </pre>
  *
- * <h2>Why an embedded Redis is started</h2>
- *
- * Several rqueue beans (notably {@code RqueueConfig}, {@code RqueueQStatsDaoImpl}, and the
- * dashboard controller chain) currently still require a {@code RedisConnectionFactory} as a hard
- * Spring dependency, even when {@code rqueue.backend=nats}. Pure NATS-only deployments without
- * Redis on the classpath will need those beans to become conditional — tracked as a v1.x
- * follow-up. Until then this test starts an embedded Redis purely to satisfy the bean graph;
- * the actual message flow runs entirely through JetStream and never hits Redis.
+ * <p>Boots without any Redis at all: every Redis-shaped bean (config DAOs, dashboard controllers,
+ * pub/sub channel, schedulers) is gated by {@code @Conditional(RedisBackendCondition.class)} and
+ * stays out of the context when {@code rqueue.backend=nats}. {@code DataRedisAutoConfiguration} is
+ * excluded so Spring Boot doesn't try to wire a Lettuce client either. The whole produce-and-
+ * consume loop runs through JetStream.
  */
 @SpringBootTest(
     classes = NatsBackendEndToEndIT.TestApp.class,
@@ -68,46 +63,22 @@ import redis.embedded.RedisServer;
 @Tag("nats")
 class NatsBackendEndToEndIT {
 
-  private static RedisServer REDIS;
-  private static int REDIS_PORT;
-
   @Container
-  static final GenericContainer<?> NATS = new GenericContainer<>(
-          DockerImageName.parse("nats:2.10-alpine"))
-      .withCommand("-js")
-      .withExposedPorts(4222)
-      .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
-
-  @BeforeAll
-  static void startRedis() throws Exception {
-    try (ServerSocket s = new ServerSocket(0)) {
-      REDIS_PORT = s.getLocalPort();
-    }
-    REDIS = new RedisServer(REDIS_PORT);
-    REDIS.start();
-  }
-
-  @AfterAll
-  static void stopRedis() throws Exception {
-    if (REDIS != null) {
-      REDIS.stop();
-    }
-  }
+  static final GenericContainer<?> NATS =
+      new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
+          .withCommand("-js")
+          .withExposedPorts(4222)
+          .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
 
   @DynamicPropertySource
   static void registerProps(DynamicPropertyRegistry r) {
     r.add(
         "rqueue.nats.connection.url",
         () -> "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222));
-    r.add("spring.data.redis.host", () -> "localhost");
-    r.add("spring.data.redis.port", () -> REDIS_PORT);
   }
 
-  @Autowired
-  RqueueMessageEnqueuer enqueuer;
-
-  @Autowired
-  TestListener listener;
+  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired TestListener listener;
 
   @Test
   void enqueueIsReceivedByListener() throws Exception {
@@ -119,7 +90,8 @@ class NatsBackendEndToEndIT {
         .containsExactlyInAnyOrder("payload-0", "payload-1", "payload-2", "payload-3", "payload-4");
   }
 
-  @SpringBootApplication
+  @SpringBootApplication(
+      exclude = {DataRedisAutoConfiguration.class, DataRedisReactiveAutoConfiguration.class})
   static class TestApp {}
 
   @Component

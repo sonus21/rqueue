@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import static com.google.common.collect.Lists.newArrayList;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -47,6 +50,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
+@Conditional(RedisBackendCondition.class)
 @Service
 @Slf4j
 public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerService {

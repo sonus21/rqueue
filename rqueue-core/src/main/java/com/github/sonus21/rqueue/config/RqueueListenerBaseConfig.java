@@ -207,11 +207,13 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RedisTemplate<String, Long> rqueueRedisLongTemplate(RqueueConfig rqueueConfig) {
     return getRedisTemplate(rqueueConfig.getConnectionFactory());
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory() {
     return new RqueueRedisListenerContainerFactory();
   }
@@ -223,6 +225,7 @@ public abstract class RqueueListenerBaseConfig {
    * @return {@link ScheduledQueueMessageScheduler} object
    */
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public ScheduledQueueMessageScheduler scheduledMessageScheduler() {
     return new ScheduledQueueMessageScheduler();
   }
@@ -234,26 +237,31 @@ public abstract class RqueueListenerBaseConfig {
    * @return {@link ProcessingQueueMessageScheduler} object
    */
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public ProcessingQueueMessageScheduler processingMessageScheduler() {
     return new ProcessingQueueMessageScheduler();
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RqueueRedisTemplate<String> stringRqueueRedisTemplate(RqueueConfig rqueueConfig) {
     return new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RqueueStringDao rqueueStringDao(RqueueConfig rqueueConfig) {
     return new RqueueStringDaoImpl(rqueueConfig);
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RqueueWorkerRegistry rqueueWorkerRegistry(RqueueConfig rqueueConfig) {
     return new RqueueWorkerRegistryImpl(rqueueConfig);
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RqueueLockManager rqueueLockManager(RqueueStringDao rqueueStringDao) {
     return new RqueueLockManagerImpl(rqueueStringDao);
   }
@@ -286,6 +294,7 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RqueueQueueMetrics rqueueQueueMetrics(
       RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueQueueMetrics(stringRqueueRedisTemplate);
@@ -297,6 +306,7 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
+  @Conditional(RedisBackendCondition.class)
   public RqueueInternalPubSubChannel rqueueInternalPubSubChannel(
       RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
       RqueueMessageListenerContainer rqueueMessageListenerContainer,

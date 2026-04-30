@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.db.CheckinMessage;
@@ -38,6 +41,7 @@ import reactor.core.publisher.Mono;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+@Conditional(RedisBackendCondition.class)
 @Service
 public class RqueueJobServiceImpl implements RqueueJobService {
 

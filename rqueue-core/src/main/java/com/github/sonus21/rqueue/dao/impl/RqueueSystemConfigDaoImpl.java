@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.dao.impl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
@@ -32,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
+@Conditional(RedisBackendCondition.class)
 @Repository
 public class RqueueSystemConfigDaoImpl implements RqueueSystemConfigDao {
 

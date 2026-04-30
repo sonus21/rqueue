@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.Pair;
@@ -43,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
+@Conditional(RedisBackendCondition.class)
 @Service
 public class RqueueViewControllerServiceImpl implements RqueueViewControllerService {
 

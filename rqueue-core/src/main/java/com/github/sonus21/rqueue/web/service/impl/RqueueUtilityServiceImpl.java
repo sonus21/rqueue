@@ -16,6 +16,9 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
+import org.springframework.context.annotation.Conditional;
+
 import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -55,6 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+@Conditional(RedisBackendCondition.class)
 @Service
 @Slf4j
 public class RqueueUtilityServiceImpl implements RqueueUtilityService {
