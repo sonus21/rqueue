@@ -8,7 +8,7 @@
  *     https://www.apache.org/licenses/LICENSE-2.0
  */
 
-package com.github.sonus21.rqueue.dao.impl;
+package com.github.sonus21.rqueue.nats.dao;
 
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;

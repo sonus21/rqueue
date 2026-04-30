@@ -30,6 +30,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 /**
@@ -66,6 +67,7 @@ class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {
 
   @SpringBootApplication(
       exclude = {DataRedisAutoConfiguration.class, DataRedisReactiveAutoConfiguration.class})
+  @Import(CustomConsumerListener.class)
   static class TestApp {}
 
   @Component

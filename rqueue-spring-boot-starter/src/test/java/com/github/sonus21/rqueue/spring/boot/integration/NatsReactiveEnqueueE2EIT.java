@@ -32,6 +32,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -67,6 +68,7 @@ class NatsReactiveEnqueueE2EIT extends AbstractNatsBootIT {
 
   @SpringBootApplication(
       exclude = {DataRedisAutoConfiguration.class, DataRedisReactiveAutoConfiguration.class})
+  @Import(ReactiveListener.class)
   static class TestApp {}
 
   @Component

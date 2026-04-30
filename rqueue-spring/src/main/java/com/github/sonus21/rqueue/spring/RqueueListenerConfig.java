@@ -47,7 +47,9 @@ import org.springframework.context.annotation.DependsOn;
 @ComponentScan({
   "com.github.sonus21.rqueue.web",
   "com.github.sonus21.rqueue.dao",
-  "com.github.sonus21.rqueue.common.impl"
+  "com.github.sonus21.rqueue.nats.lock",
+  "com.github.sonus21.rqueue.nats.dao",
+  "com.github.sonus21.rqueue.nats.service"
 })
 public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
