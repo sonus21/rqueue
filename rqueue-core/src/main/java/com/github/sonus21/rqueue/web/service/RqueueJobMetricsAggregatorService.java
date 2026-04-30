@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -51,11 +52,13 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 @Component
+@Conditional(RedisBackendCondition.class)
 @Slf4j
 public class RqueueJobMetricsAggregatorService
     implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
