@@ -45,8 +45,16 @@ class JetStreamMessageBrokerEnqueueAckIT extends AbstractJetStreamIT {
         }
       }
       assertEquals(10, received);
-      // WorkQueue retention removes acked msgs from stream
-      assertEquals(0L, broker.size(q));
+      // WorkQueue retention removes acked msgs from the stream, but JetStream processes ACKs
+      // asynchronously: nm.ack() is fire-and-forget, so size() can briefly observe non-zero
+      // until the server applies the deletion. Poll for drain instead of asserting strictly.
+      long deadlineNanos = System.nanoTime() + Duration.ofSeconds(5).toNanos();
+      long size = broker.size(q);
+      while (size != 0L && System.nanoTime() < deadlineNanos) {
+        Thread.sleep(50L);
+        size = broker.size(q);
+      }
+      assertEquals(0L, size);
     }
   }
 }
