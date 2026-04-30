@@ -52,6 +52,15 @@ public class RqueueConfig {
   private final boolean sharedConnection;
   private final int dbVersion;
 
+  /**
+   * Active rqueue backend. Defaults to {@link Backend#REDIS} so every existing call site that
+   * constructs {@code RqueueConfig} via the Lombok-generated constructor keeps the same
+   * behavior. The {@code rqueueConfig} bean factory in {@link RqueueListenerBaseConfig} reads the
+   * {@code rqueue.backend} property and overrides it. Beans that need to know the active backend
+   * should call {@link #getBackend()} instead of probing the classpath.
+   */
+  private Backend backend = Backend.REDIS;
+
   @Value("${rqueue.reactive.enabled:false}")
   private boolean reactiveEnabled;
 

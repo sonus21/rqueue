@@ -115,40 +115,64 @@ public abstract class RqueueListenerBaseConfig {
    * @param dbVersion   database version
    * @return {@link RedisConnectionFactory} object.
    */
+  /**
+   * Backwards-compatible overload preserved for callers (notably existing tests) that constructed
+   * an {@code RqueueConfig} without specifying a backend. Delegates with {@link Backend#REDIS}.
+   */
+  public RqueueConfig rqueueConfig(
+      ConfigurableBeanFactory beanFactory,
+      String versionKey,
+      Integer dbVersion) {
+    return rqueueConfig(beanFactory, Backend.REDIS, versionKey, dbVersion);
+  }
+
   @Bean
   public RqueueConfig rqueueConfig(
       ConfigurableBeanFactory beanFactory,
+      @Value("${rqueue.backend:REDIS}") Backend backend,
       @Value("${rqueue.version.key:__rq::version}") String versionKey,
       @Value("${rqueue.db.version:}") Integer dbVersion) {
     boolean sharedConnection = false;
-    if (simpleRqueueListenerContainerFactory.getRedisConnectionFactory() == null) {
-      sharedConnection = true;
-      simpleRqueueListenerContainerFactory.setRedisConnectionFactory(
-          beanFactory.getBean(RedisConnectionFactory.class));
-    }
-    if (reactiveEnabled
-        && simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory() == null) {
-      sharedConnection = true;
-      simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
-          beanFactory.getBean(ReactiveRedisConnectionFactory.class));
-    }
     RedisConnectionFactory connectionFactory =
         simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
-    RqueueRedisTemplate<Integer> rqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
-    int version;
-    if (dbVersion == null) {
-      version = RedisUtils.updateAndGetVersion(rqueueRedisTemplate, versionKey, MAX_DB_VERSION);
-    } else if (dbVersion >= 1 && dbVersion <= MAX_DB_VERSION) {
-      RedisUtils.setVersion(rqueueRedisTemplate, versionKey, dbVersion);
-      version = dbVersion;
-    } else {
-      throw new IllegalStateException("Rqueue db version '" + dbVersion + "' is not correct");
+    if (backend == Backend.REDIS) {
+      if (connectionFactory == null) {
+        sharedConnection = true;
+        connectionFactory = beanFactory.getBean(RedisConnectionFactory.class);
+        simpleRqueueListenerContainerFactory.setRedisConnectionFactory(connectionFactory);
+      }
+      if (reactiveEnabled
+          && simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory() == null) {
+        sharedConnection = true;
+        simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
+            beanFactory.getBean(ReactiveRedisConnectionFactory.class));
+      }
     }
-    return new RqueueConfig(
+    int version;
+    if (backend == Backend.REDIS) {
+      RqueueRedisTemplate<Integer> rqueueRedisTemplate =
+          new RqueueRedisTemplate<>(connectionFactory);
+      if (dbVersion == null) {
+        version = RedisUtils.updateAndGetVersion(rqueueRedisTemplate, versionKey, MAX_DB_VERSION);
+      } else if (dbVersion >= 1 && dbVersion <= MAX_DB_VERSION) {
+        RedisUtils.setVersion(rqueueRedisTemplate, versionKey, dbVersion);
+        version = dbVersion;
+      } else {
+        throw new IllegalStateException("Rqueue db version '" + dbVersion + "' is not correct");
+      }
+    } else {
+      // Non-Redis backend (e.g. NATS): the on-Redis db-version negotiation does not apply.
+      version = (dbVersion != null && dbVersion >= 1 && dbVersion <= MAX_DB_VERSION)
+          ? dbVersion
+          : MAX_DB_VERSION;
+    }
+    RqueueConfig config = new RqueueConfig(
         connectionFactory,
         simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory(),
         sharedConnection,
         version);
+    config.setBackend(backend);
+    return config;
   }
 
   @Bean
