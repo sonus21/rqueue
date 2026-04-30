@@ -70,17 +70,15 @@ class JetStreamMessageBrokerFactoryTest {
   @Test
   void messageBrokerLoader_load_natsBackend_routesToJetStreamFactory() {
     // Same exception expected as direct factory.create() since URL is unreachable.
-    RqueueNatsException ex =
-        assertThrows(
-            RqueueNatsException.class, () -> MessageBrokerLoader.load("nats", unreachableConfig()));
+    RqueueNatsException ex = assertThrows(
+        RqueueNatsException.class, () -> MessageBrokerLoader.load("nats", unreachableConfig()));
     assertTrue(ex.getMessage().toLowerCase().contains("nats"));
   }
 
   @Test
   void messageBrokerLoader_load_unknownBackend_throwsIAE() {
-    IllegalArgumentException ex =
-        assertThrows(
-            IllegalArgumentException.class, () -> MessageBrokerLoader.load("nope", new HashMap<>()));
+    IllegalArgumentException ex = assertThrows(
+        IllegalArgumentException.class, () -> MessageBrokerLoader.load("nope", new HashMap<>()));
     assertTrue(
         ex.getMessage().contains("No MessageBrokerFactory found"),
         "expected 'No MessageBrokerFactory found' in message but was: " + ex.getMessage());

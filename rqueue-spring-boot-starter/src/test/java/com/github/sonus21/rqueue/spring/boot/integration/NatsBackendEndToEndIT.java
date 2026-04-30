@@ -72,11 +72,11 @@ class NatsBackendEndToEndIT {
   private static int REDIS_PORT;
 
   @Container
-  static final GenericContainer<?> NATS =
-      new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
-          .withCommand("-js")
-          .withExposedPorts(4222)
-          .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
+  static final GenericContainer<?> NATS = new GenericContainer<>(
+          DockerImageName.parse("nats:2.10-alpine"))
+      .withCommand("-js")
+      .withExposedPorts(4222)
+      .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
 
   @BeforeAll
   static void startRedis() throws Exception {
@@ -103,8 +103,11 @@ class NatsBackendEndToEndIT {
     r.add("spring.data.redis.port", () -> REDIS_PORT);
   }
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
-  @Autowired TestListener listener;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
+
+  @Autowired
+  TestListener listener;
 
   @Test
   void enqueueIsReceivedByListener() throws Exception {

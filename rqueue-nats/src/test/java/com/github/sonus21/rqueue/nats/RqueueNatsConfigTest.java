@@ -9,11 +9,11 @@
  */
 package com.github.sonus21.rqueue.nats;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig.ConsumerDefaults;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig.StreamDefaults;
