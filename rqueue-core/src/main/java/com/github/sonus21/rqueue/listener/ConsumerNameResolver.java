@@ -36,7 +36,9 @@ public final class ConsumerNameResolver {
    * @param methodName the listener method's simple name
    * @param queueName the resolved queue name
    * @return explicit {@code consumerName()} when set, else
-   *     {@code "rqueue-<queue>-<bean>#<method>"}
+   *     {@code "rqueue-<queue>-<bean>_<method>"} with bean/method sanitized to
+   *     {@code [A-Za-z0-9_-]} (NATS / JetStream's allowed character set for durable consumer
+   *     names; nested-class beans carry {@code $} which would otherwise be rejected).
    */
   public static String resolveConsumerName(
       RqueueListener annotation, String beanName, String methodName, String queueName) {
@@ -45,6 +47,16 @@ public final class ConsumerNameResolver {
         && !annotation.consumerName().isEmpty()) {
       return annotation.consumerName();
     }
-    return "rqueue-" + queueName + "-" + beanName + "#" + methodName;
+    String safeBean = sanitize(beanName);
+    String safeMethod = sanitize(methodName);
+    return "rqueue-" + queueName + "-" + safeBean + "_" + safeMethod;
+  }
+
+  /** Restrict to [A-Za-z0-9_-]; collapse any other character to '_'. */
+  private static String sanitize(String s) {
+    if (s == null || s.isEmpty()) {
+      return "_";
+    }
+    return s.replaceAll("[^A-Za-z0-9_-]", "_");
   }
 }

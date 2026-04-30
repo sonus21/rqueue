@@ -31,6 +31,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -52,9 +53,13 @@ import org.testcontainers.utility.DockerImageName;
  *
  * <p>Boots without any Redis at all: every Redis-shaped bean (config DAOs, dashboard controllers,
  * pub/sub channel, schedulers) is gated by {@code @Conditional(RedisBackendCondition.class)} and
- * stays out of the context when {@code rqueue.backend=nats}. {@code DataRedisAutoConfiguration} is
- * excluded so Spring Boot doesn't try to wire a Lettuce client either. The whole produce-and-
+ * stays out of the context when {@code rqueue.backend=nats}. {@code DataRedisAutoConfiguration}
+ * is excluded so Spring Boot doesn't try to wire a Lettuce client either. The whole produce-and-
  * consume loop runs through JetStream.
+ *
+ * <p>The {@link TestListener} is explicitly imported (rather than relying on package scan) so the
+ * listener is reachable regardless of where the test harness places the {@code @SpringBootTest}'s
+ * scan root.
  */
 @SpringBootTest(
     classes = NatsBackendEndToEndIT.TestApp.class,
@@ -64,11 +69,11 @@ import org.testcontainers.utility.DockerImageName;
 class NatsBackendEndToEndIT {
 
   @Container
-  static final GenericContainer<?> NATS = new GenericContainer<>(
-          DockerImageName.parse("nats:2.10-alpine"))
-      .withCommand("-js")
-      .withExposedPorts(4222)
-      .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
+  static final GenericContainer<?> NATS =
+      new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
+          .withCommand("-js")
+          .withExposedPorts(4222)
+          .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
 
   @DynamicPropertySource
   static void registerProps(DynamicPropertyRegistry r) {
@@ -77,11 +82,8 @@ class NatsBackendEndToEndIT {
         () -> "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222));
   }
 
-  @Autowired
-  RqueueMessageEnqueuer enqueuer;
-
-  @Autowired
-  TestListener listener;
+  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired TestListener listener;
 
   @Test
   void enqueueIsReceivedByListener() throws Exception {
@@ -95,6 +97,7 @@ class NatsBackendEndToEndIT {
 
   @SpringBootApplication(
       exclude = {DataRedisAutoConfiguration.class, DataRedisReactiveAutoConfiguration.class})
+  @Import(TestListener.class)
   static class TestApp {}
 
   @Component

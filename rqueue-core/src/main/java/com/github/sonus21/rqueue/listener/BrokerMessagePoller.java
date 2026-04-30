@@ -276,8 +276,12 @@ final class BrokerMessagePoller implements Runnable {
   }
 
   private void invokeHandler(Object payload) throws Exception {
-    Method method = handlerMethod.getMethod();
-    Object bean = handlerMethod.getBean();
+    // Spring's HandlerMethod can hold a bean *name* (String) until createWithResolvedBean()
+    // looks it up in the BeanFactory. method.invoke needs the actual instance.
+    org.springframework.messaging.handler.HandlerMethod resolved =
+        handlerMethod.getBean() instanceof String ? handlerMethod.createWithResolvedBean() : handlerMethod;
+    Method method = resolved.getMethod();
+    Object bean = resolved.getBean();
     if (!method.canAccess(bean)) {
       method.setAccessible(true);
     }

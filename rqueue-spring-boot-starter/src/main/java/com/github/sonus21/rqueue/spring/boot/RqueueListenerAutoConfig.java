@@ -72,8 +72,19 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   @Bean
   @ConditionalOnMissingBean
   public RqueueMessageTemplate rqueueMessageTemplate(
-      RqueueConfig rqueueConfig, RqueueMessageHandler rqueueMessageHandler) {
-    return getMessageTemplate(rqueueConfig);
+      RqueueConfig rqueueConfig,
+      RqueueMessageHandler rqueueMessageHandler,
+      org.springframework.beans.factory.ObjectProvider<MessageBroker> messageBrokerProvider) {
+    RqueueMessageTemplate template = getMessageTemplate(rqueueConfig);
+    MessageBroker broker = messageBrokerProvider.getIfAvailable();
+    // The producer path (BaseMessageSender#enqueue) reads the broker off the template; without
+    // this wiring it would silently fall back to the Redis path and never publish on NATS.
+    if (broker != null
+        && template instanceof com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl) {
+      ((com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl) template)
+          .setMessageBroker(broker);
+    }
+    return template;
   }
 
   @Bean

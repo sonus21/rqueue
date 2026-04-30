@@ -317,7 +317,11 @@ public class SimpleRqueueListenerContainerFactory {
               + "Configure exactly one transport: either set redisConnectionFactory for Redis, "
               + "or set messageBroker for an alternative backend (e.g. NATS).");
     }
-    notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
+    boolean nonRedisBroker =
+        messageBroker != null && !(messageBroker instanceof RedisMessageBroker);
+    if (!nonRedisBroker) {
+      notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
+    }
     notNull(messageConverterProvider, "messageConverterProvider must not be null");
     if (rqueueMessageTemplate == null) {
       rqueueMessageTemplate = new RqueueMessageTemplateImpl(
