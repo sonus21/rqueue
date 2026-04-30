@@ -44,7 +44,9 @@ import org.springframework.messaging.support.MessageBuilder;
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
 
-  @Autowired
+  // Redis-only — null when rqueue.backend=nats; deletion APIs that need it are no-op
+  // on the NATS path (the broker manages its own delivery state via JetStream).
+  @Autowired(required = false)
   private RqueueLockManager rqueueLockManager;
 
   public RqueueMessageManagerImpl(
