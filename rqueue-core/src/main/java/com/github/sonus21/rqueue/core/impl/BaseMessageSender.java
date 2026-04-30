@@ -79,6 +79,12 @@ abstract class BaseMessageSender {
 
   protected Object storeMessageMetadata(
       RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive, boolean isUnique) {
+    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageTemplate.getMessageBroker();
+    boolean skipMetadata =
+        broker != null && !broker.capabilities().usesPrimaryHandlerDispatch();
+    if (skipMetadata) {
+      return reactive ? reactor.core.publisher.Mono.just(true) : null;
+    }
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration = rqueueConfig.getMessageDurability(delayInMillis);
     if (reactive) {
