@@ -15,8 +15,7 @@
  */
 package com.github.sonus21.rqueue.spring;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.github.sonus21.rqueue.config.Backend;
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;
 
@@ -24,17 +23,15 @@ import org.springframework.core.type.AnnotationMetadata;
  * Selects the listener configuration classes to import based on {@link EnableRqueue#backend()}.
  *
  * <ul>
- *   <li>{@link Backend#REDIS} — only the legacy {@code RqueueListenerConfig}</li>
- *   <li>{@link Backend#NATS} — base config plus {@code RqueueNatsListenerConfig} unconditionally
- *   <li>{@link Backend#AUTO} — base config; the NATS config is gated by
- *       {@link NatsBackendCondition} so it activates only when jnats is on the classpath
- *       <em>and</em> {@code rqueue.backend=nats} is set.
+ *   <li>{@link Backend#REDIS} (default) — only {@code RqueueListenerConfig}.</li>
+ *   <li>{@link Backend#NATS} — both {@code RqueueListenerConfig} and {@code
+ *       RqueueNatsListenerConfig}.</li>
  * </ul>
  */
 public class RqueueBackendImportSelector implements ImportSelector {
   @Override
   public String[] selectImports(AnnotationMetadata importingClassMetadata) {
-    Backend backend = Backend.AUTO;
+    Backend backend = Backend.REDIS;
     Object raw =
         importingClassMetadata.getAnnotationAttributes(EnableRqueue.class.getName()) == null
             ? null
@@ -47,17 +44,14 @@ public class RqueueBackendImportSelector implements ImportSelector {
       try {
         backend = Backend.valueOf(raw.toString());
       } catch (IllegalArgumentException ignored) {
-        // keep AUTO
+        // keep default
       }
     }
-    List<String> imports = new ArrayList<>();
-    imports.add(RqueueListenerConfig.class.getName());
     if (backend == Backend.NATS) {
-      imports.add(RqueueNatsListenerConfig.class.getName());
-    } else if (backend == Backend.AUTO) {
-      // Conditionally registered via @Conditional in a thin wrapper.
-      imports.add(ConditionalNatsConfig.class.getName());
+      return new String[] {
+        RqueueListenerConfig.class.getName(), RqueueNatsListenerConfig.class.getName()
+      };
     }
-    return imports.toArray(new String[0]);
+    return new String[] {RqueueListenerConfig.class.getName()};
   }
 }
