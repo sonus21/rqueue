@@ -97,8 +97,9 @@ class RedisMessageBrokerDelegationTest extends TestBase {
     RqueueMessage m = RqueueMessage.builder().id("a").message("msg").build();
     broker.enqueueWithDelay(QUEUE, m, 5000L);
 
-    verify(template).addMessageWithDelay(
-        QUEUE.getScheduledQueueName(), QUEUE.getScheduledQueueChannelName(), m);
+    verify(template)
+        .addMessageWithDelay(
+            QUEUE.getScheduledQueueName(), QUEUE.getScheduledQueueChannelName(), m);
   }
 
   @Test
@@ -109,12 +110,13 @@ class RedisMessageBrokerDelegationTest extends TestBase {
     List<RqueueMessage> out = broker.pop(QUEUE, "consumer", 5, Duration.ofSeconds(1));
 
     assertNotNull(out);
-    verify(template).pop(
-        QUEUE.getQueueName(),
-        QUEUE.getProcessingQueueName(),
-        QUEUE.getProcessingQueueChannelName(),
-        QUEUE.getVisibilityTimeout(),
-        5);
+    verify(template)
+        .pop(
+            QUEUE.getQueueName(),
+            QUEUE.getProcessingQueueName(),
+            QUEUE.getProcessingQueueChannelName(),
+            QUEUE.getVisibilityTimeout(),
+            5);
   }
 
   @Test
@@ -138,35 +140,33 @@ class RedisMessageBrokerDelegationTest extends TestBase {
   void nackWithNoDelayDelegatesToMoveMessage() {
     RqueueMessage m = RqueueMessage.builder().id("a").message("msg").build();
     assertTrue(broker.nack(QUEUE, m, 0L));
-    verify(template).moveMessage(
-        QUEUE.getProcessingQueueName(), QUEUE.getQueueName(), m, m);
+    verify(template).moveMessage(QUEUE.getProcessingQueueName(), QUEUE.getQueueName(), m, m);
   }
 
   @Test
   void nackWithDelayDelegatesToMoveMessageWithDelay() {
     RqueueMessage m = RqueueMessage.builder().id("a").message("msg").build();
     assertTrue(broker.nack(QUEUE, m, 1500L));
-    verify(template).moveMessageWithDelay(
-        QUEUE.getProcessingQueueName(), QUEUE.getScheduledQueueName(), m, m, 1500L);
+    verify(template)
+        .moveMessageWithDelay(
+            QUEUE.getProcessingQueueName(), QUEUE.getScheduledQueueName(), m, m, 1500L);
   }
 
   @Test
   void moveExpiredDelegatesToMoveMessageZsetToList() {
     when(template.moveMessageZsetToList(
-        eq(QUEUE.getScheduledQueueName()), eq(QUEUE.getQueueName()), eq(10)))
+            eq(QUEUE.getScheduledQueueName()), eq(QUEUE.getQueueName()), eq(10)))
         .thenReturn(new MessageMoveResult(7, true));
 
     long moved = broker.moveExpired(QUEUE, System.currentTimeMillis(), 10);
 
     assertEquals(7L, moved);
-    verify(template).moveMessageZsetToList(
-        QUEUE.getScheduledQueueName(), QUEUE.getQueueName(), 10);
+    verify(template).moveMessageZsetToList(QUEUE.getScheduledQueueName(), QUEUE.getQueueName(), 10);
   }
 
   @Test
   void peekDelegatesToReadFromList() {
-    when(template.readFromList(QUEUE.getQueueName(), 0L, 4L))
-        .thenReturn(Collections.emptyList());
+    when(template.readFromList(QUEUE.getQueueName(), 0L, 4L)).thenReturn(Collections.emptyList());
 
     broker.peek(QUEUE, 0L, 5L);
 
@@ -203,7 +203,8 @@ class RedisMessageBrokerDelegationTest extends TestBase {
     org.mockito.ArgumentCaptor<Topic> topicCaptor =
         org.mockito.ArgumentCaptor.forClass(Topic.class);
     verify(pubSubContainer).addMessageListener(listenerCaptor.capture(), topicCaptor.capture());
-    assertEquals(new ChannelTopic("ch").getTopic(), ((ChannelTopic) topicCaptor.getValue()).getTopic());
+    assertEquals(
+        new ChannelTopic("ch").getTopic(), ((ChannelTopic) topicCaptor.getValue()).getTopic());
 
     // simulate a delivered message
     Message message = new Message() {
@@ -221,8 +222,8 @@ class RedisMessageBrokerDelegationTest extends TestBase {
     assertEquals("payload", received[0]);
 
     handle.close();
-    verify(pubSubContainer, times(1)).removeMessageListener(listenerCaptor.getValue(),
-        topicCaptor.getValue());
+    verify(pubSubContainer, times(1))
+        .removeMessageListener(listenerCaptor.getValue(), topicCaptor.getValue());
   }
 
   @Test

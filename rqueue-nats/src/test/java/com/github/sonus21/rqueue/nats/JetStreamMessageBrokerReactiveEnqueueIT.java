@@ -26,17 +26,11 @@ class JetStreamMessageBrokerReactiveEnqueueIT extends AbstractJetStreamIT {
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
 
-      Flux<Void> publishes =
-          Flux.range(0, 5)
-              .flatMap(
-                  i -> {
-                    RqueueMessage m =
-                        RqueueMessage.builder()
-                            .id("rm-" + i)
-                            .message("payload-" + i)
-                            .build();
-                    return broker.enqueueReactive(q, m);
-                  });
+      Flux<Void> publishes = Flux.range(0, 5).flatMap(i -> {
+        RqueueMessage m =
+            RqueueMessage.builder().id("rm-" + i).message("payload-" + i).build();
+        return broker.enqueueReactive(q, m);
+      });
 
       StepVerifier.create(publishes).verifyComplete();
 

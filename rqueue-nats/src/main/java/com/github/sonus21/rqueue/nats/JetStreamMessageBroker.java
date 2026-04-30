@@ -221,39 +221,35 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     try {
       payload = mapper.writeValueAsBytes(m);
     } catch (RuntimeException e) {
-      return Mono.error(
-          new RqueueNatsException(
-              "Failed to serialize message id="
-                  + m.getId()
-                  + " queue="
-                  + q.getName()
-                  + " subject="
-                  + subject,
-              e));
+      return Mono.error(new RqueueNatsException(
+          "Failed to serialize message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " subject="
+              + subject,
+          e));
     }
     return Mono.fromRunnable(() -> provisioner.ensureStream(streamFor(q), List.of(subject)))
         .then(Mono.fromFuture(() -> js.publishAsync(subject, headers, payload)))
-        .onErrorMap(
-            e ->
-                e instanceof RqueueNatsException
-                    ? e
-                    : new RqueueNatsException(
-                        "Failed to enqueue message id="
-                            + m.getId()
-                            + " queue="
-                            + q.getName()
-                            + " subject="
-                            + subject,
-                        e))
+        .onErrorMap(e -> e instanceof RqueueNatsException
+            ? e
+            : new RqueueNatsException(
+                "Failed to enqueue message id="
+                    + m.getId()
+                    + " queue="
+                    + q.getName()
+                    + " subject="
+                    + subject,
+                e))
         .then();
   }
 
   @Override
   public Mono<Void> enqueueWithDelayReactive(QueueDetail q, RqueueMessage m, long delayMs) {
-    return Mono.error(
-        new UnsupportedOperationException(
-            "delayed enqueue not supported by NATS backend in this version; "
-                + "use the Redis backend for scheduled messages"));
+    return Mono.error(new UnsupportedOperationException(
+        "delayed enqueue not supported by NATS backend in this version; "
+            + "use the Redis backend for scheduled messages"));
   }
 
   @Override
@@ -279,19 +275,15 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         subject);
     Duration fetchWait = wait != null ? wait : config.getDefaultFetchWait();
     String key = stream + "/" + consumerName;
-    JetStreamSubscription sub =
-        subscriptionCache.computeIfAbsent(
-            key,
-            k -> {
-              try {
-                PullSubscribeOptions opts = PullSubscribeOptions.bind(stream, consumerName);
-                return js.subscribe(subject, opts);
-              } catch (IOException | JetStreamApiException e) {
-                throw new RqueueNatsException(
-                    "Failed to bind pull subscription stream=" + stream + " consumer=" + consumerName,
-                    e);
-              }
-            });
+    JetStreamSubscription sub = subscriptionCache.computeIfAbsent(key, k -> {
+      try {
+        PullSubscribeOptions opts = PullSubscribeOptions.bind(stream, consumerName);
+        return js.subscribe(subject, opts);
+      } catch (IOException | JetStreamApiException e) {
+        throw new RqueueNatsException(
+            "Failed to bind pull subscription stream=" + stream + " consumer=" + consumerName, e);
+      }
+    });
 
     List<Message> msgs = sub.fetch(batch, fetchWait);
     List<RqueueMessage> out = new ArrayList<>(msgs.size());
@@ -359,18 +351,18 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     provisioner.ensureStream(stream, List.of(subject));
     JetStreamSubscription sub = null;
     try {
-      ConsumerConfiguration.Builder cb =
-          ConsumerConfiguration.builder()
-              .ackPolicy(AckPolicy.None)
-              .filterSubject(subject)
-              .name("rqueue-peek-" + UUID.randomUUID());
+      ConsumerConfiguration.Builder cb = ConsumerConfiguration.builder()
+          .ackPolicy(AckPolicy.None)
+          .filterSubject(subject)
+          .name("rqueue-peek-" + UUID.randomUUID());
       if (offset > 0) {
         cb.deliverPolicy(DeliverPolicy.ByStartSequence).startSequence(Math.max(1L, offset));
       } else {
         cb.deliverPolicy(DeliverPolicy.All);
       }
-      PullSubscribeOptions opts =
-          PullSubscribeOptions.builder().stream(stream).configuration(cb.build()).build();
+      PullSubscribeOptions opts = PullSubscribeOptions.builder().stream(stream)
+          .configuration(cb.build())
+          .build();
       sub = js.subscribe(subject, opts);
       int n = (int) Math.min(Integer.MAX_VALUE, Math.max(0L, count));
       List<Message> msgs = sub.fetch(n, Duration.ofSeconds(2));
@@ -469,29 +461,24 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         "$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + streamFor(q) + "." + consumerName;
     String dlqSubject = dlqSubjectFor(q);
     String stream = streamFor(q);
-    Dispatcher d =
-        connection.createDispatcher(
-            advisoryMsg -> {
-              try {
-                tools.jackson.databind.JsonNode adv =
-                    mapper.readTree(advisoryMsg.getData());
-                long streamSeq = adv.path("stream_seq").asLong(-1);
-                if (streamSeq <= 0) {
-                  return;
-                }
-                io.nats.client.api.MessageInfo mi = jsm.getMessage(stream, streamSeq);
-                Headers h = new Headers();
-                if (mi.getHeaders() != null) {
-                  mi.getHeaders().forEach((k, v) -> h.add(k, v));
-                }
-                js.publish(dlqSubject, h, mi.getData());
-              } catch (Exception e) {
-                log.log(
-                    Level.WARNING,
-                    "Failed to bridge max-delivery advisory to DLQ for stream=" + stream,
-                    e);
-              }
-            });
+    Dispatcher d = connection.createDispatcher(advisoryMsg -> {
+      try {
+        tools.jackson.databind.JsonNode adv = mapper.readTree(advisoryMsg.getData());
+        long streamSeq = adv.path("stream_seq").asLong(-1);
+        if (streamSeq <= 0) {
+          return;
+        }
+        io.nats.client.api.MessageInfo mi = jsm.getMessage(stream, streamSeq);
+        Headers h = new Headers();
+        if (mi.getHeaders() != null) {
+          mi.getHeaders().forEach((k, v) -> h.add(k, v));
+        }
+        js.publish(dlqSubject, h, mi.getData());
+      } catch (Exception e) {
+        log.log(
+            Level.WARNING, "Failed to bridge max-delivery advisory to DLQ for stream=" + stream, e);
+      }
+    });
     d.subscribe(advisorySubject);
     return () -> {
       try {

@@ -123,7 +123,8 @@ public class RedisMessageBroker implements MessageBroker {
   public AutoCloseable subscribe(String channel, Consumer<String> handler) {
     if (pubSubContainer == null) {
       throw new IllegalStateException(
-          "RedisMessageListenerContainer not configured for RedisMessageBroker; subscribe is unavailable");
+          "RedisMessageListenerContainer not configured for RedisMessageBroker; subscribe is"
+              + " unavailable");
     }
     final ChannelTopic topic = new ChannelTopic(channel);
     final MessageListener listener = new MessageListener() {

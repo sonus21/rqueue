@@ -123,12 +123,11 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
       RqueueMessageTemplate rqueueMessageTemplate,
       RqueueMessageIdGenerator rqueueMessageIdGenerator,
       org.springframework.beans.factory.ObjectProvider<MessageBroker> messageBrokerProvider) {
-    ReactiveRqueueMessageEnqueuerImpl impl =
-        new ReactiveRqueueMessageEnqueuerImpl(
-            rqueueMessageTemplate,
-            rqueueMessageHandler.getMessageConverter(),
-            simpleRqueueListenerContainerFactory.getMessageHeaders(),
-            rqueueMessageIdGenerator);
+    ReactiveRqueueMessageEnqueuerImpl impl = new ReactiveRqueueMessageEnqueuerImpl(
+        rqueueMessageTemplate,
+        rqueueMessageHandler.getMessageConverter(),
+        simpleRqueueListenerContainerFactory.getMessageHeaders(),
+        rqueueMessageIdGenerator);
     MessageBroker broker = messageBrokerProvider.getIfAvailable();
     if (broker != null) {
       impl.setMessageBroker(broker);

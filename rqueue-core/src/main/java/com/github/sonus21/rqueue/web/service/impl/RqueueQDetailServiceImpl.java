@@ -26,8 +26,8 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
-import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
+import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -107,7 +107,6 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   public void setMessageBroker(MessageBroker messageBroker) {
     this.messageBroker = messageBroker;
   }
-
 
   /**
    * Visible for tests and pluggable backends.

@@ -103,9 +103,8 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
                 || delayInMilliSecs <= com.github.sonus21.rqueue.utils.Constants.MIN_DELAY) {
               brokerMono = messageBroker.enqueueReactive(queueDetail, rqueueMessage);
             } else {
-              brokerMono =
-                  messageBroker.enqueueWithDelayReactive(
-                      queueDetail, rqueueMessage, delayInMilliSecs);
+              brokerMono = messageBroker.enqueueWithDelayReactive(
+                  queueDetail, rqueueMessage, delayInMilliSecs);
             }
             return brokerMono.then(Mono.defer(() -> monoConverter.apply(rqueueMessage)));
           }

@@ -58,14 +58,13 @@ public class NatsProvisioner {
             "Stream '" + streamName + "' does not exist and autoCreateStreams=false");
       }
       RqueueNatsConfig.StreamDefaults sd = config.getStreamDefaults();
-      StreamConfiguration.Builder b =
-          StreamConfiguration.builder()
-              .name(streamName)
-              .subjects(subjects)
-              .replicas(sd.getReplicas())
-              .storageType(sd.getStorage())
-              .retentionPolicy(sd.getRetention())
-              .duplicateWindow(sd.getDuplicateWindow());
+      StreamConfiguration.Builder b = StreamConfiguration.builder()
+          .name(streamName)
+          .subjects(subjects)
+          .replicas(sd.getReplicas())
+          .storageType(sd.getStorage())
+          .retentionPolicy(sd.getRetention())
+          .duplicateWindow(sd.getDuplicateWindow());
       if (sd.getMaxMsgs() > 0) {
         b.maxMessages(sd.getMaxMsgs());
       }
@@ -123,21 +122,19 @@ public class NatsProvisioner {
         return;
       }
       if (!config.isAutoCreateConsumers()) {
-        throw new RqueueNatsException(
-            "Consumer '"
-                + consumerName
-                + "' on stream '"
-                + streamName
-                + "' does not exist and autoCreateConsumers=false");
+        throw new RqueueNatsException("Consumer '"
+            + consumerName
+            + "' on stream '"
+            + streamName
+            + "' does not exist and autoCreateConsumers=false");
       }
-      ConsumerConfiguration.Builder cb =
-          ConsumerConfiguration.builder()
-              .durable(consumerName)
-              .ackPolicy(AckPolicy.Explicit)
-              .deliverPolicy(DeliverPolicy.All)
-              .ackWait(ackWait)
-              .maxDeliver(maxDeliver)
-              .maxAckPending(maxAckPending);
+      ConsumerConfiguration.Builder cb = ConsumerConfiguration.builder()
+          .durable(consumerName)
+          .ackPolicy(AckPolicy.Explicit)
+          .deliverPolicy(DeliverPolicy.All)
+          .ackWait(ackWait)
+          .maxDeliver(maxDeliver)
+          .maxAckPending(maxAckPending);
       if (filterSubject != null) {
         cb.filterSubject(filterSubject);
       }

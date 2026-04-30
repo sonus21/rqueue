@@ -21,8 +21,7 @@ import java.util.ServiceLoader;
 
 public final class MessageBrokerLoader {
 
-  private MessageBrokerLoader() {
-  }
+  private MessageBrokerLoader() {}
 
   public static MessageBroker load(String name, Map<String, String> config) {
     for (MessageBrokerFactory f : ServiceLoader.load(MessageBrokerFactory.class)) {

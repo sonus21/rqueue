@@ -110,33 +110,33 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
     when(stringRqueueRedisTemplate.getZsetSize(queueConfig.getScheduledQueueName()))
         .thenReturn(0L);
 
-    List<Entry<NavTab, RedisDataDetail>> details =
-        service.getQueueDataStructureDetail(queueConfig);
+    List<Entry<NavTab, RedisDataDetail>> details = service.getQueueDataStructureDetail(queueConfig);
 
     RedisDataDetail pending = details.stream()
         .filter(e -> e.getKey() == NavTab.PENDING)
-        .findFirst().orElseThrow().getValue();
+        .findFirst()
+        .orElseThrow()
+        .getValue();
     assertEquals(42L, pending.getSize());
     verify(messageBroker, atLeastOnce()).size(any(QueueDetail.class));
-    verify(stringRqueueRedisTemplate, never())
-        .getListSize(queueConfig.getQueueName());
+    verify(stringRqueueRedisTemplate, never()).getListSize(queueConfig.getQueueName());
   }
 
   @Test
   void sizeFallsBackToRedisWhenNoBroker() {
-    when(stringRqueueRedisTemplate.getListSize(queueConfig.getQueueName()))
-        .thenReturn(7L);
+    when(stringRqueueRedisTemplate.getListSize(queueConfig.getQueueName())).thenReturn(7L);
     when(stringRqueueRedisTemplate.getZsetSize(queueConfig.getProcessingQueueName()))
         .thenReturn(0L);
     when(stringRqueueRedisTemplate.getZsetSize(queueConfig.getScheduledQueueName()))
         .thenReturn(0L);
 
-    List<Entry<NavTab, RedisDataDetail>> details =
-        service.getQueueDataStructureDetail(queueConfig);
+    List<Entry<NavTab, RedisDataDetail>> details = service.getQueueDataStructureDetail(queueConfig);
 
     RedisDataDetail pending = details.stream()
         .filter(e -> e.getKey() == NavTab.PENDING)
-        .findFirst().orElseThrow().getValue();
+        .findFirst()
+        .orElseThrow()
+        .getValue();
     assertEquals(7L, pending.getSize());
   }
 
@@ -149,22 +149,16 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
     when(stringRqueueRedisTemplate.getZsetSize(queueConfig.getProcessingQueueName()))
         .thenReturn(0L);
 
-    List<Entry<NavTab, RedisDataDetail>> details =
-        service.getQueueDataStructureDetail(queueConfig);
+    List<Entry<NavTab, RedisDataDetail>> details = service.getQueueDataStructureDetail(queueConfig);
     boolean scheduledPresent = details.stream().anyMatch(e -> e.getKey() == NavTab.SCHEDULED);
     assertFalse(scheduledPresent, "scheduled nav tab should be hidden");
 
     List<NavTab> tabs = service.getNavTabs(queueConfig);
     assertFalse(tabs.contains(NavTab.SCHEDULED));
 
-    when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName()))
-        .thenReturn(queueConfig);
+    when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName())).thenReturn(queueConfig);
     DataViewResponse explore = service.getExplorePageData(
-        queueConfig.getName(),
-        queueConfig.getScheduledQueueName(),
-        DataType.ZSET,
-        0,
-        10);
+        queueConfig.getName(), queueConfig.getScheduledQueueName(), DataType.ZSET, 0, 10);
     assertTrue(explore.isHideScheduledPanel());
     assertTrue(explore.isHideCronJobs());
     assertTrue(explore.getRows() == null || explore.getRows().isEmpty());
@@ -176,15 +170,10 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
     when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
     when(messageBroker.peek(any(QueueDetail.class), anyLong(), anyLong()))
         .thenReturn(Collections.emptyList());
-    when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName()))
-        .thenReturn(queueConfig);
+    when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName())).thenReturn(queueConfig);
 
     DataViewResponse response = service.getExplorePageData(
-        queueConfig.getName(),
-        queueConfig.getQueueName(),
-        DataType.LIST,
-        0,
-        10);
+        queueConfig.getName(), queueConfig.getQueueName(), DataType.LIST, 0, 10);
 
     verify(messageBroker, atLeastOnce()).peek(any(QueueDetail.class), anyLong(), anyLong());
     assertTrue(response.getRows() == null || response.getRows().isEmpty());
@@ -196,15 +185,10 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
     when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
     when(messageBroker.peek(any(QueueDetail.class), anyLong(), anyLong()))
         .thenReturn(Collections.emptyList());
-    when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName()))
-        .thenReturn(queueConfig);
+    when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName())).thenReturn(queueConfig);
 
     DataViewResponse response = service.getExplorePageData(
-        queueConfig.getName(),
-        queueConfig.getQueueName(),
-        DataType.LIST,
-        0,
-        10);
+        queueConfig.getName(), queueConfig.getQueueName(), DataType.LIST, 0, 10);
 
     assertFalse(response.isHideScheduledPanel());
     assertFalse(response.isHideCronJobs());

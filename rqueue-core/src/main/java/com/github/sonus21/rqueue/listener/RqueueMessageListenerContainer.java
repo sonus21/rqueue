@@ -414,18 +414,14 @@ public class RqueueMessageListenerContainer
       for (RqueueMessageHandler.HandlerMethodWithPrimary hmp : e.getValue()) {
         Object beanRef = hmp.method.getBean();
         String beanName =
-            beanRef instanceof String
-                ? (String) beanRef
-                : beanRef.getClass().getSimpleName();
+            beanRef instanceof String ? (String) beanRef : beanRef.getClass().getSimpleName();
         String methodName = hmp.method.getMethod().getName();
         com.github.sonus21.rqueue.annotation.RqueueListener ann =
             org.springframework.core.annotation.AnnotationUtils.findAnnotation(
                 hmp.method.getMethod(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
         if (ann == null) {
-          ann =
-              org.springframework.core.annotation.AnnotationUtils.findAnnotation(
-                  hmp.method.getBeanType(),
-                  com.github.sonus21.rqueue.annotation.RqueueListener.class);
+          ann = org.springframework.core.annotation.AnnotationUtils.findAnnotation(
+              hmp.method.getBeanType(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
         }
         for (String queue : mapping.getQueueNames()) {
           String consumerName =
@@ -433,17 +429,16 @@ public class RqueueMessageListenerContainer
           String key = queue + "::" + consumerName;
           String prior = seen.putIfAbsent(key, beanName + "#" + methodName);
           if (prior != null) {
-            collisions.add(
-                "queue='"
-                    + queue
-                    + "' consumerName='"
-                    + consumerName
-                    + "' between "
-                    + prior
-                    + " and "
-                    + beanName
-                    + "#"
-                    + methodName);
+            collisions.add("queue='"
+                + queue
+                + "' consumerName='"
+                + consumerName
+                + "' between "
+                + prior
+                + " and "
+                + beanName
+                + "#"
+                + methodName);
           }
         }
       }
@@ -679,10 +674,8 @@ public class RqueueMessageListenerContainer
             org.springframework.core.annotation.AnnotationUtils.findAnnotation(
                 hmp.method.getMethod(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
         if (ann == null) {
-          ann =
-              org.springframework.core.annotation.AnnotationUtils.findAnnotation(
-                  hmp.method.getBeanType(),
-                  com.github.sonus21.rqueue.annotation.RqueueListener.class);
+          ann = org.springframework.core.annotation.AnnotationUtils.findAnnotation(
+              hmp.method.getBeanType(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
         }
         for (String queue : mapping.getQueueNames()) {
           QueueDetail qd = queueByName.get(queue);
@@ -709,9 +702,9 @@ public class RqueueMessageListenerContainer
               && !qd.getPriorityGroup().equals(qd.getName())
               && !qd.getPriorityGroup().equals(Constants.DEFAULT_PRIORITY_GROUP)) {
             log.warn(
-                "Queue '{}' is part of cross-queue priorityGroup='{}'. The NATS backend does not "
-                    + "support cross-queue priority groups in v1; the priority hint will be honored "
-                    + "on the same queue but cross-queue weighting is ignored.",
+                "Queue '{}' is part of cross-queue priorityGroup='{}'. The NATS backend does not"
+                    + " support cross-queue priority groups in v1; the priority hint will be"
+                    + " honored on the same queue but cross-queue weighting is ignored.",
                 queue,
                 qd.getPriorityGroup());
           }
@@ -720,22 +713,18 @@ public class RqueueMessageListenerContainer
             String consumerName =
                 priority == null ? baseConsumerName : baseConsumerName + "-" + priority;
             for (int i = 0; i < threadCount; i++) {
-              BrokerMessagePoller poller =
-                  new BrokerMessagePoller(
-                      messageBroker,
-                      qd,
-                      priority,
-                      consumerName,
-                      hmp.method,
-                      rqueueMessageHandler.getMessageConverter(),
-                      taskExecutionBackOff,
-                      queueStateMgr,
-                      Math.max(
-                          1,
-                          qd.getBatchSize() > 0
-                              ? qd.getBatchSize()
-                              : DEFAULT_BROKER_POLLER_BATCH),
-                      DEFAULT_BROKER_POLLER_FETCH_WAIT);
+              BrokerMessagePoller poller = new BrokerMessagePoller(
+                  messageBroker,
+                  qd,
+                  priority,
+                  consumerName,
+                  hmp.method,
+                  rqueueMessageHandler.getMessageConverter(),
+                  taskExecutionBackOff,
+                  queueStateMgr,
+                  Math.max(
+                      1, qd.getBatchSize() > 0 ? qd.getBatchSize() : DEFAULT_BROKER_POLLER_BATCH),
+                  DEFAULT_BROKER_POLLER_FETCH_WAIT);
               brokerPollers.add(poller);
               Future<?> future = taskExecutor.submit(poller);
               String key =

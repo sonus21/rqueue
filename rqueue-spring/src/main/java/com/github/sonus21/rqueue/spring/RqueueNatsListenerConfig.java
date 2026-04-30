@@ -36,7 +36,8 @@ import org.springframework.core.env.Environment;
 @Configuration
 public class RqueueNatsListenerConfig {
 
-  @Autowired Environment environment;
+  @Autowired
+  Environment environment;
 
   @Bean
   public Connection natsConnection() throws IOException {

@@ -49,12 +49,11 @@ class JetStreamMessageBrokerRetryDlqIT extends AbstractJetStreamIT {
         QueueDetail dlqProbe = mockQueue(name); // size of original stream
         // We don't expose dlq stream directly; verify via JSM stream lookup via a fresh probe
         while (System.currentTimeMillis() < deadline) {
-          long s =
-              connection
-                  .jetStreamManagement()
-                  .getStreamInfo(cfg.getStreamPrefix() + name + cfg.getDlqStreamSuffix())
-                  .getStreamState()
-                  .getMsgCount();
+          long s = connection
+              .jetStreamManagement()
+              .getStreamInfo(cfg.getStreamPrefix() + name + cfg.getDlqStreamSuffix())
+              .getStreamState()
+              .getMsgCount();
           if (s > 0) {
             dlqSize = s;
             break;

@@ -36,18 +36,17 @@ class JetStreamMessageBrokerCompetingConsumersIT extends AbstractJetStreamIT {
       CountDownLatch done = new CountDownLatch(total);
       var pool = Executors.newFixedThreadPool(2);
       for (int t = 0; t < 2; t++) {
-        pool.submit(
-            () -> {
-              for (int round = 0; round < 50 && done.getCount() > 0; round++) {
-                List<RqueueMessage> popped = broker.pop(q, "shared", 5, Duration.ofMillis(500));
-                for (RqueueMessage m : popped) {
-                  if (seen.add(m.getId())) {
-                    done.countDown();
-                  }
-                  broker.ack(q, m);
-                }
+        pool.submit(() -> {
+          for (int round = 0; round < 50 && done.getCount() > 0; round++) {
+            List<RqueueMessage> popped = broker.pop(q, "shared", 5, Duration.ofMillis(500));
+            for (RqueueMessage m : popped) {
+              if (seen.add(m.getId())) {
+                done.countDown();
               }
-            });
+              broker.ack(q, m);
+            }
+          }
+        });
       }
       done.await(20, java.util.concurrent.TimeUnit.SECONDS);
       pool.shutdownNow();

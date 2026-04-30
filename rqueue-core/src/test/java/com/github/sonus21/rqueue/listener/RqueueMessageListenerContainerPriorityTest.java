@@ -55,13 +55,26 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @CoreUnitTest
 class RqueueMessageListenerContainerPriorityTest extends TestBase {
 
-  @Mock private RedisConnectionFactory redisConnectionFactory;
-  @Mock private ApplicationEventPublisher applicationEventPublisher;
-  @Mock private RqueueMessageTemplate rqueueMessageTemplate;
-  @Mock private RqueueSystemConfigDao rqueueSystemConfigDao;
-  @Mock private RqueueMessageMetadataService rqueueMessageMetadataService;
-  @Mock private RqueueWebConfig rqueueWebConfig;
-  @Mock private RqueueLockManager rqueueLockManager;
+  @Mock
+  private RedisConnectionFactory redisConnectionFactory;
+
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
+
+  @Mock
+  private RqueueMessageTemplate rqueueMessageTemplate;
+
+  @Mock
+  private RqueueSystemConfigDao rqueueSystemConfigDao;
+
+  @Mock
+  private RqueueMessageMetadataService rqueueMessageMetadataService;
+
+  @Mock
+  private RqueueWebConfig rqueueWebConfig;
+
+  @Mock
+  private RqueueLockManager rqueueLockManager;
 
   private RqueueBeanProvider beanProvider;
   private RqueueMessageHandler messageHandler;
@@ -219,36 +232,59 @@ class RqueueMessageListenerContainerPriorityTest extends TestBase {
     // Verifies the SPI default contract: backends that don't override the priority-aware
     // overload (e.g. Redis) automatically delegate to enqueue(qd, msg). This is the additive
     // backwards-compatibility guarantee for the new default method.
-    final java.util.concurrent.atomic.AtomicInteger plain = new java.util.concurrent.atomic.AtomicInteger();
+    final java.util.concurrent.atomic.AtomicInteger plain =
+        new java.util.concurrent.atomic.AtomicInteger();
     MessageBroker broker = new MessageBroker() {
       @Override
       public void enqueue(QueueDetail q, RqueueMessage m) {
         plain.incrementAndGet();
       }
+
       @Override
       public void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs) {}
+
       @Override
       public List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait) {
         return Collections.emptyList();
       }
+
       @Override
-      public boolean ack(QueueDetail q, RqueueMessage m) { return true; }
+      public boolean ack(QueueDetail q, RqueueMessage m) {
+        return true;
+      }
+
       @Override
-      public boolean nack(QueueDetail q, RqueueMessage m, long retryDelayMs) { return true; }
+      public boolean nack(QueueDetail q, RqueueMessage m, long retryDelayMs) {
+        return true;
+      }
+
       @Override
-      public long moveExpired(QueueDetail q, long now, int batch) { return 0; }
+      public long moveExpired(QueueDetail q, long now, int batch) {
+        return 0;
+      }
+
       @Override
       public List<RqueueMessage> peek(QueueDetail q, long offset, long count) {
         return Collections.emptyList();
       }
+
       @Override
-      public long size(QueueDetail q) { return 0; }
+      public long size(QueueDetail q) {
+        return 0;
+      }
+
       @Override
-      public AutoCloseable subscribe(String channel, Consumer<String> handler) { return () -> {}; }
+      public AutoCloseable subscribe(String channel, Consumer<String> handler) {
+        return () -> {};
+      }
+
       @Override
       public void publish(String channel, String payload) {}
+
       @Override
-      public Capabilities capabilities() { return Capabilities.REDIS_DEFAULTS; }
+      public Capabilities capabilities() {
+        return Capabilities.REDIS_DEFAULTS;
+      }
     };
     QueueDetail qd = QueueDetail.builder()
         .name("q1")
@@ -262,7 +298,8 @@ class RqueueMessageListenerContainerPriorityTest extends TestBase {
         .numRetry(3)
         .priority(Collections.emptyMap())
         .build();
-    RqueueMessage msg = RqueueMessage.builder().id("x").queueName("q1").message("p").build();
+    RqueueMessage msg =
+        RqueueMessage.builder().id("x").queueName("q1").message("p").build();
     broker.enqueue(qd, "high", msg);
     broker.enqueue(qd, msg);
     assertEquals(2, plain.get(), "default priority overload should delegate to enqueue(q, m)");
@@ -284,5 +321,4 @@ class RqueueMessageListenerContainerPriorityTest extends TestBase {
       // no-op
     }
   }
-
 }

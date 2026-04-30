@@ -32,8 +32,7 @@ class JetStreamMessageBrokerPeekIT extends AbstractJetStreamIT {
       // create durable consumer first so we can compare ack-pending before/after peek
       broker.pop(q, "worker", 0, java.time.Duration.ofMillis(50)); // ensures consumer exists
       String stream = cfg.getStreamPrefix() + q.getName();
-      ConsumerInfo before =
-          connection.jetStreamManagement().getConsumerInfo(stream, "worker");
+      ConsumerInfo before = connection.jetStreamManagement().getConsumerInfo(stream, "worker");
 
       List<RqueueMessage> peeked = broker.peek(q, 2, 3);
       assertEquals(3, peeked.size(), "expected 3 messages starting at offset 2");

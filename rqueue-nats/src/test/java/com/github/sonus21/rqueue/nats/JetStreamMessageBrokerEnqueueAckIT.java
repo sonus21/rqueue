@@ -37,8 +37,7 @@ class JetStreamMessageBrokerEnqueueAckIT extends AbstractJetStreamIT {
 
       int received = 0;
       for (int round = 0; round < 5 && received < 10; round++) {
-        List<RqueueMessage> popped =
-            broker.pop(q, "worker", 4, Duration.ofSeconds(2));
+        List<RqueueMessage> popped = broker.pop(q, "worker", 4, Duration.ofSeconds(2));
         for (RqueueMessage m : popped) {
           assertTrue(broker.ack(q, m), "ack should succeed for " + m.getId());
           received++;

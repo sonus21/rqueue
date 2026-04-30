@@ -117,7 +117,8 @@ class QueueDetailNatsFieldsTest extends TestBase {
       oos.writeObject(q);
     }
     QueueDetail back;
-    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()))) {
+    try (ObjectInputStream ois =
+        new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()))) {
       back = (QueueDetail) ois.readObject();
     }
 

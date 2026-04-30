@@ -124,15 +124,14 @@ class ReactiveRqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
         .verifyComplete();
 
     verify(messageBroker, times(1))
-        .enqueueWithDelayReactive(
-            any(QueueDetail.class), any(RqueueMessage.class), eq(5_000L));
-    verify(messageTemplate, never())
-        .addReactiveMessageWithDelay(any(), any(), any());
+        .enqueueWithDelayReactive(any(QueueDetail.class), any(RqueueMessage.class), eq(5_000L));
+    verify(messageTemplate, never()).addReactiveMessageWithDelay(any(), any(), any());
   }
 
   @Test
   void enqueueReactive_fallsBackToRedisTemplate_whenBrokerNull() {
-    when(messageTemplate.addReactiveMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class)))
+    when(messageTemplate.addReactiveMessage(
+            eq(queueDetail.getQueueName()), any(RqueueMessage.class)))
         .thenReturn(Mono.just(1L));
 
     StepVerifier.create(enqueuer.enqueue(queue, "payload"))

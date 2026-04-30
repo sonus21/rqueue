@@ -31,9 +31,8 @@ import org.springframework.context.annotation.Configuration;
 
 class RqueueNatsAutoConfigTest {
 
-  private final ApplicationContextRunner runner =
-      new ApplicationContextRunner()
-          .withConfiguration(AutoConfigurations.of(RqueueNatsAutoConfig.class));
+  private final ApplicationContextRunner runner = new ApplicationContextRunner()
+      .withConfiguration(AutoConfigurations.of(RqueueNatsAutoConfig.class));
 
   @Test
   void doesNotWireBrokerWhenPropertyMissing() {
@@ -45,12 +44,10 @@ class RqueueNatsAutoConfigTest {
     runner
         .withPropertyValues("rqueue.backend=nats")
         .withUserConfiguration(MockNatsConfig.class)
-        .run(
-            ctx -> {
-              assertThat(ctx).hasSingleBean(MessageBroker.class);
-              assertThat(ctx.getBean(MessageBroker.class))
-                  .isInstanceOf(JetStreamMessageBroker.class);
-            });
+        .run(ctx -> {
+          assertThat(ctx).hasSingleBean(MessageBroker.class);
+          assertThat(ctx.getBean(MessageBroker.class)).isInstanceOf(JetStreamMessageBroker.class);
+        });
   }
 
   @Test

@@ -20,7 +20,6 @@ public record Capabilities(
     boolean supportsDelayedEnqueue,
     boolean supportsScheduledIntrospection,
     boolean supportsCronJobs,
-    boolean usesPrimaryHandlerDispatch
-) {
+    boolean usesPrimaryHandlerDispatch) {
   public static final Capabilities REDIS_DEFAULTS = new Capabilities(true, true, true, true);
 }

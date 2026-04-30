@@ -32,11 +32,11 @@ import org.testcontainers.utility.DockerImageName;
 abstract class AbstractJetStreamIT {
 
   @Container
-  static final GenericContainer<?> NATS =
-      new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
-          .withCommand("-js", "-DV")
-          .withExposedPorts(4222)
-          .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
+  static final GenericContainer<?> NATS = new GenericContainer<>(
+          DockerImageName.parse("nats:2.10-alpine"))
+      .withCommand("-js", "-DV")
+      .withExposedPorts(4222)
+      .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
 
   protected static Connection connection;
 
