@@ -114,6 +114,9 @@ public class RqueueMessageListenerContainer
   // unchanged. When set, capabilities() may gate scheduler/handler dispatch wiring; the Redis
   // broker reports REDIS_DEFAULTS so the gated branches still match existing semantics.
   private MessageBroker messageBroker;
+  // Phase 3.5: active broker-driven pollers (non-primary-dispatch backends). One poller per
+  // (queue, consumerName) pair. Empty for the legacy Redis path.
+  private final List<BrokerMessagePoller> brokerPollers = new ArrayList<>();
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -231,6 +234,13 @@ public class RqueueMessageListenerContainer
         executor.destroy();
       }
     }
+    if (messageBroker instanceof AutoCloseable) {
+      try {
+        ((AutoCloseable) messageBroker).close();
+      } catch (Exception e) {
+        log.warn("Error closing MessageBroker on destroy: {}", e.toString(), e);
+      }
+    }
   }
 
   @Override
@@ -324,6 +334,24 @@ public class RqueueMessageListenerContainer
   }
 
   private void initialize() {
+    if (messageBroker != null && !messageBroker.capabilities().usesPrimaryHandlerDispatch()) {
+      // Broker path manages its own task executor and does not need the per-queue worker thread
+      // map; only the post-processing handler is initialized for completeness.
+      initializeRunningQueueState();
+      this.postProcessingHandler = new PostProcessingHandler(
+          rqueueBeanProvider.getRqueueWebConfig(),
+          rqueueBeanProvider.getApplicationEventPublisher(),
+          rqueueMessageTemplate,
+          taskExecutionBackOff,
+          new MessageProcessorHandler(
+              manualDeletionMessageProcessor,
+              deadLetterQueueMessageProcessor,
+              discardMessageProcessor,
+              postExecutionMessageProcessor),
+          rqueueBeanProvider.getRqueueSystemConfigDao());
+      this.rqueueBeanProvider.setPreExecutionMessageProcessor(preExecutionMessageProcessor);
+      return;
+    }
     initializeQueue();
     this.postProcessingHandler = new PostProcessingHandler(
         rqueueBeanProvider.getRqueueWebConfig(),
@@ -563,6 +591,10 @@ public class RqueueMessageListenerContainer
       log.info("Producer mode nothing to do...");
       return;
     }
+    if (messageBroker != null && !messageBroker.capabilities().usesPrimaryHandlerDispatch()) {
+      startBrokerPollers();
+      return;
+    }
     Map<String, List<QueueDetail>> queueGroupToDetails = new HashMap<>();
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       int prioritySize = queueDetail.getPriority().size();
@@ -591,6 +623,80 @@ public class RqueueMessageListenerContainer
     }
     return queueDetails.stream()
         .collect(Collectors.toMap(QueueDetail::getName, e -> queueThreadMap.get(e.getName())));
+  }
+
+  /**
+   * Phase 3.5: starts one {@link BrokerMessagePoller} per {@code (queue, consumerName)} pair
+   * resolved from the registered {@code @RqueueListener} methods. Used only when the active
+   * {@link MessageBroker} reports {@code usesPrimaryHandlerDispatch == false}.
+   */
+  protected void startBrokerPollers() {
+    List<QueueDetail> activeQueues = EndpointRegistry.getActiveQueueDetails();
+    if (activeQueues.isEmpty()) {
+      log.warn("No active queues registered; broker pollers not started");
+      return;
+    }
+    Map<String, QueueDetail> queueByName = new HashMap<>();
+    for (QueueDetail qd : activeQueues) {
+      queueByName.put(qd.getName(), qd);
+      queueRunningState.put(qd.getName(), true);
+    }
+    if (taskExecutor == null) {
+      // Minimal pool sized to the number of expected pollers; we estimate one per active queue
+      // (per-method explosion is bounded by handler map below).
+      defaultTaskExecutor = true;
+      int corePool = Math.max(activeQueues.size(), 2);
+      taskExecutor = createTaskExecutor(corePool, corePool * 2, 0);
+    }
+    int started = 0;
+    for (Entry<MappingInformation, List<RqueueMessageHandler.HandlerMethodWithPrimary>> e :
+        rqueueMessageHandler.getHandlerMethodMap().entrySet()) {
+      MappingInformation mapping = e.getKey();
+      for (RqueueMessageHandler.HandlerMethodWithPrimary hmp : e.getValue()) {
+        Object beanRef = hmp.method.getBean();
+        String beanName =
+            beanRef instanceof String ? (String) beanRef : beanRef.getClass().getSimpleName();
+        String methodName = hmp.method.getMethod().getName();
+        com.github.sonus21.rqueue.annotation.RqueueListener ann =
+            org.springframework.core.annotation.AnnotationUtils.findAnnotation(
+                hmp.method.getMethod(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
+        if (ann == null) {
+          ann =
+              org.springframework.core.annotation.AnnotationUtils.findAnnotation(
+                  hmp.method.getBeanType(),
+                  com.github.sonus21.rqueue.annotation.RqueueListener.class);
+        }
+        for (String queue : mapping.getQueueNames()) {
+          QueueDetail qd = queueByName.get(queue);
+          if (qd == null) {
+            continue;
+          }
+          if (qd.getConcurrency() != null && qd.getConcurrency().getMax() > 1) {
+            log.info(
+                "Queue '{}' declares concurrency={}; the NATS-style backend honors this as a "
+                    + "single-thread poller in v1 (JetStream MaxAckPending controls in-flight "
+                    + "distribution).",
+                queue,
+                qd.getConcurrency().getMax());
+          }
+          String consumerName =
+              ConsumerNameResolver.resolveConsumerName(ann, beanName, methodName, queue);
+          BrokerMessagePoller poller = new BrokerMessagePoller(
+              messageBroker,
+              qd,
+              consumerName,
+              hmp.method,
+              rqueueMessageHandler.getMessageConverter(),
+              taskExecutionBackOff,
+              queueStateMgr);
+          brokerPollers.add(poller);
+          Future<?> future = taskExecutor.submit(poller);
+          scheduledFutureByQueue.put(queue + "::" + consumerName, future);
+          started++;
+        }
+      }
+    }
+    log.info("Started {} broker pollers across {} queue(s)", started, activeQueues.size());
   }
 
   protected void startGroup(String groupName, List<QueueDetail> queueDetails) {
@@ -699,6 +805,23 @@ public class RqueueMessageListenerContainer
     RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
     if (rqueueConfig.isProducer()) {
       log.info("Producer mode nothing to do...");
+      return;
+    }
+    if (!brokerPollers.isEmpty()) {
+      for (BrokerMessagePoller p : brokerPollers) {
+        p.stop();
+      }
+      for (Map.Entry<String, Future<?>> entry : scheduledFutureByQueue.entrySet()) {
+        com.github.sonus21.rqueue.utils.ThreadUtils.waitForTermination(
+            log,
+            entry.getValue(),
+            getMaxWorkerWaitTime(),
+            "An exception occurred while stopping broker poller '{}'",
+            entry.getKey());
+      }
+      for (String q : queueRunningState.keySet()) {
+        queueRunningState.put(q, false);
+      }
       return;
     }
     for (Map.Entry<String, Boolean> runningStateByQueue : queueRunningState.entrySet()) {
