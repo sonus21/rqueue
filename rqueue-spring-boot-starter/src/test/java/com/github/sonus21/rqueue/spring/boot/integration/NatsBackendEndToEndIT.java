@@ -69,11 +69,11 @@ import org.testcontainers.utility.DockerImageName;
 class NatsBackendEndToEndIT {
 
   @Container
-  static final GenericContainer<?> NATS =
-      new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
-          .withCommand("-js")
-          .withExposedPorts(4222)
-          .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
+  static final GenericContainer<?> NATS = new GenericContainer<>(
+          DockerImageName.parse("nats:2.10-alpine"))
+      .withCommand("-js")
+      .withExposedPorts(4222)
+      .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
 
   @DynamicPropertySource
   static void registerProps(DynamicPropertyRegistry r) {
@@ -82,8 +82,11 @@ class NatsBackendEndToEndIT {
         () -> "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222));
   }
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
-  @Autowired TestListener listener;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
+
+  @Autowired
+  TestListener listener;
 
   @Test
   void enqueueIsReceivedByListener() throws Exception {
