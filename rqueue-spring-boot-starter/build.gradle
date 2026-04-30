@@ -44,11 +44,21 @@ dependencies {
     api project(":rqueue-core")
     api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     api "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
+
+    // NATS support is opt-in. Auto-config classes reference rqueue-nats types but are gated by
+    // @ConditionalOnClass(io.nats.client.JetStream.class) and @ConditionalOnProperty
+    // (rqueue.backend=nats). Users who want NATS pull rqueue-nats explicitly; the starter alone
+    // keeps its existing Redis-only behavior with zero new transitive deps.
+    compileOnly project(":rqueue-nats")
+    compileOnly "io.nats:jnats:${natsVersion}"
+
     testImplementation project(":rqueue-spring-common-test")
+    testImplementation project(":rqueue-nats")
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-webtestclient:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-data-redis-reactive:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
+    testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
 }

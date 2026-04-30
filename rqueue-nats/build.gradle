@@ -11,8 +11,8 @@ mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
     pom {
-        name = "Rqueue Spring Java"
-        description = "Redis Asynchronous and Scheduled task executor for spring framework"
+        name = "Rqueue NATS"
+        description = "NATS / JetStream backend for Rqueue (preview). Add this jar and set rqueue.backend=nats to switch from Redis to NATS."
         url = "https://github.com/sonus21/rqueue"
         licenses {
             license {
@@ -40,14 +40,13 @@ mavenPublishing {
 }
 
 dependencies {
+    // Broker-impl module only. No Spring / Spring Boot dependencies live here.
+    // Spring wiring is provided by rqueue-spring (@Configuration + @EnableRqueue) and
+    // rqueue-spring-boot-starter (auto-config), both of which reference this module's
+    // types via compileOnly and gate them behind @ConditionalOnClass(JetStream.class).
     api project(":rqueue-core")
-
-    // NATS support is opt-in. RqueueListenerConfig conditionally wires JetStreamMessageBroker
-    // when rqueue-nats and io.nats:jnats are on the classpath; otherwise the existing Redis
-    // path is used. Users who want NATS pull rqueue-nats explicitly.
-    compileOnly project(":rqueue-nats")
-    compileOnly "io.nats:jnats:${natsVersion}"
-
-    testImplementation project(":rqueue-spring-common-test")
-    testImplementation project(":rqueue-nats")
+    api "io.nats:jnats:${natsVersion}"
+    testImplementation project(":rqueue-test-util")
+    testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
 }
