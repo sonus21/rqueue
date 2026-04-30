@@ -73,7 +73,8 @@ class JetStreamMessageBrokerUnitTest {
     Fixture f = newFixture(RqueueNatsConfig.defaults());
     when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
         .thenReturn(mock(PublishAck.class));
-    f.broker.enqueue(queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build());
+    f.broker.enqueue(
+        queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build());
     verify(f.js, times(1)).publish(eq("rqueue.orders"), any(Headers.class), any(byte[].class));
   }
 
@@ -83,7 +84,9 @@ class JetStreamMessageBrokerUnitTest {
     when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
         .thenReturn(mock(PublishAck.class));
     f.broker.enqueue(
-        queueNamed("orders"), "high", RqueueMessage.builder().id("m1").message("hi").build());
+        queueNamed("orders"),
+        "high",
+        RqueueMessage.builder().id("m1").message("hi").build());
     verify(f.js, times(1)).publish(eq("rqueue.orders.high"), any(Headers.class), any(byte[].class));
   }
 
@@ -103,7 +106,8 @@ class JetStreamMessageBrokerUnitTest {
     Fixture f = newFixture(cfg);
     when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
         .thenReturn(mock(PublishAck.class));
-    f.broker.enqueue(queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build());
+    f.broker.enqueue(
+        queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build());
     verify(f.js, times(1)).publish(eq("custom.orders"), any(Headers.class), any(byte[].class));
   }
 
@@ -112,12 +116,10 @@ class JetStreamMessageBrokerUnitTest {
     Fixture f = newFixture(RqueueNatsConfig.defaults());
     when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
         .thenThrow(new IOException("boom"));
-    RqueueNatsException ex =
-        assertThrows(
-            RqueueNatsException.class,
-            () ->
-                f.broker.enqueue(
-                    queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()));
+    RqueueNatsException ex = assertThrows(
+        RqueueNatsException.class,
+        () -> f.broker.enqueue(
+            queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()));
     assertNotNull(ex.getCause());
   }
 
@@ -128,9 +130,8 @@ class JetStreamMessageBrokerUnitTest {
         .thenThrow(mock(JetStreamApiException.class));
     assertThrows(
         RqueueNatsException.class,
-        () ->
-            f.broker.enqueue(
-                queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()));
+        () -> f.broker.enqueue(
+            queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()));
   }
 
   @Test
@@ -164,9 +165,8 @@ class JetStreamMessageBrokerUnitTest {
     when(f.js.publishAsync(any(String.class), any(Headers.class), any(byte[].class)))
         .thenReturn(done);
 
-    StepVerifier.create(
-            f.broker.enqueueReactive(
-                queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()))
+    StepVerifier.create(f.broker.enqueueReactive(
+            queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()))
         .verifyComplete();
     verify(f.js, times(1)).publishAsync(eq("rqueue.orders"), any(Headers.class), any(byte[].class));
   }
@@ -179,9 +179,8 @@ class JetStreamMessageBrokerUnitTest {
     when(f.js.publishAsync(any(String.class), any(Headers.class), any(byte[].class)))
         .thenReturn(failed);
 
-    StepVerifier.create(
-            f.broker.enqueueReactive(
-                queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()))
+    StepVerifier.create(f.broker.enqueueReactive(
+            queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()))
         .expectError(RqueueNatsException.class)
         .verify();
   }
@@ -189,11 +188,8 @@ class JetStreamMessageBrokerUnitTest {
   @Test
   void enqueueWithDelayReactive_returnsErrorMonoOfUOE() {
     Fixture f = newFixture(RqueueNatsConfig.defaults());
-    StepVerifier.create(
-            f.broker.enqueueWithDelayReactive(
-                queueNamed("orders"),
-                RqueueMessage.builder().id("m1").message("hi").build(),
-                100))
+    StepVerifier.create(f.broker.enqueueWithDelayReactive(
+            queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build(), 100))
         .expectError(UnsupportedOperationException.class)
         .verify();
   }

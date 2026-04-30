@@ -47,16 +47,18 @@ import org.springframework.stereotype.Component;
     classes = NatsMultipleListenersOnSameQueueE2EIT.TestApp.class,
     properties = {"rqueue.backend=nats"})
 @Tag("nats")
-@Disabled(
-    "Default JetStream retention=WorkQueue prevents true fan-out across multiple consumers; "
-        + "enable once retention is configurable per queue or defaulted to Limits/Interest.")
+@Disabled("Default JetStream retention=WorkQueue prevents true fan-out across multiple consumers; "
+    + "enable once retention is configurable per queue or defaulted to Limits/Interest.")
 class NatsMultipleListenersOnSameQueueE2EIT extends AbstractNatsBootIT {
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
 
-  @Autowired ListenerOne one;
+  @Autowired
+  ListenerOne one;
 
-  @Autowired ListenerTwo two;
+  @Autowired
+  ListenerTwo two;
 
   @Test
   void bothListenersReceiveAllMessages() throws Exception {

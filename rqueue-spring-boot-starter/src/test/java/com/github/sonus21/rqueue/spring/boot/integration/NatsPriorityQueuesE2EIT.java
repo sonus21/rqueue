@@ -46,9 +46,11 @@ import org.springframework.stereotype.Component;
 @Tag("nats")
 class NatsPriorityQueuesE2EIT extends AbstractNatsBootIT {
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
 
-  @Autowired PriorityListener listener;
+  @Autowired
+  PriorityListener listener;
 
   @Test
   void messagesEnqueuedAtBothPrioritiesAreReceived() throws Exception {
@@ -58,7 +60,8 @@ class NatsPriorityQueuesE2EIT extends AbstractNatsBootIT {
     }
     assertThat(listener.latch.await(30, TimeUnit.SECONDS)).isTrue();
 
-    long highCount = listener.received.stream().filter(s -> s.startsWith("high-")).count();
+    long highCount =
+        listener.received.stream().filter(s -> s.startsWith("high-")).count();
     long lowCount = listener.received.stream().filter(s -> s.startsWith("low-")).count();
     assertThat(highCount).isEqualTo(5);
     assertThat(lowCount).isEqualTo(5);

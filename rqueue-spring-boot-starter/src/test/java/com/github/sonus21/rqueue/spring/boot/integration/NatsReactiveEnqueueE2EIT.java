@@ -46,9 +46,11 @@ import reactor.core.publisher.Flux;
 @Tag("nats")
 class NatsReactiveEnqueueE2EIT extends AbstractNatsBootIT {
 
-  @Autowired ReactiveRqueueMessageEnqueuer reactiveEnqueuer;
+  @Autowired
+  ReactiveRqueueMessageEnqueuer reactiveEnqueuer;
 
-  @Autowired ReactiveListener listener;
+  @Autowired
+  ReactiveListener listener;
 
   @Test
   void reactivelyEnqueuedMessagesAreReceivedByListener() throws Exception {
@@ -60,8 +62,7 @@ class NatsReactiveEnqueueE2EIT extends AbstractNatsBootIT {
     assertThat(ids).hasSize(5);
 
     assertThat(listener.latch.await(20, TimeUnit.SECONDS)).isTrue();
-    assertThat(listener.received)
-        .containsExactlyInAnyOrder("rx-0", "rx-1", "rx-2", "rx-3", "rx-4");
+    assertThat(listener.received).containsExactlyInAnyOrder("rx-0", "rx-1", "rx-2", "rx-3", "rx-4");
   }
 
   @SpringBootApplication(

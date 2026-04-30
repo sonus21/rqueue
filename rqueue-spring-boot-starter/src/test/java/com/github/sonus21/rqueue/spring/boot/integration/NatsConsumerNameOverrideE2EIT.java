@@ -45,11 +45,14 @@ import org.springframework.stereotype.Component;
 @Tag("nats")
 class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
 
-  @Autowired CustomConsumerListener listener;
+  @Autowired
+  CustomConsumerListener listener;
 
-  @Autowired JetStreamManagement jsm;
+  @Autowired
+  JetStreamManagement jsm;
 
   @Test
   void overriddenConsumerNameIsRegisteredOnTheStream() throws Exception {

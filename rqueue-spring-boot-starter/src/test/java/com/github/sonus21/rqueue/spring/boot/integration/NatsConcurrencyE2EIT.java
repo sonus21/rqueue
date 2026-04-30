@@ -44,9 +44,11 @@ import org.springframework.stereotype.Component;
 @Tag("nats")
 class NatsConcurrencyE2EIT extends AbstractNatsBootIT {
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
 
-  @Autowired ConcurrencyListener listener;
+  @Autowired
+  ConcurrencyListener listener;
 
   @Test
   void parallelInvocationsAreObserved() throws Exception {
