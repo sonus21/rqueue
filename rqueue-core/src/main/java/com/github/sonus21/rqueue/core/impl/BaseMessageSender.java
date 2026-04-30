@@ -29,7 +29,6 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -53,9 +52,6 @@ abstract class BaseMessageSender {
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
   protected final RqueueMessageIdGenerator messageIdGenerator;
-
-  @Autowired
-  protected RqueueStringDao rqueueStringDao;
 
   @Autowired
   protected RqueueConfig rqueueConfig;

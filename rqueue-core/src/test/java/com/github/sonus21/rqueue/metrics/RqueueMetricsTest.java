@@ -18,16 +18,14 @@ package com.github.sonus21.rqueue.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
@@ -54,7 +52,7 @@ class RqueueMetricsTest extends TestBase {
       TestUtils.createQueueDetail(simpleQueue, deadLetterQueue);
 
   @Mock
-  private RqueueStringDao rqueueStringDao;
+  private RqueueQueueMetricsProvider queueMetricsProvider;
 
   @Mock
   private QueueCounter queueCounter;
@@ -120,45 +118,24 @@ class RqueueMetricsTest extends TestBase {
     RqueueMetrics metrics = new RqueueMetrics(queueCounter);
     FieldUtils.writeField(metrics, "meterRegistry", meterRegistry, true);
     FieldUtils.writeField(metrics, "metricsProperties", metricsProperties, true);
+    FieldUtils.writeField(metrics, "queueMetricsProvider", queueMetricsProvider, true);
     return metrics;
   }
 
   @Test
   void queueStatistics() throws IllegalAccessException {
-    doAnswer(invocation -> {
-          String zsetName = invocation.getArgument(0);
-          if (zsetName.equals(scheduledQueueDetail.getScheduledQueueName())) {
-            return 5L;
-          }
-          if (zsetName.equals(simpleQueueDetail.getProcessingQueueName())) {
-            return 10L;
-          }
-          if (zsetName.equals(scheduledQueueDetail.getProcessingQueueName())) {
-            return 15L;
-          }
-          return null;
-        })
-        .when(rqueueStringDao)
-        .getSortedSetSize(anyString());
+    // All four gauges read through RqueueQueueMetricsProvider, keyed by user-facing queue name.
+    when(queueMetricsProvider.getPendingMessageCount(simpleQueue)).thenReturn(100L);
+    when(queueMetricsProvider.getPendingMessageCount(scheduledQueue)).thenReturn(200L);
+    when(queueMetricsProvider.getProcessingMessageCount(simpleQueue)).thenReturn(10L);
+    when(queueMetricsProvider.getProcessingMessageCount(scheduledQueue)).thenReturn(15L);
+    when(queueMetricsProvider.getScheduledMessageCount(simpleQueue)).thenReturn(0L);
+    when(queueMetricsProvider.getScheduledMessageCount(scheduledQueue)).thenReturn(5L);
+    // Only simpleQueue has a DLQ configured; the scheduledQueue gauge is never registered.
+    when(queueMetricsProvider.getDeadLetterMessageCount(simpleQueue)).thenReturn(300L);
 
-    doAnswer(invocation -> {
-          String listName = invocation.getArgument(0);
-          if (listName.equals(simpleQueueDetail.getQueueName())) {
-            return 100L;
-          }
-          if (listName.equals(scheduledQueueDetail.getQueueName())) {
-            return 200L;
-          }
-          if (listName.equals(deadLetterQueue)) {
-            return 300L;
-          }
-          return null;
-        })
-        .when(rqueueStringDao)
-        .getListSize(anyString());
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     RqueueMetrics metrics = rqueueMetrics(meterRegistry, metricsProperties);
-    FieldUtils.writeField(metrics, "rqueueStringDao", rqueueStringDao, true);
     metrics.onApplicationEvent(new RqueueBootstrapEvent("Test", true));
     verifyQueueStatistics(meterRegistry, simpleQueue, 100, 10, 300, 0);
     verifyQueueStatistics(meterRegistry, scheduledQueue, 200, 15, 0, 5);

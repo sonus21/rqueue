@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.dao.impl;
+package com.github.sonus21.rqueue.redis.dao;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;

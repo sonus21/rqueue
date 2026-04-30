@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.dao;
+package com.github.sonus21.rqueue.redis.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -27,12 +27,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
-import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.redis.RedisUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.dao.impl.RqueueSystemConfigDaoImpl;
+import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
-import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.redis.RedisTestUtils;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,12 +43,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@CoreUnitTest
+@RedisUnitTest
 class RqueueSystemConfigDaoTest extends TestBase {
 
   private final String queueName = "job";
-  private final String configKey = TestUtils.getQueueConfigKey(queueName);
-  private final QueueConfig queueConfig = TestUtils.createQueueConfig(queueName);
+  private final String configKey = RedisTestUtils.getQueueConfigKey(queueName);
+  private final QueueConfig queueConfig = RedisTestUtils.createQueueConfig(queueName);
 
   @Mock
   private RqueueRedisTemplate<QueueConfig> rqueueRedisTemplate;
@@ -67,26 +67,26 @@ class RqueueSystemConfigDaoTest extends TestBase {
   @Test
   void getQConfig() {
     // default return
-    assertNull(rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey(queueName), true));
-    doReturn(queueConfig).when(rqueueRedisTemplate).get(TestUtils.getQueueConfigKey(queueName));
+    assertNull(rqueueSystemConfigDao.getQConfig(RedisTestUtils.getQueueConfigKey(queueName), true));
+    doReturn(queueConfig).when(rqueueRedisTemplate).get(RedisTestUtils.getQueueConfigKey(queueName));
     assertEquals(
         queueConfig,
-        rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey(queueName), false));
+        rqueueSystemConfigDao.getQConfig(RedisTestUtils.getQueueConfigKey(queueName), false));
     assertEquals(
         queueConfig,
-        rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey(queueName), true));
+        rqueueSystemConfigDao.getQConfig(RedisTestUtils.getQueueConfigKey(queueName), true));
     verify(rqueueRedisTemplate, times(2)).get(any());
 
     assertEquals(
         queueConfig,
-        rqueueSystemConfigDao.getQConfig(TestUtils.getQueueConfigKey(queueName), false));
+        rqueueSystemConfigDao.getQConfig(RedisTestUtils.getQueueConfigKey(queueName), false));
     verify(rqueueRedisTemplate, times(3)).get(any());
   }
 
   @Test
   void findAllQConfig() {
     List<String> keys = Arrays.asList(
-        TestUtils.getQueueConfigKey(queueName), TestUtils.getQueueConfigKey("notification"));
+        RedisTestUtils.getQueueConfigKey(queueName), RedisTestUtils.getQueueConfigKey("notification"));
     doReturn(Arrays.asList(queueConfig, null)).when(rqueueRedisTemplate).mget(keys);
     assertEquals(
         Collections.singletonList(queueConfig), rqueueSystemConfigDao.findAllQConfig(keys));
@@ -94,7 +94,7 @@ class RqueueSystemConfigDaoTest extends TestBase {
 
   @Test
   void saveAllQConfig() {
-    QueueConfig queueConfig2 = TestUtils.createQueueConfig("notification");
+    QueueConfig queueConfig2 = RedisTestUtils.createQueueConfig("notification");
     doAnswer(invocation -> {
           Map<String, QueueConfig> configMap = new HashMap<>();
           configMap.put(queueConfig.getId(), queueConfig);

@@ -16,8 +16,10 @@
 package com.github.sonus21.rqueue.spring.boot;
 
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.nats.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
+import com.github.sonus21.rqueue.nats.metrics.NatsRqueueQueueMetricsProvider;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;
@@ -112,6 +114,13 @@ public class RqueueNatsAutoConfig {
         .management(jetStreamManagement)
         .config(toBrokerConfig(props))
         .build();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(RqueueQueueMetricsProvider.class)
+  public RqueueQueueMetricsProvider natsRqueueQueueMetricsProvider(
+      JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
+    return new NatsRqueueQueueMetricsProvider(jetStreamManagement, toBrokerConfig(props));
   }
 
   static RqueueNatsConfig toBrokerConfig(RqueueNatsProperties p) {

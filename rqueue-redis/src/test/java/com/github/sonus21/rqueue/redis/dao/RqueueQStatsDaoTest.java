@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.dao;
+package com.github.sonus21.rqueue.redis.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -26,10 +26,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
-import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.redis.RedisUnitTest;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.dao.impl.RqueueQStatsDaoImpl;
+import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@CoreUnitTest
+@RedisUnitTest
 @Slf4j
 class RqueueQStatsDaoTest extends TestBase {
 

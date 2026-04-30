@@ -36,12 +36,14 @@ import com.github.sonus21.rqueue.metrics.RqueueCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetrics;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsCounter;
 import com.github.sonus21.rqueue.metrics.RqueueMetricsRegistry;
+import com.github.sonus21.rqueue.redis.config.RqueueRedisListenerConfig;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 
 @Configuration
 @ComponentScan({
@@ -51,6 +53,7 @@ import org.springframework.context.annotation.DependsOn;
   "com.github.sonus21.rqueue.nats.dao",
   "com.github.sonus21.rqueue.nats.service"
 })
+@Import(RqueueRedisListenerConfig.class)
 public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
   @Bean

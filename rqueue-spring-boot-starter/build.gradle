@@ -42,6 +42,7 @@ mavenPublishing {
 
 dependencies {
     api project(":rqueue-core")
+    api project(":rqueue-redis")
     api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     api "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
 

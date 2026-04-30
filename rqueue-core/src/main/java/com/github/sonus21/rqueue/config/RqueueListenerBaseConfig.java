@@ -16,23 +16,18 @@
 
 package com.github.sonus21.rqueue.config;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
-
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
-import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
-import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.utils.RedisUtils;
@@ -206,18 +201,6 @@ public abstract class RqueueListenerBaseConfig {
     return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
   }
 
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RedisTemplate<String, Long> rqueueRedisLongTemplate(RqueueConfig rqueueConfig) {
-    return getRedisTemplate(rqueueConfig.getConnectionFactory());
-  }
-
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory() {
-    return new RqueueRedisListenerContainerFactory();
-  }
-
   /**
    * This scheduler is used to pull messages from a scheduled queue to their respective queue.
    * Internally it moves messages from ZSET to LIST based on the priority and current time.
@@ -240,18 +223,6 @@ public abstract class RqueueListenerBaseConfig {
   @Conditional(RedisBackendCondition.class)
   public ProcessingQueueMessageScheduler processingMessageScheduler() {
     return new ProcessingQueueMessageScheduler();
-  }
-
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueRedisTemplate<String> stringRqueueRedisTemplate(RqueueConfig rqueueConfig) {
-    return new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
-  }
-
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueStringDao rqueueStringDao(RqueueConfig rqueueConfig) {
-    return new RqueueStringDaoImpl(rqueueConfig);
   }
 
   @Bean
@@ -305,20 +276,4 @@ public abstract class RqueueListenerBaseConfig {
     return new RqueueBeanProvider();
   }
 
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueInternalPubSubChannel rqueueInternalPubSubChannel(
-      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
-      RqueueMessageListenerContainer rqueueMessageListenerContainer,
-      RqueueConfig rqueueConfig,
-      RqueueBeanProvider rqueueBeanProvider,
-      @Qualifier("stringRqueueRedisTemplate")
-          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
-    return new RqueueInternalPubSubChannel(
-        rqueueRedisListenerContainerFactory,
-        rqueueMessageListenerContainer,
-        rqueueConfig,
-        stringRqueueRedisTemplate,
-        rqueueBeanProvider);
-  }
 }
