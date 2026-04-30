@@ -188,6 +188,31 @@ public class QueueDetail extends SerializableBase {
   }
 
   /**
+   * Resolves the JetStream stream name for a specific priority bucket. When {@code priority} is
+   * null or empty falls back to {@link #resolvedNatsStream()}; otherwise appends {@code "-" +
+   * priority} to the resolved base stream name. Used by the NATS broker when a queue declares
+   * per-priority sub-streams.
+   */
+  public String resolvedNatsStreamForPriority(String priority) {
+    if (priority == null || priority.isEmpty()) {
+      return resolvedNatsStream();
+    }
+    return resolvedNatsStream() + "-" + priority;
+  }
+
+  /**
+   * Resolves the JetStream subject for a specific priority bucket. Falls back to
+   * {@link #resolvedNatsSubject()} when {@code priority} is null/empty; otherwise appends
+   * {@code "." + priority}.
+   */
+  public String resolvedNatsSubjectForPriority(String priority) {
+    if (priority == null || priority.isEmpty()) {
+      return resolvedNatsSubject();
+    }
+    return resolvedNatsSubject() + "." + priority;
+  }
+
+  /**
    * Resolves the dead-letter stream name. Falls back to {@code resolvedNatsStream() + "-dlq"}.
    */
   public String resolvedNatsDlqStream() {

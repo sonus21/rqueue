@@ -28,9 +28,41 @@ import java.util.function.Consumer;
 public interface MessageBroker {
   void enqueue(QueueDetail q, RqueueMessage m);
 
+  /**
+   * Priority-aware enqueue overload. Implementations that route to a per-priority destination
+   * (e.g. a NATS subject suffixed with the priority name) override this. The default delegates
+   * to {@link #enqueue(QueueDetail, RqueueMessage)} so backends without per-priority routing
+   * (Redis already encodes priority in the queue name) keep their existing behavior.
+   *
+   * @param q queue detail (already priority-suffixed for backends that key off queue name)
+   * @param priority priority name as declared on {@code @RqueueListener.priority}; may be
+   *     {@code null} or empty for the default priority bucket
+   * @param m message to publish
+   */
+  default void enqueue(QueueDetail q, String priority, RqueueMessage m) {
+    enqueue(q, m);
+  }
+
   void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs);
 
   List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait);
+
+  /**
+   * Priority-aware pop overload. Implementations that route to a per-priority stream/consumer
+   * override this; the default delegates to
+   * {@link #pop(QueueDetail, String, int, Duration)}.
+   *
+   * @param q queue detail
+   * @param priority priority name; {@code null} or empty for the default bucket
+   * @param consumerName durable consumer name (already priority-suffixed by the caller for
+   *     backends that key off the consumer name)
+   * @param batch maximum messages to fetch
+   * @param wait fetch wait duration
+   */
+  default List<RqueueMessage> pop(
+      QueueDetail q, String priority, String consumerName, int batch, Duration wait) {
+    return pop(q, consumerName, batch, wait);
+  }
 
   boolean ack(QueueDetail q, RqueueMessage m);
 

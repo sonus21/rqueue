@@ -72,6 +72,7 @@ final class BrokerMessagePoller implements Runnable {
   private final MessageBroker broker;
   private final QueueDetail queueDetail;
   private final String consumerName;
+  private final String priority;
   private final HandlerMethod handlerMethod;
   private final MessageConverter messageConverter;
   private final TaskExecutionBackOff backoff;
@@ -91,6 +92,7 @@ final class BrokerMessagePoller implements Runnable {
     this(
         broker,
         queueDetail,
+        null,
         consumerName,
         handlerMethod,
         messageConverter,
@@ -110,8 +112,33 @@ final class BrokerMessagePoller implements Runnable {
       QueueStateMgr queueStateMgr,
       int batchSize,
       Duration fetchWait) {
+    this(
+        broker,
+        queueDetail,
+        null,
+        consumerName,
+        handlerMethod,
+        messageConverter,
+        backoff,
+        queueStateMgr,
+        batchSize,
+        fetchWait);
+  }
+
+  BrokerMessagePoller(
+      MessageBroker broker,
+      QueueDetail queueDetail,
+      String priority,
+      String consumerName,
+      HandlerMethod handlerMethod,
+      MessageConverter messageConverter,
+      TaskExecutionBackOff backoff,
+      QueueStateMgr queueStateMgr,
+      int batchSize,
+      Duration fetchWait) {
     this.broker = broker;
     this.queueDetail = queueDetail;
+    this.priority = priority;
     this.consumerName = consumerName;
     this.handlerMethod = handlerMethod;
     this.messageConverter = messageConverter;
@@ -119,6 +146,10 @@ final class BrokerMessagePoller implements Runnable {
     this.queueStateMgr = queueStateMgr;
     this.batchSize = batchSize;
     this.fetchWait = fetchWait;
+  }
+
+  String getPriority() {
+    return priority;
   }
 
   /** Signal the loop to exit at the next iteration boundary. */
@@ -151,7 +182,8 @@ final class BrokerMessagePoller implements Runnable {
           sleepQuietly(fetchWait.toMillis());
           continue;
         }
-        List<RqueueMessage> msgs = broker.pop(queueDetail, consumerName, batchSize, fetchWait);
+        List<RqueueMessage> msgs =
+            broker.pop(queueDetail, priority, consumerName, batchSize, fetchWait);
         if (msgs == null || msgs.isEmpty()) {
           continue;
         }

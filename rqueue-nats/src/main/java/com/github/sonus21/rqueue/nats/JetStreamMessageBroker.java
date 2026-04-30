@@ -100,6 +100,29 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     return config.getStreamPrefix() + q.getName();
   }
 
+  /**
+   * Resolve the priority-specific subject. Returns the unsuffixed subject when {@code priority}
+   * is null or empty; otherwise appends {@code "." + priority}. Mirrors the naming used by
+   * {@link QueueDetail#resolvedNatsSubjectForPriority(String)}.
+   */
+  private String subjectFor(QueueDetail q, String priority) {
+    if (priority == null || priority.isEmpty()) {
+      return subjectFor(q);
+    }
+    return subjectFor(q) + "." + priority;
+  }
+
+  /**
+   * Resolve the priority-specific stream. Returns the unsuffixed stream when {@code priority}
+   * is null or empty; otherwise appends {@code "-" + priority}.
+   */
+  private String streamFor(QueueDetail q, String priority) {
+    if (priority == null || priority.isEmpty()) {
+      return streamFor(q);
+    }
+    return streamFor(q) + "-" + priority;
+  }
+
   private String dlqStreamFor(QueueDetail q) {
     return streamFor(q) + config.getDlqStreamSuffix();
   }
@@ -143,6 +166,43 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   @Override
+  public void enqueue(QueueDetail q, String priority, RqueueMessage m) {
+    String stream = streamFor(q, priority);
+    String subject = subjectFor(q, priority);
+    provisioner.ensureStream(stream, List.of(subject));
+    Headers headers = new Headers();
+    if (m.getId() != null) {
+      headers.add("Nats-Msg-Id", m.getId());
+    }
+    try {
+      byte[] payload = mapper.writeValueAsBytes(m);
+      js.publish(subject, headers, payload);
+    } catch (IOException | JetStreamApiException e) {
+      throw new RqueueNatsException(
+          "Failed to enqueue message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " priority="
+              + priority
+              + " subject="
+              + subject,
+          e);
+    } catch (RuntimeException e) {
+      throw new RqueueNatsException(
+          "Failed to serialize/enqueue message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " priority="
+              + priority
+              + " subject="
+              + subject,
+          e);
+    }
+  }
+
+  @Override
   public void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs) {
     throw new UnsupportedOperationException(
         "delayed enqueue not supported by NATS backend in this version; "
@@ -151,8 +211,17 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait) {
-    String stream = streamFor(q);
-    String subject = subjectFor(q);
+    return popInternal(streamFor(q), subjectFor(q), consumerName, batch, wait);
+  }
+
+  @Override
+  public List<RqueueMessage> pop(
+      QueueDetail q, String priority, String consumerName, int batch, Duration wait) {
+    return popInternal(streamFor(q, priority), subjectFor(q, priority), consumerName, batch, wait);
+  }
+
+  private List<RqueueMessage> popInternal(
+      String stream, String subject, String consumerName, int batch, Duration wait) {
     provisioner.ensureStream(stream, List.of(subject));
     provisioner.ensureConsumer(
         stream,

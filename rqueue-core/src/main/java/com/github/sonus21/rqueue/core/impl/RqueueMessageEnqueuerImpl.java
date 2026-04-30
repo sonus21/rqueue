@@ -99,13 +99,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
   public String enqueueWithPriority(String queueName, String priority, Object message) {
     validateBasic(queueName, message);
     validatePriority(priority);
-    return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority),
-        null,
-        message,
-        null,
-        null,
-        false);
+    return pushMessageForPriority(queueName, priority, null, message, null);
   }
 
   @Override
@@ -113,14 +107,35 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
       String queueName, String priority, String messageId, Object message) {
     validateWithId(queueName, messageId, message);
     validatePriority(priority);
+    return pushMessageForPriority(queueName, priority, messageId, message, null) != null;
+  }
+
+  /**
+   * Routes priority-aware enqueues:
+   *
+   * <ul>
+   *   <li>Redis backend (default): uses the suffixed queue name
+   *       ({@code PriorityUtils.getQueueNameForPriority}). Priority is encoded in the queue name.
+   *   <li>Broker backend with non-primary-handler-dispatch (e.g. NATS): uses the original queue
+   *       name and passes the priority through to
+   *       {@link com.github.sonus21.rqueue.core.spi.MessageBroker#enqueue(QueueDetail, String,
+   *       RqueueMessage)} so the broker can route to a per-priority destination (subject/stream).
+   * </ul>
+   */
+  private String pushMessageForPriority(
+      String queueName, String priority, String messageId, Object message, Long delayMs) {
+    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageTemplate.getMessageBroker();
+    if (broker != null && !broker.capabilities().usesPrimaryHandlerDispatch()) {
+      return pushMessage(queueName, priority, messageId, message, null, delayMs, false);
+    }
     return pushMessage(
-            PriorityUtils.getQueueNameForPriority(queueName, priority),
-            messageId,
-            message,
-            null,
-            null,
-            false)
-        != null;
+        PriorityUtils.getQueueNameForPriority(queueName, priority),
+        priority,
+        messageId,
+        message,
+        null,
+        delayMs,
+        false);
   }
 
   @Override

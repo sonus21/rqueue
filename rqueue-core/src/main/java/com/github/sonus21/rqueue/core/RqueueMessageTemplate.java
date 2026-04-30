@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import java.util.List;
 import java.util.Optional;
@@ -101,4 +102,14 @@ public interface RqueueMessageTemplate {
   Optional<RqueueMessage> findFirstElementFromZset(String name);
 
   Optional<TypedTuple<RqueueMessage>> findFirstElementFromZsetWithScore(String name);
+
+  /**
+   * Returns the optional pluggable {@link MessageBroker} associated with this template, or
+   * {@code null} when the template uses the default Redis-backed path. Internal use; subject
+   * to change.
+   */
+  default MessageBroker getMessageBroker() {
+    return null;
+  }
 }
+

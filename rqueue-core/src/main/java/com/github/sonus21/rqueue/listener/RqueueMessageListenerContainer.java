@@ -115,8 +115,11 @@ public class RqueueMessageListenerContainer
   // broker reports REDIS_DEFAULTS so the gated branches still match existing semantics.
   private MessageBroker messageBroker;
   // Phase 3.5: active broker-driven pollers (non-primary-dispatch backends). One poller per
-  // (queue, consumerName, threadIndex) tuple. Empty for the legacy Redis path.
+  // (queue, priority, consumerName, threadIndex) tuple. Empty for the legacy Redis path.
   private final List<BrokerMessagePoller> brokerPollers = new ArrayList<>();
+  private static final int DEFAULT_BROKER_POLLER_BATCH = 8;
+  private static final java.time.Duration DEFAULT_BROKER_POLLER_FETCH_WAIT =
+      java.time.Duration.ofMillis(500);
 
   /** Visible for tests: returns the list of broker pollers spawned by {@link #startBrokerPollers()}. */
   List<BrokerMessagePoller> getBrokerPollersForTesting() {
@@ -653,7 +656,12 @@ public class RqueueMessageListenerContainer
       defaultTaskExecutor = true;
       int estimated = 0;
       for (QueueDetail qd : activeQueues) {
-        estimated += resolveBrokerThreadCount(qd);
+        if (qd.isSystemGenerated()) {
+          // priority-cloned queues are absorbed into the per-priority poller fan-out below;
+          // counting them again would oversize the pool.
+          continue;
+        }
+        estimated += resolveBrokerThreadCount(qd) * resolvePriorityKeys(qd).size();
       }
       int corePool = Math.max(estimated, 2);
       taskExecutor = createTaskExecutor(corePool, corePool * 2, 0);
@@ -681,7 +689,7 @@ public class RqueueMessageListenerContainer
           if (qd == null) {
             continue;
           }
-          String consumerName =
+          String baseConsumerName =
               ConsumerNameResolver.resolveConsumerName(ann, beanName, methodName, queue);
           int threadCount = resolveBrokerThreadCount(qd);
           if (qd.getConcurrency() != null
@@ -697,25 +705,72 @@ public class RqueueMessageListenerContainer
                 qd.getConcurrency().getMax(),
                 threadCount);
           }
-          for (int i = 0; i < threadCount; i++) {
-            BrokerMessagePoller poller = new BrokerMessagePoller(
-                messageBroker,
-                qd,
-                consumerName,
-                hmp.method,
-                rqueueMessageHandler.getMessageConverter(),
-                taskExecutionBackOff,
-                queueStateMgr);
-            brokerPollers.add(poller);
-            Future<?> future = taskExecutor.submit(poller);
-            String key = queue + "::" + consumerName + "#" + i;
-            scheduledFutureByQueue.put(key, future);
-            started++;
+          if (!StringUtils.isEmpty(qd.getPriorityGroup())
+              && !qd.getPriorityGroup().equals(qd.getName())
+              && !qd.getPriorityGroup().equals(Constants.DEFAULT_PRIORITY_GROUP)) {
+            log.warn(
+                "Queue '{}' is part of cross-queue priorityGroup='{}'. The NATS backend does not "
+                    + "support cross-queue priority groups in v1; the priority hint will be honored "
+                    + "on the same queue but cross-queue weighting is ignored.",
+                queue,
+                qd.getPriorityGroup());
+          }
+          List<String> priorities = resolvePriorityKeys(qd);
+          for (String priority : priorities) {
+            String consumerName =
+                priority == null ? baseConsumerName : baseConsumerName + "-" + priority;
+            for (int i = 0; i < threadCount; i++) {
+              BrokerMessagePoller poller =
+                  new BrokerMessagePoller(
+                      messageBroker,
+                      qd,
+                      priority,
+                      consumerName,
+                      hmp.method,
+                      rqueueMessageHandler.getMessageConverter(),
+                      taskExecutionBackOff,
+                      queueStateMgr,
+                      Math.max(
+                          1,
+                          qd.getBatchSize() > 0
+                              ? qd.getBatchSize()
+                              : DEFAULT_BROKER_POLLER_BATCH),
+                      DEFAULT_BROKER_POLLER_FETCH_WAIT);
+              brokerPollers.add(poller);
+              Future<?> future = taskExecutor.submit(poller);
+              String key =
+                  queue + (priority == null ? "" : "::" + priority) + "::" + consumerName + "#" + i;
+              scheduledFutureByQueue.put(key, future);
+              started++;
+            }
           }
         }
       }
     }
     log.info("Started {} broker pollers across {} queue(s)", started, activeQueues.size());
+  }
+
+  /**
+   * Resolves the priority keys to spawn pollers for on the broker path. Returns a singleton list
+   * containing {@code null} (i.e. "no priority") when the queue has at most one entry; otherwise
+   * returns the listener-declared priority names with {@code DEFAULT_PRIORITY_KEY} filtered out
+   * (the default bucket is implicit for backends that route per-priority).
+   */
+  private static List<String> resolvePriorityKeys(QueueDetail qd) {
+    if (qd.getPriority() == null || qd.getPriority().size() <= 1) {
+      return Collections.singletonList(null);
+    }
+    List<String> out = new ArrayList<>();
+    for (String key : qd.getPriority().keySet()) {
+      if (Constants.DEFAULT_PRIORITY_KEY.equals(key)) {
+        continue;
+      }
+      out.add(key);
+    }
+    if (out.isEmpty()) {
+      return Collections.singletonList(null);
+    }
+    return out;
   }
 
   /**
