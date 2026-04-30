@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import reactor.core.publisher.Mono;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -207,6 +208,52 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     throw new UnsupportedOperationException(
         "delayed enqueue not supported by NATS backend in this version; "
             + "use the Redis backend for scheduled messages");
+  }
+
+  @Override
+  public Mono<Void> enqueueReactive(QueueDetail q, RqueueMessage m) {
+    String subject = subjectFor(q);
+    Headers headers = new Headers();
+    if (m.getId() != null) {
+      headers.add("Nats-Msg-Id", m.getId());
+    }
+    byte[] payload;
+    try {
+      payload = mapper.writeValueAsBytes(m);
+    } catch (RuntimeException e) {
+      return Mono.error(
+          new RqueueNatsException(
+              "Failed to serialize message id="
+                  + m.getId()
+                  + " queue="
+                  + q.getName()
+                  + " subject="
+                  + subject,
+              e));
+    }
+    return Mono.fromRunnable(() -> provisioner.ensureStream(streamFor(q), List.of(subject)))
+        .then(Mono.fromFuture(() -> js.publishAsync(subject, headers, payload)))
+        .onErrorMap(
+            e ->
+                e instanceof RqueueNatsException
+                    ? e
+                    : new RqueueNatsException(
+                        "Failed to enqueue message id="
+                            + m.getId()
+                            + " queue="
+                            + q.getName()
+                            + " subject="
+                            + subject,
+                        e))
+        .then();
+  }
+
+  @Override
+  public Mono<Void> enqueueWithDelayReactive(QueueDetail q, RqueueMessage m, long delayMs) {
+    return Mono.error(
+        new UnsupportedOperationException(
+            "delayed enqueue not supported by NATS backend in this version; "
+                + "use the Redis backend for scheduled messages"));
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Consumer;
+import reactor.core.publisher.Mono;
 
 /**
  * Internal SPI. Subject to change. Application code must not depend on this directly.
@@ -44,6 +45,24 @@ public interface MessageBroker {
   }
 
   void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs);
+
+  /**
+   * Reactive variant of {@link #enqueue(QueueDetail, RqueueMessage)}. The default falls back to the
+   * blocking implementation wrapped in {@code Mono.fromRunnable}; backends with native async
+   * publish APIs (e.g. JetStream) should override this to avoid blocking the calling thread.
+   */
+  default Mono<Void> enqueueReactive(QueueDetail q, RqueueMessage m) {
+    return Mono.fromRunnable(() -> enqueue(q, m));
+  }
+
+  /**
+   * Reactive variant of {@link #enqueueWithDelay(QueueDetail, RqueueMessage, long)}. The default
+   * falls back to the blocking implementation. Backends that do not support delayed enqueue should
+   * override this to return {@code Mono.error(new UnsupportedOperationException(...))}.
+   */
+  default Mono<Void> enqueueWithDelayReactive(QueueDetail q, RqueueMessage m, long delayMs) {
+    return Mono.fromRunnable(() -> enqueueWithDelay(q, m, delayMs));
+  }
 
   List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait);
 
