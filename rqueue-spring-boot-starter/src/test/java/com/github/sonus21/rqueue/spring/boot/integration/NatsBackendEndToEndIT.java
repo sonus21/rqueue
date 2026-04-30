@@ -59,8 +59,11 @@ import org.springframework.stereotype.Component;
 @Tag("nats")
 class NatsBackendEndToEndIT extends AbstractNatsBootIT {
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
-  @Autowired TestListener listener;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
+
+  @Autowired
+  TestListener listener;
 
   @Test
   void enqueueIsReceivedByListener() throws Exception {
