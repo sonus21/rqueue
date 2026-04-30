@@ -16,10 +16,8 @@
 
 package com.github.sonus21.rqueue.dao.impl;
 
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
-import org.springframework.context.annotation.Conditional;
-
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -32,6 +30,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 

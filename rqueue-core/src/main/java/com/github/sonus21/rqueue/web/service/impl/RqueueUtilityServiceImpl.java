@@ -16,11 +16,9 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
-import org.springframework.context.annotation.Conditional;
-
 import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
@@ -55,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 

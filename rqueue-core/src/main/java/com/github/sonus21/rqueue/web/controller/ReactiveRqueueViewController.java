@@ -17,8 +17,6 @@
 package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RedisBackendCondition;
-import org.springframework.context.annotation.Conditional;
-
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
@@ -41,7 +39,6 @@ import reactor.core.publisher.Mono;
 @Conditional({RedisBackendCondition.class, ReactiveEnabled.class})
 @Controller
 @RequestMapping(path = "${rqueue.web.url.prefix:}rqueue")
-
 public class ReactiveRqueueViewController extends BaseReactiveController {
 
   private final ViewResolver rqueueViewResolver;

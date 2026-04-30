@@ -16,11 +16,9 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
-import org.springframework.context.annotation.Conditional;
-
 import static com.google.common.collect.Lists.newArrayList;
 
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -45,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;

@@ -16,13 +16,11 @@
 
 package com.github.sonus21.rqueue.web.service.impl;
 
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
-import org.springframework.context.annotation.Conditional;
-
 import static com.github.sonus21.rqueue.utils.StringUtils.clean;
 import static com.google.common.collect.Lists.newArrayList;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -65,6 +63,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
