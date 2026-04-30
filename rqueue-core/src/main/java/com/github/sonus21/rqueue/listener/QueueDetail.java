@@ -72,6 +72,19 @@ public class QueueDetail extends SerializableBase {
   private String priorityGroup;
   private Set<Class<? extends Throwable>> doNotRetry;
 
+  // ---------------------------------------------------------------------------
+  // NATS / JetStream-related fields. All nullable and additive: when null the
+  // resolved* helpers below derive sensible defaults from queueName /
+  // visibilityTimeout / numRetry. Existing Redis-shaped behavior is unchanged.
+  // ---------------------------------------------------------------------------
+  private final String natsStream;
+  private final String natsSubject;
+  private final String natsDlqStream;
+  private final String natsDlqSubject;
+  private final Duration natsAckWaitOverride;
+  private final Integer natsMaxDeliverOverride;
+  private final Duration natsDedupWindow;
+
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
   }
@@ -156,6 +169,52 @@ public class QueueDetail extends SerializableBase {
 
   public Duration visibilityDuration() {
     return Duration.ofMillis(visibilityTimeout);
+  }
+
+  /**
+   * Resolves the JetStream stream name. When {@link #natsStream} is null the default
+   * derivation {@code "rqueue-" + queueName} is used so existing queue configs keep
+   * working with a NATS broker without explicit overrides.
+   */
+  public String resolvedNatsStream() {
+    return natsStream != null ? natsStream : "rqueue-" + queueName;
+  }
+
+  /**
+   * Resolves the JetStream subject. Falls back to {@code "rqueue." + queueName}.
+   */
+  public String resolvedNatsSubject() {
+    return natsSubject != null ? natsSubject : "rqueue." + queueName;
+  }
+
+  /**
+   * Resolves the dead-letter stream name. Falls back to {@code resolvedNatsStream() + "-dlq"}.
+   */
+  public String resolvedNatsDlqStream() {
+    return natsDlqStream != null ? natsDlqStream : resolvedNatsStream() + "-dlq";
+  }
+
+  /**
+   * Resolves the dead-letter subject. Falls back to {@code resolvedNatsSubject() + ".dlq"}.
+   */
+  public String resolvedNatsDlqSubject() {
+    return natsDlqSubject != null ? natsDlqSubject : resolvedNatsSubject() + ".dlq";
+  }
+
+  /**
+   * Returns the JetStream ack-wait, falling back to the supplied {@code fallback}
+   * (typically the {@link #visibilityDuration()}) when no explicit override is set.
+   */
+  public Duration resolvedAckWait(Duration fallback) {
+    return natsAckWaitOverride != null ? natsAckWaitOverride : fallback;
+  }
+
+  /**
+   * Returns the JetStream max-deliver count, falling back to {@code fallback}
+   * (typically {@code numRetry + 1}) when no explicit override is set.
+   */
+  public int resolvedMaxDeliver(int fallback) {
+    return natsMaxDeliverOverride != null ? natsMaxDeliverOverride : fallback;
   }
 
   public enum QueueType {
