@@ -65,9 +65,8 @@ class ConsumerNameResolverTest extends TestBase {
    */
   @Test
   void sanitizesIllegalCharactersInBeanAndMethodNames() {
-    String resolved =
-        ConsumerNameResolver.resolveConsumerName(
-            null, "Outer$Inner.bean", "method.with$weird#chars", "q1");
+    String resolved = ConsumerNameResolver.resolveConsumerName(
+        null, "Outer$Inner.bean", "method.with$weird#chars", "q1");
     assertEquals("rqueue-q1-Outer_Inner_bean_method_with_weird_chars", resolved);
   }
 }
