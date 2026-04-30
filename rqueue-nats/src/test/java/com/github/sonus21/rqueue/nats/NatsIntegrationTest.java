@@ -19,13 +19,13 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Meta-annotation for Docker-gated JetStream integration tests. Carries both {@code integration}
- * and {@code nats} tags so CI can select them via {@code -DincludeTags=nats} without spinning up
- * Redis, while still surfacing in any pipeline that asks for {@code integration} tests.
+ * Meta-annotation for Docker-gated JetStream integration tests. Carries only the {@code nats}
+ * tag so the existing Redis-driven {@code integration_test} and {@code reactive_integration_test}
+ * jobs don't try to run them; they're picked up exclusively by the dedicated
+ * {@code nats_integration_test} CI job via {@code -DincludeTags=nats}.
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Tag("integration")
 @Tag("nats")
 @ExtendWith(TestTracerExtension.class)
 public @interface NatsIntegrationTest {}

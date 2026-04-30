@@ -70,7 +70,6 @@ import org.testcontainers.utility.DockerImageName;
     classes = NatsBackendEndToEndIT.TestApp.class,
     properties = {"rqueue.backend=nats"})
 @Testcontainers(disabledWithoutDocker = true)
-@Tag("integration")
 @Tag("nats")
 class NatsBackendEndToEndIT {
 
