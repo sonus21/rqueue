@@ -120,9 +120,7 @@ public abstract class RqueueListenerBaseConfig {
    * an {@code RqueueConfig} without specifying a backend. Delegates with {@link Backend#REDIS}.
    */
   public RqueueConfig rqueueConfig(
-      ConfigurableBeanFactory beanFactory,
-      String versionKey,
-      Integer dbVersion) {
+      ConfigurableBeanFactory beanFactory, String versionKey, Integer dbVersion) {
     return rqueueConfig(beanFactory, Backend.REDIS, versionKey, dbVersion);
   }
 
