@@ -115,8 +115,13 @@ public class RqueueMessageListenerContainer
   // broker reports REDIS_DEFAULTS so the gated branches still match existing semantics.
   private MessageBroker messageBroker;
   // Phase 3.5: active broker-driven pollers (non-primary-dispatch backends). One poller per
-  // (queue, consumerName) pair. Empty for the legacy Redis path.
+  // (queue, consumerName, threadIndex) tuple. Empty for the legacy Redis path.
   private final List<BrokerMessagePoller> brokerPollers = new ArrayList<>();
+
+  /** Visible for tests: returns the list of broker pollers spawned by {@link #startBrokerPollers()}. */
+  List<BrokerMessagePoller> getBrokerPollersForTesting() {
+    return Collections.unmodifiableList(brokerPollers);
+  }
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -642,10 +647,15 @@ public class RqueueMessageListenerContainer
       queueRunningState.put(qd.getName(), true);
     }
     if (taskExecutor == null) {
-      // Minimal pool sized to the number of expected pollers; we estimate one per active queue
-      // (per-method explosion is bounded by handler map below).
+      // Pool sized to the sum of resolved concurrency thread counts across registered queues so
+      // every poller has a thread; per-method/per-priority explosion is bounded by the handler map
+      // below. We err on the side of larger pools because each poller blocks on broker.pop.
       defaultTaskExecutor = true;
-      int corePool = Math.max(activeQueues.size(), 2);
+      int estimated = 0;
+      for (QueueDetail qd : activeQueues) {
+        estimated += resolveBrokerThreadCount(qd);
+      }
+      int corePool = Math.max(estimated, 2);
       taskExecutor = createTaskExecutor(corePool, corePool * 2, 0);
     }
     int started = 0;
@@ -671,32 +681,61 @@ public class RqueueMessageListenerContainer
           if (qd == null) {
             continue;
           }
-          if (qd.getConcurrency() != null && qd.getConcurrency().getMax() > 1) {
-            log.info(
-                "Queue '{}' declares concurrency={}; the NATS-style backend honors this as a "
-                    + "single-thread poller in v1 (JetStream MaxAckPending controls in-flight "
-                    + "distribution).",
-                queue,
-                qd.getConcurrency().getMax());
-          }
           String consumerName =
               ConsumerNameResolver.resolveConsumerName(ann, beanName, methodName, queue);
-          BrokerMessagePoller poller = new BrokerMessagePoller(
-              messageBroker,
-              qd,
-              consumerName,
-              hmp.method,
-              rqueueMessageHandler.getMessageConverter(),
-              taskExecutionBackOff,
-              queueStateMgr);
-          brokerPollers.add(poller);
-          Future<?> future = taskExecutor.submit(poller);
-          scheduledFutureByQueue.put(queue + "::" + consumerName, future);
-          started++;
+          int threadCount = resolveBrokerThreadCount(qd);
+          if (qd.getConcurrency() != null
+              && qd.getConcurrency().isValid()
+              && qd.getConcurrency().getMin() != qd.getConcurrency().getMax()) {
+            log.info(
+                "Queue '{}' declares elastic concurrency min={}, max={}; the NATS-style backend "
+                    + "uses a fixed thread pool sized to max in v1 (elastic ramping not yet "
+                    + "implemented). All {} threads share the same JetStream durable consumer; "
+                    + "the consumer's MaxAckPending is a queue-wide budget shared across threads.",
+                queue,
+                qd.getConcurrency().getMin(),
+                qd.getConcurrency().getMax(),
+                threadCount);
+          }
+          for (int i = 0; i < threadCount; i++) {
+            BrokerMessagePoller poller = new BrokerMessagePoller(
+                messageBroker,
+                qd,
+                consumerName,
+                hmp.method,
+                rqueueMessageHandler.getMessageConverter(),
+                taskExecutionBackOff,
+                queueStateMgr);
+            brokerPollers.add(poller);
+            Future<?> future = taskExecutor.submit(poller);
+            String key = queue + "::" + consumerName + "#" + i;
+            scheduledFutureByQueue.put(key, future);
+            started++;
+          }
         }
       }
     }
     log.info("Started {} broker pollers across {} queue(s)", started, activeQueues.size());
+  }
+
+  /**
+   * Resolves the broker-poller thread count for a {@link QueueDetail}. Uses the listener's
+   * {@code @RqueueListener.concurrency} upper bound when set; otherwise defaults to a single
+   * thread.
+   *
+   * <p>NATS v1 always uses a fixed-size thread pool sized to {@code max}. Elastic ramping
+   * (min &lt; max) is not yet implemented; instead all {@code max} threads are spawned eagerly
+   * and share the durable consumer's {@code MaxAckPending} budget — JetStream load-balances
+   * messages across the bound subscribers.
+   */
+  private int resolveBrokerThreadCount(QueueDetail qd) {
+    if (qd != null
+        && qd.getConcurrency() != null
+        && qd.getConcurrency().isValid()
+        && qd.getConcurrency().getMax() > 0) {
+      return qd.getConcurrency().getMax();
+    }
+    return 1;
   }
 
   protected void startGroup(String groupName, List<QueueDetail> queueDetails) {

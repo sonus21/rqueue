@@ -55,9 +55,12 @@ import org.springframework.messaging.handler.HandlerMethod;
  * are not consulted. The first method parameter receives the deserialized payload; richer
  * argument resolution is deferred to a future phase.
  *
- * <p><b>Single-thread poller per (queue, consumerName).</b> {@code @RqueueListener.concurrency}
- * is not honored on the broker path in v1. JetStream's MaxAckPending already controls
- * in-flight distribution; if a user sets concurrency &gt; 1, a single INFO is logged.
+ * <p><b>Concurrency.</b> {@code @RqueueListener.concurrency} is honored by spawning
+ * {@code max} pollers for the same {@code (queue, consumerName)} triple. All threads bind to
+ * the same JetStream durable consumer; JetStream load-balances delivery across the bound
+ * subscribers and shares a single {@code MaxAckPending} budget across them. Elastic ramping
+ * (when {@code min < max}) is not yet implemented for the NATS path; the container always
+ * uses a fixed pool sized to {@code max}.
  */
 final class BrokerMessagePoller implements Runnable {
 
