@@ -110,7 +110,8 @@ class RqueueListenerAutoConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
+    messageAutoConfig.rqueueMessageListenerContainer(
+        rqueueMessageHandler, new EmptyMessageBrokerProvider());
     assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
   }
 
@@ -143,5 +144,29 @@ class RqueueListenerAutoConfigTest extends TestBase {
         rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
+  }
+
+  private static class EmptyMessageBrokerProvider
+      implements org.springframework.beans.factory.ObjectProvider<
+          com.github.sonus21.rqueue.core.spi.MessageBroker> {
+    @Override
+    public com.github.sonus21.rqueue.core.spi.MessageBroker getObject() {
+      throw new org.springframework.beans.factory.NoSuchBeanDefinitionException("MessageBroker");
+    }
+
+    @Override
+    public com.github.sonus21.rqueue.core.spi.MessageBroker getObject(Object... args) {
+      throw new org.springframework.beans.factory.NoSuchBeanDefinitionException("MessageBroker");
+    }
+
+    @Override
+    public com.github.sonus21.rqueue.core.spi.MessageBroker getIfAvailable() {
+      return null;
+    }
+
+    @Override
+    public com.github.sonus21.rqueue.core.spi.MessageBroker getIfUnique() {
+      return null;
+    }
   }
 }
