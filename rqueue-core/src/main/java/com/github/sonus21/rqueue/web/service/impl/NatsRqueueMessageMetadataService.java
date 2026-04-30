@@ -80,7 +80,8 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
       String queueName, MessageMetadata messageMetadata, Long ttlInMillisecond) {}
 
   @Override
-  public java.util.List<org.springframework.data.redis.core.ZSetOperations.TypedTuple<MessageMetadata>>
+  public java.util.List<
+          org.springframework.data.redis.core.ZSetOperations.TypedTuple<MessageMetadata>>
       readMessageMetadataForQueue(String queueName, long start, long end) {
     return Collections.emptyList();
   }

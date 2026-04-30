@@ -28,11 +28,32 @@ import org.springframework.stereotype.Repository;
 @Repository
 @Conditional(NatsBackendCondition.class)
 public class NatsRqueueJobDao implements RqueueJobDao {
-  @Override public void createJob(RqueueJob rqueueJob, Duration expiry) {}
-  @Override public void save(RqueueJob rqueueJob, Duration expiry) {}
-  @Override public RqueueJob findById(String jobId) { return null; }
-  @Override public List<RqueueJob> findJobsByIdIn(Collection<String> jobIds) { return Collections.emptyList(); }
-  @Override public List<RqueueJob> finByMessageIdIn(List<String> messageIds) { return Collections.emptyList(); }
-  @Override public List<RqueueJob> finByMessageId(String messageId) { return Collections.emptyList(); }
-  @Override public void delete(String jobId) {}
+  @Override
+  public void createJob(RqueueJob rqueueJob, Duration expiry) {}
+
+  @Override
+  public void save(RqueueJob rqueueJob, Duration expiry) {}
+
+  @Override
+  public RqueueJob findById(String jobId) {
+    return null;
+  }
+
+  @Override
+  public List<RqueueJob> findJobsByIdIn(Collection<String> jobIds) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<RqueueJob> finByMessageIdIn(List<String> messageIds) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<RqueueJob> finByMessageId(String messageId) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public void delete(String jobId) {}
 }

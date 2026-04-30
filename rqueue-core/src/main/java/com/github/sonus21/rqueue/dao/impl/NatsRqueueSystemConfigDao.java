@@ -23,12 +23,37 @@ import org.springframework.stereotype.Repository;
 @Repository
 @Conditional(NatsBackendCondition.class)
 public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
-  @Override public QueueConfig getConfigByName(String name) { return null; }
-  @Override public List<QueueConfig> getConfigByNames(Collection<String> names) { return Collections.emptyList(); }
-  @Override public QueueConfig getConfigByName(String name, boolean cached) { return null; }
-  @Override public QueueConfig getQConfig(String id, boolean cached) { return null; }
-  @Override public List<QueueConfig> findAllQConfig(Collection<String> ids) { return Collections.emptyList(); }
-  @Override public void saveQConfig(QueueConfig queueConfig) {}
-  @Override public void saveAllQConfig(List<QueueConfig> newConfigs) {}
-  @Override public void clearCacheByName(String name) {}
+  @Override
+  public QueueConfig getConfigByName(String name) {
+    return null;
+  }
+
+  @Override
+  public List<QueueConfig> getConfigByNames(Collection<String> names) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public QueueConfig getConfigByName(String name, boolean cached) {
+    return null;
+  }
+
+  @Override
+  public QueueConfig getQConfig(String id, boolean cached) {
+    return null;
+  }
+
+  @Override
+  public List<QueueConfig> findAllQConfig(Collection<String> ids) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public void saveQConfig(QueueConfig queueConfig) {}
+
+  @Override
+  public void saveAllQConfig(List<QueueConfig> newConfigs) {}
+
+  @Override
+  public void clearCacheByName(String name) {}
 }

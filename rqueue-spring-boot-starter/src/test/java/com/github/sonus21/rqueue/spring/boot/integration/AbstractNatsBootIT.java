@@ -65,12 +65,10 @@ abstract class AbstractNatsBootIT {
     if (USE_EXTERNAL_NATS) {
       r.add("rqueue.nats.connection.url", () -> EXTERNAL_NATS_URL);
     } else {
-      r.add(
-          "rqueue.nats.connection.url",
-          () -> {
-            startNats();
-            return "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222);
-          });
+      r.add("rqueue.nats.connection.url", () -> {
+        startNats();
+        return "nats://" + NATS.getHost() + ":" + NATS.getMappedPort(4222);
+      });
     }
   }
 }
