@@ -46,7 +46,7 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.utils.MessageMetadataTestUtils;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;

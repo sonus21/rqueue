@@ -15,42 +15,42 @@
  */
 package com.github.sonus21.rqueue.redis.metrics;
 
+import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
- * Redis-backed {@link RqueueQueueMetricsProvider}. Reads sizes directly off a
- * {@link StringRedisTemplate}: pending messages live in the queue list (LLEN); scheduled messages
- * live in the scheduled-queue sorted set (ZCARD).
+ * Redis-backed {@link RqueueQueueMetricsProvider}. Reads sizes off the same
+ * {@link RqueueRedisTemplate} the rest of the Redis backend uses: pending and DLQ live in
+ * Redis lists (LLEN); scheduled and in-flight live in sorted sets (ZCARD).
  */
 public class RedisRqueueQueueMetricsProvider implements RqueueQueueMetricsProvider {
 
-  private final StringRedisTemplate redisTemplate;
+  private final RqueueRedisTemplate<String> redisTemplate;
 
-  public RedisRqueueQueueMetricsProvider(StringRedisTemplate redisTemplate) {
+  public RedisRqueueQueueMetricsProvider(RqueueRedisTemplate<String> redisTemplate) {
     this.redisTemplate = redisTemplate;
   }
 
   @Override
   public long getPendingMessageCount(String queueName) {
     QueueDetail q = EndpointRegistry.get(queueName);
-    Long size = redisTemplate.opsForList().size(q.getQueueName());
+    Long size = redisTemplate.getListSize(q.getQueueName());
     return size == null ? 0L : size;
   }
 
   @Override
   public long getScheduledMessageCount(String queueName) {
     QueueDetail q = EndpointRegistry.get(queueName);
-    Long size = redisTemplate.opsForZSet().zCard(q.getScheduledQueueName());
+    Long size = redisTemplate.getZsetSize(q.getScheduledQueueName());
     return size == null ? 0L : size;
   }
 
   @Override
   public long getProcessingMessageCount(String queueName) {
     QueueDetail q = EndpointRegistry.get(queueName);
-    Long size = redisTemplate.opsForZSet().zCard(q.getProcessingQueueName());
+    Long size = redisTemplate.getZsetSize(q.getProcessingQueueName());
     return size == null ? 0L : size;
   }
 
@@ -60,7 +60,7 @@ public class RedisRqueueQueueMetricsProvider implements RqueueQueueMetricsProvid
     if (!q.isDlqSet()) {
       return 0L;
     }
-    Long size = redisTemplate.opsForList().size(q.getDeadLetterQueueName());
+    Long size = redisTemplate.getListSize(q.getDeadLetterQueueName());
     return size == null ? 0L : size;
   }
 }

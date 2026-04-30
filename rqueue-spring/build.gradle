@@ -41,6 +41,8 @@ mavenPublishing {
 
 dependencies {
     api project(":rqueue-core")
+    // Default-on dashboard module. Consumers who want a headless worker can <exclude> rqueue-web.
+    api project(":rqueue-web")
     // Redis backend (default). Carries the @Configuration that wires Redis-only @Beans extracted
     // from rqueue-core's RqueueListenerBaseConfig.
     api project(":rqueue-redis")

@@ -38,7 +38,7 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;

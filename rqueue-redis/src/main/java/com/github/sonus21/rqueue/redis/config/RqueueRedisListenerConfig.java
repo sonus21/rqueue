@@ -15,16 +15,25 @@
  */
 package com.github.sonus21.rqueue.redis.config;
 
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
+import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.redis.dao.RqueueStringDaoImpl;
+import com.github.sonus21.rqueue.redis.metrics.RedisRqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.utils.RedisUtils;
+import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
+import com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -44,7 +53,12 @@ import org.springframework.data.redis.core.RedisTemplate;
  */
 @Configuration
 @Conditional(RedisBackendCondition.class)
-@ComponentScan("com.github.sonus21.rqueue.redis.dao")
+@ComponentScan({
+  "com.github.sonus21.rqueue.redis.dao",
+  // The 6 web service impls relocated from rqueue-core; auto-discovered here so their
+  // @Conditional(RedisBackendCondition.class) is the single source of "load on Redis only".
+  "com.github.sonus21.rqueue.redis.web.service.impl"
+})
 public class RqueueRedisListenerConfig {
 
   @Bean
@@ -85,5 +99,58 @@ public class RqueueRedisListenerConfig {
         rqueueConfig,
         stringRqueueRedisTemplate,
         rqueueBeanProvider);
+  }
+
+  /**
+   * Pulls due delayed messages from the per-queue ZSET back onto the ready LIST. Redis-only;
+   * NATS uses JetStream's native redelivery instead.
+   */
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public ScheduledQueueMessageScheduler scheduledMessageScheduler() {
+    return new ScheduledQueueMessageScheduler();
+  }
+
+  /**
+   * Re-queues messages whose ack-window expired without explicit ack. Redis-only; the equivalent
+   * on NATS is the consumer's {@code AckWait} timer.
+   */
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public ProcessingQueueMessageScheduler processingMessageScheduler() {
+    return new ProcessingQueueMessageScheduler();
+  }
+
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public RqueueWorkerRegistry rqueueWorkerRegistry(RqueueConfig rqueueConfig) {
+    return new RqueueWorkerRegistryImpl(rqueueConfig);
+  }
+
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public RqueueLockManager rqueueLockManager(RqueueStringDao rqueueStringDao) {
+    return new RqueueLockManagerImpl(rqueueStringDao);
+  }
+
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public RqueueQueueMetrics rqueueQueueMetrics(
+      @Qualifier("stringRqueueRedisTemplate")
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+    return new RqueueQueueMetrics(stringRqueueRedisTemplate);
+  }
+
+  /**
+   * Backend-agnostic queue-depth gauge source consumed by {@link
+   * com.github.sonus21.rqueue.metrics.RqueueMetrics}. Reuses the existing
+   * {@code stringRqueueRedisTemplate} bean so we don't add a new connection-bound dependency.
+   */
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public RqueueQueueMetricsProvider rqueueQueueMetricsProvider(
+      @Qualifier("stringRqueueRedisTemplate")
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+    return new RedisRqueueQueueMetricsProvider(stringRqueueRedisTemplate);
   }
 }

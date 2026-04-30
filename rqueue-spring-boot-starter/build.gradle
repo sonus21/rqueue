@@ -42,6 +42,8 @@ mavenPublishing {
 
 dependencies {
     api project(":rqueue-core")
+    // Default-on dashboard module. Consumers who want a headless worker can <exclude> rqueue-web.
+    api project(":rqueue-web")
     api project(":rqueue-redis")
     api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     api "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"

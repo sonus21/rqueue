@@ -20,7 +20,7 @@ import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
-import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
+import com.github.sonus21.rqueue.service.RqueueUtilityService;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

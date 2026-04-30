@@ -40,7 +40,7 @@ import com.github.sonus21.rqueue.test.service.FailureManager;
 import com.github.sonus21.rqueue.test.service.RqueueEventListener;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;

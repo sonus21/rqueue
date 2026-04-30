@@ -43,21 +43,13 @@ dependencies {
     api "tools.jackson.core:jackson-core:${jacksonVersion}"
     api "tools.jackson.core:jackson-databind:${jacksonVersion}"
     api "com.fasterxml.jackson.core:jackson-annotations:${jacksonAnnotationsVersion}"
-    // https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api
-    api "jakarta.servlet:jakarta.servlet-api:${jakartaServletVersion}"
-    // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
+    // jakarta.validation annotations are still used by request DTOs in core (consumed by
+    // RqueueUtilityService, which the core engine depends on for admin operations).
     api "jakarta.validation:jakarta.validation-api:${jakartaValidationApiVersion}"
-    implementation 'jakarta.el:jakarta.el-api:5.0.0'
-    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
-    // https://mvnrepository.com/artifact/org.springframework/spring-webmvc
-    api "org.springframework:spring-webmvc:${springVersion}"
-    api "org.springframework:spring-webflux:${springVersion}"
-    api "io.pebbletemplates:pebble-spring7:${pebbleVersion}"
-    api "io.seruco.encoding:base62:${serucoEncodingVersion}"
+    // Mono / Flux types appear in core service interfaces (reactive variants of admin ops).
+    api "io.projectreactor:reactor-core:${projectReactorReactorTestVersion}"
     // https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
     api "org.apache.commons:commons-collections4:${apacheCommonCollectionVerion}"
-    // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
-    api "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}"
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
     api "io.micrometer:micrometer-core:${microMeterVersion}"
     testImplementation "io.lettuce:lettuce-core:${lettuceVersion}"

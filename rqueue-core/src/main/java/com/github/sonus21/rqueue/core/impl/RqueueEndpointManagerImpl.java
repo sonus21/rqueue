@@ -29,7 +29,7 @@ import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.Validator;
-import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
+import com.github.sonus21.rqueue.service.RqueueUtilityService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

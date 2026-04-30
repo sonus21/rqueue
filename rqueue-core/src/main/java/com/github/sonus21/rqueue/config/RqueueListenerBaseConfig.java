@@ -16,31 +16,15 @@
 
 package com.github.sonus21.rqueue.config;
 
-import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
-import com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.condition.MissingRqueueMessageIdGenerator;
-import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
-import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
-import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
-import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
-import com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl;
-import io.pebbletemplates.pebble.PebbleEngine;
-import io.pebbletemplates.spring.extension.SpringExtension;
-import io.pebbletemplates.spring.reactive.PebbleReactiveViewResolver;
-import io.pebbletemplates.spring.servlet.PebbleViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +34,6 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.servlet.ViewResolver;
 
 /**
  * This is a base configuration class for Rqueue, that is used in Spring and Spring boot Rqueue libs
@@ -66,8 +49,6 @@ import org.springframework.web.servlet.ViewResolver;
 public abstract class RqueueListenerBaseConfig {
 
   public static final int MAX_DB_VERSION = 2;
-  private static final String TEMPLATE_DIR = "templates/rqueue/";
-  private static final String TEMPLATE_SUFFIX = ".html";
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
@@ -199,76 +180,6 @@ public abstract class RqueueListenerBaseConfig {
     simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(new RqueueMessageTemplateImpl(
         rqueueConfig.getConnectionFactory(), rqueueConfig.getReactiveRedisConnectionFactory()));
     return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
-  }
-
-  /**
-   * This scheduler is used to pull messages from a scheduled queue to their respective queue.
-   * Internally it moves messages from ZSET to LIST based on the priority and current time.
-   *
-   * @return {@link ScheduledQueueMessageScheduler} object
-   */
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public ScheduledQueueMessageScheduler scheduledMessageScheduler() {
-    return new ScheduledQueueMessageScheduler();
-  }
-
-  /**
-   * This scheduler is used to pull messages from processing queue to their respective queue.
-   * Internally it moves messages from ZSET to LIST based on the priority and current time.
-   *
-   * @return {@link ProcessingQueueMessageScheduler} object
-   */
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public ProcessingQueueMessageScheduler processingMessageScheduler() {
-    return new ProcessingQueueMessageScheduler();
-  }
-
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueWorkerRegistry rqueueWorkerRegistry(RqueueConfig rqueueConfig) {
-    return new RqueueWorkerRegistryImpl(rqueueConfig);
-  }
-
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueLockManager rqueueLockManager(RqueueStringDao rqueueStringDao) {
-    return new RqueueLockManagerImpl(rqueueStringDao);
-  }
-
-  private PebbleEngine createPebbleEngine() {
-    ResourceLoader loader = new ResourceLoader();
-    loader.setPrefix(TEMPLATE_DIR);
-    loader.setSuffix(TEMPLATE_SUFFIX);
-    return new PebbleEngine.Builder()
-        .extension(new RqueuePebbleExtension(), new SpringExtension(null))
-        .loader(loader)
-        .build();
-  }
-
-  @Bean
-  public ViewResolver rqueueViewResolver() {
-    PebbleViewResolver resolver = new PebbleViewResolver(createPebbleEngine());
-    resolver.setPrefix(TEMPLATE_DIR);
-    resolver.setSuffix(TEMPLATE_SUFFIX);
-    return resolver;
-  }
-
-  @Bean
-  @Conditional(ReactiveEnabled.class)
-  public org.springframework.web.reactive.result.view.ViewResolver reactiveRqueueViewResolver() {
-    PebbleReactiveViewResolver resolver = new PebbleReactiveViewResolver(createPebbleEngine());
-    resolver.setPrefix(TEMPLATE_DIR);
-    resolver.setSuffix(TEMPLATE_SUFFIX);
-    return resolver;
-  }
-
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueQueueMetrics rqueueQueueMetrics(
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
-    return new RqueueQueueMetrics(stringRqueueRedisTemplate);
   }
 
   @Bean

@@ -18,34 +18,48 @@ package com.github.sonus21.rqueue.utils;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import java.net.InetSocketAddress;
-import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 public final class HttpUtils {
 
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
   private HttpUtils() {}
 
-  private static SimpleClientHttpRequestFactory getRequestFactory(RqueueConfig rqueueConfig) {
-    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-    requestFactory.setReadTimeout(2 * Constants.ONE_MILLI_INT);
-    requestFactory.setConnectTimeout(2 * Constants.ONE_MILLI_INT);
-    if (StringUtils.isEmpty(rqueueConfig.getProxyHost())) {
-      return requestFactory;
+  private static HttpClient buildClient(RqueueConfig rqueueConfig) {
+    HttpClient.Builder builder =
+        HttpClient.newBuilder().connectTimeout(Duration.ofMillis(2 * Constants.ONE_MILLI_INT));
+    if (!StringUtils.isEmpty(rqueueConfig.getProxyHost())) {
+      builder.proxy(
+          ProxySelector.of(
+              new InetSocketAddress(rqueueConfig.getProxyHost(), rqueueConfig.getProxyPort())));
     }
-    Proxy proxy = new Proxy(
-        rqueueConfig.getProxyType(),
-        new InetSocketAddress(rqueueConfig.getProxyHost(), rqueueConfig.getProxyPort()));
-    requestFactory.setProxy(proxy);
-    return requestFactory;
+    return builder.build();
   }
 
   public static <T> T readUrl(RqueueConfig rqueueConfig, String url, Class<T> clazz) {
     try {
-      RestTemplate restTemplate = new RestTemplate(getRequestFactory(rqueueConfig));
-      return restTemplate.getForObject(url, clazz);
+      HttpClient client = buildClient(rqueueConfig);
+      HttpRequest request =
+          HttpRequest.newBuilder(URI.create(url))
+              .timeout(Duration.ofMillis(2 * Constants.ONE_MILLI_INT))
+              .header("Accept", "application/json")
+              .GET()
+              .build();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      if (response.statusCode() / 100 != 2) {
+        log.error("GET {} returned status {}", url, response.statusCode());
+        return null;
+      }
+      return OBJECT_MAPPER.readValue(response.body(), clazz);
     } catch (Exception e) {
       log.error("GET call failed for {}", url, e);
       return null;

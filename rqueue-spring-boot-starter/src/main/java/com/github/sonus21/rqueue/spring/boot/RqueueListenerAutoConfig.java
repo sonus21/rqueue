@@ -161,17 +161,4 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
     }
     return impl;
   }
-
-  /**
-   * Redis-backend {@link RqueueQueueMetricsProvider}. The NATS counterpart is registered in
-   * {@code RqueueNatsAutoConfig} under {@code @ConditionalOnProperty(rqueue.backend=nats)};
-   * together they guarantee exactly one provider is on the classpath regardless of backend.
-   */
-  @Bean
-  @ConditionalOnMissingBean(RqueueQueueMetricsProvider.class)
-  @Conditional(RedisBackendCondition.class)
-  public RqueueQueueMetricsProvider redisRqueueQueueMetricsProvider(
-      StringRedisTemplate stringRedisTemplate) {
-    return new RedisRqueueQueueMetricsProvider(stringRedisTemplate);
-  }
 }
