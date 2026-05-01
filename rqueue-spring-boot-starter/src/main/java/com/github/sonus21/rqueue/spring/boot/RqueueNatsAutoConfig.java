@@ -174,6 +174,19 @@ public class RqueueNatsAutoConfig {
         rqueueConfig, workerRegistryStore);
   }
 
+  /**
+   * NATS-side {@link com.github.sonus21.rqueue.repository.MessageBrowsingRepository} powering
+   * the dashboard's data-explorer panel. JetStream KV doesn't model arbitrary keyed reads, so
+   * this impl returns 0 sizes and throws {@code BackendCapabilityException} from
+   * {@code viewData} (mapped to HTTP 501 by {@code RqueueWebExceptionAdvice}).
+   */
+  @Bean
+  @ConditionalOnMissingBean(com.github.sonus21.rqueue.repository.MessageBrowsingRepository.class)
+  public com.github.sonus21.rqueue.repository.MessageBrowsingRepository
+      natsMessageBrowsingRepository() {
+    return new com.github.sonus21.rqueue.nats.repository.NatsMessageBrowsingRepository();
+  }
+
   static RqueueNatsConfig toBrokerConfig(RqueueNatsProperties p) {
     RqueueNatsConfig cfg = RqueueNatsConfig.defaults();
     cfg.setStreamPrefix(p.getNaming().getStreamPrefix());

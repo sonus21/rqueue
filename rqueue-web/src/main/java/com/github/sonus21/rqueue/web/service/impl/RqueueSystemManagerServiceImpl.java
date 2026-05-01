@@ -14,11 +14,10 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web;
+package com.github.sonus21.rqueue.web.service.impl;
 
 import static com.google.common.collect.Lists.newArrayList;
 
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -43,33 +42,41 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
-@Conditional(RedisBackendCondition.class)
 @Service
 @Slf4j
 public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerService {
 
   private final RqueueConfig rqueueConfig;
-  private final RqueueStringDao rqueueStringDao;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
+
+  /**
+   * Redis-only DAO for the per-queue data wipe in {@link #deleteQueue(String)}. {@code required
+   * = false} so the bean wires on NATS too — there {@code deleteQueue} returns
+   * {@code code = 1 "not supported"} since JetStream has no equivalent atomic
+   * "delete-these-keys-and-set-this-config" primitive. Source-of-truth for the queue list now
+   * comes from {@link EndpointRegistry}, removing the previous Redis-only "set of queue names"
+   * key.
+   */
+  private final RqueueStringDao rqueueStringDao;
+
   private ScheduledExecutorService executorService;
 
   @Autowired
   public RqueueSystemManagerServiceImpl(
       RqueueConfig rqueueConfig,
-      RqueueStringDao rqueueStringDao,
       RqueueSystemConfigDao rqueueSystemConfigDao,
-      RqueueMessageMetadataService rqueueMessageMetadataService) {
+      RqueueMessageMetadataService rqueueMessageMetadataService,
+      @Autowired(required = false) RqueueStringDao rqueueStringDao) {
     this.rqueueConfig = rqueueConfig;
-    this.rqueueStringDao = rqueueStringDao;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
     this.rqueueMessageMetadataService = rqueueMessageMetadataService;
+    this.rqueueStringDao = rqueueStringDao;
   }
 
   private List<String> queueKeys(QueueConfig queueConfig) {
@@ -93,6 +100,12 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
     if (queueConfig == null) {
       baseResponse.setCode(1);
       baseResponse.setMessage("Queue not found");
+      return baseResponse;
+    }
+    if (rqueueStringDao == null) {
+      // NATS path: no equivalent atomic "delete-keys-and-set-config" primitive.
+      baseResponse.setCode(1);
+      baseResponse.setMessage("deleteQueue is not supported on rqueue.backend=nats in v1");
       return baseResponse;
     }
     queueConfig.setDeletedOn(System.currentTimeMillis());
@@ -151,7 +164,9 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
     for (QueueDetail queueDetail : queueDetails) {
       queues[i++] = queueDetail.getName();
     }
-    rqueueStringDao.appendToSet(rqueueConfig.getQueuesKey(), queues);
+    // The previous Redis "set of queue names" cache (rqueueStringDao.appendToSet) is gone —
+    // EndpointRegistry.getActiveQueues() is the in-memory source of truth and works on every
+    // backend. The system-config DAO still persists the per-queue metadata below.
     List<String> ids =
         Arrays.stream(queues).map(rqueueConfig::getQueueConfigKey).collect(Collectors.toList());
     List<QueueConfig> queueConfigs = rqueueSystemConfigDao.findAllQConfig(ids);
@@ -212,7 +227,10 @@ public class RqueueSystemManagerServiceImpl implements RqueueSystemManagerServic
 
   @Override
   public List<String> getQueues() {
-    return rqueueStringDao.readFromSet(rqueueConfig.getQueuesKey());
+    // EndpointRegistry is the in-memory source of truth for active queue names; identical
+    // semantics to the previous Redis "set of queue names" key on a single instance, and it
+    // works on both backends without needing a per-backend Redis-set abstraction.
+    return new ArrayList<>(EndpointRegistry.getActiveQueues());
   }
 
   @Override

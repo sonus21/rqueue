@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web.service;
+package com.github.sonus21.rqueue.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,12 +27,13 @@ import static org.mockito.Mockito.doReturn;
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
-import com.github.sonus21.rqueue.redis.web.RqueueSystemManagerServiceImpl;
+import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
@@ -76,8 +77,11 @@ class RqueueSystemManagerServiceTest extends TestBase {
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
+    // EndpointRegistry is a global static; clear it so other test classes that register
+    // queues don't leak state into these tests (the new getQueues() reads from it).
+    EndpointRegistry.delete();
     rqueueSystemManagerService = new RqueueSystemManagerServiceImpl(
-        rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
+        rqueueConfig, rqueueSystemConfigDao, rqueueMessageMetadataService, rqueueStringDao);
     queues = new HashSet<>();
     queues.add(slowQueue);
     queues.add(fastQueue);
@@ -100,12 +104,9 @@ class RqueueSystemManagerServiceTest extends TestBase {
 
   @Test
   void getQueues() {
-    doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
-    doReturn(Collections.emptyList()).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
+    // The new impl reads active queue names from EndpointRegistry rather than a Redis SET.
     assertEquals(Collections.emptyList(), rqueueSystemManagerService.getQueues());
-    doReturn(Collections.singletonList("job"))
-        .when(rqueueStringDao)
-        .readFromSet(TestUtils.getQueuesKey());
+    EndpointRegistry.register(TestUtils.createQueueDetail("job"));
     assertEquals(Collections.singletonList("job"), rqueueSystemManagerService.getQueues());
   }
 
@@ -117,12 +118,14 @@ class RqueueSystemManagerServiceTest extends TestBase {
         })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
-    doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
-    doReturn(new ArrayList<>(queues)).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
+    EndpointRegistry.register(slowQueueDetail);
+    EndpointRegistry.register(fastQueueDetail);
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
         .findAllQConfig(
-            queues.stream().map(TestUtils::getQueueConfigKey).collect(Collectors.toList()));
+            EndpointRegistry.getActiveQueues().stream()
+                .map(TestUtils::getQueueConfigKey)
+                .collect(Collectors.toList()));
     assertEquals(
         Arrays.asList(slowQueueConfig, fastQueueConfig),
         rqueueSystemManagerService.getQueueConfigs());
@@ -136,13 +139,12 @@ class RqueueSystemManagerServiceTest extends TestBase {
         })
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
-    doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
-    doReturn(new ArrayList<>(queues)).when(rqueueStringDao).readFromSet(TestUtils.getQueuesKey());
+    EndpointRegistry.register(slowQueueDetail);
+    EndpointRegistry.register(fastQueueDetail);
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
-        .findAllQConfig(queues.stream()
+        .findAllQConfig(EndpointRegistry.getActiveQueues().stream()
             .map(TestUtils::getQueueConfigKey)
-            .sorted()
             .collect(Collectors.toList()));
     assertEquals(
         Arrays.asList(fastQueueConfig, slowQueueConfig),

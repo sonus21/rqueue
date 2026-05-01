@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web.service;
+package com.github.sonus21.rqueue.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -39,7 +39,7 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
-import com.github.sonus21.rqueue.redis.web.RqueueSystemManagerServiceImpl;
+import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.Arrays;
@@ -82,7 +82,7 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
     MockitoAnnotations.openMocks(this);
     EndpointRegistry.delete();
     rqueueSystemManagerService = new RqueueSystemManagerServiceImpl(
-        rqueueConfig, rqueueStringDao, rqueueSystemConfigDao, rqueueMessageMetadataService);
+        rqueueConfig, rqueueSystemConfigDao, rqueueMessageMetadataService, rqueueStringDao);
     slowQueueConfig.setId(TestUtils.getQueueConfigKey(slowQueue));
     fastQueueConfig.setId(TestUtils.getQueueConfigKey(fastQueue));
     EndpointRegistry.register(slowQueueDetail);
@@ -120,7 +120,6 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
 
   @Test
   void onApplicationEventStartCreateAllQueueConfigs() {
-    doReturn("__rq::queues").when(rqueueConfig).getQueuesKey();
     doAnswer(invocation -> {
           String name = invocation.getArgument(0);
           return "__rq::q-config::" + name;
@@ -128,18 +127,9 @@ class RqueueSystemManagerServiceImplTest extends TestBase {
         .when(rqueueConfig)
         .getQueueConfigKey(anyString());
     RqueueBootstrapEvent event = new RqueueBootstrapEvent("Container", true);
-    doAnswer(invocation -> {
-          if (slowQueue.equals(invocation.getArgument(1))) {
-            assertEquals(fastQueue, invocation.getArgument(2));
-          } else if (fastQueue.equals(invocation.getArgument(1))) {
-            assertEquals(slowQueue, invocation.getArgument(2));
-          } else {
-            fail();
-          }
-          return 2L;
-        })
-        .when(rqueueStringDao)
-        .appendToSet(eq(TestUtils.getQueuesKey()), any());
+    // Note: rqueueStringDao.appendToSet(...) was removed from the impl as part of the
+    // backend-neutral refactor (queue names now come from EndpointRegistry instead of a
+    // Redis-only set). Only saveAllQConfig is exercised on the create path.
     doAnswer(invocation -> {
           List<QueueConfig> queueConfigs = invocation.getArgument(0);
           assertEquals(2, queueConfigs.size());

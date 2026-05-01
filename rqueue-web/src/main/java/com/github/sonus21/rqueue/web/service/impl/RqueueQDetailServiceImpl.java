@@ -14,13 +14,11 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web;
+package com.github.sonus21.rqueue.web.service.impl;
 
 import static com.github.sonus21.rqueue.utils.StringUtils.clean;
 import static com.google.common.collect.Lists.newArrayList;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -44,10 +42,10 @@ import com.github.sonus21.rqueue.models.response.RowColumnMeta;
 import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
+import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
@@ -62,19 +60,16 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
-@Conditional(RedisBackendCondition.class)
 @Service
 public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
-  private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  private final MessageBrowsingRepository messageBrowsingRepository;
   private final RqueueMessageTemplate rqueueMessageTemplate;
   private final RqueueSystemManagerService rqueueSystemManagerService;
   private final RqueueMessageMetadataService rqueueMessageMetadataService;
@@ -92,13 +87,13 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Autowired
   public RqueueQDetailServiceImpl(
-      @Qualifier("stringRqueueRedisTemplate") RqueueRedisTemplate<String> stringRqueueRedisTemplate,
+      MessageBrowsingRepository messageBrowsingRepository,
       RqueueMessageTemplate rqueueMessageTemplate,
       RqueueSystemManagerService rqueueSystemManagerService,
       RqueueMessageMetadataService rqueueMessageMetadataService,
       RqueueConfig rqueueConfig,
       RqueueWorkerRegistry rqueueWorkerRegistry) {
-    this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
+    this.messageBrowsingRepository = messageBrowsingRepository;
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.rqueueSystemManagerService = rqueueSystemManagerService;
     this.rqueueMessageMetadataService = rqueueMessageMetadataService;
@@ -158,10 +153,10 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (brokerQueueDetail != null) {
       pending = messageBroker.size(brokerQueueDetail);
     } else {
-      pending = stringRqueueRedisTemplate.getListSize(queueConfig.getQueueName());
+      pending = messageBrowsingRepository.getDataSize(queueConfig.getQueueName(), DataType.LIST);
     }
     String processingQueueName = queueConfig.getProcessingQueueName();
-    Long running = stringRqueueRedisTemplate.getZsetSize(processingQueueName);
+    Long running = messageBrowsingRepository.getDataSize(processingQueueName, DataType.ZSET);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList(
         new HashMap.SimpleEntry<>(
             NavTab.PENDING,
@@ -175,7 +170,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     // When the broker doesn't support scheduled introspection (e.g. JetStream), suppress
     // the SCHEDULED nav tab entry entirely so the dashboard doesn't query an absent ZSET.
     if (!brokerHidesScheduled()) {
-      Long scheduled = stringRqueueRedisTemplate.getZsetSize(scheduledQueueName);
+      Long scheduled = messageBrowsingRepository.getDataSize(scheduledQueueName, DataType.ZSET);
       queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
           NavTab.SCHEDULED,
           new RedisDataDetail(
@@ -184,7 +179,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
       for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
         if (!dlq.isConsumerEnabled()) {
-          Long dlqSize = stringRqueueRedisTemplate.getListSize(dlq.getName());
+          Long dlqSize = messageBrowsingRepository.getDataSize(dlq.getName(), DataType.LIST);
           queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
               NavTab.DEAD,
               new RedisDataDetail(dlq.getName(), DataType.LIST, dlqSize == null ? 0 : dlqSize)));
@@ -197,7 +192,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     }
     if (rqueueConfig.messageInTerminalStateShouldBeStored()
         && !StringUtils.isEmpty(queueConfig.getCompletedQueueName())) {
-      Long completed = stringRqueueRedisTemplate.getZsetSize(queueConfig.getCompletedQueueName());
+      Long completed =
+          messageBrowsingRepository.getDataSize(queueConfig.getCompletedQueueName(), DataType.ZSET);
       queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
           NavTab.COMPLETED,
           new RedisDataDetail(
@@ -375,60 +371,6 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         .collect(Collectors.toList());
   }
 
-  private DataViewResponse responseForSet(String name) {
-    List<Object> items = new ArrayList<>(stringRqueueRedisTemplate.getMembers(name));
-    DataViewResponse response = new DataViewResponse();
-    response.setHeaders(Collections.singletonList("Item"));
-    List<TableRow> tableRows = new ArrayList<>();
-    for (Object item : items) {
-      tableRows.add(new TableRow(new TableColumn(item.toString())));
-    }
-    response.setRows(tableRows);
-    return response;
-  }
-
-  private DataViewResponse responseForKeyVal(String name) {
-    DataViewResponse response = new DataViewResponse();
-    response.setHeaders(Collections.singletonList("Value"));
-    Object val = stringRqueueRedisTemplate.get(name);
-    response.addRow(new TableRow(new TableColumn(String.valueOf(val))));
-    return response;
-  }
-
-  private DataViewResponse responseForZset(
-      String name, String key, int pageNumber, int itemPerPage) {
-    DataViewResponse response = new DataViewResponse();
-    int start = pageNumber * itemPerPage;
-    int end = start + itemPerPage - 1;
-    List<TableRow> tableRows = new ArrayList<>();
-    if (!StringUtils.isEmpty(key)) {
-      Double score = stringRqueueRedisTemplate.getZsetMemberScore(name, key);
-      response.setHeaders(Collections.singletonList("Score"));
-      tableRows.add(new TableRow(new TableColumn(score)));
-    } else {
-      response.setHeaders(Arrays.asList("Value", "Score"));
-      for (TypedTuple<String> tuple : stringRqueueRedisTemplate.zrangeWithScore(name, start, end)) {
-        tableRows.add(new TableRow(Arrays.asList(
-            new TableColumn(String.valueOf(tuple.getValue())), new TableColumn(tuple.getScore()))));
-      }
-    }
-    response.setRows(tableRows);
-    return response;
-  }
-
-  private DataViewResponse responseForList(String name, int pageNumber, int itemPerPage) {
-    DataViewResponse response = new DataViewResponse();
-    response.setHeaders(Collections.singletonList("Item"));
-    int start = pageNumber * itemPerPage;
-    int end = start + itemPerPage - 1;
-    List<TableRow> tableRows = new ArrayList<>();
-    for (Object s : stringRqueueRedisTemplate.lrange(name, start, end)) {
-      tableRows.add(new TableRow(new TableColumn(String.valueOf(s))));
-    }
-    response.setRows(tableRows);
-    return response;
-  }
-
   @Override
   public DataViewResponse viewData(
       String name, DataType type, String key, int pageNumber, int itemPerPage) {
@@ -438,18 +380,10 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (DataType.isUnknown(type)) {
       return DataViewResponse.createErrorMessage("Data type is not provided.");
     }
-    switch (type) {
-      case SET:
-        return responseForSet(clean(name));
-      case ZSET:
-        return responseForZset(clean(name), clean(key), pageNumber, itemPerPage);
-      case LIST:
-        return responseForList(clean(name), pageNumber, itemPerPage);
-      case KEY:
-        return responseForKeyVal(clean(name));
-      default:
-        throw new UnknownSwitchCase(type.name());
-    }
+    // Delegate the per-type dispatch to the storage layer. Backends without arbitrary keyed
+    // reads (NATS) throw BackendCapabilityException → 501; the web advice surfaces it.
+    return messageBrowsingRepository.viewData(
+        clean(name), type, key == null ? null : clean(key), pageNumber, itemPerPage);
   }
 
   private void setHeadersIfRequired(
@@ -477,74 +411,61 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getRunningTasks() {
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
-    List<List<Object>> rows = new ArrayList<>();
-    List<Object> result = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(queueConfigs)) {
-      result = RedisUtils.executePipeLine(
-          stringRqueueRedisTemplate.getRedisTemplate(),
-          ((connection, keySerializer, valueSerializer) -> {
-            for (QueueConfig queueConfig : queueConfigs) {
-              connection.zCard(keySerializer.serialize(queueConfig.getProcessingQueueName()));
-            }
-          }));
-    }
-    rows.add(Arrays.asList("Queue", "Processing [ZSET]", "Number of Messages"));
-    for (int i = 0; i < queueConfigs.size(); i++) {
-      QueueConfig queueConfig = queueConfigs.get(i);
-      rows.add(Arrays.asList(
-          queueConfig.getName(), queueConfig.getProcessingQueueName(), result.get(i)));
-    }
-    return rows;
+    return bulkSizeTable(
+        rqueueSystemManagerService.getSortedQueueConfigs(),
+        QueueConfig::getProcessingQueueName,
+        DataType.ZSET,
+        "Processing [ZSET]");
   }
 
   @Override
   public List<List<Object>> getWaitingTasks() {
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
-    List<List<Object>> rows = new ArrayList<>();
-    List<Object> result = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(queueConfigs)) {
-      result = RedisUtils.executePipeLine(
-          stringRqueueRedisTemplate.getRedisTemplate(),
-          ((connection, keySerializer, valueSerializer) -> {
-            for (QueueConfig queueConfig : queueConfigs) {
-              connection.lLen(keySerializer.serialize(queueConfig.getQueueName()));
-            }
-          }));
-    }
-    rows.add(Arrays.asList("Queue", "Queue [LIST]", "Number of Messages"));
-    for (int i = 0; i < queueConfigs.size(); i++) {
-      QueueConfig queueConfig = queueConfigs.get(i);
-      rows.add(Arrays.asList(queueConfig.getName(), queueConfig.getQueueName(), result.get(i)));
-    }
-    return rows;
+    return bulkSizeTable(
+        rqueueSystemManagerService.getSortedQueueConfigs(),
+        QueueConfig::getQueueName,
+        DataType.LIST,
+        "Queue [LIST]");
   }
 
   @Override
   public List<List<Object>> getScheduledTasks() {
-    List<QueueConfig> queueConfigs = rqueueSystemManagerService.getSortedQueueConfigs();
+    return bulkSizeTable(
+        rqueueSystemManagerService.getSortedQueueConfigs(),
+        QueueConfig::getScheduledQueueName,
+        DataType.ZSET,
+        "Scheduled [ZSET]");
+  }
+
+  /**
+   * Render the home-dashboard "queue / data-name / count" 3-column table for a per-queue data
+   * structure. The repository's {@link MessageBrowsingRepository#getDataSizes(List, List)} is
+   * expected to pipeline on Redis; NATS returns zeros.
+   */
+  private List<List<Object>> bulkSizeTable(
+      List<QueueConfig> queueConfigs,
+      java.util.function.Function<QueueConfig, String> nameExtractor,
+      DataType dataType,
+      String columnLabel) {
     List<List<Object>> rows = new ArrayList<>();
-    List<Object> result = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(queueConfigs)) {
-      result = RedisUtils.executePipeLine(
-          stringRqueueRedisTemplate.getRedisTemplate(),
-          ((connection, keySerializer, valueSerializer) -> {
-            for (QueueConfig queueConfig : queueConfigs) {
-              connection.zCard(keySerializer.serialize(queueConfig.getScheduledQueueName()));
-            }
-          }));
+    rows.add(Arrays.asList("Queue", columnLabel, "Number of Messages"));
+    if (CollectionUtils.isEmpty(queueConfigs)) {
+      return rows;
     }
-    rows.add(Arrays.asList("Queue", "Scheduled [ZSET]", "Number of Messages"));
+    List<String> names = new ArrayList<>(queueConfigs.size());
+    List<DataType> types = new ArrayList<>(queueConfigs.size());
+    for (QueueConfig queueConfig : queueConfigs) {
+      names.add(nameExtractor.apply(queueConfig));
+      types.add(dataType);
+    }
+    List<Long> sizes = messageBrowsingRepository.getDataSizes(names, types);
     for (int i = 0; i < queueConfigs.size(); i++) {
-      QueueConfig queueConfig = queueConfigs.get(i);
-      rows.add(
-          Arrays.asList(queueConfig.getName(), queueConfig.getScheduledQueueName(), result.get(i)));
+      rows.add(Arrays.asList(queueConfigs.get(i).getName(), names.get(i), sizes.get(i)));
     }
     return rows;
   }
 
   private void addRows(
-      List<Object> result,
+      List<Long> result,
       List<List<Object>> rows,
       List<Entry<QueueConfig, String>> queueConfigAndDlq) {
     for (int i = 0, j = 0; i < queueConfigAndDlq.size(); i++) {
@@ -579,17 +500,17 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       }
     }
     List<List<Object>> rows = new ArrayList<>();
-    List<Object> result = new ArrayList<>();
+    List<Long> result = new ArrayList<>();
     if (!CollectionUtils.isEmpty(queueConfigAndDlq)) {
-      result = RedisUtils.executePipeLine(
-          stringRqueueRedisTemplate.getRedisTemplate(),
-          ((connection, keySerializer, valueSerializer) -> {
-            for (Entry<QueueConfig, String> entry : queueConfigAndDlq) {
-              if (!entry.getValue().isEmpty()) {
-                connection.lLen(keySerializer.serialize(entry.getValue()));
-              }
-            }
-          }));
+      List<String> dlqNames = new ArrayList<>();
+      List<DataType> dlqTypes = new ArrayList<>();
+      for (Entry<QueueConfig, String> entry : queueConfigAndDlq) {
+        if (!entry.getValue().isEmpty()) {
+          dlqNames.add(entry.getValue());
+          dlqTypes.add(DataType.LIST);
+        }
+      }
+      result = messageBrowsingRepository.getDataSizes(dlqNames, dlqTypes);
     }
     rows.add(Arrays.asList("Queue", "Dead Letter Queues [LIST]", "Number of Messages"));
     addRows(result, rows, queueConfigAndDlq);

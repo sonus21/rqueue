@@ -14,9 +14,8 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web;
+package com.github.sonus21.rqueue.web.service.impl;
 
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
@@ -47,12 +46,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
-@Conditional(RedisBackendCondition.class)
 @Service
 public class RqueueDashboardChartServiceImpl implements RqueueDashboardChartService {
 

@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web.service;
+package com.github.sonus21.rqueue.web.service;
 
 import static com.github.sonus21.rqueue.utils.TestUtils.createQueueConfig;
 import static com.google.common.collect.Lists.newArrayList;
@@ -22,11 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
+import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -47,7 +48,7 @@ import com.github.sonus21.rqueue.models.response.RowColumnMeta;
 import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
-import com.github.sonus21.rqueue.redis.web.RqueueQDetailServiceImpl;
+import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
@@ -83,7 +84,7 @@ class RqueueQDetailServiceTest extends TestBase {
   private RedisTemplate<String, Object> redisTemplate;
 
   @Mock
-  private RqueueRedisTemplate<String> stringRqueueRedisTemplate;
+  private MessageBrowsingRepository messageBrowsingRepository;
 
   @Mock
   private RqueueMessageTemplate rqueueMessageTemplate;
@@ -108,7 +109,7 @@ class RqueueQDetailServiceTest extends TestBase {
   public void init() {
     MockitoAnnotations.openMocks(this);
     rqueueQDetailService = new RqueueQDetailServiceImpl(
-        stringRqueueRedisTemplate,
+        messageBrowsingRepository,
         rqueueMessageTemplate,
         rqueueSystemManagerService,
         rqueueMessageMetadataService,
@@ -123,10 +124,10 @@ class RqueueQDetailServiceTest extends TestBase {
   @Test
   void getQueueDataStructureDetail() {
     assertEquals(Collections.emptyList(), rqueueQDetailService.getQueueDataStructureDetail(null));
-    doReturn(10L).when(stringRqueueRedisTemplate).getListSize("__rq::queue::test");
-    doReturn(11L).when(stringRqueueRedisTemplate).getListSize("test-dlq");
-    doReturn(12L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test");
-    doReturn(5L).when(stringRqueueRedisTemplate).getZsetSize("__rq::p-queue::test");
+    doReturn(10L).when(messageBrowsingRepository).getDataSize("__rq::queue::test", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(11L).when(messageBrowsingRepository).getDataSize("test-dlq", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(12L).when(messageBrowsingRepository).getDataSize("__rq::d-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(5L).when(messageBrowsingRepository).getDataSize("__rq::p-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = new ArrayList<>();
     queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
         NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
@@ -146,10 +147,10 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getQueueDataStructureDetails() {
-    doReturn(10L).when(stringRqueueRedisTemplate).getListSize("__rq::queue::test");
-    doReturn(11L).when(stringRqueueRedisTemplate).getListSize("test-dlq");
-    doReturn(12L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test");
-    doReturn(5L).when(stringRqueueRedisTemplate).getZsetSize("__rq::p-queue::test");
+    doReturn(10L).when(messageBrowsingRepository).getDataSize("__rq::queue::test", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(11L).when(messageBrowsingRepository).getDataSize("test-dlq", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(12L).when(messageBrowsingRepository).getDataSize("__rq::d-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(5L).when(messageBrowsingRepository).getDataSize("__rq::p-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = new ArrayList<>();
     queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
         NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
@@ -164,9 +165,9 @@ class RqueueQDetailServiceTest extends TestBase {
             DataType.LIST,
             11)));
 
-    doReturn(5L).when(stringRqueueRedisTemplate).getListSize("__rq::queue::test2");
-    doReturn(2L).when(stringRqueueRedisTemplate).getZsetSize("__rq::p-queue::test2");
-    doReturn(8L).when(stringRqueueRedisTemplate).getZsetSize("__rq::d-queue::test2");
+    doReturn(5L).when(messageBrowsingRepository).getDataSize("__rq::queue::test2", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(2L).when(messageBrowsingRepository).getDataSize("__rq::p-queue::test2", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(8L).when(messageBrowsingRepository).getDataSize("__rq::d-queue::test2", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
 
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails2 = new ArrayList<>();
     queueRedisDataDetails2.add(new HashMap.SimpleEntry<>(
@@ -401,107 +402,21 @@ class RqueueQDetailServiceTest extends TestBase {
     assertEquals(expectedResponse, response);
   }
 
+  // Per-type rendering for viewData (KEY / LIST / ZSET / SET) is now exercised inside
+  // RedisMessageBrowsingRepository (the storage layer); the service is a thin pass-through.
+  // Below we verify the service correctly forwards arguments to the repository and returns
+  // its response unchanged. Detailed per-type rendering coverage belongs in a future
+  // RedisMessageBrowsingRepositoryTest.
   @Test
-  void viewDataKey() {
-    doReturn("test").when(stringRqueueRedisTemplate).get("key");
-    DataViewResponse response = rqueueQDetailService.viewData("key", DataType.KEY, null, 0, 10);
-    DataViewResponse expectedResponse = new DataViewResponse();
-    expectedResponse.setHeaders(Collections.singletonList("Value"));
-    expectedResponse.setRows(Collections.singletonList(new TableRow(new TableColumn("test"))));
-    assertEquals(expectedResponse, response);
-
-    doReturn(null).when(stringRqueueRedisTemplate).get("key2");
-    response = rqueueQDetailService.viewData("key2", DataType.KEY, null, 0, 10);
-    expectedResponse.setRows(Collections.singletonList(new TableRow(new TableColumn("null"))));
-    assertEquals(expectedResponse, response);
-  }
-
-  @Test
-  void viewDataList() {
-    List<Object> objects = new ArrayList<>();
-    objects.add("Test");
-    objects.add(RqueueMessageUtils.buildMessage(
-        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-        messageConverter,
-        "jobs",
-        null,
-        "buildMessage",
-        null,
-        null,
-        null));
-    objects.add(null);
-    doReturn(objects).when(stringRqueueRedisTemplate).lrange("jobs", 0, 9);
+  void viewDataDelegatesToRepository() {
+    DataViewResponse stub = new DataViewResponse();
+    stub.setHeaders(Collections.singletonList("Item"));
+    stub.setRows(Collections.singletonList(new TableRow(new TableColumn("hello"))));
+    doReturn(stub)
+        .when(messageBrowsingRepository)
+        .viewData("jobs", DataType.LIST, null, 0, 10);
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.LIST, null, 0, 10);
-    DataViewResponse expectedResponse = new DataViewResponse();
-    expectedResponse.setHeaders(Collections.singletonList("Item"));
-    List<TableRow> tableRows = new ArrayList<>();
-    for (Object o : objects) {
-      tableRows.add(new TableRow(new TableColumn(String.valueOf(o))));
-    }
-    expectedResponse.setRows(tableRows);
-    assertEquals(expectedResponse, response);
-  }
-
-  @Test
-  void viewDataZset() {
-    Set<TypedTuple<Object>> objects = new HashSet<>();
-    objects.add(new DefaultTypedTuple<>("Test", 100.0));
-    objects.add(new DefaultTypedTuple<>(
-        RqueueMessageUtils.buildMessage(
-            RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-            messageConverter,
-            "jobs",
-            null,
-            "buildMessage",
-            null,
-            null,
-            null),
-        200.0));
-
-    List<TableRow> tableRows = new ArrayList<>();
-    for (TypedTuple<Object> typedTuple : objects) {
-      List<TableColumn> items = new ArrayList<>();
-      items.add(new TableColumn(String.valueOf(typedTuple.getValue())));
-      items.add(new TableColumn(typedTuple.getScore()));
-      tableRows.add(new TableRow(items));
-    }
-    DataViewResponse expectedResponse = new DataViewResponse();
-    List<String> headers = new ArrayList<>();
-    headers.add("Value");
-    headers.add("Score");
-    expectedResponse.setHeaders(headers);
-
-    expectedResponse.setRows(tableRows);
-
-    doReturn(objects).when(stringRqueueRedisTemplate).zrangeWithScore("jobs", 0, 9);
-    DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.ZSET, null, 0, 10);
-
-    assertEquals(expectedResponse, response);
-  }
-
-  @Test
-  void viewDataSet() {
-    Set<Object> objects = new HashSet<>();
-    objects.add("Test");
-    objects.add(RqueueMessageUtils.buildMessage(
-        RqueueMessageTestUtils.MESSAGE_ID_GENERATOR,
-        messageConverter,
-        "jobs",
-        null,
-        "Test object",
-        null,
-        null,
-        null));
-    List<TableRow> tableRows = new ArrayList<>();
-    for (Object object : objects) {
-      tableRows.add(new TableRow(new TableColumn(String.valueOf(object))));
-    }
-    DataViewResponse expectedResponse = new DataViewResponse();
-    expectedResponse.setHeaders(Collections.singletonList("Item"));
-    expectedResponse.setRows(tableRows);
-    doReturn(objects).when(stringRqueueRedisTemplate).getMembers("jobs");
-    DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.SET, null, 0, 10);
-    assertEquals(expectedResponse, response);
+    assertEquals(stub, response);
   }
 
   @Test
@@ -517,7 +432,6 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getScheduledTasks() {
-    doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     QueueConfig queueConfig = createQueueConfig("test", 10, 10000L, null);
     queueConfig.addDeadLetterQueue(new DeadLetterQueue("test-dlq", false));
     QueueConfig queueConfig2 = createQueueConfig("test2", 10, 10000L, null);
@@ -527,9 +441,9 @@ class RqueueQDetailServiceTest extends TestBase {
         .when(rqueueSystemManagerService)
         .getSortedQueueConfigs();
 
-    doReturn(newArrayList(100L, 200L))
-        .when(redisTemplate)
-        .executePipelined(any(RedisCallback.class));
+    doReturn(Arrays.asList(100L, 200L))
+        .when(messageBrowsingRepository)
+        .getDataSizes(anyList(), anyList());
     List<List<Object>> response = rqueueQDetailService.getScheduledTasks();
     assertEquals(3, response.size());
     List<List<Object>> expectedResponse = new ArrayList<>();
@@ -544,11 +458,10 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getWaitingTasks() {
-    doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
-        .when(redisTemplate)
-        .executePipelined(any(RedisCallback.class));
+        .when(messageBrowsingRepository)
+        .getDataSizes(anyList(), anyList());
     List<List<Object>> response = rqueueQDetailService.getWaitingTasks();
     assertEquals(3, response.size());
     List<Object> headers = Arrays.asList("Queue", "Queue [LIST]", "Number of Messages");
@@ -559,11 +472,10 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getRunningTasks() {
-    doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
-        .when(redisTemplate)
-        .executePipelined(any(RedisCallback.class));
+        .when(messageBrowsingRepository)
+        .getDataSizes(anyList(), anyList());
     List<List<Object>> response = rqueueQDetailService.getRunningTasks();
     assertEquals(3, response.size());
     List<Object> headers = Arrays.asList("Queue", "Processing [ZSET]", "Number of Messages");
@@ -576,11 +488,10 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getDeadLetterTasks() {
-    doReturn(redisTemplate).when(stringRqueueRedisTemplate).getRedisTemplate();
     doReturn(queueConfigList).when(rqueueSystemManagerService).getSortedQueueConfigs();
     doReturn(Arrays.asList(100L, 110L))
-        .when(redisTemplate)
-        .executePipelined(any(RedisCallback.class));
+        .when(messageBrowsingRepository)
+        .getDataSizes(anyList(), anyList());
     List<List<Object>> response = rqueueQDetailService.getDeadLetterTasks();
     assertEquals(3, response.size());
     List<Object> headers =

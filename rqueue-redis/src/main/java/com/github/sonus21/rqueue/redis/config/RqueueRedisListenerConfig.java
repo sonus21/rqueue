@@ -30,7 +30,9 @@ import com.github.sonus21.rqueue.redis.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.redis.dao.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.redis.lock.RqueueRedisLock;
 import com.github.sonus21.rqueue.redis.metrics.RedisRqueueQueueMetricsProvider;
+import com.github.sonus21.rqueue.redis.repository.RedisMessageBrowsingRepository;
 import com.github.sonus21.rqueue.redis.worker.RedisWorkerRegistryStore;
+import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl;
@@ -124,6 +126,14 @@ public class RqueueRedisListenerConfig {
   @Conditional(RedisBackendCondition.class)
   public WorkerRegistryStore redisWorkerRegistryStore(RqueueConfig rqueueConfig) {
     return new RedisWorkerRegistryStore(rqueueConfig);
+  }
+
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public MessageBrowsingRepository messageBrowsingRepository(
+      @Qualifier("stringRqueueRedisTemplate")
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+    return new RedisMessageBrowsingRepository(stringRqueueRedisTemplate);
   }
 
   @Bean
