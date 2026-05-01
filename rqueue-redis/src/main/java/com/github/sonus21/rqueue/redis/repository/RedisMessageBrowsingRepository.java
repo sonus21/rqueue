@@ -71,13 +71,11 @@ public class RedisMessageBrowsingRepository implements MessageBrowsingRepository
       return Collections.emptyList();
     }
     if (types == null || names.size() != types.size()) {
-      throw new IllegalArgumentException(
-          "names and types must be the same length; names=" + names.size()
-              + " types=" + (types == null ? "null" : types.size()));
+      throw new IllegalArgumentException("names and types must be the same length; names="
+          + names.size() + " types=" + (types == null ? "null" : types.size()));
     }
     List<Object> raw = RedisUtils.executePipeLine(
-        stringTemplate.getRedisTemplate(),
-        (connection, keySerializer, valueSerializer) -> {
+        stringTemplate.getRedisTemplate(), (connection, keySerializer, valueSerializer) -> {
           for (int i = 0; i < names.size(); i++) {
             byte[] key = keySerializer.serialize(names.get(i));
             switch (types.get(i)) {

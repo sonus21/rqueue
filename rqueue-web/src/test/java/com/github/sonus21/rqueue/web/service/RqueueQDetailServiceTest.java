@@ -17,17 +17,14 @@
 package com.github.sonus21.rqueue.web.service;
 
 import static com.github.sonus21.rqueue.utils.TestUtils.createQueueConfig;
-import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
@@ -48,31 +45,26 @@ import com.github.sonus21.rqueue.models.response.RowColumnMeta;
 import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
-import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
+import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
-import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
+import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.messaging.converter.MessageConverter;
 
 @CoreUnitTest
@@ -124,10 +116,18 @@ class RqueueQDetailServiceTest extends TestBase {
   @Test
   void getQueueDataStructureDetail() {
     assertEquals(Collections.emptyList(), rqueueQDetailService.getQueueDataStructureDetail(null));
-    doReturn(10L).when(messageBrowsingRepository).getDataSize("__rq::queue::test", com.github.sonus21.rqueue.models.enums.DataType.LIST);
-    doReturn(11L).when(messageBrowsingRepository).getDataSize("test-dlq", com.github.sonus21.rqueue.models.enums.DataType.LIST);
-    doReturn(12L).when(messageBrowsingRepository).getDataSize("__rq::d-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
-    doReturn(5L).when(messageBrowsingRepository).getDataSize("__rq::p-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(10L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::queue::test", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(11L)
+        .when(messageBrowsingRepository)
+        .getDataSize("test-dlq", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(12L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::d-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(5L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::p-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = new ArrayList<>();
     queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
         NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
@@ -147,10 +147,18 @@ class RqueueQDetailServiceTest extends TestBase {
 
   @Test
   void getQueueDataStructureDetails() {
-    doReturn(10L).when(messageBrowsingRepository).getDataSize("__rq::queue::test", com.github.sonus21.rqueue.models.enums.DataType.LIST);
-    doReturn(11L).when(messageBrowsingRepository).getDataSize("test-dlq", com.github.sonus21.rqueue.models.enums.DataType.LIST);
-    doReturn(12L).when(messageBrowsingRepository).getDataSize("__rq::d-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
-    doReturn(5L).when(messageBrowsingRepository).getDataSize("__rq::p-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(10L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::queue::test", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(11L)
+        .when(messageBrowsingRepository)
+        .getDataSize("test-dlq", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(12L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::d-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(5L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::p-queue::test", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = new ArrayList<>();
     queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
         NavTab.PENDING, new RedisDataDetail("__rq::queue::test", DataType.LIST, 10)));
@@ -165,9 +173,15 @@ class RqueueQDetailServiceTest extends TestBase {
             DataType.LIST,
             11)));
 
-    doReturn(5L).when(messageBrowsingRepository).getDataSize("__rq::queue::test2", com.github.sonus21.rqueue.models.enums.DataType.LIST);
-    doReturn(2L).when(messageBrowsingRepository).getDataSize("__rq::p-queue::test2", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
-    doReturn(8L).when(messageBrowsingRepository).getDataSize("__rq::d-queue::test2", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(5L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::queue::test2", com.github.sonus21.rqueue.models.enums.DataType.LIST);
+    doReturn(2L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::p-queue::test2", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
+    doReturn(8L)
+        .when(messageBrowsingRepository)
+        .getDataSize("__rq::d-queue::test2", com.github.sonus21.rqueue.models.enums.DataType.ZSET);
 
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails2 = new ArrayList<>();
     queueRedisDataDetails2.add(new HashMap.SimpleEntry<>(
@@ -412,9 +426,7 @@ class RqueueQDetailServiceTest extends TestBase {
     DataViewResponse stub = new DataViewResponse();
     stub.setHeaders(Collections.singletonList("Item"));
     stub.setRows(Collections.singletonList(new TableRow(new TableColumn("hello"))));
-    doReturn(stub)
-        .when(messageBrowsingRepository)
-        .viewData("jobs", DataType.LIST, null, 0, 10);
+    doReturn(stub).when(messageBrowsingRepository).viewData("jobs", DataType.LIST, null, 0, 10);
     DataViewResponse response = rqueueQDetailService.viewData("jobs", DataType.LIST, null, 0, 10);
     assertEquals(stub, response);
   }
