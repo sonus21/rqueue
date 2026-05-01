@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
@@ -86,7 +86,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
   private RqueueJobDao rqueueJobDao;
 
   @Mock
-  private RqueueMessageTemplate rqueueMessageTemplate;
+  private MessageBroker messageBroker;
 
   private RqueueJobMetricsAggregatorService rqueueJobMetricsAggregatorService;
 
@@ -125,7 +125,7 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
         rqueueConfig,
         rqueueMessageMetadataService,
         rqueueJobDao,
-        rqueueMessageTemplate,
+        messageBroker,
         rqueueLockManager,
         queueDetail,
         messageMetadata,
