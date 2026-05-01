@@ -136,7 +136,8 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   @Override
   public void putQueueHeartbeat(String queueKey, String workerId, String metadataJson) {
     if (heartbeatBucketTtl == null) {
-      // Best-effort default — overwritten by refreshQueueTtl when the registry computes the real value.
+      // Best-effort default — overwritten by refreshQueueTtl when the registry computes the real
+      // value.
       heartbeatBucketTtl = Duration.ofHours(1);
     }
     try {
@@ -202,8 +203,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
 
   // ---- helpers ----------------------------------------------------------
 
-  private KeyValue ensureBucket(
-      AtomicReference<KeyValue> ref, String bucketName, Duration maxAge)
+  private KeyValue ensureBucket(AtomicReference<KeyValue> ref, String bucketName, Duration maxAge)
       throws IOException, JetStreamApiException {
     KeyValue cached = ref.get();
     if (cached != null) {
