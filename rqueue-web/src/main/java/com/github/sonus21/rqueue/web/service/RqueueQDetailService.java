@@ -29,6 +29,10 @@ import reactor.core.publisher.Mono;
 
 public interface RqueueQDetailService {
 
+  String storageKicker();
+
+  String storageDescription();
+
   Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
       List<QueueConfig> queueConfig);
 

@@ -11,37 +11,98 @@ package com.github.sonus21.rqueue.nats.internal;
 
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
+import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.JetStreamManagement;
+import io.nats.client.KeyValue;
+import io.nats.client.KeyValueManagement;
 import io.nats.client.api.AckPolicy;
+import io.nats.client.api.CompressionOption;
 import io.nats.client.api.ConsumerConfiguration;
 import io.nats.client.api.ConsumerInfo;
 import io.nats.client.api.DeliverPolicy;
+import io.nats.client.api.KeyValueConfiguration;
+import io.nats.client.api.KeyValueStatus;
 import io.nats.client.api.StreamConfiguration;
 import io.nats.client.api.StreamInfo;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Idempotent stream/consumer provisioning helpers. All methods are safe to call repeatedly; if the
- * target object already exists with a compatible config, this class leaves it alone. If it exists
- * but with diverging config (e.g. ackWait, maxDeliver), this class logs a WARN and does NOT
- * auto-mutate so user customizations are preserved.
+ * Idempotent stream/consumer/KV provisioning helpers. All methods are safe to call repeatedly;
+ * if the target object already exists with a compatible config, this class leaves it alone. If it
+ * exists but with diverging config (e.g. ackWait, maxDeliver), this class logs a WARN and does
+ * NOT auto-mutate so user customizations are preserved.
  */
 public class NatsProvisioner {
 
   private static final Logger log = Logger.getLogger(NatsProvisioner.class.getName());
 
+  private final Connection connection;
+  private final KeyValueManagement kvm;
   private final JetStreamManagement jsm;
   private final RqueueNatsConfig config;
 
-  public NatsProvisioner(JetStreamManagement jsm, RqueueNatsConfig config) {
+  private final ConcurrentHashMap<String, KeyValue> kvCache = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Object> kvLocks = new ConcurrentHashMap<>();
+
+  public NatsProvisioner(Connection connection, JetStreamManagement jsm, RqueueNatsConfig config)
+      throws IOException {
+    this.connection = connection;
+    this.kvm = connection.keyValueManagement();
     this.jsm = jsm;
     this.config = config;
   }
+
+  // ---- KV provisioning --------------------------------------------------
+
+  /**
+   * Returns a {@link KeyValue} handle for {@code bucketName}, creating the bucket on first call.
+   * All buckets are created with S2 compression. A bucket-level TTL is applied at creation time
+   * only; existing buckets are reused as-is.
+   *
+   * @param bucketName NATS KV bucket name (e.g. {@code "rqueue-jobs"})
+   * @param ttl        bucket-level max-age; {@code null} or non-positive = no TTL
+   */
+  public KeyValue ensureKv(String bucketName, Duration ttl)
+      throws IOException, JetStreamApiException {
+    KeyValue cached = kvCache.get(bucketName);
+    if (cached != null) {
+      return cached;
+    }
+    Object lock = kvLocks.computeIfAbsent(bucketName, k -> new Object());
+    synchronized (lock) {
+      cached = kvCache.get(bucketName);
+      if (cached != null) {
+        return cached;
+      }
+      try {
+        KeyValueStatus status = kvm.getStatus(bucketName);
+        if (status != null) {
+          KeyValue kv = connection.keyValue(bucketName);
+          kvCache.put(bucketName, kv);
+          return kv;
+        }
+      } catch (JetStreamApiException missing) {
+        // bucket absent — fall through to create
+      }
+      KeyValueConfiguration.Builder cfg =
+          KeyValueConfiguration.builder().name(bucketName).compression(true);
+      if (ttl != null && !ttl.isZero() && !ttl.isNegative()) {
+        cfg.ttl(ttl);
+      }
+      kvm.create(cfg.build());
+      KeyValue kv = connection.keyValue(bucketName);
+      kvCache.put(bucketName, kv);
+      return kv;
+    }
+  }
+
+  // ---- Stream provisioning ----------------------------------------------
 
   /**
    * Ensure a JetStream stream exists with the given subjects. If absent and {@code
@@ -64,7 +125,8 @@ public class NatsProvisioner {
           .replicas(sd.getReplicas())
           .storageType(sd.getStorage())
           .retentionPolicy(sd.getRetention())
-          .duplicateWindow(sd.getDuplicateWindow());
+          .duplicateWindow(sd.getDuplicateWindow())
+          .compressionOption(CompressionOption.S2);
       if (sd.getMaxMsgs() > 0) {
         b.maxMessages(sd.getMaxMsgs());
       }
@@ -79,15 +141,7 @@ public class NatsProvisioner {
   }
 
   /**
-   * Ensure a durable pull consumer exists. If existing config differs from desired, logs WARN and
-   * leaves it alone (so users can hand-tune consumers in production).
-   */
-  /**
-   * Ensure a consumer exists on a stream with the given configuration, returning the actual
-   * consumer name that will be used for binding (may differ from {@code consumerName} if a
-   * stale/recovered consumer was reused).
-   *
-   * @return the actual consumer name to use for binding
+   * Ensure a durable pull consumer exists, returning the actual consumer name to use for binding.
    */
   public String ensureConsumer(
       String streamName,
@@ -163,35 +217,31 @@ public class NatsProvisioner {
     }
   }
 
-  /**
-   * Handle the "filtered consumer not unique" error by finding an existing consumer on the stream
-   * that matches the desired filter subject. This can happen when:
-   * - Stale consumers from a previous consumer naming scheme still exist
-   * - Multiple instances crashed mid-initialization and left orphaned consumers
-   *
-   * <p>When found, returns the actual consumer name so the broker can bind to it correctly.
-   *
-   * @return the actual consumer name to use for binding
-   * @throws RqueueNatsException if recovery fails
-   */
+  /** Ensure a DLQ stream exists capturing dead-letter subjects (e.g. "rqueue.js.*.dlq"). */
+  public void ensureDlqStream(String dlqStreamName, List<String> dlqSubjects) {
+    if (!config.isAutoCreateDlqStream()) {
+      return;
+    }
+    ensureStream(dlqStreamName, dlqSubjects);
+  }
+
+  // ---- private helpers --------------------------------------------------
+
   private String tryFindAndBindStaleConsumer(
       String streamName, String filterSubject, String preferredConsumerName) {
     try {
-      // List all consumers on the stream and find one matching our filter.
       List<String> consumerNames = jsm.getConsumerNames(streamName);
       for (String name : consumerNames) {
         ConsumerInfo ci = jsm.getConsumerInfo(streamName, name);
         ConsumerConfiguration cc = ci.getConsumerConfiguration();
-        // Check if this consumer has the same filter we're looking for.
         if (filterSubject.equals(cc.getFilterSubject())) {
           log.log(
               Level.INFO,
               "Reusing existing consumer '" + name + "' (filter=" + filterSubject + ")"
                   + " instead of creating '" + preferredConsumerName + "'");
-          return name; // Return the actual consumer name for binding
+          return name;
         }
       }
-      // No matching consumer found; this is unexpected, so fail.
       throw new RqueueNatsException(
           "Filtered consumer with filter '" + filterSubject + "' not found on stream '"
               + streamName + "' despite 'filtered consumer not unique' error");
@@ -201,14 +251,6 @@ public class NatsProvisioner {
               + "'",
           e);
     }
-  }
-
-  /** Ensure a DLQ stream exists capturing dead-letter subjects (e.g. "rqueue.js.*.dlq"). */
-  public void ensureDlqStream(String dlqStreamName, List<String> dlqSubjects) {
-    if (!config.isAutoCreateDlqStream()) {
-      return;
-    }
-    ensureStream(dlqStreamName, dlqSubjects);
   }
 
   private StreamInfo safeGetStreamInfo(String streamName)
@@ -229,10 +271,9 @@ public class NatsProvisioner {
     try {
       return jsm.getConsumerInfo(streamName, consumerName);
     } catch (JetStreamApiException e) {
-      // 10014 = consumer not found, 10059 = stream not found (stream hasn't been created yet).
-      // Both cases mean "consumer doesn't exist"; callers should create the consumer (and ensure
-      // the stream) rather than receiving an exception here.
-      if (e.getApiErrorCode() == 10014 || e.getApiErrorCode() == 10059 || e.getErrorCode() == 404) {
+      // 10014 = consumer not found, 10059 = stream not found
+      if (e.getApiErrorCode() == 10014 || e.getApiErrorCode() == 10059
+          || e.getErrorCode() == 404) {
         return null;
       }
       throw e;

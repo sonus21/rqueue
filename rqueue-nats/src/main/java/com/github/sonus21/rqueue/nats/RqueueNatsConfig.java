@@ -33,7 +33,7 @@ public class RqueueNatsConfig {
 
   private boolean autoCreateStreams = true;
   private boolean autoCreateConsumers = true;
-  private boolean autoCreateDlqStream = true;
+  private boolean autoCreateDlqStream = false;
 
   private StreamDefaults streamDefaults = new StreamDefaults();
   private ConsumerDefaults consumerDefaults = new ConsumerDefaults();

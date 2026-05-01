@@ -16,6 +16,7 @@
 package com.github.sonus21.rqueue.spring.boot;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator;
 import com.github.sonus21.rqueue.nats.worker.NatsWorkerRegistryStore;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
@@ -23,7 +24,6 @@ import com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl;
 import com.github.sonus21.rqueue.worker.WorkerRegistryStore;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
-import java.io.IOException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -58,8 +58,8 @@ public class RqueueNatsListenerAutoConfig {
   @Bean
   @ConditionalOnMissingBean(WorkerRegistryStore.class)
   @DependsOn("natsKvBucketValidator")
-  public WorkerRegistryStore natsWorkerRegistryStore(Connection connection) throws IOException {
-    return new NatsWorkerRegistryStore(connection);
+  public WorkerRegistryStore natsWorkerRegistryStore(NatsProvisioner natsProvisioner) {
+    return new NatsWorkerRegistryStore(natsProvisioner);
   }
 
   /**

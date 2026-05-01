@@ -122,6 +122,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     queueNameConfigs.sort(Entry.comparingByKey());
     model.addAttribute("queues", queueConfigs);
     model.addAttribute("queueConfigs", queueNameConfigs);
+    model.addAttribute("storageKicker", rqueueQDetailService.storageKicker());
+    model.addAttribute("storageDescription", rqueueQDetailService.storageDescription());
     model.addAttribute("currentPage", currentPage);
     model.addAttribute("totalPages", totalPages);
     model.addAttribute("hasPreviousPage", currentPage > 1);

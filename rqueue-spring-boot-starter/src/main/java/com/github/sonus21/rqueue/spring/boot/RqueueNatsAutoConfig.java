@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.spring.boot;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.nats.js.NatsStreamValidator;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator;
@@ -118,12 +119,14 @@ public class RqueueNatsAutoConfig {
       Connection connection,
       JetStream jetStream,
       JetStreamManagement jetStreamManagement,
+      NatsProvisioner natsProvisioner,
       RqueueNatsProperties props) {
     return JetStreamMessageBroker.builder()
         .connection(connection)
         .jetStream(jetStream)
         .management(jetStreamManagement)
         .config(toBrokerConfig(props))
+        .provisioner(natsProvisioner)
         .build();
   }
 
@@ -142,8 +145,8 @@ public class RqueueNatsAutoConfig {
   @Bean
   @ConditionalOnMissingBean(NatsStreamValidator.class)
   public NatsStreamValidator natsStreamValidator(
-      JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
-    return new NatsStreamValidator(jetStreamManagement, toBrokerConfig(props));
+      NatsProvisioner natsProvisioner, RqueueNatsProperties props) {
+    return new NatsStreamValidator(natsProvisioner, toBrokerConfig(props));
   }
 
   /**
@@ -158,17 +161,29 @@ public class RqueueNatsAutoConfig {
     return new NatsKvBucketValidator(connection, props.isAutoCreateKvBuckets());
   }
 
-  /**
+  @Bean
+  @ConditionalOnMissingBean(NatsProvisioner.class)
+  @DependsOn("natsKvBucketValidator")
+  public NatsProvisioner natsProvisioner(
+      Connection connection, JetStreamManagement jetStreamManagement, RqueueNatsProperties props)
+      throws IOException {
+    return new NatsProvisioner(connection, jetStreamManagement, toBrokerConfig(props));
+  }
+
+/**
    * NATS-side {@link com.github.sonus21.rqueue.repository.MessageBrowsingRepository} powering
-   * the dashboard's data-explorer panel. JetStream KV doesn't model arbitrary keyed reads, so
-   * this impl returns 0 sizes and throws {@code BackendCapabilityException} from
-   * {@code viewData} (mapped to HTTP 501 by {@code RqueueWebExceptionAdvice}).
+   * the dashboard's data-explorer and queue-detail panels. Maps Redis-style queue names to
+   * JetStream streams and returns actual message counts from the broker. JetStream KV doesn't
+   * model arbitrary keyed reads, so {@link #viewData} throws {@code BackendCapabilityException}
+   * (mapped to HTTP 501 by {@code RqueueWebExceptionAdvice}).
    */
   @Bean
   @ConditionalOnMissingBean(com.github.sonus21.rqueue.repository.MessageBrowsingRepository.class)
   public com.github.sonus21.rqueue.repository.MessageBrowsingRepository
-      natsMessageBrowsingRepository() {
-    return new com.github.sonus21.rqueue.nats.repository.NatsMessageBrowsingRepository();
+      natsMessageBrowsingRepository(
+          JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
+    return new com.github.sonus21.rqueue.nats.repository.NatsMessageBrowsingRepository(
+        jetStreamManagement, toBrokerConfig(props));
   }
 
   static RqueueNatsConfig toBrokerConfig(RqueueNatsProperties p) {

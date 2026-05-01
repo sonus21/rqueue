@@ -13,14 +13,11 @@ package com.github.sonus21.rqueue.nats.dao;
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
-import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
-import io.nats.client.KeyValueManagement;
-import io.nats.client.api.KeyValueConfiguration;
 import io.nats.client.api.KeyValueEntry;
-import io.nats.client.api.KeyValueStatus;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
@@ -55,41 +51,15 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
   private static final Logger log = Logger.getLogger(NatsRqueueSystemConfigDao.class.getName());
   private static final String BUCKET_NAME = NatsKvBuckets.QUEUE_CONFIG;
 
-  private final Connection connection;
-  private final KeyValueManagement kvm;
-  private final AtomicReference<KeyValue> kvRef = new AtomicReference<>();
+  private final NatsProvisioner provisioner;
   private final ConcurrentHashMap<String, QueueConfig> cache = new ConcurrentHashMap<>();
 
-  public NatsRqueueSystemConfigDao(Connection connection) throws IOException {
-    this.connection = connection;
-    this.kvm = connection.keyValueManagement();
+  public NatsRqueueSystemConfigDao(NatsProvisioner provisioner) {
+    this.provisioner = provisioner;
   }
 
-  private KeyValue ensureBucket() throws IOException, JetStreamApiException {
-    KeyValue cached = kvRef.get();
-    if (cached != null) {
-      return cached;
-    }
-    synchronized (this) {
-      cached = kvRef.get();
-      if (cached != null) {
-        return cached;
-      }
-      try {
-        KeyValueStatus status = kvm.getStatus(BUCKET_NAME);
-        if (status != null) {
-          KeyValue kv = connection.keyValue(BUCKET_NAME);
-          kvRef.set(kv);
-          return kv;
-        }
-      } catch (JetStreamApiException missing) {
-        // fall through to create
-      }
-      kvm.create(KeyValueConfiguration.builder().name(BUCKET_NAME).build());
-      KeyValue kv = connection.keyValue(BUCKET_NAME);
-      kvRef.set(kv);
-      return kv;
-    }
+  private KeyValue kv() throws IOException, JetStreamApiException {
+    return provisioner.ensureKv(BUCKET_NAME, null);
   }
 
   @Override
@@ -151,8 +121,7 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
   @Override
   public void saveQConfig(QueueConfig queueConfig) {
     try {
-      KeyValue kv = ensureBucket();
-      kv.put(sanitize(queueConfig.getName()), serialize(queueConfig));
+      kv().put(sanitize(queueConfig.getName()), serialize(queueConfig));
       cache.put(queueConfig.getName(), queueConfig);
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "saveQConfig " + queueConfig.getName() + " failed", e);
@@ -175,8 +144,7 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
 
   private QueueConfig loadByKey(String key) {
     try {
-      KeyValue kv = ensureBucket();
-      KeyValueEntry entry = kv.get(key);
+      KeyValueEntry entry = kv().get(key);
       if (entry == null || entry.getValue() == null) {
         return null;
       }
@@ -192,8 +160,7 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
       return null;
     }
     try {
-      KeyValue kv = ensureBucket();
-      List<String> keys = new ArrayList<>(kv.keys());
+      List<String> keys = new ArrayList<>(kv().keys());
       for (String k : keys) {
         QueueConfig c = loadByKey(k);
         if (c != null && id.equals(c.getId())) {

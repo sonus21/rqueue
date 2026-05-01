@@ -15,15 +15,12 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
-import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
-import io.nats.client.KeyValueManagement;
-import io.nats.client.api.KeyValueConfiguration;
 import io.nats.client.api.KeyValueEntry;
-import io.nats.client.api.KeyValueStatus;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
@@ -65,40 +61,14 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
       Logger.getLogger(NatsRqueueMessageMetadataService.class.getName());
   private static final String BUCKET_NAME = NatsKvBuckets.MESSAGE_METADATA;
 
-  private final Connection connection;
-  private final KeyValueManagement kvm;
-  private final AtomicReference<KeyValue> kvRef = new AtomicReference<>();
+  private final NatsProvisioner provisioner;
 
-  public NatsRqueueMessageMetadataService(Connection connection) throws IOException {
-    this.connection = connection;
-    this.kvm = connection.keyValueManagement();
+  public NatsRqueueMessageMetadataService(NatsProvisioner provisioner) {
+    this.provisioner = provisioner;
   }
 
-  private KeyValue ensureBucket() throws IOException, JetStreamApiException {
-    KeyValue cached = kvRef.get();
-    if (cached != null) {
-      return cached;
-    }
-    synchronized (this) {
-      cached = kvRef.get();
-      if (cached != null) {
-        return cached;
-      }
-      try {
-        KeyValueStatus status = kvm.getStatus(BUCKET_NAME);
-        if (status != null) {
-          KeyValue kv = connection.keyValue(BUCKET_NAME);
-          kvRef.set(kv);
-          return kv;
-        }
-      } catch (JetStreamApiException missing) {
-        // fall through
-      }
-      kvm.create(KeyValueConfiguration.builder().name(BUCKET_NAME).build());
-      KeyValue kv = connection.keyValue(BUCKET_NAME);
-      kvRef.set(kv);
-      return kv;
-    }
+  private KeyValue kv() throws IOException, JetStreamApiException {
+    return provisioner.ensureKv(BUCKET_NAME, null);
   }
 
   @Override
@@ -109,8 +79,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
   @Override
   public void delete(String id) {
     try {
-      KeyValue kv = ensureBucket();
-      kv.delete(sanitize(id));
+      kv().delete(sanitize(id));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "delete metadata " + id + " failed", e);
     }
@@ -138,8 +107,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
   @Override
   public void save(MessageMetadata messageMetadata, Duration ttl, boolean checkUnique) {
     try {
-      KeyValue kv = ensureBucket();
-      kv.put(sanitize(messageMetadata.getId()), serialize(messageMetadata));
+      kv().put(sanitize(messageMetadata.getId()), serialize(messageMetadata));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "save metadata " + messageMetadata.getId() + " failed", e);
     }
@@ -185,8 +153,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
     // The Redis impl uses a ZSET sorted by createdAt for pagination. We don't have a sorted
     // index here, so this returns all metadata for the queue and the caller paginates.
     try {
-      KeyValue kv = ensureBucket();
-      List<String> keys = new ArrayList<>(kv.keys());
+      List<String> keys = new ArrayList<>(kv().keys());
       List<TypedTuple<MessageMetadata>> out = new ArrayList<>();
       String prefix = sanitize(queueName);
       for (String k : keys) {
@@ -220,8 +187,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
   @Override
   public void deleteQueueMessages(String queueName, long before) {
     try {
-      KeyValue kv = ensureBucket();
-      List<String> keys = new ArrayList<>(kv.keys());
+      List<String> keys = new ArrayList<>(kv().keys());
       String prefix = sanitize(queueName);
       for (String k : keys) {
         if (!k.startsWith(prefix)) {
@@ -229,7 +195,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
         }
         MessageMetadata m = loadByKey(k);
         if (m != null && m.getUpdatedOn() < before) {
-          kv.delete(k);
+          kv().delete(k);
         }
       }
     } catch (IOException | JetStreamApiException | InterruptedException e) {
@@ -244,8 +210,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
 
   private MessageMetadata loadByKey(String key) {
     try {
-      KeyValue kv = ensureBucket();
-      KeyValueEntry entry = kv.get(key);
+      KeyValueEntry entry = kv().get(key);
       if (entry == null || entry.getValue() == null) {
         return null;
       }

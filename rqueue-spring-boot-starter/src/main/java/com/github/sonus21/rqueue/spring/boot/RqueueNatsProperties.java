@@ -33,7 +33,7 @@ public class RqueueNatsProperties {
   private Naming naming = new Naming();
   private boolean autoCreateStreams = true;
   private boolean autoCreateConsumers = true;
-  private boolean autoCreateDlqStream = true;
+  private boolean autoCreateDlqStream = false;
   /**
    * When {@code true} (default), each NATS-backed store / dao lazily creates its KV bucket on
    * first use. When {@code false}, {@code NatsKvBucketValidator} verifies at startup that every

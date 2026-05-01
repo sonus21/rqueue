@@ -21,7 +21,6 @@ import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
-import io.nats.client.JetStreamManagement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -44,9 +43,12 @@ import org.springframework.context.ApplicationListener;
  * <ul>
  *   <li>the main stream {@code <streamPrefix><queue>},
  *   <li>one stream per declared priority sub-queue ({@code <streamPrefix><queue>-<priority>}),
- *   <li>the DLQ stream ({@code <streamPrefix><queue><dlqStreamSuffix>}) — but only when the
- *       listener declared a DLQ (i.e. {@link QueueDetail#isDlqSet()}) and
- *       {@link RqueueNatsConfig#isAutoCreateDlqStream()} is true.
+ *   <li>when the listener declared a Rqueue-level DLQ ({@link QueueDetail#isDlqSet()}): the
+ *       target DLQ queue's stream ({@code <streamPrefix><deadLetterQueueName>}), so that
+ *       {@code PostProcessingHandler} can publish there after retry exhaustion.
+ *   <li>when no Rqueue DLQ is declared and {@link RqueueNatsConfig#isAutoCreateDlqStream()} is
+ *       true: the NATS-native DLQ stream ({@code <streamPrefix><queue><dlqStreamSuffix>}) as a
+ *       safety net for messages that exhaust JetStream {@code maxDeliver}.
  * </ul>
  *
  * <p><b>Behaviour by flag.</b> All work is delegated to
@@ -74,8 +76,8 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
   private final NatsProvisioner provisioner;
   private final RqueueNatsConfig config;
 
-  public NatsStreamValidator(JetStreamManagement jsm, RqueueNatsConfig config) {
-    this.provisioner = new NatsProvisioner(jsm, config);
+  public NatsStreamValidator(NatsProvisioner provisioner, RqueueNatsConfig config) {
+    this.provisioner = provisioner;
     this.config = config;
   }
 
@@ -102,10 +104,14 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
         }
       }
 
-      if (q.isDlqSet() && config.isAutoCreateDlqStream()) {
-        String dlqStream = mainStream + config.getDlqStreamSuffix();
-        String dlqSubject = mainSubject + config.getDlqSubjectSuffix();
-        total += tryEnsureDlq(failures, dlqStream, dlqSubject);
+      if (q.isDlqSet()) {
+        // User declared a Rqueue-level DLQ: ensure the target queue's JetStream stream exists
+        // so that PostProcessingHandler can publish to it after retry exhaustion. The
+        // NATS-native "job-queue-dlq" stream is unrelated and must not be created here —
+        // Rqueue routes the message explicitly, not via advisory bridging.
+        String dlqQueueStream = config.getStreamPrefix() + q.getDeadLetterQueueName();
+        String dlqQueueSubject = config.getSubjectPrefix() + q.getDeadLetterQueueName();
+        total += tryEnsure(failures, dlqQueueStream, dlqQueueSubject);
       }
     }
     if (!failures.isEmpty()) {

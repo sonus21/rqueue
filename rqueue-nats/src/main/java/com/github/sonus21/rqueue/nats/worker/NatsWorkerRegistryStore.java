@@ -18,15 +18,12 @@ package com.github.sonus21.rqueue.nats.worker;
 
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.models.registry.RqueueWorkerInfo;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import com.github.sonus21.rqueue.worker.WorkerRegistryStore;
-import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
-import io.nats.client.KeyValueManagement;
-import io.nats.client.api.KeyValueConfiguration;
 import io.nats.client.api.KeyValueEntry;
-import io.nats.client.api.KeyValueStatus;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,7 +36,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
@@ -74,19 +70,14 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   /** Separator used to flatten a {@code (queueKey, workerId)} pair into a single KV key. */
   private static final String SEP = "__";
 
-  private final Connection connection;
-  private final KeyValueManagement kvm;
-  private final AtomicReference<KeyValue> workerKv = new AtomicReference<>();
-  private final AtomicReference<KeyValue> heartbeatKv = new AtomicReference<>();
+  private final NatsProvisioner provisioner;
   /** Captured on first putWorkerInfo call so worker bucket gets the right maxAge. */
   private volatile Duration workerBucketTtl;
-
   /** Captured on first putQueueHeartbeat / refreshQueueTtl so heartbeat bucket gets the right maxAge. */
   private volatile Duration heartbeatBucketTtl;
 
-  public NatsWorkerRegistryStore(Connection connection) throws IOException {
-    this.connection = connection;
-    this.kvm = connection.keyValueManagement();
+  public NatsWorkerRegistryStore(NatsProvisioner provisioner) {
+    this.provisioner = provisioner;
   }
 
   @Override
@@ -95,7 +86,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
       workerBucketTtl = ttl;
     }
     try {
-      KeyValue kv = ensureBucket(workerKv, WORKER_BUCKET, workerBucketTtl);
+      KeyValue kv = provisioner.ensureKv(WORKER_BUCKET, workerBucketTtl);
       kv.put(sanitize(workerKey), serialize(info));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "putWorkerInfo " + workerKey + " failed", e);
@@ -105,7 +96,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   @Override
   public void deleteWorkerInfo(String workerKey) {
     try {
-      KeyValue kv = ensureBucket(workerKv, WORKER_BUCKET, workerBucketTtl);
+      KeyValue kv = provisioner.ensureKv(WORKER_BUCKET, workerBucketTtl);
       kv.delete(sanitize(workerKey));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "deleteWorkerInfo " + workerKey + " failed", e);
@@ -119,7 +110,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
     }
     Map<String, RqueueWorkerInfo> out = new LinkedHashMap<>();
     try {
-      KeyValue kv = ensureBucket(workerKv, WORKER_BUCKET, workerBucketTtl);
+      KeyValue kv = provisioner.ensureKv(WORKER_BUCKET, workerBucketTtl);
       for (String key : workerKeys) {
         KeyValueEntry entry = kv.get(sanitize(key));
         if (entry == null || entry.getValue() == null) {
@@ -144,7 +135,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
       heartbeatBucketTtl = Duration.ofHours(1);
     }
     try {
-      KeyValue kv = ensureBucket(heartbeatKv, HEARTBEAT_BUCKET, heartbeatBucketTtl);
+      KeyValue kv = provisioner.ensureKv(HEARTBEAT_BUCKET, heartbeatBucketTtl);
       kv.put(compositeKey(queueKey, workerId), metadataJson.getBytes());
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "putQueueHeartbeat queue=" + queueKey + " failed", e);
@@ -155,7 +146,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   public Map<String, String> getQueueHeartbeats(String queueKey) {
     Map<String, String> out = new LinkedHashMap<>();
     try {
-      KeyValue kv = ensureBucket(heartbeatKv, HEARTBEAT_BUCKET, heartbeatBucketTtl);
+      KeyValue kv = provisioner.ensureKv(HEARTBEAT_BUCKET, heartbeatBucketTtl);
       String prefix = sanitize(queueKey) + SEP;
       List<String> keys = new ArrayList<>(kv.keys());
       for (String k : keys) {
@@ -184,7 +175,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
       return;
     }
     try {
-      KeyValue kv = ensureBucket(heartbeatKv, HEARTBEAT_BUCKET, heartbeatBucketTtl);
+      KeyValue kv = provisioner.ensureKv(HEARTBEAT_BUCKET, heartbeatBucketTtl);
       for (String workerId : workerIds) {
         kv.delete(compositeKey(queueKey, workerId));
       }
@@ -205,38 +196,6 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   }
 
   // ---- helpers ----------------------------------------------------------
-
-  private KeyValue ensureBucket(AtomicReference<KeyValue> ref, String bucketName, Duration maxAge)
-      throws IOException, JetStreamApiException {
-    KeyValue cached = ref.get();
-    if (cached != null) {
-      return cached;
-    }
-    synchronized (ref) {
-      cached = ref.get();
-      if (cached != null) {
-        return cached;
-      }
-      try {
-        KeyValueStatus status = kvm.getStatus(bucketName);
-        if (status != null) {
-          KeyValue kv = connection.keyValue(bucketName);
-          ref.set(kv);
-          return kv;
-        }
-      } catch (JetStreamApiException missing) {
-        // fall through to create
-      }
-      KeyValueConfiguration.Builder cfg = KeyValueConfiguration.builder().name(bucketName);
-      if (maxAge != null && !maxAge.isZero() && !maxAge.isNegative()) {
-        cfg.ttl(maxAge);
-      }
-      kvm.create(cfg.build());
-      KeyValue kv = connection.keyValue(bucketName);
-      ref.set(kv);
-      return kv;
-    }
-  }
 
   private static String compositeKey(String queueKey, String workerId) {
     return sanitize(queueKey) + SEP + sanitize(workerId);

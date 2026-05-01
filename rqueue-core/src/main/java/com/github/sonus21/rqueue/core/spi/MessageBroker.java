@@ -147,6 +147,38 @@ public interface MessageBroker {
 
   long size(QueueDetail q);
 
+  /**
+   * Short label for the storage backend shown in the dashboard "Queue Storage Footprint" section
+   * header (e.g. "Redis", "NATS"). Defaults to "Redis".
+   */
+  default String storageKicker() {
+    return "Redis";
+  }
+
+  /**
+   * One-line description for the storage backend shown below the footprint section heading.
+   * Defaults to the Redis description.
+   */
+  default String storageDescription() {
+    return "Underlying Redis structures for the queues visible on this page.";
+  }
+
+  /**
+   * Display name for the primary storage unit backing the given queue's messages (pending,
+   * in-flight, and completed). Returns {@code null} to fall back to the Redis key name.
+   */
+  default String storageDisplayName(QueueDetail q) {
+    return null;
+  }
+
+  /**
+   * Display name for the dead-letter storage unit of the given queue. Returns {@code null} to
+   * fall back to the DLQ key name stored in {@code DeadLetterQueue}.
+   */
+  default String dlqStorageDisplayName(QueueDetail q) {
+    return null;
+  }
+
   AutoCloseable subscribe(String channel, Consumer<String> handler);
 
   void publish(String channel, String payload);

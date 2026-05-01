@@ -135,6 +135,18 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   }
 
   @Override
+  public String storageKicker() {
+    return messageBroker != null ? messageBroker.storageKicker() : "Redis";
+  }
+
+  @Override
+  public String storageDescription() {
+    return messageBroker != null
+        ? messageBroker.storageDescription()
+        : "Underlying Redis structures for the queues visible on this page.";
+  }
+
+  @Override
   public Map<String, List<Entry<NavTab, RedisDataDetail>>> getQueueDataStructureDetails(
       List<QueueConfig> queueConfig) {
     return queueConfig.parallelStream()
@@ -157,15 +169,22 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     }
     String processingQueueName = queueConfig.getProcessingQueueName();
     Long running = messageBrowsingRepository.getDataSize(processingQueueName, DataType.ZSET);
+    // When a non-Redis broker is configured, use its storage display names instead of Redis keys.
+    String pendingDisplayName = brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+        ? messageBroker.storageDisplayName(brokerQueueDetail)
+        : queueConfig.getQueueName();
+    String runningDisplayName = brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+        ? messageBroker.storageDisplayName(brokerQueueDetail)
+        : processingQueueName;
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList(
         new HashMap.SimpleEntry<>(
             NavTab.PENDING,
             new RedisDataDetail(
-                queueConfig.getQueueName(), DataType.LIST, pending == null ? 0 : pending)),
+                pendingDisplayName, DataType.LIST, pending == null ? 0 : pending)),
         new HashMap.SimpleEntry<>(
             NavTab.RUNNING,
             new RedisDataDetail(
-                processingQueueName, DataType.ZSET, running == null ? 0 : running)));
+                runningDisplayName, DataType.ZSET, running == null ? 0 : running)));
     String scheduledQueueName = queueConfig.getScheduledQueueName();
     // When the broker doesn't support scheduled introspection (e.g. JetStream), suppress
     // the SCHEDULED nav tab entry entirely so the dashboard doesn't query an absent ZSET.
@@ -178,15 +197,18 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     }
     if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
       for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
+        String dlqDisplayName = brokerQueueDetail != null && messageBroker.dlqStorageDisplayName(brokerQueueDetail) != null
+            ? messageBroker.dlqStorageDisplayName(brokerQueueDetail)
+            : dlq.getName();
         if (!dlq.isConsumerEnabled()) {
           Long dlqSize = messageBrowsingRepository.getDataSize(dlq.getName(), DataType.LIST);
           queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
               NavTab.DEAD,
-              new RedisDataDetail(dlq.getName(), DataType.LIST, dlqSize == null ? 0 : dlqSize)));
+              new RedisDataDetail(dlqDisplayName, DataType.LIST, dlqSize == null ? 0 : dlqSize)));
         } else {
           // TODO should we redirect to the queue page?
           queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-              NavTab.DEAD, new RedisDataDetail(dlq.getName(), DataType.LIST, -1)));
+              NavTab.DEAD, new RedisDataDetail(dlqDisplayName, DataType.LIST, -1)));
         }
       }
     }
@@ -194,10 +216,13 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         && !StringUtils.isEmpty(queueConfig.getCompletedQueueName())) {
       Long completed =
           messageBrowsingRepository.getDataSize(queueConfig.getCompletedQueueName(), DataType.ZSET);
+      String completedDisplayName = brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+          ? messageBroker.storageDisplayName(brokerQueueDetail)
+          : queueConfig.getCompletedQueueName();
       queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
           NavTab.COMPLETED,
           new RedisDataDetail(
-              queueConfig.getCompletedQueueName(),
+              completedDisplayName,
               DataType.ZSET,
               completed == null ? 0 : completed)));
     }

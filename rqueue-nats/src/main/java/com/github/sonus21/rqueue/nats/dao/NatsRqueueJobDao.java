@@ -13,14 +13,11 @@ package com.github.sonus21.rqueue.nats.dao;
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.RqueueJob;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
-import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
-import io.nats.client.KeyValueManagement;
-import io.nats.client.api.KeyValueConfiguration;
 import io.nats.client.api.KeyValueEntry;
-import io.nats.client.api.KeyValueStatus;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
@@ -56,44 +52,14 @@ public class NatsRqueueJobDao implements RqueueJobDao {
   private static final Logger log = Logger.getLogger(NatsRqueueJobDao.class.getName());
   private static final String BUCKET_NAME = NatsKvBuckets.JOBS;
 
-  private final Connection connection;
-  private final KeyValueManagement kvm;
-  private final AtomicReference<KeyValue> kvRef = new AtomicReference<>();
+  private final NatsProvisioner provisioner;
 
-  public NatsRqueueJobDao(Connection connection) throws IOException {
-    this.connection = connection;
-    this.kvm = connection.keyValueManagement();
+  public NatsRqueueJobDao(NatsProvisioner provisioner) {
+    this.provisioner = provisioner;
   }
 
-  private KeyValue ensureBucket(Duration ttl) throws IOException, JetStreamApiException {
-    KeyValue cached = kvRef.get();
-    if (cached != null) {
-      return cached;
-    }
-    synchronized (this) {
-      cached = kvRef.get();
-      if (cached != null) {
-        return cached;
-      }
-      try {
-        KeyValueStatus status = kvm.getStatus(BUCKET_NAME);
-        if (status != null) {
-          KeyValue kv = connection.keyValue(BUCKET_NAME);
-          kvRef.set(kv);
-          return kv;
-        }
-      } catch (JetStreamApiException missing) {
-        // fall through
-      }
-      KeyValueConfiguration.Builder cfg = KeyValueConfiguration.builder().name(BUCKET_NAME);
-      if (ttl != null && !ttl.isZero() && !ttl.isNegative()) {
-        cfg.ttl(ttl);
-      }
-      kvm.create(cfg.build());
-      KeyValue kv = connection.keyValue(BUCKET_NAME);
-      kvRef.set(kv);
-      return kv;
-    }
+  private KeyValue kv(Duration ttl) throws IOException, JetStreamApiException {
+    return provisioner.ensureKv(BUCKET_NAME, ttl);
   }
 
   @Override
@@ -104,8 +70,7 @@ public class NatsRqueueJobDao implements RqueueJobDao {
   @Override
   public void save(RqueueJob rqueueJob, Duration expiry) {
     try {
-      KeyValue kv = ensureBucket(expiry);
-      kv.put(sanitize(rqueueJob.getId()), serialize(rqueueJob));
+      kv(expiry).put(sanitize(rqueueJob.getId()), serialize(rqueueJob));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "save job " + rqueueJob.getId() + " failed", e);
     }
@@ -147,8 +112,7 @@ public class NatsRqueueJobDao implements RqueueJobDao {
   @Override
   public void delete(String jobId) {
     try {
-      KeyValue kv = ensureBucket(null);
-      kv.delete(sanitize(jobId));
+      kv(null).delete(sanitize(jobId));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "delete job " + jobId + " failed", e);
     }
@@ -158,8 +122,7 @@ public class NatsRqueueJobDao implements RqueueJobDao {
 
   private RqueueJob loadByKey(String key) {
     try {
-      KeyValue kv = ensureBucket(null);
-      KeyValueEntry entry = kv.get(key);
+      KeyValueEntry entry = kv(null).get(key);
       if (entry == null || entry.getValue() == null) {
         return null;
       }
@@ -172,8 +135,7 @@ public class NatsRqueueJobDao implements RqueueJobDao {
 
   private List<RqueueJob> scanForMessageIds(Collection<String> messageIds) {
     try {
-      KeyValue kv = ensureBucket(null);
-      List<String> keys = new ArrayList<>(kv.keys());
+      List<String> keys = new ArrayList<>(kv(null).keys());
       List<RqueueJob> out = new ArrayList<>();
       for (String k : keys) {
         RqueueJob j = loadByKey(k);

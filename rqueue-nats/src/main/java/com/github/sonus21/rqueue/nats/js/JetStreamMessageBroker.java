@@ -58,7 +58,7 @@ import tools.jackson.databind.ObjectMapper;
 public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   private static final Logger log = Logger.getLogger(JetStreamMessageBroker.class.getName());
-  private static final Capabilities CAPS = new Capabilities(false, false, false, true);
+  private static final Capabilities CAPS = new Capabilities(false, false, false, false);
 
   private final Connection connection;
   private final JetStream js;
@@ -82,13 +82,14 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       JetStream js,
       JetStreamManagement jsm,
       RqueueNatsConfig config,
-      ObjectMapper mapper) {
+      ObjectMapper mapper,
+      NatsProvisioner provisioner) {
     this.connection = connection;
     this.js = js;
     this.jsm = jsm;
     this.config = config;
     this.mapper = mapper;
-    this.provisioner = new NatsProvisioner(jsm, config);
+    this.provisioner = provisioner;
   }
 
   public static Builder builder() {
@@ -130,11 +131,15 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   private String dlqStreamFor(QueueDetail q) {
-    return streamFor(q) + config.getDlqStreamSuffix();
+    return q.getNatsDlqStream() != null
+        ? q.getNatsDlqStream()
+        : streamFor(q) + config.getDlqStreamSuffix();
   }
 
   private String dlqSubjectFor(QueueDetail q) {
-    return subjectFor(q) + config.getDlqSubjectSuffix();
+    return q.getNatsDlqSubject() != null
+        ? q.getNatsDlqSubject()
+        : subjectFor(q) + config.getDlqSubjectSuffix();
   }
 
   // ---- MessageBroker -----------------------------------------------------
@@ -360,6 +365,83 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     return true;
   }
 
+  /**
+   * NATS redelivery (nak) replays the original payload bytes, so {@code failureCount} embedded in
+   * the message never increments across deliveries. We ack the original and re-publish the
+   * {@code updated} message (which already carries the incremented count) so the next delivery sees
+   * the correct counter. The retry delay is not honoured — NATS JetStream has no server-side
+   * delayed publish in this version.
+   *
+   * <p>The {@code Nats-Msg-Id} header is suffixed with the failure count so the stream's
+   * deduplication window does not drop the re-published message (same base id, different attempt).
+   */
+  @Override
+  public void parkForRetry(QueueDetail q, RqueueMessage old, RqueueMessage updated, long delayMs) {
+    if (old.getId() != null) {
+      Message nm = inFlight.remove(old.getId());
+      if (nm != null) {
+        nm.ack();
+      }
+    }
+    String subject = subjectFor(q);
+    Headers headers = new Headers();
+    if (updated.getId() != null) {
+      headers.add("Nats-Msg-Id", updated.getId() + "-r" + updated.getFailureCount());
+    }
+    try {
+      byte[] payload = mapper.writeValueAsBytes(updated);
+      js.publish(subject, headers, payload);
+    } catch (IOException | JetStreamApiException e) {
+      throw new RqueueNatsException(
+          "Failed to re-enqueue message id=" + old.getId() + " for retry on queue=" + q.getName(),
+          e);
+    } catch (RuntimeException e) {
+      throw new RqueueNatsException(
+          "Failed to serialize/re-enqueue message id="
+              + old.getId()
+              + " for retry on queue="
+              + q.getName(),
+          e);
+    }
+  }
+
+  @Override
+  public void moveToDlq(
+      QueueDetail source,
+      String targetQueue,
+      RqueueMessage old,
+      RqueueMessage updated,
+      long delayMs) {
+    // Ack the original NATS message so it is removed from the source stream.
+    if (old.getId() != null) {
+      Message nm = inFlight.remove(old.getId());
+      if (nm != null) {
+        nm.ack();
+      }
+    }
+    // targetQueue is the configured deadLetterQueue name (e.g. "job-morgue"). Map it to a NATS
+    // stream and subject using the same prefix convention as any other queue.
+    // NATS JetStream has no server-side delayed publish, so delayMs is ignored.
+    String dlqStream = config.getStreamPrefix() + targetQueue;
+    String dlqSubject = config.getSubjectPrefix() + targetQueue;
+    Headers headers = new Headers();
+    if (updated.getId() != null) {
+      headers.add("Nats-Msg-Id", updated.getId() + "-dlq");
+    }
+    try {
+      provisioner.ensureStream(dlqStream, List.of(dlqSubject));
+      byte[] payload = mapper.writeValueAsBytes(updated);
+      js.publish(dlqSubject, headers, payload);
+    } catch (IOException | JetStreamApiException e) {
+      throw new RqueueNatsException(
+          "Failed to move message id=" + old.getId() + " to DLQ stream=" + dlqStream, e);
+    } catch (RuntimeException e) {
+      throw new RqueueNatsException(
+          "Failed to serialize/publish message id=" + old.getId() + " to DLQ stream=" + dlqStream,
+          e);
+    }
+  }
+
   @Override
   public long moveExpired(QueueDetail q, long now, int batch) {
     // No-op: JetStream's ack-wait + maxDeliver + DLQ advisory bridge handle redelivery and
@@ -446,6 +528,26 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   @Override
+  public String storageKicker() {
+    return "NATS";
+  }
+
+  @Override
+  public String storageDescription() {
+    return "Underlying NATS JetStream streams for the queues visible on this page.";
+  }
+
+  @Override
+  public String storageDisplayName(QueueDetail q) {
+    return streamFor(q);
+  }
+
+  @Override
+  public String dlqStorageDisplayName(QueueDetail q) {
+    return dlqStreamFor(q);
+  }
+
+  @Override
   public void close() {
     for (JetStreamSubscription s : subscriptionCache.values()) {
       try {
@@ -519,6 +621,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     private JetStreamManagement management;
     private RqueueNatsConfig config;
     private ObjectMapper mapper;
+    private NatsProvisioner provisioner;
 
     public Builder connection(Connection connection) {
       this.connection = connection;
@@ -545,6 +648,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       return this;
     }
 
+    public Builder provisioner(NatsProvisioner provisioner) {
+      this.provisioner = provisioner;
+      return this;
+    }
+
     public JetStreamMessageBroker build() {
       if (connection == null) {
         throw new IllegalStateException("connection is required");
@@ -556,6 +664,9 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         if (management == null) {
           management = connection.jetStreamManagement();
         }
+        if (provisioner == null) {
+          provisioner = new NatsProvisioner(connection, management, config != null ? config : RqueueNatsConfig.defaults());
+        }
       } catch (IOException e) {
         throw new RqueueNatsException("Failed to derive JetStream context from connection", e);
       }
@@ -565,7 +676,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       if (mapper == null) {
         mapper = new ObjectMapper();
       }
-      return new JetStreamMessageBroker(connection, jetStream, management, config, mapper);
+      return new JetStreamMessageBroker(connection, jetStream, management, config, mapper, provisioner);
     }
 
     /** Create a broker that wraps a pre-built {@link Map} of NATS handles. Used by the factory. */

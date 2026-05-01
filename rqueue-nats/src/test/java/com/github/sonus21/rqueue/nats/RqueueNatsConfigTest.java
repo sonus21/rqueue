@@ -35,7 +35,7 @@ class RqueueNatsConfigTest {
     assertNotNull(c.getDlqSubjectSuffix());
     assertTrue(c.isAutoCreateStreams());
     assertTrue(c.isAutoCreateConsumers());
-    assertTrue(c.isAutoCreateDlqStream());
+    assertFalse(c.isAutoCreateDlqStream());
     assertNotNull(c.getDefaultFetchWait());
     assertTrue(c.getDefaultFetchWait().toMillis() > 0);
     assertNotNull(c.getStreamDefaults());

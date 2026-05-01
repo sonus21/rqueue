@@ -12,18 +12,14 @@ package com.github.sonus21.rqueue.nats.lock;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
-import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
-import io.nats.client.KeyValueManagement;
-import io.nats.client.api.KeyValueConfiguration;
 import io.nats.client.api.KeyValueEntry;
-import io.nats.client.api.KeyValueStatus;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
@@ -51,54 +47,16 @@ public class NatsRqueueLockManager implements RqueueLockManager {
   private static final Logger log = Logger.getLogger(NatsRqueueLockManager.class.getName());
   private static final String BUCKET_NAME = NatsKvBuckets.LOCKS;
 
-  private final Connection connection;
-  private final KeyValueManagement kvm;
-  private final AtomicReference<KeyValue> kvRef = new AtomicReference<>();
+  private final NatsProvisioner provisioner;
 
-  public NatsRqueueLockManager(Connection connection) throws IOException {
-    this.connection = connection;
-    this.kvm = connection.keyValueManagement();
-  }
-
-  /**
-   * Lazily create / open the KV bucket with the requested TTL. The TTL is set on bucket
-   * creation; subsequent calls reuse the existing bucket regardless of the requested TTL —
-   * matching how Redis-side locks rely on {@code SET ... EX} for per-key TTL is out of scope
-   * for this v1 KV-bucket implementation. Callers should prefer a uniform lock duration.
-   */
-  private KeyValue ensureBucket(Duration ttl) throws IOException, JetStreamApiException {
-    KeyValue cached = kvRef.get();
-    if (cached != null) {
-      return cached;
-    }
-    synchronized (this) {
-      cached = kvRef.get();
-      if (cached != null) {
-        return cached;
-      }
-      try {
-        KeyValueStatus status = kvm.getStatus(BUCKET_NAME);
-        if (status != null) {
-          KeyValue kv = connection.keyValue(BUCKET_NAME);
-          kvRef.set(kv);
-          return kv;
-        }
-      } catch (JetStreamApiException missing) {
-        // bucket does not exist; fall through to create
-      }
-      KeyValueConfiguration cfg =
-          KeyValueConfiguration.builder().name(BUCKET_NAME).ttl(ttl).build();
-      kvm.create(cfg);
-      KeyValue kv = connection.keyValue(BUCKET_NAME);
-      kvRef.set(kv);
-      return kv;
-    }
+  public NatsRqueueLockManager(NatsProvisioner provisioner) {
+    this.provisioner = provisioner;
   }
 
   @Override
   public boolean acquireLock(String lockKey, String lockValue, Duration duration) {
     try {
-      KeyValue kv = ensureBucket(duration);
+      KeyValue kv = provisioner.ensureKv(BUCKET_NAME, duration);
       kv.create(sanitize(lockKey), lockValue.getBytes(StandardCharsets.UTF_8));
       return true;
     } catch (JetStreamApiException existing) {
@@ -116,7 +74,7 @@ public class NatsRqueueLockManager implements RqueueLockManager {
   @Override
   public boolean releaseLock(String lockKey, String lockValue) {
     try {
-      KeyValue kv = ensureBucket(Duration.ofSeconds(60));
+      KeyValue kv = provisioner.ensureKv(BUCKET_NAME, Duration.ofSeconds(60));
       String key = sanitize(lockKey);
       KeyValueEntry entry = kv.get(key);
       if (entry == null) {
