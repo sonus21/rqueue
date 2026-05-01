@@ -86,8 +86,8 @@ public class RqueueNatsProperties {
   @Getter
   @Setter
   public static class Naming {
-    private String streamPrefix = "rqueue-";
-    private String subjectPrefix = "rqueue.";
+    private String streamPrefix = "rqueue-js-";
+    private String subjectPrefix = "rqueue.js.";
     private String dlqSuffix = "-dlq";
   }
 }

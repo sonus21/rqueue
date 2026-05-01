@@ -26,8 +26,8 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class RqueueNatsConfig {
 
-  private String streamPrefix = "rqueue-";
-  private String subjectPrefix = "rqueue.";
+  private String streamPrefix = "rqueue-js-";
+  private String subjectPrefix = "rqueue.js.";
   private String dlqStreamSuffix = "-dlq";
   private String dlqSubjectSuffix = ".dlq";
 

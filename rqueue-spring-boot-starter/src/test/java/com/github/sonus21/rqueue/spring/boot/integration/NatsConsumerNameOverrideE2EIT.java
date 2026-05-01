@@ -60,7 +60,7 @@ class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {
     enqueuer.enqueue("custom-consumer", "hello");
     assertThat(listener.latch.await(20, TimeUnit.SECONDS)).isTrue();
 
-    ConsumerInfo info = jsm.getConsumerInfo("rqueue-custom-consumer", "my-custom-consumer");
+    ConsumerInfo info = jsm.getConsumerInfo("rqueue-js-custom-consumer", "my-custom-consumer");
     assertThat(info).isNotNull();
     assertThat(info.getName()).isEqualTo("my-custom-consumer");
   }

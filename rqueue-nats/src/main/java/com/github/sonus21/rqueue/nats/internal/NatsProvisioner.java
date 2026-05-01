@@ -145,7 +145,7 @@ public class NatsProvisioner {
     }
   }
 
-  /** Ensure a DLQ stream exists capturing dead-letter subjects (e.g. "rqueue.*.dlq"). */
+  /** Ensure a DLQ stream exists capturing dead-letter subjects (e.g. "rqueue.js.*.dlq"). */
   public void ensureDlqStream(String dlqStreamName, List<String> dlqSubjects) {
     if (!config.isAutoCreateDlqStream()) {
       return;

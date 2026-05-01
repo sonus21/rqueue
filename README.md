@@ -284,17 +284,21 @@ Each registered queue produces **one main stream**, **one DLQ stream** (when
 sub-queue** the queue declares. Only the main queue has a DLQ — priority sub-queues fan out to
 their own streams but share the parent queue's DLQ wiring through `RqueueExecutor`.
 
-| Queue shape                   | Stream count | Names (with default prefixes)                                           |
-|-------------------------------|--------------|-------------------------------------------------------------------------|
-| Plain queue, DLQ on (default) | 2            | `rqueue-<queue>`, `rqueue-<queue>-dlq`                                  |
-| Plain queue, DLQ off          | 1            | `rqueue-<queue>`                                                        |
-| Queue with N priorities, DLQ on | N + 2      | `rqueue-<queue>`, `rqueue-<queue>-<p1>` … `rqueue-<queue>-<pN>`, `rqueue-<queue>-dlq` |
+| Queue shape                   | Stream count | Names (with default prefixes)                                                                  |
+|-------------------------------|--------------|------------------------------------------------------------------------------------------------|
+| Plain queue, DLQ on (default) | 2            | `rqueue-js-<queue>`, `rqueue-js-<queue>-dlq`                                                   |
+| Plain queue, DLQ off          | 1            | `rqueue-js-<queue>`                                                                            |
+| Queue with N priorities, DLQ on | N + 2      | `rqueue-js-<queue>`, `rqueue-js-<queue>-<p1>` … `rqueue-js-<queue>-<pN>`, `rqueue-js-<queue>-dlq` |
 
 The naming scheme is `<streamPrefix><queueName>[-<priority>][<dlqStreamSuffix>]`, configurable via
-`rqueue.nats.naming.streamPrefix` (default `rqueue-`) and `rqueue.nats.naming.dlqSuffix` (default
-`-dlq`). Subjects follow the same shape with `.` separators: `<subjectPrefix><queueName>[.<priority>][<dlqSubjectSuffix>]`.
-Stream defaults (replicas, storage, retention, duplicate window, max msgs/bytes) come from
-`rqueue.nats.stream.*`.
+`rqueue.nats.naming.streamPrefix` (default `rqueue-js-`) and `rqueue.nats.naming.dlqSuffix`
+(default `-dlq`). The `-js-` segment makes Rqueue's message streams easy to distinguish at a
+glance from the JetStream-backed KV buckets below (which keep the plain `rqueue-` prefix because
+that's the operator-facing bucket name, not a stream name) and from anything else sharing the
+JetStream account. Subjects follow the same shape with `.` separators:
+`<subjectPrefix><queueName>[.<priority>][<dlqSubjectSuffix>]` (default subject prefix
+`rqueue.js.`). Stream defaults (replicas, storage, retention, duplicate window, max msgs/bytes)
+come from `rqueue.nats.stream.*`.
 
 ### KV buckets (one set, shared across all queues)
 

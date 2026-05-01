@@ -68,7 +68,7 @@ class NatsRetryAndDlqE2EIT extends AbstractNatsBootIT {
     Awaitility.await().atMost(Duration.ofSeconds(60)).until(() -> listener.attempts.get() >= 2);
 
     Awaitility.await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
-      StreamInfo dlq = jsm.getStreamInfo("rqueue-failing-dlq");
+      StreamInfo dlq = jsm.getStreamInfo("rqueue-js-failing-dlq");
       assertThat(dlq.getStreamState().getMsgCount()).isGreaterThanOrEqualTo(1);
     });
   }
