@@ -109,12 +109,21 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
       }
     }
     if (!failures.isEmpty()) {
+      String hint = config.isAutoCreateStreams()
+          ? "Stream creation failed — verify NATS is running with JetStream enabled"
+              + " (start the server with `nats-server -js`) and that the account has"
+              + " `add_stream` permission."
+          : "With rqueue.nats.auto-create-streams=false every required stream must exist"
+              + " before the application starts. Run `nats stream add` for each missing"
+              + " stream or set rqueue.nats.auto-create-streams=true to let rqueue create"
+              + " them automatically.";
       throw new IllegalStateException("NATS JetStream provisioning failed for "
           + failures.size()
           + " of "
           + total
-          + " stream(s) at startup. With rqueue.nats.autoCreateStreams=false, every required"
-          + " stream must exist before the application starts. Failed streams:\n"
+          + " stream(s) at startup. "
+          + hint
+          + " Failed streams:\n"
           + "  - "
           + String.join("\n  - ", failures));
     }
@@ -129,7 +138,7 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
       provisioner.ensureStream(streamName, List.of(subject));
       return 1;
     } catch (RqueueNatsException e) {
-      failures.add(streamName + " (subject " + subject + "): " + e.getMessage());
+      failures.add(streamName + " (subject " + subject + "): " + rootCause(e));
       return 1;
     }
   }
@@ -139,8 +148,18 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
       provisioner.ensureDlqStream(dlqStream, List.of(dlqSubject));
       return 1;
     } catch (RqueueNatsException e) {
-      failures.add(dlqStream + " (DLQ subject " + dlqSubject + "): " + e.getMessage());
+      failures.add(dlqStream + " (DLQ subject " + dlqSubject + "): " + rootCause(e));
       return 1;
     }
+  }
+
+  /** Returns the deepest non-null message in the cause chain for diagnostics. */
+  private static String rootCause(Throwable t) {
+    Throwable cause = t;
+    while (cause.getCause() != null) {
+      cause = cause.getCause();
+    }
+    String msg = cause.getMessage();
+    return (msg != null && !msg.isEmpty()) ? msg : cause.getClass().getSimpleName();
   }
 }

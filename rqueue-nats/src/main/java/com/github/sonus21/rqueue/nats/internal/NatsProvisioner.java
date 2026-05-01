@@ -171,7 +171,10 @@ public class NatsProvisioner {
     try {
       return jsm.getConsumerInfo(streamName, consumerName);
     } catch (JetStreamApiException e) {
-      if (e.getApiErrorCode() == 10014 || e.getErrorCode() == 404) {
+      // 10014 = consumer not found, 10059 = stream not found (stream hasn't been created yet).
+      // Both cases mean "consumer doesn't exist"; callers should create the consumer (and ensure
+      // the stream) rather than receiving an exception here.
+      if (e.getApiErrorCode() == 10014 || e.getApiErrorCode() == 10059 || e.getErrorCode() == 404) {
         return null;
       }
       throw e;

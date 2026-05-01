@@ -30,13 +30,13 @@ import org.springframework.context.annotation.Bean;
  * pluggable-backend split.
  */
 @SpringBootApplication
-public class RQueueApplication {
+public class RQueueNatApplication {
 
   @Value("${workers.count:3}")
   private int workersCount;
 
   public static void main(String[] args) {
-    SpringApplication.run(RQueueApplication.class, args);
+    SpringApplication.run(RQueueNatApplication.class, args);
   }
 
   @Bean
