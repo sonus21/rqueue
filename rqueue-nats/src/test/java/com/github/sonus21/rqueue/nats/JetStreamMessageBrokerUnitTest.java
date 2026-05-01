@@ -88,7 +88,8 @@ class JetStreamMessageBrokerUnitTest {
         queueNamed("orders"),
         "high",
         RqueueMessage.builder().id("m1").message("hi").build());
-    verify(f.js, times(1)).publish(eq("rqueue.js.orders.high"), any(Headers.class), any(byte[].class));
+    verify(f.js, times(1))
+        .publish(eq("rqueue.js.orders.high"), any(Headers.class), any(byte[].class));
   }
 
   @Test
@@ -169,7 +170,8 @@ class JetStreamMessageBrokerUnitTest {
     StepVerifier.create(f.broker.enqueueReactive(
             queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build()))
         .verifyComplete();
-    verify(f.js, times(1)).publishAsync(eq("rqueue.js.orders"), any(Headers.class), any(byte[].class));
+    verify(f.js, times(1))
+        .publishAsync(eq("rqueue.js.orders"), any(Headers.class), any(byte[].class));
   }
 
   @Test
