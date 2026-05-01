@@ -38,9 +38,8 @@ public final class HttpUtils {
     HttpClient.Builder builder =
         HttpClient.newBuilder().connectTimeout(Duration.ofMillis(2 * Constants.ONE_MILLI_INT));
     if (!StringUtils.isEmpty(rqueueConfig.getProxyHost())) {
-      builder.proxy(
-          ProxySelector.of(
-              new InetSocketAddress(rqueueConfig.getProxyHost(), rqueueConfig.getProxyPort())));
+      builder.proxy(ProxySelector.of(
+          new InetSocketAddress(rqueueConfig.getProxyHost(), rqueueConfig.getProxyPort())));
     }
     return builder.build();
   }
@@ -48,12 +47,11 @@ public final class HttpUtils {
   public static <T> T readUrl(RqueueConfig rqueueConfig, String url, Class<T> clazz) {
     try {
       HttpClient client = buildClient(rqueueConfig);
-      HttpRequest request =
-          HttpRequest.newBuilder(URI.create(url))
-              .timeout(Duration.ofMillis(2 * Constants.ONE_MILLI_INT))
-              .header("Accept", "application/json")
-              .GET()
-              .build();
+      HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+          .timeout(Duration.ofMillis(2 * Constants.ONE_MILLI_INT))
+          .header("Accept", "application/json")
+          .GET()
+          .build();
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
       if (response.statusCode() / 100 != 2) {
         log.error("GET {} returned status {}", url, response.statusCode());
