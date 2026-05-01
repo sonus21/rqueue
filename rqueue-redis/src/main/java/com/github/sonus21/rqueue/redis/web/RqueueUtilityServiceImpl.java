@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.redis.web;
 
 import static com.github.sonus21.rqueue.utils.HttpUtils.readUrl;
 
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
@@ -53,11 +52,15 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-@Conditional(RedisBackendCondition.class)
+/**
+ * Redis-shaped impl. Backend gating is handled at module level via
+ * {@code RqueueRedisListenerConfig.@Conditional(RedisBackendCondition)} + its
+ * {@code @ComponentScan} of {@code com.github.sonus21.rqueue.redis} — a per-class
+ * {@code @Conditional} would be redundant.
+ */
 @Service
 @Slf4j
 public class RqueueUtilityServiceImpl implements RqueueUtilityService {
@@ -69,6 +72,13 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
   private final RqueueMessageMetadataService messageMetadataService;
   private final RqueueInternalPubSubChannel rqueueInternalPubSubChannel;
   private final RqueueConfig rqueueConfig;
+  /**
+   * Resolved once via {@link MessageSweeper#getInstance} at construction so {@link #makeEmpty}
+   * doesn't take the static-singleton path on every call. {@code getInstance} is itself a
+   * (Redis-shaped) singleton so this just pins it to a field for direct reuse.
+   */
+  private final MessageSweeper messageSweeper;
+
   private String latestVersion = "NA";
   private String releaseLink = "#";
   private long versionFetchTime = 0;
@@ -89,6 +99,8 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     this.rqueueMessageTemplate = rqueueMessageTemplate;
     this.messageMetadataService = messageMetadataService;
     this.rqueueInternalPubSubChannel = rqueueInternalPubSubChannel;
+    this.messageSweeper =
+        MessageSweeper.getInstance(rqueueConfig, rqueueMessageTemplate, messageMetadataService);
   }
 
   @Override
