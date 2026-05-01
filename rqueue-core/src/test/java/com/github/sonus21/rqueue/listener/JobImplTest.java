@@ -257,9 +257,7 @@ class JobImplTest extends TestBase {
   void getVisibilityTimeout() {
     JobImpl job = instance();
     job.execute();
-    doReturn(-10L)
-        .when(messageBroker)
-        .getVisibilityTimeoutScore(queueDetail, rqueueMessage);
+    doReturn(-10L).when(messageBroker).getVisibilityTimeoutScore(queueDetail, rqueueMessage);
     assertEquals(Duration.ZERO, job.getVisibilityTimeout());
 
     doReturn(System.currentTimeMillis() + 10_000L)
@@ -268,9 +266,7 @@ class JobImplTest extends TestBase {
     Duration timeout = job.getVisibilityTimeout();
     assertTrue(timeout.toMillis() <= 10_000 && timeout.toMillis() >= 9_000);
 
-    doReturn(0L)
-        .when(messageBroker)
-        .getVisibilityTimeoutScore(queueDetail, rqueueMessage);
+    doReturn(0L).when(messageBroker).getVisibilityTimeoutScore(queueDetail, rqueueMessage);
     assertEquals(Duration.ZERO, job.getVisibilityTimeout());
   }
 
@@ -278,13 +274,9 @@ class JobImplTest extends TestBase {
   void updateVisibilityTimeout() {
     JobImpl job = instance();
     job.execute();
-    doReturn(true)
-        .when(messageBroker)
-        .extendVisibilityTimeout(queueDetail, rqueueMessage, 5_000L);
+    doReturn(true).when(messageBroker).extendVisibilityTimeout(queueDetail, rqueueMessage, 5_000L);
     assertTrue(job.updateVisibilityTimeout(Duration.ofSeconds(5)));
-    doReturn(false)
-        .when(messageBroker)
-        .extendVisibilityTimeout(queueDetail, rqueueMessage, 5_000L);
+    doReturn(false).when(messageBroker).extendVisibilityTimeout(queueDetail, rqueueMessage, 5_000L);
     assertFalse(job.updateVisibilityTimeout(Duration.ofSeconds(5)));
   }
 

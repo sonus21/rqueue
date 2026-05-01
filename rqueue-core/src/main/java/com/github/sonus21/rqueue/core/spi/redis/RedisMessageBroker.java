@@ -165,12 +165,10 @@ public class RedisMessageBroker implements MessageBroker {
       RqueueMessage updated,
       long delayMs) {
     RedisUtils.executePipeLine(
-        template.getTemplate(),
-        (connection, keySerializer, valueSerializer) -> {
+        template.getTemplate(), (connection, keySerializer, valueSerializer) -> {
           byte[] updatedBytes = valueSerializer.serialize(updated);
           byte[] oldBytes = valueSerializer.serialize(old);
-          byte[] processingQueueBytes =
-              keySerializer.serialize(source.getProcessingQueueName());
+          byte[] processingQueueBytes = keySerializer.serialize(source.getProcessingQueueName());
           byte[] targetQueueBytes = keySerializer.serialize(targetQueue);
           if (delayMs > 0) {
             connection.zAdd(targetQueueBytes, delayMs, updatedBytes);

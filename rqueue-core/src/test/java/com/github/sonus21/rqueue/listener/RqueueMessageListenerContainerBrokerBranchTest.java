@@ -186,7 +186,8 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
       // All brokers now go through the normal startQueue/startGroup path.
       assertTrue(
           container.startQueueCalled.get() || container.startGroupCalled.get(),
-          "startQueue or startGroup should be invoked for any broker using primary handler dispatch");
+          "startQueue or startGroup should be invoked for any broker using primary handler"
+              + " dispatch");
     } finally {
       container.stop();
       container.destroy();
@@ -207,7 +208,8 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
       assertTrue(
           container.startQueueCalled.get() || container.startGroupCalled.get(),
           "legacy Redis-side wiring should run for REDIS_DEFAULTS capabilities");
-      assertFalse(container.startBrokerPollersCalled.get(),
+      assertFalse(
+          container.startBrokerPollersCalled.get(),
           "startBrokerPollers no longer exists; flag must remain false");
     } finally {
       container.stop();

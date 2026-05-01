@@ -218,10 +218,7 @@ class RqueueExecutorTest extends TestBase {
         .run();
     verify(messageBroker, times(1))
         .parkForRetry(
-            eq(queueDetail),
-            any(RqueueMessage.class),
-            any(RqueueMessage.class),
-            eq(5000L));
+            eq(queueDetail), any(RqueueMessage.class), any(RqueueMessage.class), eq(5000L));
   }
 
   @Test

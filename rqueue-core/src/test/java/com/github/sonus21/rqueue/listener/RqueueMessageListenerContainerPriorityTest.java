@@ -98,7 +98,8 @@ class RqueueMessageListenerContainerPriorityTest {
         .numRetry(3)
         .priority(Collections.emptyMap())
         .build();
-    RqueueMessage msg = RqueueMessage.builder().id("x").queueName("q1").message("p").build();
+    RqueueMessage msg =
+        RqueueMessage.builder().id("x").queueName("q1").message("p").build();
     broker.enqueue(qd, "high", msg);
     broker.enqueue(qd, msg);
     assertEquals(2, plain.get(), "default priority overload should delegate to enqueue(q, m)");

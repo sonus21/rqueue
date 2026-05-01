@@ -255,13 +255,19 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait) {
-    return popInternal(streamFor(q), subjectFor(q), resolveConsumerName(q.getName(), consumerName), batch, wait);
+    return popInternal(
+        streamFor(q), subjectFor(q), resolveConsumerName(q.getName(), consumerName), batch, wait);
   }
 
   @Override
   public List<RqueueMessage> pop(
       QueueDetail q, String priority, String consumerName, int batch, Duration wait) {
-    return popInternal(streamFor(q, priority), subjectFor(q, priority), resolveConsumerName(q.getName(), consumerName), batch, wait);
+    return popInternal(
+        streamFor(q, priority),
+        subjectFor(q, priority),
+        resolveConsumerName(q.getName(), consumerName),
+        batch,
+        wait);
   }
 
   private static String resolveConsumerName(String queueName, String consumerName) {

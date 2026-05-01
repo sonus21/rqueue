@@ -137,7 +137,8 @@ class PostProcessingHandler extends PrefixLogger {
         job.getRqueueMessage(),
         job.getQueueDetail().getDeadLetterQueueName());
     RqueueMessage rqueueMessage = job.getRqueueMessage();
-    RqueueMessage newMessage = rqueueMessage.toBuilder().failureCount(failureCount).build();
+    RqueueMessage newMessage =
+        rqueueMessage.toBuilder().failureCount(failureCount).build();
     newMessage.updateReEnqueuedAt();
     QueueDetail queueDetail = job.getQueueDetail();
     Object userMessage = job.getMessage();
@@ -151,7 +152,8 @@ class PostProcessingHandler extends PrefixLogger {
             "Queue Config not found for queue {}",
             null,
             queueDetail.getDeadLetterQueue());
-        broker.moveToDlq(queueDetail, queueDetail.getDeadLetterQueueName(), rqueueMessage, newMessage, -1);
+        broker.moveToDlq(
+            queueDetail, queueDetail.getDeadLetterQueueName(), rqueueMessage, newMessage, -1);
       } else {
         newMessage.setQueueName(queueConfig.getName());
         newMessage.setFailureCount(0);
@@ -161,10 +163,12 @@ class PostProcessingHandler extends PrefixLogger {
         backOff = (backOff == TaskExecutionBackOff.STOP)
             ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
             : backOff;
-        broker.moveToDlq(queueDetail, queueConfig.getScheduledQueueName(), rqueueMessage, newMessage, backOff);
+        broker.moveToDlq(
+            queueDetail, queueConfig.getScheduledQueueName(), rqueueMessage, newMessage, backOff);
       }
     } else {
-      broker.moveToDlq(queueDetail, queueDetail.getDeadLetterQueueName(), rqueueMessage, newMessage, -1);
+      broker.moveToDlq(
+          queueDetail, queueDetail.getDeadLetterQueueName(), rqueueMessage, newMessage, -1);
     }
     publishEvent(job, newMessage, MessageStatus.MOVED_TO_DLQ);
   }

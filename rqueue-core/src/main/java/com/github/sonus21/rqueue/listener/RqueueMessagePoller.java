@@ -59,9 +59,7 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
   }
 
   private List<RqueueMessage> getMessages(QueueDetail queueDetail, int count) {
-    return rqueueBeanProvider
-        .getMessageBroker()
-        .pop(queueDetail, null, count, Duration.ZERO);
+    return rqueueBeanProvider.getMessageBroker().pop(queueDetail, null, count, Duration.ZERO);
   }
 
   private void execute(
