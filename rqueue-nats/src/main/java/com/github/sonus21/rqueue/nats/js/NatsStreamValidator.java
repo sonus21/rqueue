@@ -98,11 +98,7 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
 
       if (q.getPriority() != null) {
         for (String priority : q.getPriority().keySet()) {
-          total +=
-              tryEnsure(
-                  failures,
-                  mainStream + "-" + priority,
-                  mainSubject + "." + priority);
+          total += tryEnsure(failures, mainStream + "-" + priority, mainSubject + "." + priority);
         }
       }
 
@@ -113,15 +109,14 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
       }
     }
     if (!failures.isEmpty()) {
-      throw new IllegalStateException(
-          "NATS JetStream provisioning failed for "
-              + failures.size()
-              + " of "
-              + total
-              + " stream(s) at startup. "
-              + "With rqueue.nats.autoCreateStreams=false, every required stream must exist before the application starts. "
-              + "Failed streams:\n  - "
-              + String.join("\n  - ", failures));
+      throw new IllegalStateException("NATS JetStream provisioning failed for "
+          + failures.size()
+          + " of "
+          + total
+          + " stream(s) at startup. With rqueue.nats.autoCreateStreams=false, every required"
+          + " stream must exist before the application starts. Failed streams:\n"
+          + "  - "
+          + String.join("\n  - ", failures));
     }
     log.log(
         Level.INFO,

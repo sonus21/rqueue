@@ -17,10 +17,10 @@ package com.github.sonus21.rqueue.spring.boot;
 
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
+import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.nats.js.NatsStreamValidator;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator;
-import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.metrics.NatsRqueueQueueMetricsProvider;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
