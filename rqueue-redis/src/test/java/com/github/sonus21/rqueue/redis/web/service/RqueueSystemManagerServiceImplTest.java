@@ -39,7 +39,7 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
-import com.github.sonus21.rqueue.redis.web.service.impl.RqueueSystemManagerServiceImpl;
+import com.github.sonus21.rqueue.redis.web.RqueueSystemManagerServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import java.util.Arrays;

@@ -41,7 +41,7 @@ import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
-import com.github.sonus21.rqueue.redis.web.service.impl.RqueueQDetailServiceImpl;
+import com.github.sonus21.rqueue.redis.web.RqueueQDetailServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;

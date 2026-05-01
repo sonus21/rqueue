@@ -17,6 +17,8 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import org.junit.jupiter.api.Test;
 
 @NatsIntegrationTest

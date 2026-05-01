@@ -15,6 +15,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -56,11 +58,13 @@ import reactor.core.publisher.Mono;
  */
 @Service
 @Conditional(NatsBackendCondition.class)
+@DependsOn("natsKvBucketValidator")
 public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataService {
 
   private static final Logger log =
       Logger.getLogger(NatsRqueueMessageMetadataService.class.getName());
-  private static final String BUCKET_NAME = "rqueue-message-metadata";
+  private static final String BUCKET_NAME =
+      NatsKvBuckets.MESSAGE_METADATA;
 
   private final Connection connection;
   private final KeyValueManagement kvm;

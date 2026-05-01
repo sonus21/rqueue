@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.nats.worker;
 
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.models.registry.RqueueWorkerInfo;
+import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import com.github.sonus21.rqueue.worker.WorkerRegistryStore;
 import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
@@ -42,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -63,11 +65,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @Conditional(NatsBackendCondition.class)
+@DependsOn("natsKvBucketValidator")
 public class NatsWorkerRegistryStore implements WorkerRegistryStore {
 
   private static final Logger log = Logger.getLogger(NatsWorkerRegistryStore.class.getName());
-  private static final String WORKER_BUCKET = "rqueue-workers";
-  private static final String HEARTBEAT_BUCKET = "rqueue-worker-heartbeats";
+  private static final String WORKER_BUCKET = NatsKvBuckets.WORKERS;
+  private static final String HEARTBEAT_BUCKET = NatsKvBuckets.WORKER_HEARTBEATS;
   /** Separator used to flatten a {@code (queueKey, workerId)} pair into a single KV key. */
   private static final String SEP = "__";
 

@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;

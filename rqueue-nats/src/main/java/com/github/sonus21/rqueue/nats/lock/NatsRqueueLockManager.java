@@ -12,6 +12,7 @@ package com.github.sonus21.rqueue.nats.lock;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
+import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
@@ -26,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 /**
@@ -43,10 +45,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Conditional(NatsBackendCondition.class)
+@DependsOn("natsKvBucketValidator")
 public class NatsRqueueLockManager implements RqueueLockManager {
 
   private static final Logger log = Logger.getLogger(NatsRqueueLockManager.class.getName());
-  private static final String BUCKET_NAME = "rqueue-locks";
+  private static final String BUCKET_NAME = NatsKvBuckets.LOCKS;
 
   private final Connection connection;
   private final KeyValueManagement kvm;

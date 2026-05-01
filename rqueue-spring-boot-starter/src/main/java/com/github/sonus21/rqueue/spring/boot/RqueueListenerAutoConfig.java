@@ -49,12 +49,7 @@ import org.springframework.context.annotation.Import;
 @ComponentScan({
   "com.github.sonus21.rqueue.web",
   "com.github.sonus21.rqueue.dao",
-  // Pick up NATS-backend stub/impl beans (gated by NatsBackendCondition) — these live in
-  // rqueue-nats and only resolve when rqueue-nats is on the classpath. With Redis-only
-  // deployments the package is absent and the scan is a no-op.
-  "com.github.sonus21.rqueue.nats.lock",
-  "com.github.sonus21.rqueue.nats.dao",
-  "com.github.sonus21.rqueue.nats.service"
+  "com.github.sonus21.rqueue.nats",
 })
 @Conditional({RqueueEnabled.class})
 @Import(RqueueRedisListenerConfig.class)

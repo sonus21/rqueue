@@ -37,7 +37,7 @@ import com.github.sonus21.rqueue.dao.RqueueMessageMetadataDao;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
-import com.github.sonus21.rqueue.redis.web.service.impl.RqueueMessageMetadataServiceImpl;
+import com.github.sonus21.rqueue.redis.web.RqueueMessageMetadataServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.time.Duration;

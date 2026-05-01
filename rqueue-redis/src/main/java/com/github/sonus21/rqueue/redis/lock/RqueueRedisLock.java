@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.common.impl;
+package com.github.sonus21.rqueue.redis.lock;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
@@ -23,11 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
 @Slf4j
-public class RqueueLockManagerImpl implements RqueueLockManager {
+public class RqueueRedisLock implements RqueueLockManager {
 
   private final RqueueStringDao rqueueStringDao;
 
-  public RqueueLockManagerImpl(RqueueStringDao rqueueStringDao) {
+  public RqueueRedisLock(RqueueStringDao rqueueStringDao) {
     this.rqueueStringDao = rqueueStringDao;
   }
 

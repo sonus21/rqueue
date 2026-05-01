@@ -22,17 +22,17 @@ import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
-import com.github.sonus21.rqueue.redis.common.impl.RqueueLockManagerImpl;
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import java.time.Duration;
+import com.github.sonus21.rqueue.redis.lock.RqueueRedisLock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @CoreUnitTest
-class RqueueLockManagerImplTest extends TestBase {
+class RqueueRedisLockTest extends TestBase {
 
   private final String lockKey = "test-key";
   private final String lockValue = "test-value";
@@ -45,7 +45,7 @@ class RqueueLockManagerImplTest extends TestBase {
   @BeforeEach
   public void init() {
     MockitoAnnotations.openMocks(this);
-    rqueueLockManager = new RqueueLockManagerImpl(rqueueStringDao);
+    rqueueLockManager = new RqueueRedisLock(rqueueStringDao);
   }
 
   @Test

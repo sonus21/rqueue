@@ -19,6 +19,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import org.junit.jupiter.api.Test;
 
 @NatsIntegrationTest

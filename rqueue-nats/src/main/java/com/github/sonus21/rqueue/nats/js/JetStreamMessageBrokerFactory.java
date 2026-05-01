@@ -7,10 +7,11 @@
  *
  *     https://www.apache.org/licenses/LICENSE-2.0
  */
-package com.github.sonus21.rqueue.nats;
+package com.github.sonus21.rqueue.nats.js;
 
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.spi.MessageBrokerFactory;
+import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import io.nats.client.Connection;
 import io.nats.client.Nats;
 import io.nats.client.Options;

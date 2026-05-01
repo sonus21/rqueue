@@ -93,31 +93,86 @@ Snapshot of `nats-backend` branch progress and what's left to land. Kept here so
 - DAO impls: `RqueueStringDaoImpl`, `RqueueJobDaoImpl`, `RqueueMessageMetadataDaoImpl`, `RqueueQStatsDaoImpl`, `RqueueSystemConfigDaoImpl` → `rqueue-redis/src/main/java/com/github/sonus21/rqueue/redis/dao/`.
 - Metrics: `RedisRqueueQueueMetricsProvider` → `rqueue-redis/.../redis/metrics/`.
 - 5 `@Bean` factories from `RqueueListenerBaseConfig` → `RqueueRedisListenerConfig`: `rqueueRedisLongTemplate`, `rqueueRedisListenerContainerFactory`, `stringRqueueRedisTemplate`, `rqueueInternalPubSubChannel`, `rqueueStringDao`.
-- 5 more `@Bean` factories moved most recently: `scheduledMessageScheduler`, `processingMessageScheduler`, `rqueueWorkerRegistry`, `rqueueLockManager`, `rqueueQueueMetrics`.
-- 6 service impls (in flight, see Pending): `RqueueDashboardChartServiceImpl`, `RqueueJobServiceImpl`, `RqueueMessageMetadataServiceImpl`, `RqueueQDetailServiceImpl`, `RqueueSystemManagerServiceImpl`, `RqueueUtilityServiceImpl` — moved to `rqueue-redis/.../redis/web/service/impl/`.
+- 5 more `@Bean` factories: `scheduledMessageScheduler`, `processingMessageScheduler`, `rqueueWorkerRegistry`, `rqueueLockManager`, `rqueueQueueMetrics`.
+- 6 service impls: `RqueueDashboardChartServiceImpl`, `RqueueJobServiceImpl`, `RqueueMessageMetadataServiceImpl`, `RqueueQDetailServiceImpl`, `RqueueSystemManagerServiceImpl`, `RqueueUtilityServiceImpl` → `rqueue-redis/.../redis/web/service/impl/`.
+
+### `rqueue-web` module extraction
+- New module `rqueue-web` registered in `settings.gradle`. `rqueue-spring-boot-starter`, `rqueue-spring`, `rqueue-redis`, and `rqueue-spring-common-test` declare `api project(":rqueue-web")` so the dashboard ships by default; consumers `<exclude>` it for headless workers.
+- Moved out of `rqueue-core/web/...` into `rqueue-web/web/...`: 5 controllers (`Base`, `BaseReactive`, `RqueueRest`, `RqueueView`, `ReactiveRqueueRest`, `ReactiveRqueueView`), `RqueueWebExceptionAdvice`, `RqueueViewControllerServiceImpl`, and the 6 web-only service interfaces (`RqueueDashboardChartService`, `RqueueJobMetricsAggregatorService`, `RqueueJobService`, `RqueueQDetailService`, `RqueueSystemManagerService`, `RqueueViewControllerService`). Stayed in core: `RqueueMessageMetadataService` and `RqueueUtilityService` interfaces (consumed by listener / endpoint manager).
+- Moved out of `rqueue-core/utils/pebble/`: 7 Pebble extension classes → `rqueue-web/utils/pebble/` (same package, no import changes).
+- Moved out of `rqueue-core/src/main/resources/`: `templates/rqueue/**`, `public/rqueue/**` (CSS, JS, vendor assets) → `rqueue-web/src/main/resources/`.
+- Moved out of `rqueue-core/src/test/`: `web/**` and `utils/pebble/**` test files → `rqueue-web/src/test/`. **Currently unbuildable** — see Pending.
+- Pebble view-resolver `@Bean`s extracted from `RqueueListenerBaseConfig` into a new `RqueueWebViewConfig` in `rqueue-web/web/config/`. Picked up via the existing `com.github.sonus21.rqueue.web` component scan.
+- `rqueue-core/build.gradle` dropped: `spring-webmvc`, `spring-webflux`, `jakarta.servlet-api`, `pebble-spring7`, `seruco/base62`, `hibernate-validator`, `org.glassfish:jakarta.el`. Added `reactor-core` directly (no longer comes via `spring-webflux`). `jakarta.validation-api` retained for DTO annotations.
+
+### `HttpUtils` JDK-client migration
+- `HttpUtils.readUrl` rewritten to use `java.net.http.HttpClient` + Jackson; `org.springframework.web.client.RestTemplate` removed. `spring-web` dropped from `rqueue-core` deps.
+- `joinPath` retained unchanged; `RqueueWebConfig.getUrlPrefix` still calls it.
+
+### Backend-agnostic worker registry
+- New SPI in `rqueue-core`: `WorkerRegistryStore` (7 narrow KV-shaped methods). `RqueueWorkerRegistryImpl` relocated from `rqueue-redis/redis/worker/` to `rqueue-core/worker/`; takes `(RqueueConfig, WorkerRegistryStore)` in the constructor. All heartbeat scheduling / view assembly logic backend-neutral.
+- `RedisWorkerRegistryStore` (rqueue-redis) wraps `RqueueRedisTemplate` over `set`/`get`/`mget`/hash ops.
+- `NatsWorkerRegistryStore` (rqueue-nats) wraps two JetStream KV buckets: `rqueue-workers` (TTL = `workerRegistry.workerTtl`), `rqueue-worker-heartbeats` (TTL = `workerRegistry.queueTtl`). Hash-of-strings emulated as flattened keys `<sanitizedQueueKey>__<sanitizedWorkerId>`. `refreshQueueTtl` is a no-op since NATS resets per-entry age on each write.
+- Wired in `RqueueRedisListenerConfig` and `RqueueNatsAutoConfig` under `@ConditionalOnMissingBean`.
+
+### NATS KV bucket lifecycle (`rqueue.nats.autoCreateKvBuckets`)
+- New `com.github.sonus21.rqueue.nats.kv.NatsKvBuckets` constants class — single source of truth for the 6 bucket names (`QUEUE_CONFIG`, `JOBS`, `LOCKS`, `MESSAGE_METADATA`, `WORKERS`, `WORKER_HEARTBEATS`) + `ALL_BUCKETS` list. Every store / dao now references this constant instead of a private string.
+- New `com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator` — config-source-agnostic class; constructor takes `(Connection, boolean autoCreate)`. Static `validate(Connection, boolean)` walks `ALL_BUCKETS` via `kvm.getStatus(name)` and aborts with `IllegalStateException` listing missing buckets. Implements `InitializingBean` so the bean form re-runs the same check.
+- New `rqueue.nats.autoCreateKvBuckets` field on `RqueueNatsProperties` (default `true`). `rqueue-nats` itself never reads `rqueue.nats.*` keys directly — the property flows in only through the auto-config.
+- Two enforcement layers in `RqueueNatsAutoConfig`:
+  1. Inline call to `NatsKvBucketValidator.validate(connection, props.isAutoCreateKvBuckets())` inside the `natsConnection` `@Bean` factory, so validation completes during `Connection` bean creation (strictly before any other NATS bean can inject the connection).
+  2. `@Bean public NatsKvBucketValidator natsKvBucketValidator(...)` declared from `RqueueNatsProperties`. Five NATS components (`NatsRqueueSystemConfigDao`, `NatsRqueueJobDao`, `NatsRqueueLockManager`, `NatsRqueueMessageMetadataService`, `NatsWorkerRegistryStore`) plus the `WorkerRegistryStore` `@Bean` factory carry `@DependsOn("natsKvBucketValidator")` so they wait on it even when the inline path is bypassed.
+
+### Web-layer infrastructure for capability-aware errors
+- `BackendCapabilityException` (in `rqueue-core/exception/`) — carries `{backend, operation, reason}`. Mapped to HTTP 501 with structured JSON body by `RqueueWebExceptionAdvice` (in `rqueue-web/web/controller/`, scoped `@RestControllerAdvice(basePackageClasses = ...)`). No callers yet — landed as scaffolding for the upcoming web-service repository-interface refactor.
+
+### README — NATS backend section
+- New "NATS backend" section in `README.md` covering: the 6 KV buckets (table with name, purpose, TTL behaviour, code link), how buckets are configured (lazy / immutable `ttl` / connection wiring), pre-create commands for restricted JetStream accounts, the `rqueue.nats.autoCreateKvBuckets=false` flag and its two-layer enforcement, and a recreate-with-new-TTL recipe.
 
 ### CI & PR
 - Branch `nats-backend` pushed to `origin`. ~50 commits, all carry `Assisted-By: Claude Code` only (no `Co-Authored-By:`). `CLAUDE.md` documents the rule.
 
 ## Pending items
 
-### In flight — finish service impl move (slice B of `@Conditional` cleanup)
+### Build green — three test-compile failures across the tree
 
-The 6 `*ServiceImpl` files have moved to `rqueue-redis`. Their unit tests have been moved alongside. **Compilation in `rqueue-redis:test` is failing** because the moved tests depend on `CoreUnitTest` (annotation) and `QueueStatisticsTest` (fixture data) which still live in `rqueue-core/src/test`. Two paths:
+Same root cause for two of three (cross-module visibility of test fixtures). Pick **option 1** below: promote the offenders to `rqueue-test-util/src/main`.
 
-1. Promote `CoreUnitTest` + `QueueStatisticsTest` to `rqueue-test-util/src/main` so they're visible across modules. Smallest change.
-2. Add Gradle `java-test-fixtures` to `rqueue-core` and pull from `rqueue-redis` via `testFixtures(project(":rqueue-core"))`. More canonical Gradle but bigger setup.
+1. **`rqueue-redis:compileTestJava`** — moved tests reference `CoreUnitTest` (annotation) and `QueueStatisticsTest` (fixture data) still living in `rqueue-core/src/test`.
+2. **`rqueue-web:compileTestJava`** — `DateTimeFunctionTest`, `RqueueTaskMetricsAggregatorServiceTest`, `RqueuePebbleExtensionTest` reference `CoreUnitTest` and `TestUtils.createQueueDetail`, both still in `rqueue-core/src/test`.
+3. **`rqueue-nats:compileTestJava`** — `JetStreamMessageBrokerDelayThrowsTest:36` calls `new JetStreamMessageBroker(Connection, JetStream, JetStreamManagement, RqueueNatsConfig, ObjectMapper)` from outside the broker's package. The constructor is package-private (regression from a recent visibility tighten). Fix: widen the constructor to `public`, or use the existing `JetStreamMessageBroker.builder()` API in the test.
 
-Pick **option 1** for simplicity. Move:
-- `rqueue-core/src/test/java/com/github/sonus21/rqueue/CoreUnitTest.java` → `rqueue-test-util/src/main/java/com/github/sonus21/rqueue/CoreUnitTest.java`
-- `rqueue-core/src/test/java/com/github/sonus21/rqueue/models/db/QueueStatisticsTest.java` → split into a fixture helper in `rqueue-test-util` and a thin test that re-exercises it in core (or just keep both copies during transition).
+Plan for items 1 + 2:
+- Move `rqueue-core/src/test/java/com/github/sonus21/rqueue/CoreUnitTest.java` → `rqueue-test-util/src/main/java/com/github/sonus21/rqueue/CoreUnitTest.java`.
+- Move `rqueue-core/src/test/java/com/github/sonus21/rqueue/utils/TestUtils.java` → `rqueue-test-util/src/main/java/com/github/sonus21/rqueue/utils/TestUtils.java`.
+- (Optional) `QueueStatisticsTest` fixture data — promote helpers if the moved Redis tests still need them.
+- All consumer modules already pull `rqueue-test-util` as `testImplementation`, so no build wiring needed.
 
-Then re-run `./gradlew :rqueue-core:test :rqueue-redis:test :rqueue-nats:test -DincludeTags=unit` and `./gradlew :rqueue-spring-boot-starter:test --tests NatsBackendEndToEndIT`.
+Then re-run:
+```
+./gradlew :rqueue-core:test :rqueue-redis:test :rqueue-web:test :rqueue-nats:test -DincludeTags=unit
+./gradlew :rqueue-spring-boot-starter:test --tests "com.github.sonus21.rqueue.spring.boot.integration.NatsBackendEndToEndIT"
+```
+
+### Web-layer NATS dashboard gap (new follow-up)
+
+All 4 controllers and the 5 web service impls (`RqueueDashboardChartService*`, `RqueueQDetailService*`, `RqueueJobService*`, `RqueueSystemManagerService*`, `RqueueUtilityService*`) are still gated `@Conditional(RedisBackendCondition)`. On NATS the dashboard reports broker-derived sizes only; no charts, no message browse, no admin ops. Plan to fix:
+
+1. Introduce repository interfaces in `rqueue-core/repository/` for the few storage primitives the web services share (queue browsing, time-series counters, atomic move). Web service impls move into core / `rqueue-web` and depend only on the repos.
+2. Redis impls of the repos stay in `rqueue-redis`; NATS impls go in `rqueue-nats` and throw `BackendCapabilityException("nats", "operation", "reason")` for primitives JetStream can't model (positional message moves, time-bucket charts).
+3. Drop `@Conditional(RedisBackendCondition)` from controllers; the advice already maps the exception to HTTP 501 with a structured body.
+4. Extend the existing `Capabilities` record (`MessageBroker.capabilities()`) with dashboard-op flags so the front-end can hide unsupported panels instead of relying on 501s. Expose `GET /rqueue/api/capabilities`.
+
+Order of operations: easiest first — `RqueueSystemManagerService` (already mostly goes through `RqueueSystemConfigDao`), then `RqueueJobService`, `RqueueViewControllerService`, then `RqueueQDetailService` (needs new `MessageBrowsingRepository`), then `RqueueDashboardChartService` and `RqueueUtilityService.move/enqueue` last (these throw on NATS).
+
+### Spring Boot configuration metadata
+
+`spring-configuration-metadata.json` has no entry for `rqueue.nats.autoCreateKvBuckets`. IDE autocomplete won't show it. Easy follow-up: add `spring-boot-configuration-processor` to the starter's annotation processors if not already wired.
 
 ### Other open follow-ups
 
-- **`RqueueStringDao` interface** itself — analysis recommended keeping it Redis-only (don't split into smaller cross-backend interfaces). It already has zero NATS-path consumers; just document it as Redis-internal in javadoc.
-- **`RqueueMessageMetadataDao`, `RqueueQStatsDao`** — no NATS impls needed; all consumers are Redis-only gated. Verified, no action.
+- **`RqueueStringDao` interface** — keep Redis-only; document as Redis-internal in javadoc.
+- **`RqueueMessageMetadataDao`, `RqueueQStatsDao`** — no NATS impls needed; all consumers are Redis-only gated. Re-verify in light of the web-layer refactor above.
 - **Reactive listener container** — only enqueue side is reactive in v1. Phase 5 territory.
 - **Delayed/scheduled/cron messages on NATS** — throws `UnsupportedOperationException`. Out of scope for v1.
 - **Cross-queue `priorityGroup` weighting on NATS** — boot WARN, not honored. Acceptable for v1.

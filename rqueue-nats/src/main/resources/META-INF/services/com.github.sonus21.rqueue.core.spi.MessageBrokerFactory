@@ -1,1 +1,1 @@
-com.github.sonus21.rqueue.nats.JetStreamMessageBrokerFactory
+com.github.sonus21.rqueue.nats.js.JetStreamMessageBrokerFactory

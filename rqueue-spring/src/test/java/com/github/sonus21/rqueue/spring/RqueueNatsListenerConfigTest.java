@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
-import com.github.sonus21.rqueue.nats.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;

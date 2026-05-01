@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web.service.impl;
+package com.github.sonus21.rqueue.redis.web;
 
 import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;

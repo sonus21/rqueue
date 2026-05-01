@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import org.junit.jupiter.api.Test;
 
 @NatsIntegrationTest

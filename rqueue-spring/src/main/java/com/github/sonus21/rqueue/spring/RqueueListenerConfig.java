@@ -49,9 +49,7 @@ import org.springframework.context.annotation.Import;
 @ComponentScan({
   "com.github.sonus21.rqueue.web",
   "com.github.sonus21.rqueue.dao",
-  "com.github.sonus21.rqueue.nats.lock",
-  "com.github.sonus21.rqueue.nats.dao",
-  "com.github.sonus21.rqueue.nats.service"
+  "com.github.sonus21.rqueue.nats",
 })
 @Import(RqueueRedisListenerConfig.class)
 public class RqueueListenerConfig extends RqueueListenerBaseConfig {

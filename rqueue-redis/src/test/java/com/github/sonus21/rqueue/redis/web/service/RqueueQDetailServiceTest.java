@@ -47,7 +47,7 @@ import com.github.sonus21.rqueue.models.response.RowColumnMeta;
 import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
-import com.github.sonus21.rqueue.redis.web.service.impl.RqueueQDetailServiceImpl;
+import com.github.sonus21.rqueue.redis.web.RqueueQDetailServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.web.service.RqueueQDetailService;

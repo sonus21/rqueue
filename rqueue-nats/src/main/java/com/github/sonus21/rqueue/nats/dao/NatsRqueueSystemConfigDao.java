@@ -12,6 +12,7 @@ package com.github.sonus21.rqueue.nats.dao;
 
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -47,10 +49,11 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @Conditional(NatsBackendCondition.class)
+@DependsOn("natsKvBucketValidator")
 public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
 
   private static final Logger log = Logger.getLogger(NatsRqueueSystemConfigDao.class.getName());
-  private static final String BUCKET_NAME = "rqueue-queue-config";
+  private static final String BUCKET_NAME = NatsKvBuckets.QUEUE_CONFIG;
 
   private final Connection connection;
   private final KeyValueManagement kvm;

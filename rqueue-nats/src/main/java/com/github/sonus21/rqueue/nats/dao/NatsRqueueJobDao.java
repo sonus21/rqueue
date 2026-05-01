@@ -13,6 +13,7 @@ package com.github.sonus21.rqueue.nats.dao;
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.RqueueJob;
+import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -48,10 +50,11 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @Conditional(NatsBackendCondition.class)
+@DependsOn("natsKvBucketValidator")
 public class NatsRqueueJobDao implements RqueueJobDao {
 
   private static final Logger log = Logger.getLogger(NatsRqueueJobDao.class.getName());
-  private static final String BUCKET_NAME = "rqueue-jobs";
+  private static final String BUCKET_NAME = NatsKvBuckets.JOBS;
 
   private final Connection connection;
   private final KeyValueManagement kvm;
