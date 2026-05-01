@@ -70,6 +70,9 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.messaging.converter.MessageConverter;
+import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
+import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 
 @CoreUnitTest
 class RqueueQDetailServiceTest extends TestBase {

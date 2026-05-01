@@ -49,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 
 @CoreUnitTest
 class RqueueMessageMetadataServiceTest extends TestBase {

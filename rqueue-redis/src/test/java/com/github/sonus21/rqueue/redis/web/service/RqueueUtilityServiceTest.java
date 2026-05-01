@@ -57,6 +57,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
+import com.github.sonus21.rqueue.service.RqueueUtilityService;
 
 @CoreUnitTest
 class RqueueUtilityServiceTest extends TestBase {

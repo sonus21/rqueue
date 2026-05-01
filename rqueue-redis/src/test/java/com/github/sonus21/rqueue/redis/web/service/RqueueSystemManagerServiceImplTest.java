@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.redis.web.service.impl;
+package com.github.sonus21.rqueue.redis.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -39,6 +39,7 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
+import com.github.sonus21.rqueue.redis.web.service.impl.RqueueSystemManagerServiceImpl;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import java.util.Arrays;

@@ -31,7 +31,7 @@ import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.models.db.JobRunTime;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
-import com.github.sonus21.rqueue.models.db.QueueStatisticsTest;
+import com.github.sonus21.rqueue.models.db.QueueStatisticsFixtures;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.ChartType;
@@ -50,6 +50,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
+import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 
 @Slf4j
 @CoreUnitTest
@@ -225,7 +227,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     LocalDate localDate = DateTimeUtils.today();
     for (int i = 0; i < rqueueWebConfig.getHistoryDay(); i++) {
-      QueueStatisticsTest.addData(queueStatistics, localDate, i);
+      QueueStatisticsFixtures.addData(queueStatistics, localDate, i);
     }
     doReturn(Collections.singletonList(queueStatistics))
         .when(rqueueQStatsDao)
@@ -263,7 +265,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     LocalDate localDate = DateTimeUtils.today();
     for (int i = 0; i < rqueueWebConfig.getHistoryDay(); i++) {
-      QueueStatisticsTest.addData(queueStatistics, localDate, i);
+      QueueStatisticsFixtures.addData(queueStatistics, localDate, i);
     }
     doReturn(Collections.singletonList(queueStatistics))
         .when(rqueueQStatsDao)
@@ -301,7 +303,7 @@ class RqueueDashboardChartServiceTest extends TestBase {
     QueueStatistics queueStatistics = new QueueStatistics(id);
     LocalDate localDate = DateTimeUtils.today();
     for (int i = 10; i < rqueueWebConfig.getHistoryDay() - 10; i++) {
-      QueueStatisticsTest.addData(queueStatistics, localDate, i);
+      QueueStatisticsFixtures.addData(queueStatistics, localDate, i);
     }
     doReturn(Collections.singletonList(queueStatistics))
         .when(rqueueQStatsDao)

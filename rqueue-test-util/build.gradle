@@ -30,4 +30,13 @@ dependencies {
     api "org.hibernate.orm:hibernate-core:${hibernateCoreVersion}"
 
     api "com.athaydes.javanna:javanna:1.1"
+
+    // Needed so shared test-utility classes (e.g. @CoreUnitTest) can reference Mockito's
+    // JUnit Jupiter extension from main sources.
+    api "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+
+    // Test fixtures that ship from main sources (TestUtils, QueueStatisticsFixtures) reference
+    // model and service types from rqueue-core. Marked compileOnly to avoid a hard runtime
+    // coupling — every consumer of rqueue-test-util already has rqueue-core on its classpath.
+    compileOnly project(":rqueue-core")
 }
