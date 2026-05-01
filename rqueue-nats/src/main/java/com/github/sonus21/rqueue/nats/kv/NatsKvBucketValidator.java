@@ -89,9 +89,8 @@ public class NatsKvBucketValidator implements InitializingBean {
    */
   public static void validate(Connection connection, boolean autoCreate) {
     if (autoCreate) {
-      log.fine(
-          "rqueue.nats.autoCreateKvBuckets=true; skipping startup KV bucket validation, stores"
-              + " will lazily create buckets as needed.");
+      log.fine("rqueue.nats.autoCreateKvBuckets=true; skipping startup KV bucket validation, stores"
+          + " will lazily create buckets as needed.");
       return;
     }
     KeyValueManagement kvm;

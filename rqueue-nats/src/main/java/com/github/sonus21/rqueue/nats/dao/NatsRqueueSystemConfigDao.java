@@ -12,8 +12,8 @@ package com.github.sonus21.rqueue.nats.dao;
 
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
-import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
+import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import io.nats.client.Connection;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;

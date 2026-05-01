@@ -25,10 +25,10 @@ import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
-import com.github.sonus21.rqueue.redis.lock.RqueueRedisLock;
 import com.github.sonus21.rqueue.redis.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.redis.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.redis.dao.RqueueStringDaoImpl;
+import com.github.sonus21.rqueue.redis.lock.RqueueRedisLock;
 import com.github.sonus21.rqueue.redis.metrics.RedisRqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.redis.worker.RedisWorkerRegistryStore;
 import com.github.sonus21.rqueue.utils.RedisUtils;
@@ -55,7 +55,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 @Configuration
 @Conditional(RedisBackendCondition.class)
 @ComponentScan({
-    "com.github.sonus21.rqueue.redis",
+  "com.github.sonus21.rqueue.redis",
 })
 public class RqueueRedisListenerConfig {
 
@@ -91,7 +91,7 @@ public class RqueueRedisListenerConfig {
       RqueueConfig rqueueConfig,
       RqueueBeanProvider rqueueBeanProvider,
       @Qualifier("stringRqueueRedisTemplate")
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RqueueInternalPubSubChannel(
         rqueueRedisListenerContainerFactory,
         rqueueMessageListenerContainer,
@@ -148,7 +148,7 @@ public class RqueueRedisListenerConfig {
   @Conditional(RedisBackendCondition.class)
   public RqueueQueueMetricsProvider rqueueQueueMetricsProvider(
       @Qualifier("stringRqueueRedisTemplate")
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
+          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
     return new RedisRqueueQueueMetricsProvider(stringRqueueRedisTemplate);
   }
 }

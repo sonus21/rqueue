@@ -13,14 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-
-import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import org.junit.jupiter.api.Test;
 
 @NatsIntegrationTest

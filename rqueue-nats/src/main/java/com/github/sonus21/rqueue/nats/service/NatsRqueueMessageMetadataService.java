@@ -63,8 +63,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
 
   private static final Logger log =
       Logger.getLogger(NatsRqueueMessageMetadataService.class.getName());
-  private static final String BUCKET_NAME =
-      NatsKvBuckets.MESSAGE_METADATA;
+  private static final String BUCKET_NAME = NatsKvBuckets.MESSAGE_METADATA;
 
   private final Connection connection;
   private final KeyValueManagement kvm;
