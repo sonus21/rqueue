@@ -276,7 +276,9 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   private List<RqueueMessage> popInternal(
       String stream, String subject, String consumerName, int batch, Duration wait) {
-    Duration fetchWait = wait != null ? wait : config.getDefaultFetchWait();
+    // Use default fetch wait if none provided OR if zero duration is passed (Redis compatibility).
+    // JetStream requires a positive duration for fetch().
+    Duration fetchWait = (wait != null && !wait.isZero()) ? wait : config.getDefaultFetchWait();
     String key = stream + "/" + consumerName;
     JetStreamSubscription sub = subscriptionCache.computeIfAbsent(key, k -> {
       // computeIfAbsent runs at most once per (stream, consumer) per JVM, so both the stream
