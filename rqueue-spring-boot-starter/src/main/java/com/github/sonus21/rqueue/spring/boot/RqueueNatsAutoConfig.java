@@ -30,6 +30,7 @@ import io.nats.client.Options;
 import java.io.IOException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -166,6 +167,7 @@ public class RqueueNatsAutoConfig {
   }
 
   @Bean
+  @ConditionalOnBean(com.github.sonus21.rqueue.config.RqueueConfig.class)
   @ConditionalOnMissingBean(com.github.sonus21.rqueue.worker.RqueueWorkerRegistry.class)
   public com.github.sonus21.rqueue.worker.RqueueWorkerRegistry natsRqueueWorkerRegistry(
       com.github.sonus21.rqueue.config.RqueueConfig rqueueConfig,
