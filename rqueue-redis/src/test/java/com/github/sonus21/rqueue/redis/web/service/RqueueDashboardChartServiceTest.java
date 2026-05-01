@@ -39,6 +39,8 @@ import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.redis.web.service.impl.RqueueDashboardChartServiceImpl;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
+import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
+import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,8 +52,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import com.github.sonus21.rqueue.web.service.RqueueDashboardChartService;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 
 @Slf4j
 @CoreUnitTest

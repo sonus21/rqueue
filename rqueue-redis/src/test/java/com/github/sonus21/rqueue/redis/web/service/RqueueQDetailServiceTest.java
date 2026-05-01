@@ -48,7 +48,10 @@ import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.redis.web.service.impl.RqueueQDetailServiceImpl;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
+import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
+import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,9 +73,6 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.messaging.converter.MessageConverter;
-import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
-import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 
 @CoreUnitTest
 class RqueueQDetailServiceTest extends TestBase {

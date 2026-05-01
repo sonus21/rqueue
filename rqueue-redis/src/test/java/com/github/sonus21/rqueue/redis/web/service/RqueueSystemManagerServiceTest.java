@@ -33,7 +33,9 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.redis.web.service.impl.RqueueSystemManagerServiceImpl;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,8 +46,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
-import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 
 @CoreUnitTest
 class RqueueSystemManagerServiceTest extends TestBase {
