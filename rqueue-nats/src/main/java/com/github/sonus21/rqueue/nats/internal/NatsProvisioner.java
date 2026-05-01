@@ -82,7 +82,14 @@ public class NatsProvisioner {
    * Ensure a durable pull consumer exists. If existing config differs from desired, logs WARN and
    * leaves it alone (so users can hand-tune consumers in production).
    */
-  public void ensureConsumer(
+  /**
+   * Ensure a consumer exists on a stream with the given configuration, returning the actual
+   * consumer name that will be used for binding (may differ from {@code consumerName} if a
+   * stale/recovered consumer was reused).
+   *
+   * @return the actual consumer name to use for binding
+   */
+  public String ensureConsumer(
       String streamName,
       String consumerName,
       Duration ackWait,
@@ -119,7 +126,7 @@ public class NatsProvisioner {
                   + maxDeliver
                   + ") - leaving existing config in place.");
         }
-        return;
+        return consumerName;
       }
       if (!config.isAutoCreateConsumers()) {
         throw new RqueueNatsException("Consumer '"
@@ -139,14 +146,14 @@ public class NatsProvisioner {
         cb.filterSubject(filterSubject);
       }
       jsm.addOrUpdateConsumer(streamName, cb.build());
+      return consumerName;
     } catch (JetStreamApiException e) {
       // Error 10100 = "filtered consumer not unique" — a consumer with the same filter
       // already exists on the stream (stale from a previous naming scheme or crashed run).
       // List all consumers and check if one matches our filter; reuse it rather than
       // failing the startup.
       if (e.getApiErrorCode() == 10100 && filterSubject != null) {
-        tryFindAndBindStaleConsumer(streamName, filterSubject, consumerName);
-        return;
+        return tryFindAndBindStaleConsumer(streamName, filterSubject, consumerName);
       }
       throw new RqueueNatsException(
           "Failed to ensure consumer '" + consumerName + "' on stream '" + streamName + "'", e);
@@ -162,12 +169,12 @@ public class NatsProvisioner {
    * - Stale consumers from a previous consumer naming scheme still exist
    * - Multiple instances crashed mid-initialization and left orphaned consumers
    *
-   * <p>When found, the broker will bind to the existing consumer (which will work fine as long as
-   * it has a compatible configuration).
+   * <p>When found, returns the actual consumer name so the broker can bind to it correctly.
    *
+   * @return the actual consumer name to use for binding
    * @throws RqueueNatsException if recovery fails
    */
-  private void tryFindAndBindStaleConsumer(
+  private String tryFindAndBindStaleConsumer(
       String streamName, String filterSubject, String preferredConsumerName) {
     try {
       // List all consumers on the stream and find one matching our filter.
@@ -181,7 +188,7 @@ public class NatsProvisioner {
               Level.INFO,
               "Reusing existing consumer '" + name + "' (filter=" + filterSubject + ")"
                   + " instead of creating '" + preferredConsumerName + "'");
-          return; // Bind will use the existing consumer
+          return name; // Return the actual consumer name for binding
         }
       }
       // No matching consumer found; this is unexpected, so fail.

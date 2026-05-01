@@ -289,14 +289,16 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       // (one getStreamInfo round-trip per subscription, not per message).
       try {
         provisioner.ensureStream(stream, List.of(subject));
-        provisioner.ensureConsumer(
+        // ensureConsumer returns the actual consumer name to use (may differ if a stale
+        // consumer was recovered/reused due to naming scheme changes).
+        String actualConsumerName = provisioner.ensureConsumer(
             stream,
             consumerName,
             config.getConsumerDefaults().getAckWait(),
             config.getConsumerDefaults().getMaxDeliver(),
             config.getConsumerDefaults().getMaxAckPending(),
             subject);
-        PullSubscribeOptions opts = PullSubscribeOptions.bind(stream, consumerName);
+        PullSubscribeOptions opts = PullSubscribeOptions.bind(stream, actualConsumerName);
         return js.subscribe(subject, opts);
       } catch (IOException | JetStreamApiException e) {
         throw new RqueueNatsException(
