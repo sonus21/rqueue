@@ -231,7 +231,8 @@ public class ReactiveRqueueRestController extends BaseReactiveController {
     if (!isEnabled(response)) {
       return Mono.empty();
     }
-    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageBrokerProvider.getIfAvailable();
+    com.github.sonus21.rqueue.core.spi.MessageBroker broker =
+        messageBrokerProvider.getIfAvailable();
     return Mono.just(
         broker == null
             ? com.github.sonus21.rqueue.core.spi.Capabilities.REDIS_DEFAULTS
