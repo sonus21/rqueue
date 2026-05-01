@@ -273,9 +273,12 @@ Micrometer based dashboard for queue
 Rqueue can use NATS JetStream as the message broker instead of Redis by setting
 `rqueue.backend=nats` and including the `rqueue-nats` module on the classpath. State that Redis
 stores in keys, hashes, and sorted-sets is mapped onto JetStream **streams** (for messages) and
-JetStream **KV buckets** (for everything else). Streams and buckets are lazily provisioned on
-first use by `JetStreamMessageBrokerFactory` / `NatsProvisioner`; nothing needs to be created
-ahead of time as long as the JetStream credentials allow `add_stream` / `kv_create`.
+JetStream **KV buckets** (for everything else). Both are provisioned **once at startup** —
+streams by `NatsStreamValidator` on `RqueueBootstrapEvent`, KV buckets by `NatsKvBucketValidator`
+on the `Connection` bean — so the publish / pop hot path never pays a `getStreamInfo` round-trip
+to confirm the stream exists. As long as the JetStream credentials allow `add_stream` /
+`kv_create`, nothing needs to be created ahead of time. For locked-down accounts see the
+"Pre-creating streams" / "Pre-creating buckets" subsections below.
 
 ### Streams per queue
 
@@ -284,11 +287,11 @@ Each registered queue produces **one main stream**, **one DLQ stream** (when
 sub-queue** the queue declares. Only the main queue has a DLQ — priority sub-queues fan out to
 their own streams but share the parent queue's DLQ wiring through `RqueueExecutor`.
 
-| Queue shape                   | Stream count | Names (with default prefixes)                                                                  |
-|-------------------------------|--------------|------------------------------------------------------------------------------------------------|
-| Plain queue, DLQ on (default) | 2            | `rqueue-js-<queue>`, `rqueue-js-<queue>-dlq`                                                   |
-| Plain queue, DLQ off          | 1            | `rqueue-js-<queue>`                                                                            |
-| Queue with N priorities, DLQ on | N + 2      | `rqueue-js-<queue>`, `rqueue-js-<queue>-<p1>` … `rqueue-js-<queue>-<pN>`, `rqueue-js-<queue>-dlq` |
+| Queue shape                     | Stream count | Names (with default prefixes)                                                                     |
+|---------------------------------|--------------|---------------------------------------------------------------------------------------------------|
+| Plain queue, DLQ on (default)   | 2            | `rqueue-js-<queue>`, `rqueue-js-<queue>-dlq`                                                      |
+| Plain queue, DLQ off            | 1            | `rqueue-js-<queue>`                                                                               |
+| Queue with N priorities, DLQ on | N + 2        | `rqueue-js-<queue>`, `rqueue-js-<queue>-<p1>` … `rqueue-js-<queue>-<pN>`, `rqueue-js-<queue>-dlq` |
 
 The naming scheme is `<streamPrefix><queueName>[-<priority>][<dlqStreamSuffix>]`, configurable via
 `rqueue.nats.naming.streamPrefix` (default `rqueue-js-`) and `rqueue.nats.naming.dlqSuffix`
@@ -299,6 +302,32 @@ JetStream account. Subjects follow the same shape with `.` separators:
 `<subjectPrefix><queueName>[.<priority>][<dlqSubjectSuffix>]` (default subject prefix
 `rqueue.js.`). Stream defaults (replicas, storage, retention, duplicate window, max msgs/bytes)
 come from `rqueue.nats.stream.*`.
+
+#### Pre-creating streams (restricted JetStream accounts)
+
+For deployments where the application credentials cannot run `add_stream` at runtime, set
+`rqueue.nats.autoCreateStreams=false` and pre-create every stream the application needs.
+`NatsStreamValidator` walks `EndpointRegistry` on `RqueueBootstrapEvent` and verifies that
+every main stream, every priority sub-queue stream, and every DLQ stream (for queues whose
+listener declared a DLQ) exists. If any are missing it aborts boot with one
+`IllegalStateException` listing all of them — operator-actionable failure at startup, not a
+"stream not found" on first enqueue.
+
+The streams to pre-create follow the table above. For a queue `orders` with priorities
+`high` / `low` and a DLQ:
+
+```sh
+nats stream add rqueue-js-orders --subjects rqueue.js.orders ...
+nats stream add rqueue-js-orders-high --subjects rqueue.js.orders.high ...
+nats stream add rqueue-js-orders-low --subjects rqueue.js.orders.low ...
+nats stream add rqueue-js-orders-dlq --subjects rqueue.js.orders.dlq ...
+```
+
+Consumers (durable pull consumers) are still created lazily — the broker calls
+`ensureConsumer` once per `(stream, consumerName)` pair on the cold path of the first pop and
+caches the bind in-process, so there's no per-pop RTT after warm-up. Set
+`rqueue.nats.autoCreateConsumers=false` to fail-fast on missing consumers instead of creating
+them.
 
 ### KV buckets (one set, shared across all queues)
 

@@ -17,7 +17,9 @@ package com.github.sonus21.rqueue.spring.boot;
 
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
-import com.github.sonus21.rqueue.nats.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.nats.js.NatsStreamValidator;
+import com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.metrics.NatsRqueueQueueMetricsProvider;
 import io.nats.client.Connection;
@@ -33,6 +35,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
 
 /**
  * Auto-configuration that wires a JetStream-backed {@link MessageBroker} when
@@ -81,12 +84,19 @@ public class RqueueNatsAutoConfig {
     if (c.getPingInterval() != null) {
       ob.pingInterval(c.getPingInterval());
     }
+    Connection connection;
     try {
-      return Nats.connect(ob.build());
+      connection = Nats.connect(ob.build());
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IOException("Interrupted while connecting to NATS", e);
     }
+    // Validate KV buckets here — inside the Connection bean factory — so every other NATS
+    // bean (broker, daos, registry, lock manager) that injects Connection is guaranteed to
+    // see a validated cluster. Spring's @Order/@Priority don't control bean creation order;
+    // anchoring the check on the Connection itself does.
+    NatsKvBucketValidator.validate(connection, props.isAutoCreateKvBuckets());
+    return connection;
   }
 
   @Bean
@@ -123,8 +133,33 @@ public class RqueueNatsAutoConfig {
     return new NatsRqueueQueueMetricsProvider(jetStreamManagement, toBrokerConfig(props));
   }
 
+  /**
+   * Boot-time stream / DLQ existence guard. Fires on {@code RqueueBootstrapEvent} so it sees the
+   * full {@code EndpointRegistry} after every {@code @RqueueListener} has registered. Removes
+   * the per-publish {@code getStreamInfo} round-trip from the broker hot path.
+   */
+  @Bean
+  @ConditionalOnMissingBean(NatsStreamValidator.class)
+  public NatsStreamValidator natsStreamValidator(
+      JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
+    return new NatsStreamValidator(jetStreamManagement, toBrokerConfig(props));
+  }
+
+  /**
+   * Bean form of the KV-bucket validator. Other NATS beans {@code @DependsOn} this name so it
+   * runs before they are constructed. The flag is sourced from {@link RqueueNatsProperties} —
+   * {@code rqueue-nats} itself never reads {@code rqueue.nats.*} keys directly.
+   */
+  @Bean
+  @ConditionalOnMissingBean(NatsKvBucketValidator.class)
+  public NatsKvBucketValidator natsKvBucketValidator(
+      Connection connection, RqueueNatsProperties props) {
+    return new NatsKvBucketValidator(connection, props.isAutoCreateKvBuckets());
+  }
+
   @Bean
   @ConditionalOnMissingBean(com.github.sonus21.rqueue.worker.WorkerRegistryStore.class)
+  @DependsOn("natsKvBucketValidator")
   public com.github.sonus21.rqueue.worker.WorkerRegistryStore natsWorkerRegistryStore(
       Connection connection) throws IOException {
     return new com.github.sonus21.rqueue.nats.worker.NatsWorkerRegistryStore(connection);

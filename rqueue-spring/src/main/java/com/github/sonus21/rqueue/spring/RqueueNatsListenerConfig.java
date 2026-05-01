@@ -16,7 +16,9 @@
 package com.github.sonus21.rqueue.spring;
 
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
-import com.github.sonus21.rqueue.nats.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.nats.js.NatsStreamValidator;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;
@@ -81,5 +83,10 @@ public class RqueueNatsListenerConfig {
         .jetStream(jetStream)
         .management(jetStreamManagement)
         .build();
+  }
+
+  @Bean
+  public NatsStreamValidator natsStreamValidator(JetStreamManagement jetStreamManagement) {
+    return new NatsStreamValidator(jetStreamManagement, RqueueNatsConfig.defaults());
   }
 }
