@@ -223,13 +223,11 @@ public class RqueueUtilityServiceImpl implements RqueueUtilityService {
     if (type == null || type == org.springframework.data.redis.connection.DataType.NONE) {
       return new BooleanResponse(true);
     }
-    return new BooleanResponse(
-        MessageSweeper.getInstance(rqueueConfig, rqueueMessageTemplate, messageMetadataService)
-            .deleteAllMessages(MessageDeleteRequest.builder()
-                .dataName(dataName)
-                .queueName(queueName)
-                .dataType(type)
-                .build()));
+    return new BooleanResponse(messageSweeper.deleteAllMessages(MessageDeleteRequest.builder()
+        .dataName(dataName)
+        .queueName(queueName)
+        .dataType(type)
+        .build()));
   }
 
   private boolean shouldFetchVersionDetail() {
