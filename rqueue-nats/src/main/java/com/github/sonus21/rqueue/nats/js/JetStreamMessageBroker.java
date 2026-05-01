@@ -665,7 +665,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
           management = connection.jetStreamManagement();
         }
         if (provisioner == null) {
-          provisioner = new NatsProvisioner(connection, management, config != null ? config : RqueueNatsConfig.defaults());
+          provisioner = new NatsProvisioner(
+              connection, management, config != null ? config : RqueueNatsConfig.defaults());
         }
       } catch (IOException e) {
         throw new RqueueNatsException("Failed to derive JetStream context from connection", e);
@@ -676,7 +677,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       if (mapper == null) {
         mapper = new ObjectMapper();
       }
-      return new JetStreamMessageBroker(connection, jetStream, management, config, mapper, provisioner);
+      return new JetStreamMessageBroker(
+          connection, jetStream, management, config, mapper, provisioner);
     }
 
     /** Create a broker that wraps a pre-built {@link Map} of NATS handles. Used by the factory. */

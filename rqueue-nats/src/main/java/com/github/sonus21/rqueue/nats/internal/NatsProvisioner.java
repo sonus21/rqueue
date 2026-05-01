@@ -243,8 +243,8 @@ public class NatsProvisioner {
         }
       }
       throw new RqueueNatsException(
-          "Filtered consumer with filter '" + filterSubject + "' not found on stream '"
-              + streamName + "' despite 'filtered consumer not unique' error");
+          "Filtered consumer with filter '" + filterSubject + "' not found on stream '" + streamName
+              + "' despite 'filtered consumer not unique' error");
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
           "Failed to recover from 'filtered consumer not unique' error on stream '" + streamName
@@ -272,8 +272,7 @@ public class NatsProvisioner {
       return jsm.getConsumerInfo(streamName, consumerName);
     } catch (JetStreamApiException e) {
       // 10014 = consumer not found, 10059 = stream not found
-      if (e.getApiErrorCode() == 10014 || e.getApiErrorCode() == 10059
-          || e.getErrorCode() == 404) {
+      if (e.getApiErrorCode() == 10014 || e.getApiErrorCode() == 10059 || e.getErrorCode() == 404) {
         return null;
       }
       throw e;

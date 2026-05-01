@@ -17,12 +17,9 @@
 package com.github.sonus21.rqueue.nats.repository;
 
 import com.github.sonus21.rqueue.exception.BackendCapabilityException;
-import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
-import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
-import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.JetStreamManagement;

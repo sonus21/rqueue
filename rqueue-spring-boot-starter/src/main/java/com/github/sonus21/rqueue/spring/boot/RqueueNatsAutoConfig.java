@@ -31,7 +31,6 @@ import io.nats.client.Options;
 import java.io.IOException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -170,7 +169,7 @@ public class RqueueNatsAutoConfig {
     return new NatsProvisioner(connection, jetStreamManagement, toBrokerConfig(props));
   }
 
-/**
+  /**
    * NATS-side {@link com.github.sonus21.rqueue.repository.MessageBrowsingRepository} powering
    * the dashboard's data-explorer and queue-detail panels. Maps Redis-style queue names to
    * JetStream streams and returns actual message counts from the broker. JetStream KV doesn't

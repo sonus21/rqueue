@@ -53,9 +53,8 @@ public final class NatsKvBuckets {
   public static final String QUEUE_STATS = "rqueue-queue-stats";
 
   /** All buckets the NATS backend will use, in stable order. */
-  public static final List<String> ALL_BUCKETS = Collections.unmodifiableList(
-      Arrays.asList(QUEUE_CONFIG, JOBS, LOCKS, MESSAGE_METADATA, WORKERS, WORKER_HEARTBEATS,
-          QUEUE_STATS));
+  public static final List<String> ALL_BUCKETS = Collections.unmodifiableList(Arrays.asList(
+      QUEUE_CONFIG, JOBS, LOCKS, MESSAGE_METADATA, WORKERS, WORKER_HEARTBEATS, QUEUE_STATS));
 
   private NatsKvBuckets() {}
 }
