@@ -33,11 +33,9 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
-import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
-import java.util.ArrayList;
+import com.github.sonus21.rqueue.web.service.impl.RqueueSystemManagerServiceImpl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -122,10 +120,9 @@ class RqueueSystemManagerServiceTest extends TestBase {
     EndpointRegistry.register(fastQueueDetail);
     doReturn(Arrays.asList(slowQueueConfig, fastQueueConfig))
         .when(rqueueSystemConfigDao)
-        .findAllQConfig(
-            EndpointRegistry.getActiveQueues().stream()
-                .map(TestUtils::getQueueConfigKey)
-                .collect(Collectors.toList()));
+        .findAllQConfig(EndpointRegistry.getActiveQueues().stream()
+            .map(TestUtils::getQueueConfigKey)
+            .collect(Collectors.toList()));
     assertEquals(
         Arrays.asList(slowQueueConfig, fastQueueConfig),
         rqueueSystemManagerService.getQueueConfigs());
