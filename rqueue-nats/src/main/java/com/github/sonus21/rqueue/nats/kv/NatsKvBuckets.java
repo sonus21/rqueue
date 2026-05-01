@@ -50,8 +50,8 @@ public final class NatsKvBuckets {
   public static final String WORKER_HEARTBEATS = "rqueue-worker-heartbeats";
 
   /** All buckets the NATS backend will use, in stable order. */
-  public static final List<String> ALL_BUCKETS = Collections.unmodifiableList(Arrays.asList(
-      QUEUE_CONFIG, JOBS, LOCKS, MESSAGE_METADATA, WORKERS, WORKER_HEARTBEATS));
+  public static final List<String> ALL_BUCKETS = Collections.unmodifiableList(
+      Arrays.asList(QUEUE_CONFIG, JOBS, LOCKS, MESSAGE_METADATA, WORKERS, WORKER_HEARTBEATS));
 
   private NatsKvBuckets() {}
 }

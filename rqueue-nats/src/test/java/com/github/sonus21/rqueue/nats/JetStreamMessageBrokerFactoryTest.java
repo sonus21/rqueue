@@ -16,11 +16,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.core.spi.MessageBrokerFactory;
 import com.github.sonus21.rqueue.core.spi.MessageBrokerLoader;
+import com.github.sonus21.rqueue.nats.js.JetStreamMessageBrokerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
-
-import com.github.sonus21.rqueue.nats.js.JetStreamMessageBrokerFactory;
 import org.junit.jupiter.api.Test;
 
 /** ServiceLoader and configuration-parsing tests for {@link JetStreamMessageBrokerFactory}. */
