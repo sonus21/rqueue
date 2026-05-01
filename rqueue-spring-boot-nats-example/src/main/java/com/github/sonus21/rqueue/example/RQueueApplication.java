@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2024-2026 Sonu Kumar
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
+package com.github.sonus21.rqueue.example;
+
+import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
+import com.github.sonus21.rqueue.utils.Constants;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+/**
+ * Mirror of the redis-backed {@code rqueue-spring-boot-example} for the NATS / JetStream backend.
+ * Selecting the backend is a property switch only (see {@code application.properties}); the
+ * application code is unchanged from the redis example, which is the whole point of the
+ * pluggable-backend split.
+ */
+@SpringBootApplication
+public class RQueueApplication {
+
+  @Value("${workers.count:3}")
+  private int workersCount;
+
+  public static void main(String[] args) {
+    SpringApplication.run(RQueueApplication.class, args);
+  }
+
+  @Bean
+  public SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory() {
+    SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
+        new SimpleRqueueListenerContainerFactory();
+    simpleRqueueListenerContainerFactory.setMaxNumWorkers(workersCount);
+    simpleRqueueListenerContainerFactory.setPollingInterval(Constants.ONE_MILLI);
+    return simpleRqueueListenerContainerFactory;
+  }
+}

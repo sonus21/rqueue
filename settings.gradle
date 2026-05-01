@@ -9,5 +9,6 @@ include "rqueue-spring"
 include "rqueue-spring-boot-starter"
 include "rqueue-spring-example"
 include "rqueue-spring-boot-example"
+include "rqueue-spring-boot-nats-example"
 include "rqueue-spring-boot-reactive-example"
 
