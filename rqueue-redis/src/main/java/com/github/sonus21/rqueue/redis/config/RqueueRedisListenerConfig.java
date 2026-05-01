@@ -17,23 +17,24 @@ package com.github.sonus21.rqueue.redis.config;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
-import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
+import com.github.sonus21.rqueue.redis.common.impl.RqueueLockManagerImpl;
+import com.github.sonus21.rqueue.redis.core.ProcessingQueueMessageScheduler;
+import com.github.sonus21.rqueue.redis.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.redis.dao.RqueueStringDaoImpl;
 import com.github.sonus21.rqueue.redis.metrics.RedisRqueueQueueMetricsProvider;
+import com.github.sonus21.rqueue.redis.worker.RedisWorkerRegistryStore;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl;
+import com.github.sonus21.rqueue.worker.WorkerRegistryStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -124,22 +125,21 @@ public class RqueueRedisListenerConfig {
 
   @Bean
   @Conditional(RedisBackendCondition.class)
-  public RqueueWorkerRegistry rqueueWorkerRegistry(RqueueConfig rqueueConfig) {
-    return new RqueueWorkerRegistryImpl(rqueueConfig);
+  public WorkerRegistryStore redisWorkerRegistryStore(RqueueConfig rqueueConfig) {
+    return new RedisWorkerRegistryStore(rqueueConfig);
+  }
+
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public RqueueWorkerRegistry rqueueWorkerRegistry(
+      RqueueConfig rqueueConfig, WorkerRegistryStore workerRegistryStore) {
+    return new RqueueWorkerRegistryImpl(rqueueConfig, workerRegistryStore);
   }
 
   @Bean
   @Conditional(RedisBackendCondition.class)
   public RqueueLockManager rqueueLockManager(RqueueStringDao rqueueStringDao) {
     return new RqueueLockManagerImpl(rqueueStringDao);
-  }
-
-  @Bean
-  @Conditional(RedisBackendCondition.class)
-  public RqueueQueueMetrics rqueueQueueMetrics(
-      @Qualifier("stringRqueueRedisTemplate")
-          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
-    return new RqueueQueueMetrics(stringRqueueRedisTemplate);
   }
 
   /**

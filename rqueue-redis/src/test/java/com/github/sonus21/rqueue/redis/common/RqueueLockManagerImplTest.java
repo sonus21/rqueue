@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.common;
+package com.github.sonus21.rqueue.redis.common;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,8 +22,9 @@ import static org.mockito.Mockito.doReturn;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
+import com.github.sonus21.rqueue.redis.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.common.RqueueLockManager;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

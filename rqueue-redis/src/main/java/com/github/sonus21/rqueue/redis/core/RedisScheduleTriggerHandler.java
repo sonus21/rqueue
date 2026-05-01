@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  *
  */
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.redis.core;
 
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
+import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;

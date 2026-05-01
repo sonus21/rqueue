@@ -1,4 +1,4 @@
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.redis.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,6 +13,8 @@ import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
+import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;

@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.redis.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
@@ -23,11 +23,12 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
-import com.github.sonus21.rqueue.core.ScheduledQueueMessageSchedulerTest.TestScheduledQueueMessageScheduler;
+import com.github.sonus21.rqueue.redis.core.ScheduledQueueMessageSchedulerTest.TestScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.test.TestTaskScheduler;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;

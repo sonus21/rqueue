@@ -123,6 +123,22 @@ public class RqueueNatsAutoConfig {
     return new NatsRqueueQueueMetricsProvider(jetStreamManagement, toBrokerConfig(props));
   }
 
+  @Bean
+  @ConditionalOnMissingBean(com.github.sonus21.rqueue.worker.WorkerRegistryStore.class)
+  public com.github.sonus21.rqueue.worker.WorkerRegistryStore natsWorkerRegistryStore(
+      Connection connection) throws IOException {
+    return new com.github.sonus21.rqueue.nats.worker.NatsWorkerRegistryStore(connection);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(com.github.sonus21.rqueue.worker.RqueueWorkerRegistry.class)
+  public com.github.sonus21.rqueue.worker.RqueueWorkerRegistry natsRqueueWorkerRegistry(
+      com.github.sonus21.rqueue.config.RqueueConfig rqueueConfig,
+      com.github.sonus21.rqueue.worker.WorkerRegistryStore workerRegistryStore) {
+    return new com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl(
+        rqueueConfig, workerRegistryStore);
+  }
+
   static RqueueNatsConfig toBrokerConfig(RqueueNatsProperties p) {
     RqueueNatsConfig cfg = RqueueNatsConfig.defaults();
     cfg.setStreamPrefix(p.getNaming().getStreamPrefix());

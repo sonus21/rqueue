@@ -16,7 +16,6 @@
 
 package com.github.sonus21.rqueue.worker;
 
-import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -45,13 +44,17 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.util.CollectionUtils;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Backend-agnostic worker registry. All heartbeat scheduling, in-memory bookkeeping, and view
+ * assembly lives here; storage is delegated to a {@link WorkerRegistryStore}, of which Redis
+ * and NATS JetStream KV provide concrete implementations.
+ */
 @Slf4j
 public class RqueueWorkerRegistryImpl
     implements RqueueWorkerRegistry, ApplicationListener<RqueueBootstrapEvent> {
   private final ObjectMapper objectMapper = SerializationUtils.createObjectMapper();
   private final RqueueConfig rqueueConfig;
-  private final RqueueRedisTemplate<RqueueWorkerInfo> workerTemplate;
-  private final RqueueRedisTemplate<String> stringTemplate;
+  private final WorkerRegistryStore store;
   private final String workerId;
   private final String host;
   private final String pid;
@@ -64,10 +67,9 @@ public class RqueueWorkerRegistryImpl
   private final Map<String, Long> capacityExhaustedCountByQueue = new ConcurrentHashMap<>();
   private volatile long lastWorkerHeartbeatAt;
 
-  public RqueueWorkerRegistryImpl(RqueueConfig rqueueConfig) {
+  public RqueueWorkerRegistryImpl(RqueueConfig rqueueConfig, WorkerRegistryStore store) {
     this.rqueueConfig = rqueueConfig;
-    this.workerTemplate = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
-    this.stringTemplate = new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
+    this.store = store;
     this.workerId = RqueueConfig.getBrokerId();
     this.host = getHostName();
     this.pid = getPid();
@@ -90,17 +92,7 @@ public class RqueueWorkerRegistryImpl
     if (!queueHeartbeatRequired(registryQueueName, now)) {
       return;
     }
-    RqueueWorkerPollerMetadata metadata = buildMetadata(registryQueueName, queueThreadPool);
-    try {
-      stringTemplate.putHashValue(
-          rqueueConfig.getWorkerRegistryQueueKey(registryQueueName),
-          workerId,
-          objectMapper.writeValueAsString(metadata));
-      refreshQueueTtlIfRequired(registryQueueName, now);
-      lastQueueHeartbeatAt.put(registryQueueName, now);
-    } catch (Exception e) {
-      log.warn("Worker registry serialization failed for queue {}", registryQueueName, e);
-    }
+    publishHeartbeat(registryQueueName, queueThreadPool, now);
   }
 
   @Override
@@ -125,12 +117,15 @@ public class RqueueWorkerRegistryImpl
     if (!queueHeartbeatRequired(registryQueueName, now)) {
       return;
     }
+    publishHeartbeat(registryQueueName, queueThreadPool, now);
+  }
+
+  private void publishHeartbeat(
+      String registryQueueName, QueueThreadPool queueThreadPool, long now) {
     RqueueWorkerPollerMetadata metadata = buildMetadata(registryQueueName, queueThreadPool);
     try {
-      stringTemplate.putHashValue(
-          rqueueConfig.getWorkerRegistryQueueKey(registryQueueName),
-          workerId,
-          objectMapper.writeValueAsString(metadata));
+      String queueKey = rqueueConfig.getWorkerRegistryQueueKey(registryQueueName);
+      store.putQueueHeartbeat(queueKey, workerId, objectMapper.writeValueAsString(metadata));
       refreshQueueTtlIfRequired(registryQueueName, now);
       lastQueueHeartbeatAt.put(registryQueueName, now);
     } catch (Exception e) {
@@ -144,7 +139,7 @@ public class RqueueWorkerRegistryImpl
       return Collections.emptyList();
     }
     String queueKey = rqueueConfig.getWorkerRegistryQueueKey(queueName);
-    Map<String, String> rawEntries = stringTemplate.getHashEntries(queueKey);
+    Map<String, String> rawEntries = store.getQueueHeartbeats(queueKey);
     if (CollectionUtils.isEmpty(rawEntries)) {
       return Collections.emptyList();
     }
@@ -160,7 +155,7 @@ public class RqueueWorkerRegistryImpl
           toDelete.add(entry.getKey());
           continue;
         }
-        // Lazy cleanup for entries that are far older than the queue hash retention window.
+        // Lazy cleanup for entries that are far older than the queue retention window.
         if (now - metadata.getLastPollAt()
             > rqueueConfig.getWorkerRegistryQueueTtl().toMillis()) {
           toDelete.add(entry.getKey());
@@ -173,12 +168,12 @@ public class RqueueWorkerRegistryImpl
       }
     }
     if (!toDelete.isEmpty()) {
-      stringTemplate.deleteHashValues(queueKey, toDelete.toArray(new String[0]));
+      store.deleteQueueHeartbeats(queueKey, toDelete.toArray(new String[0]));
     }
     if (metadataByWorkerId.isEmpty()) {
       return Collections.emptyList();
     }
-    Map<String, RqueueWorkerInfo> workerInfoById = getWorkerInfo(metadataByWorkerId.keySet());
+    Map<String, RqueueWorkerInfo> workerInfoById = loadWorkerInfo(metadataByWorkerId.keySet());
     List<RqueueWorkerPollerView> rows = new ArrayList<>();
     for (Map.Entry<String, RqueueWorkerPollerMetadata> entry : metadataByWorkerId.entrySet()) {
       String workerId = entry.getKey();
@@ -239,7 +234,7 @@ public class RqueueWorkerRegistryImpl
         .startedAt(startedAt)
         .lastSeenAt(now)
         .build();
-    workerTemplate.set(
+    store.putWorkerInfo(
         rqueueConfig.getWorkerRegistryKey(workerId),
         workerInfo,
         rqueueConfig.getWorkerRegistryWorkerTtl());
@@ -262,14 +257,14 @@ public class RqueueWorkerRegistryImpl
     if (lastRefreshAt != null && now - lastRefreshAt < refreshIntervalInMillis) {
       return;
     }
-    stringTemplate.expire(rqueueConfig.getWorkerRegistryQueueKey(queueName), ttl);
+    store.refreshQueueTtl(rqueueConfig.getWorkerRegistryQueueKey(queueName), ttl);
     lastQueueTtlRefreshAt.put(queueName, now);
   }
 
   private void cleanup() {
-    workerTemplate.delete(rqueueConfig.getWorkerRegistryKey(workerId));
+    store.deleteWorkerInfo(rqueueConfig.getWorkerRegistryKey(workerId));
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
-      stringTemplate.deleteHashValues(
+      store.deleteQueueHeartbeats(
           rqueueConfig.getWorkerRegistryQueueKey(registryQueueName(queueDetail)), workerId);
     }
     lastMessageAtByQueue.clear();
@@ -292,22 +287,13 @@ public class RqueueWorkerRegistryImpl
         .build();
   }
 
-  private Map<String, RqueueWorkerInfo> getWorkerInfo(Collection<String> workerIds) {
+  private Map<String, RqueueWorkerInfo> loadWorkerInfo(Collection<String> workerIds) {
     List<String> keys = new ArrayList<>(workerIds.size());
     for (String workerId : workerIds) {
       keys.add(rqueueConfig.getWorkerRegistryKey(workerId));
     }
-    List<RqueueWorkerInfo> workerInfos = workerTemplate.mget(keys);
-    if (CollectionUtils.isEmpty(workerInfos)) {
-      return Collections.emptyMap();
-    }
-    Map<String, RqueueWorkerInfo> workerInfoById = new LinkedHashMap<>();
-    for (RqueueWorkerInfo workerInfo : workerInfos) {
-      if (workerInfo != null && workerInfo.getWorkerId() != null) {
-        workerInfoById.put(workerInfo.getWorkerId(), workerInfo);
-      }
-    }
-    return workerInfoById;
+    Map<String, RqueueWorkerInfo> result = store.getWorkerInfos(keys);
+    return result == null ? Collections.emptyMap() : result;
   }
 
   private static String formatAge(long now, Long time) {

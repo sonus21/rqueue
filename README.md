@@ -267,6 +267,99 @@ Micrometer based dashboard for queue
 
 ---
 
+## NATS backend
+
+Rqueue can use NATS JetStream as the message broker instead of Redis by setting
+`rqueue.backend=nats` and including the `rqueue-nats` module on the classpath. JetStream streams
+(one per queue) are provisioned by `JetStreamMessageBrokerFactory` / `NatsProvisioner`. State
+that Redis stores in keys, hashes, and sorted-sets is mapped onto JetStream **KV buckets** —
+one bucket per concern. All buckets use the default replicas / storage settings of the JetStream
+account unless noted; per-entry TTL relies on the bucket's `ttl` (NATS' name for `maxAge`),
+which is set once at bucket creation.
+
+| Bucket name                  | Purpose                                                                 | TTL behaviour                                                                                                  | Created in                                                                                                                                                            |
+|------------------------------|-------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `rqueue-queue-config`        | Per-queue `QueueConfig` records (registered queues, DLQ wiring, flags). | No TTL. Entries persist until explicitly overwritten.                                                          | [`NatsRqueueSystemConfigDao`](rqueue-nats/src/main/java/com/github/sonus21/rqueue/nats/dao/NatsRqueueSystemConfigDao.java) (`@Conditional(NatsBackendCondition)`)      |
+| `rqueue-jobs`                | `RqueueJob` execution history per message id.                           | TTL captured from the first `createJob`/`save` call's `expiry` argument; bucket-level so it applies uniformly. | [`NatsRqueueJobDao`](rqueue-nats/src/main/java/com/github/sonus21/rqueue/nats/dao/NatsRqueueJobDao.java)                                                              |
+| `rqueue-locks`               | Distributed locks (scheduler leadership, message-level locks).          | TTL captured from the first `acquireLock` call's `duration` argument.                                          | [`NatsRqueueLockManager`](rqueue-nats/src/main/java/com/github/sonus21/rqueue/nats/lock/NatsRqueueLockManager.java)                                                   |
+| `rqueue-message-metadata`    | Per-message metadata (delivery status, retry count, dead-letter flags). | No TTL at the bucket. Per-write `ttl` arguments are ignored on this v1 impl.                                   | [`NatsRqueueMessageMetadataService`](rqueue-nats/src/main/java/com/github/sonus21/rqueue/nats/service/NatsRqueueMessageMetadataService.java)                          |
+| `rqueue-workers`             | Worker process info (host, pid, version, last-seen).                    | TTL = `rqueue.workerRegistry.workerTtl` (captured on first heartbeat).                                         | [`NatsWorkerRegistryStore`](rqueue-nats/src/main/java/com/github/sonus21/rqueue/nats/worker/NatsWorkerRegistryStore.java)                                             |
+| `rqueue-worker-heartbeats`   | Per-(queue, worker) heartbeats. Keys flattened as `<queue>__<worker>`.  | TTL = `rqueue.workerRegistry.queueTtl` (captured on first refresh; falls back to 1 h if registry not enabled). | [`NatsWorkerRegistryStore`](rqueue-nats/src/main/java/com/github/sonus21/rqueue/nats/worker/NatsWorkerRegistryStore.java)                                             |
+
+### How buckets are configured
+
+- **Lazy, code-driven creation.** Each store / dao calls `kvm.create(KeyValueConfiguration...)`
+  the first time it is touched after startup. There is no `application.yml` switch to disable
+  this, and there is no provisioning step you need to run by hand — but the JetStream account
+  used by your `Connection` bean must have permission to create KV buckets (i.e. JetStream must
+  be enabled and account limits must allow it).
+- **TTL is fixed at bucket creation.** All buckets that take a `ttl` snapshot the value at
+  creation. Changing the corresponding rqueue property after the bucket exists has no effect
+  until the bucket is deleted out-of-band and recreated. This matches NATS KV semantics — the
+  bucket's `maxAge` is immutable.
+- **No bucket per queue.** All queues share the same buckets above; per-queue scoping is done
+  via the key prefix (`rqueue.workerRegistry.queueKey(queueName)`, etc.).
+- **Connection wiring.** The `io.nats.client.Connection` bean comes from
+  [`RqueueNatsAutoConfig`](rqueue-spring-boot-starter/src/main/java/com/github/sonus21/rqueue/spring/boot/RqueueNatsAutoConfig.java)
+  (Spring Boot) when `rqueue.backend=nats` and `io.nats.client.JetStream` is on the classpath.
+  All KV stores receive that same `Connection` and call `connection.keyValueManagement()` /
+  `connection.keyValue(name)` against it.
+
+### Pre-creating buckets (restricted JetStream accounts)
+
+In managed or locked-down JetStream deployments the credentials your application uses may not
+have permission to create KV buckets at runtime. In that case the lazy `kvm.create(...)` call
+on first use will fail with `JetStreamApiException` ("permission violation" or "stream not
+found"), and depending on the call site the failure may be logged and swallowed (registry,
+metadata) or surface as a missing record.
+
+To run against such a NATS, **pre-create every bucket below before starting the application**.
+The commands assume the [`nats` CLI](https://docs.nats.io/using-nats/nats-tools/nats_cli) is
+configured against the same account and creds your application uses. Substitute your own
+values for replicas, storage, and TTL; the values shown match the defaults Rqueue would use if
+it created the bucket itself.
+
+```bash
+# State that must persist (no TTL).
+nats kv add rqueue-queue-config       --replicas=3 --storage=file
+nats kv add rqueue-message-metadata   --replicas=3 --storage=file
+
+# Job history. Use the same value as rqueue.job.durability (default 7 days).
+nats kv add rqueue-jobs               --replicas=3 --storage=file --ttl=7d
+
+# Distributed locks. Use a value at least as large as your longest expected lock hold.
+nats kv add rqueue-locks              --replicas=3 --storage=file --ttl=10m
+
+# Worker registry. Match rqueue.workerRegistry.workerTtl / queueTtl exactly.
+nats kv add rqueue-workers            --replicas=3 --storage=file --ttl=5m
+nats kv add rqueue-worker-heartbeats  --replicas=3 --storage=file --ttl=10m
+```
+
+Once the buckets exist, Rqueue's lazy initialiser short-circuits — `kvm.getStatus(name)` returns
+non-null and the existing bucket is opened, no `create` call is made. The application
+credentials only need read/write on the buckets, not management privileges.
+
+> Today there is no `rqueue.nats.autoCreateKvBuckets` flag to fail fast at startup if a bucket
+> is missing — the failure is observed lazily on first use. If you want stricter validation,
+> file an issue / PR; the hook point is the `ensureBucket(...)` method in each store and dao.
+
+### Re-creating a bucket with new settings
+
+If you need to change a bucket's TTL or replication settings after deployment, delete the
+bucket via the NATS CLI and either let Rqueue recreate it on the next startup (open accounts)
+or recreate it yourself with the new flags (restricted accounts):
+
+```bash
+nats kv del rqueue-worker-heartbeats --force
+nats kv add rqueue-worker-heartbeats --replicas=3 --storage=file --ttl=20m
+```
+
+Be aware that any data in the bucket is lost (which is acceptable for the worker registry and
+locks, but **not** for `rqueue-queue-config` — back it up first if you have configured queues
+through the dashboard).
+
+---
+
 ## Status
 
 Rqueue is stable and production ready, processing millions of messages daily in production

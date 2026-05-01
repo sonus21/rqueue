@@ -14,10 +14,11 @@
  *
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.redis.core;
 
 import static java.lang.Long.max;
 
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import java.util.List;
 import java.util.Map;

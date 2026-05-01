@@ -14,8 +14,9 @@
  *
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.redis.core;
 
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 

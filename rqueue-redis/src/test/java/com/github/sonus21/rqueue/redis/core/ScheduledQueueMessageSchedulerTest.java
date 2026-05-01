@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.redis.core;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
@@ -40,6 +40,8 @@ import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import com.github.sonus21.test.TestTaskScheduler;
+import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;

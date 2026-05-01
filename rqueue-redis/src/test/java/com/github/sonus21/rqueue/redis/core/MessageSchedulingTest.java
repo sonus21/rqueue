@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.core;
+package com.github.sonus21.rqueue.redis.core;
 
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.sleep;
 import static com.github.sonus21.rqueue.utils.TimeoutUtils.waitFor;
@@ -27,12 +27,14 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueSchedulerConfig;
-import com.github.sonus21.rqueue.core.ProcessingQueueMessageSchedulerTest.ProcessingQTestMessageScheduler;
+import com.github.sonus21.rqueue.redis.core.ProcessingQueueMessageSchedulerTest.ProcessingQTestMessageScheduler;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.ThreadUtils;
 import com.github.sonus21.test.TestTaskScheduler;
+import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

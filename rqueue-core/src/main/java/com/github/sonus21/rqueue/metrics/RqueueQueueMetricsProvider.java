@@ -53,4 +53,23 @@ public interface RqueueQueueMetricsProvider {
    * {@code 0} when no DLQ is configured for the queue or the backend does not surface DLQ depth.
    */
   long getDeadLetterMessageCount(String queueName);
+
+  /**
+   * Priority-aware variant of {@link #getPendingMessageCount(String)}. The default implementation
+   * ignores priority and returns the parent queue depth, which is the right behaviour for backends
+   * that don't model per-priority sub-queues.
+   */
+  default long getPendingMessageCount(String queueName, String priority) {
+    return getPendingMessageCount(queueName);
+  }
+
+  /** Priority-aware variant of {@link #getScheduledMessageCount(String)}. */
+  default long getScheduledMessageCount(String queueName, String priority) {
+    return getScheduledMessageCount(queueName);
+  }
+
+  /** Priority-aware variant of {@link #getProcessingMessageCount(String)}. */
+  default long getProcessingMessageCount(String queueName, String priority) {
+    return getProcessingMessageCount(queueName);
+  }
 }

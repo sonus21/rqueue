@@ -33,7 +33,7 @@ import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.test.entity.ConsumedMessage;
 import com.github.sonus21.rqueue.test.service.ConsumedMessageStore;
@@ -103,7 +103,7 @@ public abstract class SpringTestBase extends TestBase {
   protected ObjectMapper objectMapper;
 
   @Autowired
-  protected RqueueQueueMetrics rqueueQueueMetrics;
+  protected RqueueQueueMetricsProvider rqueueQueueMetrics;
 
   @Value("${email.queue.name}")
   protected String emailQueue;

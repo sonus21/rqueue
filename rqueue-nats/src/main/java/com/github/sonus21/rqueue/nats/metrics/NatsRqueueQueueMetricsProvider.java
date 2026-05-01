@@ -16,6 +16,7 @@
 package com.github.sonus21.rqueue.nats.metrics;
 
 import com.github.sonus21.rqueue.core.EndpointRegistry;
+import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
@@ -45,7 +46,13 @@ public class NatsRqueueQueueMetricsProvider implements RqueueQueueMetricsProvide
 
   @Override
   public long getPendingMessageCount(String queueName) {
-    QueueDetail q = EndpointRegistry.get(queueName);
+    QueueDetail q;
+    try {
+      q = EndpointRegistry.get(queueName);
+    } catch (QueueDoesNotExist e) {
+      // unknown queue name -> 0 (mirrors how RedisRqueueQueueMetricsProvider handles it)
+      return 0L;
+    }
     String stream = config.getStreamPrefix() + q.getName();
     try {
       StreamInfo info = jsm.getStreamInfo(stream);
@@ -74,7 +81,12 @@ public class NatsRqueueQueueMetricsProvider implements RqueueQueueMetricsProvide
 
   @Override
   public long getDeadLetterMessageCount(String queueName) {
-    QueueDetail q = EndpointRegistry.get(queueName);
+    QueueDetail q;
+    try {
+      q = EndpointRegistry.get(queueName);
+    } catch (QueueDoesNotExist e) {
+      return 0L;
+    }
     String dlqStream = config.getStreamPrefix() + q.getName() + config.getDlqStreamSuffix();
     try {
       StreamInfo info = jsm.getStreamInfo(dlqStream);

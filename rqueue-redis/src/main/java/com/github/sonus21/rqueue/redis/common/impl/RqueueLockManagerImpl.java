@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.common.impl;
+package com.github.sonus21.rqueue.redis.common.impl;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
