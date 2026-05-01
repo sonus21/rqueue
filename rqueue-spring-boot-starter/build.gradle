@@ -55,6 +55,11 @@ dependencies {
     compileOnly project(":rqueue-nats")
     compileOnly "io.nats:jnats:${natsVersion}"
 
+    // Generates spring-configuration-metadata.json from @ConfigurationProperties classes
+    // (RqueueNatsProperties primarily) so IDE autocomplete and the Spring Boot metadata viewer
+    // surface every rqueue.nats.* key. Processor only — no runtime dep added.
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
+
     testImplementation project(":rqueue-spring-common-test")
     testImplementation project(":rqueue-nats")
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"

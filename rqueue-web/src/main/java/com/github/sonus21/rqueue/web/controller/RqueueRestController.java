@@ -17,6 +17,8 @@
 package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.spi.Capabilities;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.exception.ProcessingException;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
@@ -44,6 +46,7 @@ import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,6 +67,7 @@ public class RqueueRestController extends BaseController {
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueQManagerService;
   private final RqueueJobService rqueueJobService;
+  private final ObjectProvider<MessageBroker> messageBrokerProvider;
 
   @Autowired
   public RqueueRestController(
@@ -72,13 +76,15 @@ public class RqueueRestController extends BaseController {
       RqueueUtilityService rqueueUtilityService,
       RqueueSystemManagerService rqueueQManagerService,
       RqueueWebConfig rqueueWebConfig,
-      RqueueJobService rqueueJobService) {
+      RqueueJobService rqueueJobService,
+      ObjectProvider<MessageBroker> messageBrokerProvider) {
     super(rqueueWebConfig);
     this.rqueueDashboardChartService = rqueueDashboardChartService;
     this.rqueueQDetailService = rqueueQDetailService;
     this.rqueueUtilityService = rqueueUtilityService;
     this.rqueueQManagerService = rqueueQManagerService;
     this.rqueueJobService = rqueueJobService;
+    this.messageBrokerProvider = messageBrokerProvider;
   }
 
   @PostMapping("chart")
@@ -211,5 +217,26 @@ public class RqueueRestController extends BaseController {
       return rqueueUtilityService.aggregateDataCounter(type);
     }
     return null;
+  }
+
+  /**
+   * Reports the active broker's capability flags (delayed enqueue, scheduled introspection,
+   * cron jobs, primary-handler dispatch). The dashboard front-end reads this once at boot to
+   * hide panels the backend cannot service rather than relying on per-call 501 responses.
+   *
+   * <p>Sourced from {@link MessageBroker#capabilities()} — the Redis broker answers with
+   * {@link Capabilities#REDIS_DEFAULTS} (everything true) and the NATS broker answers
+   * with everything false in v1. {@link ObjectProvider} keeps the broker dependency optional
+   * so deployments that strip the bean still get a sane payload (defaults to Redis, the
+   * historical behavior).
+   */
+  @GetMapping("capabilities")
+  @ResponseBody
+  public Capabilities capabilities(HttpServletResponse response) {
+    if (!isEnable(response)) {
+      return null;
+    }
+    MessageBroker broker = messageBrokerProvider.getIfAvailable();
+    return broker == null ? Capabilities.REDIS_DEFAULTS : broker.capabilities();
   }
 }

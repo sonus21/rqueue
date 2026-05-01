@@ -17,7 +17,6 @@
 package com.github.sonus21.rqueue.redis.web;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
-import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
@@ -37,13 +36,17 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-@Conditional(RedisBackendCondition.class)
+/**
+ * Redis-shaped impl. Backend gating is handled at module level via
+ * {@code RqueueRedisListenerConfig.@Conditional(RedisBackendCondition)} + its
+ * {@code @ComponentScan} of {@code com.github.sonus21.rqueue.redis} — a per-class
+ * {@code @Conditional} would be redundant.
+ */
 @Service
 @Slf4j
 public class RqueueMessageMetadataServiceImpl implements RqueueMessageMetadataService {

@@ -65,6 +65,9 @@ public class ReactiveRqueueRestController extends BaseReactiveController {
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueQManagerService;
   private final RqueueJobService rqueueJobService;
+  private final org.springframework.beans.factory.ObjectProvider<
+          com.github.sonus21.rqueue.core.spi.MessageBroker>
+      messageBrokerProvider;
 
   @Autowired
   public ReactiveRqueueRestController(
@@ -73,13 +76,17 @@ public class ReactiveRqueueRestController extends BaseReactiveController {
       RqueueUtilityService rqueueUtilityService,
       RqueueSystemManagerService rqueueQManagerService,
       RqueueWebConfig rqueueWebConfig,
-      RqueueJobService rqueueJobService) {
+      RqueueJobService rqueueJobService,
+      org.springframework.beans.factory.ObjectProvider<
+              com.github.sonus21.rqueue.core.spi.MessageBroker>
+          messageBrokerProvider) {
     super(rqueueWebConfig);
     this.rqueueDashboardChartService = rqueueDashboardChartService;
     this.rqueueQDetailService = rqueueQDetailService;
     this.rqueueUtilityService = rqueueUtilityService;
     this.rqueueQManagerService = rqueueQManagerService;
     this.rqueueJobService = rqueueJobService;
+    this.messageBrokerProvider = messageBrokerProvider;
   }
 
   @PostMapping("chart")
@@ -214,5 +221,20 @@ public class ReactiveRqueueRestController extends BaseReactiveController {
       return rqueueUtilityService.reactiveAggregateDataCounter(type);
     }
     return null;
+  }
+
+  /** Reactive twin of {@code RqueueRestController#capabilities}. See javadoc there. */
+  @GetMapping("capabilities")
+  @ResponseBody
+  public Mono<com.github.sonus21.rqueue.core.spi.Capabilities> capabilities(
+      ServerHttpResponse response) {
+    if (!isEnabled(response)) {
+      return Mono.empty();
+    }
+    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageBrokerProvider.getIfAvailable();
+    return Mono.just(
+        broker == null
+            ? com.github.sonus21.rqueue.core.spi.Capabilities.REDIS_DEFAULTS
+            : broker.capabilities());
   }
 }

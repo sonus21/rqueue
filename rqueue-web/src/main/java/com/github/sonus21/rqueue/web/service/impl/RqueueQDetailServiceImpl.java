@@ -223,6 +223,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   private List<TypedTuple<RqueueMessage>> readFromZset(
       String name, int pageNumber, int itemPerPage) {
+    requireScheduledIntrospection("readFromZset");
     long start = pageNumber * (long) itemPerPage;
     long end = start + itemPerPage - 1;
 
@@ -242,9 +243,25 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   private List<TypedTuple<RqueueMessage>> readFromZetWithScore(
       String name, int pageNumber, int itemPerPage) {
+    requireScheduledIntrospection("readFromZsetWithScore");
     long start = pageNumber * (long) itemPerPage;
     long end = start + itemPerPage - 1;
     return rqueueMessageTemplate.readFromZsetWithScore(name, start, end);
+  }
+
+  /**
+   * Guard for ZSET-shaped lookups that the redis backend services natively but no other backend
+   * does. Backends that report {@code !supportsScheduledIntrospection()} surface a structured 501
+   * via {@code BackendCapabilityException} instead of NPE-ing through a Redis-shaped template
+   * with no Redis connection.
+   */
+  private void requireScheduledIntrospection(String op) {
+    if (messageBroker != null && !messageBroker.capabilities().supportsScheduledIntrospection()) {
+      throw new com.github.sonus21.rqueue.exception.BackendCapabilityException(
+          messageBroker.getClass().getSimpleName(),
+          op,
+          "broker does not expose scheduled / completion ZSET introspection");
+    }
   }
 
   private List<TableRow> buildRows(
