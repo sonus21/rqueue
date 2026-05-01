@@ -139,9 +139,60 @@ public class NatsProvisioner {
         cb.filterSubject(filterSubject);
       }
       jsm.addOrUpdateConsumer(streamName, cb.build());
-    } catch (IOException | JetStreamApiException e) {
+    } catch (JetStreamApiException e) {
+      // Error 10100 = "filtered consumer not unique" — a consumer with the same filter
+      // already exists on the stream (stale from a previous naming scheme or crashed run).
+      // List all consumers and check if one matches our filter; reuse it rather than
+      // failing the startup.
+      if (e.getApiErrorCode() == 10100 && filterSubject != null) {
+        tryFindAndBindStaleConsumer(streamName, filterSubject, consumerName);
+        return;
+      }
       throw new RqueueNatsException(
           "Failed to ensure consumer '" + consumerName + "' on stream '" + streamName + "'", e);
+    } catch (IOException e) {
+      throw new RqueueNatsException(
+          "Failed to ensure consumer '" + consumerName + "' on stream '" + streamName + "'", e);
+    }
+  }
+
+  /**
+   * Handle the "filtered consumer not unique" error by finding an existing consumer on the stream
+   * that matches the desired filter subject. This can happen when:
+   * - Stale consumers from a previous consumer naming scheme still exist
+   * - Multiple instances crashed mid-initialization and left orphaned consumers
+   *
+   * <p>When found, the broker will bind to the existing consumer (which will work fine as long as
+   * it has a compatible configuration).
+   *
+   * @throws RqueueNatsException if recovery fails
+   */
+  private void tryFindAndBindStaleConsumer(
+      String streamName, String filterSubject, String preferredConsumerName) {
+    try {
+      // List all consumers on the stream and find one matching our filter.
+      List<String> consumerNames = jsm.getConsumerNames(streamName);
+      for (String name : consumerNames) {
+        ConsumerInfo ci = jsm.getConsumerInfo(streamName, name);
+        ConsumerConfiguration cc = ci.getConsumerConfiguration();
+        // Check if this consumer has the same filter we're looking for.
+        if (filterSubject.equals(cc.getFilterSubject())) {
+          log.log(
+              Level.INFO,
+              "Reusing existing consumer '" + name + "' (filter=" + filterSubject + ")"
+                  + " instead of creating '" + preferredConsumerName + "'");
+          return; // Bind will use the existing consumer
+        }
+      }
+      // No matching consumer found; this is unexpected, so fail.
+      throw new RqueueNatsException(
+          "Filtered consumer with filter '" + filterSubject + "' not found on stream '"
+              + streamName + "' despite 'filtered consumer not unique' error");
+    } catch (IOException | JetStreamApiException e) {
+      throw new RqueueNatsException(
+          "Failed to recover from 'filtered consumer not unique' error on stream '" + streamName
+              + "'",
+          e);
     }
   }
 
