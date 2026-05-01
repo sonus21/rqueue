@@ -91,6 +91,60 @@ public interface MessageBroker {
 
   List<RqueueMessage> peek(QueueDetail q, long offset, long count);
 
+  /**
+   * Remove {@code old} from the processing store and re-enqueue {@code updated} for retry.
+   * {@code delayMs <= 0} means immediate; {@code delayMs > 0} means schedule after that delay.
+   * Backends without a processing store (e.g. NATS) default to a plain nack.
+   */
+  default void parkForRetry(QueueDetail q, RqueueMessage old, RqueueMessage updated, long delayMs) {
+    nack(q, updated, delayMs);
+  }
+
+  /**
+   * Remove {@code old} from the processing store and enqueue {@code updated} to {@code targetQueue}.
+   * {@code delayMs <= 0} means immediate (list push); {@code delayMs > 0} means schedule (sorted-set).
+   * Backends without a processing store default to a plain enqueue to the DLQ.
+   */
+  default void moveToDlq(
+      QueueDetail source,
+      String targetQueue,
+      RqueueMessage old,
+      RqueueMessage updated,
+      long delayMs) {
+    if (delayMs > 0) {
+      enqueueWithDelay(source, updated, delayMs);
+    } else {
+      enqueue(source, updated);
+    }
+  }
+
+  /**
+   * Schedule the next execution of a periodic message.
+   * {@code messageKey} is the deduplication key; {@code expirySeconds} is the TTL for that key.
+   * Backends that don't support server-side scheduling default to a delayed enqueue.
+   */
+  default void scheduleNext(
+      QueueDetail q, String messageKey, RqueueMessage message, long expirySeconds) {
+    long delayMs = Math.max(0, message.getProcessAt() - System.currentTimeMillis());
+    enqueueWithDelay(q, message, delayMs);
+  }
+
+  /**
+   * Returns the score (epoch-ms deadline) of {@code m} in the processing store, or {@code null}
+   * if the backend does not track per-message visibility (e.g. NATS uses consumer-level AckWait).
+   */
+  default Long getVisibilityTimeoutScore(QueueDetail q, RqueueMessage m) {
+    return null;
+  }
+
+  /**
+   * Adds {@code deltaMs} to the visibility timeout of {@code m} in the processing store.
+   * Returns {@code false} if the backend does not support per-message lease extension.
+   */
+  default boolean extendVisibilityTimeout(QueueDetail q, RqueueMessage m, long deltaMs) {
+    return false;
+  }
+
   long size(QueueDetail q);
 
   AutoCloseable subscribe(String channel, Consumer<String> handler);

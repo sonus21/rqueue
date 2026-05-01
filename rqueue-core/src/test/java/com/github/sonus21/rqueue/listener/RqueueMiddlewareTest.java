@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -36,7 +37,7 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.core.context.DefaultContext;
 import com.github.sonus21.rqueue.core.middleware.ContextMiddleware;
@@ -108,7 +109,7 @@ class RqueueMiddlewareTest extends TestBase {
   private RqueueJobDao rqueueJobDao;
 
   @Mock
-  private RqueueMessageTemplate messageTemplate;
+  private MessageBroker messageBroker;
 
   @Mock
   private RqueueMessageHandler messageHandler;
@@ -141,10 +142,11 @@ class RqueueMiddlewareTest extends TestBase {
     postProcessingHandler = new PostProcessingHandler(
         rqueueWebConfig,
         applicationEventPublisher,
-        messageTemplate,
+        messageBroker,
         taskBackOff,
         messageProcessorHandler,
         rqueueSystemConfigDao);
+    doReturn(messageBroker).when(rqueueBeanProvider).getMessageBroker();
     doReturn(rqueueMessageMetadataService)
         .when(rqueueBeanProvider)
         .getRqueueMessageMetadataService();
@@ -185,8 +187,7 @@ class RqueueMiddlewareTest extends TestBase {
             queueThreadPool)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
-    verify(messageTemplate, times(1))
-        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
+    verify(messageBroker, times(1)).ack(eq(queueDetail), any(RqueueMessage.class));
     assertEquals(1, logMiddleware.jobs.size());
   }
 
@@ -213,8 +214,7 @@ class RqueueMiddlewareTest extends TestBase {
             queueThreadPool)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
-    verify(messageTemplate, times(1))
-        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
+    verify(messageBroker, times(1)).ack(eq(queueDetail), any(RqueueMessage.class));
     assertEquals(1, logMiddleware.jobs.size());
     assertEquals(1, contextMiddleware.jobs.size());
     assertNotNull(logMiddleware.jobs.get(0).getId());
@@ -275,8 +275,8 @@ class RqueueMiddlewareTest extends TestBase {
         .run();
 
     verify(messageHandler, times(1)).handleMessage(any());
-    verify(messageTemplate, times(1))
-        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
+    // Both executors call ack: allowed message after success, declined message after IGNORED.
+    verify(messageBroker, times(2)).ack(eq(queueDetail), any(RqueueMessage.class));
     assertEquals(2, logMiddleware.jobs.size());
     assertEquals(2, contextMiddleware.jobs.size());
     assertEquals(2, permissionMiddleware.jobs.size());
@@ -377,8 +377,7 @@ class RqueueMiddlewareTest extends TestBase {
             queueThreadPool)
         .run();
     verify(messageHandler, times(1)).handleMessage(any());
-    verify(messageTemplate, times(1))
-        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
+    verify(messageBroker, times(1)).ack(eq(queueDetail), any(RqueueMessage.class));
     assertEquals(1, logMiddleware.jobs.size());
     assertEquals(1, profilerMiddleware.jobs.size());
     assertEquals(rqueueMessage.getId(), profilerMiddleware.jobs.get(0).getMessageId());

@@ -50,12 +50,13 @@ class JetStreamMessageBrokerDelayThrowsTest {
   }
 
   @Test
-  void capabilities_areAllFalse() {
+  void capabilities_delayAndCronFalse_primaryDispatchTrue() {
     Capabilities caps = newBroker().capabilities();
     assertEquals(false, caps.supportsDelayedEnqueue());
     assertEquals(false, caps.supportsScheduledIntrospection());
     assertEquals(false, caps.supportsCronJobs());
-    assertEquals(false, caps.usesPrimaryHandlerDispatch());
+    // NATS routes through DefaultRqueuePoller + RqueueExecutor (primary handler dispatch).
+    assertEquals(true, caps.usesPrimaryHandlerDispatch());
   }
 
   @Test

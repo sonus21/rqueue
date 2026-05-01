@@ -58,7 +58,7 @@ import tools.jackson.databind.ObjectMapper;
 public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   private static final Logger log = Logger.getLogger(JetStreamMessageBroker.class.getName());
-  private static final Capabilities CAPS = new Capabilities(false, false, false, false);
+  private static final Capabilities CAPS = new Capabilities(false, false, false, true);
 
   private final Connection connection;
   private final JetStream js;
@@ -255,13 +255,17 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait) {
-    return popInternal(streamFor(q), subjectFor(q), consumerName, batch, wait);
+    return popInternal(streamFor(q), subjectFor(q), resolveConsumerName(q.getName(), consumerName), batch, wait);
   }
 
   @Override
   public List<RqueueMessage> pop(
       QueueDetail q, String priority, String consumerName, int batch, Duration wait) {
-    return popInternal(streamFor(q, priority), subjectFor(q, priority), consumerName, batch, wait);
+    return popInternal(streamFor(q, priority), subjectFor(q, priority), resolveConsumerName(q.getName(), consumerName), batch, wait);
+  }
+
+  private static String resolveConsumerName(String queueName, String consumerName) {
+    return (consumerName != null && !consumerName.isEmpty()) ? consumerName : "rqueue-" + queueName;
   }
 
   private List<RqueueMessage> popInternal(
@@ -269,11 +273,16 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     Duration fetchWait = wait != null ? wait : config.getDefaultFetchWait();
     String key = stream + "/" + consumerName;
     JetStreamSubscription sub = subscriptionCache.computeIfAbsent(key, k -> {
-      // computeIfAbsent runs at most once per (stream, consumer) per JVM, so the durable
-      // consumer is ensured exactly once on the cold path — not on every pop. Streams are
-      // assumed to already exist (provisioned at bootstrap time by the broker factory's
-      // boot-time stream check; if not, bind() below will surface a clear "stream not found").
+      // computeIfAbsent runs at most once per (stream, consumer) per JVM, so both the stream
+      // and the durable consumer are ensured exactly once on the cold path — not on every pop.
+      //
+      // ensureStream here guards against a start-order race: RqueueBootstrapEvent (which drives
+      // NatsStreamValidator) fires *after* doStart() has already launched the broker pollers.
+      // The validator is still the authoritative boot-time check for the "autoCreateStreams=false"
+      // case, but ensureStream() here is idempotent and free if the stream already exists
+      // (one getStreamInfo round-trip per subscription, not per message).
       try {
+        provisioner.ensureStream(stream, List.of(subject));
         provisioner.ensureConsumer(
             stream,
             consumerName,

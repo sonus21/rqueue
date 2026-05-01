@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
+import com.github.sonus21.rqueue.utils.RedisUtils;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Consumer;
@@ -144,6 +145,56 @@ public class RedisMessageBroker implements MessageBroker {
   @Override
   public void publish(String channel, String payload) {
     template.getTemplate().convertAndSend(channel, payload);
+  }
+
+  @Override
+  public void parkForRetry(QueueDetail q, RqueueMessage old, RqueueMessage updated, long delayMs) {
+    if (delayMs <= 0) {
+      template.moveMessage(q.getProcessingQueueName(), q.getQueueName(), old, updated);
+    } else {
+      template.moveMessageWithDelay(
+          q.getProcessingQueueName(), q.getScheduledQueueName(), old, updated, delayMs);
+    }
+  }
+
+  @Override
+  public void moveToDlq(
+      QueueDetail source,
+      String targetQueue,
+      RqueueMessage old,
+      RqueueMessage updated,
+      long delayMs) {
+    RedisUtils.executePipeLine(
+        template.getTemplate(),
+        (connection, keySerializer, valueSerializer) -> {
+          byte[] updatedBytes = valueSerializer.serialize(updated);
+          byte[] oldBytes = valueSerializer.serialize(old);
+          byte[] processingQueueBytes =
+              keySerializer.serialize(source.getProcessingQueueName());
+          byte[] targetQueueBytes = keySerializer.serialize(targetQueue);
+          if (delayMs > 0) {
+            connection.zAdd(targetQueueBytes, delayMs, updatedBytes);
+          } else {
+            connection.lPush(targetQueueBytes, updatedBytes);
+          }
+          connection.zRem(processingQueueBytes, oldBytes);
+        });
+  }
+
+  @Override
+  public void scheduleNext(
+      QueueDetail q, String messageKey, RqueueMessage message, long expirySeconds) {
+    template.scheduleMessage(q.getScheduledQueueName(), messageKey, message, expirySeconds);
+  }
+
+  @Override
+  public Long getVisibilityTimeoutScore(QueueDetail q, RqueueMessage m) {
+    return template.getScore(q.getProcessingQueueName(), m);
+  }
+
+  @Override
+  public boolean extendVisibilityTimeout(QueueDetail q, RqueueMessage m, long deltaMs) {
+    return template.addScore(q.getProcessingQueueName(), m, deltaMs);
   }
 
   @Override

@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -114,17 +115,6 @@ public class RqueueMessageListenerContainer
   // unchanged. When set, capabilities() may gate scheduler/handler dispatch wiring; the Redis
   // broker reports REDIS_DEFAULTS so the gated branches still match existing semantics.
   private MessageBroker messageBroker;
-  // Phase 3.5: active broker-driven pollers (non-primary-dispatch backends). One poller per
-  // (queue, priority, consumerName, threadIndex) tuple. Empty for the legacy Redis path.
-  private final List<BrokerMessagePoller> brokerPollers = new ArrayList<>();
-  private static final int DEFAULT_BROKER_POLLER_BATCH = 8;
-  private static final java.time.Duration DEFAULT_BROKER_POLLER_FETCH_WAIT =
-      java.time.Duration.ofMillis(500);
-
-  /** Visible for tests: returns the list of broker pollers spawned by {@link #startBrokerPollers()}. */
-  List<BrokerMessagePoller> getBrokerPollersForTesting() {
-    return Collections.unmodifiableList(brokerPollers);
-  }
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -342,35 +332,24 @@ public class RqueueMessageListenerContainer
   }
 
   private void initialize() {
-    if (messageBroker != null && !messageBroker.capabilities().usesPrimaryHandlerDispatch()) {
-      // Broker path manages its own task executor and does not need the per-queue worker thread
-      // map; only the post-processing handler is initialized for completeness.
-      initializeRunningQueueState();
-      this.postProcessingHandler = new PostProcessingHandler(
-          rqueueBeanProvider.getRqueueWebConfig(),
-          rqueueBeanProvider.getApplicationEventPublisher(),
-          rqueueMessageTemplate,
-          taskExecutionBackOff,
-          new MessageProcessorHandler(
-              manualDeletionMessageProcessor,
-              deadLetterQueueMessageProcessor,
-              discardMessageProcessor,
-              postExecutionMessageProcessor),
-          rqueueBeanProvider.getRqueueSystemConfigDao());
-      this.rqueueBeanProvider.setPreExecutionMessageProcessor(preExecutionMessageProcessor);
-      return;
-    }
+    // Resolve the effective broker: injected (e.g. NATS) or a Redis wrapper for the legacy path.
+    MessageBroker effectiveBroker =
+        messageBroker != null ? messageBroker : new RedisMessageBroker(rqueueMessageTemplate);
+    rqueueBeanProvider.setMessageBroker(effectiveBroker);
+
+    MessageProcessorHandler msgProcessorHandler = new MessageProcessorHandler(
+        manualDeletionMessageProcessor,
+        deadLetterQueueMessageProcessor,
+        discardMessageProcessor,
+        postExecutionMessageProcessor);
+
     initializeQueue();
     this.postProcessingHandler = new PostProcessingHandler(
         rqueueBeanProvider.getRqueueWebConfig(),
         rqueueBeanProvider.getApplicationEventPublisher(),
-        rqueueMessageTemplate,
+        effectiveBroker,
         taskExecutionBackOff,
-        new MessageProcessorHandler(
-            manualDeletionMessageProcessor,
-            deadLetterQueueMessageProcessor,
-            discardMessageProcessor,
-            postExecutionMessageProcessor),
+        msgProcessorHandler,
         rqueueBeanProvider.getRqueueSystemConfigDao());
     this.rqueueBeanProvider.setPreExecutionMessageProcessor(preExecutionMessageProcessor);
   }
@@ -385,68 +364,12 @@ public class RqueueMessageListenerContainer
       rqueueMessageHandler.setPrimaryHandlerDispatchEnabled(isPrimaryHandlerDispatchEnabled());
       RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
       initializeQueueRegistry();
-      if (!isPrimaryHandlerDispatchEnabled()) {
-        validateConsumerNameUniqueness();
-      }
       if (rqueueConfig.isProducer()) {
         log.info("Producer mode nothing to do...");
       } else {
         initialize();
       }
       lifecycleMgr.notifyAll();
-    }
-  }
-
-  /**
-   * Phase 3 cross-handler validation for capability-gated brokers (NATS / JetStream).
-   *
-   * <p>Walks every {@code @RqueueListener} method in the handler map and computes
-   * {@code (queueName, consumerName)} pairs via {@link ConsumerNameResolver}. If any pair
-   * collides across distinct {@code bean#method} owners, throws {@link IllegalStateException}
-   * listing the offenders so boot fails fast.
-   */
-  private void validateConsumerNameUniqueness() {
-    Map<String, String> seen = new HashMap<>();
-    List<String> collisions = new ArrayList<>();
-    for (Entry<MappingInformation, List<RqueueMessageHandler.HandlerMethodWithPrimary>> e :
-        rqueueMessageHandler.getHandlerMethodMap().entrySet()) {
-      MappingInformation mapping = e.getKey();
-      for (RqueueMessageHandler.HandlerMethodWithPrimary hmp : e.getValue()) {
-        Object beanRef = hmp.method.getBean();
-        String beanName =
-            beanRef instanceof String ? (String) beanRef : beanRef.getClass().getSimpleName();
-        String methodName = hmp.method.getMethod().getName();
-        com.github.sonus21.rqueue.annotation.RqueueListener ann =
-            org.springframework.core.annotation.AnnotationUtils.findAnnotation(
-                hmp.method.getMethod(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
-        if (ann == null) {
-          ann = org.springframework.core.annotation.AnnotationUtils.findAnnotation(
-              hmp.method.getBeanType(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
-        }
-        for (String queue : mapping.getQueueNames()) {
-          String consumerName =
-              ConsumerNameResolver.resolveConsumerName(ann, beanName, methodName, queue);
-          String key = queue + "::" + consumerName;
-          String prior = seen.putIfAbsent(key, beanName + "#" + methodName);
-          if (prior != null) {
-            collisions.add("queue='"
-                + queue
-                + "' consumerName='"
-                + consumerName
-                + "' between "
-                + prior
-                + " and "
-                + beanName
-                + "#"
-                + methodName);
-          }
-        }
-      }
-    }
-    if (!collisions.isEmpty()) {
-      throw new IllegalStateException(
-          "Duplicate (queueName, consumerName) pairs across @RqueueListener methods: "
-              + String.join("; ", collisions));
     }
   }
 
@@ -594,10 +517,6 @@ public class RqueueMessageListenerContainer
       log.info("Producer mode nothing to do...");
       return;
     }
-    if (messageBroker != null && !messageBroker.capabilities().usesPrimaryHandlerDispatch()) {
-      startBrokerPollers();
-      return;
-    }
     Map<String, List<QueueDetail>> queueGroupToDetails = new HashMap<>();
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       int prioritySize = queueDetail.getPriority().size();
@@ -626,160 +545,6 @@ public class RqueueMessageListenerContainer
     }
     return queueDetails.stream()
         .collect(Collectors.toMap(QueueDetail::getName, e -> queueThreadMap.get(e.getName())));
-  }
-
-  /**
-   * Phase 3.5: starts one {@link BrokerMessagePoller} per {@code (queue, consumerName)} pair
-   * resolved from the registered {@code @RqueueListener} methods. Used only when the active
-   * {@link MessageBroker} reports {@code usesPrimaryHandlerDispatch == false}.
-   */
-  protected void startBrokerPollers() {
-    List<QueueDetail> activeQueues = EndpointRegistry.getActiveQueueDetails();
-    if (activeQueues.isEmpty()) {
-      log.warn("No active queues registered; broker pollers not started");
-      return;
-    }
-    Map<String, QueueDetail> queueByName = new HashMap<>();
-    for (QueueDetail qd : activeQueues) {
-      queueByName.put(qd.getName(), qd);
-      queueRunningState.put(qd.getName(), true);
-    }
-    if (taskExecutor == null) {
-      // Pool sized to the sum of resolved concurrency thread counts across registered queues so
-      // every poller has a thread; per-method/per-priority explosion is bounded by the handler map
-      // below. We err on the side of larger pools because each poller blocks on broker.pop.
-      defaultTaskExecutor = true;
-      int estimated = 0;
-      for (QueueDetail qd : activeQueues) {
-        if (qd.isSystemGenerated()) {
-          // priority-cloned queues are absorbed into the per-priority poller fan-out below;
-          // counting them again would oversize the pool.
-          continue;
-        }
-        estimated += resolveBrokerThreadCount(qd) * resolvePriorityKeys(qd).size();
-      }
-      int corePool = Math.max(estimated, 2);
-      taskExecutor = createTaskExecutor(corePool, corePool * 2, 0);
-    }
-    int started = 0;
-    for (Entry<MappingInformation, List<RqueueMessageHandler.HandlerMethodWithPrimary>> e :
-        rqueueMessageHandler.getHandlerMethodMap().entrySet()) {
-      MappingInformation mapping = e.getKey();
-      for (RqueueMessageHandler.HandlerMethodWithPrimary hmp : e.getValue()) {
-        Object beanRef = hmp.method.getBean();
-        String beanName =
-            beanRef instanceof String ? (String) beanRef : beanRef.getClass().getSimpleName();
-        String methodName = hmp.method.getMethod().getName();
-        com.github.sonus21.rqueue.annotation.RqueueListener ann =
-            org.springframework.core.annotation.AnnotationUtils.findAnnotation(
-                hmp.method.getMethod(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
-        if (ann == null) {
-          ann = org.springframework.core.annotation.AnnotationUtils.findAnnotation(
-              hmp.method.getBeanType(), com.github.sonus21.rqueue.annotation.RqueueListener.class);
-        }
-        for (String queue : mapping.getQueueNames()) {
-          QueueDetail qd = queueByName.get(queue);
-          if (qd == null) {
-            continue;
-          }
-          String baseConsumerName =
-              ConsumerNameResolver.resolveConsumerName(ann, beanName, methodName, queue);
-          int threadCount = resolveBrokerThreadCount(qd);
-          if (qd.getConcurrency() != null
-              && qd.getConcurrency().isValid()
-              && qd.getConcurrency().getMin() != qd.getConcurrency().getMax()) {
-            log.info(
-                "Queue '{}' declares elastic concurrency min={}, max={}; the NATS-style backend "
-                    + "uses a fixed thread pool sized to max in v1 (elastic ramping not yet "
-                    + "implemented). All {} threads share the same JetStream durable consumer; "
-                    + "the consumer's MaxAckPending is a queue-wide budget shared across threads.",
-                queue,
-                qd.getConcurrency().getMin(),
-                qd.getConcurrency().getMax(),
-                threadCount);
-          }
-          if (!StringUtils.isEmpty(qd.getPriorityGroup())
-              && !qd.getPriorityGroup().equals(qd.getName())
-              && !qd.getPriorityGroup().equals(Constants.DEFAULT_PRIORITY_GROUP)) {
-            log.warn(
-                "Queue '{}' is part of cross-queue priorityGroup='{}'. The NATS backend does not"
-                    + " support cross-queue priority groups in v1; the priority hint will be"
-                    + " honored on the same queue but cross-queue weighting is ignored.",
-                queue,
-                qd.getPriorityGroup());
-          }
-          List<String> priorities = resolvePriorityKeys(qd);
-          for (String priority : priorities) {
-            String consumerName =
-                priority == null ? baseConsumerName : baseConsumerName + "-" + priority;
-            for (int i = 0; i < threadCount; i++) {
-              BrokerMessagePoller poller = new BrokerMessagePoller(
-                  messageBroker,
-                  qd,
-                  priority,
-                  consumerName,
-                  hmp.method,
-                  rqueueMessageHandler.getMessageConverter(),
-                  taskExecutionBackOff,
-                  queueStateMgr,
-                  Math.max(
-                      1, qd.getBatchSize() > 0 ? qd.getBatchSize() : DEFAULT_BROKER_POLLER_BATCH),
-                  DEFAULT_BROKER_POLLER_FETCH_WAIT);
-              brokerPollers.add(poller);
-              Future<?> future = taskExecutor.submit(poller);
-              String key =
-                  queue + (priority == null ? "" : "::" + priority) + "::" + consumerName + "#" + i;
-              scheduledFutureByQueue.put(key, future);
-              started++;
-            }
-          }
-        }
-      }
-    }
-    log.info("Started {} broker pollers across {} queue(s)", started, activeQueues.size());
-  }
-
-  /**
-   * Resolves the priority keys to spawn pollers for on the broker path. Returns a singleton list
-   * containing {@code null} (i.e. "no priority") when the queue has at most one entry; otherwise
-   * returns the listener-declared priority names with {@code DEFAULT_PRIORITY_KEY} filtered out
-   * (the default bucket is implicit for backends that route per-priority).
-   */
-  private static List<String> resolvePriorityKeys(QueueDetail qd) {
-    if (qd.getPriority() == null || qd.getPriority().size() <= 1) {
-      return Collections.singletonList(null);
-    }
-    List<String> out = new ArrayList<>();
-    for (String key : qd.getPriority().keySet()) {
-      if (Constants.DEFAULT_PRIORITY_KEY.equals(key)) {
-        continue;
-      }
-      out.add(key);
-    }
-    if (out.isEmpty()) {
-      return Collections.singletonList(null);
-    }
-    return out;
-  }
-
-  /**
-   * Resolves the broker-poller thread count for a {@link QueueDetail}. Uses the listener's
-   * {@code @RqueueListener.concurrency} upper bound when set; otherwise defaults to a single
-   * thread.
-   *
-   * <p>NATS v1 always uses a fixed-size thread pool sized to {@code max}. Elastic ramping
-   * (min &lt; max) is not yet implemented; instead all {@code max} threads are spawned eagerly
-   * and share the durable consumer's {@code MaxAckPending} budget — JetStream load-balances
-   * messages across the bound subscribers.
-   */
-  private int resolveBrokerThreadCount(QueueDetail qd) {
-    if (qd != null
-        && qd.getConcurrency() != null
-        && qd.getConcurrency().isValid()
-        && qd.getConcurrency().getMax() > 0) {
-      return qd.getConcurrency().getMax();
-    }
-    return 1;
   }
 
   protected void startGroup(String groupName, List<QueueDetail> queueDetails) {
@@ -888,23 +653,6 @@ public class RqueueMessageListenerContainer
     RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
     if (rqueueConfig.isProducer()) {
       log.info("Producer mode nothing to do...");
-      return;
-    }
-    if (!brokerPollers.isEmpty()) {
-      for (BrokerMessagePoller p : brokerPollers) {
-        p.stop();
-      }
-      for (Map.Entry<String, Future<?>> entry : scheduledFutureByQueue.entrySet()) {
-        com.github.sonus21.rqueue.utils.ThreadUtils.waitForTermination(
-            log,
-            entry.getValue(),
-            getMaxWorkerWaitTime(),
-            "An exception occurred while stopping broker poller '{}'",
-            entry.getKey());
-      }
-      for (String q : queueRunningState.keySet()) {
-        queueRunningState.put(q, false);
-      }
       return;
     }
     for (Map.Entry<String, Boolean> runningStateByQueue : queueRunningState.entrySet()) {

@@ -20,7 +20,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.context.Context;
 import com.github.sonus21.rqueue.core.context.DefaultContext;
 import com.github.sonus21.rqueue.core.middleware.TimeProviderMiddleware;
@@ -50,7 +50,7 @@ public class JobImpl implements Job {
   public final Duration expiry;
   private final RqueueJobDao rqueueJobDao;
   private final RqueueMessageMetadataService messageMetadataService;
-  private final RqueueMessageTemplate rqueueMessageTemplate;
+  private final MessageBroker messageBroker;
   private final RqueueLockManager rqueueLockManager;
   private final RqueueConfig rqueueConfig;
   private final QueueDetail queueDetail;
@@ -66,7 +66,7 @@ public class JobImpl implements Job {
       RqueueConfig rqueueConfig,
       RqueueMessageMetadataService messageMetadataService,
       RqueueJobDao rqueueJobDao,
-      RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueLockManager rqueueLockManager,
       QueueDetail queueDetail,
       MessageMetadata messageMetadata,
@@ -76,7 +76,7 @@ public class JobImpl implements Job {
     this.rqueueJobDao = rqueueJobDao;
     this.messageMetadataService = messageMetadataService;
     this.rqueueConfig = rqueueConfig;
-    this.rqueueMessageTemplate = rqueueMessageTemplate;
+    this.messageBroker = messageBroker;
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
     this.postProcessingHandler = postProcessingHandler;
@@ -143,8 +143,7 @@ public class JobImpl implements Job {
 
   @Override
   public Duration getVisibilityTimeout() {
-    Long score = rqueueMessageTemplate.getScore(
-        queueDetail.getProcessingQueueName(), rqueueJob.getRqueueMessage());
+    Long score = messageBroker.getVisibilityTimeoutScore(queueDetail, rqueueJob.getRqueueMessage());
     if (score == null || score <= 0) {
       return Duration.ZERO;
     }
@@ -154,10 +153,8 @@ public class JobImpl implements Job {
 
   @Override
   public boolean updateVisibilityTimeout(Duration deltaDuration) {
-    return rqueueMessageTemplate.addScore(
-        queueDetail.getProcessingQueueName(),
-        rqueueJob.getRqueueMessage(),
-        deltaDuration.toMillis());
+    return messageBroker.extendVisibilityTimeout(
+        queueDetail, rqueueJob.getRqueueMessage(), deltaDuration.toMillis());
   }
 
   @Override

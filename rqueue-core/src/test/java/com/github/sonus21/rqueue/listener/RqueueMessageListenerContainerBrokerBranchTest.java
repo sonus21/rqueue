@@ -102,7 +102,7 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     messageHandler.afterPropertiesSet();
   }
 
-  /** Capability-gated broker that records pop calls but never returns messages. */
+  /** Counting broker that records pop calls but never returns messages. */
   static class CountingBroker implements MessageBroker, AutoCloseable {
     final AtomicInteger popCalls = new AtomicInteger();
     final AtomicBoolean closed = new AtomicBoolean();
@@ -174,27 +174,19 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
   }
 
   @Test
-  void brokerBranchInvokesStartBrokerPollersAndSkipsRedisWiring() throws Exception {
+  void brokerWithPrimaryHandlerDispatchUsesNormalStartQueuePath() throws Exception {
     EndpointRegistry.delete();
-    CountingBroker broker = new CountingBroker(new Capabilities(true, false, false, false));
+    // Capabilities with usesPrimaryHandlerDispatch=true (e.g. NATS after the refactor).
+    CountingBroker broker = new CountingBroker(new Capabilities(true, false, false, true));
     TrackingContainer container = new TrackingContainer(messageHandler);
     container.setMessageBroker(broker);
     container.afterPropertiesSet();
     container.start();
     try {
-      assertTrue(container.startBrokerPollersCalled.get(), "startBrokerPollers should be called");
-      assertFalse(
-          container.startQueueCalled.get(),
-          "Redis-side startQueue should NOT be called for broker path");
-      assertFalse(
-          container.startGroupCalled.get(),
-          "Redis-side startGroup should NOT be called for broker path");
-      // Wait briefly to ensure the poller actually got submitted and is calling pop.
-      long deadline = System.currentTimeMillis() + 2000;
-      while (System.currentTimeMillis() < deadline && broker.popCalls.get() == 0) {
-        Thread.sleep(20);
-      }
-      assertTrue(broker.popCalls.get() > 0, "broker.pop should have been invoked at least once");
+      // All brokers now go through the normal startQueue/startGroup path.
+      assertTrue(
+          container.startQueueCalled.get() || container.startGroupCalled.get(),
+          "startQueue or startGroup should be invoked for any broker using primary handler dispatch");
     } finally {
       container.stop();
       container.destroy();
@@ -203,7 +195,7 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
   }
 
   @Test
-  void redisCapabilitiesUsesLegacyPathNotBrokerPollers() throws Exception {
+  void redisDefaultsBrokerAlsoUsesNormalStartQueuePath() throws Exception {
     EndpointRegistry.delete();
     CountingBroker broker = new CountingBroker(Capabilities.REDIS_DEFAULTS);
     TrackingContainer container = new TrackingContainer(messageHandler);
@@ -211,14 +203,12 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     container.afterPropertiesSet();
     container.start();
     try {
-      assertFalse(
-          container.startBrokerPollersCalled.get(),
-          "broker pollers should not start when capabilities use primary handler dispatch");
-      // Either startQueue or startGroup is invoked from the legacy path; exact one depends on
-      // priority configuration. broker-q1 has no priority, so startQueue is expected.
+      // broker-q1 has no priority group, so startQueue is expected.
       assertTrue(
           container.startQueueCalled.get() || container.startGroupCalled.get(),
           "legacy Redis-side wiring should run for REDIS_DEFAULTS capabilities");
+      assertFalse(container.startBrokerPollersCalled.get(),
+          "startBrokerPollers no longer exists; flag must remain false");
     } finally {
       container.stop();
       container.destroy();
@@ -236,15 +226,9 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     }
 
     @Override
-    protected void startBrokerPollers() {
-      startBrokerPollersCalled.set(true);
-      super.startBrokerPollers();
-    }
-
-    @Override
     protected void startQueue(String queueName, QueueDetail queueDetail) {
       startQueueCalled.set(true);
-      // Do not actually start the Redis-side poller; it would block on a real Redis.
+      // Do not actually start the poller; it would need a real broker.
     }
 
     @Override
