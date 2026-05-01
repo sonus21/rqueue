@@ -158,24 +158,6 @@ public class RqueueNatsAutoConfig {
     return new NatsKvBucketValidator(connection, props.isAutoCreateKvBuckets());
   }
 
-  @Bean
-  @ConditionalOnMissingBean(com.github.sonus21.rqueue.worker.WorkerRegistryStore.class)
-  @DependsOn("natsKvBucketValidator")
-  public com.github.sonus21.rqueue.worker.WorkerRegistryStore natsWorkerRegistryStore(
-      Connection connection) throws IOException {
-    return new com.github.sonus21.rqueue.nats.worker.NatsWorkerRegistryStore(connection);
-  }
-
-  @Bean
-  @ConditionalOnBean(com.github.sonus21.rqueue.config.RqueueConfig.class)
-  @ConditionalOnMissingBean(com.github.sonus21.rqueue.worker.RqueueWorkerRegistry.class)
-  public com.github.sonus21.rqueue.worker.RqueueWorkerRegistry natsRqueueWorkerRegistry(
-      com.github.sonus21.rqueue.config.RqueueConfig rqueueConfig,
-      com.github.sonus21.rqueue.worker.WorkerRegistryStore workerRegistryStore) {
-    return new com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl(
-        rqueueConfig, workerRegistryStore);
-  }
-
   /**
    * NATS-side {@link com.github.sonus21.rqueue.repository.MessageBrowsingRepository} powering
    * the dashboard's data-explorer panel. JetStream KV doesn't model arbitrary keyed reads, so
