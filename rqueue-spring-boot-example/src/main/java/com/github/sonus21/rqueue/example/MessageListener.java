@@ -16,15 +16,9 @@
 
 package com.github.sonus21.rqueue.example;
 
-import com.github.sonus21.rqueue.annotation.RqueueHandler;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
-import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
-import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +38,6 @@ public class MessageListener extends BaseListener {
   public void onMessage(String message) {
     execute("delay: {}", message, true);
   }
-
 
   @RqueueListener(
       value = "sch-job-queue",

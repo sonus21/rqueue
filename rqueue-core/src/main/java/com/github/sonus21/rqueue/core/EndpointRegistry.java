@@ -116,9 +116,8 @@ public final class EndpointRegistry {
 
   public static List<QueueDetail> getActiveQueueDetails() {
     synchronized (lock) {
-      List<QueueDetail> queueDetails = registry.values().stream()
-          .filter(QueueDetail::isActive)
-          .collect(Collectors.toList());
+      List<QueueDetail> queueDetails =
+          registry.values().stream().filter(QueueDetail::isActive).collect(Collectors.toList());
       lock.notifyAll();
       return queueDetails;
     }

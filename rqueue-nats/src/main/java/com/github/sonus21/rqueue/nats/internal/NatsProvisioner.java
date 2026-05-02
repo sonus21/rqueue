@@ -153,7 +153,9 @@ public class NatsProvisioner {
           if (sd.getMaxBytes() > 0) {
             b.maxBytes(sd.getMaxBytes());
           }
-          if (sd.getMaxAge() != null && !sd.getMaxAge().isZero() && !sd.getMaxAge().isNegative()) {
+          if (sd.getMaxAge() != null
+              && !sd.getMaxAge().isZero()
+              && !sd.getMaxAge().isNegative()) {
             b.maxAge(sd.getMaxAge());
           }
           jsm.addStream(b.build());
@@ -192,7 +194,8 @@ public class NatsProvisioner {
       if (cached != null) {
         return cached;
       }
-      String actual = doEnsureConsumer(streamName, consumerName, ackWait, maxDeliver, maxAckPending);
+      String actual =
+          doEnsureConsumer(streamName, consumerName, ackWait, maxDeliver, maxAckPending);
       consumerCache.put(cacheKey, actual);
       return actual;
     }
@@ -228,14 +231,16 @@ public class NatsProvisioner {
         throw new RqueueNatsException("Consumer '" + consumerName + "' on stream '" + streamName
             + "' does not exist and autoCreateConsumers=false");
       }
-      jsm.addOrUpdateConsumer(streamName, ConsumerConfiguration.builder()
-          .durable(consumerName)
-          .ackPolicy(AckPolicy.Explicit)
-          .deliverPolicy(DeliverPolicy.All)
-          .ackWait(ackWait)
-          .maxDeliver(maxDeliver)
-          .maxAckPending(maxAckPending)
-          .build());
+      jsm.addOrUpdateConsumer(
+          streamName,
+          ConsumerConfiguration.builder()
+              .durable(consumerName)
+              .ackPolicy(AckPolicy.Explicit)
+              .deliverPolicy(DeliverPolicy.All)
+              .ackWait(ackWait)
+              .maxDeliver(maxDeliver)
+              .maxAckPending(maxAckPending)
+              .build());
       return consumerName;
     } catch (JetStreamApiException e) {
       throw new RqueueNatsException(
