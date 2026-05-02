@@ -102,7 +102,8 @@ class RqueueMessageConfigTest extends TestBase {
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
     when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
     assertEquals(
-        rqueueMessageHandler.hashCode(), messageConfig.rqueueMessageHandler(messageBroker).hashCode());
+        rqueueMessageHandler.hashCode(),
+        messageConfig.rqueueMessageHandler(messageBroker).hashCode());
   }
 
   @Test
