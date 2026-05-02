@@ -17,8 +17,8 @@
 package com.github.sonus21.rqueue.web.config;
 
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
-import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
-import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
+import com.github.sonus21.rqueue.web.pebble.ResourceLoader;
+import com.github.sonus21.rqueue.web.pebble.RqueuePebbleExtension;
 import io.pebbletemplates.pebble.PebbleEngine;
 import io.pebbletemplates.spring.extension.SpringExtension;
 import io.pebbletemplates.spring.reactive.PebbleReactiveViewResolver;
