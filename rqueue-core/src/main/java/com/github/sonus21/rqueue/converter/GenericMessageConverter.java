@@ -66,8 +66,8 @@ public class GenericMessageConverter implements SmartMessageConverter {
 
   public GenericMessageConverter(ObjectMapper objectMapper) {
     notNull(objectMapper, "objectMapper cannot be null");
-    this.smartMessageSerDes = new SmartMessageSerDes(new RqJacksonSerDes(objectMapper),
-        new RqJacksonTypeFactory(objectMapper));
+    this.smartMessageSerDes = new SmartMessageSerDes(
+        new RqJacksonSerDes(objectMapper), new RqJacksonTypeFactory(objectMapper));
   }
 
   public GenericMessageConverter(RqueueSerDes serDes, RqueueTypeFactory typeFactory) {

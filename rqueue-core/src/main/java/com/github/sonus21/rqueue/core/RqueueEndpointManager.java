@@ -40,7 +40,6 @@ public interface RqueueEndpointManager {
     registerQueue(name, QueueType.QUEUE, priorities);
   }
 
-
   /**
    * Use this method to register any queue, that's only used for sending message.
    *

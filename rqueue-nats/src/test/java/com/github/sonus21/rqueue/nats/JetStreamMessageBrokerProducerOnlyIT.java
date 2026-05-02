@@ -84,12 +84,12 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
         JetStreamMessageBroker.builder().connection(connection).build()) {
       int count = 5;
       for (int i = 0; i < count; i++) {
-        EmailEvent event = new EmailEvent(UUID.randomUUID().toString(),
-            "user" + i + "@example.com", "Subject " + i);
+        EmailEvent event = new EmailEvent(
+            UUID.randomUUID().toString(), "user" + i + "@example.com", "Subject " + i);
         broker.enqueue(emailQueue, rqueueMessage("email-" + i, event));
       }
-      assertEquals(count, broker.size(emailQueue),
-          "all email events should be visible in the stream");
+      assertEquals(
+          count, broker.size(emailQueue), "all email events should be visible in the stream");
     }
   }
 
@@ -103,8 +103,8 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
         JobEvent event = new JobEvent(UUID.randomUUID().toString(), types[i]);
         broker.enqueue(jobQueue, rqueueMessage("job-" + i, event));
       }
-      assertEquals(types.length, broker.size(jobQueue),
-          "all job events should be visible in the stream");
+      assertEquals(
+          types.length, broker.size(jobQueue), "all job events should be visible in the stream");
     }
   }
 
@@ -117,14 +117,16 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
       int perPriority = 4;
       for (String priority : priorities) {
         for (int i = 0; i < perPriority; i++) {
-          NotificationEvent event = new NotificationEvent(
-              UUID.randomUUID().toString(), priority + "-notification-" + i);
+          NotificationEvent event =
+              new NotificationEvent(UUID.randomUUID().toString(), priority + "-notification-" + i);
           broker.enqueue(notifQueue, priority, rqueueMessage(priority + "-notif-" + i, event));
         }
       }
       for (String priority : priorities) {
         QueueDetail pq = mockQueue(notifQueue.getName() + "_" + priority);
-        assertEquals(perPriority, broker.size(pq),
+        assertEquals(
+            perPriority,
+            broker.size(pq),
             "priority=" + priority + " stream should hold " + perPriority + " notification events");
       }
     }
@@ -142,10 +144,12 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
             UUID.randomUUID().toString(), "user" + i + "@example.com", "RE: item " + i);
         messages.add(rqueueMessage("re-email-" + i, event));
       }
-      Flux<Void> publishes = Flux.fromIterable(messages)
-          .flatMap(m -> broker.enqueueReactive(emailQueue, m));
+      Flux<Void> publishes =
+          Flux.fromIterable(messages).flatMap(m -> broker.enqueueReactive(emailQueue, m));
       StepVerifier.create(publishes).verifyComplete();
-      assertEquals(count, broker.size(emailQueue),
+      assertEquals(
+          count,
+          broker.size(emailQueue),
           "all reactively enqueued email events should be in the stream");
     }
   }
@@ -161,8 +165,8 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
 
       // 3 email events on the main queue
       for (int i = 0; i < 3; i++) {
-        EmailEvent email = new EmailEvent(UUID.randomUUID().toString(),
-            "to" + i + "@example.com", "Hello " + i);
+        EmailEvent email =
+            new EmailEvent(UUID.randomUUID().toString(), "to" + i + "@example.com", "Hello " + i);
         broker.enqueue(mainQueue, rqueueMessage("email-" + i, email));
       }
       // 2 job events on the "high" priority sub-queue
@@ -171,7 +175,8 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
         broker.enqueue(mainQueue, "high", rqueueMessage("job-high-" + i, job));
       }
       // 1 notification reactively on the main queue
-      NotificationEvent notif = new NotificationEvent(UUID.randomUUID().toString(), "reactive notif");
+      NotificationEvent notif =
+          new NotificationEvent(UUID.randomUUID().toString(), "reactive notif");
       StepVerifier.create(broker.enqueueReactive(mainQueue, rqueueMessage("notif-0", notif)))
           .verifyComplete();
 

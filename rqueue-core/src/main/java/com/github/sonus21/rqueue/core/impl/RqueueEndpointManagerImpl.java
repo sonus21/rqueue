@@ -66,7 +66,7 @@ public class RqueueEndpointManagerImpl extends BaseMessageSender implements Rque
 
   @Override
   public void registerQueue(String name, QueueType type, String... priorities) {
-    registerQueueInternal(name,  type, priorities);
+    registerQueueInternal(name, type, priorities);
   }
 
   @Override
