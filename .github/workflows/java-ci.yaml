@@ -478,3 +478,9 @@ jobs:
             exit 1
           fi
           ./gradlew coverallsJacoco
+          echo "=== Coveralls request payload ==="
+          if [ -f build/coveralls-request.json ]; then
+            cat build/coveralls-request.json | head -100
+          else
+            echo "No coveralls-request.json file found"
+          fi

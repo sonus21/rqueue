@@ -206,6 +206,8 @@ coverallsJacoco {
     reportSourceSets = publishedProjects.collectMany {
         it.sourceSets.main.allSource.srcDirs
     }
+    // Debug: write request payload to file to see what's being sent
+    coverallsRequest = file("build/coveralls-request.json")
 }
 
 def javaFormatSources = providers.provider {
