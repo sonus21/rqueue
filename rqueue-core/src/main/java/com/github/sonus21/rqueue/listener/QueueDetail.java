@@ -84,6 +84,7 @@ public class QueueDetail extends SerializableBase {
   private final Duration natsAckWaitOverride;
   private final Integer natsMaxDeliverOverride;
   private final Duration natsDedupWindow;
+  private final String natsConsumerName;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
@@ -164,6 +165,7 @@ public class QueueDetail extends SerializableBase {
         .concurrency(concurrency)
         .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, priority))
         .doNotRetry(doNotRetry)
+        .natsConsumerName(natsConsumerName)
         .build();
   }
 

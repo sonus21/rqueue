@@ -46,6 +46,7 @@ class MappingInformation implements Comparable<MappingInformation> {
   private final boolean primary;
   private final int batchSize;
   private final Set<Class<? extends Throwable>> doNotRetry;
+  private final String natsConsumerName;
 
   @Override
   public String toString() {

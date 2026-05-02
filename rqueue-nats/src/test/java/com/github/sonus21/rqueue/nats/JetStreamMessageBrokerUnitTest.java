@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
 import com.github.sonus21.rqueue.serdes.SerializationUtils;
@@ -32,7 +33,6 @@ import io.nats.client.JetStreamApiException;
 import io.nats.client.JetStreamManagement;
 import io.nats.client.MessageHandler;
 import io.nats.client.api.PublishAck;
-import io.nats.client.api.StreamInfo;
 import io.nats.client.impl.Headers;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -58,15 +58,12 @@ class JetStreamMessageBrokerUnitTest {
     Connection conn = mock(Connection.class);
     JetStream js = mock(JetStream.class);
     JetStreamManagement jsm = mock(JetStreamManagement.class);
-    StreamInfo info = mock(StreamInfo.class);
-    try {
-      // Pretend every stream already exists so provisioner returns early without addStream().
-      when(jsm.getStreamInfo(any(String.class))).thenReturn(info);
-    } catch (IOException | JetStreamApiException unreachable) {
-      throw new AssertionError(unreachable);
-    }
+    // Mock the provisioner so ensureStream() is a no-op — these tests verify subject
+    // naming and exception wrapping, not stream creation.
+    NatsProvisioner provisioner = mock(NatsProvisioner.class);
     JetStreamMessageBroker broker = new JetStreamMessageBroker(
-        conn, js, jsm, config, new RqJacksonSerDes(SerializationUtils.getObjectMapper()), null);
+        conn, js, jsm, config, new RqJacksonSerDes(SerializationUtils.getObjectMapper()),
+        provisioner);
     return new Fixture(conn, js, jsm, broker);
   }
 

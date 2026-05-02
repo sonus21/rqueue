@@ -38,8 +38,14 @@ public class HandlerMiddleware implements Middleware {
   public void handle(Job job, Callable<Void> next) throws Exception {
     Execution execution = job.getLatestExecution();
     RqueueMessage rqueueMessage = job.getRqueueMessage();
+    // Use the pre-decoded user message when available so that Spring's
+    // PayloadMethodArgumentResolver does not short-circuit on type-assignability
+    // and return the raw JSON-encoded envelope (e.g. {"msg":"...","name":"..."})
+    // instead of the actual user object.
+    Object userMessage = job.getMessage();
+    Object payload = (userMessage != null) ? userMessage : rqueueMessage.getMessage();
     Message<?> message = MessageBuilder.createMessage(
-        rqueueMessage.getMessage(),
+        payload,
         buildMessageHeaders(
             job.getQueueDetail().getName(),
             rqueueMessage,

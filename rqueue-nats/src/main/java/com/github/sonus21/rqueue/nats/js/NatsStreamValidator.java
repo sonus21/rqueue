@@ -97,15 +97,16 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
     for (QueueDetail q : queues) {
       String mainStream = config.getStreamPrefix() + q.getName();
       String mainSubject = config.getSubjectPrefix() + q.getName();
+      String configuredConsumer = resolveConsumerName(q);
       total += tryEnsure(failures, mainStream, mainSubject);
-      tryEnsureConsumer(failures, mainStream, consumerName(q.getName()), cd, mainSubject);
+      tryEnsureConsumer(failures, mainStream, configuredConsumer, cd, mainSubject);
 
       if (q.getPriority() != null) {
         for (String priority : q.getPriority().keySet()) {
           String pStream = mainStream + "-" + priority;
           String pSubject = mainSubject + "." + priority;
           total += tryEnsure(failures, pStream, pSubject);
-          tryEnsureConsumer(failures, pStream, consumerName(q.getName()), cd, pSubject);
+          tryEnsureConsumer(failures, pStream, configuredConsumer, cd, pSubject);
         }
       }
 
@@ -145,7 +146,13 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
         new Object[] {total, queues.size()});
   }
 
-  /** Mirrors {@code JetStreamMessageBroker.resolveConsumerName} for a null caller-supplied name. */
+  /** Returns the configured consumer name override, or the default derived from the queue name. */
+  static String resolveConsumerName(QueueDetail q) {
+    String override = q.getNatsConsumerName();
+    return (override != null && !override.isEmpty()) ? override : consumerName(q.getName());
+  }
+
+  /** Derives the default consumer name when no override is configured. */
   static String consumerName(String queueName) {
     return "rqueue-" + queueName;
   }

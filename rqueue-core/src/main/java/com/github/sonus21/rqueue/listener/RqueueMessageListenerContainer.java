@@ -488,6 +488,7 @@ public class RqueueMessageListenerContainer
         .priority(priority)
         .priorityGroup(priorityGroup)
         .doNotRetry(mappingInformation.getDoNotRetry())
+        .natsConsumerName(mappingInformation.getNatsConsumerName())
         .build();
     List<QueueDetail> queueDetails;
     if (queueDetail.getPriority().size() <= 1) {
