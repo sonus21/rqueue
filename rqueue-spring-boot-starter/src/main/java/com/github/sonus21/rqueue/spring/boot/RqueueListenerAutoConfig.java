@@ -31,7 +31,6 @@ import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.redis.config.RqueueRedisListenerConfig;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.condition.RqueueEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -52,7 +51,7 @@ import org.springframework.context.annotation.Import;
   "com.github.sonus21.rqueue.nats",
 })
 @Conditional({RqueueEnabled.class})
-@Import(RqueueRedisListenerConfig.class)
+@Import(RqueueRedisConfigImportSelector.class)
 public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
 
   @Bean

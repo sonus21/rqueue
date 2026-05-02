@@ -94,7 +94,7 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
     for (QueueDetail q : queues) {
       String mainStream = config.getStreamPrefix() + q.getName();
       String mainSubject = config.getSubjectPrefix() + q.getName();
-      total += tryEnsure(failures, mainStream, mainSubject);
+      total += tryEnsure(failures, mainStream, mainSubject, q);
       tryEnsureConsumer(failures, mainStream, q.resolvedConsumerName(), cd);
 
       if (q.getPriority() != null) {
@@ -106,7 +106,7 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
               config.getStreamPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
           String pSubject =
               config.getSubjectPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
-          total += tryEnsure(failures, pStream, pSubject);
+          total += tryEnsure(failures, pStream, pSubject, q);
           // Consumer is NOT created here: each priority sub-queue has its own QueueDetail
           // in the registry and is processed as its own mainStream entry above, so exactly
           // one consumer is created per stream. Adding a second one here would fail on
@@ -121,7 +121,7 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
         // Rqueue routes the message explicitly, not via advisory bridging.
         String dlqQueueStream = config.getStreamPrefix() + q.getDeadLetterQueueName();
         String dlqQueueSubject = config.getSubjectPrefix() + q.getDeadLetterQueueName();
-        total += tryEnsure(failures, dlqQueueStream, dlqQueueSubject);
+        total += tryEnsure(failures, dlqQueueStream, dlqQueueSubject, q);
         // No consumer needed for the DLQ stream here — the DLQ queue registers its own listener.
       }
     }
@@ -163,9 +163,10 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
     }
   }
 
-  private int tryEnsure(List<String> failures, String streamName, String subject) {
+  private int tryEnsure(
+      List<String> failures, String streamName, String subject, QueueDetail q) {
     try {
-      provisioner.ensureStream(streamName, List.of(subject));
+      provisioner.ensureStream(streamName, List.of(subject), q.getType());
       return 1;
     } catch (RqueueNatsException e) {
       failures.add(streamName + " (subject " + subject + "): " + rootCause(e));

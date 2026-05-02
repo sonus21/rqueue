@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.listener;
 import static com.github.sonus21.rqueue.utils.Constants.DELTA_BETWEEN_RE_ENQUEUE_TIME;
 import static com.github.sonus21.rqueue.utils.Constants.MIN_EXECUTION_TIME;
 
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.models.Concurrency;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,9 @@ class MappingInformation implements Comparable<MappingInformation> {
   private final boolean primary;
   private final int batchSize;
   private final Set<Class<? extends Throwable>> doNotRetry;
+
+  @Builder.Default
+  private final QueueType queueType = QueueType.QUEUE;
 
   @Override
   public String toString() {

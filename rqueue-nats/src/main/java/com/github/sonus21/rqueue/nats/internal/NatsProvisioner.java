@@ -9,6 +9,7 @@
  */
 package com.github.sonus21.rqueue.nats.internal;
 
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import io.nats.client.Connection;
@@ -23,6 +24,7 @@ import io.nats.client.api.ConsumerInfo;
 import io.nats.client.api.DeliverPolicy;
 import io.nats.client.api.KeyValueConfiguration;
 import io.nats.client.api.KeyValueStatus;
+import io.nats.client.api.RetentionPolicy;
 import io.nats.client.api.StreamConfiguration;
 import io.nats.client.api.StreamInfo;
 import java.io.IOException;
@@ -118,11 +120,29 @@ public class NatsProvisioner {
   // ---- Stream provisioning ----------------------------------------------
 
   /**
-   * Ensure a JetStream stream exists with the given subjects. Hits the NATS backend at most once
-   * per stream name per process lifetime; subsequent calls return immediately from the in-process
-   * cache.
+   * Ensure a JetStream stream exists with the given subjects, using {@link QueueType#QUEUE}
+   * (WorkQueue retention) as the default. Callers that have a {@link QueueType} available should
+   * use {@link #ensureStream(String, List, QueueType)} instead.
    */
   public void ensureStream(String streamName, List<String> subjects) {
+    ensureStream(streamName, subjects, QueueType.QUEUE);
+  }
+
+  /**
+   * Ensure a JetStream stream exists with the given subjects and retention policy derived from
+   * {@code queueType}:
+   * <ul>
+   *   <li>{@link QueueType#QUEUE} — {@link io.nats.client.api.RetentionPolicy#WorkQueue}: each
+   *       message is delivered to exactly one consumer; competing-consumer semantics.
+   *   <li>{@link QueueType#STREAM} — {@link io.nats.client.api.RetentionPolicy#Limits}: every
+   *       independent durable consumer group receives all messages; stream/fan-out semantics.
+   * </ul>
+   *
+   * <p>Hits the NATS backend at most once per stream name per process lifetime; subsequent calls
+   * return immediately from the in-process cache. If the stream already exists with a different
+   * retention policy, a WARNING is logged and the existing config is left untouched.
+   */
+  public void ensureStream(String streamName, List<String> subjects, QueueType queueType) {
     if (streamsDone.contains(streamName)) {
       return;
     }
@@ -133,6 +153,9 @@ public class NatsProvisioner {
       }
       try {
         StreamInfo existing = safeGetStreamInfo(streamName);
+        RetentionPolicy desired = queueType == QueueType.STREAM
+            ? RetentionPolicy.Limits
+            : RetentionPolicy.WorkQueue;
         if (existing == null) {
           if (!config.isAutoCreateStreams()) {
             throw new RqueueNatsException(
@@ -144,7 +167,7 @@ public class NatsProvisioner {
               .subjects(subjects)
               .replicas(sd.getReplicas())
               .storageType(sd.getStorage())
-              .retentionPolicy(sd.getRetention())
+              .retentionPolicy(desired)
               .duplicateWindow(sd.getDuplicateWindow())
               .compressionOption(CompressionOption.S2);
           if (sd.getMaxMsgs() > 0) {
@@ -159,6 +182,15 @@ public class NatsProvisioner {
             b.maxAge(sd.getMaxAge());
           }
           jsm.addStream(b.build());
+        } else {
+          RetentionPolicy actual = existing.getConfiguration().getRetentionPolicy();
+          if (actual != desired) {
+            log.log(
+                Level.WARNING,
+                "Stream ''{0}'' exists with retention={1} but queueMode requires retention={2}"
+                    + " — leaving existing config in place.",
+                new Object[] {streamName, actual, desired});
+          }
         }
       } catch (IOException | JetStreamApiException e) {
         throw new RqueueNatsException(

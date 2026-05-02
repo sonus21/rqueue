@@ -12,6 +12,7 @@ package com.github.sonus21.rqueue.nats;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import java.time.Duration;
@@ -25,13 +26,10 @@ class JetStreamMessageBrokerIndependentConsumersIT extends AbstractJetStreamIT {
 
   @Test
   void twoDurables_eachReceiveAllMessages() throws Exception {
-    QueueDetail q = mockQueue("icq-" + System.nanoTime());
-    RqueueNatsConfig cfg = RqueueNatsConfig.defaults();
-    // Need Limits/Interest retention so independent consumers each see all messages.
-    cfg.getStreamDefaults().setRetention(io.nats.client.api.RetentionPolicy.Limits);
+    QueueDetail q = mockQueue("icq-" + System.nanoTime(), QueueType.STREAM);
     int total = 5;
     try (JetStreamMessageBroker broker =
-        JetStreamMessageBroker.builder().connection(connection).config(cfg).build()) {
+        JetStreamMessageBroker.builder().connection(connection).build()) {
       for (int i = 0; i < total; i++) {
         broker.enqueue(q, RqueueMessage.builder().id("m-" + i).message("p" + i).build());
       }

@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -99,12 +100,13 @@ abstract class BaseMessageSender {
   }
 
   /**
-   * Priority-aware enqueue. When a non-Redis {@link com.github.sonus21.rqueue.core.spi.MessageBroker}
-   * is set on the underlying {@link RqueueMessageTemplate} (i.e. capabilities advertise
-   * {@code !usesPrimaryHandlerDispatch}) this routes the publish through
+   * Priority-aware enqueue. When a non-Redis
+   * {@link com.github.sonus21.rqueue.core.spi.MessageBroker} is set on the underlying
+   * {@link RqueueMessageTemplate} (i.e. capabilities advertise {@code !usesPrimaryHandlerDispatch})
+   * this routes the publish through
    * {@link com.github.sonus21.rqueue.core.spi.MessageBroker#enqueue(QueueDetail, String,
-   * RqueueMessage)} so backends like NATS can publish to a priority-specific subject. Otherwise
-   * the existing Redis-shaped path is used; Redis already encodes priority in the queue name so
+   * RqueueMessage)} so backends like NATS can publish to a priority-specific subject. Otherwise the
+   * existing Redis-shaped path is used; Redis already encodes priority in the queue name so
    * {@code priority} is ignored.
    */
   protected Object enqueue(
@@ -218,7 +220,8 @@ abstract class BaseMessageSender {
             MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
-  protected void registerQueueInternal(String queueName, String... priorities) {
+  protected void registerQueueInternal(String queueName, QueueType type,
+      String... priorities) {
     validateQueue(queueName);
     notNull(priorities, "priorities cannot be null");
     Map<String, Integer> priorityMap = new HashMap<>();
@@ -236,8 +239,10 @@ abstract class BaseMessageSender {
         .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
         .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
         .priority(priorityMap)
+        .type(type)
         .build();
     EndpointRegistry.register(queueDetail);
+    notifyBrokerQueueRegistered(queueDetail);
     for (String priority : priorities) {
       String suffix = PriorityUtils.getSuffix(priority);
       queueDetail = QueueDetail.builder()
@@ -252,6 +257,14 @@ abstract class BaseMessageSender {
           .priority(Collections.singletonMap(DEFAULT_PRIORITY_KEY, 1))
           .build();
       EndpointRegistry.register(queueDetail);
+      notifyBrokerQueueRegistered(queueDetail);
+    }
+  }
+
+  private void notifyBrokerQueueRegistered(QueueDetail queueDetail) {
+    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageTemplate.getMessageBroker();
+    if (broker != null) {
+      broker.onQueueRegistered(queueDetail);
     }
   }
 }

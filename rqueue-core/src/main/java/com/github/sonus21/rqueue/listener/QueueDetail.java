@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.listener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
@@ -258,11 +259,6 @@ public class QueueDetail extends SerializableBase {
    */
   public int resolvedMaxDeliver(int fallback) {
     return natsMaxDeliverOverride != null ? natsMaxDeliverOverride : fallback;
-  }
-
-  public enum QueueType {
-    QUEUE,
-    STREAM
   }
 
   public boolean isDoNotRetryError(Throwable throwable) {

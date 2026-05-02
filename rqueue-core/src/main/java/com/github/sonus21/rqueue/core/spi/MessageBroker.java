@@ -47,6 +47,13 @@ public interface MessageBroker {
   void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs);
 
   /**
+   * Called by {@code RqueueEndpointManager.registerQueue} after a queue is added to the registry.
+   * Backends that need to provision resources (e.g. JetStream streams) at registration time should
+   * override this. The default is a no-op so Redis and other backends are unaffected.
+   */
+  default void onQueueRegistered(QueueDetail q) {}
+
+  /**
    * Reactive variant of {@link #enqueue(QueueDetail, RqueueMessage)}. The default falls back to the
    * blocking implementation wrapped in {@code Mono.fromRunnable}; backends with native async
    * publish APIs (e.g. JetStream) should override this to avoid blocking the calling thread.

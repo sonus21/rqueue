@@ -165,7 +165,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public void enqueue(QueueDetail q, RqueueMessage m) {
     String subject = subjectFor(q);
     String stream = streamFor(q);
-    provisioner.ensureStream(stream, List.of(subject));
+    provisioner.ensureStream(stream, List.of(subject), q.getType());
     Headers headers = new Headers();
     if (m.getId() != null) {
       headers.add("Nats-Msg-Id", m.getId());
@@ -198,7 +198,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public void enqueue(QueueDetail q, String priority, RqueueMessage m) {
     String subject = subjectFor(q, priority);
     String stream = streamFor(q, priority);
-    provisioner.ensureStream(stream, List.of(subject));
+    provisioner.ensureStream(stream, List.of(subject), q.getType());
     Headers headers = new Headers();
     if (m.getId() != null) {
       headers.add("Nats-Msg-Id", m.getId());
@@ -243,7 +243,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     String subject = subjectFor(q);
     String stream = streamFor(q);
     try {
-      provisioner.ensureStream(stream, List.of(subject));
+      provisioner.ensureStream(stream, List.of(subject), q.getType());
     } catch (Exception e) {
       return Mono.error(new RqueueNatsException(
           "Failed to provision stream for reactive enqueue id="
@@ -522,6 +522,13 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   @Override
   public void publish(String channel, String payload) {
     connection.publish(channel, payload.getBytes(UTF_8));
+  }
+
+  @Override
+  public void onQueueRegistered(QueueDetail q) {
+    String stream = streamFor(q);
+    String subject = subjectFor(q);
+    provisioner.ensureStream(stream, List.of(subject), q.getType());
   }
 
   @Override

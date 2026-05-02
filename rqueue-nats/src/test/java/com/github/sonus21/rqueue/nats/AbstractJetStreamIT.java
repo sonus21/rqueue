@@ -12,6 +12,7 @@ package com.github.sonus21.rqueue.nats;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import io.nats.client.Connection;
 import io.nats.client.Nats;
@@ -74,8 +75,13 @@ public abstract class AbstractJetStreamIT {
   }
 
   protected QueueDetail mockQueue(String name) {
+    return mockQueue(name, QueueType.QUEUE);
+  }
+
+  protected QueueDetail mockQueue(String name, QueueType type) {
     QueueDetail q = mock(QueueDetail.class);
     when(q.getName()).thenReturn(name);
+    when(q.getType()).thenReturn(type);
     return q;
   }
 }

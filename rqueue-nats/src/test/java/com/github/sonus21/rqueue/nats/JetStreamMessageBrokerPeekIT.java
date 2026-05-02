@@ -12,6 +12,7 @@ package com.github.sonus21.rqueue.nats;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import io.nats.client.api.ConsumerInfo;
@@ -23,9 +24,10 @@ class JetStreamMessageBrokerPeekIT extends AbstractJetStreamIT {
 
   @Test
   void peek_doesNotPerturbDurableConsumerAckPending() throws Exception {
-    QueueDetail q = mockQueue("pkq-" + System.nanoTime());
+    // Peek creates an AckPolicy.None ephemeral consumer which WorkQueue streams reject (error
+    // 10084). Peek is inherently a fan-out / read-only operation and requires a Limits stream.
+    QueueDetail q = mockQueue("pkq-" + System.nanoTime(), QueueType.STREAM);
     RqueueNatsConfig cfg = RqueueNatsConfig.defaults();
-    cfg.getStreamDefaults().setRetention(io.nats.client.api.RetentionPolicy.Limits);
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).config(cfg).build()) {
       for (int i = 1; i <= 5; i++) {

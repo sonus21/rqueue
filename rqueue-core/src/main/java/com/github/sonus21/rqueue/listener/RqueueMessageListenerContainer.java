@@ -503,6 +503,7 @@ public class RqueueMessageListenerContainer
         .priorityGroup(priorityGroup)
         .doNotRetry(mappingInformation.getDoNotRetry())
         .consumerName(mappingInformation.getConsumerName())
+        .type(mappingInformation.getQueueType())
         .build();
     List<QueueDetail> queueDetails;
     if (queueDetail.getPriority().size() <= 1) {

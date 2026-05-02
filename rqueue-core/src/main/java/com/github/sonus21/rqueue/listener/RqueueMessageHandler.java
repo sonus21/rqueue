@@ -334,6 +334,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
         .batchSize(batchSize)
         .doNotRetry(new HashSet<>(Arrays.asList(rqueueListener.doNotRetry())))
         .consumerName(natsConsumerName.isEmpty() ? null : natsConsumerName)
+        .queueType(rqueueListener.queueMode())
         .build();
     if (mappingInformation.isValid()) {
       return mappingInformation;
