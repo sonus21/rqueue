@@ -18,7 +18,6 @@ package com.github.sonus21.rqueue.metrics;
 
 import com.github.sonus21.rqueue.config.MetricsProperties;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import io.micrometer.core.instrument.Gauge;
@@ -49,23 +48,10 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
   private MeterRegistry meterRegistry;
 
   @Autowired
-  private RqueueStringDao rqueueStringDao;
+  private RqueueQueueMetricsProvider queueMetricsProvider;
 
   public RqueueMetrics(QueueCounter queueCounter) {
     this.queueCounter = queueCounter;
-  }
-
-  private long size(String name, boolean isZset) {
-    Long val;
-    if (!isZset) {
-      val = rqueueStringDao.getListSize(name);
-    } else {
-      val = rqueueStringDao.getSortedSetSize(name);
-    }
-    if (val == null) {
-      return 0;
-    }
-    return val;
   }
 
   private void monitor() {
@@ -75,21 +61,21 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
       Gauge.builder(
               metricsProperties.getMetricName(QUEUE_SIZE),
               queueDetail,
-              c -> size(queueDetail.getQueueName(), false))
+              c -> queueMetricsProvider.getPendingMessageCount(queueDetail.getName()))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
           .description("The number of entries in this queue")
           .register(meterRegistry);
       Gauge.builder(
               metricsProperties.getMetricName(PROCESSING_QUEUE_SIZE),
               queueDetail,
-              c -> size(queueDetail.getProcessingQueueName(), true))
+              c -> queueMetricsProvider.getProcessingMessageCount(queueDetail.getName()))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getProcessingQueueName()))
           .description("The number of entries in the processing queue")
           .register(meterRegistry);
       Gauge.builder(
               metricsProperties.getMetricName(SCHEDULED_QUEUE_SIZE),
               queueDetail,
-              c -> size(queueDetail.getScheduledQueueName(), true))
+              c -> queueMetricsProvider.getScheduledMessageCount(queueDetail.getName()))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getScheduledQueueName()))
           .description("The number of entries waiting in the scheduled queue")
           .register(meterRegistry);
@@ -97,7 +83,7 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
         Builder<QueueDetail> builder = Gauge.builder(
             metricsProperties.getMetricName(DEAD_LETTER_QUEUE_SIZE),
             queueDetail,
-            c -> size(queueDetail.getDeadLetterQueueName(), false));
+            c -> queueMetricsProvider.getDeadLetterMessageCount(queueDetail.getName()));
         builder.tags(queueTags);
         builder.description("The number of entries in the dead letter queue");
         builder.register(meterRegistry);

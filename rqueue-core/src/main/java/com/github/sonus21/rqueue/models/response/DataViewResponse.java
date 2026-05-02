@@ -39,6 +39,23 @@ public class DataViewResponse extends BaseResponse {
   private List<Action> actions = new ArrayList<>();
   private List<TableRow> rows = new LinkedList<>();
 
+  /**
+   * Optional UI hint set by the dashboard service when the active {@code MessageBroker}
+   * does not support scheduled-queue introspection (see
+   * {@code Capabilities#supportsScheduledIntrospection}). When {@code true} the frontend
+   * should hide / grey out the scheduled-queue panel. Additive and defaults to {@code false}
+   * so the Redis backend's existing behavior is unchanged.
+   */
+  private boolean hideScheduledPanel;
+
+  /**
+   * Optional UI hint set by the dashboard service when the active {@code MessageBroker}
+   * does not support cron jobs (see {@code Capabilities#supportsCronJobs}). When {@code true}
+   * the frontend should hide / grey out cron-style management. Additive and defaults to
+   * {@code false}.
+   */
+  private boolean hideCronJobs;
+
   public static DataViewResponse createErrorMessage(String message) {
     DataViewResponse response = new DataViewResponse();
     response.setCode(1);

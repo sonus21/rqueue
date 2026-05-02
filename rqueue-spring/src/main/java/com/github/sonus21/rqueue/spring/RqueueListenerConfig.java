@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.QueueCounter;
@@ -41,15 +42,24 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 
 @Configuration
-@ComponentScan({"com.github.sonus21.rqueue.web", "com.github.sonus21.rqueue.dao"})
+@ComponentScan({
+  "com.github.sonus21.rqueue.web",
+  "com.github.sonus21.rqueue.dao",
+  "com.github.sonus21.rqueue.nats",
+})
+@Import(RqueueRedisConfigImportSelector.class)
 public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
   @Bean
-  public RqueueMessageHandler rqueueMessageHandler() {
-    return simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
-        getMessageConverterProvider());
+  public RqueueMessageHandler rqueueMessageHandler(MessageBroker messageBroker) {
+    RqueueMessageHandler handler =
+        simpleRqueueListenerContainerFactory.getRqueueMessageHandler(getMessageConverterProvider());
+    handler.setPrimaryHandlerDispatchEnabled(
+        messageBroker.capabilities().usesPrimaryHandlerDispatch());
+    return handler;
   }
 
   @Bean
@@ -69,9 +79,11 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public RqueueMessageManager rqueueMessageManager(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageManagerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -81,9 +93,11 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public RqueueEndpointManager rqueueEndpointManager(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueEndpointManagerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -93,9 +107,11 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public RqueueMessageEnqueuer rqueueMessageEnqueuer(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -120,9 +136,11 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new ReactiveRqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);

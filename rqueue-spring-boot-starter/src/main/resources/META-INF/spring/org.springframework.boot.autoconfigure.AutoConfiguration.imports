@@ -1,2 +1,4 @@
 com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig
 com.github.sonus21.rqueue.spring.boot.RqueueMetricsAutoConfig
+com.github.sonus21.rqueue.spring.boot.RqueueNatsAutoConfig
+com.github.sonus21.rqueue.spring.boot.RqueueNatsListenerAutoConfig

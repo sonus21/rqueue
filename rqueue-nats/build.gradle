@@ -1,0 +1,56 @@
+plugins {
+    id 'com.vanniktech.maven.publish' version '0.28.0'
+}
+apply from: "${rootDir}/gradle/packaging.gradle"
+apply from: "${rootDir}/gradle/test-runner.gradle"
+apply from: "${rootDir}/gradle/code-publish.gradle"
+
+import com.vanniktech.maven.publish.SonatypeHost;
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+    pom {
+        name = "Rqueue NATS"
+        description = "NATS / JetStream backend for Rqueue (preview). Add this jar and set rqueue.backend=nats to switch from Redis to NATS."
+        url = "https://github.com/sonus21/rqueue"
+        licenses {
+            license {
+                name = "Apache License 2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "sonus21"
+                name = "Sonu Kumar"
+                email = "sonunitw12@gmail.com"
+            }
+        }
+        scm {
+            url = "https://github.com/sonus21/rqueue"
+            connection = "scm:git:git://github.com/sonus21/rqueue.git"
+            developerConnection = "scm:git:ssh://git@github.com:sonus21/rqueue.git"
+        }
+        issueManagement {
+            system = "GitHub"
+            url = "https://github.com/sonus21/rqueue/issues"
+        }
+    }
+}
+
+dependencies {
+    // Broker-impl module only. No Spring / Spring Boot dependencies live here.
+    // Spring wiring is provided by rqueue-spring (@Configuration + @EnableRqueue) and
+    // rqueue-spring-boot-starter (auto-config), both of which reference this module's
+    // types via compileOnly and gate them behind @ConditionalOnClass(JetStream.class).
+    api project(":rqueue-core")
+    // NATS-shaped web service impls (NatsRqueueQDetailService, etc.) implement interfaces
+    // declared in rqueue-web. Mirrors how rqueue-redis pulls rqueue-web for the same reason.
+    api project(":rqueue-web")
+    api "io.nats:jnats:${natsVersion}"
+    testImplementation project(":rqueue-test-util")
+    testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation "io.projectreactor:reactor-test:${projectReactorReactorTestVersion}"
+}

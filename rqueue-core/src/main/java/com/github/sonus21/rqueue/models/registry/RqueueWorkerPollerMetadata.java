@@ -37,6 +37,7 @@ public class RqueueWorkerPollerMetadata extends SerializableBase {
   private static final long serialVersionUID = -8612115593908071754L;
 
   private String workerId;
+  private String consumerName;
   private long lastPollAt;
   private Long lastMessageAt;
   private Long lastCapacityExhaustedAt;

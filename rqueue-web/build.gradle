@@ -1,0 +1,57 @@
+plugins {
+    id 'com.vanniktech.maven.publish' version '0.28.0'
+}
+apply from: "${rootDir}/gradle/packaging.gradle"
+apply from: "${rootDir}/gradle/test-runner.gradle"
+apply from: "${rootDir}/gradle/code-publish.gradle"
+
+import com.vanniktech.maven.publish.SonatypeHost;
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+    pom {
+        name = "Rqueue Web"
+        description = "Web dashboard, REST/reactive controllers, Pebble templates, and dashboard service interfaces for Rqueue. Pulled in by default through rqueue-spring-boot-starter; can be excluded for headless worker deployments that do not need the dashboard."
+        url = "https://github.com/sonus21/rqueue"
+        licenses {
+            license {
+                name = "Apache License 2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "sonus21"
+                name = "Sonu Kumar"
+                email = "sonunitw12@gmail.com"
+            }
+        }
+        scm {
+            url = "https://github.com/sonus21/rqueue"
+            connection = "scm:git:git://github.com/sonus21/rqueue.git"
+            developerConnection = "scm:git:ssh://git@github.com:sonus21/rqueue.git"
+        }
+        issueManagement {
+            system = "GitHub"
+            url = "https://github.com/sonus21/rqueue/issues"
+        }
+    }
+}
+
+dependencies {
+    api project(":rqueue-core")
+    api "jakarta.servlet:jakarta.servlet-api:${jakartaServletVersion}"
+    api "jakarta.validation:jakarta.validation-api:${jakartaValidationApiVersion}"
+    implementation 'jakarta.el:jakarta.el-api:5.0.0'
+    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
+    api "org.springframework:spring-webmvc:${springVersion}"
+    api "org.springframework:spring-webflux:${springVersion}"
+    api "io.pebbletemplates:pebble-spring7:${pebbleVersion}"
+    api "io.seruco.encoding:base62:${serucoEncodingVersion}"
+    api "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}"
+
+    testImplementation project(":rqueue-test-util")
+    testImplementation "io.lettuce:lettuce-core:${lettuceVersion}"
+    testImplementation "io.projectreactor:reactor-test:${projectReactorReactorTestVersion}"
+}

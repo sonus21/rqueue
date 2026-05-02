@@ -16,10 +16,12 @@
 
 package com.github.sonus21.rqueue.models.db;
 
+import static com.github.sonus21.rqueue.models.db.QueueStatisticsFixtures.addData;
+import static com.github.sonus21.rqueue.models.db.QueueStatisticsFixtures.checkNonNull;
+import static com.github.sonus21.rqueue.models.db.QueueStatisticsFixtures.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
@@ -30,34 +32,6 @@ import org.junit.jupiter.api.Test;
 public class QueueStatisticsTest extends TestBase {
 
   private final String id = "__rq::q-stat::slow-queue";
-
-  public static void validate(QueueStatistics queueStatistics, int count) {
-    assertEquals(count, queueStatistics.getJobRunTime().size());
-    assertEquals(count, queueStatistics.getTasksSuccessful().size());
-    assertEquals(count, queueStatistics.getTasksDiscarded().size());
-    assertEquals(count, queueStatistics.getTasksMovedToDeadLetter().size());
-    assertEquals(count, queueStatistics.getTasksRetried().size());
-  }
-
-  public static void checkNonNull(QueueStatistics queueStatistics, String date) {
-    assertNotNull(queueStatistics.jobRunTime(date));
-    assertTrue(queueStatistics.tasksSuccessful(date) > 0);
-    assertTrue(queueStatistics.tasksDiscarded(date) > 0);
-    assertTrue(queueStatistics.tasksMovedToDeadLetter(date) > 0);
-    assertTrue(queueStatistics.tasksRetried(date) > 0);
-  }
-
-  public static void addData(QueueStatistics queueStatistics, LocalDate localDate, int day) {
-    String date = localDate.minusDays(day).toString();
-    int val = 1 + (int) (Math.random() * 100);
-    queueStatistics.incrementSuccessful(date, val);
-    queueStatistics.incrementDiscard(date, val);
-    queueStatistics.incrementDeadLetter(date, val);
-    queueStatistics.incrementRetry(date, val);
-    int val2 = 1 + (int) (Math.random() * 100);
-    JobRunTime jobRunTime = new JobRunTime(val, val2, val * val2, val2);
-    queueStatistics.updateJobExecutionTime(date, jobRunTime);
-  }
 
   @Test
   void incrementDeadLetter() {

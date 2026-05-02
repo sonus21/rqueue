@@ -78,6 +78,18 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.comparator.ComparableComparator;
 
+/**
+ * Invokes {@link RqueueListener}-annotated listener methods and routes exceptions to
+ * {@link RqueueHandler}-annotated error handlers.
+ *
+ * <p>Extends Spring's {@link AbstractMethodMessageHandler} to discover listener methods via
+ * reflection, deserialize incoming messages to the correct argument types, and dispatch to the
+ * appropriate handler based on message content and method signature.
+ *
+ * <p>Supports multiple argument injection patterns: message payload (with type conversion), raw
+ * {@code Message<?>} envelopes, Spring headers, and custom parameters via {@code @Header}.
+ * Exception handlers are matched by exception type with fallback to base exception class.
+ */
 @Slf4j
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
 
@@ -91,6 +103,12 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
   private final Map<String, MappingInformation> destinationLookup = new HashMap<>(64);
   private final MultiValueMap<MappingInformation, HandlerMethodWithPrimary> handlerMethods =
       new LinkedMultiValueMap<>(64);
+
+  // Phase 3: when set to false (NATS-style brokers), the "exactly one primary per queue"
+  // validation in afterPropertiesSet() is skipped and a single WARN is logged listing queues
+  // with multiple handlers. Defaults to true to preserve Redis semantics.
+  private boolean primaryHandlerDispatchEnabled = true;
+  private static volatile boolean rqueueHandlerWarnLogged = false;
 
   public RqueueMessageHandler(final MessageConverter messageConverter, boolean inspectAllBean) {
     notNull(messageConverter, "messageConverter cannot be null");
@@ -136,9 +154,44 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     return new ArrayList<>(getCustomReturnValueHandlers());
   }
 
+  /**
+   * Capability flag set by the listener container when a non-Redis broker is active. When
+   * {@code false}, the {@code @RqueueHandler} primary validation is skipped because secondary
+   * handler dispatch is not honored by such brokers.
+   */
+  public void setPrimaryHandlerDispatchEnabled(boolean primaryHandlerDispatchEnabled) {
+    this.primaryHandlerDispatchEnabled = primaryHandlerDispatchEnabled;
+  }
+
+  public boolean isPrimaryHandlerDispatchEnabled() {
+    return primaryHandlerDispatchEnabled;
+  }
+
   @Override
   public void afterPropertiesSet() {
     super.afterPropertiesSet();
+    if (!primaryHandlerDispatchEnabled) {
+      // NATS-style backend: secondary handler dispatch is not supported; warn once with the
+      // queues that have multiple handler methods so users can convert them to listeners.
+      if (!rqueueHandlerWarnLogged) {
+        for (Entry<String, MappingInformation> e : destinationLookup.entrySet()) {
+          List<HandlerMethodWithPrimary> methods = handlerMethods.get(e.getValue());
+          if (methods != null && methods.size() > 1) {
+            int secondary = (int) methods.stream().filter(m -> !m.primary).count();
+            if (secondary > 0) {
+              log.warn(
+                  "@RqueueHandler is not honored by the NATS backend; the {} secondary handler "
+                      + "methods on queue '{}' will not receive messages. Convert them to "
+                      + "@RqueueListener with their own consumerName.",
+                  secondary,
+                  e.getKey());
+              rqueueHandlerWarnLogged = true;
+            }
+          }
+        }
+      }
+      return;
+    }
     for (Entry<String, MappingInformation> e : destinationLookup.entrySet()) {
       List<HandlerMethodWithPrimary> handlerMethodWithPrimaries = handlerMethods.get(e.getValue());
       if (handlerMethodWithPrimaries.size() > 1) {
@@ -211,9 +264,15 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected void handleMessageInternal(Message<?> message, String lookupDestination) {
-    MappingInformation mapping = this.destinationLookup.get(lookupDestination);
+    String consumerName = (String) message.getHeaders().get(RqueueMessageHeaders.CONSUMER_NAME);
+    String lookupKey = (consumerName != null && !consumerName.isEmpty())
+        ? consumerLookupKey(lookupDestination, consumerName)
+        : lookupDestination;
+    MappingInformation mapping = this.destinationLookup.get(lookupKey);
     Set<Match> matches = new HashSet<>();
-    addMatchesToCollection(mapping, message, matches);
+    if (mapping != null) {
+      addMatchesToCollection(mapping, message, matches);
+    }
     if (matches.isEmpty()) {
       handleNoMatch(this.getHandlerMethodMap().keySet(), lookupDestination, message);
       return;
@@ -272,6 +331,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     Map<String, Integer> priorityMap = resolvePriority(rqueueListener);
     String priorityGroup = resolvePriorityGroup(rqueueListener);
     int batchSize = getBatchSize(rqueueListener, concurrency);
+    String natsConsumerName =
+        ValueResolver.resolveKeyToString(getApplicationContext(), rqueueListener.consumerName());
     MappingInformation mappingInformation = MappingInformation.builder()
         .active(active)
         .concurrency(concurrency)
@@ -284,6 +345,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
         .priority(priorityMap)
         .batchSize(batchSize)
         .doNotRetry(new HashSet<>(Arrays.asList(rqueueListener.doNotRetry())))
+        .consumerName(natsConsumerName.isEmpty() ? null : natsConsumerName)
+        .queueType(rqueueListener.mode())
         .build();
     if (mappingInformation.isValid()) {
       return mappingInformation;
@@ -479,11 +542,23 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected Set<String> getDirectLookupDestinations(MappingInformation mapping) {
-    Set<String> destinations = new HashSet<>(mapping.getQueueNames());
+    String consumerName = mapping.getConsumerName();
+    Set<String> destinations = new HashSet<>();
     for (String queueName : mapping.getQueueNames()) {
-      destinations.addAll(PriorityUtils.getNamesFromPriority(queueName, mapping.getPriority()));
+      if (consumerName != null && !consumerName.isEmpty()) {
+        // Consumer-qualified key so two @RqueueListener methods with different consumerNames
+        // on the same queue get independent destinationLookup entries.
+        destinations.add(consumerLookupKey(queueName, consumerName));
+      } else {
+        destinations.add(queueName);
+        destinations.addAll(PriorityUtils.getNamesFromPriority(queueName, mapping.getPriority()));
+      }
     }
     return destinations;
+  }
+
+  static String consumerLookupKey(String queueName, String consumerName) {
+    return queueName + "##" + consumerName;
   }
 
   @Override

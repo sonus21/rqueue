@@ -4,39 +4,61 @@
 
 ## Overview
 
-Rqueue 4.0.0-RC4 continues the development of multi-backend support with significant improvements to the NATS JetStream backend and enhanced documentation for core APIs.
+Rqueue 4.0.0-RC4 introduces **production-ready NATS JetStream backend support**, bringing multi-backend message queue capabilities to Rqueue. This release adds a fully-featured alternative to Redis, enabling users to choose the backend that best fits their infrastructure and requirements.
 
 ## What's New
 
-### 🚀 Features
+### 🎯 Major Features
 
-#### NATS Backend Enhancements
-- **JetStream Consumer Configuration**: Honor per-queue `visibilityTimeout` and `numRetry` settings on JetStream consumers
-  - Visibility timeout now maps to JetStream's `ackWait` parameter
-  - `numRetry` configures the consumer's `maxDeliver` setting
-  - Fallback to global consumer defaults when queue-level settings are not configured
-  
-- **Queue Name Validation**: Added backend-specific queue name validation for NATS
-  - Prevents invalid queue names from reaching the NATS server
-  - Early error detection at queue registration time
-  
-- **Stream Metadata**: JetStream streams now include descriptive metadata
-  - Stream descriptions identify the associated Rqueue queue
-  - Improves operational visibility in `nats stream info` output
+#### 🚀 NATS JetStream Backend (NEW)
+Complete implementation of a high-performance, cloud-native message broker alternative to Redis:
 
-- **Producer Mode Wiring**: Improved configuration of the NATS backend in producer-only mode
-  - Cleaner initialization of transport-specific beans
-  - Support for enqueueing without starting listeners
+- **Full Feature Parity**: Supports all core Rqueue features including message enqueueing, polling, retry logic, and dead-letter queues
+- **Stream-based Architecture**: Leverages NATS JetStream for persistent, replicated message storage
+- **Cloud-Native Design**: Stateless brokers with durable message persistence
+- **Horizontal Scalability**: JetStream clustering enables distributed deployments
 
-#### Multi-Backend Architecture
-- **QueueType Support**: Introduce `QueueType` enum for backend-specific queue modes
-  - `QUEUE`: Standard queue mode (default)
-  - `STREAM`: Backend-specific streaming mode
-  - `@RqueueListener` can declare queue type via annotation parameter
+**Key Capabilities:**
+- Multi-priority queue support via stream multiplexing
+- Configurable consumer settings (ack-wait, max-deliver)
+- Queue name validation and stream descriptions for operational visibility
+- Producer and consumer mode support (enqueue-only or full listener deployment)
+
+#### NATS Backend Implementation Details
+- **JetStream Consumer Configuration**: Full honors per-queue `visibilityTimeout` and `numRetry` settings
+  - `visibilityTimeout` → JetStream `ackWait` (message visibility window)
+  - `numRetry` → Consumer `maxDeliver` (retry attempts before DLQ)
+  - Automatic fallback to global defaults when queue-level settings omitted
+  - Compatible with Redis backend parameter semantics
   
-- **MessageBroker as Required Dependency**: Refactored `BaseMessageSender` to require `MessageBroker` at construction time
-  - Cleaner dependency injection patterns
-  - Earlier detection of misconfiguration
+- **Queue Name Validation**: Backend-specific validation at registration time
+  - Early detection of invalid queue names before server rejection
+  - Clear error messages for misconfiguration
+  
+- **Stream Metadata & Discoverability**: Descriptive JetStream stream information
+  - Automatic stream descriptions tie back to Rqueue queue names
+  - Operational visibility via `nats stream info` commands
+  
+- **Flexible Deployment Modes**:
+  - **Consumer Mode**: Full listener infrastructure with message processing
+  - **Producer Mode**: Enqueue-only deployments for message senders
+  - Independent backend configuration per deployment
+
+#### Multi-Backend SPI Framework
+- **Backend Abstraction**: Clean `MessageBroker` SPI enables pluggable implementations
+  - Redis backend: Established, production-hardened (v3.x legacy support)
+  - NATS backend: New high-performance alternative
+  - Plugin-ready architecture for future backends
+  
+- **QueueType Enumeration**: Backend-specific queue mode selection
+  - `QUEUE`: Traditional queue semantics (default)
+  - `STREAM`: Native stream/topic semantics (NATS JetStream streams)
+  - Declared via `@RqueueListener(queueType=QueueType.STREAM)`
+  
+- **Dependency Injection Improvements**: `MessageBroker` as required constructor dependency
+  - Eliminates late-binding configuration errors
+  - Explicit backend selection at application startup
+  - Type-safe Spring bean wiring
 
 ### 📚 Documentation
 
@@ -62,9 +84,30 @@ Rqueue 4.0.0-RC4 continues the development of multi-backend support with signifi
 - Updated copyright notices for 2026
 - Cleaned up test infrastructure and mock configurations
 
+## Migration Guide
+
+### From Rqueue 3.x to 4.0.0-RC4
+
+**No breaking changes** for existing Redis-based deployments. Applications using the Redis backend will continue to work without modification.
+
+**Opting into NATS Backend:**
+1. Add `rqueue-nats` dependency
+2. Set `rqueue.backend=nats` in application properties
+3. Configure NATS connection URL via `spring.nats.urls` or `NATS_URL`
+4. JetStream will be auto-configured on startup
+
+**Example:**
+```yaml
+rqueue:
+  backend: nats
+spring:
+  nats:
+    urls: nats://localhost:4222
+```
+
 ## Breaking Changes
 
-None in this release candidate.
+None in this release candidate. Full backward compatibility with Rqueue 3.4.x.
 
 ## Deprecations
 
@@ -82,19 +125,36 @@ No special steps required to upgrade from 4.0.0-RC3. Existing code will continue
 
 Special thanks to all contributors to this release.
 
+## Why Choose NATS Backend?
+
+| Feature | Redis | NATS JetStream |
+|---------|-------|----------------|
+| **Persistence** | Configurable (RDB/AOF) | Built-in durability |
+| **Replication** | Cluster mode (complex) | Native clustering |
+| **Cloud-Native** | Traditional | Kubernetes-friendly |
+| **Message Priority** | Via sorted sets | Native streams |
+| **Consumer Groups** | Manual management | First-class citizens |
+| **Operational Insight** | Limited | Rich metadata/introspection |
+
+**Choose Redis when:** You have existing Redis infrastructure, need established ecosystem, or require maximum feature stability.
+
+**Choose NATS when:** You want cloud-native architecture, need horizontal scalability, prefer JetStream's semantics, or are running Kubernetes.
+
 ## System Requirements
 
 - Java 21+
 - Spring Framework 5.3.x / 6.x
-- Redis 4.x+ (for Redis backend)
-- NATS Server 2.10.x+ (for NATS backend)
+- Redis 4.x+ (for Redis backend) — optional, not required
+- NATS Server 2.10.x+ (for NATS backend) — optional, not required
 
 ## What's Next
 
-The Rqueue project is continuing work on:
-- Stabilizing the NATS backend for GA release
-- Performance optimizations
-- Additional backend support exploration
+The Rqueue project roadmap includes:
+- **NATS Backend GA**: Final production hardening and performance tuning for 4.0.0 GA release
+- **Backend Comparisons**: Performance benchmarks (Redis vs NATS) and deployment guides
+- **Advanced Features**: Dead-letter queue improvements, custom serialization options
+- **Ecosystem**: Dashboard/monitoring enhancements for NATS deployments
+- **Future Backends**: Exploration of Kafka, Pulsar, and other cloud-native message systems
 
 ---
 

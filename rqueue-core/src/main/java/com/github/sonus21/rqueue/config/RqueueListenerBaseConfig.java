@@ -16,46 +16,27 @@
 
 package com.github.sonus21.rqueue.config;
 
-import static com.github.sonus21.rqueue.utils.RedisUtils.getRedisTemplate;
-
-import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
-import com.github.sonus21.rqueue.common.impl.RqueueLockManagerImpl;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
-import com.github.sonus21.rqueue.core.ProcessingQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
-import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
-import com.github.sonus21.rqueue.core.ScheduledQueueMessageScheduler;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
-import com.github.sonus21.rqueue.dao.impl.RqueueStringDaoImpl;
-import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
-import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
+import com.github.sonus21.rqueue.serdes.RqueueTypeFactory;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.condition.MissingRqueueMessageIdGenerator;
-import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
-import com.github.sonus21.rqueue.utils.pebble.ResourceLoader;
-import com.github.sonus21.rqueue.utils.pebble.RqueuePebbleExtension;
-import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
-import com.github.sonus21.rqueue.worker.RqueueWorkerRegistryImpl;
-import io.pebbletemplates.pebble.PebbleEngine;
-import io.pebbletemplates.spring.extension.SpringExtension;
-import io.pebbletemplates.spring.reactive.PebbleReactiveViewResolver;
-import io.pebbletemplates.spring.servlet.PebbleViewResolver;
+import com.github.sonus21.rqueue.utils.condition.MissingRqueueSerDes;
+import com.github.sonus21.rqueue.utils.condition.MissingRqueueTypeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.servlet.ViewResolver;
 
 /**
  * This is a base configuration class for Rqueue, that is used in Spring and Spring boot Rqueue libs
@@ -71,8 +52,6 @@ import org.springframework.web.servlet.ViewResolver;
 public abstract class RqueueListenerBaseConfig {
 
   public static final int MAX_DB_VERSION = 2;
-  private static final String TEMPLATE_DIR = "templates/rqueue/";
-  private static final String TEMPLATE_SUFFIX = ".html";
 
   @Autowired(required = false)
   protected final SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory =
@@ -115,40 +94,62 @@ public abstract class RqueueListenerBaseConfig {
    * @param dbVersion   database version
    * @return {@link RedisConnectionFactory} object.
    */
+  /**
+   * Backwards-compatible overload preserved for callers (notably existing tests) that constructed
+   * an {@code RqueueConfig} without specifying a backend. Delegates with {@link Backend#REDIS}.
+   */
+  public RqueueConfig rqueueConfig(
+      ConfigurableBeanFactory beanFactory, String versionKey, Integer dbVersion) {
+    return rqueueConfig(beanFactory, Backend.REDIS, versionKey, dbVersion);
+  }
+
   @Bean
   public RqueueConfig rqueueConfig(
       ConfigurableBeanFactory beanFactory,
+      @Value("${rqueue.backend:REDIS}") Backend backend,
       @Value("${rqueue.version.key:__rq::version}") String versionKey,
       @Value("${rqueue.db.version:}") Integer dbVersion) {
     boolean sharedConnection = false;
-    if (simpleRqueueListenerContainerFactory.getRedisConnectionFactory() == null) {
-      sharedConnection = true;
-      simpleRqueueListenerContainerFactory.setRedisConnectionFactory(
-          beanFactory.getBean(RedisConnectionFactory.class));
-    }
-    if (reactiveEnabled
-        && simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory() == null) {
-      sharedConnection = true;
-      simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
-          beanFactory.getBean(ReactiveRedisConnectionFactory.class));
-    }
     RedisConnectionFactory connectionFactory =
         simpleRqueueListenerContainerFactory.getRedisConnectionFactory();
-    RqueueRedisTemplate<Integer> rqueueRedisTemplate = new RqueueRedisTemplate<>(connectionFactory);
-    int version;
-    if (dbVersion == null) {
-      version = RedisUtils.updateAndGetVersion(rqueueRedisTemplate, versionKey, MAX_DB_VERSION);
-    } else if (dbVersion >= 1 && dbVersion <= MAX_DB_VERSION) {
-      RedisUtils.setVersion(rqueueRedisTemplate, versionKey, dbVersion);
-      version = dbVersion;
-    } else {
-      throw new IllegalStateException("Rqueue db version '" + dbVersion + "' is not correct");
+    if (backend == Backend.REDIS) {
+      if (connectionFactory == null) {
+        sharedConnection = true;
+        connectionFactory = beanFactory.getBean(RedisConnectionFactory.class);
+        simpleRqueueListenerContainerFactory.setRedisConnectionFactory(connectionFactory);
+      }
+      if (reactiveEnabled
+          && simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory() == null) {
+        sharedConnection = true;
+        simpleRqueueListenerContainerFactory.setReactiveRedisConnectionFactory(
+            beanFactory.getBean(ReactiveRedisConnectionFactory.class));
+      }
     }
-    return new RqueueConfig(
+    int version;
+    if (backend == Backend.REDIS) {
+      RqueueRedisTemplate<Integer> rqueueRedisTemplate =
+          new RqueueRedisTemplate<>(connectionFactory);
+      if (dbVersion == null) {
+        version = RedisUtils.updateAndGetVersion(rqueueRedisTemplate, versionKey, MAX_DB_VERSION);
+      } else if (dbVersion >= 1 && dbVersion <= MAX_DB_VERSION) {
+        RedisUtils.setVersion(rqueueRedisTemplate, versionKey, dbVersion);
+        version = dbVersion;
+      } else {
+        throw new IllegalStateException("Rqueue db version '" + dbVersion + "' is not correct");
+      }
+    } else {
+      // Non-Redis backend (e.g. NATS): the on-Redis db-version negotiation does not apply.
+      version = (dbVersion != null && dbVersion >= 1 && dbVersion <= MAX_DB_VERSION)
+          ? dbVersion
+          : MAX_DB_VERSION;
+    }
+    RqueueConfig config = new RqueueConfig(
         connectionFactory,
         simpleRqueueListenerContainerFactory.getReactiveRedisConnectionFactory(),
         sharedConnection,
         version);
+    config.setBackend(backend);
+    return config;
   }
 
   @Bean
@@ -185,108 +186,19 @@ public abstract class RqueueListenerBaseConfig {
   }
 
   @Bean
-  public RedisTemplate<String, Long> rqueueRedisLongTemplate(RqueueConfig rqueueConfig) {
-    return getRedisTemplate(rqueueConfig.getConnectionFactory());
+  @Conditional(MissingRqueueSerDes.class)
+  public RqueueSerDes rqueueSerDes() {
+    return SerializationUtils.getSerDes();
   }
 
   @Bean
-  public RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory() {
-    return new RqueueRedisListenerContainerFactory();
-  }
-
-  /**
-   * This scheduler is used to pull messages from a scheduled queue to their respective queue.
-   * Internally it moves messages from ZSET to LIST based on the priority and current time.
-   *
-   * @return {@link ScheduledQueueMessageScheduler} object
-   */
-  @Bean
-  public ScheduledQueueMessageScheduler scheduledMessageScheduler() {
-    return new ScheduledQueueMessageScheduler();
-  }
-
-  /**
-   * This scheduler is used to pull messages from processing queue to their respective queue.
-   * Internally it moves messages from ZSET to LIST based on the priority and current time.
-   *
-   * @return {@link ProcessingQueueMessageScheduler} object
-   */
-  @Bean
-  public ProcessingQueueMessageScheduler processingMessageScheduler() {
-    return new ProcessingQueueMessageScheduler();
-  }
-
-  @Bean
-  public RqueueRedisTemplate<String> stringRqueueRedisTemplate(RqueueConfig rqueueConfig) {
-    return new RqueueRedisTemplate<>(rqueueConfig.getConnectionFactory());
-  }
-
-  @Bean
-  public RqueueStringDao rqueueStringDao(RqueueConfig rqueueConfig) {
-    return new RqueueStringDaoImpl(rqueueConfig);
-  }
-
-  @Bean
-  public RqueueWorkerRegistry rqueueWorkerRegistry(RqueueConfig rqueueConfig) {
-    return new RqueueWorkerRegistryImpl(rqueueConfig);
-  }
-
-  @Bean
-  public RqueueLockManager rqueueLockManager(RqueueStringDao rqueueStringDao) {
-    return new RqueueLockManagerImpl(rqueueStringDao);
-  }
-
-  private PebbleEngine createPebbleEngine() {
-    ResourceLoader loader = new ResourceLoader();
-    loader.setPrefix(TEMPLATE_DIR);
-    loader.setSuffix(TEMPLATE_SUFFIX);
-    return new PebbleEngine.Builder()
-        .extension(new RqueuePebbleExtension(), new SpringExtension(null))
-        .loader(loader)
-        .build();
-  }
-
-  @Bean
-  public ViewResolver rqueueViewResolver() {
-    PebbleViewResolver resolver = new PebbleViewResolver(createPebbleEngine());
-    resolver.setPrefix(TEMPLATE_DIR);
-    resolver.setSuffix(TEMPLATE_SUFFIX);
-    return resolver;
-  }
-
-  @Bean
-  @Conditional(ReactiveEnabled.class)
-  public org.springframework.web.reactive.result.view.ViewResolver reactiveRqueueViewResolver() {
-    PebbleReactiveViewResolver resolver = new PebbleReactiveViewResolver(createPebbleEngine());
-    resolver.setPrefix(TEMPLATE_DIR);
-    resolver.setSuffix(TEMPLATE_SUFFIX);
-    return resolver;
-  }
-
-  @Bean
-  public RqueueQueueMetrics rqueueQueueMetrics(
-      RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
-    return new RqueueQueueMetrics(stringRqueueRedisTemplate);
+  @Conditional(MissingRqueueTypeFactory.class)
+  public RqueueTypeFactory rqueueTypeFactory() {
+    return SerializationUtils.getTypeFactory();
   }
 
   @Bean
   public RqueueBeanProvider rqueueBeanProvider() {
     return new RqueueBeanProvider();
-  }
-
-  @Bean
-  public RqueueInternalPubSubChannel rqueueInternalPubSubChannel(
-      RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
-      RqueueMessageListenerContainer rqueueMessageListenerContainer,
-      RqueueConfig rqueueConfig,
-      RqueueBeanProvider rqueueBeanProvider,
-      @Qualifier("stringRqueueRedisTemplate")
-          RqueueRedisTemplate<String> stringRqueueRedisTemplate) {
-    return new RqueueInternalPubSubChannel(
-        rqueueRedisListenerContainerFactory,
-        rqueueMessageListenerContainer,
-        rqueueConfig,
-        stringRqueueRedisTemplate,
-        rqueueBeanProvider);
   }
 }

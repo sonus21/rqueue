@@ -18,14 +18,13 @@ package com.github.sonus21.rqueue.converter;
 
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.utils.SerializationUtils;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * JsonMessageConverter tries to convert to JSON and from JSON to object.
@@ -41,15 +40,15 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class JsonMessageConverter implements MessageConverter {
 
-  private final ObjectMapper objectMapper;
+  private final RqueueSerDes serDes;
 
   public JsonMessageConverter() {
-    this.objectMapper = SerializationUtils.createObjectMapper();
+    this.serDes = SerializationUtils.getSerDes();
   }
 
-  public JsonMessageConverter(ObjectMapper objectMapper) {
-    notNull(objectMapper, "objectMapper cannot be null");
-    this.objectMapper = objectMapper;
+  public JsonMessageConverter(RqueueSerDes serDes) {
+    notNull(serDes, "serDes cannot be null");
+    this.serDes = serDes;
   }
 
   @Override
@@ -61,10 +60,10 @@ public class JsonMessageConverter implements MessageConverter {
         return null;
       }
       if (SerializationUtils.isJson(payload)) {
-        return objectMapper.readValue(payload, targetClass);
+        return serDes.deserialize(payload, targetClass);
       }
       return null;
-    } catch (JacksonException | ClassCastException e) {
+    } catch (Exception e) {
       log.debug("Deserialization of message {} failed", message, e);
       return null;
     }
@@ -74,9 +73,8 @@ public class JsonMessageConverter implements MessageConverter {
   public Message<?> toMessage(Object payload, MessageHeaders headers) {
     log.trace("Payload: {} Headers: {}", payload, headers);
     try {
-      String msg = objectMapper.writeValueAsString(payload);
-      return new GenericMessage<>(msg);
-    } catch (JacksonException e) {
+      return new GenericMessage<>(serDes.serializeAsString(payload));
+    } catch (Exception e) {
       log.debug("Serialisation failed, Payload: {}", payload, e);
       return null;
     }

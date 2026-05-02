@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.annotation;
 
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.utils.Constants;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -191,4 +192,36 @@ public @interface RqueueListener {
    * @return exceptions those will not be retried
    */
   Class<? extends Throwable>[] doNotRetry() default {};
+
+  /**
+   * Optional explicit consumer name for backends that require per-listener durable identity
+   * (currently the NATS / JetStream backend uses this as the durable consumer name).
+   *
+   * <p>When empty (the default), the listener container synthesizes a name of the form
+   * {@code "rqueue-<queue>-<beanName>#<methodName>"}. The Redis backend ignores this attribute;
+   * it's strictly additive and exists so multiple {@link RqueueListener} methods on the same
+   * NATS-backed queue can be told apart by JetStream.
+   *
+   * @return durable consumer name override; empty for "auto-generate"
+   */
+  String consumerName() default "";
+
+  /**
+   * Delivery mode for this queue.
+   *
+   * <ul>
+   *   <li>{@link QueueType#QUEUE} (default) — competing-consumer semantics: each
+   *       message is delivered to exactly one listener instance. Maps to a JetStream
+   *       {@code WorkQueue} stream. Multiple listeners share the load.
+   *   <li>{@link QueueType#STREAM} — fan-out semantics: every independent listener
+   *       group receives a copy of each message. Maps to a JetStream {@code Limits} stream.
+   *       Each listener must use a distinct {@link #consumerName()} so JetStream tracks its
+   *       own position independently.
+   * </ul>
+   *
+   * <p>The Redis backend ignores this attribute (Redis queue names already encode the routing).
+   *
+   * @return queue delivery mode
+   */
+  QueueType mode() default QueueType.QUEUE;
 }

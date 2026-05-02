@@ -38,6 +38,13 @@ public class RqueueRedisTemplate<V extends Serializable> {
   protected RedisTemplate<String, V> redisTemplate;
 
   public RqueueRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    if (redisConnectionFactory == null) {
+      // Permitted on the NATS backend path, where the template is constructed for type
+      // satisfaction but never used for Redis operations. Leaving redisTemplate null fails
+      // fast and obviously if anyone does try to use it.
+      this.redisTemplate = null;
+      return;
+    }
     this.redisTemplate = RedisUtils.getRedisTemplate(redisConnectionFactory);
     this.redisTemplate.afterPropertiesSet();
   }

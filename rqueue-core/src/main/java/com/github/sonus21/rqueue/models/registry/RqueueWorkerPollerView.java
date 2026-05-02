@@ -38,6 +38,7 @@ public class RqueueWorkerPollerView extends SerializableBase {
 
   private String queue;
   private String workerId;
+  private String consumerName;
   private String host;
   private String pid;
   private String status;

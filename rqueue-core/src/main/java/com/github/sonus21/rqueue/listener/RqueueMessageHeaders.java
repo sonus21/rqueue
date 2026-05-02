@@ -56,6 +56,13 @@ public final class RqueueMessageHeaders {
    */
   public static final String EXECUTION = "execution";
 
+  /**
+   * NATS JetStream consumer name — set when a message was fetched for a specific named consumer so
+   * that {@link RqueueMessageHandler} can route it to the correct {@code @RqueueListener} method.
+   * Absent (null) for single-consumer queues and all Redis-backed queues.
+   */
+  public static final String CONSUMER_NAME = "consumerName";
+
   private static final MessageHeaders emptyMessageHeaders =
       new MessageHeaders(Collections.emptyMap());
 
@@ -71,8 +78,21 @@ public final class RqueueMessageHeaders {
       Job job,
       Execution execution,
       MessageHeaders messageHeaders) {
-    Map<String, Object> headers = new HashMap<>(9);
+    return buildMessageHeaders(destination, null, rqueueMessage, job, execution, messageHeaders);
+  }
+
+  public static MessageHeaders buildMessageHeaders(
+      String destination,
+      String consumerName,
+      RqueueMessage rqueueMessage,
+      Job job,
+      Execution execution,
+      MessageHeaders messageHeaders) {
+    Map<String, Object> headers = new HashMap<>(10);
     headers.put(DESTINATION, destination);
+    if (consumerName != null && !consumerName.isEmpty()) {
+      headers.put(CONSUMER_NAME, consumerName);
+    }
     headers.put(ID, rqueueMessage.getId());
     headers.put(MESSAGE, rqueueMessage);
     if (job != null) {

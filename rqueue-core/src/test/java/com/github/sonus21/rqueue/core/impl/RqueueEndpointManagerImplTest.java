@@ -29,14 +29,16 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
+import com.github.sonus21.rqueue.service.RqueueUtilityService;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.service.RqueueUtilityService;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,8 +74,8 @@ class RqueueEndpointManagerImplTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueEndpointManager =
-        new RqueueEndpointManagerImpl(messageTemplate, messageConverter, messageHeaders);
+    rqueueEndpointManager = new RqueueEndpointManagerImpl(
+        messageTemplate, new RedisMessageBroker(messageTemplate), messageConverter, messageHeaders);
     RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, 1);
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(
@@ -184,5 +186,30 @@ class RqueueEndpointManagerImplTest extends TestBase {
         .when(rqueueUtilityService)
         .pauseUnpauseQueue(request);
     assertFalse(rqueueEndpointManager.pauseUnpauseQueue(queue, priorities[0], false));
+  }
+
+  /**
+   * registerQueue must consult {@link MessageBroker#validateQueueName(String)}; an exception there
+   * must propagate so callers fail fast on illegal names (e.g. dots when running on NATS).
+   */
+  @Test
+  void registerQueue_propagatesBrokerValidationFailure() throws IllegalAccessException {
+    MessageBroker rejectingBroker = new RedisMessageBroker(messageTemplate) {
+      @Override
+      public void validateQueueName(String queueName) {
+        if (queueName.contains(".")) {
+          throw new IllegalArgumentException("dot rejected: " + queueName);
+        }
+      }
+    };
+    RqueueEndpointManager mgr = new RqueueEndpointManagerImpl(
+        messageTemplate, rejectingBroker, messageConverter, messageHeaders);
+    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, 1);
+    FieldUtils.writeField(mgr, "rqueueConfig", rqueueConfig, true);
+
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> mgr.registerQueue("orders.us"));
+    assertTrue(ex.getMessage().contains("orders.us"));
+    assertFalse(mgr.isQueueRegistered("orders.us"));
   }
 }
