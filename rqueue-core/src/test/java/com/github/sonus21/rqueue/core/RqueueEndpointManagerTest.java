@@ -22,6 +22,7 @@ import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,10 @@ class RqueueEndpointManagerTest extends TestBase {
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
     rqueueEndpointManager = new RqueueEndpointManagerImpl(
-        rqueueMessageTemplate, new DefaultRqueueMessageConverter(), null);
+        rqueueMessageTemplate,
+        new RedisMessageBroker(rqueueMessageTemplate),
+        new DefaultRqueueMessageConverter(),
+        null);
 
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     EndpointRegistry.delete();

@@ -43,23 +43,26 @@ import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
-
-  @Autowired
-  private RqueueLockManager rqueueLockManager;
-
   public RqueueMessageManagerImpl(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+    this(
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
   }
 
   public RqueueMessageManagerImpl(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
-    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
+    super(messageTemplate, messageBroker, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @Override

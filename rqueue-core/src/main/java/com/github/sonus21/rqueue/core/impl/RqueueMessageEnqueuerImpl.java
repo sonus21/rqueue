@@ -27,6 +27,7 @@ import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -38,17 +39,24 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
 
   public RqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+    this(
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
   }
 
   public RqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
-    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
+    super(messageTemplate, messageBroker, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   private void validateBasic(String queue, Object message) {
@@ -114,18 +122,18 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
    * Routes priority-aware enqueues:
    *
    * <ul>
-   *   <li>Redis backend (default): uses the suffixed queue name
-   *       ({@code PriorityUtils.getQueueNameForPriority}). Priority is encoded in the queue name.
-   *   <li>Broker backend with non-primary-handler-dispatch (e.g. NATS): uses the original queue
-   *       name and passes the priority through to
+   *   <li>Redis-style backends (capabilities advertise {@code usesPrimaryHandlerDispatch}): uses
+   *       the suffixed queue name ({@code PriorityUtils.getQueueNameForPriority}). Priority is
+   *       encoded in the queue name; the broker ignores the {@code priority} param.
+   *   <li>Backends with per-priority routing (e.g. NATS): uses the base queue name and passes the
+   *       priority through to
    *       {@link com.github.sonus21.rqueue.core.spi.MessageBroker#enqueue(QueueDetail, String,
-   *       RqueueMessage)} so the broker can route to a per-priority destination (subject/stream).
+   *       RqueueMessage)} so the broker picks the per-priority destination (subject/stream).
    * </ul>
    */
   private String pushMessageForPriority(
       String queueName, String priority, String messageId, Object message, Long delayMs) {
-    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageTemplate.getMessageBroker();
-    if (broker != null && !broker.capabilities().usesPrimaryHandlerDispatch()) {
+    if (!messageBroker.capabilities().usesPrimaryHandlerDispatch()) {
       return pushMessage(queueName, priority, messageId, message, null, delayMs, false);
     }
     return pushMessage(

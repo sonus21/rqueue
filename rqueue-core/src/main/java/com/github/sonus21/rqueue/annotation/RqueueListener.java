@@ -223,5 +223,5 @@ public @interface RqueueListener {
    *
    * @return queue delivery mode
    */
-  QueueType queueMode() default QueueType.QUEUE;
+  QueueType mode() default QueueType.QUEUE;
 }

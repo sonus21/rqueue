@@ -53,6 +53,7 @@ abstract class BaseMessageSender {
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
   protected final RqueueMessageIdGenerator messageIdGenerator;
+  protected final com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker;
 
   @Autowired
   protected RqueueConfig rqueueConfig;
@@ -62,13 +63,16 @@ abstract class BaseMessageSender {
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
     notNull(messageTemplate, "messageTemplate cannot be null");
+    notNull(messageBroker, "messageBroker cannot be null");
     notNull(messageConverter, "messageConverter cannot be null");
     notNull(messageIdGenerator, "messageIdGenerator cannot be null");
     this.messageTemplate = messageTemplate;
+    this.messageBroker = messageBroker;
     this.messageConverter = messageConverter;
     this.messageHeaders = messageHeaders;
     this.messageIdGenerator = messageIdGenerator;
@@ -76,8 +80,7 @@ abstract class BaseMessageSender {
 
   protected Object storeMessageMetadata(
       RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive, boolean isUnique) {
-    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageTemplate.getMessageBroker();
-    boolean skipMetadata = broker != null && !broker.capabilities().usesPrimaryHandlerDispatch();
+    boolean skipMetadata = !messageBroker.capabilities().usesPrimaryHandlerDispatch();
     if (skipMetadata) {
       return reactive ? reactor.core.publisher.Mono.just(true) : null;
     }
@@ -100,14 +103,12 @@ abstract class BaseMessageSender {
   }
 
   /**
-   * Priority-aware enqueue. When a non-Redis
-   * {@link com.github.sonus21.rqueue.core.spi.MessageBroker} is set on the underlying
-   * {@link RqueueMessageTemplate} (i.e. capabilities advertise {@code !usesPrimaryHandlerDispatch})
-   * this routes the publish through
-   * {@link com.github.sonus21.rqueue.core.spi.MessageBroker#enqueue(QueueDetail, String,
-   * RqueueMessage)} so backends like NATS can publish to a priority-specific subject. Otherwise the
-   * existing Redis-shaped path is used; Redis already encodes priority in the queue name so
-   * {@code priority} is ignored.
+   * Priority-aware enqueue. Always routes through {@link
+   * com.github.sonus21.rqueue.core.spi.MessageBroker} — the Redis-vs-NATS dispatch lives inside
+   * each broker implementation. Backends that key off the queue name (Redis) ignore {@code
+   * priority}; backends that publish to a per-priority destination (NATS) use it to pick the
+   * subject. Reactive enqueues route through {@code enqueueReactive} so backends with native
+   * async APIs do not block a thread.
    */
   protected Object enqueue(
       QueueDetail queueDetail,
@@ -115,35 +116,17 @@ abstract class BaseMessageSender {
       RqueueMessage rqueueMessage,
       Long delayInMilliSecs,
       boolean reactive) {
-    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageTemplate.getMessageBroker();
-    boolean useBroker =
-        !reactive && broker != null && !broker.capabilities().usesPrimaryHandlerDispatch();
     if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
-      if (useBroker) {
-        broker.enqueue(queueDetail, priority, rqueueMessage);
-        return null;
-      }
       if (reactive) {
-        return messageTemplate.addReactiveMessage(queueDetail.getQueueName(), rqueueMessage);
-      } else {
-        messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
+        return messageBroker.enqueueReactive(queueDetail, rqueueMessage);
       }
+      messageBroker.enqueue(queueDetail, priority, rqueueMessage);
     } else {
-      if (useBroker) {
-        broker.enqueueWithDelay(queueDetail, rqueueMessage, delayInMilliSecs);
-        return null;
-      }
       if (reactive) {
-        return messageTemplate.addReactiveMessageWithDelay(
-            queueDetail.getScheduledQueueName(),
-            queueDetail.getScheduledQueueChannelName(),
-            rqueueMessage);
-      } else {
-        messageTemplate.addMessageWithDelay(
-            queueDetail.getScheduledQueueName(),
-            queueDetail.getScheduledQueueChannelName(),
-            rqueueMessage);
+        return messageBroker.enqueueWithDelayReactive(
+            queueDetail, rqueueMessage, delayInMilliSecs);
       }
+      messageBroker.enqueueWithDelay(queueDetail, rqueueMessage, delayInMilliSecs);
     }
     return null;
   }
@@ -261,9 +244,6 @@ abstract class BaseMessageSender {
   }
 
   private void notifyBrokerQueueRegistered(QueueDetail queueDetail) {
-    com.github.sonus21.rqueue.core.spi.MessageBroker broker = messageTemplate.getMessageBroker();
-    if (broker != null) {
-      broker.onQueueRegistered(queueDetail);
-    }
+    messageBroker.onQueueRegistered(queueDetail);
   }
 }

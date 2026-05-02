@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -72,8 +73,11 @@ class RqueueEndpointManagerImplTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueEndpointManager =
-        new RqueueEndpointManagerImpl(messageTemplate, messageConverter, messageHeaders);
+    rqueueEndpointManager = new RqueueEndpointManagerImpl(
+        messageTemplate,
+        new RedisMessageBroker(messageTemplate),
+        messageConverter,
+        messageHeaders);
     RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, 1);
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(

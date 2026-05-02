@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.spring.boot.tests.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -118,26 +119,35 @@ class RqueueListenerAutoConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    messageAutoConfig.rqueueMessageListenerContainer(
-        rqueueMessageHandler, new EmptyMessageBrokerProvider());
+    messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler, messageBroker);
     assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
+    // The broker must be propagated onto the factory so the container picks it up.
+    assertSame(messageBroker, factory.getMessageBroker());
   }
 
   @Test
-  void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
+  void rqueueMessageEnqueuerWiresBroker() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRqueueMessageTemplate(messageTemplate);
     doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
-    assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
+
+    RqueueMessageEnqueuer enqueuer = messageAutoConfig.rqueueMessageEnqueuer(
+        rqueueMessageHandler,
+        messageTemplate,
+        messageBroker,
+        new UuidV4RqueueMessageIdGenerator());
+
+    assertNotNull(enqueuer);
+    // Broker is on the enqueuer (inherited from BaseMessageSender), not on the template — that
+    // sidesteps the Redis cycle and removes the original NPE class entirely.
+    assertSame(messageBroker, FieldUtils.readField(enqueuer, "messageBroker", true));
   }
 
   @Test
-  void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
+  void rqueueMessageSenderUsesConfiguredMessageConverter() throws IllegalAccessException {
     MessageConverter messageConverter = new GenericMessageConverter();
     MessageConverterProvider messageConverterProvider = () -> messageConverter;
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
@@ -146,35 +156,12 @@ class RqueueListenerAutoConfigTest extends TestBase {
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
-    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
     RqueueMessageEnqueuer messageSender = messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator());
+        rqueueMessageHandler,
+        messageTemplate,
+        messageBroker,
+        new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
-  }
-
-  private static class EmptyMessageBrokerProvider
-      implements org.springframework.beans.factory.ObjectProvider<
-          com.github.sonus21.rqueue.core.spi.MessageBroker> {
-    @Override
-    public com.github.sonus21.rqueue.core.spi.MessageBroker getObject() {
-      throw new org.springframework.beans.factory.NoSuchBeanDefinitionException("MessageBroker");
-    }
-
-    @Override
-    public com.github.sonus21.rqueue.core.spi.MessageBroker getObject(Object... args) {
-      throw new org.springframework.beans.factory.NoSuchBeanDefinitionException("MessageBroker");
-    }
-
-    @Override
-    public com.github.sonus21.rqueue.core.spi.MessageBroker getIfAvailable() {
-      return null;
-    }
-
-    @Override
-    public com.github.sonus21.rqueue.core.spi.MessageBroker getIfUnique() {
-      return null;
-    }
   }
 }

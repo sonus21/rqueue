@@ -26,7 +26,6 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
@@ -341,10 +340,6 @@ public class RqueueMessageListenerContainer
     MessageBroker effectiveBroker =
         messageBroker != null ? messageBroker : new RedisMessageBroker(rqueueMessageTemplate);
     rqueueBeanProvider.setMessageBroker(effectiveBroker);
-    // Wire the broker onto the template so BaseMessageSender can route non-Redis publish calls.
-    if (rqueueMessageTemplate instanceof RqueueMessageTemplateImpl) {
-      ((RqueueMessageTemplateImpl) rqueueMessageTemplate).setMessageBroker(effectiveBroker);
-    }
 
     MessageProcessorHandler msgProcessorHandler = new MessageProcessorHandler(
         manualDeletionMessageProcessor,

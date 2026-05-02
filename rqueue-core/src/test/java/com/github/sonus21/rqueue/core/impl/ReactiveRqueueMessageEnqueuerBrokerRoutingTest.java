@@ -88,7 +88,7 @@ class ReactiveRqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
     RqueueConfig rqueueConfig = new RqueueConfig(null, null, true, 2);
     rqueueConfig.setMessageDurabilityInMinute(10080);
     enqueuer = new ReactiveRqueueMessageEnqueuerImpl(
-        messageTemplate, messageConverter, messageHeaders, FIXED_ID);
+        messageTemplate, messageBroker, messageConverter, messageHeaders, FIXED_ID);
     FieldUtils.writeField(enqueuer, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(
         enqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
@@ -98,8 +98,7 @@ class ReactiveRqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
   }
 
   @Test
-  void enqueueReactive_routesThroughBroker_whenBrokerSet() {
-    enqueuer.setMessageBroker(messageBroker);
+  void enqueueReactive_routesThroughBroker() {
     when(messageBroker.enqueueReactive(any(QueueDetail.class), any(RqueueMessage.class)))
         .thenReturn(Mono.empty());
 
@@ -113,8 +112,7 @@ class ReactiveRqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
   }
 
   @Test
-  void enqueueInReactive_routesThroughBrokerDelayed_whenBrokerSet() {
-    enqueuer.setMessageBroker(messageBroker);
+  void enqueueInReactive_routesThroughBrokerDelayed() {
     when(messageBroker.enqueueWithDelayReactive(
             any(QueueDetail.class), any(RqueueMessage.class), eq(5_000L)))
         .thenReturn(Mono.empty());
@@ -126,20 +124,5 @@ class ReactiveRqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
     verify(messageBroker, times(1))
         .enqueueWithDelayReactive(any(QueueDetail.class), any(RqueueMessage.class), eq(5_000L));
     verify(messageTemplate, never()).addReactiveMessageWithDelay(any(), any(), any());
-  }
-
-  @Test
-  void enqueueReactive_fallsBackToRedisTemplate_whenBrokerNull() {
-    when(messageTemplate.addReactiveMessage(
-            eq(queueDetail.getQueueName()), any(RqueueMessage.class)))
-        .thenReturn(Mono.just(1L));
-
-    StepVerifier.create(enqueuer.enqueue(queue, "payload"))
-        .expectNext("fixed-id")
-        .verifyComplete();
-
-    verify(messageTemplate, times(1))
-        .addReactiveMessage(eq(queueDetail.getQueueName()), any(RqueueMessage.class));
-    verify(messageBroker, never()).enqueueReactive(any(), any());
   }
 }

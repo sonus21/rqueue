@@ -40,6 +40,7 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
@@ -104,8 +105,11 @@ class RqueueMessageManagerImplTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageManager =
-        new RqueueMessageManagerImpl(rqueueMessageTemplate, messageConverter, null);
+    rqueueMessageManager = new RqueueMessageManagerImpl(
+        rqueueMessageTemplate,
+        new RedisMessageBroker(rqueueMessageTemplate),
+        messageConverter,
+        null);
     EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
     EndpointRegistry.register(queueDetail2);

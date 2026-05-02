@@ -87,7 +87,11 @@ class BaseMessageSenderMetadataTest extends TestBase {
     rqueueConfig = new RqueueConfig(null, null, true, 2);
     rqueueConfig.setMessageDurabilityInMinute(10080);
     enqueuer = new RqueueMessageEnqueuerImpl(
-        messageTemplate, messageConverter, messageHeaders, FIXED_MESSAGE_ID_GENERATOR);
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        FIXED_MESSAGE_ID_GENERATOR);
     FieldUtils.writeField(enqueuer, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(
         enqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
@@ -95,30 +99,20 @@ class BaseMessageSenderMetadataTest extends TestBase {
   }
 
   @Test
-  void redisPathSavesMetadata() {
-    // Default mock: messageTemplate.getMessageBroker() returns null (Redis path).
+  void redisCapabilitiesSaveMetadata() {
+    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
     String id = enqueuer.enqueue(queue, "redis-payload");
     assertEquals("metadata-id", id);
     verify(rqueueMessageMetadataService).save(any(), any(), anyBoolean());
   }
 
   @Test
-  void brokerWithoutPrimaryDispatchSkipsMetadata() {
+  void natsLikeCapabilitiesSkipMetadata() {
     Capabilities caps = new Capabilities(true, false, false, false);
-    when(messageTemplate.getMessageBroker()).thenReturn(messageBroker);
     when(messageBroker.capabilities()).thenReturn(caps);
 
     String id = enqueuer.enqueue(queue, "nats-payload");
     assertEquals("metadata-id", id);
     verify(rqueueMessageMetadataService, never()).save(any(), any(), anyBoolean());
-  }
-
-  @Test
-  void brokerWithPrimaryDispatchStillSavesMetadata() {
-    when(messageTemplate.getMessageBroker()).thenReturn(messageBroker);
-    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
-
-    enqueuer.enqueue(queue, "redis-broker-payload");
-    verify(rqueueMessageMetadataService).save(any(), any(), anyBoolean());
   }
 }

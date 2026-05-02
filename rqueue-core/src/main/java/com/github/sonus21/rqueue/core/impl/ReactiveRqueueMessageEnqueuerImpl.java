@@ -32,44 +32,32 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
     implements ReactiveRqueueMessageEnqueuer {
 
-  // Optional broker delegate. When non-null, reactive enqueue routes through
-  // MessageBroker.enqueueReactive instead of the reactive Redis template path.
-  private MessageBroker messageBroker;
-
   public ReactiveRqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+    this(
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
   }
 
   public ReactiveRqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
-    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
-  }
-
-  /**
-   * Set an optional {@link MessageBroker} delegate. When non-null, reactive enqueue calls route
-   * through {@link MessageBroker#enqueueReactive(QueueDetail, RqueueMessage)} instead of the legacy
-   * reactive Redis template path. Existing Redis users that do not configure a broker keep the
-   * original behavior.
-   */
-  public void setMessageBroker(MessageBroker messageBroker) {
-    this.messageBroker = messageBroker;
-  }
-
-  public MessageBroker getMessageBroker() {
-    return messageBroker;
+    super(messageTemplate, messageBroker, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @SuppressWarnings("unchecked")
@@ -96,32 +84,18 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       Mono<Boolean> storeResult =
           (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
       return storeResult.flatMap(success -> {
-        if (Boolean.TRUE.equals(success)) {
-          if (messageBroker != null) {
-            Mono<Void> brokerMono;
-            if (delayInMilliSecs == null
-                || delayInMilliSecs <= com.github.sonus21.rqueue.utils.Constants.MIN_DELAY) {
-              brokerMono = messageBroker.enqueueReactive(queueDetail, rqueueMessage);
-            } else {
-              brokerMono = messageBroker.enqueueWithDelayReactive(
-                  queueDetail, rqueueMessage, delayInMilliSecs);
-            }
-            return brokerMono.then(Mono.defer(() -> monoConverter.apply(rqueueMessage)));
-          }
-          Object result = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
-          Mono<Long> enqueueMono;
-          if (result instanceof Flux) {
-            enqueueMono = ((Flux<Long>) result).next();
-          } else if (result instanceof Mono) {
-            enqueueMono = (Mono<Long>) result;
-          } else {
-            return Mono.error(
-                new IllegalStateException("Unexpected enqueue result type: " + result.getClass()));
-          }
-          return enqueueMono.flatMap(ignore -> monoConverter.apply(rqueueMessage));
-        } else {
+        if (!Boolean.TRUE.equals(success)) {
           return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
         }
+        Mono<Void> brokerMono;
+        if (delayInMilliSecs == null
+            || delayInMilliSecs <= com.github.sonus21.rqueue.utils.Constants.MIN_DELAY) {
+          brokerMono = messageBroker.enqueueReactive(queueDetail, rqueueMessage);
+        } else {
+          brokerMono =
+              messageBroker.enqueueWithDelayReactive(queueDetail, rqueueMessage, delayInMilliSecs);
+        }
+        return brokerMono.then(Mono.defer(() -> monoConverter.apply(rqueueMessage)));
       });
     } catch (Exception e) {
       log.error(

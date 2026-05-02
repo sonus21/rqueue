@@ -79,9 +79,11 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public RqueueMessageManager rqueueMessageManager(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageManagerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -91,9 +93,11 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public RqueueEndpointManager rqueueEndpointManager(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueEndpointManagerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -103,9 +107,11 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public RqueueMessageEnqueuer rqueueMessageEnqueuer(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -130,17 +136,13 @@ public class RqueueListenerConfig extends RqueueListenerBaseConfig {
   public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
-      RqueueMessageIdGenerator rqueueMessageIdGenerator,
-      org.springframework.beans.factory.ObjectProvider<MessageBroker> messageBrokerProvider) {
-    ReactiveRqueueMessageEnqueuerImpl impl = new ReactiveRqueueMessageEnqueuerImpl(
+      MessageBroker messageBroker,
+      RqueueMessageIdGenerator rqueueMessageIdGenerator) {
+    return new ReactiveRqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
-    MessageBroker broker = messageBrokerProvider.getIfAvailable();
-    if (broker != null) {
-      impl.setMessageBroker(broker);
-    }
-    return impl;
   }
 }

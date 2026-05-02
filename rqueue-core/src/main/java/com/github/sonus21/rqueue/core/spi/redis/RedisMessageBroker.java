@@ -31,6 +31,7 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import reactor.core.publisher.Mono;
 
 /**
  * Default {@link MessageBroker} implementation that delegates to the existing Redis-backed
@@ -71,6 +72,23 @@ public class RedisMessageBroker implements MessageBroker {
   public void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs) {
     // Delegate to existing scheduled-queue add path; processAt is encoded on the message.
     template.addMessageWithDelay(q.getScheduledQueueName(), q.getScheduledQueueChannelName(), m);
+  }
+
+  /**
+   * Override the SPI default (which wraps the blocking call in {@code Mono.fromRunnable}) so
+   * reactive callers stay on the reactive Redis driver and never block a thread.
+   */
+  @Override
+  public Mono<Void> enqueueReactive(QueueDetail q, RqueueMessage m) {
+    return template.addReactiveMessage(q.getQueueName(), m).then();
+  }
+
+  /** Reactive scheduled-queue equivalent of {@link #enqueueWithDelay}. */
+  @Override
+  public Mono<Void> enqueueWithDelayReactive(QueueDetail q, RqueueMessage m, long delayMs) {
+    return template
+        .addReactiveMessageWithDelay(q.getScheduledQueueName(), q.getScheduledQueueChannelName(), m)
+        .then();
   }
 
   @Override

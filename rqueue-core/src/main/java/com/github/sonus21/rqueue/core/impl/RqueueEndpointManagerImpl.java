@@ -51,17 +51,24 @@ public class RqueueEndpointManagerImpl extends BaseMessageSender implements Rque
 
   public RqueueEndpointManagerImpl(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+    this(
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
   }
 
   public RqueueEndpointManagerImpl(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
-    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
+    super(messageTemplate, messageBroker, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @Override
