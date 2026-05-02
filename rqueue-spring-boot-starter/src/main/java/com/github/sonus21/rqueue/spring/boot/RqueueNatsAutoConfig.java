@@ -61,7 +61,7 @@ public class RqueueNatsAutoConfig {
   public Connection natsConnection(RqueueNatsProperties props) throws IOException {
     Options.Builder ob = new Options.Builder();
     RqueueNatsProperties.Connection c = props.getConnection();
-   if (!StringUtils.isEmpty(c.getUrl())) {
+    if (!StringUtils.isEmpty(c.getUrl())) {
       ob.server(c.getUrl());
     } else {
       ob.server(Options.DEFAULT_URL);
