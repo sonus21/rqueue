@@ -16,6 +16,7 @@ import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
+import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
@@ -114,26 +115,27 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   /**
-   * Resolve the priority-specific subject. Returns the unsuffixed subject when {@code priority} is
-   * null or empty; otherwise appends {@code "." + priority}. Mirrors the naming used by
-   * {@link QueueDetail#resolvedNatsSubjectForPriority(String)}.
+   * Resolve the priority-specific subject. Uses the same {@code "_priority"} suffix as
+   * {@link com.github.sonus21.rqueue.utils.PriorityUtils#getSuffix(String)} so the subject
+   * matches the expanded {@link QueueDetail#getName()} used by the poller (e.g. {@code "pq_high"}).
    */
   private String subjectFor(QueueDetail q, String priority) {
     if (priority == null || priority.isEmpty()) {
       return subjectFor(q);
     }
-    return subjectFor(q) + "." + priority;
+    return config.getSubjectPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
   }
 
   /**
-   * Resolve the priority-specific stream. Returns the unsuffixed stream when {@code priority} is
-   * null or empty; otherwise appends {@code "-" + priority}.
+   * Resolve the priority-specific stream. Uses the same {@code "_priority"} suffix as
+   * {@link com.github.sonus21.rqueue.utils.PriorityUtils#getSuffix(String)} so the stream name
+   * matches what the poller derives from the expanded {@link QueueDetail#getName()}.
    */
   private String streamFor(QueueDetail q, String priority) {
     if (priority == null || priority.isEmpty()) {
       return streamFor(q);
     }
-    return streamFor(q) + "-" + priority;
+    return config.getStreamPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
   }
 
   private String dlqStreamFor(QueueDetail q) {
@@ -547,10 +549,9 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    * {@link #installDeadLetterBridge(QueueDetail, String)}.
    */
   public void provisionDlq(QueueDetail q) {
-    if (!config.isAutoCreateDlqStream()) {
-      return;
-    }
-    provisioner.ensureDlqStream(dlqStreamFor(q), List.of(dlqSubjectFor(q)));
+    // Explicit call — always provision, bypassing the autoCreateDlqStream flag.
+    // That flag gates automatic provisioning at bootstrap; here the caller is explicitly opting in.
+    provisioner.ensureStream(dlqStreamFor(q), List.of(dlqSubjectFor(q)));
   }
 
   /**

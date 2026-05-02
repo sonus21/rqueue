@@ -91,7 +91,7 @@ class JetStreamMessageBrokerUnitTest {
         "high",
         RqueueMessage.builder().id("m1").message("hi").build());
     verify(f.js, times(1))
-        .publish(eq("rqueue.js.orders.high"), any(Headers.class), any(byte[].class));
+        .publish(eq("rqueue.js.orders_high"), any(Headers.class), any(byte[].class));
   }
 
   @Test
