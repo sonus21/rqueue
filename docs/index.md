@@ -167,64 +167,20 @@ public class Application {
 
 ### NATS JetStream Backend
 
-To use NATS JetStream instead of Redis, add `rqueue-nats` alongside the starter and set
-`rqueue.backend=nats`. No `RedisConnectionFactory` bean is required.
-
-{: .warning }
-The NATS backend does not support delayed enqueue, scheduled messages, or cron jobs (`enqueueIn`,
-`enqueueAt`, `enqueuePeriodic`). These throw `UnsupportedOperationException`. Use the Redis
-backend for workloads that require scheduling.
-
-#### Spring Boot 4.x — NATS Setup
-
-* Gradle
-  ```groovy
-  implementation 'com.github.sonus21:rqueue-spring-boot-starter:4.0.0-RELEASE'
-  implementation 'com.github.sonus21:rqueue-nats:4.0.0-RELEASE'
-  ```
-
-* Maven
-  ```xml
-  <dependency>
-      <groupId>com.github.sonus21</groupId>
-      <artifactId>rqueue-spring-boot-starter</artifactId>
-      <version>4.0.0-RELEASE</version>
-  </dependency>
-  <dependency>
-      <groupId>com.github.sonus21</groupId>
-      <artifactId>rqueue-nats</artifactId>
-      <version>4.0.0-RELEASE</version>
-  </dependency>
-  ```
-
-Then in `application.properties`:
+To use NATS JetStream instead of Redis, add `rqueue-nats` alongside the starter, set
+`rqueue.backend=nats`, and point `rqueue.nats.connection.url` at a JetStream-enabled server.
+No `RedisConnectionFactory` bean is required. All listener, producer, and middleware APIs work
+without any code changes.
 
 ```properties
 rqueue.backend=nats
 rqueue.nats.connection.url=nats://localhost:4222
 ```
 
-Start a JetStream-enabled NATS server:
-
-```sh
-# native binary
-nats-server -js
-
-# Docker
-docker run -p 4222:4222 nats:latest -js
-```
-
-Rqueue provisions streams and KV buckets at startup. For locked-down JetStream accounts where the
-application credentials cannot call `add_stream` / `kv_create` at runtime, set:
-
-```properties
-rqueue.nats.auto-create-streams=false
-rqueue.nats.auto-create-kv-buckets=false
-```
-
-…and pre-create the streams and buckets before starting the application. See the
-[rqueue-spring-boot-nats-example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-nats-example)
-for a complete working example and the repository README for the full stream / KV bucket reference.
+{: .note }
+See [NATS Configuration](configuration/nats-configuration) for the full reference — connection
+options, stream defaults, consumer tuning, naming, auto-provisioning, locked-down account setup,
+and feature limitations.
 
 ---
 

@@ -187,7 +187,7 @@ public class RqueueNatsAutoConfig {
    * NATS-side {@link com.github.sonus21.rqueue.repository.MessageBrowsingRepository} powering
    * the dashboard's data-explorer and queue-detail panels. Maps Redis-style queue names to
    * JetStream streams and returns actual message counts from the broker. JetStream KV doesn't
-   * model arbitrary keyed reads, so {@link #viewData} throws {@code BackendCapabilityException}
+   * model arbitrary keyed reads, so  throws {@code BackendCapabilityException}
    * (mapped to HTTP 501 by {@code RqueueWebExceptionAdvice}).
    */
   @Bean

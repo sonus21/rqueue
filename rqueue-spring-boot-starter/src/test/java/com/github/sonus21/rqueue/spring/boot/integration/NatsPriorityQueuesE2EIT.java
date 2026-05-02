@@ -80,7 +80,6 @@ class NatsPriorityQueuesE2EIT extends AbstractNatsBootIT {
 
     @RqueueListener(value = "pq", priority = "high=10,low=1")
     void onMessage(String payload) {
-      System.err.println(">>> onMessage payload=" + payload + " latch=" + latch.getCount());
       received.add(payload);
       latch.countDown();
     }

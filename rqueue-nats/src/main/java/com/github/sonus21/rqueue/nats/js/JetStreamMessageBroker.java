@@ -63,6 +63,15 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   private static final Logger log = Logger.getLogger(JetStreamMessageBroker.class.getName());
   private static final Capabilities CAPS = new Capabilities(false, false, false, false);
 
+  /**
+   * Translation of {@link Duration#ZERO} (the Redis "non-blocking" pop convention used by
+   * {@code RqueueMessagePoller}) into the smallest positive duration JetStream will accept on a
+   * pull fetch. Long enough that messages already buffered for the consumer come back in the same
+   * call, short enough that an empty sub-queue inside a priority group does not stall the poll
+   * cycle.
+   */
+  private static final Duration NON_BLOCKING_FETCH_WAIT = Duration.ofMillis(50);
+
   private final Connection connection;
   private final JetStream js;
   private final JetStreamManagement jsm;
@@ -304,9 +313,20 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   private List<RqueueMessage> popInternal(
       String stream, String subject, String consumerName, int batch, Duration wait) {
-    // Use default fetch wait if none provided OR if zero duration is passed (Redis compatibility).
-    // JetStream requires a positive duration for fetch().
-    Duration fetchWait = (wait != null && !wait.isZero()) ? wait : config.getDefaultFetchWait();
+    // Use default fetch wait if none provided. If zero duration is passed (Redis "non-blocking"
+    // pop convention used by RqueueMessagePoller), translate to a short but positive duration:
+    // JetStream rejects zero, but using the multi-second defaultFetchWait blocks empty pulls long
+    // enough that under Weighted/Strict priority polling the cycle starves real queues — a single
+    // empty sub-queue in a priority group can absorb the whole 30s test budget. Use the smallest
+    // value JetStream still tolerates so empty sub-queues yield back to polling immediately.
+    Duration fetchWait;
+    if (wait == null) {
+      fetchWait = config.getDefaultFetchWait();
+    } else if (wait.isZero()) {
+      fetchWait = NON_BLOCKING_FETCH_WAIT;
+    } else {
+      fetchWait = wait;
+    }
     String key = stream + "/" + consumerName;
     JetStreamSubscription sub = subscriptionCache.computeIfAbsent(key, k -> {
       // NatsStreamValidator provisions the stream and consumer at bootstrap (RqueueBootstrapEvent).
