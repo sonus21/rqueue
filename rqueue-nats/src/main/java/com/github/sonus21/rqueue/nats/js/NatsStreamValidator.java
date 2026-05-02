@@ -112,7 +112,10 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
           String pSubject =
               config.getSubjectPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
           total += tryEnsure(failures, pStream, pSubject);
-          tryEnsureConsumer(failures, pStream, q.resolvedConsumerName(), cd);
+          // Consumer is NOT created here: each priority sub-queue has its own QueueDetail
+          // in the registry and is processed as its own mainStream entry above, so exactly
+          // one consumer is created per stream. Adding a second one here would fail on
+          // WorkQueue streams (error 10099).
         }
       }
 
