@@ -41,7 +41,8 @@ class JetStreamMessageBrokerResolveTest {
   void resolveAckWait_usesVisibilityTimeoutWhenPositive() {
     QueueDetail q = queue(45_000L, 3);
     assertEquals(
-        Duration.ofMillis(45_000L), JetStreamMessageBroker.resolveAckWait(q, RqueueNatsConfig.defaults()));
+        Duration.ofMillis(45_000L),
+        JetStreamMessageBroker.resolveAckWait(q, RqueueNatsConfig.defaults()));
   }
 
   @Test

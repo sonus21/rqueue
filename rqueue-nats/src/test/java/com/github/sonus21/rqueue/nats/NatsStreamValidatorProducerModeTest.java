@@ -75,8 +75,7 @@ class NatsStreamValidatorProducerModeTest {
     when(rqueueConfig.getMode()).thenReturn(RqueueMode.PRODUCER);
     when(rqueueConfig.isProducer()).thenReturn(true);
 
-    NatsStreamValidator validator =
-        new NatsStreamValidator(provisioner, natsConfig, rqueueConfig);
+    NatsStreamValidator validator = new NatsStreamValidator(provisioner, natsConfig, rqueueConfig);
     validator.afterSingletonsInstantiated();
 
     verify(provisioner, times(1))
@@ -91,8 +90,7 @@ class NatsStreamValidatorProducerModeTest {
     RqueueConfig rqueueConfig = mock(RqueueConfig.class);
     when(rqueueConfig.getMode()).thenReturn(RqueueMode.BOTH);
 
-    NatsStreamValidator validator =
-        new NatsStreamValidator(provisioner, natsConfig, rqueueConfig);
+    NatsStreamValidator validator = new NatsStreamValidator(provisioner, natsConfig, rqueueConfig);
     validator.afterSingletonsInstantiated();
 
     verify(provisioner, times(1))

@@ -199,8 +199,8 @@ public class RqueueNatsAutoConfig {
   @Bean
   @ConditionalOnMissingBean(com.github.sonus21.rqueue.repository.MessageBrowsingRepository.class)
   public com.github.sonus21.rqueue.repository.MessageBrowsingRepository
-  natsMessageBrowsingRepository(
-      JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
+      natsMessageBrowsingRepository(
+          JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
     return new com.github.sonus21.rqueue.nats.repository.NatsMessageBrowsingRepository(
         jetStreamManagement, toBrokerConfig(props));
   }
@@ -225,7 +225,7 @@ public class RqueueNatsAutoConfig {
         "WORKQUEUE".equalsIgnoreCase(p.getStream().getRetention())
             ? io.nats.client.api.RetentionPolicy.WorkQueue
             : "INTEREST".equalsIgnoreCase(p.getStream().getRetention())
-              ? io.nats.client.api.RetentionPolicy.Interest
+                ? io.nats.client.api.RetentionPolicy.Interest
                 : io.nats.client.api.RetentionPolicy.Limits);
     sd.setMaxMsgs(p.getStream().getMaxMessages());
     sd.setMaxBytes(p.getStream().getMaxBytes());
