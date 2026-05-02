@@ -123,8 +123,7 @@ abstract class BaseMessageSender {
       messageBroker.enqueue(queueDetail, priority, rqueueMessage);
     } else {
       if (reactive) {
-        return messageBroker.enqueueWithDelayReactive(
-            queueDetail, rqueueMessage, delayInMilliSecs);
+        return messageBroker.enqueueWithDelayReactive(queueDetail, rqueueMessage, delayInMilliSecs);
       }
       messageBroker.enqueueWithDelay(queueDetail, rqueueMessage, delayInMilliSecs);
     }

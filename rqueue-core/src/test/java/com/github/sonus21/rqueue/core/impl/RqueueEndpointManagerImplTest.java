@@ -74,10 +74,7 @@ class RqueueEndpointManagerImplTest extends TestBase {
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
     rqueueEndpointManager = new RqueueEndpointManagerImpl(
-        messageTemplate,
-        new RedisMessageBroker(messageTemplate),
-        messageConverter,
-        messageHeaders);
+        messageTemplate, new RedisMessageBroker(messageTemplate), messageConverter, messageHeaders);
     RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, 1);
     FieldUtils.writeField(rqueueEndpointManager, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(

@@ -135,10 +135,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
 
     RqueueMessageEnqueuer enqueuer = messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler,
-        messageTemplate,
-        messageBroker,
-        new UuidV4RqueueMessageIdGenerator());
+        rqueueMessageHandler, messageTemplate, messageBroker, new UuidV4RqueueMessageIdGenerator());
 
     assertNotNull(enqueuer);
     // Broker is on the enqueuer (inherited from BaseMessageSender), not on the template — that
@@ -157,10 +154,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
     RqueueMessageEnqueuer messageSender = messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler,
-        messageTemplate,
-        messageBroker,
-        new UuidV4RqueueMessageIdGenerator());
+        rqueueMessageHandler, messageTemplate, messageBroker, new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
   }
