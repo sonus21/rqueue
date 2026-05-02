@@ -78,6 +78,18 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.comparator.ComparableComparator;
 
+/**
+ * Invokes {@link RqueueListener}-annotated listener methods and routes exceptions to
+ * {@link RqueueHandler}-annotated error handlers.
+ *
+ * <p>Extends Spring's {@link AbstractMethodMessageHandler} to discover listener methods via
+ * reflection, deserialize incoming messages to the correct argument types, and dispatch to the
+ * appropriate handler based on message content and method signature.
+ *
+ * <p>Supports multiple argument injection patterns: message payload (with type conversion), raw
+ * {@code Message<?>} envelopes, Spring headers, and custom parameters via {@code @Header}.
+ * Exception handlers are matched by exception type with fallback to base exception class.
+ */
 @Slf4j
 public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingInformation> {
 

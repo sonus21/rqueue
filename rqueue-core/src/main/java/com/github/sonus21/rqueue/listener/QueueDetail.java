@@ -42,6 +42,17 @@ import lombok.Getter;
 import lombok.ToString;
 import org.springframework.util.CollectionUtils;
 
+/**
+ * Configuration and metadata for an Rqueue listener. Each queue detail captures the queue's
+ * polling behavior, error handling, and optional dead-letter queue setup.
+ *
+ * <p>Internal field names (e.g., {@code queueName}, {@code processingQueueName}) are backed by the
+ * queue name and prefixes from {@link com.github.sonus21.rqueue.config.RqueueConfig}.
+ *
+ * <p>Supports priority-based sub-queues via the {@code priority} map, where each entry defines a
+ * priority level and its relative weight. Use {@code expandQueueDetail()} to generate concrete
+ * queue details for each priority when multi-priority queueing is configured.
+ */
 @Getter
 @Builder
 @EqualsAndHashCode(callSuper = true)
