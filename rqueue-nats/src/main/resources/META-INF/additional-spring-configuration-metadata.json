@@ -1,5 +1,19 @@
 {
-  "hints" : [],
+  "hints" : [
+    {
+      "name" : "rqueue.backend",
+      "values" : [
+        {
+          "value" : "redis",
+          "description" : "Redis backend (default). Requires a RedisConnectionFactory bean."
+        },
+        {
+          "value" : "nats",
+          "description" : "NATS JetStream backend. Requires the rqueue-nats module and a running NATS server with JetStream enabled."
+        }
+      ]
+    }
+  ],
   "groups" : [
     {
       "sourceType" : "com.github.sonus21.rqueue.spring.boot.RqueueMetricsProperties",
@@ -231,6 +245,62 @@
       "description" : "System Mode",
       "type" : "com.github.sonus21.rqueue.models.enums.RqueueMode",
       "defaultValue" : "BOTH"
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.backend",
+      "description" : "Message broker backend. Use 'redis' (default) for the Redis backend or 'nats' to switch to NATS JetStream. The 'nats' value requires the rqueue-nats module on the classpath.",
+      "type" : "java.lang.String",
+      "defaultValue" : "redis"
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.worker.registry.enabled",
+      "description" : "Enable worker and queue-poller tracking for the dashboard",
+      "type" : "java.lang.Boolean",
+      "defaultValue" : true
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.worker.registry.worker.ttl",
+      "description" : "TTL in seconds for worker metadata entries",
+      "type" : "java.lang.Long",
+      "defaultValue" : 300
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.worker.registry.worker.heartbeat.interval",
+      "description" : "Interval in seconds for refreshing worker metadata",
+      "type" : "java.lang.Long",
+      "defaultValue" : 60
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.worker.registry.queue.ttl",
+      "description" : "TTL in seconds for queue-poller metadata entries",
+      "type" : "java.lang.Long",
+      "defaultValue" : 3600
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.worker.registry.queue.heartbeat.interval",
+      "description" : "Interval in seconds for queue-poller heartbeat refresh",
+      "type" : "java.lang.Long",
+      "defaultValue" : 15
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.worker.registry.key.prefix",
+      "description" : "Key prefix for worker registry entries",
+      "type" : "java.lang.String",
+      "defaultValue" : "worker::"
+    },
+    {
+      "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",
+      "name" : "rqueue.worker.registry.queue.key.prefix",
+      "description" : "Key prefix for queue-poller registry entries",
+      "type" : "java.lang.String",
+      "defaultValue" : "q-pollers::"
     },
     {
       "sourceType" : "com.github.sonus21.rqueue.config.RqueueConfig",

@@ -1,0 +1,251 @@
+{
+  "groups": [],
+  "properties": [
+    {
+      "name": "rqueue.nats.auto-create-streams",
+      "type": "java.lang.Boolean",
+      "description": "When true (default), Rqueue creates JetStream streams for each registered queue at startup via NatsStreamValidator. Set to false for locked-down JetStream accounts where the application credentials lack add_stream permission; NatsStreamValidator will then verify that every required stream already exists and abort boot with a clear error listing any missing ones.",
+      "defaultValue": true,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties"
+    },
+    {
+      "name": "rqueue.nats.auto-create-consumers",
+      "type": "java.lang.Boolean",
+      "description": "When true (default), Rqueue lazily creates durable pull consumers on the first pop call for each (stream, consumerName) pair and caches the subscription in-process. Set to false to fail-fast on missing consumers instead.",
+      "defaultValue": true,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties"
+    },
+    {
+      "name": "rqueue.nats.auto-create-dlq-stream",
+      "type": "java.lang.Boolean",
+      "description": "When true, Rqueue automatically creates a dead-letter queue stream for each registered queue that declares a deadLetterQueue in its @RqueueListener. Default is false.",
+      "defaultValue": false,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties"
+    },
+    {
+      "name": "rqueue.nats.auto-create-kv-buckets",
+      "type": "java.lang.Boolean",
+      "description": "When true (default), each NATS-backed store lazily creates its KV bucket on first use. Set to false for locked-down JetStream accounts; NatsKvBucketValidator will verify at startup that every required bucket already exists and abort boot listing any missing ones. Pre-create the buckets with: nats kv add rqueue-queue-config / rqueue-jobs / rqueue-locks / rqueue-message-metadata / rqueue-workers / rqueue-worker-heartbeats.",
+      "defaultValue": true,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties"
+    },
+    {
+      "name": "rqueue.nats.connection.url",
+      "type": "java.lang.String",
+      "description": "NATS server URL (e.g. nats://localhost:4222). Used when a single server URL is sufficient. Use rqueue.nats.connection.urls for a cluster.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.credentials-path",
+      "type": "java.lang.String",
+      "description": "Path to a NATS credentials file (.creds) for NKey/JWT-based authentication.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.username",
+      "type": "java.lang.String",
+      "description": "Username for NATS username/password authentication.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.password",
+      "type": "java.lang.String",
+      "description": "Password for NATS username/password authentication.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.token",
+      "type": "java.lang.String",
+      "description": "Token for NATS token-based authentication.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.tls",
+      "type": "java.lang.Boolean",
+      "description": "Enable TLS for the NATS connection.",
+      "defaultValue": false,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.connection-name",
+      "type": "java.lang.String",
+      "description": "Logical name for this NATS connection, visible in server monitoring.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.connect-timeout",
+      "type": "java.time.Duration",
+      "description": "Maximum time to wait for the initial connection to the NATS server.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.reconnect-wait",
+      "type": "java.time.Duration",
+      "description": "Time to wait between reconnect attempts when the NATS connection is lost.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.max-reconnects",
+      "type": "java.lang.Integer",
+      "description": "Maximum number of reconnect attempts. -1 means unlimited.",
+      "defaultValue": -1,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.connection.ping-interval",
+      "type": "java.time.Duration",
+      "description": "Interval between server pings to detect a stale connection.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Connection"
+    },
+    {
+      "name": "rqueue.nats.stream.replicas",
+      "type": "java.lang.Integer",
+      "description": "Number of stream replicas. Must not exceed the number of JetStream-enabled servers in the cluster.",
+      "defaultValue": 1,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.stream.storage",
+      "type": "java.lang.String",
+      "description": "Storage backend for streams: FILE (default, durable) or MEMORY (faster, lost on restart).",
+      "defaultValue": "FILE",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.stream.retention",
+      "type": "java.lang.String",
+      "description": "Stream retention policy: LIMITS (default, bounded by max-age/max-bytes/max-messages), INTEREST (remove when no consumers), or WORK_QUEUE (remove on ack).",
+      "defaultValue": "LIMITS",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.stream.max-age",
+      "type": "java.time.Duration",
+      "description": "Maximum age of messages in the stream before they are discarded. Default is 14 days.",
+      "defaultValue": "14d",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.stream.max-bytes",
+      "type": "java.lang.Long",
+      "description": "Maximum total size in bytes of all messages in the stream. -1 means unlimited.",
+      "defaultValue": -1,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.stream.max-messages",
+      "type": "java.lang.Long",
+      "description": "Maximum number of messages in the stream. -1 means unlimited.",
+      "defaultValue": -1,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.stream.discard-policy",
+      "type": "java.lang.String",
+      "description": "Policy for discarding messages when stream limits are reached: OLD (default, discard oldest) or NEW (reject new messages).",
+      "defaultValue": "OLD",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.stream.duplicate-window",
+      "type": "java.time.Duration",
+      "description": "Deduplication window for the Nats-Msg-Id header. Messages with the same ID published within this window are deduplicated by the server. Default is 2 minutes.",
+      "defaultValue": "2m",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Stream"
+    },
+    {
+      "name": "rqueue.nats.consumer.ack-wait",
+      "type": "java.time.Duration",
+      "description": "Time the server waits for an ack before redelivering the message. Should be longer than the slowest expected message processing time. Default is 30 seconds.",
+      "defaultValue": "30s",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Consumer"
+    },
+    {
+      "name": "rqueue.nats.consumer.max-deliver",
+      "type": "java.lang.Long",
+      "description": "Maximum number of delivery attempts for a message before it is sent to the DLQ (if configured). Default is 3.",
+      "defaultValue": 3,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Consumer"
+    },
+    {
+      "name": "rqueue.nats.consumer.max-ack-pending",
+      "type": "java.lang.Long",
+      "description": "Maximum number of unacknowledged messages a consumer can hold. Default is 1000.",
+      "defaultValue": 1000,
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Consumer"
+    },
+    {
+      "name": "rqueue.nats.consumer.fetch-wait",
+      "type": "java.time.Duration",
+      "description": "Maximum time to wait for messages in a single fetch call before returning an empty result. Default is 2 seconds.",
+      "defaultValue": "2s",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Consumer"
+    },
+    {
+      "name": "rqueue.nats.naming.stream-prefix",
+      "type": "java.lang.String",
+      "description": "Prefix applied to every JetStream stream name created by Rqueue (e.g. rqueue-js-my-queue). Default is 'rqueue-js-'.",
+      "defaultValue": "rqueue-js-",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Naming"
+    },
+    {
+      "name": "rqueue.nats.naming.subject-prefix",
+      "type": "java.lang.String",
+      "description": "Prefix applied to every JetStream subject used by Rqueue (e.g. rqueue.js.my-queue). Default is 'rqueue.js.'.",
+      "defaultValue": "rqueue.js.",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Naming"
+    },
+    {
+      "name": "rqueue.nats.naming.dlq-suffix",
+      "type": "java.lang.String",
+      "description": "Suffix appended to the stream and subject name for dead-letter queue streams (e.g. rqueue-js-my-queue-dlq). Default is '-dlq'.",
+      "defaultValue": "-dlq",
+      "sourceType": "com.github.sonus21.rqueue.spring.boot.RqueueNatsProperties$Naming"
+    }
+  ],
+  "hints": [
+    {
+      "name": "rqueue.nats.stream.storage",
+      "values": [
+        {
+          "value": "FILE",
+          "description": "Durable file-backed storage (default)."
+        },
+        {
+          "value": "MEMORY",
+          "description": "In-memory storage; faster but lost on server restart."
+        }
+      ]
+    },
+    {
+      "name": "rqueue.nats.stream.retention",
+      "values": [
+        {
+          "value": "LIMITS",
+          "description": "Retain messages subject to max-age, max-bytes, and max-messages limits (default)."
+        },
+        {
+          "value": "INTEREST",
+          "description": "Remove messages once all active consumers have acknowledged them."
+        },
+        {
+          "value": "WORK_QUEUE",
+          "description": "Remove messages immediately after they are acknowledged by any consumer."
+        }
+      ]
+    },
+    {
+      "name": "rqueue.nats.stream.discard-policy",
+      "values": [
+        {
+          "value": "OLD",
+          "description": "Discard the oldest messages when limits are reached (default)."
+        },
+        {
+          "value": "NEW",
+          "description": "Reject new publish calls when limits are reached."
+        }
+      ]
+    }
+  ]
+}

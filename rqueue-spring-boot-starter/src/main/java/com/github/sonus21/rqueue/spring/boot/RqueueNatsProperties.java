@@ -48,7 +48,6 @@ public class RqueueNatsProperties {
   @Setter
   public static class Connection {
     private String url;
-    private List<String> urls;
     private String credentialsPath;
     private String username;
     private String password;
@@ -78,9 +77,8 @@ public class RqueueNatsProperties {
   @Setter
   public static class Consumer {
     private Duration ackWait = Duration.ofSeconds(30);
-    private long maxDeliver = 5;
+    private long maxDeliver = 3;
     private long maxAckPending = 1000;
-    private int fetchBatch = 1;
     private Duration fetchWait = Duration.ofSeconds(2);
   }
 

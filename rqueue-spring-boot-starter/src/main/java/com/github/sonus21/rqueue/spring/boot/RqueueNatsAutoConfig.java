@@ -25,6 +25,7 @@ import com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator;
 import com.github.sonus21.rqueue.nats.metrics.NatsRqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
 import com.github.sonus21.rqueue.serdes.SerializationUtils;
+import com.github.sonus21.rqueue.utils.StringUtils;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;
@@ -60,9 +61,7 @@ public class RqueueNatsAutoConfig {
   public Connection natsConnection(RqueueNatsProperties props) throws IOException {
     Options.Builder ob = new Options.Builder();
     RqueueNatsProperties.Connection c = props.getConnection();
-    if (c.getUrls() != null && !c.getUrls().isEmpty()) {
-      ob.servers(c.getUrls().toArray(new String[0]));
-    } else if (c.getUrl() != null && !c.getUrl().isEmpty()) {
+   if (!StringUtils.isEmpty(c.getUrl())) {
       ob.server(c.getUrl());
     } else {
       ob.server(Options.DEFAULT_URL);
@@ -139,9 +138,11 @@ public class RqueueNatsAutoConfig {
   }
 
   /**
-   * Boot-time stream / DLQ existence guard. Fires on {@code RqueueBootstrapEvent} so it sees the
-   * full {@code EndpointRegistry} after every {@code @RqueueListener} has registered. Removes
-   * the per-publish {@code getStreamInfo} round-trip from the broker hot path.
+   * Boot-time stream / DLQ existence guard. Implements {@code SmartInitializingSingleton} so it
+   * runs after every {@code @RqueueListener} has registered with {@code EndpointRegistry} but
+   * before {@code SmartLifecycle.start()} spawns the message pollers — otherwise pollers race
+   * the validator and surface {@code stream not found [10059]}. Removes the per-publish
+   * {@code getStreamInfo} round-trip from the broker hot path.
    */
   @Bean
   @ConditionalOnMissingBean(NatsStreamValidator.class)

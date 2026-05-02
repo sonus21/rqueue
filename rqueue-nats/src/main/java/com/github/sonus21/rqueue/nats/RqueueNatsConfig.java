@@ -65,7 +65,7 @@ public class RqueueNatsConfig {
   @Accessors(chain = true)
   public static class ConsumerDefaults {
     private Duration ackWait = Duration.ofSeconds(30);
-    private long maxDeliver = 5;
+    private long maxDeliver = 3;
     private long maxAckPending = 1000;
   }
 }

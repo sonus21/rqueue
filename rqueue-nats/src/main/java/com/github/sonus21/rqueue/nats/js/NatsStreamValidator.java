@@ -17,7 +17,6 @@ package com.github.sonus21.rqueue.nats.js;
 
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
@@ -27,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.springframework.context.ApplicationListener;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 
 /**
  * Boot-time JetStream stream / DLQ existence guard. Mirrors the role
@@ -35,11 +34,14 @@ import org.springframework.context.ApplicationListener;
  * publish / pop hot path (where they cost a {@code getStreamInfo} round-trip per message) onto
  * the bootstrap path so a running broker never has to ask "does this stream exist?" again.
  *
- * <p><b>When this runs.</b> Listens for {@link RqueueBootstrapEvent} (start). That event fires
- * from {@code RqueueMessageListenerContainer.afterPropertiesSet} after every
- * {@code @RqueueListener} method has registered its queue with {@link EndpointRegistry}, which
- * is the first moment the full queue / priority / DLQ set is known. {@code InitializingBean}
- * would be too early — the registry is still empty.
+ * <p><b>When this runs.</b> Implements {@link SmartInitializingSingleton} so provisioning fires
+ * after every singleton bean — including {@code RqueueMessageListenerContainer} — has finished
+ * its {@code afterPropertiesSet}, which is when {@link EndpointRegistry} is populated, and
+ * <em>before</em> {@code SmartLifecycle.start()} spawns the message pollers. Listening on
+ * {@code RqueueBootstrapEvent} would race against the pollers because that event fires
+ * <em>after</em> {@code doStart()} has already submitted them, and a poll on a not-yet-created
+ * stream surfaces as {@code stream not found [10059]}. {@code InitializingBean} would be too
+ * early — the registry is still empty when this bean's own {@code afterPropertiesSet} would run.
  *
  * <p><b>What it walks.</b> For every queue in {@link EndpointRegistry#getActiveQueueDetails()}:
  * <ul>
@@ -66,12 +68,8 @@ import org.springframework.context.ApplicationListener;
  *       single batch of {@code nats stream add} commands rather than chase failures one queue
  *       at a time.
  * </ul>
- *
- * <p>This class consumes {@link RqueueBootstrapEvent} via {@link ApplicationListener} rather
- * than {@code @EventListener} so it works under both Spring Boot and plain Spring without
- * pulling in a stereotype scan.
  */
-public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapEvent> {
+public class NatsStreamValidator implements SmartInitializingSingleton {
 
   private static final Logger log = Logger.getLogger(NatsStreamValidator.class.getName());
 
@@ -84,10 +82,7 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
   }
 
   @Override
-  public void onApplicationEvent(RqueueBootstrapEvent event) {
-    if (!event.isStart()) {
-      return; // shutdown event; nothing to provision
-    }
+  public void afterSingletonsInstantiated() {
     List<QueueDetail> queues = EndpointRegistry.getActiveQueueDetails();
     if (queues.isEmpty()) {
       log.log(Level.FINE, "NatsStreamValidator: no active queues registered; nothing to do");

@@ -1,6 +1,6 @@
 <div>
    <img  align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue-core/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
-   <h1 style="float:left">Rqueue: Redis-Backed Job Queue and Scheduler for Spring and Spring Boot</h1>
+   <h1 style="float:left">Rqueue: Job Queue and Scheduler for Spring and Spring Boot (Redis &amp; NATS)</h1>
 </div>
 
 [![Coverage Status](https://coveralls.io/repos/github/sonus21/rqueue/badge.svg?branch=master)](https://coveralls.io/github/sonus21/rqueue?branch=master)
@@ -8,10 +8,10 @@
 [![Javadoc](https://javadoc.io/badge2/com.github.sonus21/rqueue-core/javadoc.svg)](https://javadoc.io/doc/com.github.sonus21/rqueue-core)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**Rqueue** is a Redis-backed job queue and producer-consumer system for Spring and Spring Boot. It
-supports both producers and consumers for background jobs, scheduled tasks, and event-driven
-workflows, similar to Sidekiq or Celery, but fully integrated into the Spring programming model with
-annotation-driven APIs and minimal setup.
+**Rqueue** is a job queue and producer-consumer system for Spring and Spring Boot with pluggable
+broker backends — **Redis** (default) and **NATS JetStream**. It supports producers and consumers
+for background jobs, scheduled tasks, and event-driven workflows, similar to Sidekiq or Celery,
+fully integrated into the Spring programming model with annotation-driven APIs and minimal setup.
 
 <br/>
 
@@ -49,19 +49,21 @@ annotation-driven APIs and minimal setup.
   * Monitor in-flight, queued, and scheduled messages with metrics
   * Use the built-in web dashboard for queue visibility and latency insights
 
-* **Redis and platform support**
+* **Backend and platform support**
+  * Switch backends with a single property (`rqueue.backend=redis|nats`)
   * Use a separate Redis setup for Rqueue if needed
   * Support Redis standalone, Sentinel, and Cluster setups
   * Work with Lettuce for Redis Cluster
   * Support reactive Redis and Spring WebFlux
+  * Use NATS JetStream as a drop-in Redis replacement (add `rqueue-nats` and set `rqueue.backend=nats`)
 
 ### Requirements
 
 * Spring 5+, 6+, 7+
-* Java 1.8+,17, 21
-* Spring boot 2+,3+,4+
-* Lettuce client for Redis cluster
-* Read master preference for Redis cluster
+* Java 1.8+, 17, 21
+* Spring Boot 2+, 3+, 4+
+* **Redis backend (default):** Lettuce client; read-master preference for Redis Cluster
+* **NATS backend:** NATS Server 2.2+ with JetStream enabled (`nats-server -js`); `rqueue-nats` on the classpath
 
 ## Getting Started
 
@@ -94,6 +96,40 @@ from [Maven central](https://search.maven.org/search?q=g:com.github.sonus21%20AN
     ```
 
   No additional configurations are required, only dependency is required.
+
+##### Spring Boot with NATS backend
+
+To use NATS JetStream instead of Redis, add `rqueue-nats` alongside the starter and set
+`rqueue.backend=nats` in `application.properties`:
+
+* Gradle
+  ```groovy
+  implementation 'com.github.sonus21:rqueue-spring-boot-starter:4.0.0-RELEASE'
+  implementation 'com.github.sonus21:rqueue-nats:4.0.0-RELEASE'
+  ```
+* Maven
+  ```xml
+  <dependency>
+      <groupId>com.github.sonus21</groupId>
+      <artifactId>rqueue-spring-boot-starter</artifactId>
+      <version>4.0.0-RELEASE</version>
+  </dependency>
+  <dependency>
+      <groupId>com.github.sonus21</groupId>
+      <artifactId>rqueue-nats</artifactId>
+      <version>4.0.0-RELEASE</version>
+  </dependency>
+  ```
+
+Then in `application.properties`:
+```properties
+rqueue.backend=nats
+rqueue.nats.connection.url=nats://localhost:4222
+```
+
+No `RedisConnectionFactory` bean is required. Start a JetStream-enabled NATS server with
+`nats-server -js` and the application is ready. See the [NATS backend](#nats-backend) section
+below for streams, KV buckets, and advanced configuration.
 
 ---
 
