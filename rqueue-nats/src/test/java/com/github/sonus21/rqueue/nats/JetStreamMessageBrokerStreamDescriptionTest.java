@@ -74,10 +74,7 @@ class JetStreamMessageBrokerStreamDescriptionTest {
     f.broker.onQueueRegistered(queueNamed("orders"));
     verify(f.provisioner)
         .ensureStream(
-            eq("rqueue-js-orders"),
-            anyList(),
-            eq(QueueType.QUEUE),
-            eq("rqueue queue: orders"));
+            eq("rqueue-js-orders"), anyList(), eq(QueueType.QUEUE), eq("rqueue queue: orders"));
   }
 
   @Test
@@ -89,10 +86,7 @@ class JetStreamMessageBrokerStreamDescriptionTest {
         queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build());
     verify(f.provisioner)
         .ensureStream(
-            eq("rqueue-js-orders"),
-            anyList(),
-            any(QueueType.class),
-            eq("rqueue queue: orders"));
+            eq("rqueue-js-orders"), anyList(), any(QueueType.class), eq("rqueue queue: orders"));
   }
 
   @Test

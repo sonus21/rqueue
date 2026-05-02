@@ -215,8 +215,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public void enqueue(QueueDetail q, String priority, RqueueMessage m) {
     String subject = subjectFor(q, priority);
     String stream = streamFor(q, priority);
-    provisioner.ensureStream(
-        stream, List.of(subject), q.getType(), streamDescription(q, priority));
+    provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q, priority));
     Headers headers = new Headers();
     if (m.getId() != null) {
       headers.add("Nats-Msg-Id", m.getId());
@@ -568,13 +567,12 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     for (int i = 0; i < queueName.length(); i++) {
       char c = queueName.charAt(i);
       if (c == '.' || c == '*' || c == '>' || Character.isWhitespace(c)) {
-        throw new IllegalArgumentException(
-            "Queue name '"
-                + queueName
-                + "' contains illegal character '"
-                + c
-                + "' for the NATS backend. Subject hierarchy ('.'), wildcards ('*', '>') and"
-                + " whitespace are not allowed in queue names — use '-' or '_' instead.");
+        throw new IllegalArgumentException("Queue name '"
+            + queueName
+            + "' contains illegal character '"
+            + c
+            + "' for the NATS backend. Subject hierarchy ('.'), wildcards ('*', '>') and"
+            + " whitespace are not allowed in queue names — use '-' or '_' instead.");
       }
     }
   }
