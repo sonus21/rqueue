@@ -111,7 +111,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
       throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
-    factory.setRedisConnectionFactory(redisConnectionFactory);
+    factory.setMessageBroker(messageBroker);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(
         messageAutoConfig,
