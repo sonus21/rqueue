@@ -26,8 +26,10 @@ class JetStreamMessageBrokerEnqueueAckIT extends AbstractJetStreamIT {
   @Test
   void enqueuePopAck_drainsStream() throws Exception {
     QueueDetail q = mockQueue("eaq-" + System.nanoTime());
+    RqueueNatsConfig cfg = RqueueNatsConfig.defaults();
+    cfg.getStreamDefaults().setRetention(io.nats.client.api.RetentionPolicy.WorkQueue);
     try (JetStreamMessageBroker broker =
-        JetStreamMessageBroker.builder().connection(connection).build()) {
+        JetStreamMessageBroker.builder().connection(connection).config(cfg).build()) {
       List<RqueueMessage> sent = new ArrayList<>();
       for (int i = 0; i < 10; i++) {
         RqueueMessage m =
