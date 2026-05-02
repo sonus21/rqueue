@@ -25,8 +25,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.github.sonus21.rqueue.core.spi.Capabilities;
-
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -35,6 +33,7 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
@@ -94,7 +93,9 @@ class ReactiveRqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
     FieldUtils.writeField(enqueuer, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(
         enqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
-    lenient().when(messageBroker.capabilities()).thenReturn(new Capabilities(true, false, false, true));
+    lenient()
+        .when(messageBroker.capabilities())
+        .thenReturn(new Capabilities(true, false, false, true));
     lenient()
         .when(rqueueMessageMetadataService.saveReactive(any(), any(), anyBoolean()))
         .thenReturn(Mono.just(Boolean.TRUE));
