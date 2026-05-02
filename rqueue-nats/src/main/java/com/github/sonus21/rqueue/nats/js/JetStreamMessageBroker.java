@@ -14,6 +14,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
@@ -159,13 +160,29 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         : subjectFor(q) + config.getDlqSubjectSuffix();
   }
 
+  /** Stream description shown in {@code nats stream info} so operators can map back to rqueue. */
+  private static String streamDescription(QueueDetail q) {
+    return "rqueue queue: " + q.getName();
+  }
+
+  /** Stream description for the priority sub-stream. */
+  private static String streamDescription(QueueDetail q, String priority) {
+    return priority == null || priority.isEmpty()
+        ? streamDescription(q)
+        : "rqueue queue: " + q.getName() + " (priority=" + priority + ")";
+  }
+
+  private static String dlqStreamDescription(QueueDetail q) {
+    return "rqueue DLQ for queue: " + q.getName();
+  }
+
   // ---- MessageBroker -----------------------------------------------------
 
   @Override
   public void enqueue(QueueDetail q, RqueueMessage m) {
     String subject = subjectFor(q);
     String stream = streamFor(q);
-    provisioner.ensureStream(stream, List.of(subject), q.getType());
+    provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
     Headers headers = new Headers();
     if (m.getId() != null) {
       headers.add("Nats-Msg-Id", m.getId());
@@ -198,7 +215,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public void enqueue(QueueDetail q, String priority, RqueueMessage m) {
     String subject = subjectFor(q, priority);
     String stream = streamFor(q, priority);
-    provisioner.ensureStream(stream, List.of(subject), q.getType());
+    provisioner.ensureStream(
+        stream, List.of(subject), q.getType(), streamDescription(q, priority));
     Headers headers = new Headers();
     if (m.getId() != null) {
       headers.add("Nats-Msg-Id", m.getId());
@@ -243,7 +261,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     String subject = subjectFor(q);
     String stream = streamFor(q);
     try {
-      provisioner.ensureStream(stream, List.of(subject), q.getType());
+      provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
     } catch (Exception e) {
       return Mono.error(new RqueueNatsException(
           "Failed to provision stream for reactive enqueue id="
@@ -431,7 +449,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       headers.add("Nats-Msg-Id", updated.getId() + "-dlq");
     }
     try {
-      provisioner.ensureStream(dlqStream, List.of(dlqSubject));
+      provisioner.ensureStream(
+          dlqStream, List.of(dlqSubject), QueueType.QUEUE, "rqueue DLQ for queue: " + targetQueue);
       byte[] payload = serdes.serialize(updated);
       js.publish(dlqSubject, headers, payload);
     } catch (IOException | JetStreamApiException e) {
@@ -528,7 +547,36 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public void onQueueRegistered(QueueDetail q) {
     String stream = streamFor(q);
     String subject = subjectFor(q);
-    provisioner.ensureStream(stream, List.of(subject), q.getType());
+    provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
+  }
+
+  /**
+   * NATS subjects use {@code .} as a hierarchy separator and stream / consumer names disallow it
+   * outright. A queue name like {@code "orders.us"} would (a) silently turn the publish subject
+   * into a two-level token tree and (b) make {@code rqueue-js-orders.us} an invalid stream name —
+   * the JetStream API would reject it with an opaque error at first publish. Reject the name at
+   * registration so the failure is loud and local.
+   *
+   * <p>{@code *} and {@code &gt;} are also illegal in subject tokens (they're NATS wildcards), and
+   * whitespace is rejected by the server; check those too while we're here.
+   */
+  @Override
+  public void validateQueueName(String queueName) {
+    if (queueName == null || queueName.isEmpty()) {
+      return;
+    }
+    for (int i = 0; i < queueName.length(); i++) {
+      char c = queueName.charAt(i);
+      if (c == '.' || c == '*' || c == '>' || Character.isWhitespace(c)) {
+        throw new IllegalArgumentException(
+            "Queue name '"
+                + queueName
+                + "' contains illegal character '"
+                + c
+                + "' for the NATS backend. Subject hierarchy ('.'), wildcards ('*', '>') and"
+                + " whitespace are not allowed in queue names — use '-' or '_' instead.");
+      }
+    }
   }
 
   @Override
@@ -578,7 +626,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public void provisionDlq(QueueDetail q) {
     // Explicit call — always provision, bypassing the autoCreateDlqStream flag.
     // That flag gates automatic provisioning at bootstrap; here the caller is explicitly opting in.
-    provisioner.ensureStream(dlqStreamFor(q), List.of(dlqSubjectFor(q)));
+    provisioner.ensureStream(
+        dlqStreamFor(q), List.of(dlqSubjectFor(q)), QueueType.QUEUE, dlqStreamDescription(q));
   }
 
   /**

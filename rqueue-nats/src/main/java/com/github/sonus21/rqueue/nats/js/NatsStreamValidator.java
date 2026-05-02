@@ -165,7 +165,8 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
 
   private int tryEnsure(List<String> failures, String streamName, String subject, QueueDetail q) {
     try {
-      provisioner.ensureStream(streamName, List.of(subject), q.getType());
+      provisioner.ensureStream(
+          streamName, List.of(subject), q.getType(), "rqueue queue: " + q.getName());
       return 1;
     } catch (RqueueNatsException e) {
       failures.add(streamName + " (subject " + subject + "): " + rootCause(e));

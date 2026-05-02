@@ -54,6 +54,18 @@ public interface MessageBroker {
   default void onQueueRegistered(QueueDetail q) {}
 
   /**
+   * Validate the queue name against backend-specific rules. Called from every queue-registration
+   * path ({@code RqueueEndpointManager.registerQueue} and the {@code @RqueueListener} bootstrap)
+   * before the queue is added to the registry, so an illegal name fails fast with a clear error
+   * instead of surfacing later as an opaque NATS / driver-side rejection.
+   *
+   * <p>Default is a no-op — backends like Redis accept any non-empty name.
+   *
+   * @throws IllegalArgumentException if {@code queueName} is not legal for this backend
+   */
+  default void validateQueueName(String queueName) {}
+
+  /**
    * Reactive variant of {@link #enqueue(QueueDetail, RqueueMessage)}. The default falls back to the
    * blocking implementation wrapped in {@code Mono.fromRunnable}; backends with native async
    * publish APIs (e.g. JetStream) should override this to avoid blocking the calling thread.

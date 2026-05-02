@@ -204,6 +204,7 @@ abstract class BaseMessageSender {
 
   protected void registerQueueInternal(String queueName, QueueType type, String... priorities) {
     validateQueue(queueName);
+    messageBroker.validateQueueName(queueName);
     notNull(priorities, "priorities cannot be null");
     Map<String, Integer> priorityMap = new HashMap<>();
     priorityMap.put(DEFAULT_PRIORITY_KEY, 1);

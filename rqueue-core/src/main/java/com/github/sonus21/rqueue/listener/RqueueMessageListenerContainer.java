@@ -294,9 +294,15 @@ public class RqueueMessageListenerContainer
   private void initializeQueueRegistry() {
     log.info("Initializing queue registry");
     EndpointRegistry.delete();
+    // Validate every @RqueueListener queue name against backend rules before registering, so
+    // illegal names (e.g. dots when running on NATS) fail loudly at startup instead of surfacing
+    // as opaque driver errors at first publish.
     for (MappingInformation mappingInformation :
         rqueueMessageHandler.getHandlerMethodMap().keySet()) {
       for (String queue : mappingInformation.getQueueNames()) {
+        if (messageBroker != null) {
+          messageBroker.validateQueueName(queue);
+        }
         for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
           EndpointRegistry.register(queueDetail);
         }

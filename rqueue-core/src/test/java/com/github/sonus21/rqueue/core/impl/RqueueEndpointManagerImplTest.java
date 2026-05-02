@@ -29,6 +29,7 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
@@ -185,5 +186,30 @@ class RqueueEndpointManagerImplTest extends TestBase {
         .when(rqueueUtilityService)
         .pauseUnpauseQueue(request);
     assertFalse(rqueueEndpointManager.pauseUnpauseQueue(queue, priorities[0], false));
+  }
+
+  /**
+   * registerQueue must consult {@link MessageBroker#validateQueueName(String)}; an exception there
+   * must propagate so callers fail fast on illegal names (e.g. dots when running on NATS).
+   */
+  @Test
+  void registerQueue_propagatesBrokerValidationFailure() throws IllegalAccessException {
+    MessageBroker rejectingBroker = new RedisMessageBroker(messageTemplate) {
+      @Override
+      public void validateQueueName(String queueName) {
+        if (queueName.contains(".")) {
+          throw new IllegalArgumentException("dot rejected: " + queueName);
+        }
+      }
+    };
+    RqueueEndpointManager mgr = new RqueueEndpointManagerImpl(
+        messageTemplate, rejectingBroker, messageConverter, messageHeaders);
+    RqueueConfig rqueueConfig = new RqueueConfig(redisConnectionFactory, null, false, 1);
+    FieldUtils.writeField(mgr, "rqueueConfig", rqueueConfig, true);
+
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> mgr.registerQueue("orders.us"));
+    assertTrue(ex.getMessage().contains("orders.us"));
+    assertFalse(mgr.isQueueRegistered("orders.us"));
   }
 }

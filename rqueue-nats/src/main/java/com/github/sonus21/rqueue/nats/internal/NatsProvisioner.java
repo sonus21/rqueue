@@ -125,7 +125,12 @@ public class NatsProvisioner {
    * use {@link #ensureStream(String, List, QueueType)} instead.
    */
   public void ensureStream(String streamName, List<String> subjects) {
-    ensureStream(streamName, subjects, QueueType.QUEUE);
+    ensureStream(streamName, subjects, QueueType.QUEUE, null);
+  }
+
+  /** See {@link #ensureStream(String, List, QueueType, String)}. */
+  public void ensureStream(String streamName, List<String> subjects, QueueType queueType) {
+    ensureStream(streamName, subjects, queueType, null);
   }
 
   /**
@@ -138,11 +143,16 @@ public class NatsProvisioner {
    *       independent durable consumer group receives all messages; stream/fan-out semantics.
    * </ul>
    *
+   * <p>{@code description} is forwarded to JetStream as the stream's description (visible via
+   * {@code nats stream info}). Callers should pass the rqueue queue name so operators can map a
+   * stream back to the queue that created it; pass {@code null} to skip.
+   *
    * <p>Hits the NATS backend at most once per stream name per process lifetime; subsequent calls
    * return immediately from the in-process cache. If the stream already exists with a different
    * retention policy, a WARNING is logged and the existing config is left untouched.
    */
-  public void ensureStream(String streamName, List<String> subjects, QueueType queueType) {
+  public void ensureStream(
+      String streamName, List<String> subjects, QueueType queueType, String description) {
     if (streamsDone.contains(streamName)) {
       return;
     }
@@ -169,6 +179,9 @@ public class NatsProvisioner {
               .retentionPolicy(desired)
               .duplicateWindow(sd.getDuplicateWindow())
               .compressionOption(CompressionOption.S2);
+          if (description != null && !description.isEmpty()) {
+            b.description(description);
+          }
           if (sd.getMaxMsgs() > 0) {
             b.maxMessages(sd.getMaxMsgs());
           }
