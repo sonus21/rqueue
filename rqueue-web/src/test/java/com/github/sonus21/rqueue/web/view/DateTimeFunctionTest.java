@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.utils.pebble.DateTimeFunction;
+import com.github.sonus21.rqueue.web.pebble.DateTimeFunction;
 import java.util.Collections;
 import java.util.TimeZone;
 import org.junit.jupiter.api.BeforeAll;

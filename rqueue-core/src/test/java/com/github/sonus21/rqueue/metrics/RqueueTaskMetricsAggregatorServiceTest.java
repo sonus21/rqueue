@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service;
+package com.github.sonus21.rqueue.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -88,12 +88,12 @@ class RqueueTaskMetricsAggregatorServiceTest extends TestBase {
   @Mock
   private MessageBroker messageBroker;
 
-  private RqueueJobMetricsAggregatorService rqueueJobMetricsAggregatorService;
+  private RqueueMetricsAggregatorService rqueueJobMetricsAggregatorService;
 
   @BeforeEach
   public void initService() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueJobMetricsAggregatorService = new RqueueJobMetricsAggregatorService(
+    rqueueJobMetricsAggregatorService = new RqueueMetricsAggregatorService(
         rqueueConfig, rqueueWebConfig, rqueueLockManager, rqueueQStatsDao);
     doReturn(true).when(rqueueWebConfig).isCollectListenerStats();
     doReturn(1).when(rqueueWebConfig).getStatsAggregatorThreadCount();

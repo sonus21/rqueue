@@ -21,6 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
+import com.github.sonus21.rqueue.web.pebble.DateTimeFunction;
+import com.github.sonus21.rqueue.web.pebble.DurationFunction;
+import com.github.sonus21.rqueue.web.pebble.ReadableDateTimeFunction;
+import com.github.sonus21.rqueue.web.pebble.RqueuePebbleExtension;
 import io.pebbletemplates.pebble.extension.Function;
 import java.util.Collections;
 import java.util.Map;

@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service.impl;
+package com.github.sonus21.rqueue.web.service;
 
 import static com.github.sonus21.rqueue.utils.StringUtils.clean;
 import static com.google.common.collect.Lists.newArrayList;
@@ -47,8 +47,8 @@ import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
+import com.github.sonus21.rqueue.web.RqueueQDetailService;
+import com.github.sonus21.rqueue.web.RqueueSystemManagerService;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;

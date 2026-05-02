@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service;
+package com.github.sonus21.rqueue.web;
 
 import org.springframework.ui.Model;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Sonu Kumar
+ * Copyright (c) 2021-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -14,29 +14,32 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils.pebble;
+package com.github.sonus21.rqueue.web.pebble;
 
-import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import io.pebbletemplates.pebble.extension.Function;
 import io.pebbletemplates.pebble.template.EvaluationContext;
 import io.pebbletemplates.pebble.template.PebbleTemplate;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class DurationFunction implements Function {
+public class DefaultFunction implements Function {
 
-  public static final String FUNCTION_NAME = "duration";
+  public static final String FUNCTION_NAME = "default";
 
   @Override
   public Object execute(
       Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber) {
-    Long milli = (Long) args.get("milli");
-    return DateTimeUtils.formatMilliToCompactDuration(milli);
+    Object src = args.get("src");
+    Object dst = args.get("dst");
+    if (src == null) {
+      return dst;
+    }
+    return src;
   }
 
   @Override
   public List<String> getArgumentNames() {
-    return Collections.singletonList("milli");
+    return Arrays.asList("src", "dst");
   }
 }

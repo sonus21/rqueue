@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service.impl;
+package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.exception.ProcessingException;
@@ -27,7 +27,7 @@ import com.github.sonus21.rqueue.serdes.RqueueSerDes;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
-import com.github.sonus21.rqueue.web.service.RqueueJobService;
+import com.github.sonus21.rqueue.web.RqueueJobService;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;

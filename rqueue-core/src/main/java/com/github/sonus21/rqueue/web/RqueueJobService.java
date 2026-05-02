@@ -14,15 +14,15 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service;
+package com.github.sonus21.rqueue.web;
 
-import com.github.sonus21.rqueue.models.request.ChartDataRequest;
-import com.github.sonus21.rqueue.models.response.ChartDataResponse;
+import com.github.sonus21.rqueue.exception.ProcessingException;
+import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import reactor.core.publisher.Mono;
 
-public interface RqueueDashboardChartService {
+public interface RqueueJobService {
 
-  ChartDataResponse getDashboardChartData(ChartDataRequest chartDataRequest);
+  DataViewResponse getJobs(String messageId) throws ProcessingException;
 
-  Mono<ChartDataResponse> getReactiveDashBoardData(ChartDataRequest chartDataRequest);
+  Mono<DataViewResponse> getReactiveJobs(String messageId) throws ProcessingException;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Sonu Kumar
+ * Copyright (c) 2019-2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -14,29 +14,39 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils.pebble;
+package com.github.sonus21.rqueue.web.pebble;
 
-import com.github.sonus21.rqueue.utils.DateTimeUtils;
+import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
+import com.github.sonus21.rqueue.utils.Constants;
 import io.pebbletemplates.pebble.extension.Function;
 import io.pebbletemplates.pebble.template.EvaluationContext;
 import io.pebbletemplates.pebble.template.PebbleTemplate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.util.CollectionUtils;
 
-public class ReadableDateTimeFunction implements Function {
+@SuppressWarnings("unchecked")
+public class DeadLetterQueuesFunction implements Function {
 
-  public static final String FUNCTION_NAME = "readableTime";
+  public static final String FUNCTION_NAME = "dlq";
 
   @Override
   public Object execute(
       Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber) {
-    Long milli = (Long) args.get("milli");
-    return DateTimeUtils.formatMilliToReadableString(milli);
+    List<DeadLetterQueue> deadLetterQueues = (List<DeadLetterQueue>) args.get("queues");
+
+    if (CollectionUtils.isEmpty(deadLetterQueues)) {
+      return "";
+    }
+    List<String> queues =
+        deadLetterQueues.stream().map(DeadLetterQueue::getName).collect(Collectors.toList());
+    return String.join(Constants.Comma, queues);
   }
 
   @Override
   public List<String> getArgumentNames() {
-    return Collections.singletonList("milli");
+    return Collections.singletonList("queues");
   }
 }

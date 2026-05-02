@@ -43,9 +43,6 @@ dependencies {
     // Broker-impl module mirroring rqueue-nats. spring-data-redis is inherited as `api` from
     // the root subprojects block, so consumers of rqueue-redis transitively get the Redis SDK.
     api project(":rqueue-core")
-    // Redis impls implement web service interfaces declared in rqueue-web (e.g. RqueueQDetailService).
-    // After the planned repository-interface refactor this dep can drop back to api(":rqueue-core").
-    api project(":rqueue-web")
     testImplementation project(":rqueue-test-util")
     testImplementation "io.lettuce:lettuce-core:${lettuceVersion}"
     testImplementation "io.projectreactor:reactor-test:${projectReactorReactorTestVersion}"

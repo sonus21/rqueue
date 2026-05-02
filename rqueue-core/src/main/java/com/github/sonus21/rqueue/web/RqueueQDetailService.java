@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service;
+package com.github.sonus21.rqueue.web;
 
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;

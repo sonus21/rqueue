@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils.pebble;
+package com.github.sonus21.rqueue.web.pebble;
 
 import io.pebbletemplates.pebble.error.LoaderException;
 import io.pebbletemplates.pebble.loader.Loader;

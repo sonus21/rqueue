@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils.pebble;
+package com.github.sonus21.rqueue.web.pebble;
 
 import io.pebbletemplates.pebble.extension.AbstractExtension;
 import io.pebbletemplates.pebble.extension.Function;

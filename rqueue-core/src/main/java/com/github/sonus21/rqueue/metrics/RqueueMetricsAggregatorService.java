@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service;
+package com.github.sonus21.rqueue.metrics;
 
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
@@ -57,7 +57,7 @@ import org.springframework.util.CollectionUtils;
 
 @Component
 @Slf4j
-public class RqueueJobMetricsAggregatorService
+public class RqueueMetricsAggregatorService
     implements ApplicationListener<RqueueExecutionEvent>, DisposableBean, SmartLifecycle {
 
   private final RqueueConfig rqueueConfig;
@@ -73,7 +73,7 @@ public class RqueueJobMetricsAggregatorService
   private List<Future<?>> eventAggregatorTasks;
 
   @Autowired
-  public RqueueJobMetricsAggregatorService(
+  public RqueueMetricsAggregatorService(
       RqueueConfig rqueueConfig,
       RqueueWebConfig rqueueWebConfig,
       RqueueLockManager rqueueLockManager,

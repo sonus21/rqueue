@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service.impl;
+package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
@@ -29,9 +29,9 @@ import com.github.sonus21.rqueue.models.registry.RqueueWorkerView;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.service.RqueueUtilityService;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.web.service.RqueueQDetailService;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
-import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
+import com.github.sonus21.rqueue.web.RqueueQDetailService;
+import com.github.sonus21.rqueue.web.RqueueSystemManagerService;
+import com.github.sonus21.rqueue.web.RqueueViewControllerService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;

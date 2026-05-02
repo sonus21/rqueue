@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2026 Sonu Kumar
+ * Copyright (c) 2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils.pebble;
+package com.github.sonus21.rqueue.web.pebble;
 
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import io.pebbletemplates.pebble.extension.Function;
@@ -24,15 +24,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class DateTimeFunction implements Function {
+public class ReadableDateTimeFunction implements Function {
 
-  public static final String FUNCTION_NAME = "time";
+  public static final String FUNCTION_NAME = "readableTime";
 
   @Override
   public Object execute(
       Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber) {
     Long milli = (Long) args.get("milli");
-    return DateTimeUtils.formatMilliToString(milli);
+    return DateTimeUtils.formatMilliToReadableString(milli);
   }
 
   @Override

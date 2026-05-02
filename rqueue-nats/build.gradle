@@ -45,9 +45,6 @@ dependencies {
     // rqueue-spring-boot-starter (auto-config), both of which reference this module's
     // types via compileOnly and gate them behind @ConditionalOnClass(JetStream.class).
     api project(":rqueue-core")
-    // NATS-shaped web service impls (NatsRqueueQDetailService, etc.) implement interfaces
-    // declared in rqueue-web. Mirrors how rqueue-redis pulls rqueue-web for the same reason.
-    api project(":rqueue-web")
     api "io.nats:jnats:${natsVersion}"
     testImplementation project(":rqueue-test-util")
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"

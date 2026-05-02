@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.utils.condition.ReactiveDisabled;
-import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
+import com.github.sonus21.rqueue.web.RqueueViewControllerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Locale;

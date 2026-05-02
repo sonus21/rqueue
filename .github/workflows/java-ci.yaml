@@ -463,3 +463,22 @@ jobs:
             build/reports/jacoco/test/jacocoTestReport.xml
             build/reports/jacoco/coverageReportOnly/html
           if-no-files-found: ignore
+
+      - name: Push coverage to Coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_NUMBER: ${{ github.run_id }}
+          CI_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if [ -z "$COVERALLS_REPO_TOKEN" ]; then
+            echo "ERROR: COVERALLS_REPO_TOKEN is not set"
+            exit 1
+          fi
+          ./gradlew coverallsJacoco -i
+          echo "=== Coveralls request payload ==="
+          if [ -f build/coveralls-request.json ]; then
+            cat build/coveralls-request.json | jq . 2>/dev/null || cat build/coveralls-request.json
+          else
+            echo "No coveralls-request.json found"
+          fi
