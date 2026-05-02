@@ -39,7 +39,8 @@ import reactor.core.publisher.Mono;
 @Conditional(NatsBackendCondition.class)
 public class NatsRqueueUtilityService implements RqueueUtilityService {
 
-  @Autowired private RqueueWebConfig rqueueWebConfig;
+  @Autowired
+  private RqueueWebConfig rqueueWebConfig;
 
   private static <T extends BaseResponse> T notSupported(T response, String op) {
     response.setCode(1);
@@ -152,7 +153,8 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
         for (int date : dates) {
           if (date == i) {
             String suffix = i == 1 ? "day" : "days";
-            dateSelector.add(new Pair<>(String.valueOf(date), String.format("Last %d %s", date, suffix)));
+            dateSelector.add(
+                new Pair<>(String.valueOf(date), String.format("Last %d %s", date, suffix)));
             break;
           }
         }
@@ -165,7 +167,8 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
   private List<Pair<String, String>> getWeeklyDateCounter() {
     List<Pair<String, String>> dateSelector = new LinkedList<>();
     dateSelector.add(new Pair<>("0", "Select"));
-    int nWeek = (int) Math.ceil(rqueueWebConfig.getHistoryDay() / (double) Constants.DAYS_IN_A_WEEK);
+    int nWeek =
+        (int) Math.ceil(rqueueWebConfig.getHistoryDay() / (double) Constants.DAYS_IN_A_WEEK);
     for (int week = 1; week <= nWeek; week++) {
       String suffix = week == 1 ? "week" : "weeks";
       dateSelector.add(new Pair<>(String.valueOf(week), String.format("Last %d %s", week, suffix)));
@@ -176,10 +179,12 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
   private List<Pair<String, String>> getMonthlyDateCounter() {
     List<Pair<String, String>> dateSelector = new LinkedList<>();
     dateSelector.add(new Pair<>("0", "Select"));
-    int nMonths = (int) Math.ceil(rqueueWebConfig.getHistoryDay() / (double) Constants.DAYS_IN_A_MONTH);
+    int nMonths =
+        (int) Math.ceil(rqueueWebConfig.getHistoryDay() / (double) Constants.DAYS_IN_A_MONTH);
     for (int month = 1; month <= nMonths; month++) {
       String suffix = month == 1 ? "month" : "months";
-      dateSelector.add(new Pair<>(String.valueOf(month), String.format("Last %d %s", month, suffix)));
+      dateSelector.add(
+          new Pair<>(String.valueOf(month), String.format("Last %d %s", month, suffix)));
     }
     return dateSelector;
   }

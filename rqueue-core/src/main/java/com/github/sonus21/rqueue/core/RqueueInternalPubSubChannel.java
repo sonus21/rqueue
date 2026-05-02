@@ -118,7 +118,8 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
             handlePauseEvent(rqueuePubSubEvent.messageAs(serDes, PauseUnpauseQueueRequest.class));
             break;
           case QUEUE_CRUD:
-            rqueueBeanProvider.getRqueueSystemConfigDao()
+            rqueueBeanProvider
+                .getRqueueSystemConfigDao()
                 .clearCacheByName(rqueuePubSubEvent.messageAs(serDes, String.class));
             break;
           default:

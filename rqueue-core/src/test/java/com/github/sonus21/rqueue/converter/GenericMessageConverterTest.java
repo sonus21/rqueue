@@ -17,14 +17,12 @@
 package com.github.sonus21.rqueue.converter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.serdes.SerializationUtils;
-import tools.jackson.databind.ObjectMapper;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -50,6 +48,7 @@ import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.deser.std.StdDeserializer;
 import tools.jackson.databind.module.SimpleModule;
@@ -179,31 +178,31 @@ class GenericMessageConverterTest extends TestBase {
     ObjectMapper mapper = SerializationUtils.getObjectMapper();
 
     Comment unicodeComment = new Comment("u-1", "Héllo 你好 🎉");
-    Comment asciiComment   = new Comment("a-1", "plain ascii");
-    Email   specialEmail   = new Email("e-2", "subject: re: hello & goodbye");
+    Comment asciiComment = new Comment("a-1", "plain ascii");
+    Email specialEmail = new Email("e-2", "subject: re: hello & goodbye");
 
     // 5 cases: class name is straightforward for non-generic POJOs
     Object[][] cases = {
-        {comment,       comment.getClass().getName()},
-        {email,         email.getClass().getName()},
-        {unicodeComment, unicodeComment.getClass().getName()},
-        {asciiComment,  asciiComment.getClass().getName()},
-        {specialEmail,  specialEmail.getClass().getName()},
+      {comment, comment.getClass().getName()},
+      {email, email.getClass().getName()},
+      {unicodeComment, unicodeComment.getClass().getName()},
+      {asciiComment, asciiComment.getClass().getName()},
+      {specialEmail, specialEmail.getClass().getName()},
     };
 
     for (Object[] c : cases) {
-      Object payload   = c[0];
+      Object payload = c[0];
       String className = (String) c[1];
 
       // Build old-format JSON: {"msg":"<json-string>","name":"<className>"}
-      String innerJson  = mapper.writeValueAsString(payload);
+      String innerJson = mapper.writeValueAsString(payload);
       String oldFormatJson = mapper.writeValueAsString(new OldMsg(innerJson, className));
 
-      Object restored = genericMessageConverter.fromMessage(
-          new GenericMessage<>(oldFormatJson), null);
+      Object restored =
+          genericMessageConverter.fromMessage(new GenericMessage<>(oldFormatJson), null);
 
-      assertEquals(payload, restored,
-          "old String-format data must deserialise correctly for " + className);
+      assertEquals(
+          payload, restored, "old String-format data must deserialise correctly for " + className);
     }
   }
 

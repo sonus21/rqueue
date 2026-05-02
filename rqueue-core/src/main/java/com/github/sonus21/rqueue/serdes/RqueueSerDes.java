@@ -9,7 +9,6 @@
  */
 package com.github.sonus21.rqueue.serdes;
 
-import tools.jackson.databind.JavaType;
 import java.io.IOException;
 
 /**

@@ -35,8 +35,12 @@ class JetStreamMessageBrokerDelayThrowsTest {
     JetStream js = mock(JetStream.class);
     JetStreamManagement jsm = mock(JetStreamManagement.class);
     return new JetStreamMessageBroker(
-        conn, js, jsm, RqueueNatsConfig.defaults(),
-        new RqJacksonSerDes(SerializationUtils.getObjectMapper()), null);
+        conn,
+        js,
+        jsm,
+        RqueueNatsConfig.defaults(),
+        new RqJacksonSerDes(SerializationUtils.getObjectMapper()),
+        null);
   }
 
   @Test

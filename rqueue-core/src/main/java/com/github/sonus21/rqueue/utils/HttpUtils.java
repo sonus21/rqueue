@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.utils;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
 import java.net.URI;
@@ -24,9 +25,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 public final class HttpUtils {

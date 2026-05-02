@@ -65,9 +65,8 @@ class JetStreamMessageBrokerUnitTest {
     } catch (IOException | JetStreamApiException unreachable) {
       throw new AssertionError(unreachable);
     }
-    JetStreamMessageBroker broker =
-        new JetStreamMessageBroker(conn, js, jsm, config,
-            new RqJacksonSerDes(SerializationUtils.getObjectMapper()), null);
+    JetStreamMessageBroker broker = new JetStreamMessageBroker(
+        conn, js, jsm, config, new RqJacksonSerDes(SerializationUtils.getObjectMapper()), null);
     return new Fixture(conn, js, jsm, broker);
   }
 

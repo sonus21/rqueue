@@ -162,9 +162,11 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
     when(messageBroker.size(any(QueueDetail.class))).thenReturn(0L);
 
     List<Entry<NavTab, RedisDataDetail>> details = service.getQueueDataStructureDetail(queueConfig);
-    assertFalse(details.stream().anyMatch(e -> e.getKey() == NavTab.SCHEDULED),
+    assertFalse(
+        details.stream().anyMatch(e -> e.getKey() == NavTab.SCHEDULED),
         "scheduled nav tab should be hidden for NATS");
-    assertFalse(details.stream().anyMatch(e -> e.getKey() == NavTab.RUNNING),
+    assertFalse(
+        details.stream().anyMatch(e -> e.getKey() == NavTab.RUNNING),
         "running nav tab should be hidden for NATS (no processing ZSET)");
 
     List<NavTab> tabs = service.getNavTabs(queueConfig);

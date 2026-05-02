@@ -57,8 +57,8 @@ public class GenericMessageConverter implements SmartMessageConverter {
   private final SmartMessageSerDes smartMessageSerDes;
 
   public GenericMessageConverter() {
-    this.smartMessageSerDes = new SmartMessageSerDes(
-        SerializationUtils.getSerDes(), SerializationUtils.getTypeFactory());
+    this.smartMessageSerDes =
+        new SmartMessageSerDes(SerializationUtils.getSerDes(), SerializationUtils.getTypeFactory());
   }
 
   public GenericMessageConverter(RqueueSerDes serDes, RqueueTypeFactory typeFactory) {
@@ -131,6 +131,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
     @JsonSerialize(using = Utf8BytesSerializer.class)
     @JsonDeserialize(using = Utf8BytesDeserializer.class)
     private byte[] msg;
+
     private String name;
   }
 

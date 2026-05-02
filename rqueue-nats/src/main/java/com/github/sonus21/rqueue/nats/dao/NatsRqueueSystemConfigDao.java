@@ -51,7 +51,8 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
   private final com.github.sonus21.rqueue.serdes.RqueueSerDes serdes;
   private final ConcurrentHashMap<String, QueueConfig> cache = new ConcurrentHashMap<>();
 
-  public NatsRqueueSystemConfigDao(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
+  public NatsRqueueSystemConfigDao(
+      NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
     this.serdes = serdes;
   }

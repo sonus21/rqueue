@@ -21,8 +21,8 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.nats.AbstractJetStreamIT;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
-import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
 import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValueManagement;
@@ -47,7 +47,8 @@ class NatsRqueueMessageMetadataServiceIT extends AbstractJetStreamIT {
     }
     NatsProvisioner provisioner = new NatsProvisioner(
         connection, connection.jetStreamManagement(), RqueueNatsConfig.defaults());
-    svc = new NatsRqueueMessageMetadataService(provisioner, new RqJacksonSerDes(SerializationUtils.getObjectMapper()));
+    svc = new NatsRqueueMessageMetadataService(
+        provisioner, new RqJacksonSerDes(SerializationUtils.getObjectMapper()));
   }
 
   private RqueueMessage rqueueMessage(String queue, String id) {

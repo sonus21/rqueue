@@ -51,7 +51,8 @@ public class NatsRqueueJobDao implements RqueueJobDao {
   private final NatsProvisioner provisioner;
   private final com.github.sonus21.rqueue.serdes.RqueueSerDes serdes;
 
-  public NatsRqueueJobDao(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
+  public NatsRqueueJobDao(
+      NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
     this.serdes = serdes;
   }

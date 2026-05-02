@@ -248,11 +248,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
             ? e
             : new RqueueNatsException(
                 "Failed to enqueue message id="
-                + m.getId()
-                + " queue="
-                + q.getName()
-                + " subject="
-                + subject,
+                    + m.getId()
+                    + " queue="
+                    + q.getName()
+                    + " subject="
+                    + subject,
                 e))
         .then();
   }
@@ -673,8 +673,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
           management = connection.jetStreamManagement();
         }
         if (provisioner == null) {
-          provisioner = new NatsProvisioner(connection, management,
-              config != null ? config : RqueueNatsConfig.defaults());
+          provisioner = new NatsProvisioner(
+              connection, management, config != null ? config : RqueueNatsConfig.defaults());
         }
       } catch (IOException e) {
         throw new RqueueNatsException("Failed to derive JetStream context from connection", e);
@@ -685,8 +685,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       if (serdes == null) {
         serdes = new RqJacksonSerDes(SerializationUtils.getObjectMapper());
       }
-      return new JetStreamMessageBroker(connection, jetStream, management, config, serdes,
-          provisioner);
+      return new JetStreamMessageBroker(
+          connection, jetStream, management, config, serdes, provisioner);
     }
 
     /**

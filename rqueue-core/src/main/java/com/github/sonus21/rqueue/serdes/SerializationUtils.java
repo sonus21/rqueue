@@ -36,8 +36,7 @@ public final class SerializationUtils {
   @Getter
   public static RqueueTypeFactory typeFactory = new RqJacksonTypeFactory(objectMapper);
 
-  private SerializationUtils() {
-  }
+  private SerializationUtils() {}
 
   public static boolean isEmpty(byte[] bytes) {
     return bytes == null || bytes.length == 0;

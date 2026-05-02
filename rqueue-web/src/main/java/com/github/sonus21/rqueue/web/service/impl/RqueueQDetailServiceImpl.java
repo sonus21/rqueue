@@ -177,14 +177,14 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       pending = messageBrowsingRepository.getDataSize(queueConfig.getQueueName(), DataType.LIST);
     }
     // When a non-Redis broker is configured, use its storage display names instead of Redis keys.
-    String pendingDisplayName = brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
-        ? messageBroker.storageDisplayName(brokerQueueDetail)
-        : queueConfig.getQueueName();
-    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList(
-        new HashMap.SimpleEntry<>(
+    String pendingDisplayName =
+        brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+            ? messageBroker.storageDisplayName(brokerQueueDetail)
+            : queueConfig.getQueueName();
+    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails =
+        newArrayList(new HashMap.SimpleEntry<>(
             NavTab.PENDING,
-            new RedisDataDetail(
-                pendingDisplayName, DataType.LIST, pending == null ? 0 : pending)));
+            new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending)));
     // Brokers that manage their own in-flight tracking (e.g. NATS JetStream) have no separate
     // processing ZSET, so omit the RUNNING entry to avoid a 501 when the explorer opens it.
     if (!brokerHidesRunning()) {
@@ -192,8 +192,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       Long running = messageBrowsingRepository.getDataSize(processingQueueName, DataType.ZSET);
       queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
           NavTab.RUNNING,
-          new RedisDataDetail(
-              processingQueueName, DataType.ZSET, running == null ? 0 : running)));
+          new RedisDataDetail(processingQueueName, DataType.ZSET, running == null ? 0 : running)));
     }
     String scheduledQueueName = queueConfig.getScheduledQueueName();
     // When the broker doesn't support scheduled introspection (e.g. JetStream), suppress

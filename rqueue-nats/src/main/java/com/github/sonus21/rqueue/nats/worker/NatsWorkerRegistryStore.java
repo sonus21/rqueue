@@ -73,7 +73,8 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   /** Captured on first putQueueHeartbeat / refreshQueueTtl so heartbeat bucket gets the right maxAge. */
   private volatile Duration heartbeatBucketTtl;
 
-  public NatsWorkerRegistryStore(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
+  public NatsWorkerRegistryStore(
+      NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
     this.serdes = serdes;
   }
