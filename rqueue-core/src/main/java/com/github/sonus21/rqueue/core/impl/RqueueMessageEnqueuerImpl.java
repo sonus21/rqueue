@@ -27,6 +27,7 @@ import static com.github.sonus21.rqueue.utils.Validator.validateRetryCount;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -38,17 +39,24 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
 
   public RqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+    this(
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
   }
 
   public RqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
-    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
+    super(messageTemplate, messageBroker, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   private void validateBasic(String queue, Object message) {
@@ -99,13 +107,7 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
   public String enqueueWithPriority(String queueName, String priority, Object message) {
     validateBasic(queueName, message);
     validatePriority(priority);
-    return pushMessage(
-        PriorityUtils.getQueueNameForPriority(queueName, priority),
-        null,
-        message,
-        null,
-        null,
-        false);
+    return pushMessageForPriority(queueName, priority, null, message, null);
   }
 
   @Override
@@ -113,14 +115,35 @@ public class RqueueMessageEnqueuerImpl extends BaseMessageSender implements Rque
       String queueName, String priority, String messageId, Object message) {
     validateWithId(queueName, messageId, message);
     validatePriority(priority);
+    return pushMessageForPriority(queueName, priority, messageId, message, null) != null;
+  }
+
+  /**
+   * Routes priority-aware enqueues:
+   *
+   * <ul>
+   *   <li>Redis-style backends (capabilities advertise {@code usesPrimaryHandlerDispatch}): uses
+   *       the suffixed queue name ({@code PriorityUtils.getQueueNameForPriority}). Priority is
+   *       encoded in the queue name; the broker ignores the {@code priority} param.
+   *   <li>Backends with per-priority routing (e.g. NATS): uses the base queue name and passes the
+   *       priority through to
+   *       {@link com.github.sonus21.rqueue.core.spi.MessageBroker#enqueue(QueueDetail, String,
+   *       RqueueMessage)} so the broker picks the per-priority destination (subject/stream).
+   * </ul>
+   */
+  private String pushMessageForPriority(
+      String queueName, String priority, String messageId, Object message, Long delayMs) {
+    if (!messageBroker.capabilities().usesPrimaryHandlerDispatch()) {
+      return pushMessage(queueName, priority, messageId, message, null, delayMs, false);
+    }
     return pushMessage(
-            PriorityUtils.getQueueNameForPriority(queueName, priority),
-            messageId,
-            message,
-            null,
-            null,
-            false)
-        != null;
+        PriorityUtils.getQueueNameForPriority(queueName, priority),
+        priority,
+        messageId,
+        message,
+        null,
+        delayMs,
+        false);
   }
 
   @Override

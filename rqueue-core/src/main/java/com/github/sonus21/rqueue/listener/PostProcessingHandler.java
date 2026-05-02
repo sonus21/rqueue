@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.listener;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -26,7 +26,6 @@ import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.models.event.RqueueExecutionEvent;
 import com.github.sonus21.rqueue.utils.PrefixLogger;
-import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
 import java.io.Serializable;
@@ -40,7 +39,7 @@ class PostProcessingHandler extends PrefixLogger {
 
   private final ApplicationEventPublisher applicationEventPublisher;
   private final RqueueWebConfig rqueueWebConfig;
-  private final RqueueMessageTemplate rqueueMessageTemplate;
+  private final MessageBroker broker;
   private final TaskExecutionBackOff taskExecutionBackoff;
   private final MessageProcessorHandler messageProcessorHandler;
   private final RqueueSystemConfigDao rqueueSystemConfigDao;
@@ -48,14 +47,14 @@ class PostProcessingHandler extends PrefixLogger {
   PostProcessingHandler(
       RqueueWebConfig rqueueWebConfig,
       ApplicationEventPublisher applicationEventPublisher,
-      RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker broker,
       TaskExecutionBackOff taskExecutionBackoff,
       MessageProcessorHandler messageProcessorHandler,
       RqueueSystemConfigDao rqueueSystemConfigDao) {
     super(log, null);
     this.applicationEventPublisher = applicationEventPublisher;
     this.rqueueWebConfig = rqueueWebConfig;
-    this.rqueueMessageTemplate = rqueueMessageTemplate;
+    this.broker = broker;
     this.taskExecutionBackoff = taskExecutionBackoff;
     this.messageProcessorHandler = messageProcessorHandler;
     this.rqueueSystemConfigDao = rqueueSystemConfigDao;
@@ -106,8 +105,7 @@ class PostProcessingHandler extends PrefixLogger {
         null,
         rqueueMessage,
         job.getQueueDetail().getName());
-    rqueueMessageTemplate.removeElementFromZset(
-        job.getQueueDetail().getProcessingQueueName(), rqueueMessage);
+    broker.ack(job.getQueueDetail(), rqueueMessage);
   }
 
   private void publishEvent(JobImpl job, RqueueMessage rqueueMessage, MessageStatus messageStatus) {
@@ -125,36 +123,10 @@ class PostProcessingHandler extends PrefixLogger {
 
   private void deleteMessage(JobImpl job, MessageStatus status, int failureCount) {
     RqueueMessage rqueueMessage = job.getRqueueMessage();
-    rqueueMessageTemplate.removeElementFromZset(
-        job.getQueueDetail().getProcessingQueueName(), rqueueMessage);
+    broker.ack(job.getQueueDetail(), rqueueMessage);
     rqueueMessage.setFailureCount(failureCount);
     messageProcessorHandler.handleMessage(job, status);
     publishEvent(job, job.getRqueueMessage(), status);
-  }
-
-  private void moveMessageToQueue(
-      QueueDetail queueDetail,
-      String queueName,
-      RqueueMessage oldMessage,
-      RqueueMessage newMessage,
-      long delay) {
-    RedisUtils.executePipeLine(
-        rqueueMessageTemplate.getTemplate(), (connection, keySerializer, valueSerializer) -> {
-          byte[] newMessageBytes = valueSerializer.serialize(newMessage);
-          byte[] oldMessageBytes = valueSerializer.serialize(oldMessage);
-          byte[] processingQueueNameBytes =
-              keySerializer.serialize(queueDetail.getProcessingQueueName());
-          byte[] queueNameBytes = keySerializer.serialize(queueName);
-          assert queueNameBytes != null;
-          assert newMessageBytes != null;
-          if (delay > 0) {
-            connection.zAdd(queueNameBytes, delay, newMessageBytes);
-          } else {
-            connection.lPush(queueNameBytes, newMessageBytes);
-          }
-          assert processingQueueNameBytes != null;
-          connection.zRem(processingQueueNameBytes, oldMessageBytes);
-        });
   }
 
   private void moveMessageToDlq(JobImpl job, int failureCount, Throwable throwable) {
@@ -180,11 +152,9 @@ class PostProcessingHandler extends PrefixLogger {
             "Queue Config not found for queue {}",
             null,
             queueDetail.getDeadLetterQueue());
-        moveMessageToQueue(
+        broker.moveToDlq(
             queueDetail, queueDetail.getDeadLetterQueueName(), rqueueMessage, newMessage, -1);
       } else {
-        // update queue name to dead letter queue
-        // task execution backoff should consider this to identify if it's part of dead letter queue
         newMessage.setQueueName(queueConfig.getName());
         newMessage.setFailureCount(0);
         newMessage.setSourceQueueName(rqueueMessage.getQueueName());
@@ -193,11 +163,11 @@ class PostProcessingHandler extends PrefixLogger {
         backOff = (backOff == TaskExecutionBackOff.STOP)
             ? FixedTaskExecutionBackOff.DEFAULT_INTERVAL
             : backOff;
-        moveMessageToQueue(
+        broker.moveToDlq(
             queueDetail, queueConfig.getScheduledQueueName(), rqueueMessage, newMessage, backOff);
       }
     } else {
-      moveMessageToQueue(
+      broker.moveToDlq(
           queueDetail, queueDetail.getDeadLetterQueueName(), rqueueMessage, newMessage, -1);
     }
     publishEvent(job, newMessage, MessageStatus.MOVED_TO_DLQ);
@@ -207,20 +177,7 @@ class PostProcessingHandler extends PrefixLogger {
       RqueueMessage rqueueMessage, int failureCount, long delay, QueueDetail queueDetail) {
     RqueueMessage newMessage =
         rqueueMessage.toBuilder().failureCount(failureCount).build().updateReEnqueuedAt();
-    if (delay <= 0) {
-      rqueueMessageTemplate.moveMessage(
-          queueDetail.getProcessingQueueName(),
-          queueDetail.getQueueName(),
-          rqueueMessage,
-          newMessage);
-    } else {
-      rqueueMessageTemplate.moveMessageWithDelay(
-          queueDetail.getProcessingQueueName(),
-          queueDetail.getScheduledQueueName(),
-          rqueueMessage,
-          newMessage,
-          delay);
-    }
+    broker.parkForRetry(queueDetail, rqueueMessage, newMessage, delay);
     return newMessage;
   }
 

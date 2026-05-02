@@ -26,6 +26,8 @@ import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.listener.HardStrictPriorityPollerProperties;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
@@ -90,6 +92,10 @@ public class SimpleRqueueListenerContainerFactory {
   // Any message headers that should be set, headers are NOT STORED in db so it should not be
   // changed, same header is used in serialized and deserialization process.
   private MessageHeaders messageHeaders;
+
+  // Optional pluggable message broker (SPI). Additive: when null, behavior is unchanged and the
+  // factory uses the existing Redis-backed paths.
+  private MessageBroker messageBroker;
 
   // Set priority mode for the pollers
   private PriorityMode priorityMode = PriorityMode.WEIGHTED;
@@ -303,7 +309,19 @@ public class SimpleRqueueListenerContainerFactory {
    * @return an object of {@link RqueueMessageListenerContainer} object
    */
   public RqueueMessageListenerContainer createMessageListenerContainer() {
-    notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
+    if (messageBroker != null
+        && redisConnectionFactory != null
+        && !(messageBroker instanceof RedisMessageBroker)) {
+      throw new IllegalStateException(
+          "Both redisConnectionFactory and a non-Redis MessageBroker are configured. "
+              + "Configure exactly one transport: either set redisConnectionFactory for Redis, "
+              + "or set messageBroker for an alternative backend (e.g. NATS).");
+    }
+    boolean nonRedisBroker =
+        messageBroker != null && !(messageBroker instanceof RedisMessageBroker);
+    if (!nonRedisBroker) {
+      notNull(redisConnectionFactory, "redisConnectionFactory must not be null");
+    }
     notNull(messageConverterProvider, "messageConverterProvider must not be null");
     if (rqueueMessageTemplate == null) {
       rqueueMessageTemplate = new RqueueMessageTemplateImpl(
@@ -311,6 +329,9 @@ public class SimpleRqueueListenerContainerFactory {
     }
     RqueueMessageListenerContainer messageListenerContainer = new RqueueMessageListenerContainer(
         getRqueueMessageHandler(messageConverterProvider), rqueueMessageTemplate);
+    if (messageBroker != null) {
+      messageListenerContainer.setMessageBroker(messageBroker);
+    }
     messageListenerContainer.setAutoStartup(autoStartup);
     if (taskExecutor != null) {
       messageListenerContainer.setTaskExecutor(taskExecutor);
@@ -560,5 +581,26 @@ public class SimpleRqueueListenerContainerFactory {
       ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
     notNull(reactiveRedisConnectionFactory, "reactiveRedisConnectionFactory can not be null");
     this.reactiveRedisConnectionFactory = reactiveRedisConnectionFactory;
+  }
+
+  /**
+   * @return configured {@link MessageBroker} or {@code null} if none has been set
+   */
+  public MessageBroker getMessageBroker() {
+    return messageBroker;
+  }
+
+  /**
+   * Set the {@link MessageBroker} SPI instance to be used by the listener container. Additive: if
+   * not set, the container falls back to the existing Redis-backed code path.
+   *
+   * <p>If {@code messageBroker} is non-null and {@code redisConnectionFactory} is also set, the
+   * broker must be a {@link RedisMessageBroker}; otherwise {@link #createMessageListenerContainer()}
+   * will throw {@link IllegalStateException}.
+   *
+   * @param messageBroker the broker to use, or {@code null} to clear
+   */
+  public void setMessageBroker(MessageBroker messageBroker) {
+    this.messageBroker = messageBroker;
   }
 }

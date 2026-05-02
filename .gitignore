@@ -32,4 +32,5 @@ hs_err_pid*
 /*/build/
 /*/log
 
-.DS_Store
+.DS_Store.claude/
+.claude/

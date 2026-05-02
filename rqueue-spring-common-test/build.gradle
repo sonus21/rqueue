@@ -1,5 +1,8 @@
 dependencies {
     implementation project(":rqueue-core")
+    // Brings in spring-webflux (WebClient), spring-webmvc, jakarta.servlet, Pebble, etc. — all
+    // of which the common-test base classes (SpringWebTestBase) consume.
+    api project(":rqueue-web")
     api project(":rqueue-test-util")
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
     api "io.micrometer:micrometer-registry-prometheus:${microMeterVersion}"

@@ -62,7 +62,9 @@ public class RqueueMessageTemplateImpl extends RqueueRedisTemplate<RqueueMessage
       RedisConnectionFactory redisConnectionFactory,
       ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
     super(redisConnectionFactory);
-    this.scriptExecutor = new DefaultScriptExecutor<>(redisTemplate);
+    // On the NATS backend path the connection factory is null and the Redis-script executors
+    // are never invoked; leaving them null fails fast if anyone does try to use them.
+    this.scriptExecutor = redisTemplate == null ? null : new DefaultScriptExecutor<>(redisTemplate);
     if (reactiveRedisConnectionFactory != null) {
       this.reactiveRedisTemplate =
           new ReactiveRqueueRedisTemplate<>(reactiveRedisConnectionFactory);

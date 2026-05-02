@@ -22,7 +22,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.exception.TimedOutException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.metrics.RqueueQueueMetrics;
+import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.test.common.SpringTestBase;
 import com.github.sonus21.rqueue.test.dto.Email;
 import com.github.sonus21.rqueue.test.dto.Job;
@@ -40,7 +40,7 @@ public abstract class MetricTest extends SpringTestBase {
   protected MeterRegistry meterRegistry;
 
   @Autowired
-  protected RqueueQueueMetrics rqueueQueueMetrics;
+  protected RqueueQueueMetricsProvider rqueueQueueMetrics;
 
   protected void verifyScheduledQueueStatus() throws TimedOutException {
     long maxDelay = 0;

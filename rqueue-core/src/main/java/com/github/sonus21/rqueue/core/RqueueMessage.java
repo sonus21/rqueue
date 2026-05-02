@@ -28,7 +28,24 @@ import lombok.ToString;
 import org.springframework.messaging.MessageHeaders;
 
 /**
- * Internal message for Rqueue
+ * Envelope for a message being processed through Rqueue. Each message maintains its own state
+ * including serialized content, retry metadata, failure counts, and timing information.
+ *
+ * <p><b>Message Content.</b> The {@code message} field holds the serialized (JSON) representation
+ * of the user's object. Use {@link com.github.sonus21.rqueue.core.support.RqueueMessageUtils}
+ * to convert between serialized and object form.
+ *
+ * <p><b>Timing and Scheduling.</b> {@code queuedTime} records when the message was enqueued
+ * (nanosecond precision). {@code processAt} defines the intended processing time (for delayed
+ * messages). {@code reEnqueuedAt} tracks the last re-queue timestamp following failure.
+ *
+ * <p><b>Failure Tracking.</b> {@code failureCount} and {@code sourceQueueFailureCount} track
+ * retries in the current and source queue respectively. Once retries are exhausted, the message
+ * may be routed to the configured dead-letter queue ({@code sourceQueueName}).
+ *
+ * <p><b>Periodic Tasks.</b> For messages representing recurring work, the {@code period} field
+ * (in milliseconds) defines the recurrence interval. Use {@code nextProcessAt()} to compute the
+ * next scheduling time.
  */
 @Getter
 @Setter

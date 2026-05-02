@@ -35,9 +35,9 @@ import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainerTest.Boo
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainerTest.TestEventBroadcaster;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.PriorityMode;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import com.github.sonus21.test.TestTaskExecutor;
 import java.util.Arrays;
 import java.util.Collections;

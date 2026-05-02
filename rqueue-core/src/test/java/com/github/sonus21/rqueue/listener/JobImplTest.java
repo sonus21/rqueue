@@ -39,7 +39,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.Execution;
@@ -48,9 +48,9 @@ import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.ExecutionStatus;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +84,7 @@ class JobImplTest extends TestBase {
   private RqueueJobDao rqueueJobDao;
 
   @Mock
-  private RqueueMessageTemplate rqueueMessageTemplate;
+  private MessageBroker messageBroker;
 
   @Mock
   private RqueueLockManager rqueueLockManager;
@@ -109,7 +109,7 @@ class JobImplTest extends TestBase {
         rqueueConfig,
         messageMetadataService,
         rqueueJobDao,
-        rqueueMessageTemplate,
+        messageBroker,
         rqueueLockManager,
         queueDetail,
         messageMetadata,
@@ -257,20 +257,16 @@ class JobImplTest extends TestBase {
   void getVisibilityTimeout() {
     JobImpl job = instance();
     job.execute();
-    doReturn(-10L)
-        .when(rqueueMessageTemplate)
-        .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
+    doReturn(-10L).when(messageBroker).getVisibilityTimeoutScore(queueDetail, rqueueMessage);
     assertEquals(Duration.ZERO, job.getVisibilityTimeout());
 
     doReturn(System.currentTimeMillis() + 10_000L)
-        .when(rqueueMessageTemplate)
-        .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
+        .when(messageBroker)
+        .getVisibilityTimeoutScore(queueDetail, rqueueMessage);
     Duration timeout = job.getVisibilityTimeout();
     assertTrue(timeout.toMillis() <= 10_000 && timeout.toMillis() >= 9_000);
 
-    doReturn(0L)
-        .when(rqueueMessageTemplate)
-        .getScore(queueDetail.getProcessingQueueName(), rqueueMessage);
+    doReturn(0L).when(messageBroker).getVisibilityTimeoutScore(queueDetail, rqueueMessage);
     assertEquals(Duration.ZERO, job.getVisibilityTimeout());
   }
 
@@ -278,13 +274,9 @@ class JobImplTest extends TestBase {
   void updateVisibilityTimeout() {
     JobImpl job = instance();
     job.execute();
-    doReturn(true)
-        .when(rqueueMessageTemplate)
-        .addScore(queueDetail.getProcessingQueueName(), rqueueMessage, 5_000L);
+    doReturn(true).when(messageBroker).extendVisibilityTimeout(queueDetail, rqueueMessage, 5_000L);
     assertTrue(job.updateVisibilityTimeout(Duration.ofSeconds(5)));
-    doReturn(false)
-        .when(rqueueMessageTemplate)
-        .addScore(queueDetail.getProcessingQueueName(), rqueueMessage, 5_000L);
+    doReturn(false).when(messageBroker).extendVisibilityTimeout(queueDetail, rqueueMessage, 5_000L);
     assertFalse(job.updateVisibilityTimeout(Duration.ofSeconds(5)));
   }
 

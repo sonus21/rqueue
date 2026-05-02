@@ -1,0 +1,180 @@
+<!--
+  ~ Copyright (c) 2020-2026 Sonu Kumar
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations under the License.
+  ~
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="default-src 'self' *.gstatic.com *.googleapis.com 'unsafe-inline' 'unsafe-eval'"
+        http-equiv="Content-Security-Policy">
+  <meta content='Rqueue' name="description">
+  <meta content='Rqueue, task queue, scheduled queue, scheduled tasks, asynchronous processor' name="keywords">
+  <title>{{ default(title, 'Rqueue Dashboard') }}</title>
+  <link href="{{urlPrefix}}rqueue/img/favicon.ico" rel="shortcut icon">
+  <link href="{{urlPrefix}}rqueue/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="{{urlPrefix}}rqueue/img/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
+  <link href="{{urlPrefix}}rqueue/img/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i" rel="stylesheet">
+  <link href="{{urlPrefix}}rqueue/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{urlPrefix}}rqueue/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="{{urlPrefix}}rqueue/css/rqueue.css" rel="stylesheet">
+</head>
+<body>
+<header class="fixed-top" id="header">
+  <div class="container d-flex">
+    <div class="logo mr-auto">
+      <h1 class="text-green"><a href="{{urlPrefix}}rqueue">Rqueue</a></h1>
+    </div>
+    <nav class="nav-menu display-none d-lg-block">
+      <ul>
+        <li class="{% if queuesActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/queues">
+            <i class='bx bx-coin-stack'></i>
+            <span>Queues</span>
+          </a>
+        </li>
+        <li class="{% if workersActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/workers">
+            <i class='bx bx-user-pin'></i>
+            <span>Workers</span>
+          </a>
+        </li>
+        <li class="{% if runningActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/running">
+            <i class='bx bx-sync'></i>
+            <span>Running</span>
+          </a>
+        </li>
+        {# Hidden when the active broker reports !supportsScheduledIntrospection (e.g. JetStream).
+           Defaults to visible (hideScheduledPanel == null/false) for the Redis backend. #}
+        {% if not hideScheduledPanel %}
+        <li class="{% if scheduledActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/scheduled">
+            <i class='bx bxs-hourglass'></i>
+            <span>Scheduled</span>
+          </a>
+        </li>
+        {% endif %}
+        <li class="{% if pendingActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/pending">
+            <i class='bx bx-spreadsheet'></i>
+            <span>Pending</span>
+          </a>
+        </li>
+        <li class="{% if deadActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/dead">
+            <i class='bx bx-ghost'></i>
+            <span>Dead</span>
+          </a>
+        </li>
+        <li class="{% if utilityActive %}active{% endif %}">
+          <a href="{{urlPrefix}}rqueue/utility">
+            <i class='bx bxs-wrench'></i>
+            <span>Utility</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="alert alert-primary alert-dismissible fade display-none" id="global-error-container"
+       role="alert">
+    <button aria-label="Close" class="close" data-dismiss="alert" type="button">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    <p id="global-error-message"></p>
+  </div>
+  {% block main %}
+  {% endblock %}
+</main>
+
+<footer id="footer">
+  <div class="container">
+    <div class="row">
+      <ul class="footer-links">
+        <li>
+          <h3><a href="https://github.com/sonus21/rqueue" target="_blank">Rqueue</a></h3>
+        </li>
+        <li>
+          <a href="#">Version:&nbsp;<p class="text-white float-right">{{version}}</p></a>
+        </li>
+        <li>
+          <a href="{{releaseLink}}" target="_blank">Latest Version:&nbsp;
+            <p class="text-white float-right">{{latestVersion}}</p>
+          </a>
+        </li>
+        <li>
+          <a href="#">Time:&nbsp;<p class="text-white float-right">{{time}} ({{timeInMilli}}Ms)</p>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<div class="modal fade" id="delete-modal">
+  <div class="modal-dialog modal-confirm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="delete-modal-title">Are you sure?</h4>
+        <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="delete-modal-body">
+          Do you really want to delete this? This process cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-info" data-dismiss="modal" type="button">Cancel</button>
+        <button class="btn btn-danger delete-btn" type="button">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="info-modal">
+  <div class="modal-dialog modal-info">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="info-modal-title">Title</h4>
+        <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="info-modal-body">Some text</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-info" data-dismiss="modal" type="button">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://www.gstatic.com/charts/loader.js" type="application/javascript"></script>
+<script src="{{urlPrefix}}rqueue/vendor/jquery/jquery.min.js"
+        type="application/javascript"></script>
+<script src="{{urlPrefix}}rqueue/vendor/bootstrap/js/bootstrap.bundle.min.js"
+        type="application/javascript"></script>
+<script src="{{urlPrefix}}rqueue/js/rqueue.js" type="application/javascript"></script>
+<script type="application/javascript">
+  urlPrefix = "{{urlPrefix}}";
+</script>
+{% block additional_script %}{% endblock %}
+</body>
+</html>

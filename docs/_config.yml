@@ -14,7 +14,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: Rqueue
-description: Library for Async Processing using Redis
+description: Library for Async Processing using Redis or NATS JetStream
 baseurl: "/rqueue" # the subpath of your site, e.g. /blog
 url: "https://sonus21.github.io/rqueue" # the base hostname & protocol for your site, e.g. http://example.com
 

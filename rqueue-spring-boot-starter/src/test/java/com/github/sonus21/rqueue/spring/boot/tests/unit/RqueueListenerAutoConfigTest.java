@@ -18,8 +18,10 @@ package com.github.sonus21.rqueue.spring.boot.tests.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
@@ -30,6 +32,8 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
+import com.github.sonus21.rqueue.core.spi.Capabilities;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
@@ -59,6 +63,9 @@ class RqueueListenerAutoConfigTest extends TestBase {
   private RqueueMessageHandler rqueueMessageHandler;
 
   @Mock
+  private MessageBroker messageBroker;
+
+  @Mock
   private RedisConnectionFactory redisConnectionFactory;
 
   @InjectMocks
@@ -77,7 +84,8 @@ class RqueueListenerAutoConfigTest extends TestBase {
   @Test
   void rqueueMessageHandlerDefaultCreation()
       throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-    assertNotNull(rqueueMessageAutoConfig.rqueueMessageHandler());
+    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
+    assertNotNull(rqueueMessageAutoConfig.rqueueMessageHandler(messageBroker));
   }
 
   @Test
@@ -92,9 +100,10 @@ class RqueueListenerAutoConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
+    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
     assertEquals(
         rqueueMessageHandler.hashCode(),
-        messageAutoConfig.rqueueMessageHandler().hashCode());
+        messageAutoConfig.rqueueMessageHandler(messageBroker).hashCode());
   }
 
   @Test
@@ -102,7 +111,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
       throws IllegalAccessException, ClassNotFoundException, InstantiationException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
-    factory.setRedisConnectionFactory(redisConnectionFactory);
+    factory.setMessageBroker(messageBroker);
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(
         messageAutoConfig,
@@ -110,25 +119,32 @@ class RqueueListenerAutoConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler);
+    messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler, messageBroker);
     assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
+    // The broker must be propagated onto the factory so the container picks it up.
+    assertSame(messageBroker, factory.getMessageBroker());
   }
 
   @Test
-  void rqueueMessageSenderWithMessageTemplate() throws IllegalAccessException {
+  void rqueueMessageEnqueuerWiresBroker() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
     factory.setRqueueMessageTemplate(messageTemplate);
     doReturn(new DefaultRqueueMessageConverter()).when(rqueueMessageHandler).getMessageConverter();
     RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
-    assertEquals(factory.getRqueueMessageTemplate().hashCode(), messageTemplate.hashCode());
+
+    RqueueMessageEnqueuer enqueuer = messageAutoConfig.rqueueMessageEnqueuer(
+        rqueueMessageHandler, messageTemplate, messageBroker, new UuidV4RqueueMessageIdGenerator());
+
+    assertNotNull(enqueuer);
+    // Broker is on the enqueuer (inherited from BaseMessageSender), not on the template — that
+    // sidesteps the Redis cycle and removes the original NPE class entirely.
+    assertSame(messageBroker, FieldUtils.readField(enqueuer, "messageBroker", true));
   }
 
   @Test
-  void rqueueMessageSenderWithMessageConverters() throws IllegalAccessException {
+  void rqueueMessageSenderUsesConfiguredMessageConverter() throws IllegalAccessException {
     MessageConverter messageConverter = new GenericMessageConverter();
     MessageConverterProvider messageConverterProvider = () -> messageConverter;
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
@@ -137,10 +153,8 @@ class RqueueListenerAutoConfigTest extends TestBase {
     factory.setRqueueMessageTemplate(messageTemplate);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
     doReturn(messageConverter).when(rqueueMessageHandler).getMessageConverter();
-    assertNotNull(messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator()));
     RqueueMessageEnqueuer messageSender = messageAutoConfig.rqueueMessageEnqueuer(
-        rqueueMessageHandler, messageTemplate, new UuidV4RqueueMessageIdGenerator());
+        rqueueMessageHandler, messageTemplate, messageBroker, new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
   }

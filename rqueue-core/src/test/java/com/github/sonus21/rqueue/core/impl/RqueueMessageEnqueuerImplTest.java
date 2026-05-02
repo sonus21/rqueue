@@ -31,12 +31,13 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -85,7 +86,11 @@ class RqueueMessageEnqueuerImplTest extends TestBase {
     rqueueConfig = new RqueueConfig(null, null, true, 2);
     rqueueConfig.setMessageDurabilityInMinute(10080);
     rqueueMessageEnqueuer = new RqueueMessageEnqueuerImpl(
-        messageTemplate, messageConverter, messageHeaders, FIXED_MESSAGE_ID_GENERATOR);
+        messageTemplate,
+        new RedisMessageBroker(messageTemplate),
+        messageConverter,
+        messageHeaders,
+        FIXED_MESSAGE_ID_GENERATOR);
     FieldUtils.writeField(rqueueMessageEnqueuer, "rqueueConfig", rqueueConfig, true);
     FieldUtils.writeField(
         rqueueMessageEnqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);

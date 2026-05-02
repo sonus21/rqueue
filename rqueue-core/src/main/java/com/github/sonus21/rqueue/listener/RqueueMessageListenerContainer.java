@@ -27,6 +27,8 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -76,6 +78,7 @@ public class RqueueMessageListenerContainer
   public static final String EVENT_SOURCE = "RqueueMessageListenerContainer";
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
+  static final String POLLER_KEY_SEP = "##";
   final QueueStateMgr queueStateMgr = new QueueStateMgr();
   private final Object lifecycleMgr = new Object();
   private final RqueueMessageTemplate rqueueMessageTemplate;
@@ -84,6 +87,9 @@ public class RqueueMessageListenerContainer
   private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue =
       new ConcurrentHashMap<>();
   private final Map<String, QueueThreadPool> queueThreadMap = new ConcurrentHashMap<>();
+  // tracks which (queue, consumer) pollers have been started; prevents the second consumer of a
+  // multi-consumer queue from being skipped by the bare-name dedup check in startQueue.
+  private final java.util.Set<String> startedPollerKeys = ConcurrentHashMap.newKeySet();
 
   @Autowired
   protected RqueueBeanProvider rqueueBeanProvider;
@@ -109,6 +115,10 @@ public class RqueueMessageListenerContainer
   private PriorityMode priorityMode;
   private MessageHeaders messageHeaders;
   private HardStrictPriorityPollerProperties hardStrictPriorityPollerProperties;
+  // Optional pluggable backend. Additive in Phase 1: when null (current code path), behavior is
+  // unchanged. When set, capabilities() may gate scheduler/handler dispatch wiring; the Redis
+  // broker reports REDIS_DEFAULTS so the gated branches still match existing semantics.
+  private MessageBroker messageBroker;
 
   public RqueueMessageListenerContainer(
       RqueueMessageHandler rqueueMessageHandler, RqueueMessageTemplate rqueueMessageTemplate) {
@@ -146,6 +156,42 @@ public class RqueueMessageListenerContainer
 
   public RqueueMessageHandler getRqueueMessageHandler() {
     return rqueueMessageHandler;
+  }
+
+  /**
+   * Returns the optional {@link MessageBroker} backing this container, or {@code null} if the
+   * container is using the legacy Redis-backed code path.
+   */
+  public MessageBroker getMessageBroker() {
+    return messageBroker;
+  }
+
+  /**
+   * Optionally set a {@link MessageBroker}. Additive in Phase 1: when not set (default), the
+   * container behaves exactly as before. When set, capability flags may gate scheduler and handler
+   * dispatch wiring. The default Redis broker reports {@code REDIS_DEFAULTS} so all gated branches
+   * resolve to the existing behavior.
+   *
+   * @param messageBroker broker SPI instance, or {@code null}
+   */
+  public void setMessageBroker(MessageBroker messageBroker) {
+    this.messageBroker = messageBroker;
+  }
+
+  /**
+   * Whether scheduler startup should run for this container. Returns {@code true} for the legacy
+   * (no broker) path and for brokers that advertise scheduled introspection support.
+   */
+  public boolean isScheduledIntrospectionEnabled() {
+    return messageBroker == null || messageBroker.capabilities().supportsScheduledIntrospection();
+  }
+
+  /**
+   * Whether the primary {@link RqueueMessageHandler} dispatch path is enabled. Returns {@code true}
+   * for the legacy (no broker) path and for brokers that advertise primary handler dispatch.
+   */
+  public boolean isPrimaryHandlerDispatchEnabled() {
+    return messageBroker == null || messageBroker.capabilities().usesPrimaryHandlerDispatch();
   }
 
   public Integer getMaxNumWorkers() {
@@ -188,6 +234,13 @@ public class RqueueMessageListenerContainer
       ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) taskExecutor;
       if (!destroyedExecutors.contains(executor.getThreadNamePrefix())) {
         executor.destroy();
+      }
+    }
+    if (messageBroker instanceof AutoCloseable) {
+      try {
+        ((AutoCloseable) messageBroker).close();
+      } catch (Exception e) {
+        log.warn("Error closing MessageBroker on destroy: {}", e.toString(), e);
       }
     }
   }
@@ -241,9 +294,15 @@ public class RqueueMessageListenerContainer
   private void initializeQueueRegistry() {
     log.info("Initializing queue registry");
     EndpointRegistry.delete();
+    // Validate every @RqueueListener queue name against backend rules before registering, so
+    // illegal names (e.g. dots when running on NATS) fail loudly at startup instead of surfacing
+    // as opaque driver errors at first publish.
     for (MappingInformation mappingInformation :
         rqueueMessageHandler.getHandlerMethodMap().keySet()) {
       for (String queue : mappingInformation.getQueueNames()) {
+        if (messageBroker != null) {
+          messageBroker.validateQueueName(queue);
+        }
         for (QueueDetail queueDetail : getQueueDetail(queue, mappingInformation)) {
           EndpointRegistry.register(queueDetail);
         }
@@ -283,17 +342,24 @@ public class RqueueMessageListenerContainer
   }
 
   private void initialize() {
+    // Resolve the effective broker: injected (e.g. NATS) or a Redis wrapper for the legacy path.
+    MessageBroker effectiveBroker =
+        messageBroker != null ? messageBroker : new RedisMessageBroker(rqueueMessageTemplate);
+    rqueueBeanProvider.setMessageBroker(effectiveBroker);
+
+    MessageProcessorHandler msgProcessorHandler = new MessageProcessorHandler(
+        manualDeletionMessageProcessor,
+        deadLetterQueueMessageProcessor,
+        discardMessageProcessor,
+        postExecutionMessageProcessor);
+
     initializeQueue();
     this.postProcessingHandler = new PostProcessingHandler(
         rqueueBeanProvider.getRqueueWebConfig(),
         rqueueBeanProvider.getApplicationEventPublisher(),
-        rqueueMessageTemplate,
+        effectiveBroker,
         taskExecutionBackOff,
-        new MessageProcessorHandler(
-            manualDeletionMessageProcessor,
-            deadLetterQueueMessageProcessor,
-            discardMessageProcessor,
-            postExecutionMessageProcessor),
+        msgProcessorHandler,
         rqueueBeanProvider.getRqueueSystemConfigDao());
     this.rqueueBeanProvider.setPreExecutionMessageProcessor(preExecutionMessageProcessor);
   }
@@ -301,6 +367,11 @@ public class RqueueMessageListenerContainer
   @Override
   public void afterPropertiesSet() throws Exception {
     synchronized (lifecycleMgr) {
+      // Propagate broker capability into the handler before its afterPropertiesSet runs the
+      // primary-validation. The handler is wired through Spring lifecycle separately, but if
+      // it's already been initialized this is a no-op for the primary path; the handler will
+      // re-check its flag when validating.
+      rqueueMessageHandler.setPrimaryHandlerDispatchEnabled(isPrimaryHandlerDispatchEnabled());
       RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
       initializeQueueRegistry();
       if (rqueueConfig.isProducer()) {
@@ -330,6 +401,11 @@ public class RqueueMessageListenerContainer
     for (String queue : EndpointRegistry.getActiveQueues()) {
       queueRunningState.put(queue, false);
     }
+  }
+
+  static String pollerKey(QueueDetail qd) {
+    String cn = qd.getConsumerName();
+    return (cn != null && !cn.isEmpty()) ? qd.getName() + POLLER_KEY_SEP + cn : qd.getName();
   }
 
   private int getWorkersCount(int queueCount) {
@@ -427,6 +503,8 @@ public class RqueueMessageListenerContainer
         .priority(priority)
         .priorityGroup(priorityGroup)
         .doNotRetry(mappingInformation.getDoNotRetry())
+        .consumerName(mappingInformation.getConsumerName())
+        .type(mappingInformation.getQueueType())
         .build();
     List<QueueDetail> queueDetails;
     if (queueDetail.getPriority().size() <= 1) {
@@ -460,7 +538,7 @@ public class RqueueMessageListenerContainer
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       int prioritySize = queueDetail.getPriority().size();
       if (prioritySize == 0) {
-        startQueue(queueDetail.getName(), queueDetail);
+        startQueue(pollerKey(queueDetail), queueDetail);
       } else {
         List<QueueDetail> queueDetails =
             queueGroupToDetails.getOrDefault(queueDetail.getPriorityGroup(), new ArrayList<>());
@@ -541,15 +619,17 @@ public class RqueueMessageListenerContainer
     scheduledFutureByQueue.put(groupName, future);
   }
 
-  protected void startQueue(String queueName, QueueDetail queueDetail) {
-    if (Boolean.TRUE.equals(queueRunningState.get(queueName))) {
-      return;
+  protected void startQueue(String pollerKey, QueueDetail queueDetail) {
+    if (!startedPollerKeys.add(pollerKey)) {
+      return; // already started (dedup for multi-consumer queues)
     }
+    String queueName = queueDetail.getName();
     queueRunningState.put(queueName, true);
     QueueConfig config = rqueueBeanProvider.getRqueueSystemConfigDao().getConfigByName(queueName);
     queueStateMgr.pauseQueueIfRequired(config);
     QueueThreadPool queueThreadPool = queueThreadMap.get(queueName);
     DefaultRqueuePoller messagePoller = new DefaultRqueuePoller(
+        queueName,
         queueDetail,
         queueThreadPool,
         rqueueBeanProvider,
@@ -560,7 +640,7 @@ public class RqueueMessageListenerContainer
         postProcessingHandler,
         getMessageHeaders());
     Future<?> future = getTaskExecutor().submit(messagePoller);
-    scheduledFutureByQueue.put(queueName, future);
+    scheduledFutureByQueue.put(pollerKey, future);
   }
 
   public void pauseUnpauseQueue(String queue, boolean pause) {
@@ -600,18 +680,17 @@ public class RqueueMessageListenerContainer
       }
     }
     waitForRunningQueuesToStop();
+    startedPollerKeys.clear();
   }
 
   private void waitForRunningQueuesToStop() {
-    for (Map.Entry<String, Boolean> entry : queueRunningState.entrySet()) {
-      String queueName = entry.getKey();
-      Future<?> queueSpinningThread = scheduledFutureByQueue.get(queueName);
+    for (Map.Entry<String, Future<?>> entry : scheduledFutureByQueue.entrySet()) {
       waitForTermination(
           log,
-          queueSpinningThread,
+          entry.getValue(),
           getMaxWorkerWaitTime(),
           "An exception occurred while stopping queue '{}'",
-          queueName);
+          entry.getKey());
     }
     if (!waitForWorkerTermination(queueThreadMap.values(), getMaxWorkerWaitTime())) {
       log.error("Some workers are not stopped within time");

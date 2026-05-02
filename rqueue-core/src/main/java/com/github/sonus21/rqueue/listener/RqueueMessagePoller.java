@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
+import java.time.Duration;
 import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -59,13 +60,12 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
 
   private List<RqueueMessage> getMessages(QueueDetail queueDetail, int count) {
     return rqueueBeanProvider
-        .getRqueueMessageTemplate()
+        .getMessageBroker()
         .pop(
-            queueDetail.getQueueName(),
-            queueDetail.getProcessingQueueName(),
-            queueDetail.getProcessingQueueChannelName(),
-            queueDetail.getVisibilityTimeout(),
-            count);
+            queueDetail,
+            queueDetail.resolvedConsumerName(),
+            count,
+            Duration.ofMillis(pollingInterval));
   }
 
   private void execute(

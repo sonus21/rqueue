@@ -19,7 +19,6 @@ package com.github.sonus21.rqueue.core.impl;
 import static org.springframework.util.Assert.isTrue;
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
@@ -35,7 +34,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
@@ -43,23 +41,26 @@ import org.springframework.messaging.support.MessageBuilder;
 
 @Slf4j
 public class RqueueMessageManagerImpl extends BaseMessageSender implements RqueueMessageManager {
-
-  @Autowired
-  private RqueueLockManager rqueueLockManager;
-
   public RqueueMessageManagerImpl(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+    this(
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
   }
 
   public RqueueMessageManagerImpl(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
-    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
+    super(messageTemplate, messageBroker, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @Override

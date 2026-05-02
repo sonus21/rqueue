@@ -28,6 +28,7 @@ import com.github.sonus21.rqueue.core.impl.ReactiveRqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueEndpointManagerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageEnqueuerImpl;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageManagerImpl;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
@@ -40,33 +41,44 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 
 @Configuration
 @AutoConfigureAfter(DataRedisAutoConfiguration.class)
-@ComponentScan({"com.github.sonus21.rqueue.web", "com.github.sonus21.rqueue.dao"})
+@ComponentScan({
+  "com.github.sonus21.rqueue.web",
+  "com.github.sonus21.rqueue.dao",
+  "com.github.sonus21.rqueue.nats",
+})
 @Conditional({RqueueEnabled.class})
+@Import(RqueueRedisConfigImportSelector.class)
 public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageHandler rqueueMessageHandler() {
-    return simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
-        getMessageConverterProvider());
+  public RqueueMessageHandler rqueueMessageHandler(MessageBroker messageBroker) {
+    RqueueMessageHandler handler =
+        simpleRqueueListenerContainerFactory.getRqueueMessageHandler(getMessageConverterProvider());
+    handler.setPrimaryHandlerDispatchEnabled(
+        messageBroker.capabilities().usesPrimaryHandlerDispatch());
+    return handler;
   }
 
   @Bean
   @DependsOn("rqueueConfig")
   @ConditionalOnMissingBean
   public RqueueMessageListenerContainer rqueueMessageListenerContainer(
-      RqueueMessageHandler rqueueMessageHandler) {
+      RqueueMessageHandler rqueueMessageHandler, MessageBroker messageBroker) {
     simpleRqueueListenerContainerFactory.setRqueueMessageHandler(rqueueMessageHandler);
+    if (simpleRqueueListenerContainerFactory.getMessageBroker() == null) {
+      simpleRqueueListenerContainerFactory.setMessageBroker(messageBroker);
+    }
     return simpleRqueueListenerContainerFactory.createMessageListenerContainer();
   }
 
   @Bean
   @ConditionalOnMissingBean
-  public RqueueMessageTemplate rqueueMessageTemplate(
-      RqueueConfig rqueueConfig, RqueueMessageHandler rqueueMessageHandler) {
+  public RqueueMessageTemplate rqueueMessageTemplate(RqueueConfig rqueueConfig) {
     return getMessageTemplate(rqueueConfig);
   }
 
@@ -75,9 +87,11 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   public RqueueMessageManager rqueueMessageManager(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageManagerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -88,9 +102,11 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   public RqueueEndpointManager rqueueEndpointManager(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueEndpointManagerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -101,9 +117,11 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   public RqueueMessageEnqueuer rqueueMessageEnqueuer(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new RqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);
@@ -115,9 +133,11 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
   public ReactiveRqueueMessageEnqueuer reactiveRqueueMessageEnqueuer(
       RqueueMessageHandler rqueueMessageHandler,
       RqueueMessageTemplate rqueueMessageTemplate,
+      MessageBroker messageBroker,
       RqueueMessageIdGenerator rqueueMessageIdGenerator) {
     return new ReactiveRqueueMessageEnqueuerImpl(
         rqueueMessageTemplate,
+        messageBroker,
         rqueueMessageHandler.getMessageConverter(),
         simpleRqueueListenerContainerFactory.getMessageHeaders(),
         rqueueMessageIdGenerator);

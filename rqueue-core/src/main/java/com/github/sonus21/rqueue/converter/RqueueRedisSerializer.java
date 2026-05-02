@@ -17,7 +17,7 @@
 package com.github.sonus21.rqueue.converter;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import com.github.sonus21.rqueue.utils.SerializationUtils;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.support.NullValue;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -64,11 +64,10 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
 
   // adapted from spring-data-redis
   private static class RqueueRedisSerDes implements RedisSerializer<Object> {
-
-    private ObjectMapper mapper;
+    private final ObjectMapper mapper;
 
     RqueueRedisSerDes() {
-      this.mapper = SerializationUtils.createObjectMapper()
+      this.mapper = SerializationUtils.getObjectMapper()
           .rebuild()
           .addModule(new SimpleModule().addSerializer(new NullValueSerializer()))
           .activateDefaultTyping(

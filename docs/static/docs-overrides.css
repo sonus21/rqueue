@@ -1,0 +1,12 @@
+/* Dark-mode note callouts read better with a warm accent than the default blue/purple tone. */
+.note {
+  background: linear-gradient(135deg, rgba(84, 63, 26, 0.82), rgba(48, 39, 22, 0.94));
+  border-left-color: #d7a54a;
+  box-shadow: inset 0 1px 0 rgba(255, 224, 158, 0.06);
+}
+
+.note .label,
+.note-title,
+.note > :first-child {
+  color: #f0bf68;
+}

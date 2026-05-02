@@ -1,0 +1,164 @@
+{% extends 'base' %}
+{% block main %}
+<!--
+  ~ Copyright (c) 2026 Sonu Kumar
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations under the License.
+  ~
+  -->
+
+<div class="container worker-dashboard">
+  <section class="worker-hero">
+    <div class="worker-hero-copy">
+      <span class="worker-hero-kicker">Worker Registry</span>
+      <h1 class="worker-hero-title">Live Pollers Across Your Fleet</h1>
+      <p class="worker-hero-subtitle">
+        Inspect poll activity, queue ownership, and recent capacity pressure without leaving the dashboard.
+      </p>
+    </div>
+    <div class="worker-hero-meta">
+      <div class="worker-hero-stat">
+        <span class="worker-hero-stat-label">Workers</span>
+        <strong class="worker-hero-stat-value">{{totalWorkerCount}}</strong>
+      </div>
+      <div class="worker-hero-stat">
+        <span class="worker-hero-stat-label">Page</span>
+        <strong class="worker-hero-stat-value">{{currentPage}} / {{totalPages}}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="worker-toolbar">
+    <div class="worker-toolbar-note">
+      {% if totalWorkerCount > 0 %}
+      Showing worker records for this page.
+      {% else %}
+      Waiting for worker heartbeats.
+      {% endif %}
+    </div>
+    <div class="worker-pagination">
+      {% if hasPreviousPage %}
+      <a class="worker-page-btn" href="?page={{previousPage}}">Previous</a>
+      {% endif %}
+      <span class="worker-page-pill">Page {{currentPage}}</span>
+      {% if hasNextPage %}
+      <a class="worker-page-btn worker-page-btn-primary" href="?page={{nextPage}}">Next</a>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if workers is empty %}
+  <section class="worker-empty-state" role="alert">
+    <h2>No worker heartbeat is available yet.</h2>
+    <p>The page will populate after a worker starts polling queues and reports registry metadata.</p>
+  </section>
+  {% else %}
+  <section class="worker-list">
+    {% for worker in workers %}
+    <details class="worker-panel" {% if loop.first %}open{% endif %}>
+      <summary class="worker-panel-summary">
+        <div class="worker-panel-main">
+          <div class="worker-panel-title-row">
+            <span class="worker-id-pill">Worker</span>
+            <h2 class="worker-panel-title">{{worker.workerId}}</h2>
+          </div>
+          <div class="worker-panel-meta">
+            <span class="worker-meta-chip">Host {{worker.host}}</span>
+            <span class="worker-meta-chip">PID {{worker.pid}}</span>
+            <span class="worker-meta-chip">Last Poll {{ time(worker.lastPollAt) }}</span>
+            <span class="worker-meta-chip">{{worker.lastPollAge}}</span>
+          </div>
+        </div>
+        <div class="worker-panel-stats">
+          <div class="worker-stat-chip">
+            <span class="worker-stat-chip-label">Active</span>
+            <strong>{{worker.activeQueues}}</strong>
+          </div>
+          <div class="worker-stat-chip worker-stat-chip-warning">
+            <span class="worker-stat-chip-label">Stale</span>
+            <strong>{{worker.staleQueues}}</strong>
+          </div>
+          <div class="worker-stat-chip worker-stat-chip-danger">
+            <span class="worker-stat-chip-label">Recent Exhaustion</span>
+            <strong>{{worker.recentCapacityExhaustedQueues}}</strong>
+          </div>
+        </div>
+        <span class="worker-panel-caret" aria-hidden="true"></span>
+      </summary>
+
+      <div class="worker-panel-body">
+        <div class="worker-queue-grid">
+          {% for poller in worker.pollers %}
+          <article class="worker-queue-card">
+            <div class="worker-queue-card-head">
+              <div>
+                <span class="worker-queue-label">Queue</span>
+                <h3 class="worker-queue-title">
+                  <a href="queues/{{poller.queue}}">{{poller.queue}}</a>
+                </h3>
+                {% if poller.consumerName %}
+                <span class="worker-consumer-name">{{poller.consumerName}}</span>
+                {% endif %}
+              </div>
+              <span class="worker-status-badge
+                  {% if poller.status == 'ACTIVE' %}worker-status-active{% endif %}
+                  {% if poller.status == 'STALE' %}worker-status-stale{% endif %}
+                  {% if poller.status == 'PAUSED' %}worker-status-paused{% endif %}">
+                {{poller.status}}
+              </span>
+            </div>
+
+            <div class="worker-queue-timeline">
+              <div class="worker-queue-event">
+                <span class="worker-queue-event-label">Last Poll</span>
+                <strong class="worker-queue-event-time">{% if poller.lastPollAt > 0 %}{{ time(poller.lastPollAt) }}{% else %}-{% endif %}</strong>
+                <span class="worker-queue-event-age">{{poller.lastPollAge}}</span>
+              </div>
+              <div class="worker-queue-event">
+                <span class="worker-queue-event-label">Last Message</span>
+                <strong class="worker-queue-event-time">{% if poller.lastMessageAt > 0 %}{{ time(poller.lastMessageAt) }}{% else %}-{% endif %}</strong>
+                <span class="worker-queue-event-age">{{poller.lastMessageAge}}</span>
+              </div>
+              <div class="worker-queue-event">
+                <span class="worker-queue-event-label">Last Exhausted</span>
+                <strong class="worker-queue-event-time">{% if poller.lastCapacityExhaustedAt > 0 %}{{ time(poller.lastCapacityExhaustedAt) }}{% else %}-{% endif %}</strong>
+                <span class="worker-queue-event-age">{{poller.lastCapacityExhaustedAge}}</span>
+              </div>
+            </div>
+
+            <div class="worker-queue-footer">
+              <span class="worker-queue-footer-label">Exhausted Count</span>
+              <strong class="worker-queue-footer-value">{{poller.capacityExhaustedCount}}</strong>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </details>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="worker-toolbar worker-toolbar-bottom">
+    <div class="worker-toolbar-note">Use the queue cards to drill into the queue detail page.</div>
+    <div class="worker-pagination">
+      {% if hasPreviousPage %}
+      <a class="worker-page-btn" href="?page={{previousPage}}">Previous</a>
+      {% endif %}
+      <span class="worker-page-pill">Page {{currentPage}} of {{totalPages}}</span>
+      {% if hasNextPage %}
+      <a class="worker-page-btn worker-page-btn-primary" href="?page={{nextPage}}">Next</a>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

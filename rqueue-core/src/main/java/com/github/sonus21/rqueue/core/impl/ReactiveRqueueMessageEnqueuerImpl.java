@@ -23,6 +23,7 @@ import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -31,7 +32,6 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -40,17 +40,24 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
 
   public ReactiveRqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders) {
-    this(messageTemplate, messageConverter, messageHeaders, new UuidV4RqueueMessageIdGenerator());
+    this(
+        messageTemplate,
+        messageBroker,
+        messageConverter,
+        messageHeaders,
+        new UuidV4RqueueMessageIdGenerator());
   }
 
   public ReactiveRqueueMessageEnqueuerImpl(
       RqueueMessageTemplate messageTemplate,
+      MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
-    super(messageTemplate, messageConverter, messageHeaders, messageIdGenerator);
+    super(messageTemplate, messageBroker, messageConverter, messageHeaders, messageIdGenerator);
   }
 
   @SuppressWarnings("unchecked")
@@ -77,21 +84,18 @@ public class ReactiveRqueueMessageEnqueuerImpl extends BaseMessageSender
       Mono<Boolean> storeResult =
           (Mono<Boolean>) storeMessageMetadata(rqueueMessage, delayInMilliSecs, true, isUnique);
       return storeResult.flatMap(success -> {
-        if (Boolean.TRUE.equals(success)) {
-          Object result = enqueue(queueDetail, rqueueMessage, delayInMilliSecs, true);
-          Mono<Long> enqueueMono;
-          if (result instanceof Flux) {
-            enqueueMono = ((Flux<Long>) result).next();
-          } else if (result instanceof Mono) {
-            enqueueMono = (Mono<Long>) result;
-          } else {
-            return Mono.error(
-                new IllegalStateException("Unexpected enqueue result type: " + result.getClass()));
-          }
-          return enqueueMono.flatMap(ignore -> monoConverter.apply(rqueueMessage));
-        } else {
+        if (!Boolean.TRUE.equals(success)) {
           return Mono.error(new DuplicateMessageException(rqueueMessage.getId()));
         }
+        Mono<Void> brokerMono;
+        if (delayInMilliSecs == null
+            || delayInMilliSecs <= com.github.sonus21.rqueue.utils.Constants.MIN_DELAY) {
+          brokerMono = messageBroker.enqueueReactive(queueDetail, rqueueMessage);
+        } else {
+          brokerMono =
+              messageBroker.enqueueWithDelayReactive(queueDetail, rqueueMessage, delayInMilliSecs);
+        }
+        return brokerMono.then(Mono.defer(() -> monoConverter.apply(rqueueMessage)));
       });
     } catch (Exception e) {
       log.error(

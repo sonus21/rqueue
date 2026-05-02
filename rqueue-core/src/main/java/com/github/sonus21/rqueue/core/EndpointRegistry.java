@@ -37,7 +37,15 @@ import java.util.stream.Collectors;
 public final class EndpointRegistry {
 
   private static final Object lock = new Object();
-  private static final Map<String, QueueDetail> queueNameToDetail = new HashMap<>();
+  // composite key: "queueName" for single-consumer, "queueName##consumerName" for multi-consumer
+  private static final Map<String, QueueDetail> registry = new HashMap<>();
+  // first registered QueueDetail per queue name — used by enqueue / management operations
+  private static final Map<String, QueueDetail> primaryByName = new HashMap<>();
+
+  private static String compositeKey(QueueDetail qd) {
+    String cn = qd.getConsumerName();
+    return (cn != null && !cn.isEmpty()) ? qd.getName() + "##" + cn : qd.getName();
+  }
 
   private EndpointRegistry() {}
 
@@ -51,7 +59,7 @@ public final class EndpointRegistry {
    * @see #get(String, String)
    */
   public static QueueDetail get(String queueName) {
-    QueueDetail queueDetail = queueNameToDetail.get(queueName);
+    QueueDetail queueDetail = primaryByName.get(queueName);
     if (queueDetail == null) {
       throw new QueueDoesNotExist(queueName);
     }
@@ -68,7 +76,7 @@ public final class EndpointRegistry {
    */
   public static QueueDetail get(String queueName, String priority) {
     QueueDetail queueDetail =
-        queueNameToDetail.get(PriorityUtils.getQueueNameForPriority(queueName, priority));
+        primaryByName.get(PriorityUtils.getQueueNameForPriority(queueName, priority));
     if (queueDetail == null) {
       throw new QueueDoesNotExist(queueName);
     }
@@ -77,24 +85,27 @@ public final class EndpointRegistry {
 
   public static void register(QueueDetail queueDetail) {
     synchronized (lock) {
-      if (queueNameToDetail.containsKey(queueDetail.getName())) {
+      String ck = compositeKey(queueDetail);
+      if (registry.containsKey(ck)) {
         throw new OverrideException(queueDetail.getName());
       }
-      queueNameToDetail.put(queueDetail.getName(), queueDetail);
+      registry.put(ck, queueDetail);
+      primaryByName.putIfAbsent(queueDetail.getName(), queueDetail);
       lock.notifyAll();
     }
   }
 
   public static void delete() {
     synchronized (lock) {
-      queueNameToDetail.clear();
+      registry.clear();
+      primaryByName.clear();
       lock.notifyAll();
     }
   }
 
   public static List<String> getActiveQueues() {
     synchronized (lock) {
-      List<String> queues = queueNameToDetail.values().stream()
+      List<String> queues = primaryByName.values().stream()
           .filter(QueueDetail::isActive)
           .map(QueueDetail::getName)
           .collect(Collectors.toList());
@@ -105,9 +116,8 @@ public final class EndpointRegistry {
 
   public static List<QueueDetail> getActiveQueueDetails() {
     synchronized (lock) {
-      List<QueueDetail> queueDetails = queueNameToDetail.values().stream()
-          .filter(QueueDetail::isActive)
-          .collect(Collectors.toList());
+      List<QueueDetail> queueDetails =
+          registry.values().stream().filter(QueueDetail::isActive).collect(Collectors.toList());
       lock.notifyAll();
       return queueDetails;
     }
@@ -115,7 +125,7 @@ public final class EndpointRegistry {
 
   public static Map<String, QueueDetail> getActiveQueueMap() {
     synchronized (lock) {
-      Map<String, QueueDetail> queueDetails = queueNameToDetail.values().stream()
+      Map<String, QueueDetail> queueDetails = primaryByName.values().stream()
           .filter(QueueDetail::isActive)
           .collect(Collectors.toMap(QueueDetail::getName, Function.identity()));
       lock.notifyAll();
@@ -126,7 +136,7 @@ public final class EndpointRegistry {
   public static String toStr() {
     StringBuilder builder = new StringBuilder();
     synchronized (lock) {
-      List<QueueDetail> queueDetails = new ArrayList<>(queueNameToDetail.values());
+      List<QueueDetail> queueDetails = new ArrayList<>(registry.values());
       queueDetails.sort(Comparator.comparing(QueueDetail::getName));
       for (QueueDetail q : queueDetails) {
         builder.append(q.toString());
@@ -142,6 +152,6 @@ public final class EndpointRegistry {
   }
 
   public static int getRegisteredQueueCount() {
-    return queueNameToDetail.size();
+    return registry.size();
   }
 }

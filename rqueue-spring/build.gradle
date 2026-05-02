@@ -41,5 +41,18 @@ mavenPublishing {
 
 dependencies {
     api project(":rqueue-core")
+    // Default-on dashboard module. Consumers who want a headless worker can <exclude> rqueue-web.
+    api project(":rqueue-web")
+    // Redis backend (default). Carries the @Configuration that wires Redis-only @Beans extracted
+    // from rqueue-core's RqueueListenerBaseConfig.
+    api project(":rqueue-redis")
+
+    // NATS support is opt-in. RqueueListenerConfig conditionally wires JetStreamMessageBroker
+    // when rqueue-nats and io.nats:jnats are on the classpath; otherwise the existing Redis
+    // path is used. Users who want NATS pull rqueue-nats explicitly.
+    compileOnly project(":rqueue-nats")
+    compileOnly "io.nats:jnats:${natsVersion}"
+
     testImplementation project(":rqueue-spring-common-test")
+    testImplementation project(":rqueue-nats")
 }

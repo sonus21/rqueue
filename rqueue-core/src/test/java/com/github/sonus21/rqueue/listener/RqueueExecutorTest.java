@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.listener;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -35,7 +36,7 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.Job;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
-import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.support.MessageProcessor;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
@@ -43,22 +44,19 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
 import com.github.sonus21.rqueue.utils.backoff.FixedTaskExecutionBackOff;
 import com.github.sonus21.rqueue.utils.backoff.TaskExecutionBackOff;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.converter.MessageConverter;
 
@@ -99,13 +97,10 @@ class RqueueExecutorTest extends TestBase {
   private RqueueSystemConfigDao rqueueSystemConfigDao;
 
   @Mock
-  private RedisTemplate<String, RqueueMessage> redisTemplate;
-
-  @Mock
   private ApplicationEventPublisher applicationEventPublisher;
 
   @Mock
-  private RqueueMessageTemplate messageTemplate;
+  private MessageBroker messageBroker;
 
   private RqueueMessage rqueueMessage = new RqueueMessage();
   private PostProcessingHandler postProcessingHandler;
@@ -130,10 +125,11 @@ class RqueueExecutorTest extends TestBase {
     postProcessingHandler = new PostProcessingHandler(
         rqueueWebConfig,
         applicationEventPublisher,
-        messageTemplate,
+        messageBroker,
         taskBackOff,
         messageProcessorHandler,
         rqueueSystemConfigDao);
+    doReturn(messageBroker).when(rqueueBeanProvider).getMessageBroker();
     doReturn(rqueueMessageMetadataService)
         .when(rqueueBeanProvider)
         .getRqueueMessageMetadataService();
@@ -175,7 +171,6 @@ class RqueueExecutorTest extends TestBase {
   @Test
   void callDeadLetterProcessor() {
     doReturn(true).when(rqueueLockManager).acquireLock(anyString(), anyString(), any());
-    doReturn(redisTemplate).when(messageTemplate).getTemplate();
     doReturn(preProcessMessageProcessor).when(rqueueBeanProvider).getPreExecutionMessageProcessor();
     doThrow(new MessagingException("Failing for some reason."))
         .when(messageHandler)
@@ -187,9 +182,6 @@ class RqueueExecutorTest extends TestBase {
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .get(defaultMessageMetadata.getId());
-    doReturn(Collections.emptyList())
-        .when(redisTemplate)
-        .executePipelined(any(RedisCallback.class));
     doReturn(3).when(rqueueConfig).getRetryPerPoll();
     new RqueueExecutor(
             rqueueBeanProvider,
@@ -224,13 +216,9 @@ class RqueueExecutorTest extends TestBase {
             queueDetail,
             queueThreadPool)
         .run();
-    verify(messageTemplate, times(1))
-        .moveMessageWithDelay(
-            eq(queueDetail.getProcessingQueueName()),
-            eq(queueDetail.getScheduledQueueName()),
-            eq(rqueueMessage),
-            any(),
-            eq(5000L));
+    verify(messageBroker, times(1))
+        .parkForRetry(
+            eq(queueDetail), any(RqueueMessage.class), any(RqueueMessage.class), eq(5000L));
   }
 
   @Test
@@ -307,8 +295,7 @@ class RqueueExecutorTest extends TestBase {
             queueThreadPool)
         .run();
     verify(messageHandler, times(0)).handleMessage(any());
-    verify(messageTemplate, times(1))
-        .removeElementFromZset(queueDetail.getProcessingQueueName(), rqueueMessage);
+    verify(messageBroker, times(1)).ack(eq(queueDetail), any(RqueueMessage.class));
   }
 
   @Test
@@ -333,7 +320,6 @@ class RqueueExecutorTest extends TestBase {
         + newMessage.getProcessAt();
     doReturn(1).when(rqueueConfig).getRetryPerPoll();
     doReturn(preProcessMessageProcessor).when(rqueueBeanProvider).getPreExecutionMessageProcessor();
-    doReturn(messageTemplate).when(rqueueBeanProvider).getRqueueMessageTemplate();
     doReturn(defaultMessageMetadata)
         .when(rqueueMessageMetadataService)
         .getOrCreateMessageMetadata(any());
@@ -350,9 +336,8 @@ class RqueueExecutorTest extends TestBase {
             queueDetail,
             queueThreadPool)
         .run();
-    verify(messageTemplate, times(1))
-        .scheduleMessage(
-            eq(queueDetail.getScheduledQueueName()), eq(messageKey), eq(newMessage), any());
+    verify(messageBroker, times(1))
+        .scheduleNext(eq(queueDetail), eq(messageKey), eq(newMessage), anyLong());
     verify(messageHandler, times(1)).handleMessage(any());
   }
 

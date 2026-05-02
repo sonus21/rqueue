@@ -65,6 +65,8 @@ ext {
 
     // database
     lettuceVersion = "7.2.1.RELEASE"
+    natsVersion = "2.25.2"
+    testcontainersVersion = "1.20.4"
     jakartaAnnotationVersion = "3.0.0"
     jakartaPersistenceVersion = "3.2.0"
     hibernateCoreVersion = "7.2.1.Final"
@@ -83,7 +85,7 @@ ext {
 
 subprojects {
     group = "com.github.sonus21"
-    version = "4.0.0-RC3"
+    version = "4.0.0-RC4"
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging

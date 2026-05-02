@@ -1,0 +1,230 @@
+{% extends 'base' %}
+{% block main %}
+<!--
+  ~ Copyright (c) 2025-2026 Sonu Kumar
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations under the License.
+  ~
+  -->
+
+<div class="container queue-dashboard">
+  <section class="queue-hero">
+    <div class="queue-hero-copy">
+      <span class="queue-hero-kicker">Queue Catalog</span>
+      <h1 class="queue-hero-title">Operational View of Every Queue</h1>
+      <p class="queue-hero-subtitle">
+        Browse queue configuration, retry policy, pause state, and backing Redis structures from a single page.
+      </p>
+    </div>
+    <div class="queue-hero-meta">
+      <div class="queue-hero-stat">
+        <span class="queue-hero-stat-label">Queues</span>
+        <strong class="queue-hero-stat-value">{{totalQueueCount}}</strong>
+      </div>
+      <div class="queue-hero-stat">
+        <span class="queue-hero-stat-label">Page</span>
+        <strong class="queue-hero-stat-value">{{currentPage}} / {{totalPages}}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="queue-toolbar">
+    <div class="queue-toolbar-note">
+      {% if totalQueueCount > 0 %}
+      Showing queue records for this page.
+      {% else %}
+      No queues are registered.
+      {% endif %}
+    </div>
+    <div class="worker-pagination">
+      {% if hasPreviousPage %}
+      <a class="worker-page-btn" href="?page={{previousPage}}">Previous</a>
+      {% endif %}
+      <span class="worker-page-pill">Page {{currentPage}}</span>
+      {% if hasNextPage %}
+      <a class="worker-page-btn worker-page-btn-primary" href="?page={{nextPage}}">Next</a>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if queues is empty %}
+  <section class="queue-empty-state" role="alert">
+    <h2>No queues available.</h2>
+    <p>Queue definitions will appear here after Rqueue loads listener metadata.</p>
+  </section>
+  {% else %}
+  <section class="queue-card-grid">
+    {% for meta in queues %}
+    <article class="queue-card">
+      <div class="queue-card-top">
+        <div class="queue-card-heading">
+          <span class="queue-card-label">Queue</span>
+          <h2 class="queue-card-title"><a href="queues/{{meta.name}}">{{meta.name}}</a></h2>
+        </div>
+        <div class="queue-card-actions">
+          <span
+              aria-label="{% if meta.paused %}Paused{% else %}Live{% endif %}"
+              class="queue-state-badge {% if meta.paused %}queue-state-paused{% else %}queue-state-live{% endif %}"
+              data-placement="top"
+              data-toggle="tooltip"
+              title="{% if meta.paused %}Paused{% else %}Live{% endif %}">
+            <i class="bx {% if meta.paused %}bx-pause-circle{% else %}bx-check-circle{% endif %}"></i>
+          </span>
+          <button class="queue-pause-toggle" type="button">
+            <i class="bx pause-queue-btn {% if meta.paused %} bx-play-circle {% else %} bx-pause-circle {% endif %}"
+               data-placement="top"
+               data-queue="{{meta.name}}"
+               data-toggle="tooltip"
+               title="{% if meta.paused %}Unpause{% else %}Pause{% endif %}"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="queue-card-metrics">
+        <div class="queue-metric">
+          <span aria-label="Concurrency"
+                class="queue-metric-label queue-metric-icon"
+                data-placement="top"
+                data-toggle="tooltip"
+                title="Concurrency">
+            <i class="bx bx-sitemap"></i>
+          </span>
+          <strong class="queue-metric-value">
+            {% if meta.concurrency.min == -1 and meta.concurrency.max == -1 %}
+            <span aria-label="Unbounded concurrency"
+                  class="queue-metric-infinity"
+                  data-placement="top"
+                  data-toggle="tooltip"
+                  title="Unbounded concurrency">
+              <i class="bx bx-infinite"></i>
+            </span>
+            {% else %}
+            {{meta.concurrency.min}} to {{meta.concurrency.max}}
+            {% endif %}
+          </strong>
+        </div>
+        <div class="queue-metric">
+          <span aria-label="Retry Count"
+                class="queue-metric-label queue-metric-icon"
+                data-placement="top"
+                data-toggle="tooltip"
+                title="Retry Count">
+            <i class="bx bx-refresh"></i>
+          </span>
+          <strong class="queue-metric-value">
+            {% if meta.unlimitedRetry %}
+            <span aria-label="Unlimited retries"
+                  class="queue-metric-infinity"
+                  data-placement="top"
+                  data-toggle="tooltip"
+                  title="Unlimited retries">
+              <i class="bx bx-infinite"></i>
+            </span>
+            {% else %}
+            {{meta.numRetry}}
+            {% endif %}
+          </strong>
+        </div>
+        <div class="queue-metric">
+          <span aria-label="Visibility Timeout"
+                class="queue-metric-label queue-metric-icon"
+                data-placement="top"
+                data-toggle="tooltip"
+                title="Visibility Timeout">
+            <i class="bx bx-time-five"></i>
+          </span>
+          <strong class="queue-metric-value">{{duration(meta.visibilityTimeout)}}</strong>
+        </div>
+      </div>
+
+      <div class="queue-card-meta">
+        <div class="queue-meta-block">
+          <span class="queue-meta-label">Dead Letter Queue(s)</span>
+          <div class="queue-meta-value queue-dlq-list">{{ dlq(meta.deadLetterQueues) }}</div>
+        </div>
+        <div class="queue-meta-grid">
+          <div class="queue-meta-block">
+            <span class="queue-meta-label">Created</span>
+            <div class="queue-meta-value queue-meta-value-inline">{{ readableTime(meta.createdOn) }}</div>
+          </div>
+          <div class="queue-meta-block">
+            <span class="queue-meta-label">Updated</span>
+            <div class="queue-meta-value queue-meta-value-inline">{{ readableTime(meta.updatedOn) }}</div>
+          </div>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="queue-storage-section">
+    <div class="queue-section-header">
+      <div>
+        <span class="queue-section-kicker">{{storageKicker}} Layout</span>
+        <h2 class="queue-section-title">Queue Storage Footprint</h2>
+      </div>
+      <p class="queue-section-copy">{{storageDescription}}</p>
+    </div>
+
+    <div class="queue-storage-grid">
+      {% for config in queueConfigs %}
+      <article class="queue-storage-card">
+        <div class="queue-storage-card-head">
+          <span class="queue-storage-label">Queue</span>
+          <h3 class="queue-storage-title">{{config.key}}</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="table queue-storage-table">
+            <thead>
+            <tr>
+              <th>Type</th>
+              <th>Name</th>
+              <th>Size</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for meta in config.value %}
+            <tr>
+              <td>{{ meta.key }}</td>
+              <td>{{ meta.value.name }}</td>
+              <td>
+                {% if meta.value.size < 0 %}
+                Queue-backed
+                {% else %}
+                {{ meta.value.size }}
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="queue-toolbar queue-toolbar-bottom">
+    <div class="queue-toolbar-note">Use each queue card to open detailed queue state and message explorers.</div>
+    <div class="worker-pagination">
+      {% if hasPreviousPage %}
+      <a class="worker-page-btn" href="?page={{previousPage}}">Previous</a>
+      {% endif %}
+      <span class="worker-page-pill">Page {{currentPage}} of {{totalPages}}</span>
+      {% if hasNextPage %}
+      <a class="worker-page-btn worker-page-btn-primary" href="?page={{nextPage}}">Next</a>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

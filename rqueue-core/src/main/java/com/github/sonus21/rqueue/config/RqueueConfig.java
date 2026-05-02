@@ -44,13 +44,32 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 public class RqueueConfig {
 
   @Getter
-  private static final String brokerId = UUID.randomUUID().toString();
+  private static final String brokerId = generateBrokerId();
+
+  private static String generateBrokerId() {
+    String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    java.util.Random random = new java.util.Random();
+    StringBuilder sb = new StringBuilder(8);
+    for (int i = 0; i < 8; i++) {
+      sb.append(chars.charAt(random.nextInt(chars.length())));
+    }
+    return sb.toString();
+  }
 
   private static final AtomicLong counter = new AtomicLong(1);
   private final RedisConnectionFactory connectionFactory;
   private final ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
   private final boolean sharedConnection;
   private final int dbVersion;
+
+  /**
+   * Active rqueue backend. Defaults to {@link Backend#REDIS} so every existing call site that
+   * constructs {@code RqueueConfig} via the Lombok-generated constructor keeps the same
+   * behavior. The {@code rqueueConfig} bean factory in {@link RqueueListenerBaseConfig} reads the
+   * {@code rqueue.backend} property and overrides it. Beans that need to know the active backend
+   * should call {@link #getBackend()} instead of probing the classpath.
+   */
+  private Backend backend = Backend.REDIS;
 
   @Value("${rqueue.reactive.enabled:false}")
   private boolean reactiveEnabled;

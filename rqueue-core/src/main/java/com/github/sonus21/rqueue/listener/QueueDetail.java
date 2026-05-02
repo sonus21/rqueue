@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.listener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.db.DeadLetterQueue;
@@ -41,6 +42,17 @@ import lombok.Getter;
 import lombok.ToString;
 import org.springframework.util.CollectionUtils;
 
+/**
+ * Configuration and metadata for an Rqueue listener. Each queue detail captures the queue's
+ * polling behavior, error handling, and optional dead-letter queue setup.
+ *
+ * <p>Internal field names (e.g., {@code queueName}, {@code processingQueueName}) are backed by the
+ * queue name and prefixes from {@link com.github.sonus21.rqueue.config.RqueueConfig}.
+ *
+ * <p>Supports priority-based sub-queues via the {@code priority} map, where each entry defines a
+ * priority level and its relative weight. Use {@code expandQueueDetail()} to generate concrete
+ * queue details for each priority when multi-priority queueing is configured.
+ */
 @Getter
 @Builder
 @EqualsAndHashCode(callSuper = true)
@@ -71,6 +83,8 @@ public class QueueDetail extends SerializableBase {
   private Map<String, Integer> priority;
   private String priorityGroup;
   private Set<Class<? extends Throwable>> doNotRetry;
+
+  private final String consumerName;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
@@ -151,6 +165,7 @@ public class QueueDetail extends SerializableBase {
         .concurrency(concurrency)
         .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, priority))
         .doNotRetry(doNotRetry)
+        .consumerName(consumerName)
         .build();
   }
 
@@ -158,9 +173,20 @@ public class QueueDetail extends SerializableBase {
     return Duration.ofMillis(visibilityTimeout);
   }
 
-  public enum QueueType {
-    QUEUE,
-    STREAM
+  /**
+   * Returns the effective JetStream consumer name for this queue. When {@link #consumerName} is
+   * explicitly set it is returned as-is. Otherwise a default is derived from the queue name:
+   * primary (non-system-generated) queues get {@code {name}-consumer-primary}; system-generated
+   * priority sub-queues get {@code {name}-consumer}. The name is sanitized so that characters
+   * outside {@code [A-Za-z0-9_-]} (e.g. the {@code ::} priority suffix separator) are replaced
+   * with {@code -}, producing a valid NATS consumer name in all cases.
+   */
+  public String resolvedConsumerName() {
+    if (consumerName != null && !consumerName.isEmpty()) {
+      return consumerName;
+    }
+    String sanitized = name.replaceAll("[^A-Za-z0-9_-]", "-");
+    return systemGenerated ? sanitized + "-consumer" : sanitized + "-consumer-primary";
   }
 
   public boolean isDoNotRetryError(Throwable throwable) {

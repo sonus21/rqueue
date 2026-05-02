@@ -2,18 +2,19 @@
 layout: default
 title: Home
 nav_order: 1
-description: Rqueue Redis Based Async Message Processor
+description: Rqueue Job Queue and Scheduler for Spring — Redis and NATS JetStream backends
 permalink: /
 ---
 
-# Rqueue | Redis-Backed Job Queue and Scheduler For Spring Framework
+# Rqueue | Job Queue and Scheduler For Spring Framework (Redis &amp; NATS)
 
 {: .fs-4 }
 
-Rqueue is a Redis-backed job queue and producer-consumer system for Spring and Spring Boot. It
-supports both producers and consumers for background jobs, scheduled tasks, and event-driven
-workflows, similar to Sidekiq or Celery, while staying fully integrated with the Spring programming
-model through annotation-driven APIs and minimal setup.
+Rqueue is a job queue and producer-consumer system for Spring and Spring Boot with pluggable
+broker backends — **Redis** (default) and **NATS JetStream**. It supports producers and consumers
+for background jobs, scheduled tasks, and event-driven workflows, similar to Sidekiq or Celery,
+while staying fully integrated with the Spring programming model through annotation-driven APIs
+and minimal setup.
 
 {: .fs-6 .fw-300 }
 
@@ -55,10 +56,12 @@ model through annotation-driven APIs and minimal setup.
   * Use the built-in web dashboard for queue visibility, worker activity, and message operations
   * Override message ID generation with a custom `RqueueMessageIdGenerator` bean
 
-* **Redis and platform support**
+* **Backend and platform support**
+  * Switch backends with a single property (`rqueue.backend=redis|nats`)
   * Support Redis standalone, Sentinel, and Cluster setups
   * Support reactive Redis and Spring WebFlux
   * Keep Redis configuration flexible for different deployment models
+  * Use NATS JetStream as a drop-in Redis replacement (add `rqueue-nats` and set `rqueue.backend=nats`)
 
 ### Requirements
 
@@ -66,8 +69,8 @@ model through annotation-driven APIs and minimal setup.
 * Spring Boot 3+, 4+
 * Java 21+
 * Spring Reactive
-* Lettuce client for Redis cluster
-* Read master preference for Redis cluster
+* **Redis backend (default):** Lettuce client; read-master preference for Redis Cluster
+* **NATS backend:** NATS Server 2.2+ with JetStream enabled (`nats-server -js`); `rqueue-nats` on the classpath
 
 ## Getting Started
 
@@ -80,7 +83,8 @@ inconsistencies. Queues should **only** be created when using Rqueue as a produc
 {: .highlight }
 The Rqueue GitHub repository includes several sample applications for local testing and demonstration:
 
-* [Rqueue Spring Boot Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example)
+* [Rqueue Spring Boot Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-example) — Redis backend
+* [Rqueue Spring Boot NATS Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-nats-example) — NATS JetStream backend
 * [Rqueue Spring Boot Reactive Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-boot-reactive-example)
 * [Rqueue Spring Example](https://github.com/sonus21/rqueue/tree/master/rqueue-spring-example)
 
@@ -158,6 +162,25 @@ public class Application {
   }
 }
 ```
+
+---
+
+### NATS JetStream Backend
+
+To use NATS JetStream instead of Redis, add `rqueue-nats` alongside the starter, set
+`rqueue.backend=nats`, and point `rqueue.nats.connection.url` at a JetStream-enabled server.
+No `RedisConnectionFactory` bean is required. All listener, producer, and middleware APIs work
+without any code changes.
+
+```properties
+rqueue.backend=nats
+rqueue.nats.connection.url=nats://localhost:4222
+```
+
+{: .note }
+See [NATS Configuration](configuration/nats-configuration) for the full reference — connection
+options, stream defaults, consumer tuning, naming, auto-provisioning, locked-down account setup,
+and feature limitations.
 
 ---
 

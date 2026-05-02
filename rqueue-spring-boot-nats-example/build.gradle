@@ -1,0 +1,20 @@
+plugins {
+    id "org.springframework.boot" version "${springBootVersion}"
+    id "war"
+}
+dependencies {
+    implementation project(":rqueue-spring-boot-starter")
+    // rqueue-nats brings the JetStream broker, KV-backed daos, NatsStreamValidator, etc.
+    // It's a runtime-conditional dependency on the starter side (gated by rqueue.backend=nats),
+    // so the example pins it explicitly.
+    implementation project(":rqueue-nats")
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    // jnats is api-exposed by rqueue-nats, but pinning it here keeps the build readable.
+    implementation "io.nats:jnats:${natsVersion}"
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
+    providedRuntime "org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}"
+}

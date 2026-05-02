@@ -33,20 +33,20 @@ import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.MessageMoveResult;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.MessageMetadataTestUtils;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -85,9 +85,6 @@ class RqueueMessageManagerImplTest extends TestBase {
   private final RqueueMessage rqueueMessage2 = messageMetadata2.getRqueueMessage();
 
   @Mock
-  private RqueueLockManager rqueueLockManager;
-
-  @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
 
   @Mock
@@ -104,13 +101,15 @@ class RqueueMessageManagerImplTest extends TestBase {
   @BeforeEach
   public void init() throws IllegalAccessException {
     MockitoAnnotations.openMocks(this);
-    rqueueMessageManager =
-        new RqueueMessageManagerImpl(rqueueMessageTemplate, messageConverter, null);
+    rqueueMessageManager = new RqueueMessageManagerImpl(
+        rqueueMessageTemplate,
+        new RedisMessageBroker(rqueueMessageTemplate),
+        messageConverter,
+        null);
     EndpointRegistry.delete();
     EndpointRegistry.register(queueDetail);
     EndpointRegistry.register(queueDetail2);
     writeField(rqueueMessageManager, "rqueueConfig", rqueueConfig, true);
-    writeField(rqueueMessageManager, "rqueueLockManager", rqueueLockManager, true);
     writeField(
         rqueueMessageManager, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
   }

@@ -29,13 +29,13 @@ import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.MessageSweeper.MessageDeleteRequest;
-import com.github.sonus21.rqueue.dao.RqueueStringDao;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.exception.DuplicateMessageException;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
+import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
-import com.github.sonus21.rqueue.web.service.RqueueMessageMetadataService;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,9 +53,7 @@ abstract class BaseMessageSender {
   protected final MessageConverter messageConverter;
   protected final RqueueMessageTemplate messageTemplate;
   protected final RqueueMessageIdGenerator messageIdGenerator;
-
-  @Autowired
-  protected RqueueStringDao rqueueStringDao;
+  protected final com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker;
 
   @Autowired
   protected RqueueConfig rqueueConfig;
@@ -65,13 +63,16 @@ abstract class BaseMessageSender {
 
   BaseMessageSender(
       RqueueMessageTemplate messageTemplate,
+      com.github.sonus21.rqueue.core.spi.MessageBroker messageBroker,
       MessageConverter messageConverter,
       MessageHeaders messageHeaders,
       RqueueMessageIdGenerator messageIdGenerator) {
     notNull(messageTemplate, "messageTemplate cannot be null");
+    notNull(messageBroker, "messageBroker cannot be null");
     notNull(messageConverter, "messageConverter cannot be null");
     notNull(messageIdGenerator, "messageIdGenerator cannot be null");
     this.messageTemplate = messageTemplate;
+    this.messageBroker = messageBroker;
     this.messageConverter = messageConverter;
     this.messageHeaders = messageHeaders;
     this.messageIdGenerator = messageIdGenerator;
@@ -79,6 +80,10 @@ abstract class BaseMessageSender {
 
   protected Object storeMessageMetadata(
       RqueueMessage rqueueMessage, Long delayInMillis, boolean reactive, boolean isUnique) {
+    boolean skipMetadata = !messageBroker.capabilities().usesPrimaryHandlerDispatch();
+    if (skipMetadata) {
+      return reactive ? reactor.core.publisher.Mono.just(true) : null;
+    }
     MessageMetadata messageMetadata = new MessageMetadata(rqueueMessage, MessageStatus.ENQUEUED);
     Duration duration = rqueueConfig.getMessageDurability(delayInMillis);
     if (reactive) {
@@ -94,30 +99,50 @@ abstract class BaseMessageSender {
       RqueueMessage rqueueMessage,
       Long delayInMilliSecs,
       boolean reactive) {
+    return enqueue(queueDetail, null, rqueueMessage, delayInMilliSecs, reactive);
+  }
+
+  /**
+   * Priority-aware enqueue. Always routes through {@link
+   * com.github.sonus21.rqueue.core.spi.MessageBroker} — the Redis-vs-NATS dispatch lives inside
+   * each broker implementation. Backends that key off the queue name (Redis) ignore {@code
+   * priority}; backends that publish to a per-priority destination (NATS) use it to pick the
+   * subject. Reactive enqueues route through {@code enqueueReactive} so backends with native
+   * async APIs do not block a thread.
+   */
+  protected Object enqueue(
+      QueueDetail queueDetail,
+      String priority,
+      RqueueMessage rqueueMessage,
+      Long delayInMilliSecs,
+      boolean reactive) {
     if (delayInMilliSecs == null || delayInMilliSecs <= MIN_DELAY) {
       if (reactive) {
-        return messageTemplate.addReactiveMessage(queueDetail.getQueueName(), rqueueMessage);
-      } else {
-        messageTemplate.addMessage(queueDetail.getQueueName(), rqueueMessage);
+        return messageBroker.enqueueReactive(queueDetail, rqueueMessage);
       }
+      messageBroker.enqueue(queueDetail, priority, rqueueMessage);
     } else {
       if (reactive) {
-        return messageTemplate.addReactiveMessageWithDelay(
-            queueDetail.getScheduledQueueName(),
-            queueDetail.getScheduledQueueChannelName(),
-            rqueueMessage);
-      } else {
-        messageTemplate.addMessageWithDelay(
-            queueDetail.getScheduledQueueName(),
-            queueDetail.getScheduledQueueChannelName(),
-            rqueueMessage);
+        return messageBroker.enqueueWithDelayReactive(queueDetail, rqueueMessage, delayInMilliSecs);
       }
+      messageBroker.enqueueWithDelay(queueDetail, rqueueMessage, delayInMilliSecs);
     }
     return null;
   }
 
   protected String pushMessage(
       String queueName,
+      String messageId,
+      Object message,
+      Integer retryCount,
+      Long delayInMilliSecs,
+      boolean isUnique) {
+    return pushMessage(queueName, null, messageId, message, retryCount, delayInMilliSecs, isUnique);
+  }
+
+  protected String pushMessage(
+      String queueName,
+      String priority,
       String messageId,
       Object message,
       Integer retryCount,
@@ -135,7 +160,7 @@ abstract class BaseMessageSender {
         messageHeaders);
     try {
       storeMessageMetadata(rqueueMessage, delayInMilliSecs, false, isUnique);
-      enqueue(queueDetail, rqueueMessage, delayInMilliSecs, false);
+      enqueue(queueDetail, priority, rqueueMessage, delayInMilliSecs, false);
     } catch (DuplicateMessageException e) {
       log.warn(
           "Duplicate message enqueue attempted queue: {}, messageId: {}",
@@ -177,8 +202,9 @@ abstract class BaseMessageSender {
             MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
-  protected void registerQueueInternal(String queueName, String... priorities) {
+  protected void registerQueueInternal(String queueName, QueueType type, String... priorities) {
     validateQueue(queueName);
+    messageBroker.validateQueueName(queueName);
     notNull(priorities, "priorities cannot be null");
     Map<String, Integer> priorityMap = new HashMap<>();
     priorityMap.put(DEFAULT_PRIORITY_KEY, 1);
@@ -195,8 +221,10 @@ abstract class BaseMessageSender {
         .processingQueueName(rqueueConfig.getProcessingQueueName(queueName))
         .processingQueueChannelName(rqueueConfig.getProcessingQueueChannelName(queueName))
         .priority(priorityMap)
+        .type(type)
         .build();
     EndpointRegistry.register(queueDetail);
+    notifyBrokerQueueRegistered(queueDetail);
     for (String priority : priorities) {
       String suffix = PriorityUtils.getSuffix(priority);
       queueDetail = QueueDetail.builder()
@@ -211,6 +239,11 @@ abstract class BaseMessageSender {
           .priority(Collections.singletonMap(DEFAULT_PRIORITY_KEY, 1))
           .build();
       EndpointRegistry.register(queueDetail);
+      notifyBrokerQueueRegistered(queueDetail);
     }
+  }
+
+  private void notifyBrokerQueueRegistered(QueueDetail queueDetail) {
+    messageBroker.onQueueRegistered(queueDetail);
   }
 }

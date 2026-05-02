@@ -67,7 +67,7 @@ public class ApplicationListenerDisabled extends BaseApplication {
     }
     return new RqueueMessageListenerContainer(rqueueMessageHandler, rqueueMessageTemplate) {
       @Override
-      protected void startQueue(String queueName, QueueDetail queueDetail) {}
+      protected void startQueue(String pollerKey, QueueDetail queueDetail) {}
     };
   }
 }

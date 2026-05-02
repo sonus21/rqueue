@@ -98,7 +98,7 @@ class RqueueExecutor extends MessageContainerBase {
         beanProvider.getRqueueConfig(),
         beanProvider.getRqueueMessageMetadataService(),
         beanProvider.getRqueueJobDao(),
-        beanProvider.getRqueueMessageTemplate(),
+        beanProvider.getMessageBroker(),
         beanProvider.getRqueueLockManager(),
         queueDetail,
         messageMetadata,
@@ -344,18 +344,10 @@ class RqueueExecutor extends MessageContainerBase {
         .build();
     String messageKey = getScheduledMessageKey(newMessage);
     long expiryInSeconds = getTtlForScheduledMessageKey(newMessage);
-    log(
-        Level.DEBUG,
-        "Schedule periodic message: {} Status: {}",
-        null,
-        job.getRqueueMessage(),
-        beanProvider
-            .getRqueueMessageTemplate()
-            .scheduleMessage(
-                job.getQueueDetail().getScheduledQueueName(),
-                messageKey,
-                newMessage,
-                expiryInSeconds));
+    log(Level.DEBUG, "Schedule periodic message: {}", null, job.getRqueueMessage());
+    beanProvider
+        .getMessageBroker()
+        .scheduleNext(job.getQueueDetail(), messageKey, newMessage, expiryInSeconds);
   }
 
   private void handlePeriodicMessage() {

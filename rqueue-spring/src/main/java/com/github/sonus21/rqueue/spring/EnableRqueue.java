@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.spring;
 
+import com.github.sonus21.rqueue.config.Backend;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,17 +24,25 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Import;
 
 /**
- * This annotation can be used to auto configure Rqueue library by providing some sample
- * configuration like by just providing
- * {@link org.springframework.data.redis.connection.RedisConnectionFactory}.
- *
- * <p>All other beans would be created automatically. Though other components of library can be
- * configured as well using
- * {@link com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory}. Even it can be
- * configured at very fine-grained level by creating all individual beans created in
- * {@link RqueueListenerConfig}
+ * Auto-configure Rqueue when {@link
+ * org.springframework.data.redis.connection.RedisConnectionFactory} (or, when {@link
+ * #backend()} is {@link Backend#NATS}, an {@link io.nats.client.Connection}-derived
+ * {@code MessageBroker}) is available. All other beans are created automatically; further
+ * customization happens through {@link
+ * com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory} or by directly defining
+ * the beans created in {@link RqueueListenerConfig}.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({RqueueListenerConfig.class})
-public @interface EnableRqueue {}
+@Import({RqueueBackendImportSelector.class})
+public @interface EnableRqueue {
+
+  /**
+   * Backend to wire. Defaults to {@link Backend#REDIS}. Set to {@link Backend#NATS} to import the
+   * NATS / JetStream listener configuration. The {@code rqueue.backend} property is independently
+   * read by {@link com.github.sonus21.rqueue.config.RqueueConfig} and remains the source of truth
+   * for the runtime backend; this attribute controls only which {@code @Configuration} class is
+   * pulled into the context.
+   */
+  Backend backend() default Backend.REDIS;
+}
