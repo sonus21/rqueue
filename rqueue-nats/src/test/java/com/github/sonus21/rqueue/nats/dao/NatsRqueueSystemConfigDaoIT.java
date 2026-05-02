@@ -15,6 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.nats.AbstractJetStreamIT;
+import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValueManagement;
 import java.io.IOException;
@@ -36,7 +40,9 @@ class NatsRqueueSystemConfigDaoIT extends AbstractJetStreamIT {
     } catch (JetStreamApiException notFound) {
       // first run
     }
-    dao = new NatsRqueueSystemConfigDao(connection);
+    NatsProvisioner provisioner = new NatsProvisioner(
+        connection, connection.jetStreamManagement(), RqueueNatsConfig.defaults());
+    dao = new NatsRqueueSystemConfigDao(provisioner, new RqJacksonSerDes(SerializationUtils.getObjectMapper()));
   }
 
   private QueueConfig sample(String id, String name) {

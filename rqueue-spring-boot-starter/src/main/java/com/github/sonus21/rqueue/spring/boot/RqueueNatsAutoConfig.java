@@ -19,10 +19,12 @@ import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.nats.js.NatsStreamValidator;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator;
 import com.github.sonus21.rqueue.nats.metrics.NatsRqueueQueueMetricsProvider;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;
@@ -158,6 +160,17 @@ public class RqueueNatsAutoConfig {
   public NatsKvBucketValidator natsKvBucketValidator(
       Connection connection, RqueueNatsProperties props) {
     return new NatsKvBucketValidator(connection, props.isAutoCreateKvBuckets());
+  }
+
+  /**
+   * Shared {@link com.github.sonus21.rqueue.serdes.RqueueSerDes} for the NATS backend. Backed by Jackson with the same configuration as
+   * the rest of rqueue ({@code FAIL_ON_UNKNOWN_PROPERTIES=false}, auto-detected modules) so values
+   * written to KV buckets are readable via {@code nats kv get}.
+   */
+  @Bean
+  @ConditionalOnMissingBean(com.github.sonus21.rqueue.serdes.RqueueSerDes.class)
+  public com.github.sonus21.rqueue.serdes.RqueueSerDes natsSerDes() {
+    return new RqJacksonSerDes(SerializationUtils.getObjectMapper());
   }
 
   @Bean

@@ -17,6 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.enums.JobStatus;
 import com.github.sonus21.rqueue.nats.AbstractJetStreamIT;
+import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValueManagement;
 import java.io.IOException;
@@ -39,7 +43,9 @@ class NatsRqueueJobDaoIT extends AbstractJetStreamIT {
     } catch (JetStreamApiException notFound) {
       // first run
     }
-    dao = new NatsRqueueJobDao(connection);
+    NatsProvisioner provisioner = new NatsProvisioner(
+        connection, connection.jetStreamManagement(), RqueueNatsConfig.defaults());
+    dao = new NatsRqueueJobDao(provisioner, new RqJacksonSerDes(SerializationUtils.getObjectMapper()));
   }
 
   private RqueueJob job(String id, String messageId) {

@@ -14,8 +14,10 @@
  *
  */
 
-package com.github.sonus21.rqueue.utils;
+package com.github.sonus21.rqueue.serdes;
 
+import com.github.sonus21.rqueue.utils.StringUtils;
+import lombok.Getter;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -24,7 +26,18 @@ public final class SerializationUtils {
 
   public static final byte[] EMPTY_ARRAY = new byte[0];
 
-  private SerializationUtils() {}
+  // These have been left public so callers can override if needed.
+  @Getter
+  public static ObjectMapper objectMapper = createObjectMapper();
+
+  @Getter
+  public static RqueueSerDes serDes = new RqJacksonSerDes(objectMapper);
+
+  @Getter
+  public static RqueueTypeFactory typeFactory = new RqJacksonTypeFactory(objectMapper);
+
+  private SerializationUtils() {
+  }
 
   public static boolean isEmpty(byte[] bytes) {
     return bytes == null || bytes.length == 0;
@@ -36,9 +49,10 @@ public final class SerializationUtils {
         && data.charAt(data.length() - 1) == '}';
   }
 
-  public static ObjectMapper createObjectMapper() {
+  private static ObjectMapper createObjectMapper() {
     return JsonMapper.builder()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
         .findAndAddModules()
         .build();
   }

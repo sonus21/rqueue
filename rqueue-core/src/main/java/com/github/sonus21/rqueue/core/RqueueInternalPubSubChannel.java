@@ -18,14 +18,14 @@ package com.github.sonus21.rqueue.core;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.config.RqueueConfig;
-import com.github.sonus21.rqueue.converter.GenericMessageConverter.SmartMessageSerDes;
 import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.enums.PubSubType;
 import com.github.sonus21.rqueue.models.event.RqueuePubSubEvent;
 import com.github.sonus21.rqueue.models.request.PauseUnpauseQueueRequest;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.SerializationUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.time.Duration;
 import java.util.UUID;
@@ -44,7 +44,7 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
   private final RqueueRedisTemplate<String> stringRqueueRedisTemplate;
   private final RqueueRedisSerializer rqueueRedisSerializer;
   private final RqueueBeanProvider rqueueBeanProvider;
-  private SmartMessageSerDes smartMessageSerDes;
+  private final RqueueSerDes serDes = SerializationUtils.getSerDes();
 
   public RqueueInternalPubSubChannel(
       RqueueRedisListenerContainerFactory rqueueRedisListenerContainerFactory,
@@ -63,10 +63,8 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
   @Override
   public void afterPropertiesSet() throws Exception {
     String channel = rqueueConfig.getInternalCommChannelName();
-    InternalMessageListener messageListener = new InternalMessageListener();
     rqueueRedisListenerContainerFactory.addMessageListener(
-        messageListener, new ChannelTopic(channel));
-    this.smartMessageSerDes = new SmartMessageSerDes(SerializationUtils.createObjectMapper());
+        new InternalMessageListener(), new ChannelTopic(channel));
   }
 
   public void emitPauseUnpauseQueueEvent(PauseUnpauseQueueRequest pauseUnpauseQueueRequest) {
@@ -103,24 +101,31 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
 
     private void processEvent(byte[] body) {
       log.debug("Message on internal channel {}", new String(body));
-      RqueuePubSubEvent rqueuePubSubEvent =
-          smartMessageSerDes.deserialize(body, RqueuePubSubEvent.class);
+      RqueuePubSubEvent rqueuePubSubEvent;
+      try {
+        rqueuePubSubEvent = serDes.deserialize(body, RqueuePubSubEvent.class);
+      } catch (Exception e) {
+        log.error("Invalid message on pub-sub channel {}", new String(body), e);
+        return;
+      }
       if (rqueuePubSubEvent == null) {
         log.error("Invalid message on pub-sub channel {}", new String(body));
         return;
       }
-      switch (rqueuePubSubEvent.getType()) {
-        case PAUSE_QUEUE:
-          PauseUnpauseQueueRequest request =
-              rqueuePubSubEvent.messageAs(smartMessageSerDes, PauseUnpauseQueueRequest.class);
-          handlePauseEvent(request);
-          break;
-        case QUEUE_CRUD:
-          String queue = rqueuePubSubEvent.messageAs(smartMessageSerDes, String.class);
-          rqueueBeanProvider.getRqueueSystemConfigDao().clearCacheByName(queue);
-          break;
-        default:
-          log.error("Unknown event type {}", rqueuePubSubEvent);
+      try {
+        switch (rqueuePubSubEvent.getType()) {
+          case PAUSE_QUEUE:
+            handlePauseEvent(rqueuePubSubEvent.messageAs(serDes, PauseUnpauseQueueRequest.class));
+            break;
+          case QUEUE_CRUD:
+            rqueueBeanProvider.getRqueueSystemConfigDao()
+                .clearCacheByName(rqueuePubSubEvent.messageAs(serDes, String.class));
+            break;
+          default:
+            log.error("Unknown event type {}", rqueuePubSubEvent);
+        }
+      } catch (Exception e) {
+        log.error("Failed to process pub-sub event {}", rqueuePubSubEvent, e);
       }
     }
 

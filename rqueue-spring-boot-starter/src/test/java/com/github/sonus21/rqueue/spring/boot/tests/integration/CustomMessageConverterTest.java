@@ -26,7 +26,7 @@ import com.github.sonus21.rqueue.spring.boot.tests.SpringBootIntegrationTest;
 import com.github.sonus21.rqueue.test.dto.Job;
 import com.github.sonus21.rqueue.test.tests.BasicListenerTest;
 import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.SerializationUtils;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.ArrayList;
 import java.util.List;

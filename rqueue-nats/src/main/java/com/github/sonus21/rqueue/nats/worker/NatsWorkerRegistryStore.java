@@ -24,11 +24,7 @@ import com.github.sonus21.rqueue.worker.WorkerRegistryStore;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,13 +67,15 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   private static final String SEP = "__";
 
   private final NatsProvisioner provisioner;
+  private final com.github.sonus21.rqueue.serdes.RqueueSerDes serdes;
   /** Captured on first putWorkerInfo call so worker bucket gets the right maxAge. */
   private volatile Duration workerBucketTtl;
   /** Captured on first putQueueHeartbeat / refreshQueueTtl so heartbeat bucket gets the right maxAge. */
   private volatile Duration heartbeatBucketTtl;
 
-  public NatsWorkerRegistryStore(NatsProvisioner provisioner) {
+  public NatsWorkerRegistryStore(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
+    this.serdes = serdes;
   }
 
   @Override
@@ -206,19 +204,14 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
     return key == null ? "_" : key.replaceAll("[^A-Za-z0-9_=.-]", "_");
   }
 
-  private static byte[] serialize(RqueueWorkerInfo info) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-      oos.writeObject(info);
-    }
-    return baos.toByteArray();
+  private byte[] serialize(RqueueWorkerInfo info) throws IOException {
+    return serdes.serialize(info);
   }
 
-  private static RqueueWorkerInfo deserialize(byte[] bytes) {
-    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
-      Object o = ois.readObject();
-      return o instanceof RqueueWorkerInfo ? (RqueueWorkerInfo) o : null;
-    } catch (IOException | ClassNotFoundException e) {
+  private RqueueWorkerInfo deserialize(byte[] bytes) {
+    try {
+      return serdes.deserialize(bytes, RqueueWorkerInfo.class);
+    } catch (Exception e) {
       log.log(Level.WARNING, "deserialize RqueueWorkerInfo failed", e);
       return null;
     }

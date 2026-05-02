@@ -20,7 +20,6 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.JacksonJsonMessageConverter;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.SmartMessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
@@ -42,7 +41,6 @@ import org.springframework.messaging.converter.StringMessageConverter;
  * @see SmartMessageConverter
  * @see DefaultRqueueMessageConverter
  * @see JacksonJsonMessageConverter
- * @see MappingJackson2MessageConverter
  */
 public interface MessageConverterProvider {
 

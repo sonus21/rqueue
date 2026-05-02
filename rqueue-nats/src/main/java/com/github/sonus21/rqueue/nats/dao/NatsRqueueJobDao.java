@@ -18,11 +18,7 @@ import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +32,7 @@ import org.springframework.stereotype.Repository;
 
 /**
  * NATS-backed {@link RqueueJobDao} using a JetStream KV bucket as the job store. Entries are
- * keyed by job id and serialized via Java serialization. Look-ups by message id walk the bucket
+ * keyed by job id and serialized as JSON. Look-ups by message id walk the bucket
  * keys; for the volumes rqueue typically tracks (current in-flight + recent retry history) this
  * is acceptable for v1 — the Redis impl uses an explicit reverse index, that's a follow-up here.
  *
@@ -53,9 +49,11 @@ public class NatsRqueueJobDao implements RqueueJobDao {
   private static final String BUCKET_NAME = NatsKvBuckets.JOBS;
 
   private final NatsProvisioner provisioner;
+  private final com.github.sonus21.rqueue.serdes.RqueueSerDes serdes;
 
-  public NatsRqueueJobDao(NatsProvisioner provisioner) {
+  public NatsRqueueJobDao(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
+    this.serdes = serdes;
   }
 
   private KeyValue kv(Duration ttl) throws IOException, JetStreamApiException {
@@ -153,19 +151,14 @@ public class NatsRqueueJobDao implements RqueueJobDao {
     }
   }
 
-  private static byte[] serialize(RqueueJob job) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-      oos.writeObject(job);
-    }
-    return baos.toByteArray();
+  private byte[] serialize(RqueueJob job) throws IOException {
+    return serdes.serialize(job);
   }
 
-  private static RqueueJob deserialize(byte[] bytes) {
-    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
-      Object o = ois.readObject();
-      return o instanceof RqueueJob ? (RqueueJob) o : null;
-    } catch (IOException | ClassNotFoundException e) {
+  private RqueueJob deserialize(byte[] bytes) {
+    try {
+      return serdes.deserialize(bytes, RqueueJob.class);
+    } catch (Exception e) {
       log.log(Level.WARNING, "deserialize RqueueJob failed", e);
       return null;
     }

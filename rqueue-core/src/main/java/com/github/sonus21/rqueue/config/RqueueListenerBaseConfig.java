@@ -23,8 +23,13 @@ import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
+import com.github.sonus21.rqueue.serdes.RqueueTypeFactory;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import com.github.sonus21.rqueue.utils.RedisUtils;
 import com.github.sonus21.rqueue.utils.condition.MissingRqueueMessageIdGenerator;
+import com.github.sonus21.rqueue.utils.condition.MissingRqueueSerDes;
+import com.github.sonus21.rqueue.utils.condition.MissingRqueueTypeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -178,6 +183,18 @@ public abstract class RqueueListenerBaseConfig {
     simpleRqueueListenerContainerFactory.setRqueueMessageTemplate(new RqueueMessageTemplateImpl(
         rqueueConfig.getConnectionFactory(), rqueueConfig.getReactiveRedisConnectionFactory()));
     return simpleRqueueListenerContainerFactory.getRqueueMessageTemplate();
+  }
+
+  @Bean
+  @Conditional(MissingRqueueSerDes.class)
+  public RqueueSerDes rqueueSerDes() {
+    return SerializationUtils.getSerDes();
+  }
+
+  @Bean
+  @Conditional(MissingRqueueTypeFactory.class)
+  public RqueueTypeFactory rqueueTypeFactory() {
+    return SerializationUtils.getTypeFactory();
   }
 
   @Bean

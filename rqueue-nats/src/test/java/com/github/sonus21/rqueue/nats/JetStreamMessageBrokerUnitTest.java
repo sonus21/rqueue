@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.JetStream;
@@ -36,7 +38,6 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * Non-container unit tests for {@link JetStreamMessageBroker} that mock the underlying NATS
@@ -65,7 +66,8 @@ class JetStreamMessageBrokerUnitTest {
       throw new AssertionError(unreachable);
     }
     JetStreamMessageBroker broker =
-        new JetStreamMessageBroker(conn, js, jsm, config, new ObjectMapper());
+        new JetStreamMessageBroker(conn, js, jsm, config,
+            new RqJacksonSerDes(SerializationUtils.getObjectMapper()), null);
     return new Fixture(conn, js, jsm, broker);
   }
 

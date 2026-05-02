@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.sonus21.rqueue.nats.AbstractJetStreamIT;
+import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.KeyValueManagement;
@@ -43,7 +45,9 @@ class NatsRqueueLockManagerIT extends AbstractJetStreamIT {
     } catch (JetStreamApiException notFound) {
       // bucket didn't exist; first run
     }
-    lockManager = new NatsRqueueLockManager(connection);
+    NatsProvisioner provisioner = new NatsProvisioner(
+        connection, connection.jetStreamManagement(), RqueueNatsConfig.defaults());
+    lockManager = new NatsRqueueLockManager(provisioner);
   }
 
   @Test

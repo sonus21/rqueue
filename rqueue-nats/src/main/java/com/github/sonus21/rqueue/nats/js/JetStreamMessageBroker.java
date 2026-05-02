@@ -18,6 +18,9 @@ import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.JetStream;
@@ -41,7 +44,6 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import reactor.core.publisher.Mono;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * JetStream-backed implementation of {@link MessageBroker}.
@@ -64,13 +66,17 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   private final JetStream js;
   private final JetStreamManagement jsm;
   private final RqueueNatsConfig config;
-  private final ObjectMapper mapper;
+  private final RqueueSerDes serdes;
   private final NatsProvisioner provisioner;
 
-  /** keyed by RqueueMessage.id, value is the underlying NATS Message for ack/nak. */
+  /**
+   * keyed by RqueueMessage.id, value is the underlying NATS Message for ack/nak.
+   */
   private final ConcurrentHashMap<String, Message> inFlight = new ConcurrentHashMap<>();
 
-  /** Cached pull subscriptions keyed by stream + consumerName so we don't re-bind on every pop. */
+  /**
+   * Cached pull subscriptions keyed by stream + consumerName so we don't re-bind on every pop.
+   */
   private final ConcurrentHashMap<String, JetStreamSubscription> subscriptionCache =
       new ConcurrentHashMap<>();
 
@@ -82,13 +88,13 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       JetStream js,
       JetStreamManagement jsm,
       RqueueNatsConfig config,
-      ObjectMapper mapper,
+      RqueueSerDes serdes,
       NatsProvisioner provisioner) {
     this.connection = connection;
     this.js = js;
     this.jsm = jsm;
     this.config = config;
-    this.mapper = mapper;
+    this.serdes = serdes;
     this.provisioner = provisioner;
   }
 
@@ -108,8 +114,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   /**
-   * Resolve the priority-specific subject. Returns the unsuffixed subject when {@code priority}
-   * is null or empty; otherwise appends {@code "." + priority}. Mirrors the naming used by
+   * Resolve the priority-specific subject. Returns the unsuffixed subject when {@code priority} is
+   * null or empty; otherwise appends {@code "." + priority}. Mirrors the naming used by
    * {@link QueueDetail#resolvedNatsSubjectForPriority(String)}.
    */
   private String subjectFor(QueueDetail q, String priority) {
@@ -120,8 +126,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   /**
-   * Resolve the priority-specific stream. Returns the unsuffixed stream when {@code priority}
-   * is null or empty; otherwise appends {@code "-" + priority}.
+   * Resolve the priority-specific stream. Returns the unsuffixed stream when {@code priority} is
+   * null or empty; otherwise appends {@code "-" + priority}.
    */
   private String streamFor(QueueDetail q, String priority) {
     if (priority == null || priority.isEmpty()) {
@@ -152,7 +158,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       headers.add("Nats-Msg-Id", m.getId());
     }
     try {
-      byte[] payload = mapper.writeValueAsBytes(m);
+      byte[] payload = serdes.serialize(m);
       js.publish(subject, headers, payload);
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
@@ -183,7 +189,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       headers.add("Nats-Msg-Id", m.getId());
     }
     try {
-      byte[] payload = mapper.writeValueAsBytes(m);
+      byte[] payload = serdes.serialize(m);
       js.publish(subject, headers, payload);
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
@@ -226,8 +232,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
     byte[] payload;
     try {
-      payload = mapper.writeValueAsBytes(m);
-    } catch (RuntimeException e) {
+      payload = serdes.serialize(m);
+    } catch (RuntimeException | IOException e) {
       return Mono.error(new RqueueNatsException(
           "Failed to serialize message id="
               + m.getId()
@@ -242,11 +248,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
             ? e
             : new RqueueNatsException(
                 "Failed to enqueue message id="
-                    + m.getId()
-                    + " queue="
-                    + q.getName()
-                    + " subject="
-                    + subject,
+                + m.getId()
+                + " queue="
+                + q.getName()
+                + " subject="
+                + subject,
                 e))
         .then();
   }
@@ -317,12 +323,12 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     List<RqueueMessage> out = new ArrayList<>(msgs.size());
     for (Message nm : msgs) {
       try {
-        RqueueMessage rm = mapper.readValue(nm.getData(), RqueueMessage.class);
+        RqueueMessage rm = serdes.deserialize(nm.getData(), RqueueMessage.class);
         if (rm.getId() != null) {
           inFlight.put(rm.getId(), nm);
         }
         out.add(rm);
-      } catch (RuntimeException e) {
+      } catch (RuntimeException | IOException e) {
         log.log(
             Level.WARNING,
             "Failed to deserialize JetStream payload on subject "
@@ -389,7 +395,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       headers.add("Nats-Msg-Id", updated.getId() + "-r" + updated.getFailureCount());
     }
     try {
-      byte[] payload = mapper.writeValueAsBytes(updated);
+      byte[] payload = serdes.serialize(updated);
       js.publish(subject, headers, payload);
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
@@ -430,7 +436,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
     try {
       provisioner.ensureStream(dlqStream, List.of(dlqSubject));
-      byte[] payload = mapper.writeValueAsBytes(updated);
+      byte[] payload = serdes.serialize(updated);
       js.publish(dlqSubject, headers, payload);
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
@@ -473,7 +479,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       List<RqueueMessage> out = new ArrayList<>(msgs.size());
       for (Message nm : msgs) {
         try {
-          out.add(mapper.readValue(nm.getData(), RqueueMessage.class));
+          out.add(serdes.deserialize(nm.getData(), RqueueMessage.class));
         } catch (Exception e) {
           log.log(Level.WARNING, "peek: skipping undeserializable message", e);
         }
@@ -563,8 +569,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   /**
    * Provision a DLQ stream for the given queue. Caller wires up an advisory listener (subscribed to
    * {@code $JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES.>}) that republishes the exhausted message
-   * onto {@link #dlqSubjectFor(QueueDetail)}. v1 leaves the bridge wiring opt-in via {@link
-   * #installDeadLetterBridge(QueueDetail, String)}.
+   * onto {@link #dlqSubjectFor(QueueDetail)}. v1 leaves the bridge wiring opt-in via
+   * {@link #installDeadLetterBridge(QueueDetail, String)}.
    */
   public void provisionDlq(QueueDetail q) {
     if (!config.isAutoCreateDlqStream()) {
@@ -587,8 +593,10 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     String stream = streamFor(q);
     Dispatcher d = connection.createDispatcher(advisoryMsg -> {
       try {
-        tools.jackson.databind.JsonNode adv = mapper.readTree(advisoryMsg.getData());
-        long streamSeq = adv.path("stream_seq").asLong(-1);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> adv = serdes.deserialize(advisoryMsg.getData(), Map.class);
+        Object seqVal = adv.get("stream_seq");
+        long streamSeq = seqVal instanceof Number ? ((Number) seqVal).longValue() : -1L;
         if (streamSeq <= 0) {
           return;
         }
@@ -620,7 +628,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     private JetStream jetStream;
     private JetStreamManagement management;
     private RqueueNatsConfig config;
-    private ObjectMapper mapper;
+    private RqueueSerDes serdes;
     private NatsProvisioner provisioner;
 
     public Builder connection(Connection connection) {
@@ -643,8 +651,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       return this;
     }
 
-    public Builder objectMapper(ObjectMapper mapper) {
-      this.mapper = mapper;
+    public Builder serDes(RqueueSerDes serdes) {
+      this.serdes = serdes;
       return this;
     }
 
@@ -665,8 +673,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
           management = connection.jetStreamManagement();
         }
         if (provisioner == null) {
-          provisioner = new NatsProvisioner(
-              connection, management, config != null ? config : RqueueNatsConfig.defaults());
+          provisioner = new NatsProvisioner(connection, management,
+              config != null ? config : RqueueNatsConfig.defaults());
         }
       } catch (IOException e) {
         throw new RqueueNatsException("Failed to derive JetStream context from connection", e);
@@ -674,14 +682,16 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       if (config == null) {
         config = RqueueNatsConfig.defaults();
       }
-      if (mapper == null) {
-        mapper = new ObjectMapper();
+      if (serdes == null) {
+        serdes = new RqJacksonSerDes(SerializationUtils.getObjectMapper());
       }
-      return new JetStreamMessageBroker(
-          connection, jetStream, management, config, mapper, provisioner);
+      return new JetStreamMessageBroker(connection, jetStream, management, config, serdes,
+          provisioner);
     }
 
-    /** Create a broker that wraps a pre-built {@link Map} of NATS handles. Used by the factory. */
+    /**
+     * Create a broker that wraps a pre-built {@link Map} of NATS handles. Used by the factory.
+     */
     public JetStreamMessageBroker buildFromConfig(Map<String, String> ignored) {
       return build();
     }

@@ -17,9 +17,9 @@
 package com.github.sonus21.rqueue.models.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.sonus21.rqueue.converter.GenericMessageConverter.SmartMessageSerDes;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.PubSubType;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
 import java.nio.charset.StandardCharsets;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -41,7 +41,7 @@ public class RqueuePubSubEvent extends SerializableBase {
   private String message;
 
   @JsonIgnore
-  public <T> T messageAs(SmartMessageSerDes serDes, Class<T> clazz) {
+  public <T> T messageAs(RqueueSerDes serDes, Class<T> clazz) throws Exception {
     return serDes.deserialize(getMessage().getBytes(StandardCharsets.UTF_8), clazz);
   }
 }

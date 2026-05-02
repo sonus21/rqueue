@@ -21,11 +21,7 @@ import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +38,7 @@ import reactor.core.publisher.Mono;
 /**
  * NATS-backed {@link RqueueMessageMetadataService} using a JetStream KV bucket as the metadata
  * store. Entries are keyed by metadata id (which the Redis impl computes via
- * {@link RqueueMessageUtils#getMessageMetaId}) and serialized via Java serialization.
+ * {@link RqueueMessageUtils#getMessageMetaId}) and serialized as JSON.
  *
  * <p>Per-queue read methods ({@link #readMessageMetadataForQueue}) walk the bucket; rqueue
  * normally tracks recent metadata only so the volume is acceptable for v1. The Redis impl keeps
@@ -62,9 +58,11 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
   private static final String BUCKET_NAME = NatsKvBuckets.MESSAGE_METADATA;
 
   private final NatsProvisioner provisioner;
+  private final com.github.sonus21.rqueue.serdes.RqueueSerDes serdes;
 
-  public NatsRqueueMessageMetadataService(NatsProvisioner provisioner) {
+  public NatsRqueueMessageMetadataService(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
+    this.serdes = serdes;
   }
 
   private KeyValue kv() throws IOException, JetStreamApiException {
@@ -221,19 +219,14 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
     }
   }
 
-  private static byte[] serialize(MessageMetadata m) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-      oos.writeObject(m);
-    }
-    return baos.toByteArray();
+  private byte[] serialize(MessageMetadata m) throws IOException {
+    return serdes.serialize(m);
   }
 
-  private static MessageMetadata deserialize(byte[] bytes) {
-    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
-      Object o = ois.readObject();
-      return o instanceof MessageMetadata ? (MessageMetadata) o : null;
-    } catch (IOException | ClassNotFoundException e) {
+  private MessageMetadata deserialize(byte[] bytes) {
+    try {
+      return serdes.deserialize(bytes, MessageMetadata.class);
+    } catch (Exception e) {
       log.log(Level.WARNING, "deserialize MessageMetadata failed", e);
       return null;
     }

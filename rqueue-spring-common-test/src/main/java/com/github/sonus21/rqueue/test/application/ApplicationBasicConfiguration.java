@@ -19,7 +19,7 @@ package com.github.sonus21.rqueue.test.application;
 import com.athaydes.javanna.Javanna;
 import com.github.sonus21.junit.BootstrapRedis;
 import com.github.sonus21.junit.RedisBootstrapperBase;
-import com.github.sonus21.rqueue.utils.SerializationUtils;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import java.io.IOException;
 import java.util.HashMap;
 import javax.sql.DataSource;
@@ -90,6 +90,6 @@ public abstract class ApplicationBasicConfiguration extends RedisBootstrapperBas
 
   @Bean
   public ObjectMapper objectMapper() {
-    return SerializationUtils.createObjectMapper();
+    return SerializationUtils.getObjectMapper();
   }
 }

@@ -18,11 +18,7 @@ import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,10 +48,12 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
   private static final String BUCKET_NAME = NatsKvBuckets.QUEUE_CONFIG;
 
   private final NatsProvisioner provisioner;
+  private final com.github.sonus21.rqueue.serdes.RqueueSerDes serdes;
   private final ConcurrentHashMap<String, QueueConfig> cache = new ConcurrentHashMap<>();
 
-  public NatsRqueueSystemConfigDao(NatsProvisioner provisioner) {
+  public NatsRqueueSystemConfigDao(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
+    this.serdes = serdes;
   }
 
   private KeyValue kv() throws IOException, JetStreamApiException {
@@ -177,19 +175,14 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
     }
   }
 
-  private static byte[] serialize(QueueConfig c) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-      oos.writeObject(c);
-    }
-    return baos.toByteArray();
+  private byte[] serialize(QueueConfig c) throws IOException {
+    return serdes.serialize(c);
   }
 
-  private static QueueConfig deserialize(byte[] bytes) {
-    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
-      Object o = ois.readObject();
-      return o instanceof QueueConfig ? (QueueConfig) o : null;
-    } catch (IOException | ClassNotFoundException e) {
+  private QueueConfig deserialize(byte[] bytes) {
+    try {
+      return serdes.deserialize(bytes, QueueConfig.class);
+    } catch (Exception e) {
       log.log(Level.WARNING, "deserialize QueueConfig failed", e);
       return null;
     }

@@ -25,7 +25,8 @@ import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerMetadata;
 import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerView;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
-import com.github.sonus21.rqueue.utils.SerializationUtils;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -42,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
 import org.springframework.util.CollectionUtils;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * Backend-agnostic worker registry. All heartbeat scheduling, in-memory bookkeeping, and view
@@ -52,7 +52,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class RqueueWorkerRegistryImpl
     implements RqueueWorkerRegistry, ApplicationListener<RqueueBootstrapEvent> {
-  private final ObjectMapper objectMapper = SerializationUtils.createObjectMapper();
+  private final RqueueSerDes serDes = SerializationUtils.getSerDes();
   private final RqueueConfig rqueueConfig;
   private final WorkerRegistryStore store;
   private final String workerId;
@@ -125,7 +125,7 @@ public class RqueueWorkerRegistryImpl
     RqueueWorkerPollerMetadata metadata = buildMetadata(registryQueueName, queueThreadPool);
     try {
       String queueKey = rqueueConfig.getWorkerRegistryQueueKey(registryQueueName);
-      store.putQueueHeartbeat(queueKey, workerId, objectMapper.writeValueAsString(metadata));
+      store.putQueueHeartbeat(queueKey, workerId, serDes.serializeAsString(metadata));
       refreshQueueTtlIfRequired(registryQueueName, now);
       lastQueueHeartbeatAt.put(registryQueueName, now);
     } catch (Exception e) {
@@ -150,7 +150,7 @@ public class RqueueWorkerRegistryImpl
     for (Map.Entry<String, String> entry : rawEntries.entrySet()) {
       try {
         RqueueWorkerPollerMetadata metadata =
-            objectMapper.readValue(entry.getValue(), RqueueWorkerPollerMetadata.class);
+            serDes.deserialize(entry.getValue(), RqueueWorkerPollerMetadata.class);
         if (metadata == null || metadata.getWorkerId() == null) {
           toDelete.add(entry.getKey());
           continue;

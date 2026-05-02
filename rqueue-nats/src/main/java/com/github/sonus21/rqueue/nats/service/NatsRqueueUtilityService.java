@@ -11,6 +11,7 @@
 package com.github.sonus21.rqueue.nats.service;
 
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
+import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.Pair;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
@@ -21,6 +22,10 @@ import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
 import com.github.sonus21.rqueue.service.RqueueUtilityService;
+import com.github.sonus21.rqueue.utils.Constants;
+import java.util.LinkedList;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -33,6 +38,8 @@ import reactor.core.publisher.Mono;
 @Service
 @Conditional(NatsBackendCondition.class)
 public class NatsRqueueUtilityService implements RqueueUtilityService {
+
+  @Autowired private RqueueWebConfig rqueueWebConfig;
 
   private static <T extends BaseResponse> T notSupported(T response, String op) {
     response.setCode(1);
@@ -108,11 +115,72 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
 
   @Override
   public Mono<DataSelectorResponse> reactiveAggregateDataCounter(AggregationType type) {
-    return Mono.just(notSupported(new DataSelectorResponse(), "reactiveAggregateDataCounter"));
+    return Mono.just(aggregateDataCounter(type));
   }
 
   @Override
   public DataSelectorResponse aggregateDataCounter(AggregationType type) {
-    return notSupported(new DataSelectorResponse(), "aggregateDataCounter");
+    String title;
+    List<Pair<String, String>> data;
+    if (type == AggregationType.DAILY) {
+      data = getDailyDateCounter();
+      title = "Select Number of Days";
+    } else if (type == AggregationType.WEEKLY) {
+      data = getWeeklyDateCounter();
+      title = "Select Number of Weeks";
+    } else {
+      data = getMonthlyDateCounter();
+      title = "Select Number of Months";
+    }
+    return new DataSelectorResponse(title, data);
+  }
+
+  private List<Pair<String, String>> getDailyDateCounter() {
+    List<Pair<String, String>> dateSelector = new LinkedList<>();
+    int[] dates = new int[] {1, 2, 3, 4, 6, 7};
+    int step = 15;
+    int stepAfter = 15;
+    int i = 1;
+    dateSelector.add(new Pair<>("0", "Select"));
+    while (i <= rqueueWebConfig.getHistoryDay()) {
+      if (i >= stepAfter) {
+        if (i <= rqueueWebConfig.getHistoryDay()) {
+          dateSelector.add(new Pair<>(String.valueOf(i), String.format("Last %d days", i)));
+        }
+        i += step;
+      } else {
+        for (int date : dates) {
+          if (date == i) {
+            String suffix = i == 1 ? "day" : "days";
+            dateSelector.add(new Pair<>(String.valueOf(date), String.format("Last %d %s", date, suffix)));
+            break;
+          }
+        }
+        i += 1;
+      }
+    }
+    return dateSelector;
+  }
+
+  private List<Pair<String, String>> getWeeklyDateCounter() {
+    List<Pair<String, String>> dateSelector = new LinkedList<>();
+    dateSelector.add(new Pair<>("0", "Select"));
+    int nWeek = (int) Math.ceil(rqueueWebConfig.getHistoryDay() / (double) Constants.DAYS_IN_A_WEEK);
+    for (int week = 1; week <= nWeek; week++) {
+      String suffix = week == 1 ? "week" : "weeks";
+      dateSelector.add(new Pair<>(String.valueOf(week), String.format("Last %d %s", week, suffix)));
+    }
+    return dateSelector;
+  }
+
+  private List<Pair<String, String>> getMonthlyDateCounter() {
+    List<Pair<String, String>> dateSelector = new LinkedList<>();
+    dateSelector.add(new Pair<>("0", "Select"));
+    int nMonths = (int) Math.ceil(rqueueWebConfig.getHistoryDay() / (double) Constants.DAYS_IN_A_MONTH);
+    for (int month = 1; month <= nMonths; month++) {
+      String suffix = month == 1 ? "month" : "months";
+      dateSelector.add(new Pair<>(String.valueOf(month), String.format("Last %d %s", month, suffix)));
+    }
+    return dateSelector;
   }
 }

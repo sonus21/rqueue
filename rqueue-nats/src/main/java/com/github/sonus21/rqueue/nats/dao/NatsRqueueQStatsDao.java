@@ -23,11 +23,7 @@ import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -58,9 +54,11 @@ public class NatsRqueueQStatsDao implements RqueueQStatsDao {
   private static final String BUCKET_NAME = NatsKvBuckets.QUEUE_STATS;
 
   private final NatsProvisioner provisioner;
+  private final com.github.sonus21.rqueue.serdes.RqueueSerDes serdes;
 
-  public NatsRqueueQStatsDao(NatsProvisioner provisioner) {
+  public NatsRqueueQStatsDao(NatsProvisioner provisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes serdes) {
     this.provisioner = provisioner;
+    this.serdes = serdes;
   }
 
   private KeyValue kv() throws IOException, JetStreamApiException {
@@ -113,19 +111,14 @@ public class NatsRqueueQStatsDao implements RqueueQStatsDao {
 
   // ---- helpers ----------------------------------------------------------
 
-  private static byte[] serialize(QueueStatistics stat) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-      oos.writeObject(stat);
-    }
-    return baos.toByteArray();
+  private byte[] serialize(QueueStatistics stat) throws IOException {
+    return serdes.serialize(stat);
   }
 
-  private static QueueStatistics deserialize(byte[] bytes) {
-    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
-      Object o = ois.readObject();
-      return o instanceof QueueStatistics ? (QueueStatistics) o : null;
-    } catch (IOException | ClassNotFoundException e) {
+  private QueueStatistics deserialize(byte[] bytes) {
+    try {
+      return serdes.deserialize(bytes, QueueStatistics.class);
+    } catch (Exception e) {
       log.log(Level.WARNING, "deserialize QueueStatistics failed", e);
       return null;
     }

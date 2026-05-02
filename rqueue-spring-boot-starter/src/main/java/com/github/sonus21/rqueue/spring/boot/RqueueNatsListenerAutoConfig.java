@@ -58,8 +58,9 @@ public class RqueueNatsListenerAutoConfig {
   @Bean
   @ConditionalOnMissingBean(WorkerRegistryStore.class)
   @DependsOn("natsKvBucketValidator")
-  public WorkerRegistryStore natsWorkerRegistryStore(NatsProvisioner natsProvisioner) {
-    return new NatsWorkerRegistryStore(natsProvisioner);
+  public WorkerRegistryStore natsWorkerRegistryStore(
+      NatsProvisioner natsProvisioner, com.github.sonus21.rqueue.serdes.RqueueSerDes rqueueSerDes) {
+    return new NatsWorkerRegistryStore(natsProvisioner, rqueueSerDes);
   }
 
   /**

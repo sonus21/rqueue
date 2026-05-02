@@ -24,13 +24,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 public final class HttpUtils {
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private HttpUtils() {}
 
@@ -57,7 +56,7 @@ public final class HttpUtils {
         log.error("GET {} returned status {}", url, response.statusCode());
         return null;
       }
-      return OBJECT_MAPPER.readValue(response.body(), clazz);
+      return SerializationUtils.getSerDes().deserialize(response.body(), clazz);
     } catch (Exception e) {
       log.error("GET call failed for {}", url, e);
       return null;

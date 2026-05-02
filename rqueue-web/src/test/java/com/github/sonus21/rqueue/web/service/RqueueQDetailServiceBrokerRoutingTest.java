@@ -154,22 +154,22 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
   }
 
   @Test
-  void scheduledTabHiddenAndEmptyWhenIntrospectionUnsupported() {
+  void scheduledAndRunningTabsHiddenForNatsBroker() {
+    // NATS: supportsScheduledIntrospection=false, usesPrimaryHandlerDispatch=false
     Capabilities natsCaps = new Capabilities(true, false, false, false);
     service.setMessageBroker(messageBroker);
     when(messageBroker.capabilities()).thenReturn(natsCaps);
     when(messageBroker.size(any(QueueDetail.class))).thenReturn(0L);
-    when(messageBrowsingRepository.getDataSize(
-            queueConfig.getProcessingQueueName(),
-            com.github.sonus21.rqueue.models.enums.DataType.ZSET))
-        .thenReturn(0L);
 
     List<Entry<NavTab, RedisDataDetail>> details = service.getQueueDataStructureDetail(queueConfig);
-    boolean scheduledPresent = details.stream().anyMatch(e -> e.getKey() == NavTab.SCHEDULED);
-    assertFalse(scheduledPresent, "scheduled nav tab should be hidden");
+    assertFalse(details.stream().anyMatch(e -> e.getKey() == NavTab.SCHEDULED),
+        "scheduled nav tab should be hidden for NATS");
+    assertFalse(details.stream().anyMatch(e -> e.getKey() == NavTab.RUNNING),
+        "running nav tab should be hidden for NATS (no processing ZSET)");
 
     List<NavTab> tabs = service.getNavTabs(queueConfig);
     assertFalse(tabs.contains(NavTab.SCHEDULED));
+    assertFalse(tabs.contains(NavTab.RUNNING));
 
     when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName())).thenReturn(queueConfig);
     DataViewResponse explore = service.getExplorePageData(

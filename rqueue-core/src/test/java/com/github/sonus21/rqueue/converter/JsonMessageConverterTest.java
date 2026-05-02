@@ -31,18 +31,18 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MessageConverter;
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
 import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 @CoreUnitTest
 class JsonMessageConverterTest extends TestBase {
 
-  private final ObjectMapper objectMapper = JsonMapper.builder()
-      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-      .build();
+  private final RqueueSerDes serDes = new RqJacksonSerDes(
+      JsonMapper.builder().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).build());
   private final MessageConverter messageConverter = new JsonMessageConverter();
-  private final MessageConverter messageConverter2 = new JsonMessageConverter(objectMapper);
+  private final MessageConverter messageConverter2 = new JsonMessageConverter(serDes);
 
   @Test
   void fromMessage() {

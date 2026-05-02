@@ -17,11 +17,14 @@
 package com.github.sonus21.rqueue.converter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
+import tools.jackson.databind.ObjectMapper;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -163,6 +166,45 @@ class GenericMessageConverterTest extends TestBase {
     Event<Notification> fromMessage =
         (Event<Notification>) genericMessageConverter.fromMessage(message, null);
     assertEquals(event, fromMessage);
+  }
+
+  /**
+   * Verifies that messages serialised with the old {@code String msg} wire format (before the field
+   * was changed to {@code byte[]}) are still readable by the current converter.  Each case builds
+   * an old-format JSON envelope via {@link OldMsg} and feeds it directly to
+   * {@link GenericMessageConverter#fromMessage} to confirm the payload comes back intact.
+   */
+  @Test
+  void backwardCompatibility() throws Exception {
+    ObjectMapper mapper = SerializationUtils.getObjectMapper();
+
+    Comment unicodeComment = new Comment("u-1", "Héllo 你好 🎉");
+    Comment asciiComment   = new Comment("a-1", "plain ascii");
+    Email   specialEmail   = new Email("e-2", "subject: re: hello & goodbye");
+
+    // 5 cases: class name is straightforward for non-generic POJOs
+    Object[][] cases = {
+        {comment,       comment.getClass().getName()},
+        {email,         email.getClass().getName()},
+        {unicodeComment, unicodeComment.getClass().getName()},
+        {asciiComment,  asciiComment.getClass().getName()},
+        {specialEmail,  specialEmail.getClass().getName()},
+    };
+
+    for (Object[] c : cases) {
+      Object payload   = c[0];
+      String className = (String) c[1];
+
+      // Build old-format JSON: {"msg":"<json-string>","name":"<className>"}
+      String innerJson  = mapper.writeValueAsString(payload);
+      String oldFormatJson = mapper.writeValueAsString(new OldMsg(innerJson, className));
+
+      Object restored = genericMessageConverter.fromMessage(
+          new GenericMessage<>(oldFormatJson), null);
+
+      assertEquals(payload, restored,
+          "old String-format data must deserialise correctly for " + className);
+    }
   }
 
   @Test
@@ -505,6 +547,15 @@ class GenericMessageConverterTest extends TestBase {
     public int hashCode() {
       return Objects.hash(value);
     }
+  }
+
+  /** Mirrors the old wire format of the private {@code Msg} class (before {@code msg} became {@code byte[]}). */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class OldMsg {
+    private String msg;
+    private String name;
   }
 
   public static class ServiceLoadedPayloadModule extends SimpleModule {

@@ -18,9 +18,13 @@ package com.github.sonus21.rqueue.converter;
 
 import static org.springframework.util.Assert.notNull;
 
-import com.github.sonus21.rqueue.utils.SerializationUtils;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
+import com.github.sonus21.rqueue.serdes.RqueueTypeFactory;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
+import com.github.sonus21.rqueue.serdes.TypeEnvelop;
 import java.lang.reflect.Field;
 import java.lang.reflect.TypeVariable;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -33,8 +37,14 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.SmartMessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 /**
  * A converter to turn the payload of a {@link Message} from serialized form to a typed String and
@@ -47,13 +57,14 @@ public class GenericMessageConverter implements SmartMessageConverter {
   private final SmartMessageSerDes smartMessageSerDes;
 
   public GenericMessageConverter() {
-    ObjectMapper mapper = SerializationUtils.createObjectMapper();
-    this.smartMessageSerDes = new SmartMessageSerDes(mapper);
+    this.smartMessageSerDes = new SmartMessageSerDes(
+        SerializationUtils.getSerDes(), SerializationUtils.getTypeFactory());
   }
 
-  public GenericMessageConverter(ObjectMapper objectMapper) {
-    notNull(objectMapper, "objectMapper cannot be null");
-    this.smartMessageSerDes = new SmartMessageSerDes(objectMapper);
+  public GenericMessageConverter(RqueueSerDes serDes, RqueueTypeFactory typeFactory) {
+    notNull(serDes, "serDes cannot be null");
+    notNull(typeFactory, "typeFactory cannot be null");
+    this.smartMessageSerDes = new SmartMessageSerDes(serDes, typeFactory);
   }
 
   /**
@@ -117,16 +128,49 @@ public class GenericMessageConverter implements SmartMessageConverter {
   @AllArgsConstructor
   private static class Msg {
 
-    private String msg;
+    @JsonSerialize(using = Utf8BytesSerializer.class)
+    @JsonDeserialize(using = Utf8BytesDeserializer.class)
+    private byte[] msg;
     private String name;
+  }
+
+  private static class Utf8BytesSerializer extends StdSerializer<byte[]> {
+
+    Utf8BytesSerializer() {
+      super(byte[].class);
+    }
+
+    @Override
+    public void serialize(byte[] value, JsonGenerator gen, SerializationContext ctx)
+        throws JacksonException {
+      gen.writeString(new String(value, StandardCharsets.UTF_8));
+    }
+  }
+
+  private static class Utf8BytesDeserializer extends StdDeserializer<byte[]> {
+
+    Utf8BytesDeserializer() {
+      super(byte[].class);
+    }
+
+    @Override
+    public byte[] deserialize(JsonParser p, DeserializationContext ctx) throws JacksonException {
+      String text = p.getString();
+      if (text == null) {
+        return null;
+      }
+      return text.getBytes(StandardCharsets.UTF_8);
+    }
   }
 
   public static class SmartMessageSerDes {
 
-    private final ObjectMapper objectMapper;
+    private final RqueueSerDes serDes;
+    private final RqueueTypeFactory typeFactory;
 
-    public SmartMessageSerDes(ObjectMapper objectMapper) {
-      this.objectMapper = objectMapper;
+    public SmartMessageSerDes(RqueueSerDes serDes, RqueueTypeFactory typeFactory) {
+      this.serDes = serDes;
+      this.typeFactory = typeFactory;
     }
 
     private String[] splitClassNames(String name) {
@@ -197,11 +241,11 @@ public class GenericMessageConverter implements SmartMessageConverter {
       return getGenericFieldBasedClassName(payloadClass, payload);
     }
 
-    private JavaType getTargetType(Msg msg) throws ClassNotFoundException {
+    private TypeEnvelop getTargetType(Msg msg) throws ClassNotFoundException {
       String[] classNames = splitClassNames(msg.getName());
       if (classNames.length == 1) {
         Class<?> c = Thread.currentThread().getContextClassLoader().loadClass(msg.getName());
-        return objectMapper.getTypeFactory().constructType(c);
+        return typeFactory.create(c);
       }
       Class<?> envelopeClass =
           Thread.currentThread().getContextClassLoader().loadClass(classNames[0]);
@@ -209,15 +253,15 @@ public class GenericMessageConverter implements SmartMessageConverter {
       for (int i = 1; i < classNames.length; i++) {
         classes[i - 1] = Thread.currentThread().getContextClassLoader().loadClass(classNames[i]);
       }
-      return objectMapper.getTypeFactory().constructParametricType(envelopeClass, classes);
+      return typeFactory.create(envelopeClass, classes);
     }
 
     public Object deserialize(String payload) {
       try {
         if (SerializationUtils.isJson(payload)) {
-          Msg msg = objectMapper.readValue(payload, Msg.class);
-          JavaType type = getTargetType(msg);
-          return objectMapper.readValue(msg.msg, type);
+          Msg msg = serDes.deserialize(payload, Msg.class);
+          TypeEnvelop type = getTargetType(msg);
+          return serDes.deserialize(msg.msg, type);
         }
       } catch (Exception e) {
         log.debug("Deserialization of message {} failed", payload, e);
@@ -230,7 +274,7 @@ public class GenericMessageConverter implements SmartMessageConverter {
         return null;
       }
       try {
-        return objectMapper.readValue(payload, clazz);
+        return serDes.deserialize(payload, clazz);
       } catch (Exception e) {
         log.debug("Deserialization of message {} failed", new String(payload), e);
       }
@@ -243,10 +287,10 @@ public class GenericMessageConverter implements SmartMessageConverter {
         return null;
       }
       try {
-        String msg = objectMapper.writeValueAsString(payload);
+        byte[] msg = serDes.serialize(payload);
         Msg message = new Msg(msg, name);
-        return objectMapper.writeValueAsString(message);
-      } catch (JacksonException e) {
+        return serDes.serializeAsString(message);
+      } catch (Exception e) {
         log.debug("Serialisation failed", e);
         return null;
       }

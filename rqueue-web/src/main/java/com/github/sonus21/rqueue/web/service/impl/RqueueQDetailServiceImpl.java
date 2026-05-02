@@ -134,6 +134,15 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     return messageBroker != null && !messageBroker.capabilities().supportsCronJobs();
   }
 
+  /**
+   * Returns true when the broker manages its own in-flight tracking and does not use the Redis
+   * processing ZSET. Brokers that return {@code usesPrimaryHandlerDispatch() == false} (e.g. NATS)
+   * have no separate "running" queue to inspect, so the RUNNING tab/row must be suppressed.
+   */
+  private boolean brokerHidesRunning() {
+    return messageBroker != null && !messageBroker.capabilities().usesPrimaryHandlerDispatch();
+  }
+
   @Override
   public String storageKicker() {
     return messageBroker != null ? messageBroker.storageKicker() : "Redis";
@@ -167,24 +176,25 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     } else {
       pending = messageBrowsingRepository.getDataSize(queueConfig.getQueueName(), DataType.LIST);
     }
-    String processingQueueName = queueConfig.getProcessingQueueName();
-    Long running = messageBrowsingRepository.getDataSize(processingQueueName, DataType.ZSET);
     // When a non-Redis broker is configured, use its storage display names instead of Redis keys.
-    String pendingDisplayName =
-        brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
-            ? messageBroker.storageDisplayName(brokerQueueDetail)
-            : queueConfig.getQueueName();
-    String runningDisplayName =
-        brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
-            ? messageBroker.storageDisplayName(brokerQueueDetail)
-            : processingQueueName;
+    String pendingDisplayName = brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+        ? messageBroker.storageDisplayName(brokerQueueDetail)
+        : queueConfig.getQueueName();
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList(
         new HashMap.SimpleEntry<>(
             NavTab.PENDING,
-            new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending)),
-        new HashMap.SimpleEntry<>(
-            NavTab.RUNNING,
-            new RedisDataDetail(runningDisplayName, DataType.ZSET, running == null ? 0 : running)));
+            new RedisDataDetail(
+                pendingDisplayName, DataType.LIST, pending == null ? 0 : pending)));
+    // Brokers that manage their own in-flight tracking (e.g. NATS JetStream) have no separate
+    // processing ZSET, so omit the RUNNING entry to avoid a 501 when the explorer opens it.
+    if (!brokerHidesRunning()) {
+      String processingQueueName = queueConfig.getProcessingQueueName();
+      Long running = messageBrowsingRepository.getDataSize(processingQueueName, DataType.ZSET);
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
+          NavTab.RUNNING,
+          new RedisDataDetail(
+              processingQueueName, DataType.ZSET, running == null ? 0 : running)));
+    }
     String scheduledQueueName = queueConfig.getScheduledQueueName();
     // When the broker doesn't support scheduled introspection (e.g. JetStream), suppress
     // the SCHEDULED nav tab entry entirely so the dashboard doesn't query an absent ZSET.
@@ -238,7 +248,10 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       if (!brokerHidesScheduled()) {
         navTabs.add(NavTab.SCHEDULED);
       }
-      navTabs.add(NavTab.RUNNING);
+      // Hide RUNNING tab for brokers that manage in-flight tracking internally (e.g. NATS).
+      if (!brokerHidesRunning()) {
+        navTabs.add(NavTab.RUNNING);
+      }
       if (queueConfig.hasDeadLetterQueue()) {
         navTabs.add(NavTab.DEAD);
       }

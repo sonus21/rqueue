@@ -23,11 +23,12 @@ import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
-import com.github.sonus21.rqueue.utils.SerializationUtils;
 import com.github.sonus21.rqueue.utils.StringUtils;
 import com.github.sonus21.rqueue.web.service.RqueueJobService;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,12 +43,12 @@ import tools.jackson.databind.ObjectMapper;
 public class RqueueJobServiceImpl implements RqueueJobService {
 
   private final RqueueJobDao rqueueJobDao;
-  private final ObjectMapper objectMapper;
+  private final RqueueSerDes rqueueSerDes;
 
   @Autowired
-  public RqueueJobServiceImpl(RqueueJobDao rqueueJobDao) {
+  public RqueueJobServiceImpl(RqueueJobDao rqueueJobDao, RqueueSerDes rqueueSerDes) {
     this.rqueueJobDao = rqueueJobDao;
-    this.objectMapper = SerializationUtils.createObjectMapper();
+    this.rqueueSerDes = rqueueSerDes;
   }
 
   private TableRow getTableRow(RqueueJob job) throws ProcessingException {
@@ -75,9 +76,9 @@ public class RqueueJobServiceImpl implements RqueueJobService {
       columns.add(new TableColumn(Constants.BLANK));
     } else {
       try {
-        String data = objectMapper.writeValueAsString(job.getCheckins());
+        String data = rqueueSerDes.serializeAsString(job.getCheckins());
         columns.add(new TableColumn(data));
-      } catch (JacksonException e) {
+      } catch (JacksonException | IOException e) {
         throw new ProcessingException(e.getMessage(), e);
       }
     }
