@@ -38,6 +38,7 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
   private final QueueThreadPool queueThreadPool;
 
   DefaultRqueuePoller(
+      String pollerKey,
       QueueDetail queueDetail,
       QueueThreadPool queueThreadPool,
       RqueueBeanProvider rqueueBeanProvider,
@@ -96,6 +97,8 @@ class DefaultRqueuePoller extends RqueueMessagePoller {
       logNotAvailable();
       TimeoutUtils.sleepLog(pollingInterval, false);
     } else {
+      // Pass the pollerKey (queues[0]) so pollAndExecute's isQueueActive check uses the same
+      // key that queueRunningState was keyed with (may be "queueName##consumerName").
       super.poll(-1, queueDetail.getName(), queueDetail, queueThreadPool);
       lastNotAvailableAt = null;
     }

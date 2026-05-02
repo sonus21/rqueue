@@ -153,6 +153,9 @@ public class NatsProvisioner {
           if (sd.getMaxBytes() > 0) {
             b.maxBytes(sd.getMaxBytes());
           }
+          if (sd.getMaxAge() != null && !sd.getMaxAge().isZero() && !sd.getMaxAge().isNegative()) {
+            b.maxAge(sd.getMaxAge());
+          }
           jsm.addStream(b.build());
         }
       } catch (IOException | JetStreamApiException e) {
@@ -164,16 +167,20 @@ public class NatsProvisioner {
   }
 
   /**
-   * Ensure a durable pull consumer exists, returning the actual consumer name to use for binding.
+   * Ensure a durable pull consumer exists, returning the consumer name.
    * Hits the NATS backend at most once per (stream, consumer) pair per process lifetime.
+   *
+   * <p>No filter subject is set on the consumer: each queue already has its own dedicated stream
+   * with a single subject, so a filter would be redundant. More importantly, omitting the filter
+   * allows multiple independent consumer groups (fan-out) to coexist on the same stream — NATS
+   * rejects two consumers with the same filter subject (error 10100) regardless of retention type.
    */
   public String ensureConsumer(
       String streamName,
       String consumerName,
       Duration ackWait,
       long maxDeliver,
-      long maxAckPending,
-      String filterSubject) {
+      long maxAckPending) {
     String cacheKey = streamName + "/" + consumerName;
     String cached = consumerCache.get(cacheKey);
     if (cached != null) {
@@ -185,8 +192,7 @@ public class NatsProvisioner {
       if (cached != null) {
         return cached;
       }
-      String actual = doEnsureConsumer(
-          streamName, consumerName, ackWait, maxDeliver, maxAckPending, filterSubject);
+      String actual = doEnsureConsumer(streamName, consumerName, ackWait, maxDeliver, maxAckPending);
       consumerCache.put(cacheKey, actual);
       return actual;
     }
@@ -197,8 +203,7 @@ public class NatsProvisioner {
       String consumerName,
       Duration ackWait,
       long maxDeliver,
-      long maxAckPending,
-      String filterSubject) {
+      long maxAckPending) {
     try {
       ConsumerInfo info = safeGetConsumerInfo(streamName, consumerName);
       if (info != null) {
@@ -223,24 +228,16 @@ public class NatsProvisioner {
         throw new RqueueNatsException("Consumer '" + consumerName + "' on stream '" + streamName
             + "' does not exist and autoCreateConsumers=false");
       }
-      ConsumerConfiguration.Builder cb = ConsumerConfiguration.builder()
+      jsm.addOrUpdateConsumer(streamName, ConsumerConfiguration.builder()
           .durable(consumerName)
           .ackPolicy(AckPolicy.Explicit)
           .deliverPolicy(DeliverPolicy.All)
           .ackWait(ackWait)
           .maxDeliver(maxDeliver)
-          .maxAckPending(maxAckPending);
-      if (filterSubject != null) {
-        cb.filterSubject(filterSubject);
-      }
-      jsm.addOrUpdateConsumer(streamName, cb.build());
+          .maxAckPending(maxAckPending)
+          .build());
       return consumerName;
     } catch (JetStreamApiException e) {
-      // Error 10100 = "filtered consumer not unique" — a consumer with the same filter
-      // already exists on the stream (stale from a previous naming scheme or crashed run).
-      if (e.getApiErrorCode() == 10100 && filterSubject != null) {
-        return tryFindAndBindStaleConsumer(streamName, filterSubject, consumerName);
-      }
       throw new RqueueNatsException(
           "Failed to ensure consumer '" + consumerName + "' on stream '" + streamName + "'", e);
     } catch (IOException e) {
@@ -258,32 +255,6 @@ public class NatsProvisioner {
   }
 
   // ---- private helpers --------------------------------------------------
-
-  private String tryFindAndBindStaleConsumer(
-      String streamName, String filterSubject, String preferredConsumerName) {
-    try {
-      List<String> consumerNames = jsm.getConsumerNames(streamName);
-      for (String name : consumerNames) {
-        ConsumerInfo ci = jsm.getConsumerInfo(streamName, name);
-        ConsumerConfiguration cc = ci.getConsumerConfiguration();
-        if (filterSubject.equals(cc.getFilterSubject())) {
-          log.log(
-              Level.INFO,
-              "Reusing existing consumer '" + name + "' (filter=" + filterSubject + ")"
-                  + " instead of creating '" + preferredConsumerName + "'");
-          return name;
-        }
-      }
-      throw new RqueueNatsException(
-          "Filtered consumer with filter '" + filterSubject + "' not found on stream '" + streamName
-              + "' despite 'filtered consumer not unique' error");
-    } catch (IOException | JetStreamApiException e) {
-      throw new RqueueNatsException(
-          "Failed to recover from 'filtered consumer not unique' error on stream '" + streamName
-              + "'",
-          e);
-    }
-  }
 
   private StreamInfo safeGetStreamInfo(String streamName)
       throws IOException, JetStreamApiException {

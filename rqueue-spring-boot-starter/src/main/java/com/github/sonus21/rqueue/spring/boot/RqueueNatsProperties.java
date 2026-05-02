@@ -66,7 +66,8 @@ public class RqueueNatsProperties {
   public static class Stream {
     private int replicas = 1;
     private String storage = "FILE";
-    private Duration maxAge;
+    private String retention = "LIMITS";
+    private Duration maxAge = Duration.ofDays(14);
     private long maxBytes = -1;
     private long maxMessages = -1;
     private String discardPolicy = "OLD";

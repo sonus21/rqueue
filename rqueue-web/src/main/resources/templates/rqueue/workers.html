@@ -105,6 +105,9 @@
                 <h3 class="worker-queue-title">
                   <a href="queues/{{poller.queue}}">{{poller.queue}}</a>
                 </h3>
+                {% if poller.consumerName %}
+                <span class="worker-consumer-name">{{poller.consumerName}}</span>
+                {% endif %}
               </div>
               <span class="worker-status-badge
                   {% if poller.status == 'ACTIVE' %}worker-status-active{% endif %}

@@ -84,7 +84,7 @@ public class QueueDetail extends SerializableBase {
   private final Duration natsAckWaitOverride;
   private final Integer natsMaxDeliverOverride;
   private final Duration natsDedupWindow;
-  private final String natsConsumerName;
+  private final String consumerName;
 
   public boolean isDlqSet() {
     return !StringUtils.isEmpty(deadLetterQueueName);
@@ -165,12 +165,28 @@ public class QueueDetail extends SerializableBase {
         .concurrency(concurrency)
         .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, priority))
         .doNotRetry(doNotRetry)
-        .natsConsumerName(natsConsumerName)
+        .consumerName(consumerName)
         .build();
   }
 
   public Duration visibilityDuration() {
     return Duration.ofMillis(visibilityTimeout);
+  }
+
+  /**
+   * Returns the effective JetStream consumer name for this queue. When {@link #consumerName} is
+   * explicitly set it is returned as-is. Otherwise a default is derived from the queue name:
+   * primary (non-system-generated) queues get {@code {name}-consumer-primary}; system-generated
+   * priority sub-queues get {@code {name}-consumer}. The name is sanitized so that characters
+   * outside {@code [A-Za-z0-9_-]} (e.g. the {@code ::} priority suffix separator) are replaced
+   * with {@code -}, producing a valid NATS consumer name in all cases.
+   */
+  public String resolvedConsumerName() {
+    if (consumerName != null && !consumerName.isEmpty()) {
+      return consumerName;
+    }
+    String sanitized = name.replaceAll("[^A-Za-z0-9_-]", "-");
+    return systemGenerated ? sanitized + "-consumer" : sanitized + "-consumer-primary";
   }
 
   /**

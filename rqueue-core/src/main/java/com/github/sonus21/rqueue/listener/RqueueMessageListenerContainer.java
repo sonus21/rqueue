@@ -26,6 +26,7 @@ import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
+import com.github.sonus21.rqueue.core.impl.RqueueMessageTemplateImpl;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
@@ -78,6 +79,7 @@ public class RqueueMessageListenerContainer
   public static final String EVENT_SOURCE = "RqueueMessageListenerContainer";
   private static final String DEFAULT_THREAD_NAME_PREFIX =
       ClassUtils.getShortName(RqueueMessageListenerContainer.class);
+  static final String POLLER_KEY_SEP = "##";
   final QueueStateMgr queueStateMgr = new QueueStateMgr();
   private final Object lifecycleMgr = new Object();
   private final RqueueMessageTemplate rqueueMessageTemplate;
@@ -86,6 +88,9 @@ public class RqueueMessageListenerContainer
   private final ConcurrentHashMap<String, Future<?>> scheduledFutureByQueue =
       new ConcurrentHashMap<>();
   private final Map<String, QueueThreadPool> queueThreadMap = new ConcurrentHashMap<>();
+  // tracks which (queue, consumer) pollers have been started; prevents the second consumer of a
+  // multi-consumer queue from being skipped by the bare-name dedup check in startQueue.
+  private final java.util.Set<String> startedPollerKeys = ConcurrentHashMap.newKeySet();
 
   @Autowired
   protected RqueueBeanProvider rqueueBeanProvider;
@@ -336,6 +341,10 @@ public class RqueueMessageListenerContainer
     MessageBroker effectiveBroker =
         messageBroker != null ? messageBroker : new RedisMessageBroker(rqueueMessageTemplate);
     rqueueBeanProvider.setMessageBroker(effectiveBroker);
+    // Wire the broker onto the template so BaseMessageSender can route non-Redis publish calls.
+    if (rqueueMessageTemplate instanceof RqueueMessageTemplateImpl) {
+      ((RqueueMessageTemplateImpl) rqueueMessageTemplate).setMessageBroker(effectiveBroker);
+    }
 
     MessageProcessorHandler msgProcessorHandler = new MessageProcessorHandler(
         manualDeletionMessageProcessor,
@@ -391,6 +400,11 @@ public class RqueueMessageListenerContainer
     for (String queue : EndpointRegistry.getActiveQueues()) {
       queueRunningState.put(queue, false);
     }
+  }
+
+  static String pollerKey(QueueDetail qd) {
+    String cn = qd.getConsumerName();
+    return (cn != null && !cn.isEmpty()) ? qd.getName() + POLLER_KEY_SEP + cn : qd.getName();
   }
 
   private int getWorkersCount(int queueCount) {
@@ -488,7 +502,7 @@ public class RqueueMessageListenerContainer
         .priority(priority)
         .priorityGroup(priorityGroup)
         .doNotRetry(mappingInformation.getDoNotRetry())
-        .natsConsumerName(mappingInformation.getNatsConsumerName())
+        .consumerName(mappingInformation.getConsumerName())
         .build();
     List<QueueDetail> queueDetails;
     if (queueDetail.getPriority().size() <= 1) {
@@ -522,7 +536,7 @@ public class RqueueMessageListenerContainer
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       int prioritySize = queueDetail.getPriority().size();
       if (prioritySize == 0) {
-        startQueue(queueDetail.getName(), queueDetail);
+        startQueue(pollerKey(queueDetail), queueDetail);
       } else {
         List<QueueDetail> queueDetails =
             queueGroupToDetails.getOrDefault(queueDetail.getPriorityGroup(), new ArrayList<>());
@@ -603,15 +617,17 @@ public class RqueueMessageListenerContainer
     scheduledFutureByQueue.put(groupName, future);
   }
 
-  protected void startQueue(String queueName, QueueDetail queueDetail) {
-    if (Boolean.TRUE.equals(queueRunningState.get(queueName))) {
-      return;
+  protected void startQueue(String pollerKey, QueueDetail queueDetail) {
+    if (!startedPollerKeys.add(pollerKey)) {
+      return; // already started (dedup for multi-consumer queues)
     }
+    String queueName = queueDetail.getName();
     queueRunningState.put(queueName, true);
     QueueConfig config = rqueueBeanProvider.getRqueueSystemConfigDao().getConfigByName(queueName);
     queueStateMgr.pauseQueueIfRequired(config);
     QueueThreadPool queueThreadPool = queueThreadMap.get(queueName);
     DefaultRqueuePoller messagePoller = new DefaultRqueuePoller(
+        queueName,
         queueDetail,
         queueThreadPool,
         rqueueBeanProvider,
@@ -622,7 +638,7 @@ public class RqueueMessageListenerContainer
         postProcessingHandler,
         getMessageHeaders());
     Future<?> future = getTaskExecutor().submit(messagePoller);
-    scheduledFutureByQueue.put(queueName, future);
+    scheduledFutureByQueue.put(pollerKey, future);
   }
 
   public void pauseUnpauseQueue(String queue, boolean pause) {
@@ -662,18 +678,17 @@ public class RqueueMessageListenerContainer
       }
     }
     waitForRunningQueuesToStop();
+    startedPollerKeys.clear();
   }
 
   private void waitForRunningQueuesToStop() {
-    for (Map.Entry<String, Boolean> entry : queueRunningState.entrySet()) {
-      String queueName = entry.getKey();
-      Future<?> queueSpinningThread = scheduledFutureByQueue.get(queueName);
+    for (Map.Entry<String, Future<?>> entry : scheduledFutureByQueue.entrySet()) {
       waitForTermination(
           log,
-          queueSpinningThread,
+          entry.getValue(),
           getMaxWorkerWaitTime(),
           "An exception occurred while stopping queue '{}'",
-          queueName);
+          entry.getKey());
     }
     if (!waitForWorkerTermination(queueThreadMap.values(), getMaxWorkerWaitTime())) {
       log.error("Some workers are not stopped within time");

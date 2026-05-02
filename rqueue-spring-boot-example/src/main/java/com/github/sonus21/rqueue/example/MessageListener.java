@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.example;
 
+import com.github.sonus21.rqueue.annotation.RqueueHandler;
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.RqueueMessageManager;
 import com.github.sonus21.rqueue.listener.RqueueMessageHeaders;
@@ -29,38 +30,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class MessageListener {
-
-  private static final Random random = new Random();
-
-  @Autowired
-  private RqueueMessageManager rqueueMessageManager;
-
-  @Value("${job.fail.percentage:0}")
-  private int percentageFailure;
-
-  @Value("${job.execution.interval:100}")
-  private int jobExecutionTime;
-
-  private int count;
-
-  protected boolean shouldFail() {
-    if (percentageFailure == 0) {
-      return false;
-    }
-    if (percentageFailure >= 100) {
-      return true;
-    }
-    return random.nextInt(100) < percentageFailure;
-  }
-
-  protected void execute(String msg, Object any, boolean failingEnabled) {
-    log.info(msg, any);
-    TimeoutUtils.sleep(random.nextInt(jobExecutionTime));
-    if (failingEnabled && shouldFail()) {
-      throw new IllegalArgumentException("Failing On Purpose " + any);
-    }
-  }
+public class MessageListener extends BaseListener {
 
   @RqueueListener(value = "${rqueue.simple.queue}")
   public void onSimpleMessage(String message) {
@@ -75,15 +45,6 @@ public class MessageListener {
     execute("delay: {}", message, true);
   }
 
-  @RqueueListener(
-      value = "job-queue",
-      deadLetterQueue = "job-morgue",
-      numRetries = "2",
-      deadLetterQueueListenerEnabled = "false",
-      concurrency = "10-20")
-  public void onJobMessage(Job job) {
-    execute("job-queue: {}", job, true);
-  }
 
   @RqueueListener(
       value = "sch-job-queue",

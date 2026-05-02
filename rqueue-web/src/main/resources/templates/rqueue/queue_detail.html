@@ -136,6 +136,7 @@
       <thead>
       <tr>
         <th>Worker Id</th>
+        <th>Consumer Name</th>
         <th>Status</th>
         <th>Host</th>
         <th>Pid</th>
@@ -152,6 +153,7 @@
       {% for worker in queueWorkers %}
       <tr>
         <td>{{worker.workerId}}</td>
+        <td>{% if worker.consumerName %}{{worker.consumerName}}{% endif %}</td>
         <td>{{worker.status}}</td>
         <td>{{worker.host}}</td>
         <td>{{worker.pid}}</td>

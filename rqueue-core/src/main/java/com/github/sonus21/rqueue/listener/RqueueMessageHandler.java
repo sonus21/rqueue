@@ -252,9 +252,15 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected void handleMessageInternal(Message<?> message, String lookupDestination) {
-    MappingInformation mapping = this.destinationLookup.get(lookupDestination);
+    String consumerName = (String) message.getHeaders().get(RqueueMessageHeaders.CONSUMER_NAME);
+    String lookupKey = (consumerName != null && !consumerName.isEmpty())
+        ? consumerLookupKey(lookupDestination, consumerName)
+        : lookupDestination;
+    MappingInformation mapping = this.destinationLookup.get(lookupKey);
     Set<Match> matches = new HashSet<>();
-    addMatchesToCollection(mapping, message, matches);
+    if (mapping != null) {
+      addMatchesToCollection(mapping, message, matches);
+    }
     if (matches.isEmpty()) {
       handleNoMatch(this.getHandlerMethodMap().keySet(), lookupDestination, message);
       return;
@@ -327,7 +333,7 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
         .priority(priorityMap)
         .batchSize(batchSize)
         .doNotRetry(new HashSet<>(Arrays.asList(rqueueListener.doNotRetry())))
-        .natsConsumerName(natsConsumerName.isEmpty() ? null : natsConsumerName)
+        .consumerName(natsConsumerName.isEmpty() ? null : natsConsumerName)
         .build();
     if (mappingInformation.isValid()) {
       return mappingInformation;
@@ -523,11 +529,23 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
 
   @Override
   protected Set<String> getDirectLookupDestinations(MappingInformation mapping) {
-    Set<String> destinations = new HashSet<>(mapping.getQueueNames());
+    String consumerName = mapping.getConsumerName();
+    Set<String> destinations = new HashSet<>();
     for (String queueName : mapping.getQueueNames()) {
-      destinations.addAll(PriorityUtils.getNamesFromPriority(queueName, mapping.getPriority()));
+      if (consumerName != null && !consumerName.isEmpty()) {
+        // Consumer-qualified key so two @RqueueListener methods with different consumerNames
+        // on the same queue get independent destinationLookup entries.
+        destinations.add(consumerLookupKey(queueName, consumerName));
+      } else {
+        destinations.add(queueName);
+        destinations.addAll(PriorityUtils.getNamesFromPriority(queueName, mapping.getPriority()));
+      }
     }
     return destinations;
+  }
+
+  static String consumerLookupKey(String queueName, String consumerName) {
+    return queueName + "##" + consumerName;
   }
 
   @Override

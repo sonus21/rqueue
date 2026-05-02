@@ -24,9 +24,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Same listener shape as the redis example, minus the delayed-queue and scheduled-job
- * listeners (those rely on Redis-only ZSET-backed schedulers; the v1 NATS broker delegates
- * redelivery to JetStream's own {@code AckWait} timer instead).
+ * Same listener shape as the redis example, minus the delayed-queue and scheduled-job listeners
+ * (those rely on Redis-only ZSET-backed schedulers; the v1 NATS broker delegates redelivery to
+ * JetStream's own {@code AckWait} timer instead).
  */
 @Component
 @Slf4j
@@ -65,12 +65,22 @@ public class MessageListener {
 
   @RqueueListener(
       value = "job-queue",
-      deadLetterQueue = "job-morgue",
+      deadLetterQueue = "job-queue-linkedin-dlq",
       numRetries = "2",
-      deadLetterQueueListenerEnabled = "false",
-      concurrency = "10-20")
+      concurrency = "10-20",
+      consumerName = "linkedin-search")
   public void onJobMessage(Job job) {
-    execute("job-queue: {}", job, true);
+    execute("job-queue-linkedin: {}", job, true);
+  }
+
+  @RqueueListener(
+      value = "job-queue",
+      numRetries = "2",
+      deadLetterQueue = "job-queue-google-dlq",
+      concurrency = "10-20",
+      consumerName = "google-search")
+  public void onJobMessageGooglSearch(Job job) {
+    execute("job-queue-google: {}", job, true);
   }
 
   @RqueueListener(value = "job-morgue", numRetries = "1", concurrency = "1-3")

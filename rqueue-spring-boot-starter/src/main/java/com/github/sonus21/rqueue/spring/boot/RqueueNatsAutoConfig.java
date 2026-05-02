@@ -210,13 +210,17 @@ public class RqueueNatsAutoConfig {
 
     RqueueNatsConfig.StreamDefaults sd = new RqueueNatsConfig.StreamDefaults();
     sd.setReplicas(p.getStream().getReplicas());
-    if ("MEMORY".equalsIgnoreCase(p.getStream().getStorage())) {
-      sd.setStorage(io.nats.client.api.StorageType.Memory);
-    } else {
-      sd.setStorage(io.nats.client.api.StorageType.File);
-    }
+    sd.setStorage("MEMORY".equalsIgnoreCase(p.getStream().getStorage())
+        ? io.nats.client.api.StorageType.Memory
+        : io.nats.client.api.StorageType.File);
+    sd.setRetention("WORKQUEUE".equalsIgnoreCase(p.getStream().getRetention())
+        ? io.nats.client.api.RetentionPolicy.WorkQueue
+        : "INTEREST".equalsIgnoreCase(p.getStream().getRetention())
+            ? io.nats.client.api.RetentionPolicy.Interest
+            : io.nats.client.api.RetentionPolicy.Limits);
     sd.setMaxMsgs(p.getStream().getMaxMessages());
     sd.setMaxBytes(p.getStream().getMaxBytes());
+    sd.setMaxAge(p.getStream().getMaxAge());
     if (p.getStream().getDuplicateWindow() != null) {
       sd.setDuplicateWindow(p.getStream().getDuplicateWindow());
     }

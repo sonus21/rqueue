@@ -44,7 +44,17 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 public class RqueueConfig {
 
   @Getter
-  private static final String brokerId = UUID.randomUUID().toString();
+  private static final String brokerId = generateBrokerId();
+
+  private static String generateBrokerId() {
+    String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    java.util.Random random = new java.util.Random();
+    StringBuilder sb = new StringBuilder(8);
+    for (int i = 0; i < 8; i++) {
+      sb.append(chars.charAt(random.nextInt(chars.length())));
+    }
+    return sb.toString();
+  }
 
   private static final AtomicLong counter = new AtomicLong(1);
   private final RedisConnectionFactory connectionFactory;

@@ -55,9 +55,12 @@ import org.springframework.context.annotation.Import;
 public class RqueueListenerConfig extends RqueueListenerBaseConfig {
 
   @Bean
-  public RqueueMessageHandler rqueueMessageHandler() {
-    return simpleRqueueListenerContainerFactory.getRqueueMessageHandler(
-        getMessageConverterProvider());
+  public RqueueMessageHandler rqueueMessageHandler(MessageBroker messageBroker) {
+    RqueueMessageHandler handler =
+        simpleRqueueListenerContainerFactory.getRqueueMessageHandler(getMessageConverterProvider());
+    handler.setPrimaryHandlerDispatchEnabled(
+        messageBroker.capabilities().usesPrimaryHandlerDispatch());
+    return handler;
   }
 
   @Bean

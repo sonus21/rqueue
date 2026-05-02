@@ -82,17 +82,22 @@ public class RqueueWorkerRegistryImpl
     if (!rqueueConfig.isWorkerRegistryEnabled()) {
       return;
     }
-    String registryQueueName = registryQueueName(queueDetail);
+    String trackingKey = consumerTrackingKey(queueDetail);
     long now = System.currentTimeMillis();
     if (messageReceived) {
-      lastMessageAtByQueue.put(registryQueueName, now);
+      lastMessageAtByQueue.put(trackingKey, now);
     }
-    lastPollAtByQueue.put(registryQueueName, now);
+    lastPollAtByQueue.put(trackingKey, now);
     refreshWorkerInfoIfRequired(now);
-    if (!queueHeartbeatRequired(registryQueueName, now)) {
+    if (!queueHeartbeatRequired(trackingKey, now)) {
       return;
     }
-    publishHeartbeat(registryQueueName, queueThreadPool, now);
+    publishHeartbeat(
+        registryQueueName(queueDetail),
+        trackingKey,
+        queueThreadPool,
+        now,
+        queueDetail.resolvedConsumerName());
   }
 
   @Override
@@ -101,11 +106,11 @@ public class RqueueWorkerRegistryImpl
     if (!rqueueConfig.isWorkerRegistryEnabled()) {
       return;
     }
-    String registryQueueName = registryQueueName(queueDetail);
+    String trackingKey = consumerTrackingKey(queueDetail);
     long now = System.currentTimeMillis();
     refreshWorkerInfoIfRequired(now);
-    lastCapacityExhaustedAtByQueue.put(registryQueueName, now);
-    capacityExhaustedCountByQueue.compute(registryQueueName, (key, count) -> {
+    lastCapacityExhaustedAtByQueue.put(trackingKey, now);
+    capacityExhaustedCountByQueue.compute(trackingKey, (key, count) -> {
       if (count == null) {
         return 1L;
       }
@@ -114,22 +119,32 @@ public class RqueueWorkerRegistryImpl
       }
       return count + 1L;
     });
-    if (!queueHeartbeatRequired(registryQueueName, now)) {
+    if (!queueHeartbeatRequired(trackingKey, now)) {
       return;
     }
-    publishHeartbeat(registryQueueName, queueThreadPool, now);
+    publishHeartbeat(
+        registryQueueName(queueDetail),
+        trackingKey,
+        queueThreadPool,
+        now,
+        queueDetail.resolvedConsumerName());
   }
 
   private void publishHeartbeat(
-      String registryQueueName, QueueThreadPool queueThreadPool, long now) {
-    RqueueWorkerPollerMetadata metadata = buildMetadata(registryQueueName, queueThreadPool);
+      String registryQueueName,
+      String trackingKey,
+      QueueThreadPool queueThreadPool,
+      long now,
+      String consumerName) {
+    RqueueWorkerPollerMetadata metadata = buildMetadata(trackingKey, queueThreadPool, consumerName);
     try {
       String queueKey = rqueueConfig.getWorkerRegistryQueueKey(registryQueueName);
-      store.putQueueHeartbeat(queueKey, workerId, serDes.serializeAsString(metadata));
-      refreshQueueTtlIfRequired(registryQueueName, now);
-      lastQueueHeartbeatAt.put(registryQueueName, now);
+      store.putQueueHeartbeat(
+          queueKey, heartbeatSubKey(consumerName), serDes.serializeAsString(metadata));
+      refreshQueueTtlIfRequired(registryQueueName, trackingKey, now);
+      lastQueueHeartbeatAt.put(trackingKey, now);
     } catch (Exception e) {
-      log.warn("Worker registry serialization failed for queue {}", registryQueueName, e);
+      log.warn("Worker registry serialization failed for queue {}", trackingKey, e);
     }
   }
 
@@ -145,7 +160,8 @@ public class RqueueWorkerRegistryImpl
     }
     long now = System.currentTimeMillis();
     long staleAfter = 2 * rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
-    Map<String, RqueueWorkerPollerMetadata> metadataByWorkerId = new LinkedHashMap<>();
+    // Key = KV sub-key (may be "workerId__consumerName"); value = deserialized metadata.
+    Map<String, RqueueWorkerPollerMetadata> metadataBySubKey = new LinkedHashMap<>();
     List<String> toDelete = new ArrayList<>();
     for (Map.Entry<String, String> entry : rawEntries.entrySet()) {
       try {
@@ -161,7 +177,7 @@ public class RqueueWorkerRegistryImpl
           toDelete.add(entry.getKey());
           continue;
         }
-        metadataByWorkerId.put(entry.getKey(), metadata);
+        metadataBySubKey.put(entry.getKey(), metadata);
       } catch (Exception e) {
         log.warn("Worker registry deserialization failed for queue {}", queueName, e);
         toDelete.add(entry.getKey());
@@ -170,15 +186,21 @@ public class RqueueWorkerRegistryImpl
     if (!toDelete.isEmpty()) {
       store.deleteQueueHeartbeats(queueKey, toDelete.toArray(new String[0]));
     }
-    if (metadataByWorkerId.isEmpty()) {
+    if (metadataBySubKey.isEmpty()) {
       return Collections.emptyList();
     }
-    Map<String, RqueueWorkerInfo> workerInfoById = loadWorkerInfo(metadataByWorkerId.keySet());
+    // Collect unique bare workerIds from the metadata bodies (not from KV sub-keys, which may
+    // be composite "workerId__consumerName" when multiple consumers share a queue).
+    java.util.Set<String> bareWorkerIds = new java.util.LinkedHashSet<>();
+    for (RqueueWorkerPollerMetadata m : metadataBySubKey.values()) {
+      bareWorkerIds.add(m.getWorkerId());
+    }
+    Map<String, RqueueWorkerInfo> workerInfoById = loadWorkerInfo(bareWorkerIds);
     List<RqueueWorkerPollerView> rows = new ArrayList<>();
-    for (Map.Entry<String, RqueueWorkerPollerMetadata> entry : metadataByWorkerId.entrySet()) {
-      String workerId = entry.getKey();
+    for (Map.Entry<String, RqueueWorkerPollerMetadata> entry : metadataBySubKey.entrySet()) {
       RqueueWorkerPollerMetadata metadata = entry.getValue();
-      RqueueWorkerInfo workerInfo = workerInfoById.get(workerId);
+      String bareWorkerId = metadata.getWorkerId();
+      RqueueWorkerInfo workerInfo = workerInfoById.get(bareWorkerId);
       long lastActivityAt = Math.max(
           metadata.getLastPollAt(),
           metadata.getLastCapacityExhaustedAt() == null
@@ -187,7 +209,8 @@ public class RqueueWorkerRegistryImpl
       boolean stale = now - lastActivityAt > staleAfter || workerInfo == null;
       rows.add(RqueueWorkerPollerView.builder()
           .queue(queueName)
-          .workerId(workerId)
+          .workerId(bareWorkerId)
+          .consumerName(metadata.getConsumerName())
           .host(workerInfo == null ? "unknown" : workerInfo.getHost())
           .pid(workerInfo == null ? "" : workerInfo.getPid())
           .status(stale ? "STALE" : "ACTIVE")
@@ -250,22 +273,24 @@ public class RqueueWorkerRegistryImpl
         >= rqueueConfig.getWorkerRegistryQueueHeartbeatInterval().toMillis();
   }
 
-  private void refreshQueueTtlIfRequired(String queueName, long now) {
+  private void refreshQueueTtlIfRequired(String registryQueueName, String trackingKey, long now) {
     Duration ttl = rqueueConfig.getWorkerRegistryQueueTtl();
     long refreshIntervalInMillis = Math.max(1000L, ttl.toMillis() / 2);
-    Long lastRefreshAt = lastQueueTtlRefreshAt.get(queueName);
+    Long lastRefreshAt = lastQueueTtlRefreshAt.get(trackingKey);
     if (lastRefreshAt != null && now - lastRefreshAt < refreshIntervalInMillis) {
       return;
     }
-    store.refreshQueueTtl(rqueueConfig.getWorkerRegistryQueueKey(queueName), ttl);
-    lastQueueTtlRefreshAt.put(queueName, now);
+    store.refreshQueueTtl(rqueueConfig.getWorkerRegistryQueueKey(registryQueueName), ttl);
+    lastQueueTtlRefreshAt.put(trackingKey, now);
   }
 
   private void cleanup() {
     store.deleteWorkerInfo(rqueueConfig.getWorkerRegistryKey(workerId));
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
+      String consumerName = queueDetail.resolvedConsumerName();
       store.deleteQueueHeartbeats(
-          rqueueConfig.getWorkerRegistryQueueKey(registryQueueName(queueDetail)), workerId);
+          rqueueConfig.getWorkerRegistryQueueKey(registryQueueName(queueDetail)),
+          heartbeatSubKey(consumerName));
     }
     lastMessageAtByQueue.clear();
     lastPollAtByQueue.clear();
@@ -277,9 +302,10 @@ public class RqueueWorkerRegistryImpl
   }
 
   private RqueueWorkerPollerMetadata buildMetadata(
-      String registryQueueName, QueueThreadPool queueThreadPool) {
+      String registryQueueName, QueueThreadPool queueThreadPool, String consumerName) {
     return RqueueWorkerPollerMetadata.builder()
         .workerId(workerId)
+        .consumerName(consumerName)
         .lastPollAt(lastPollAtByQueue.getOrDefault(registryQueueName, 0L))
         .lastMessageAt(lastMessageAtByQueue.get(registryQueueName))
         .lastCapacityExhaustedAt(lastCapacityExhaustedAtByQueue.get(registryQueueName))
@@ -303,11 +329,42 @@ public class RqueueWorkerRegistryImpl
     return DateTimeUtils.milliToHumanRepresentation(now - time);
   }
 
+  /**
+   * Returns the KV sub-key used to store this worker's heartbeat for a queue. When two
+   * consumers share the same queue name (e.g. two {@code @RqueueListener} methods on the same
+   * queue with different {@code consumerName}s), the consumer name is appended so each consumer
+   * gets its own independent heartbeat entry rather than overwriting the other's.
+   */
+  private String heartbeatSubKey(String consumerName) {
+    if (consumerName == null || consumerName.isEmpty()) {
+      return workerId;
+    }
+    return workerId + "__" + consumerName;
+  }
+
+  /**
+   * Returns the queue name used as the KV bucket prefix for heartbeats. Always the bare queue
+   * name (no consumer suffix) so that {@link #getQueueWorkers(String)} can find all consumers
+   * of a queue under a single prefix scan.
+   */
   private static String registryQueueName(QueueDetail queueDetail) {
     if (queueDetail.isSystemGenerated() && !StringUtils.isEmpty(queueDetail.getPriorityGroup())) {
       return queueDetail.getPriorityGroup();
     }
     return queueDetail.getName();
+  }
+
+  /**
+   * Returns the key used for all in-memory tracking maps (poll timestamps, heartbeat throttle,
+   * TTL refresh throttle, capacity exhaustion counts). When multiple {@code @RqueueListener}
+   * methods target the same queue with different consumer names, each consumer needs its own
+   * independent tracking entry — otherwise the first heartbeat stamps the shared key and
+   * suppresses all subsequent consumers during the throttle window.
+   */
+  private static String consumerTrackingKey(QueueDetail queueDetail) {
+    String base = registryQueueName(queueDetail);
+    String cn = queueDetail.resolvedConsumerName();
+    return (cn != null && !cn.isEmpty()) ? base + "#" + cn : base;
   }
 
   private static String getPid() {

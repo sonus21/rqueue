@@ -21,7 +21,10 @@ import com.github.sonus21.rqueue.config.RedisBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueInternalPubSubChannel;
+import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.RqueueRedisListenerContainerFactory;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.core.spi.redis.RedisMessageBroker;
 import com.github.sonus21.rqueue.dao.RqueueStringDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
@@ -60,6 +63,12 @@ import org.springframework.data.redis.core.RedisTemplate;
   "com.github.sonus21.rqueue.redis",
 })
 public class RqueueRedisListenerConfig {
+
+  @Bean
+  @Conditional(RedisBackendCondition.class)
+  public MessageBroker redisMessageBroker(RqueueMessageTemplate rqueueMessageTemplate) {
+    return new RedisMessageBroker(rqueueMessageTemplate);
+  }
 
   @Bean
   @Conditional(RedisBackendCondition.class)

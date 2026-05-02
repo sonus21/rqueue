@@ -228,7 +228,7 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     }
 
     @Override
-    protected void startQueue(String queueName, QueueDetail queueDetail) {
+    protected void startQueue(String pollerKey, QueueDetail queueDetail) {
       startQueueCalled.set(true);
       // Do not actually start the poller; it would need a real broker.
     }

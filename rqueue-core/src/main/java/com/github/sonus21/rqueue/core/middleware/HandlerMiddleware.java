@@ -48,6 +48,7 @@ public class HandlerMiddleware implements Middleware {
         payload,
         buildMessageHeaders(
             job.getQueueDetail().getName(),
+            job.getQueueDetail().getConsumerName(),
             rqueueMessage,
             job,
             execution,

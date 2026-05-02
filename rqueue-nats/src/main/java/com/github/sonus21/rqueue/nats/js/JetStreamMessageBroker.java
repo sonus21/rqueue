@@ -309,17 +309,17 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     JetStreamSubscription sub = subscriptionCache.computeIfAbsent(key, k -> {
       // NatsStreamValidator provisions the stream and consumer at bootstrap (RqueueBootstrapEvent).
       // NatsProvisioner caches both, so ensureConsumer here is a map lookup — no backend call.
-      // We still call it to resolve the actual consumer name (may differ for stale-rebind).
       try {
         String actualConsumerName = provisioner.ensureConsumer(
             stream,
             consumerName,
             config.getConsumerDefaults().getAckWait(),
             config.getConsumerDefaults().getMaxDeliver(),
-            config.getConsumerDefaults().getMaxAckPending(),
-            subject);
+            config.getConsumerDefaults().getMaxAckPending());
         PullSubscribeOptions opts = PullSubscribeOptions.bind(stream, actualConsumerName);
-        return js.subscribe(subject, opts);
+        // Consumer has no filter subject; pass null so the NATS client doesn't validate
+        // the subject against a (nonexistent) filter — SUB-90011 otherwise.
+        return js.subscribe(null, opts);
       } catch (IOException | JetStreamApiException e) {
         throw new RqueueNatsException(
             "Failed to bind pull subscription stream=" + stream + " consumer=" + consumerName, e);

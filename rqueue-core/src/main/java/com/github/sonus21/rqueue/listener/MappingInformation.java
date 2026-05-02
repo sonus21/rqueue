@@ -35,6 +35,9 @@ class MappingInformation implements Comparable<MappingInformation> {
   @EqualsAndHashCode.Include
   private final Set<String> queueNames;
 
+  @EqualsAndHashCode.Include
+  private final String consumerName;
+
   private final int numRetry;
   private final String deadLetterQueueName;
   private final boolean deadLetterConsumerEnabled;
@@ -46,7 +49,6 @@ class MappingInformation implements Comparable<MappingInformation> {
   private final boolean primary;
   private final int batchSize;
   private final Set<Class<? extends Throwable>> doNotRetry;
-  private final String natsConsumerName;
 
   @Override
   public String toString() {

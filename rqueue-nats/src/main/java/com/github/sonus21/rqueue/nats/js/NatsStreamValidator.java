@@ -97,16 +97,15 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
     for (QueueDetail q : queues) {
       String mainStream = config.getStreamPrefix() + q.getName();
       String mainSubject = config.getSubjectPrefix() + q.getName();
-      String configuredConsumer = resolveConsumerName(q);
       total += tryEnsure(failures, mainStream, mainSubject);
-      tryEnsureConsumer(failures, mainStream, configuredConsumer, cd, mainSubject);
+      tryEnsureConsumer(failures, mainStream, q.resolvedConsumerName(), cd);
 
       if (q.getPriority() != null) {
         for (String priority : q.getPriority().keySet()) {
           String pStream = mainStream + "-" + priority;
           String pSubject = mainSubject + "." + priority;
           total += tryEnsure(failures, pStream, pSubject);
-          tryEnsureConsumer(failures, pStream, configuredConsumer, cd, pSubject);
+          tryEnsureConsumer(failures, pStream, q.resolvedConsumerName(), cd);
         }
       }
 
@@ -146,31 +145,18 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
         new Object[] {total, queues.size()});
   }
 
-  /** Returns the configured consumer name override, or the default derived from the queue name. */
-  static String resolveConsumerName(QueueDetail q) {
-    String override = q.getNatsConsumerName();
-    return (override != null && !override.isEmpty()) ? override : consumerName(q.getName());
-  }
-
-  /** Derives the default consumer name when no override is configured. */
-  static String consumerName(String queueName) {
-    return "rqueue-" + queueName;
-  }
-
   private void tryEnsureConsumer(
       List<String> failures,
       String streamName,
       String consumerName,
-      RqueueNatsConfig.ConsumerDefaults cd,
-      String filterSubject) {
+      RqueueNatsConfig.ConsumerDefaults cd) {
     try {
       provisioner.ensureConsumer(
           streamName,
           consumerName,
           cd.getAckWait(),
           cd.getMaxDeliver(),
-          cd.getMaxAckPending(),
-          filterSubject);
+          cd.getMaxAckPending());
     } catch (RqueueNatsException e) {
       failures.add("consumer " + consumerName + " on " + streamName + ": " + rootCause(e));
     }
