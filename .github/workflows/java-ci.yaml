@@ -445,6 +445,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Compile main sources
+        run: ./gradlew compileJava
+
       - name: Download coverage artifacts
         uses: actions/download-artifact@v4
         with:
