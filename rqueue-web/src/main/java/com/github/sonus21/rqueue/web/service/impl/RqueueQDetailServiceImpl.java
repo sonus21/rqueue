@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service.impl;
+package com.github.sonus21.rqueue.web.service;
 
 import static com.github.sonus21.rqueue.utils.StringUtils.clean;
 import static com.google.common.collect.Lists.newArrayList;

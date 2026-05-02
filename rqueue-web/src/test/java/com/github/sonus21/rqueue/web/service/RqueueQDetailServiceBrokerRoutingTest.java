@@ -43,7 +43,6 @@ import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
-import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import java.util.Collections;
 import java.util.List;

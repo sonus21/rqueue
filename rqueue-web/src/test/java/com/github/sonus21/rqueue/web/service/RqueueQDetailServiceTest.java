@@ -48,7 +48,6 @@ import com.github.sonus21.rqueue.models.response.TableRow;
 import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.RqueueMessageTestUtils;
-import com.github.sonus21.rqueue.web.service.impl.RqueueQDetailServiceImpl;
 import com.github.sonus21.rqueue.worker.RqueueWorkerRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;

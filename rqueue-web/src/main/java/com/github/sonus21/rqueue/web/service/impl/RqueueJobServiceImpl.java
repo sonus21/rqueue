@@ -14,7 +14,7 @@
  *
  */
 
-package com.github.sonus21.rqueue.web.service.impl;
+package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.exception.ProcessingException;
