@@ -62,7 +62,11 @@ class JetStreamMessageBrokerUnitTest {
     // naming and exception wrapping, not stream creation.
     NatsProvisioner provisioner = mock(NatsProvisioner.class);
     JetStreamMessageBroker broker = new JetStreamMessageBroker(
-        conn, js, jsm, config, new RqJacksonSerDes(SerializationUtils.getObjectMapper()),
+        conn,
+        js,
+        jsm,
+        config,
+        new RqJacksonSerDes(SerializationUtils.getObjectMapper()),
         provisioner);
     return new Fixture(conn, js, jsm, broker);
   }

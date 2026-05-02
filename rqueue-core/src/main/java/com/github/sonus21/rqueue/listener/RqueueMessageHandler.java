@@ -313,8 +313,8 @@ public class RqueueMessageHandler extends AbstractMethodMessageHandler<MappingIn
     Map<String, Integer> priorityMap = resolvePriority(rqueueListener);
     String priorityGroup = resolvePriorityGroup(rqueueListener);
     int batchSize = getBatchSize(rqueueListener, concurrency);
-    String natsConsumerName = ValueResolver.resolveKeyToString(
-        getApplicationContext(), rqueueListener.consumerName());
+    String natsConsumerName =
+        ValueResolver.resolveKeyToString(getApplicationContext(), rqueueListener.consumerName());
     MappingInformation mappingInformation = MappingInformation.builder()
         .active(active)
         .concurrency(concurrency)
