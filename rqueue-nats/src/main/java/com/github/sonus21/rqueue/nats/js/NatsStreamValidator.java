@@ -18,11 +18,11 @@ package com.github.sonus21.rqueue.nats.js;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
-import com.github.sonus21.rqueue.utils.Constants;
-import com.github.sonus21.rqueue.utils.PriorityUtils;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
+import com.github.sonus21.rqueue.utils.Constants;
+import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -107,8 +107,10 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
           if (Constants.DEFAULT_PRIORITY_KEY.equals(priority)) {
             continue; // DEFAULT entry is the queue itself; already handled above
           }
-          String pStream = config.getStreamPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
-          String pSubject = config.getSubjectPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
+          String pStream =
+              config.getStreamPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
+          String pSubject =
+              config.getSubjectPrefix() + q.getName() + PriorityUtils.getSuffix(priority);
           total += tryEnsure(failures, pStream, pSubject);
           tryEnsureConsumer(failures, pStream, q.resolvedConsumerName(), cd);
         }
