@@ -472,4 +472,5 @@ jobs:
             echo "ERROR: COVERALLS_REPO_TOKEN is not set"
             exit 1
           fi
-          ./gradlew coverallsJacoco --info
+          echo "Token is set: $(echo $COVERALLS_REPO_TOKEN | head -c 20)..."
+          ./gradlew coverallsJacoco --debug 2>&1 | grep -i "coveralls\|token\|error\|http" | tail -50
