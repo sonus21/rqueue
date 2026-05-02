@@ -15,11 +15,6 @@
  */
 
 package com.github.sonus21.rqueue.web.service;
-import com.github.sonus21.rqueue.web.RqueueDashboardChartService;
-import com.github.sonus21.rqueue.web.RqueueJobService;
-import com.github.sonus21.rqueue.web.RqueueQDetailService;
-import com.github.sonus21.rqueue.web.RqueueSystemManagerService;
-import com.github.sonus21.rqueue.web.RqueueViewControllerService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -40,6 +35,7 @@ import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.TestUtils;
+import com.github.sonus21.rqueue.web.RqueueSystemManagerService;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;

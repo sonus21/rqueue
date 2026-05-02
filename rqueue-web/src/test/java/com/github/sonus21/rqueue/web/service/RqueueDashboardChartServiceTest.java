@@ -15,11 +15,6 @@
  */
 
 package com.github.sonus21.rqueue.web.service;
-import com.github.sonus21.rqueue.web.RqueueDashboardChartService;
-import com.github.sonus21.rqueue.web.RqueueJobService;
-import com.github.sonus21.rqueue.web.RqueueQDetailService;
-import com.github.sonus21.rqueue.web.RqueueSystemManagerService;
-import com.github.sonus21.rqueue.web.RqueueViewControllerService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyCollection;
@@ -43,6 +38,8 @@ import com.github.sonus21.rqueue.models.enums.ChartType;
 import com.github.sonus21.rqueue.models.request.ChartDataRequest;
 import com.github.sonus21.rqueue.models.response.ChartDataResponse;
 import com.github.sonus21.rqueue.utils.DateTimeUtils;
+import com.github.sonus21.rqueue.web.RqueueDashboardChartService;
+import com.github.sonus21.rqueue.web.RqueueSystemManagerService;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
