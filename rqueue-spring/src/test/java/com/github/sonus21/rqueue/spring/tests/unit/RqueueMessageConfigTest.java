@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.spring.tests.unit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
@@ -27,6 +28,8 @@ import com.github.sonus21.rqueue.converter.GenericMessageConverter;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
+import com.github.sonus21.rqueue.core.spi.Capabilities;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.RqueueListenerConfig;
 import com.github.sonus21.rqueue.spring.tests.SpringUnitTest;
@@ -49,6 +52,9 @@ class RqueueMessageConfigTest extends TestBase {
 
   @Mock
   RqueueMessageHandler rqueueMessageHandler;
+
+  @Mock
+  private MessageBroker messageBroker;
 
   @Mock
   private SimpleRqueueListenerContainerFactory simpleRqueueListenerContainerFactory;
@@ -79,7 +85,8 @@ class RqueueMessageConfigTest extends TestBase {
         "messageConverterProviderClass",
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
-    assertNotNull(rqueueMessageConfig.rqueueMessageHandler());
+    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
+    assertNotNull(rqueueMessageConfig.rqueueMessageHandler(messageBroker));
   }
 
   @Test
@@ -93,8 +100,9 @@ class RqueueMessageConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageConfig, "simpleRqueueListenerContainerFactory", factory, true);
+    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
     assertEquals(
-        rqueueMessageHandler.hashCode(), messageConfig.rqueueMessageHandler().hashCode());
+        rqueueMessageHandler.hashCode(), messageConfig.rqueueMessageHandler(messageBroker).hashCode());
   }
 
   @Test

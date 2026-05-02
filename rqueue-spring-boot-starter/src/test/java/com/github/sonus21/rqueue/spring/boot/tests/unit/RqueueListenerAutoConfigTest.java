@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.config.SimpleRqueueListenerContainerFactory;
@@ -30,6 +31,8 @@ import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
+import com.github.sonus21.rqueue.core.spi.Capabilities;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
@@ -59,6 +62,9 @@ class RqueueListenerAutoConfigTest extends TestBase {
   private RqueueMessageHandler rqueueMessageHandler;
 
   @Mock
+  private MessageBroker messageBroker;
+
+  @Mock
   private RedisConnectionFactory redisConnectionFactory;
 
   @InjectMocks
@@ -77,7 +83,8 @@ class RqueueListenerAutoConfigTest extends TestBase {
   @Test
   void rqueueMessageHandlerDefaultCreation()
       throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-    assertNotNull(rqueueMessageAutoConfig.rqueueMessageHandler());
+    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
+    assertNotNull(rqueueMessageAutoConfig.rqueueMessageHandler(messageBroker));
   }
 
   @Test
@@ -92,9 +99,10 @@ class RqueueListenerAutoConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
+    when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
     assertEquals(
         rqueueMessageHandler.hashCode(),
-        messageAutoConfig.rqueueMessageHandler().hashCode());
+        messageAutoConfig.rqueueMessageHandler(messageBroker).hashCode());
   }
 
   @Test
