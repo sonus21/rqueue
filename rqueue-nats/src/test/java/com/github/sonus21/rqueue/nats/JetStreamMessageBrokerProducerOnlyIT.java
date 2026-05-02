@@ -33,7 +33,8 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
         JetStreamMessageBroker.builder().connection(connection).build()) {
       int count = 10;
       for (int i = 0; i < count; i++) {
-        broker.enqueue(q, RqueueMessage.builder().id("m-" + i).message("payload-" + i).build());
+        broker.enqueue(
+            q, RqueueMessage.builder().id("m-" + i).message("payload-" + i).build());
       }
       assertEquals(count, broker.size(q), "all enqueued messages should be visible in the stream");
     }
@@ -76,13 +77,18 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
       int count = 8;
-      Flux<Void> publishes = Flux.range(0, count).flatMap(i ->
-          broker.enqueueReactive(
-              q, RqueueMessage.builder().id("rm-" + i).message("reactive-payload-" + i).build()));
+      Flux<Void> publishes = Flux.range(0, count)
+          .flatMap(i -> broker.enqueueReactive(
+              q,
+              RqueueMessage.builder()
+                  .id("rm-" + i)
+                  .message("reactive-payload-" + i)
+                  .build()));
 
       StepVerifier.create(publishes).verifyComplete();
 
-      assertEquals(count, broker.size(q), "all reactively enqueued messages should be in the stream");
+      assertEquals(
+          count, broker.size(q), "all reactively enqueued messages should be in the stream");
     }
   }
 
@@ -97,7 +103,8 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
 
       // 3 plain messages on the main queue
       for (int i = 0; i < 3; i++) {
-        broker.enqueue(mainQ, RqueueMessage.builder().id("plain-" + i).message("p" + i).build());
+        broker.enqueue(
+            mainQ, RqueueMessage.builder().id("plain-" + i).message("p" + i).build());
       }
       // 2 priority messages on the "high" sub-queue
       for (int i = 0; i < 2; i++) {
@@ -107,9 +114,8 @@ class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
             RqueueMessage.builder().id("high-" + i).message("h" + i).build());
       }
       // 1 reactive message on the main queue
-      StepVerifier.create(
-              broker.enqueueReactive(
-                  mainQ, RqueueMessage.builder().id("react-0").message("r0").build()))
+      StepVerifier.create(broker.enqueueReactive(
+              mainQ, RqueueMessage.builder().id("react-0").message("r0").build()))
           .verifyComplete();
 
       assertEquals(4L, broker.size(mainQ), "main stream: 3 plain + 1 reactive");

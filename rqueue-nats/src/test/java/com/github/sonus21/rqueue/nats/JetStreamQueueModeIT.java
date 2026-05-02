@@ -55,17 +55,13 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
     String streamName = "rqueue-" + "qm-queue-" + System.nanoTime();
     String subject = "rqueue." + "qm-queue-" + System.nanoTime();
     JetStreamManagement jsm = connection.jetStreamManagement();
-    NatsProvisioner provisioner =
-        new NatsProvisioner(connection, jsm, RqueueNatsConfig.defaults());
+    NatsProvisioner provisioner = new NatsProvisioner(connection, jsm, RqueueNatsConfig.defaults());
 
     provisioner.ensureStream(streamName, List.of(subject), QueueType.QUEUE);
 
-    RetentionPolicy actual =
-        jsm.getStreamInfo(streamName).getConfiguration().getRetentionPolicy();
+    RetentionPolicy actual = jsm.getStreamInfo(streamName).getConfiguration().getRetentionPolicy();
     assertEquals(
-        RetentionPolicy.WorkQueue,
-        actual,
-        "QUEUE mode must create a WorkQueue-retention stream");
+        RetentionPolicy.WorkQueue, actual, "QUEUE mode must create a WorkQueue-retention stream");
   }
 
   @Test
@@ -73,17 +69,13 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
     String streamName = "rqueue-" + "qm-stream-" + System.nanoTime();
     String subject = "rqueue." + "qm-stream-" + System.nanoTime();
     JetStreamManagement jsm = connection.jetStreamManagement();
-    NatsProvisioner provisioner =
-        new NatsProvisioner(connection, jsm, RqueueNatsConfig.defaults());
+    NatsProvisioner provisioner = new NatsProvisioner(connection, jsm, RqueueNatsConfig.defaults());
 
     provisioner.ensureStream(streamName, List.of(subject), QueueType.STREAM);
 
-    RetentionPolicy actual =
-        jsm.getStreamInfo(streamName).getConfiguration().getRetentionPolicy();
+    RetentionPolicy actual = jsm.getStreamInfo(streamName).getConfiguration().getRetentionPolicy();
     assertEquals(
-        RetentionPolicy.Limits,
-        actual,
-        "STREAM mode must create a Limits-retention stream");
+        RetentionPolicy.Limits, actual, "STREAM mode must create a Limits-retention stream");
   }
 
   // ---- Contract 2: consumer reuse preserves delivery position -----------
@@ -145,7 +137,8 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
           cd.getMaxAckPending());
 
       // Verify the consumer info still reflects the already-delivered messages.
-      ConsumerInfo info = jsm.getConsumerInfo(RqueueNatsConfig.defaults().getStreamPrefix() + q.getName(), consumerName);
+      ConsumerInfo info = jsm.getConsumerInfo(
+          RqueueNatsConfig.defaults().getStreamPrefix() + q.getName(), consumerName);
       long numAcked = info.getNumAckPending() == 0
           ? total - info.getNumPending()
           : total - info.getNumPending() - info.getNumAckPending();
@@ -154,8 +147,8 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
       assertEquals(
           total - firstBatch,
           remaining,
-          "consumer position must be preserved across ensureConsumer calls; "
-              + "remaining=" + remaining + " but expected " + (total - firstBatch));
+          "consumer position must be preserved across ensureConsumer calls; " + "remaining="
+              + remaining + " but expected " + (total - firstBatch));
     }
   }
 
@@ -179,8 +172,7 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
       for (int t = 0; t < 2; t++) {
         pool.submit(() -> {
           for (int round = 0; round < 100 && done.getCount() > 0; round++) {
-            List<RqueueMessage> msgs =
-                broker.pop(q, sharedConsumer, 5, Duration.ofMillis(300));
+            List<RqueueMessage> msgs = broker.pop(q, sharedConsumer, 5, Duration.ofMillis(300));
             for (RqueueMessage m : msgs) {
               if (seen.add(m.getId())) {
                 done.countDown();
@@ -194,9 +186,7 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
       pool.shutdownNow();
 
       assertEquals(
-          total,
-          seen.size(),
-          "QUEUE mode: each message must be delivered to exactly one worker");
+          total, seen.size(), "QUEUE mode: each message must be delivered to exactly one worker");
     }
   }
 
@@ -219,9 +209,7 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
       Set<String> listenerTwoSeen = drain(broker, q, "listener-svc-2", total);
 
       assertEquals(
-          total,
-          listenerOneSeen.size(),
-          "STREAM mode: listener-svc-1 must receive all messages");
+          total, listenerOneSeen.size(), "STREAM mode: listener-svc-1 must receive all messages");
       assertEquals(
           total,
           listenerTwoSeen.size(),

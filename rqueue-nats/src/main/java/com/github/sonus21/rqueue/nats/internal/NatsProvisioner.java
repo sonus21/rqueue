@@ -153,9 +153,8 @@ public class NatsProvisioner {
       }
       try {
         StreamInfo existing = safeGetStreamInfo(streamName);
-        RetentionPolicy desired = queueType == QueueType.STREAM
-            ? RetentionPolicy.Limits
-            : RetentionPolicy.WorkQueue;
+        RetentionPolicy desired =
+            queueType == QueueType.STREAM ? RetentionPolicy.Limits : RetentionPolicy.WorkQueue;
         if (existing == null) {
           if (!config.isAutoCreateStreams()) {
             throw new RqueueNatsException(

@@ -220,8 +220,7 @@ abstract class BaseMessageSender {
             MessageDeleteRequest.builder().queueDetail(queueDetail).build());
   }
 
-  protected void registerQueueInternal(String queueName, QueueType type,
-      String... priorities) {
+  protected void registerQueueInternal(String queueName, QueueType type, String... priorities) {
     validateQueue(queueName);
     notNull(priorities, "priorities cannot be null");
     Map<String, Integer> priorityMap = new HashMap<>();
