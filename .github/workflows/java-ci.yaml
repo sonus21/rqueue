@@ -467,10 +467,14 @@ jobs:
       - name: Push coverage to Coveralls
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          CI_NAME: github
+          CI_BUILD_NUMBER: ${{ github.run_number }}
+          CI_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_PULL_REQUEST: ${{ github.event.pull_request.number }}
         run: |
           if [ -z "$COVERALLS_REPO_TOKEN" ]; then
             echo "ERROR: COVERALLS_REPO_TOKEN is not set"
             exit 1
           fi
-          echo "Token is set: $(echo $COVERALLS_REPO_TOKEN | head -c 20)..."
-          ./gradlew coverallsJacoco --debug 2>&1 | grep -i "coveralls\|token\|error\|http" | tail -50
+          ./gradlew coverallsJacoco
