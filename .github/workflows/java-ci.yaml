@@ -62,6 +62,17 @@ jobs:
       - name: Compile test sources
         run: ./gradlew compileTestJava
 
+      - name: Upload compiled classes
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-classes
+          path: |
+            **/build/classes/
+            **/build/generated/
+            **/build/resources/
+          if-no-files-found: error
+          retention-days: 1
+
   unit_test:
     needs: build
     runs-on: ubuntu-latest
@@ -85,6 +96,11 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
 
       - name: Run unit tests
         run: ./gradlew test -DincludeTags=unit
@@ -138,6 +154,11 @@ jobs:
           sudo apt-get install -y redis-server
           redis-cli --version
 
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
+
       - name: Run producer-only tests
         run: ./gradlew test -DincludeTags=producerOnly
 
@@ -189,6 +210,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y redis-server
           redis-cli --version
+
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
 
       - name: Run integration tests
         run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
@@ -260,6 +286,11 @@ jobs:
           sleep 30
           yes yes | redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1
 
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
+
       - name: Run Redis cluster tests
         run: ./gradlew test -DincludeTags=redisCluster
 
@@ -313,6 +344,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y redis-server
           redis-cli --version
+
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
 
       - name: Run reactive integration tests
         run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
@@ -382,6 +418,11 @@ jobs:
             sleep 1
           done
 
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
+
       - name: Run NATS tests
         env:
           NATS_RUNNING: "true"
@@ -445,8 +486,10 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Compile main sources
-        run: ./gradlew compileJava
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
 
       - name: Download coverage artifacts
         uses: actions/download-artifact@v4
