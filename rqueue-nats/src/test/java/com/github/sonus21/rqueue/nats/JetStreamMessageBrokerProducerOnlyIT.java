@@ -14,112 +14,169 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.serdes.SerializationUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * End-to-end producer-only smoke test: the broker enqueues messages but never pops or acks them.
- * Covers plain enqueue, priority enqueue, and reactive enqueue — verifying that all variants land
- * in JetStream and are reflected by {@link JetStreamMessageBroker#size}.
+ * End-to-end producer-only smoke test: the broker enqueues typed domain events but never pops or
+ * acks them, mirroring the producer-only application mode where the process only publishes work.
+ *
+ * <p>Covers plain enqueue, priority enqueue, and reactive enqueue — verifying that all variants
+ * land in JetStream and are reflected by {@link JetStreamMessageBroker#size}.
  */
 @NatsIntegrationTest
 class JetStreamMessageBrokerProducerOnlyIT extends AbstractJetStreamIT {
 
+  private static final ObjectMapper MAPPER = SerializationUtils.objectMapper;
+
+  // ---- minimal domain events used as message payloads --------------------
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  static class EmailEvent {
+    private String id;
+    private String to;
+    private String subject;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  static class JobEvent {
+    private String id;
+    private String type;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  static class NotificationEvent {
+    private String id;
+    private String message;
+  }
+
+  // ---- helpers -----------------------------------------------------------
+
+  private static String serialize(Object event) throws Exception {
+    return MAPPER.writeValueAsString(event);
+  }
+
+  private static RqueueMessage rqueueMessage(String id, Object event) throws Exception {
+    return RqueueMessage.builder().id(id).message(serialize(event)).build();
+  }
+
+  // ---- tests -------------------------------------------------------------
+
   @Test
-  void enqueue_messagesAccumulateInStream() throws Exception {
-    QueueDetail q = mockQueue("po-plain-" + System.nanoTime());
+  void enqueueEmailEvents_accumulateInStream() throws Exception {
+    QueueDetail emailQueue = mockQueue("email-queue-" + System.nanoTime());
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
-      int count = 10;
+      int count = 5;
       for (int i = 0; i < count; i++) {
-        broker.enqueue(
-            q, RqueueMessage.builder().id("m-" + i).message("payload-" + i).build());
+        EmailEvent event = new EmailEvent(UUID.randomUUID().toString(),
+            "user" + i + "@example.com", "Subject " + i);
+        broker.enqueue(emailQueue, rqueueMessage("email-" + i, event));
       }
-      assertEquals(count, broker.size(q), "all enqueued messages should be visible in the stream");
+      assertEquals(count, broker.size(emailQueue),
+          "all email events should be visible in the stream");
     }
   }
 
   @Test
-  void enqueueWithPriority_messagesAccumulateInPriorityStreams() throws Exception {
-    QueueDetail q = mockQueue("po-prio-" + System.nanoTime());
+  void enqueueJobEvents_accumulateInStream() throws Exception {
+    QueueDetail jobQueue = mockQueue("job-queue-" + System.nanoTime());
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
-      String[] priorities = {"high", "low", "critical"};
-      int perPriority = 5;
+      String[] types = {"FULL_TIME", "PART_TIME", "CONTRACT"};
+      for (int i = 0; i < types.length; i++) {
+        JobEvent event = new JobEvent(UUID.randomUUID().toString(), types[i]);
+        broker.enqueue(jobQueue, rqueueMessage("job-" + i, event));
+      }
+      assertEquals(types.length, broker.size(jobQueue),
+          "all job events should be visible in the stream");
+    }
+  }
+
+  @Test
+  void enqueueWithPriority_notificationEvents_accumulateInPriorityStreams() throws Exception {
+    QueueDetail notifQueue = mockQueue("notif-queue-" + System.nanoTime());
+    try (JetStreamMessageBroker broker =
+        JetStreamMessageBroker.builder().connection(connection).build()) {
+      String[] priorities = {"high", "low"};
+      int perPriority = 4;
       for (String priority : priorities) {
         for (int i = 0; i < perPriority; i++) {
-          broker.enqueue(
-              q,
-              priority,
-              RqueueMessage.builder()
-                  .id(priority + "-m-" + i)
-                  .message("payload-" + i)
-                  .build());
+          NotificationEvent event = new NotificationEvent(
+              UUID.randomUUID().toString(), priority + "-notification-" + i);
+          broker.enqueue(notifQueue, priority, rqueueMessage(priority + "-notif-" + i, event));
         }
       }
-      // Each priority maps to its own JetStream stream; verify each independently.
-      // subjectFor(q, priority) = prefix + q.getName() + "_" + priority, so size(pq) where
-      // pq.getName() = q.getName() + "_" + priority resolves to the same stream.
       for (String priority : priorities) {
-        QueueDetail pq = mockQueue(q.getName() + "_" + priority);
-        assertEquals(
-            perPriority,
-            broker.size(pq),
-            "priority=" + priority + " stream should hold " + perPriority + " messages");
+        QueueDetail pq = mockQueue(notifQueue.getName() + "_" + priority);
+        assertEquals(perPriority, broker.size(pq),
+            "priority=" + priority + " stream should hold " + perPriority + " notification events");
       }
     }
   }
 
   @Test
-  void enqueueReactive_messagesAccumulateInStream() {
-    QueueDetail q = mockQueue("po-reactive-" + System.nanoTime());
+  void enqueueReactive_emailEvents_accumulateInStream() throws Exception {
+    QueueDetail emailQueue = mockQueue("email-reactive-" + System.nanoTime());
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
-      int count = 8;
-      Flux<Void> publishes = Flux.range(0, count)
-          .flatMap(i -> broker.enqueueReactive(
-              q,
-              RqueueMessage.builder()
-                  .id("rm-" + i)
-                  .message("reactive-payload-" + i)
-                  .build()));
-
+      int count = 6;
+      List<RqueueMessage> messages = new ArrayList<>();
+      for (int i = 0; i < count; i++) {
+        EmailEvent event = new EmailEvent(
+            UUID.randomUUID().toString(), "user" + i + "@example.com", "RE: item " + i);
+        messages.add(rqueueMessage("re-email-" + i, event));
+      }
+      Flux<Void> publishes = Flux.fromIterable(messages)
+          .flatMap(m -> broker.enqueueReactive(emailQueue, m));
       StepVerifier.create(publishes).verifyComplete();
-
-      assertEquals(
-          count, broker.size(q), "all reactively enqueued messages should be in the stream");
+      assertEquals(count, broker.size(emailQueue),
+          "all reactively enqueued email events should be in the stream");
     }
   }
 
   @Test
-  void mixedEnqueue_allVariantsLandInCorrectStreams() {
-    String base = "po-mixed-" + System.nanoTime();
-    QueueDetail mainQ = mockQueue(base);
-    QueueDetail highQ = mockQueue(base + "_high");
+  void mixedEvents_allVariantsLandInCorrectStreams() throws Exception {
+    String base = "mixed-events-" + System.nanoTime();
+    QueueDetail mainQueue = mockQueue(base);
+    QueueDetail highQueue = mockQueue(base + "_high");
 
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
 
-      // 3 plain messages on the main queue
+      // 3 email events on the main queue
       for (int i = 0; i < 3; i++) {
-        broker.enqueue(
-            mainQ, RqueueMessage.builder().id("plain-" + i).message("p" + i).build());
+        EmailEvent email = new EmailEvent(UUID.randomUUID().toString(),
+            "to" + i + "@example.com", "Hello " + i);
+        broker.enqueue(mainQueue, rqueueMessage("email-" + i, email));
       }
-      // 2 priority messages on the "high" sub-queue
+      // 2 job events on the "high" priority sub-queue
       for (int i = 0; i < 2; i++) {
-        broker.enqueue(
-            mainQ,
-            "high",
-            RqueueMessage.builder().id("high-" + i).message("h" + i).build());
+        JobEvent job = new JobEvent(UUID.randomUUID().toString(), "CONTRACT");
+        broker.enqueue(mainQueue, "high", rqueueMessage("job-high-" + i, job));
       }
-      // 1 reactive message on the main queue
-      StepVerifier.create(broker.enqueueReactive(
-              mainQ, RqueueMessage.builder().id("react-0").message("r0").build()))
+      // 1 notification reactively on the main queue
+      NotificationEvent notif = new NotificationEvent(UUID.randomUUID().toString(), "reactive notif");
+      StepVerifier.create(broker.enqueueReactive(mainQueue, rqueueMessage("notif-0", notif)))
           .verifyComplete();
 
-      assertEquals(4L, broker.size(mainQ), "main stream: 3 plain + 1 reactive");
-      assertEquals(2L, broker.size(highQ), "high-priority stream: 2 messages");
+      assertEquals(4L, broker.size(mainQueue), "main stream: 3 email + 1 reactive notification");
+      assertEquals(2L, broker.size(highQueue), "high-priority stream: 2 job events");
     }
   }
 }

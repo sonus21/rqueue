@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.core.RqueueEndpointManager;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.exception.QueueDoesNotExist;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
@@ -64,8 +65,8 @@ public class RqueueEndpointManagerImpl extends BaseMessageSender implements Rque
   }
 
   @Override
-  public void registerQueue(String name, String... priorities) {
-    registerQueueInternal(name, priorities);
+  public void registerQueue(String name, QueueType type, String... priorities) {
+    registerQueueInternal(name,  type, priorities);
   }
 
   @Override

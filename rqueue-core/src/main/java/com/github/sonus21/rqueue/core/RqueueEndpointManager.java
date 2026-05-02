@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.core;
 
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
 import java.util.List;
@@ -35,7 +36,19 @@ public interface RqueueEndpointManager {
    * @param name       name of the queue
    * @param priorities list of priorities to be used while sending message on this queue.
    */
-  void registerQueue(String name, String... priorities);
+  default void registerQueue(String name, String... priorities) {
+    registerQueue(name, QueueType.QUEUE, priorities);
+  }
+
+
+  /**
+   * Use this method to register any queue, that's only used for sending message.
+   *
+   * @param name       name of the queue
+   * @param type       queue type
+   * @param priorities list of priorities to be used while sending message on this queue.
+   */
+  void registerQueue(String name, QueueType type, String... priorities);
 
   /**
    * Check if a queue is registered.

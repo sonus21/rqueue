@@ -18,6 +18,8 @@ package com.github.sonus21.rqueue.converter;
 
 import static org.springframework.util.Assert.notNull;
 
+import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
+import com.github.sonus21.rqueue.serdes.RqJacksonTypeFactory;
 import com.github.sonus21.rqueue.serdes.RqueueSerDes;
 import com.github.sonus21.rqueue.serdes.RqueueTypeFactory;
 import com.github.sonus21.rqueue.serdes.SerializationUtils;
@@ -40,6 +42,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
@@ -59,6 +62,12 @@ public class GenericMessageConverter implements SmartMessageConverter {
   public GenericMessageConverter() {
     this.smartMessageSerDes =
         new SmartMessageSerDes(SerializationUtils.getSerDes(), SerializationUtils.getTypeFactory());
+  }
+
+  public GenericMessageConverter(ObjectMapper objectMapper) {
+    notNull(objectMapper, "objectMapper cannot be null");
+    this.smartMessageSerDes = new SmartMessageSerDes(new RqJacksonSerDes(objectMapper),
+        new RqJacksonTypeFactory(objectMapper));
   }
 
   public GenericMessageConverter(RqueueSerDes serDes, RqueueTypeFactory typeFactory) {
