@@ -50,10 +50,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 /**
  * Redis-conditional bean wiring extracted from {@code RqueueListenerBaseConfig} so that the
  * Redis-only impl classes can live in {@code rqueue-redis} without forcing {@code rqueue-core} to
- * depend on this module. {@link com.github.sonus21.rqueue.spring.RqueueListenerConfig} (non-Boot)
- * and {@link com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig} (Boot) each
- * {@code @Import} this configuration, so the Redis @Beans are registered exactly where they used to
- * be.
+ * depend on this module. {@code RqueueListenerConfig} (non-Boot) and
+ * {@code RqueueListenerAutoConfig} (Boot) each {@code @Import} this configuration, so the Redis
+ * @Beans are registered exactly where they used to be.
  *
  * <p>Mirrors the role {@code RqueueNatsAutoConfig} plays for the NATS backend.
  */

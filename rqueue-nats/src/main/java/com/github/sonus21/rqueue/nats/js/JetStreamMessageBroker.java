@@ -334,9 +334,9 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   /**
    * Resolve the JetStream {@code ackWait} for this queue's pull consumer: per-queue
    * {@link QueueDetail#getVisibilityTimeout()} (when positive), else the global
-   * {@link RqueueNatsConfig.ConsumerDefaults#getAckWait()}. Honouring visibilityTimeout makes the
-   * NATS backend match the contract every other rqueue backend exposes: a message stays invisible
-   * to other consumers for that window and is redelivered if not acked in time.
+   * {@code RqueueNatsConfig.ConsumerDefaults.getAckWait()}. Honouring visibilityTimeout makes
+   * the NATS backend match the contract every other rqueue backend exposes: a message stays
+   * invisible to other consumers for that window and is redelivered if not acked in time.
    */
   public static Duration resolveAckWait(QueueDetail q, RqueueNatsConfig config) {
     long vt = q.getVisibilityTimeout();
@@ -350,7 +350,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    * Resolve the JetStream {@code maxDeliver} from per-queue {@link QueueDetail#getNumRetry()}
    * (counted as initial delivery + N retries = numRetry + 1). The {@link Integer#MAX_VALUE}
    * "retry forever" sentinel maps to JetStream's unlimited value ({@code -1}); non-positive
-   * numRetry falls back to {@link RqueueNatsConfig.ConsumerDefaults#getMaxDeliver()}.
+   * numRetry falls back to {@code RqueueNatsConfig.ConsumerDefaults.getMaxDeliver()}.
    */
   public static long resolveMaxDeliver(QueueDetail q, RqueueNatsConfig config) {
     int numRetry = q.getNumRetry();

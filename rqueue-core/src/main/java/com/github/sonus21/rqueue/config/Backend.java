@@ -15,9 +15,9 @@ package com.github.sonus21.rqueue.config;
  * (Spring binds the string value case-insensitively to the matching enum constant); defaults to
  * {@link #REDIS}.
  *
- * <p>{@link RqueueConfig#getBackend()} exposes the resolved value so any bean that wants to
- * branch on the active backend can check it directly instead of relying on classpath probes for
- * {@code RedisConnectionFactory} or {@code JetStream}.
+ * <p>The {@code RqueueConfig#getBackend()} method exposes the resolved value so any bean that
+ * wants to branch on the active backend can check it directly instead of relying on classpath
+ * probes for {@code RedisConnectionFactory} or {@code JetStream}.
  */
 public enum Backend {
   REDIS,

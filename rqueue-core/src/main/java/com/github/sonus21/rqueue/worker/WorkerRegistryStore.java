@@ -44,7 +44,8 @@ public interface WorkerRegistryStore {
 
   /**
    * Bulk-load worker infos by full key. Keys with no entry (or that fail to deserialize) are
-   * omitted from the returned map. The map is keyed by {@link RqueueWorkerInfo#getWorkerId()}.
+   * omitted from the returned map. The map is keyed by {@link RqueueWorkerInfo} worker ID
+   * ({@code getWorkerId()}).
    */
   Map<String, RqueueWorkerInfo> getWorkerInfos(Collection<String> workerKeys);
 

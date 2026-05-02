@@ -52,7 +52,7 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
  *   <li>when the listener declared a Rqueue-level DLQ ({@link QueueDetail#isDlqSet()}): the
  *       target DLQ queue's stream ({@code <streamPrefix><deadLetterQueueName>}), so that
  *       {@code PostProcessingHandler} can publish there after retry exhaustion.
- *   <li>when no Rqueue DLQ is declared and {@link RqueueNatsConfig#isAutoCreateDlqStream()} is
+ *   <li>when no Rqueue DLQ is declared and {@code RqueueNatsConfig.isAutoCreateDlqStream()} is
  *       true: the NATS-native DLQ stream ({@code <streamPrefix><queue><dlqStreamSuffix>}) as a
  *       safety net for messages that exhaust JetStream {@code maxDeliver}.
  * </ul>
