@@ -33,7 +33,6 @@ import static org.mockito.Mockito.verify;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
-import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.DefaultRqueueMessageConverter;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
@@ -86,9 +85,6 @@ class RqueueMessageManagerImplTest extends TestBase {
   private final RqueueMessage rqueueMessage2 = messageMetadata2.getRqueueMessage();
 
   @Mock
-  private RqueueLockManager rqueueLockManager;
-
-  @Mock
   private RqueueMessageMetadataService rqueueMessageMetadataService;
 
   @Mock
@@ -114,7 +110,6 @@ class RqueueMessageManagerImplTest extends TestBase {
     EndpointRegistry.register(queueDetail);
     EndpointRegistry.register(queueDetail2);
     writeField(rqueueMessageManager, "rqueueConfig", rqueueConfig, true);
-    writeField(rqueueMessageManager, "rqueueLockManager", rqueueLockManager, true);
     writeField(
         rqueueMessageManager, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
   }
