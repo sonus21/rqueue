@@ -465,7 +465,11 @@ jobs:
           if-no-files-found: ignore
 
       - name: Push coverage to Coveralls
-        if: ${{ secrets.COVERALLS_REPO_TOKEN != '' }}
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-        run: ./gradlew coverallsJacoco --info
+        run: |
+          if [ -z "$COVERALLS_REPO_TOKEN" ]; then
+            echo "ERROR: COVERALLS_REPO_TOKEN is not set"
+            exit 1
+          fi
+          ./gradlew coverallsJacoco --info
