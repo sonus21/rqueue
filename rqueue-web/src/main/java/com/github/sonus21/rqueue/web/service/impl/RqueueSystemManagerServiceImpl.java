@@ -29,7 +29,7 @@ import com.github.sonus21.rqueue.models.event.RqueueBootstrapEvent;
 import com.github.sonus21.rqueue.models.response.BaseResponse;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.RetryableRunnable;
-import com.github.sonus21.rqueue.web.service.RqueueSystemManagerService;
+import com.github.sonus21.rqueue.web.RqueueSystemManagerService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

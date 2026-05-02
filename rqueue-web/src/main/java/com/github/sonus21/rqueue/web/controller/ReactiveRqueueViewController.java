@@ -18,7 +18,7 @@ package com.github.sonus21.rqueue.web.controller;
 
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
-import com.github.sonus21.rqueue.web.service.RqueueViewControllerService;
+import com.github.sonus21.rqueue.web.RqueueViewControllerService;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
