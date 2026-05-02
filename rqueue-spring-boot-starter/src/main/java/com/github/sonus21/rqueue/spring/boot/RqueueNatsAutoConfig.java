@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2026 Sonu Kumar
+ * Copyright (c) 2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.github.sonus21.rqueue.spring.boot;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
@@ -32,6 +33,7 @@ import io.nats.client.JetStreamManagement;
 import io.nats.client.Nats;
 import io.nats.client.Options;
 import java.io.IOException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -66,13 +68,13 @@ public class RqueueNatsAutoConfig {
     } else {
       ob.server(Options.DEFAULT_URL);
     }
-    if (c.getConnectionName() != null) {
-      ob.connectionName(c.getConnectionName());
-    }
-    if (c.getToken() != null && !c.getToken().isEmpty()) {
+    if (!StringUtils.isEmpty(c.getToken())) {
       ob.token(c.getToken().toCharArray());
-    } else if (c.getUsername() != null && c.getPassword() != null) {
+    } else if (!StringUtils.isEmpty(c.getUsername()) && !StringUtils.isEmpty(c.getPassword())) {
       ob.userInfo(c.getUsername(), c.getPassword());
+    }
+    if (!StringUtils.isEmpty(c.getConnectionName())) {
+      ob.connectionName(c.getConnectionName());
     }
     if (c.getConnectTimeout() != null) {
       ob.connectionTimeout(c.getConnectTimeout());
@@ -140,20 +142,23 @@ public class RqueueNatsAutoConfig {
   /**
    * Boot-time stream / DLQ existence guard. Implements {@code SmartInitializingSingleton} so it
    * runs after every {@code @RqueueListener} has registered with {@code EndpointRegistry} but
-   * before {@code SmartLifecycle.start()} spawns the message pollers — otherwise pollers race
-   * the validator and surface {@code stream not found [10059]}. Removes the per-publish
+   * before {@code SmartLifecycle.start()} spawns the message pollers — otherwise pollers race the
+   * validator and surface {@code stream not found [10059]}. Removes the per-publish
    * {@code getStreamInfo} round-trip from the broker hot path.
    */
   @Bean
   @ConditionalOnMissingBean(NatsStreamValidator.class)
   public NatsStreamValidator natsStreamValidator(
-      NatsProvisioner natsProvisioner, RqueueNatsProperties props) {
-    return new NatsStreamValidator(natsProvisioner, toBrokerConfig(props));
+      NatsProvisioner natsProvisioner,
+      RqueueNatsProperties props,
+      ObjectProvider<RqueueConfig> rqueueConfigProvider) {
+    return new NatsStreamValidator(
+        natsProvisioner, toBrokerConfig(props), rqueueConfigProvider.getIfAvailable());
   }
 
   /**
-   * Bean form of the KV-bucket validator. Other NATS beans {@code @DependsOn} this name so it
-   * runs before they are constructed. The flag is sourced from {@link RqueueNatsProperties} —
+   * Bean form of the KV-bucket validator. Other NATS beans {@code @DependsOn} this name so it runs
+   * before they are constructed. The flag is sourced from {@link RqueueNatsProperties} —
    * {@code rqueue-nats} itself never reads {@code rqueue.nats.*} keys directly.
    */
   @Bean
@@ -164,9 +169,10 @@ public class RqueueNatsAutoConfig {
   }
 
   /**
-   * Shared {@link com.github.sonus21.rqueue.serdes.RqueueSerDes} for the NATS backend. Backed by Jackson with the same configuration as
-   * the rest of rqueue ({@code FAIL_ON_UNKNOWN_PROPERTIES=false}, auto-detected modules) so values
-   * written to KV buckets are readable via {@code nats kv get}.
+   * Shared {@link com.github.sonus21.rqueue.serdes.RqueueSerDes} for the NATS backend. Backed by
+   * Jackson with the same configuration as the rest of rqueue
+   * ({@code FAIL_ON_UNKNOWN_PROPERTIES=false}, auto-detected modules) so values written to KV
+   * buckets are readable via {@code nats kv get}.
    */
   @Bean
   @ConditionalOnMissingBean(com.github.sonus21.rqueue.serdes.RqueueSerDes.class)
@@ -184,17 +190,17 @@ public class RqueueNatsAutoConfig {
   }
 
   /**
-   * NATS-side {@link com.github.sonus21.rqueue.repository.MessageBrowsingRepository} powering
-   * the dashboard's data-explorer and queue-detail panels. Maps Redis-style queue names to
-   * JetStream streams and returns actual message counts from the broker. JetStream KV doesn't
-   * model arbitrary keyed reads, so  throws {@code BackendCapabilityException}
-   * (mapped to HTTP 501 by {@code RqueueWebExceptionAdvice}).
+   * NATS-side {@link com.github.sonus21.rqueue.repository.MessageBrowsingRepository} powering the
+   * dashboard's data-explorer and queue-detail panels. Maps Redis-style queue names to JetStream
+   * streams and returns actual message counts from the broker. JetStream KV doesn't model arbitrary
+   * keyed reads, so  throws {@code BackendCapabilityException} (mapped to HTTP 501 by
+   * {@code RqueueWebExceptionAdvice}).
    */
   @Bean
   @ConditionalOnMissingBean(com.github.sonus21.rqueue.repository.MessageBrowsingRepository.class)
   public com.github.sonus21.rqueue.repository.MessageBrowsingRepository
-      natsMessageBrowsingRepository(
-          JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
+  natsMessageBrowsingRepository(
+      JetStreamManagement jetStreamManagement, RqueueNatsProperties props) {
     return new com.github.sonus21.rqueue.nats.repository.NatsMessageBrowsingRepository(
         jetStreamManagement, toBrokerConfig(props));
   }
@@ -219,7 +225,7 @@ public class RqueueNatsAutoConfig {
         "WORKQUEUE".equalsIgnoreCase(p.getStream().getRetention())
             ? io.nats.client.api.RetentionPolicy.WorkQueue
             : "INTEREST".equalsIgnoreCase(p.getStream().getRetention())
-                ? io.nats.client.api.RetentionPolicy.Interest
+              ? io.nats.client.api.RetentionPolicy.Interest
                 : io.nats.client.api.RetentionPolicy.Limits);
     sd.setMaxMsgs(p.getStream().getMaxMessages());
     sd.setMaxBytes(p.getStream().getMaxBytes());
