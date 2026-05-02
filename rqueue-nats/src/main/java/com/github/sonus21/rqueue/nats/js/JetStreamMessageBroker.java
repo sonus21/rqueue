@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2026 Sonu Kumar
+ * Copyright (c) 2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -65,13 +65,13 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   private static final Capabilities CAPS = new Capabilities(false, false, false, false);
 
   /**
-   * Translation of {@link Duration#ZERO} (the Redis "non-blocking" pop convention used by
-   * {@code RqueueMessagePoller}) into the smallest positive duration JetStream will accept on a
-   * pull fetch. Long enough that messages already buffered for the consumer come back in the same
-   * call, short enough that an empty sub-queue inside a priority group does not stall the poll
-   * cycle.
+   * Lower bound for fetch wait when the caller passes a non-positive duration. JetStream rejects
+   * zero on a pull fetch, so any zero/negative wait is rounded up to this minimum. Callers that
+   * want long-poll semantics should pass the desired wait explicitly (e.g. the listener
+   * container's {@code pollingInterval}); this constant only guards against accidental zero waits
+   * from non-listener callers.
    */
-  private static final Duration NON_BLOCKING_FETCH_WAIT = Duration.ofMillis(50);
+  private static final Duration MIN_FETCH_WAIT = Duration.ofMillis(50);
 
   private final Connection connection;
   private final JetStream js;
@@ -115,7 +115,6 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   // ---- subject / stream naming -------------------------------------------
 
-  // TODO: once Phase 1 lands, read additive QueueDetail.getNatsSubject() / getNatsStream() if set.
   private String subjectFor(QueueDetail q) {
     return config.getSubjectPrefix() + q.getName();
   }
@@ -149,15 +148,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   private String dlqStreamFor(QueueDetail q) {
-    return q.getNatsDlqStream() != null
-        ? q.getNatsDlqStream()
-        : streamFor(q) + config.getDlqStreamSuffix();
+    return streamFor(q) + config.getDlqStreamSuffix();
   }
 
   private String dlqSubjectFor(QueueDetail q) {
-    return q.getNatsDlqSubject() != null
-        ? q.getNatsDlqSubject()
-        : subjectFor(q) + config.getDlqSubjectSuffix();
+    return subjectFor(q) + config.getDlqSubjectSuffix();
   }
 
   /** Stream description shown in {@code nats stream info} so operators can map back to rqueue. */
@@ -310,7 +305,13 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   @Override
   public List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait) {
     return popInternal(
-        streamFor(q), subjectFor(q), resolveConsumerName(q.getName(), consumerName), batch, wait);
+        streamFor(q),
+        subjectFor(q),
+        resolveConsumerName(q.getName(), consumerName),
+        batch,
+        wait,
+        resolveAckWait(q, config),
+        resolveMaxDeliver(q, config));
   }
 
   @Override
@@ -321,26 +322,64 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         subjectFor(q, priority),
         resolveConsumerName(q.getName(), consumerName),
         batch,
-        wait);
+        wait,
+        resolveAckWait(q, config),
+        resolveMaxDeliver(q, config));
   }
 
   private static String resolveConsumerName(String queueName, String consumerName) {
     return (consumerName != null && !consumerName.isEmpty()) ? consumerName : "rqueue-" + queueName;
   }
 
+  /**
+   * Resolve the JetStream {@code ackWait} for this queue's pull consumer: per-queue
+   * {@link QueueDetail#getVisibilityTimeout()} (when positive), else the global
+   * {@link RqueueNatsConfig.ConsumerDefaults#getAckWait()}. Honouring visibilityTimeout makes the
+   * NATS backend match the contract every other rqueue backend exposes: a message stays invisible
+   * to other consumers for that window and is redelivered if not acked in time.
+   */
+  public static Duration resolveAckWait(QueueDetail q, RqueueNatsConfig config) {
+    long vt = q.getVisibilityTimeout();
+    if (vt > 0) {
+      return Duration.ofMillis(vt);
+    }
+    return config.getConsumerDefaults().getAckWait();
+  }
+
+  /**
+   * Resolve the JetStream {@code maxDeliver} from per-queue {@link QueueDetail#getNumRetry()}
+   * (counted as initial delivery + N retries = numRetry + 1). The {@link Integer#MAX_VALUE}
+   * "retry forever" sentinel maps to JetStream's unlimited value ({@code -1}); non-positive
+   * numRetry falls back to {@link RqueueNatsConfig.ConsumerDefaults#getMaxDeliver()}.
+   */
+  public static long resolveMaxDeliver(QueueDetail q, RqueueNatsConfig config) {
+    int numRetry = q.getNumRetry();
+    if (numRetry == Integer.MAX_VALUE) {
+      return -1L;
+    }
+    if (numRetry > 0) {
+      return numRetry + 1L;
+    }
+    return config.getConsumerDefaults().getMaxDeliver();
+  }
+
   private List<RqueueMessage> popInternal(
-      String stream, String subject, String consumerName, int batch, Duration wait) {
-    // Use default fetch wait if none provided. If zero duration is passed (Redis "non-blocking"
-    // pop convention used by RqueueMessagePoller), translate to a short but positive duration:
-    // JetStream rejects zero, but using the multi-second defaultFetchWait blocks empty pulls long
-    // enough that under Weighted/Strict priority polling the cycle starves real queues — a single
-    // empty sub-queue in a priority group can absorb the whole 30s test budget. Use the smallest
-    // value JetStream still tolerates so empty sub-queues yield back to polling immediately.
+      String stream,
+      String subject,
+      String consumerName,
+      int batch,
+      Duration wait,
+      Duration ackWait,
+      long maxDeliver) {
+    // Honour the caller-supplied wait — this is the listener container's pollingInterval for
+    // RqueueMessagePoller, and lets JetStream long-poll instead of the broker firing a steady
+    // stream of $JS.API.CONSUMER.MSG.NEXT requests. Only fall back when the caller didn't
+    // express a preference; zero/negative waits are rounded up to the JetStream minimum.
     Duration fetchWait;
     if (wait == null) {
       fetchWait = config.getDefaultFetchWait();
-    } else if (wait.isZero()) {
-      fetchWait = NON_BLOCKING_FETCH_WAIT;
+    } else if (wait.isZero() || wait.isNegative()) {
+      fetchWait = MIN_FETCH_WAIT;
     } else {
       fetchWait = wait;
     }
@@ -352,8 +391,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         String actualConsumerName = provisioner.ensureConsumer(
             stream,
             consumerName,
-            config.getConsumerDefaults().getAckWait(),
-            config.getConsumerDefaults().getMaxDeliver(),
+            ackWait,
+            maxDeliver,
             config.getConsumerDefaults().getMaxAckPending());
         PullSubscribeOptions opts = PullSubscribeOptions.bind(stream, actualConsumerName);
         // Consumer has no filter subject; pass null so the NATS client doesn't validate

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2026 Sonu Kumar
+ * Copyright (c) 2026 Sonu Kumar
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.github.sonus21.rqueue.nats.js;
 
+import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
@@ -22,6 +23,7 @@ import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.PriorityUtils;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -75,10 +77,17 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
 
   private final NatsProvisioner provisioner;
   private final RqueueNatsConfig config;
+  private final RqueueConfig rqueueConfig;
 
   public NatsStreamValidator(NatsProvisioner provisioner, RqueueNatsConfig config) {
+    this(provisioner, config, null);
+  }
+
+  public NatsStreamValidator(
+      NatsProvisioner provisioner, RqueueNatsConfig config, RqueueConfig rqueueConfig) {
     this.provisioner = provisioner;
     this.config = config;
+    this.rqueueConfig = rqueueConfig;
   }
 
   @Override
@@ -89,13 +98,16 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
       return;
     }
     RqueueNatsConfig.ConsumerDefaults cd = config.getConsumerDefaults();
+    boolean producerOnly = rqueueConfig != null && rqueueConfig.isProducer();
     List<String> failures = new ArrayList<>();
     int total = 0;
     for (QueueDetail q : queues) {
       String mainStream = config.getStreamPrefix() + q.getName();
       String mainSubject = config.getSubjectPrefix() + q.getName();
       total += tryEnsure(failures, mainStream, mainSubject, q);
-      tryEnsureConsumer(failures, mainStream, q.resolvedConsumerName(), cd);
+      if (!producerOnly) {
+        tryEnsureConsumer(failures, mainStream, q.resolvedConsumerName(), q, cd);
+      }
 
       if (q.getPriority() != null) {
         for (String priority : q.getPriority().keySet()) {
@@ -154,10 +166,13 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
       List<String> failures,
       String streamName,
       String consumerName,
+      QueueDetail q,
       RqueueNatsConfig.ConsumerDefaults cd) {
+    Duration ackWait = JetStreamMessageBroker.resolveAckWait(q, config);
+    long maxDeliver = JetStreamMessageBroker.resolveMaxDeliver(q, config);
     try {
       provisioner.ensureConsumer(
-          streamName, consumerName, cd.getAckWait(), cd.getMaxDeliver(), cd.getMaxAckPending());
+          streamName, consumerName, ackWait, maxDeliver, cd.getMaxAckPending());
     } catch (RqueueNatsException e) {
       failures.add("consumer " + consumerName + " on " + streamName + ": " + rootCause(e));
     }

@@ -73,18 +73,6 @@ public class QueueDetail extends SerializableBase {
   private String priorityGroup;
   private Set<Class<? extends Throwable>> doNotRetry;
 
-  // ---------------------------------------------------------------------------
-  // NATS / JetStream-related fields. All nullable and additive: when null the
-  // resolved* helpers below derive sensible defaults from queueName /
-  // visibilityTimeout / numRetry. Existing Redis-shaped behavior is unchanged.
-  // ---------------------------------------------------------------------------
-  private final String natsStream;
-  private final String natsSubject;
-  private final String natsDlqStream;
-  private final String natsDlqSubject;
-  private final Duration natsAckWaitOverride;
-  private final Integer natsMaxDeliverOverride;
-  private final Duration natsDedupWindow;
   private final String consumerName;
 
   public boolean isDlqSet() {
@@ -188,77 +176,6 @@ public class QueueDetail extends SerializableBase {
     }
     String sanitized = name.replaceAll("[^A-Za-z0-9_-]", "-");
     return systemGenerated ? sanitized + "-consumer" : sanitized + "-consumer-primary";
-  }
-
-  /**
-   * Resolves the JetStream stream name. When {@link #natsStream} is null the default
-   * derivation {@code "rqueue-" + queueName} is used so existing queue configs keep
-   * working with a NATS broker without explicit overrides.
-   */
-  public String resolvedNatsStream() {
-    return natsStream != null ? natsStream : "rqueue-" + queueName;
-  }
-
-  /**
-   * Resolves the JetStream subject. Falls back to {@code "rqueue." + queueName}.
-   */
-  public String resolvedNatsSubject() {
-    return natsSubject != null ? natsSubject : "rqueue." + queueName;
-  }
-
-  /**
-   * Resolves the JetStream stream name for a specific priority bucket. When {@code priority} is
-   * null or empty falls back to {@link #resolvedNatsStream()}; otherwise appends {@code "-" +
-   * priority} to the resolved base stream name. Used by the NATS broker when a queue declares
-   * per-priority sub-streams.
-   */
-  public String resolvedNatsStreamForPriority(String priority) {
-    if (priority == null || priority.isEmpty()) {
-      return resolvedNatsStream();
-    }
-    return resolvedNatsStream() + "-" + priority;
-  }
-
-  /**
-   * Resolves the JetStream subject for a specific priority bucket. Falls back to
-   * {@link #resolvedNatsSubject()} when {@code priority} is null/empty; otherwise appends
-   * {@code "." + priority}.
-   */
-  public String resolvedNatsSubjectForPriority(String priority) {
-    if (priority == null || priority.isEmpty()) {
-      return resolvedNatsSubject();
-    }
-    return resolvedNatsSubject() + "." + priority;
-  }
-
-  /**
-   * Resolves the dead-letter stream name. Falls back to {@code resolvedNatsStream() + "-dlq"}.
-   */
-  public String resolvedNatsDlqStream() {
-    return natsDlqStream != null ? natsDlqStream : resolvedNatsStream() + "-dlq";
-  }
-
-  /**
-   * Resolves the dead-letter subject. Falls back to {@code resolvedNatsSubject() + ".dlq"}.
-   */
-  public String resolvedNatsDlqSubject() {
-    return natsDlqSubject != null ? natsDlqSubject : resolvedNatsSubject() + ".dlq";
-  }
-
-  /**
-   * Returns the JetStream ack-wait, falling back to the supplied {@code fallback}
-   * (typically the {@link #visibilityDuration()}) when no explicit override is set.
-   */
-  public Duration resolvedAckWait(Duration fallback) {
-    return natsAckWaitOverride != null ? natsAckWaitOverride : fallback;
-  }
-
-  /**
-   * Returns the JetStream max-deliver count, falling back to {@code fallback}
-   * (typically {@code numRetry + 1}) when no explicit override is set.
-   */
-  public int resolvedMaxDeliver(int fallback) {
-    return natsMaxDeliverOverride != null ? natsMaxDeliverOverride : fallback;
   }
 
   public boolean isDoNotRetryError(Throwable throwable) {
