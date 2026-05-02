@@ -463,3 +463,8 @@ jobs:
             build/reports/jacoco/test/jacocoTestReport.xml
             build/reports/jacoco/coverageReportOnly/html
           if-no-files-found: ignore
+
+      - name: Push coverage to Coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        run: ./gradlew coverallsJacoco
