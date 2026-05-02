@@ -158,7 +158,11 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
       String filterSubject) {
     try {
       provisioner.ensureConsumer(
-          streamName, consumerName, cd.getAckWait(), cd.getMaxDeliver(), cd.getMaxAckPending(),
+          streamName,
+          consumerName,
+          cd.getAckWait(),
+          cd.getMaxDeliver(),
+          cd.getMaxAckPending(),
           filterSubject);
     } catch (RqueueNatsException e) {
       failures.add("consumer " + consumerName + " on " + streamName + ": " + rootCause(e));

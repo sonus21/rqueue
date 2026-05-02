@@ -204,13 +204,15 @@ public class NatsProvisioner {
       if (info != null) {
         ConsumerConfiguration cc = info.getConsumerConfiguration();
         if (cc.getAckWait() != null && !cc.getAckWait().equals(ackWait)) {
-          log.log(Level.WARNING,
+          log.log(
+              Level.WARNING,
               "Consumer " + streamName + "/" + consumerName
                   + " ackWait differs (existing=" + cc.getAckWait()
                   + ", desired=" + ackWait + ") - leaving existing config in place.");
         }
         if (cc.getMaxDeliver() != maxDeliver) {
-          log.log(Level.WARNING,
+          log.log(
+              Level.WARNING,
               "Consumer " + streamName + "/" + consumerName
                   + " maxDeliver differs (existing=" + cc.getMaxDeliver()
                   + ", desired=" + maxDeliver + ") - leaving existing config in place.");
