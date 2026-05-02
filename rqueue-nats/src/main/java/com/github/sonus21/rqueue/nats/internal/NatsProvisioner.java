@@ -28,6 +28,7 @@ import io.nats.client.api.StreamInfo;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,6 +50,14 @@ public class NatsProvisioner {
 
   private final ConcurrentHashMap<String, KeyValue> kvCache = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Object> kvLocks = new ConcurrentHashMap<>();
+
+  // stream name → provisioned (set membership acts as the boolean flag)
+  private final Set<String> streamsDone = ConcurrentHashMap.newKeySet();
+  private final ConcurrentHashMap<String, Object> streamLocks = new ConcurrentHashMap<>();
+
+  // "streamName/requestedConsumerName" → actual consumer name (may differ for stale-rebind)
+  private final ConcurrentHashMap<String, String> consumerCache = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Object> consumerLocks = new ConcurrentHashMap<>();
 
   public NatsProvisioner(Connection connection, JetStreamManagement jsm, RqueueNatsConfig config)
       throws IOException {
@@ -90,8 +99,12 @@ public class NatsProvisioner {
       } catch (JetStreamApiException missing) {
         // bucket absent — fall through to create
       }
-      KeyValueConfiguration.Builder cfg =
-          KeyValueConfiguration.builder().name(bucketName).compression(true);
+      RqueueNatsConfig.StreamDefaults sd = config.getStreamDefaults();
+      KeyValueConfiguration.Builder cfg = KeyValueConfiguration.builder()
+          .name(bucketName)
+          .compression(true)
+          .replicas(sd.getReplicas())
+          .storageType(sd.getStorage());
       if (ttl != null && !ttl.isZero() && !ttl.isNegative()) {
         cfg.ttl(ttl);
       }
@@ -105,45 +118,81 @@ public class NatsProvisioner {
   // ---- Stream provisioning ----------------------------------------------
 
   /**
-   * Ensure a JetStream stream exists with the given subjects. If absent and {@code
-   * autoCreateStreams=true}, creates one using {@link RqueueNatsConfig.StreamDefaults}.
+   * Ensure a JetStream stream exists with the given subjects. Hits the NATS backend at most once
+   * per stream name per process lifetime; subsequent calls return immediately from the in-process
+   * cache.
    */
   public void ensureStream(String streamName, List<String> subjects) {
-    try {
-      StreamInfo existing = safeGetStreamInfo(streamName);
-      if (existing != null) {
+    if (streamsDone.contains(streamName)) {
+      return;
+    }
+    Object lock = streamLocks.computeIfAbsent(streamName, k -> new Object());
+    synchronized (lock) {
+      if (streamsDone.contains(streamName)) {
         return;
       }
-      if (!config.isAutoCreateStreams()) {
+      try {
+        StreamInfo existing = safeGetStreamInfo(streamName);
+        if (existing == null) {
+          if (!config.isAutoCreateStreams()) {
+            throw new RqueueNatsException(
+                "Stream '" + streamName + "' does not exist and autoCreateStreams=false");
+          }
+          RqueueNatsConfig.StreamDefaults sd = config.getStreamDefaults();
+          StreamConfiguration.Builder b = StreamConfiguration.builder()
+              .name(streamName)
+              .subjects(subjects)
+              .replicas(sd.getReplicas())
+              .storageType(sd.getStorage())
+              .retentionPolicy(sd.getRetention())
+              .duplicateWindow(sd.getDuplicateWindow())
+              .compressionOption(CompressionOption.S2);
+          if (sd.getMaxMsgs() > 0) {
+            b.maxMessages(sd.getMaxMsgs());
+          }
+          if (sd.getMaxBytes() > 0) {
+            b.maxBytes(sd.getMaxBytes());
+          }
+          jsm.addStream(b.build());
+        }
+      } catch (IOException | JetStreamApiException e) {
         throw new RqueueNatsException(
-            "Stream '" + streamName + "' does not exist and autoCreateStreams=false");
+            "Failed to ensure stream '" + streamName + "' for subjects " + subjects, e);
       }
-      RqueueNatsConfig.StreamDefaults sd = config.getStreamDefaults();
-      StreamConfiguration.Builder b = StreamConfiguration.builder()
-          .name(streamName)
-          .subjects(subjects)
-          .replicas(sd.getReplicas())
-          .storageType(sd.getStorage())
-          .retentionPolicy(sd.getRetention())
-          .duplicateWindow(sd.getDuplicateWindow())
-          .compressionOption(CompressionOption.S2);
-      if (sd.getMaxMsgs() > 0) {
-        b.maxMessages(sd.getMaxMsgs());
-      }
-      if (sd.getMaxBytes() > 0) {
-        b.maxBytes(sd.getMaxBytes());
-      }
-      jsm.addStream(b.build());
-    } catch (IOException | JetStreamApiException e) {
-      throw new RqueueNatsException(
-          "Failed to ensure stream '" + streamName + "' for subjects " + subjects, e);
+      streamsDone.add(streamName);
     }
   }
 
   /**
    * Ensure a durable pull consumer exists, returning the actual consumer name to use for binding.
+   * Hits the NATS backend at most once per (stream, consumer) pair per process lifetime.
    */
   public String ensureConsumer(
+      String streamName,
+      String consumerName,
+      Duration ackWait,
+      long maxDeliver,
+      long maxAckPending,
+      String filterSubject) {
+    String cacheKey = streamName + "/" + consumerName;
+    String cached = consumerCache.get(cacheKey);
+    if (cached != null) {
+      return cached;
+    }
+    Object lock = consumerLocks.computeIfAbsent(cacheKey, k -> new Object());
+    synchronized (lock) {
+      cached = consumerCache.get(cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+      String actual = doEnsureConsumer(
+          streamName, consumerName, ackWait, maxDeliver, maxAckPending, filterSubject);
+      consumerCache.put(cacheKey, actual);
+      return actual;
+    }
+  }
+
+  private String doEnsureConsumer(
       String streamName,
       String consumerName,
       Duration ackWait,
@@ -155,38 +204,21 @@ public class NatsProvisioner {
       if (info != null) {
         ConsumerConfiguration cc = info.getConsumerConfiguration();
         if (cc.getAckWait() != null && !cc.getAckWait().equals(ackWait)) {
-          log.log(
-              Level.WARNING,
-              "Consumer "
-                  + streamName
-                  + "/"
-                  + consumerName
-                  + " ackWait differs (existing="
-                  + cc.getAckWait()
-                  + ", desired="
-                  + ackWait
-                  + ") - leaving existing config in place.");
+          log.log(Level.WARNING,
+              "Consumer " + streamName + "/" + consumerName
+                  + " ackWait differs (existing=" + cc.getAckWait()
+                  + ", desired=" + ackWait + ") - leaving existing config in place.");
         }
         if (cc.getMaxDeliver() != maxDeliver) {
-          log.log(
-              Level.WARNING,
-              "Consumer "
-                  + streamName
-                  + "/"
-                  + consumerName
-                  + " maxDeliver differs (existing="
-                  + cc.getMaxDeliver()
-                  + ", desired="
-                  + maxDeliver
-                  + ") - leaving existing config in place.");
+          log.log(Level.WARNING,
+              "Consumer " + streamName + "/" + consumerName
+                  + " maxDeliver differs (existing=" + cc.getMaxDeliver()
+                  + ", desired=" + maxDeliver + ") - leaving existing config in place.");
         }
         return consumerName;
       }
       if (!config.isAutoCreateConsumers()) {
-        throw new RqueueNatsException("Consumer '"
-            + consumerName
-            + "' on stream '"
-            + streamName
+        throw new RqueueNatsException("Consumer '" + consumerName + "' on stream '" + streamName
             + "' does not exist and autoCreateConsumers=false");
       }
       ConsumerConfiguration.Builder cb = ConsumerConfiguration.builder()
@@ -204,8 +236,6 @@ public class NatsProvisioner {
     } catch (JetStreamApiException e) {
       // Error 10100 = "filtered consumer not unique" — a consumer with the same filter
       // already exists on the stream (stale from a previous naming scheme or crashed run).
-      // List all consumers and check if one matches our filter; reuse it rather than
-      // failing the startup.
       if (e.getApiErrorCode() == 10100 && filterSubject != null) {
         return tryFindAndBindStaleConsumer(streamName, filterSubject, consumerName);
       }

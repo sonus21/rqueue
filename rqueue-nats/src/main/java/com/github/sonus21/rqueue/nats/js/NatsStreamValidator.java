@@ -91,16 +91,21 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
       log.log(Level.FINE, "NatsStreamValidator: no active queues registered; nothing to do");
       return;
     }
+    RqueueNatsConfig.ConsumerDefaults cd = config.getConsumerDefaults();
     List<String> failures = new ArrayList<>();
     int total = 0;
     for (QueueDetail q : queues) {
       String mainStream = config.getStreamPrefix() + q.getName();
       String mainSubject = config.getSubjectPrefix() + q.getName();
       total += tryEnsure(failures, mainStream, mainSubject);
+      tryEnsureConsumer(failures, mainStream, consumerName(q.getName()), cd, mainSubject);
 
       if (q.getPriority() != null) {
         for (String priority : q.getPriority().keySet()) {
-          total += tryEnsure(failures, mainStream + "-" + priority, mainSubject + "." + priority);
+          String pStream = mainStream + "-" + priority;
+          String pSubject = mainSubject + "." + priority;
+          total += tryEnsure(failures, pStream, pSubject);
+          tryEnsureConsumer(failures, pStream, consumerName(q.getName()), cd, pSubject);
         }
       }
 
@@ -112,6 +117,7 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
         String dlqQueueStream = config.getStreamPrefix() + q.getDeadLetterQueueName();
         String dlqQueueSubject = config.getSubjectPrefix() + q.getDeadLetterQueueName();
         total += tryEnsure(failures, dlqQueueStream, dlqQueueSubject);
+        // No consumer needed for the DLQ stream here — the DLQ queue registers its own listener.
       }
     }
     if (!failures.isEmpty()) {
@@ -137,6 +143,26 @@ public class NatsStreamValidator implements ApplicationListener<RqueueBootstrapE
         Level.INFO,
         "NatsStreamValidator: ensured {0} JetStream stream(s) across {1} queue(s)",
         new Object[] {total, queues.size()});
+  }
+
+  /** Mirrors {@code JetStreamMessageBroker.resolveConsumerName} for a null caller-supplied name. */
+  static String consumerName(String queueName) {
+    return "rqueue-" + queueName;
+  }
+
+  private void tryEnsureConsumer(
+      List<String> failures,
+      String streamName,
+      String consumerName,
+      RqueueNatsConfig.ConsumerDefaults cd,
+      String filterSubject) {
+    try {
+      provisioner.ensureConsumer(
+          streamName, consumerName, cd.getAckWait(), cd.getMaxDeliver(), cd.getMaxAckPending(),
+          filterSubject);
+    } catch (RqueueNatsException e) {
+      failures.add("consumer " + consumerName + " on " + streamName + ": " + rootCause(e));
+    }
   }
 
   private int tryEnsure(List<String> failures, String streamName, String subject) {

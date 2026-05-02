@@ -292,18 +292,10 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     Duration fetchWait = (wait != null && !wait.isZero()) ? wait : config.getDefaultFetchWait();
     String key = stream + "/" + consumerName;
     JetStreamSubscription sub = subscriptionCache.computeIfAbsent(key, k -> {
-      // computeIfAbsent runs at most once per (stream, consumer) per JVM, so both the stream
-      // and the durable consumer are ensured exactly once on the cold path — not on every pop.
-      //
-      // ensureStream here guards against a start-order race: RqueueBootstrapEvent (which drives
-      // NatsStreamValidator) fires *after* doStart() has already launched the broker pollers.
-      // The validator is still the authoritative boot-time check for the "autoCreateStreams=false"
-      // case, but ensureStream() here is idempotent and free if the stream already exists
-      // (one getStreamInfo round-trip per subscription, not per message).
+      // NatsStreamValidator provisions the stream and consumer at bootstrap (RqueueBootstrapEvent).
+      // NatsProvisioner caches both, so ensureConsumer here is a map lookup — no backend call.
+      // We still call it to resolve the actual consumer name (may differ for stale-rebind).
       try {
-        provisioner.ensureStream(stream, List.of(subject));
-        // ensureConsumer returns the actual consumer name to use (may differ if a stale
-        // consumer was recovered/reused due to naming scheme changes).
         String actualConsumerName = provisioner.ensureConsumer(
             stream,
             consumerName,
@@ -324,6 +316,13 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     for (Message nm : msgs) {
       try {
         RqueueMessage rm = serdes.deserialize(nm.getData(), RqueueMessage.class);
+        // derive failure count from JetStream redelivery metadata
+        try {
+          long deliveredCount = nm.metaData().deliveredCount();
+          rm.setFailureCount((int) Math.max(0, deliveredCount - 1));
+        } catch (Exception ignored) {
+          // defensive: metadata unavailable on non-JetStream messages
+        }
         if (rm.getId() != null) {
           inFlight.put(rm.getId(), nm);
         }
@@ -369,46 +368,6 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
     nm.nakWithDelay(Duration.ofMillis(Math.max(0L, retryDelayMs)));
     return true;
-  }
-
-  /**
-   * NATS redelivery (nak) replays the original payload bytes, so {@code failureCount} embedded in
-   * the message never increments across deliveries. We ack the original and re-publish the
-   * {@code updated} message (which already carries the incremented count) so the next delivery sees
-   * the correct counter. The retry delay is not honoured — NATS JetStream has no server-side
-   * delayed publish in this version.
-   *
-   * <p>The {@code Nats-Msg-Id} header is suffixed with the failure count so the stream's
-   * deduplication window does not drop the re-published message (same base id, different attempt).
-   */
-  @Override
-  public void parkForRetry(QueueDetail q, RqueueMessage old, RqueueMessage updated, long delayMs) {
-    if (old.getId() != null) {
-      Message nm = inFlight.remove(old.getId());
-      if (nm != null) {
-        nm.ack();
-      }
-    }
-    String subject = subjectFor(q);
-    Headers headers = new Headers();
-    if (updated.getId() != null) {
-      headers.add("Nats-Msg-Id", updated.getId() + "-r" + updated.getFailureCount());
-    }
-    try {
-      byte[] payload = serdes.serialize(updated);
-      js.publish(subject, headers, payload);
-    } catch (IOException | JetStreamApiException e) {
-      throw new RqueueNatsException(
-          "Failed to re-enqueue message id=" + old.getId() + " for retry on queue=" + q.getName(),
-          e);
-    } catch (RuntimeException e) {
-      throw new RqueueNatsException(
-          "Failed to serialize/re-enqueue message id="
-              + old.getId()
-              + " for retry on queue="
-              + q.getName(),
-          e);
-    }
   }
 
   @Override
@@ -624,6 +583,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   // ---- builder -----------------------------------------------------------
 
   public static class Builder {
+
     private Connection connection;
     private JetStream jetStream;
     private JetStreamManagement management;
