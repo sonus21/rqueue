@@ -138,6 +138,51 @@ public class RedisMessageBroker implements MessageBroker {
     return size == null ? 0L : size;
   }
 
+  /**
+   * Per-subscriber rows for the Redis backend. Walks the {@link
+   * com.github.sonus21.rqueue.core.EndpointRegistry} for every {@code @RqueueListener}
+   * registered against this queue, then reports the shared list size and processing-ZSET
+   * size on each row. {@code pendingShared = true} on every row because Redis listeners
+   * compete on the same backing list — the figure is identical across rows but surfacing
+   * each handler still tells the operator which methods are subscribed and (joined with
+   * the worker registry by the dashboard) when each was last active.
+   */
+  @Override
+  public java.util.List<com.github.sonus21.rqueue.core.spi.SubscriberView> subscribers(
+      QueueDetail q) {
+    long sharedPending;
+    try {
+      sharedPending = size(q);
+    } catch (RuntimeException e) {
+      sharedPending = 0L;
+    }
+    long sharedInFlight;
+    try {
+      RedisTemplate<String, RqueueMessage> rt = template.getTemplate();
+      Long zsetSize = rt.opsForZSet().size(q.getProcessingQueueName());
+      sharedInFlight = zsetSize == null ? 0L : zsetSize;
+    } catch (RuntimeException e) {
+      sharedInFlight = 0L;
+    }
+    java.util.List<QueueDetail> registered =
+        com.github.sonus21.rqueue.core.EndpointRegistry.getAllForQueue(q.getName());
+    if (registered.isEmpty()) {
+      // Queue is registered as primary only (no secondary handlers) — fall through to a
+      // single row using the queue's own consumer name so the table still renders.
+      return java.util.Collections.singletonList(
+          new com.github.sonus21.rqueue.core.spi.SubscriberView(
+              q.resolvedConsumerName(), sharedPending, sharedInFlight, true));
+    }
+    java.util.List<com.github.sonus21.rqueue.core.spi.SubscriberView> out =
+        new java.util.ArrayList<>(registered.size());
+    for (QueueDetail qd : registered) {
+      out.add(
+          new com.github.sonus21.rqueue.core.spi.SubscriberView(
+              qd.resolvedConsumerName(), sharedPending, sharedInFlight, true));
+    }
+    return out;
+  }
+
   @Override
   public AutoCloseable subscribe(String channel, Consumer<String> handler) {
     if (pubSubContainer == null) {

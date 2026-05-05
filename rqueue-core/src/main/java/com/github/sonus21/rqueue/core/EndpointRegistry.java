@@ -154,4 +154,27 @@ public final class EndpointRegistry {
   public static int getRegisteredQueueCount() {
     return registry.size();
   }
+
+  /**
+   * Returns every {@link QueueDetail} registered under the given queue name, including all
+   * {@code @RqueueListener} methods that share the same backing storage. Used by the
+   * dashboard to render one subscriber row per handler. Returns an empty list when no
+   * detail is registered.
+   */
+  public static List<QueueDetail> getAllForQueue(String queueName) {
+    if (queueName == null) {
+      return new ArrayList<>();
+    }
+    synchronized (lock) {
+      List<QueueDetail> matches = registry.values().stream()
+          .filter(qd -> queueName.equals(qd.getName()))
+          .sorted(Comparator.comparing(qd -> {
+            String cn = qd.getConsumerName();
+            return cn == null ? "" : cn;
+          }))
+          .collect(Collectors.toList());
+      lock.notifyAll();
+      return matches;
+    }
+  }
 }

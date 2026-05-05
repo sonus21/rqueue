@@ -16,29 +16,12 @@
   ~
   -->
 
-{# Charts depend on time-series counters (`rqueue::queue-stat::<queue>`). Brokers that report
-   !supportsScheduledIntrospection (e.g. NATS JetStream) don't maintain those counters, so
-   the chart panels would render an empty Google Charts canvas. Hide them entirely. #}
-{% if not hideCharts %}
 {% include 'stats_chart' %}
 <hr/>
 {% include 'latency_chart' %}
-{% else %}
-<div class="card mt-4">
-  <div class="card-body text-center">
-    <h4 class="card-title">{{ storageKicker }} Dashboard</h4>
-    <p class="card-text">{{ storageDescription }}</p>
-    <p class="text-muted">
-      Time-series charts (stats &amp; latency) are not available for this backend.
-      Use the navigation above to browse queues, workers, pending messages, and the dead-letter queue.
-    </p>
-  </div>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block additional_script %}
-{% if not hideCharts %}
 <script type="application/javascript">
   var chartParams = {'type': 'STATS', 'aggregationType': 'DAILY'};
   var latencyChartParams = {'type': 'LATENCY', 'aggregationType': 'DAILY'};
@@ -54,6 +37,4 @@
     attachChartEventListeners();
   });
 </script>
-{% endif %}
 {% endblock %}
-

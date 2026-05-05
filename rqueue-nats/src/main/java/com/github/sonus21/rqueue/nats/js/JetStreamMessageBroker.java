@@ -642,6 +642,58 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   /**
+   * Per-consumer subscriber view used by the queue-detail dashboard. Walks all durable
+   * consumers on the queue's stream and reports each one's pending + in-flight counts.
+   * For WorkQueue retention {@code pending} is the shared {@code msgCount} (every row
+   * shows the same number, marked {@code pendingShared = true}); for Limits retention
+   * {@code pending} is the consumer's exact {@code numPending}. {@code inFlight} is
+   * always the consumer's exclusive {@code numAckPending}.
+   *
+   * <p>If consumer enumeration fails or the stream is unprovisioned, falls back to the
+   * default single-row implementation so the dashboard still renders something useful.
+   */
+  @Override
+  public java.util.List<com.github.sonus21.rqueue.core.spi.SubscriberView> subscribers(
+      QueueDetail q) {
+    String stream = streamFor(q);
+    try {
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      boolean pendingIsShared = retention != io.nats.client.api.RetentionPolicy.Limits;
+      long sharedPending = info.getStreamState().getMsgCount();
+      List<String> consumers = jsm.getConsumerNames(stream);
+      if (consumers == null || consumers.isEmpty()) {
+        return com.github.sonus21.rqueue.core.spi.MessageBroker.super.subscribers(q);
+      }
+      java.util.List<com.github.sonus21.rqueue.core.spi.SubscriberView> out =
+          new java.util.ArrayList<>(consumers.size());
+      for (String consumer : consumers) {
+        try {
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
+          if (ci == null) {
+            continue;
+          }
+          long pending = pendingIsShared ? sharedPending : ci.getNumPending();
+          long inFlight = ci.getNumAckPending();
+          out.add(
+              new com.github.sonus21.rqueue.core.spi.SubscriberView(
+                  consumer, pending, inFlight, pendingIsShared));
+        } catch (IOException | JetStreamApiException ignore) {
+          // best-effort; skip consumers that disappear mid-walk
+        }
+      }
+      if (out.isEmpty()) {
+        return com.github.sonus21.rqueue.core.spi.MessageBroker.super.subscribers(q);
+      }
+      return out;
+    } catch (IOException | JetStreamApiException e) {
+      log.log(Level.WARNING, "subscribers() failed for stream=" + stream, e);
+      return com.github.sonus21.rqueue.core.spi.MessageBroker.super.subscribers(q);
+    }
+  }
+
+  /**
    * For Limits-retention streams, returns an exact per-consumer pending count
    * ({@code lastSeq - delivered.streamSeq}). For WorkQueue streams returns {@code null} so the
    * dashboard falls back to the single {@link #size(QueueDetail)} row — WorkQueue messages are
@@ -651,6 +703,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    * (insertion order), giving the dashboard a stable rendering.
    */
   @Override
+  @Deprecated
   public java.util.Map<String, Long> consumerPendingSizes(QueueDetail q) {
     String stream = streamFor(q);
     try {

@@ -218,9 +218,44 @@ public interface MessageBroker {
    * <p>The default returns {@code null}, signalling that the queue has a single shared pool
    * (Redis lists, NATS WorkQueue streams) and the caller should fall back to
    * {@link #size(QueueDetail)}. Empty / null also means "no consumers attached".
+   *
+   * @deprecated superseded by {@link #subscribers(QueueDetail)} which returns a richer view
+   *     (consumer + pending + in-flight + shared flag). Retained for one release so
+   *     downstream callers keep compiling.
    */
+  @Deprecated
   default java.util.Map<String, Long> consumerPendingSizes(QueueDetail q) {
     return null;
+  }
+
+  /**
+   * Per-subscriber breakdown for the queue-detail dashboard. Each entry represents one
+   * logical handler attached to the queue:
+   *
+   * <ul>
+   *   <li><b>Redis</b> — one entry per {@code @RqueueListener} method that registered for
+   *       the queue. {@code pending} is the shared list size on every row
+   *       ({@code pendingShared = true}); {@code inFlight} is the shared processing-ZSET
+   *       size.
+   *   <li><b>NATS JetStream</b> — one entry per durable consumer. For WorkQueue retention
+   *       {@code pending} is the shared stream {@code msgCount} ({@code pendingShared = true});
+   *       for Limits retention it is the exact per-consumer {@code numPending}
+   *       ({@code pendingShared = false}). {@code inFlight} is the consumer's
+   *       {@code numAckPending} in both cases.
+   * </ul>
+   *
+   * <p>The default returns a single anonymous row backed by {@link #size(QueueDetail)}, so
+   * brokers that don't track named subscribers still render a working table.
+   */
+  default java.util.List<SubscriberView> subscribers(QueueDetail q) {
+    long pending;
+    try {
+      pending = size(q);
+    } catch (RuntimeException e) {
+      pending = 0L;
+    }
+    return java.util.Collections.singletonList(
+        new SubscriberView(q.resolvedConsumerName(), pending, 0L, true));
   }
 
   /**

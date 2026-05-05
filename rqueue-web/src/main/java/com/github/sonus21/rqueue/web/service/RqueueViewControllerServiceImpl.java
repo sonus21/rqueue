@@ -109,10 +109,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("hideScheduledPanel", !caps.supportsScheduledIntrospection());
     model.addAttribute("hideRunningPanel", !caps.usesPrimaryHandlerDispatch());
     model.addAttribute("hideCronJobs", !caps.supportsCronJobs());
-    // Charts (stats / latency) require time-series counters. Brokers without scheduled
-    // introspection (e.g. NATS) don't track them; hide the chart panels rather than render
-    // an empty Google Charts canvas.
-    model.addAttribute("hideCharts", !caps.supportsScheduledIntrospection());
+    // Charts always render; NATS deployments will show empty until counters accumulate.
+    model.addAttribute("hideCharts", false);
     model.addAttribute("storageKicker", rqueueQDetailService.storageKicker());
     model.addAttribute("storageDescription", rqueueQDetailService.storageDescription());
   }
@@ -251,6 +249,10 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("typeSelectors", ChartDataType.getActiveCharts());
     model.addAttribute("queueActions", queueActions);
     model.addAttribute("queueRedisDataDetails", queueRedisDataDetail);
+    // New per-subscriber + terminal-storage rows; the template renders these in place of the
+    // legacy data-structure table when present.
+    model.addAttribute("subscribers", rqueueQDetailService.getSubscriberRows(queueConfig));
+    model.addAttribute("terminalRows", rqueueQDetailService.getTerminalRows(queueConfig));
     model.addAttribute("config", queueConfig);
     model.addAttribute("workerRegistryEnabled", rqueueConfig.isWorkerRegistryEnabled());
     model.addAttribute("queueWorkers", queueWorkers);

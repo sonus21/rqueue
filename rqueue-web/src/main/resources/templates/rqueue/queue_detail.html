@@ -72,110 +72,72 @@
       </tr>
       </tbody>
     </table>
-    <table class="table table-bordered">
-      <thead>
-      <tr>
-        <th>Job Type</th>
-        <th>Data Type</th>
-        <th>Name</th>
-        <th>Size</th>
-      </tr>
-      </thead>
-      <tbody>
-      {% for queueData in queueRedisDataDetails %}
-      <tr>
-        <td>
-          <a class="data-explorer" data-name="{{queueData.value.name}}" data-target="#explore-queue"
-             data-toggle="modal"
-             data-type="{{queueData.value.type}}"
-             data-type-label="{{ queueData.value.typeLabel | default(queueData.value.type) }}"
-             href="#">
-            {{queueData.key.name}}
-            {% if queueData.value.consumerName %}
-              <small class="text-muted">[{{queueData.value.consumerName}}]</small>
-            {% endif %}
-          </a>
-        </td>
-        <td>{{ queueData.value.typeLabel | default(queueData.value.type) }}</td>
-        <td>
-          {{queueData.value.name}}
-          {% if queueData.value.consumerName %}
-            <small class="text-muted">/ {{queueData.value.consumerName}}</small>
-          {% endif %}
-        </td>
-        <td>
-          {% if queueData.value.size < 0 %}
-          Queue-backed
-          {% elseif queueData.value.approximate %}
-          ~ {{queueData.value.size}}
-          {% else %}
-          {{queueData.value.size}}
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-      </tbody>
-    </table>
   </div>
 </div>
-<hr/>
-{% if workerRegistryEnabled %}
+{# ---------------------------------------------------------------------------
+   Subscribers — one row per @RqueueListener consumer.
+     • Redis: every handler is a row; Pending / In-Flight are shared sizes
+       (marked "(shared)") and folded with last-poll info from the worker
+       registry.
+     • NATS WorkQueue: every durable consumer is a row; Pending is the shared
+       stream msgCount, In-Flight is the consumer's exclusive numAckPending.
+     • NATS Limits: every durable consumer is a row; Pending is the consumer's
+       exact numPending, In-Flight is its numAckPending.
+   --------------------------------------------------------------------------- #}
 <div class="container">
-  <h4>Queue Pollers</h4>
+  <h4>Subscribers</h4>
   <div class="row table-responsive">
-    <table class="table table-bordered">
-      <thead>
-      <tr>
-        <th>Active Pollers</th>
-        <th>Stale Pollers</th>
-        <th>Recent Exhaustion</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td>{{activeQueueWorkers}}</td>
-        <td>{{staleQueueWorkers}}</td>
-        <td>{{queueWorkerRecentCapacityExhausted}}</td>
-      </tr>
-      </tbody>
-    </table>
-    {% if queueWorkers is empty %}
+    {% if subscribers is empty %}
     <div class="alert alert-secondary w-100" role="alert">
-      No poller heartbeat is available for this queue yet.
+      No subscribers are attached to this queue yet.
     </div>
     {% else %}
     <table class="table table-bordered">
       <thead>
       <tr>
-        <th>Worker Id</th>
-        <th>Consumer Name</th>
+        <th>Consumer</th>
+        <th>Type</th>
+        <th>Storage</th>
+        <th>Pending</th>
+        <th>In-Flight</th>
         <th>Status</th>
-        <th>Host</th>
-        <th>Pid</th>
+        <th>Host / PID</th>
         <th>Last Poll</th>
-        <th>Last Poll Age</th>
-        <th>Last Message</th>
-        <th>Last Message Age</th>
-        <th>Last Exhausted</th>
-        <th>Exhausted Age</th>
-        <th>Exhausted Count</th>
       </tr>
       </thead>
       <tbody>
-      {% for worker in queueWorkers %}
+      {% for sub in subscribers %}
       <tr>
-        <td>{{worker.workerId}}</td>
-        <td>{% if worker.consumerName %}{{worker.consumerName}}{% endif %}</td>
-        <td>{{worker.status}}</td>
-        <td>{{worker.host}}</td>
-        <td>{{worker.pid}}</td>
-        <td>{% if worker.lastPollAt > 0 %}{{ time(worker.lastPollAt) }}{% endif %}</td>
-        <td>{{worker.lastPollAge}}</td>
-        <td>{{ time(worker.lastMessageAt) }}</td>
-        <td>{{worker.lastMessageAge}}</td>
-        <td>{{ time(worker.lastCapacityExhaustedAt) }}</td>
-        <td>{{worker.lastCapacityExhaustedAge}}</td>
-        <td>{{worker.capacityExhaustedCount}}</td>
+        <td>
+          <a class="data-explorer"
+             data-name="{{sub.storageName}}"
+             data-target="#explore-queue"
+             data-toggle="modal"
+             data-type="{{sub.dataType}}"
+             data-type-label="{{ sub.typeLabel | default(sub.dataType) }}"
+             href="#">
+            {{sub.consumerName}}
+          </a>
+        </td>
+        <td>{{ sub.typeLabel | default(sub.dataType) }}</td>
+        <td>{{sub.storageName}}</td>
+        <td>
+          {{sub.pending}}
+          {% if sub.pendingShared %}<small class="text-muted">(shared)</small>{% endif %}
+        </td>
+        <td>{{sub.inFlight}}</td>
+        <td>{% if sub.status %}{{sub.status}}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+        <td>
+          {% if sub.host %}{{sub.host}}{% if sub.pid %} / {{sub.pid}}{% endif %}{% else %}<span class="text-muted">—</span>{% endif %}
+        </td>
+        <td>
+          {% if sub.lastPollAt > 0 %}
+            {{ time(sub.lastPollAt) }}
+            {% if sub.lastPollAge %}<small class="text-muted">({{sub.lastPollAge}} ago)</small>{% endif %}
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
       </tbody>
@@ -183,15 +145,60 @@
     {% endif %}
   </div>
 </div>
+
+{# ---------------------------------------------------------------------------
+   Terminal Storage — COMPLETED set + DLQs. These are shared across subscribers
+   so they get their own table rather than being repeated per row.
+   --------------------------------------------------------------------------- #}
+{% if terminalRows is not empty %}
+<div class="container">
+  <h4>Terminal Storage</h4>
+  <div class="row table-responsive">
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Bucket</th>
+        <th>Type</th>
+        <th>Storage</th>
+        <th>Size</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for row in terminalRows %}
+      <tr>
+        <td>
+          <a class="data-explorer"
+             data-name="{{row.storageName}}"
+             data-target="#explore-queue"
+             data-toggle="modal"
+             data-type="{{row.dataType}}"
+             data-type-label="{{ row.typeLabel | default(row.dataType) }}"
+             href="#">
+            {{row.tab}}
+          </a>
+        </td>
+        <td>{{ row.typeLabel | default(row.dataType) }}</td>
+        <td>{{row.storageName}}</td>
+        <td>
+          {% if row.size < 0 %}
+          Queue-backed
+          {% elseif row.approximate %}
+          ~ {{row.size}}
+          {% else %}
+          {{row.size}}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endif %}
-{# Charts depend on time-series counters which brokers like NATS JetStream don't track.
-   Hide them when the active broker reports the unsupported capability. #}
-{% if not hideCharts %}
 <hr/>
 {% include 'stats_chart' %}
 <hr/>
 {% include 'latency_chart' %}
-{% endif %}
 
 {% include 'data_explorer_modal' %}
 {% endblock %}
@@ -200,12 +207,9 @@
 <script type="application/javascript">
   queueName = "{{queueName}}"
   dataPageUrl = "rqueue/api/v1/queue-data";
-  {% if not hideCharts %}
   var chartParams = {"queue": queueName, "type": "STATS", 'aggregationType': 'DAILY'};
   var latencyChartParams = {"queue": queueName, "type": "LATENCY", 'aggregationType': 'DAILY'};
-  {% endif %}
   $(document).ready(function () {
-    {% if not hideCharts %}
     drawChart(chartParams, "stats_chart");
     drawChart(latencyChartParams, "latency_chart");
     $('#refresh-chart').click(function () {
@@ -216,7 +220,6 @@
       refreshLatencyChart(latencyChartParams, "latency_chart");
     });
     attachChartEventListeners();
-    {% endif %}
     $('#explore-queue').on('shown.bs.modal', function () {
       $('#explorer-title').empty().append("Queue:").append("<b>&nbsp;" + queueName + "</b>").append(
           "&nbsp;[" + (dataTypeLabel || dataType) + "]").append("<b>&nbsp;" + dataName + "</b>");

@@ -22,6 +22,8 @@ import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerView;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
+import com.github.sonus21.rqueue.models.response.SubscriberRow;
+import com.github.sonus21.rqueue.models.response.TerminalStorageRow;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,6 +39,21 @@ public interface RqueueQDetailService {
       List<QueueConfig> queueConfig);
 
   List<Entry<NavTab, RedisDataDetail>> getQueueDataStructureDetail(QueueConfig queueConfig);
+
+  /**
+   * One row per subscriber attached to the queue (every {@code @RqueueListener} on Redis,
+   * every JetStream durable consumer on NATS). Backs the new "Subscribers" section on the
+   * queue-detail page; folds in last-active info from the worker registry so the standalone
+   * Queue Pollers section can be retired.
+   */
+  List<SubscriberRow> getSubscriberRows(QueueConfig queueConfig);
+
+  /**
+   * One row per terminal storage bucket (COMPLETED, DEAD letter queues) for the given queue.
+   * These are not per-consumer — they are shared stores — so the dashboard renders them in a
+   * separate section from the per-subscriber rows.
+   */
+  List<TerminalStorageRow> getTerminalRows(QueueConfig queueConfig);
 
   List<NavTab> getNavTabs(QueueConfig queueConfig);
 

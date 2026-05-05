@@ -35,13 +35,16 @@ import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.enums.TableColumnType;
 import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerView;
+import com.github.sonus21.rqueue.core.spi.SubscriberView;
 import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.models.response.RowColumnMeta;
 import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
+import com.github.sonus21.rqueue.models.response.SubscriberRow;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
+import com.github.sonus21.rqueue.models.response.TerminalStorageRow;
 import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -632,6 +635,156 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
   @Override
   public List<RqueueWorkerPollerView> getQueueWorkers(String queueName) {
     return rqueueWorkerRegistry.getQueueWorkers(queueName);
+  }
+
+  // -------------------------------------------------------------------------
+  // Subscriber + Terminal Storage rows (new queue-detail UI)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Build the per-subscriber rows that drive the new "Subscribers" section. Joins broker SPI
+   * data ({@link MessageBroker#subscribers}) with last-active info from the worker registry,
+   * keyed on {@code consumerName}. Falls back to a single anonymous row when the queue has
+   * no registered handlers (e.g. a producer-only deployment).
+   */
+  @Override
+  public List<SubscriberRow> getSubscriberRows(QueueConfig queueConfig) {
+    if (queueConfig == null) {
+      return Collections.emptyList();
+    }
+    QueueDetail brokerQueueDetail =
+        messageBroker != null ? lookupQueueDetail(queueConfig.getName()) : null;
+    List<SubscriberView> views = brokerSubscribers(queueConfig, brokerQueueDetail);
+    if (views.isEmpty()) {
+      return Collections.emptyList();
+    }
+    String storageName =
+        brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+            ? messageBroker.storageDisplayName(brokerQueueDetail)
+            : queueConfig.getQueueName();
+    String label = brokerLabel(NavTab.PENDING, DataType.LIST);
+    Map<String, RqueueWorkerPollerView> workersByConsumer =
+        indexWorkersByConsumer(queueConfig.getName());
+    List<SubscriberRow> rows = new ArrayList<>(views.size());
+    long now = System.currentTimeMillis();
+    for (SubscriberView v : views) {
+      SubscriberRow.SubscriberRowBuilder builder = SubscriberRow.builder()
+          .consumerName(v.consumerName())
+          .typeLabel(label)
+          .storageName(storageName)
+          .dataType(DataType.LIST)
+          .pending(v.pending())
+          .pendingShared(v.pendingShared())
+          .inFlight(v.inFlight());
+      RqueueWorkerPollerView w = workersByConsumer.get(v.consumerName());
+      if (w != null) {
+        builder
+            .status(w.getStatus())
+            .host(w.getHost())
+            .pid(w.getPid())
+            .lastPollAt(w.getLastPollAt());
+        if (w.getLastPollAt() > 0) {
+          builder.lastPollAge(DateTimeUtils.milliToHumanRepresentation(now - w.getLastPollAt()));
+        }
+      }
+      rows.add(builder.build());
+    }
+    return rows;
+  }
+
+  private List<SubscriberView> brokerSubscribers(
+      QueueConfig queueConfig, QueueDetail brokerQueueDetail) {
+    if (brokerQueueDetail != null && messageBroker != null) {
+      try {
+        List<SubscriberView> views = messageBroker.subscribers(brokerQueueDetail);
+        if (views != null && !views.isEmpty()) {
+          return views;
+        }
+      } catch (RuntimeException ignored) {
+        // fall through to producer-only path
+      }
+    }
+    // No active QueueDetail registered (producer-only or shutdown). Surface a single row so
+    // the operator at least sees the queue's pending count from the repository fallback.
+    Long pending =
+        messageBrowsingRepository.getDataSize(queueConfig.getQueueName(), DataType.LIST);
+    if (pending == null || pending <= 0) {
+      return Collections.emptyList();
+    }
+    return Collections.singletonList(
+        new SubscriberView(queueConfig.getName(), pending, 0L, true));
+  }
+
+  private Map<String, RqueueWorkerPollerView> indexWorkersByConsumer(String queueName) {
+    List<RqueueWorkerPollerView> workers = rqueueWorkerRegistry.getQueueWorkers(queueName);
+    if (CollectionUtils.isEmpty(workers)) {
+      return Collections.emptyMap();
+    }
+    Map<String, RqueueWorkerPollerView> out = new HashMap<>(workers.size());
+    for (RqueueWorkerPollerView w : workers) {
+      String key = w.getConsumerName();
+      if (key == null || key.isEmpty()) {
+        continue;
+      }
+      RqueueWorkerPollerView existing = out.get(key);
+      if (existing == null || w.getLastPollAt() > existing.getLastPollAt()) {
+        out.put(key, w);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Terminal-storage rows: COMPLETED set + each DLQ. These are shared across subscribers, so
+   * they live in their own table rather than being repeated on every subscriber row.
+   */
+  @Override
+  public List<TerminalStorageRow> getTerminalRows(QueueConfig queueConfig) {
+    if (queueConfig == null) {
+      return Collections.emptyList();
+    }
+    List<TerminalStorageRow> out = new ArrayList<>();
+    QueueDetail brokerQueueDetail =
+        messageBroker != null ? lookupQueueDetail(queueConfig.getName()) : null;
+    if (rqueueConfig.messageInTerminalStateShouldBeStored()
+        && !StringUtils.isEmpty(queueConfig.getCompletedQueueName())) {
+      Long completed =
+          messageBrowsingRepository.getDataSize(queueConfig.getCompletedQueueName(), DataType.ZSET);
+      String completedDisplayName =
+          brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+              ? messageBroker.storageDisplayName(brokerQueueDetail)
+              : queueConfig.getCompletedQueueName();
+      out.add(TerminalStorageRow.builder()
+          .tab(NavTab.COMPLETED)
+          .typeLabel(brokerLabel(NavTab.COMPLETED, DataType.ZSET))
+          .storageName(completedDisplayName)
+          .dataType(DataType.ZSET)
+          .size(completed == null ? 0L : completed)
+          .build());
+    }
+    if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
+      for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
+        String dlqDisplayName = brokerQueueDetail != null
+                && messageBroker.dlqStorageDisplayName(brokerQueueDetail) != null
+            ? messageBroker.dlqStorageDisplayName(brokerQueueDetail)
+            : dlq.getName();
+        long size;
+        if (dlq.isConsumerEnabled()) {
+          size = -1L;
+        } else {
+          Long dlqSize = messageBrowsingRepository.getDataSize(dlq.getName(), DataType.LIST);
+          size = dlqSize == null ? 0L : dlqSize;
+        }
+        out.add(TerminalStorageRow.builder()
+            .tab(NavTab.DEAD)
+            .typeLabel(brokerLabel(NavTab.DEAD, DataType.LIST))
+            .storageName(dlqDisplayName)
+            .dataType(DataType.LIST)
+            .size(size)
+            .build());
+      }
+    }
+    return out;
   }
 
   @Override
