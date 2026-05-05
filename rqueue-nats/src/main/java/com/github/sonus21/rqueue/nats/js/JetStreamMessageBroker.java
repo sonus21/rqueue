@@ -533,10 +533,13 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         return Collections.emptyList();
       }
       // Consumer-aware base sequence for Limits-retention streams: when a consumerName is
-      // provided, start from that consumer's next undelivered sequence so the dashboard
-      // shows messages still pending for this subscriber instead of the entire retained
-      // window. WorkQueue streams have a single shared consumer (msgs are removed on ack)
-      // so the stream's firstSeq is already the right base — skip the lookup.
+      // provided, start from that consumer's lowest unacked sequence (ackFloor + 1) so the
+      // dashboard shows everything this subscriber still has work to do on — both messages
+      // already delivered but not yet acked (in-flight) and messages still to be delivered
+      // (pending). Using delivered.streamSeq + 1 would hide the in-flight window, which
+      // surprises operators who see "in-flight = 15" but get an empty explorer.
+      // WorkQueue streams have a single shared consumer (msgs are removed on ack) so the
+      // stream's firstSeq is already the right base — skip the lookup.
       long base = firstSeq;
       if (consumerName != null
           && !consumerName.isEmpty()
@@ -545,8 +548,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
               == io.nats.client.api.RetentionPolicy.Limits) {
         try {
           io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumerName);
-          if (ci != null && ci.getDelivered() != null) {
-            base = Math.max(firstSeq, ci.getDelivered().getStreamSequence() + 1);
+          if (ci != null && ci.getAckFloor() != null) {
+            base = Math.max(firstSeq, ci.getAckFloor().getStreamSequence() + 1);
           }
         } catch (JetStreamApiException ignore) {
           // consumer may have disappeared mid-walk; fall back to stream firstSeq
