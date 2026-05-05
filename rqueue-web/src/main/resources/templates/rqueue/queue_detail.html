@@ -16,191 +16,265 @@
   ~
   -->
 
-<div class="container">
-  <div class="row table-responsive ">
-    <table class="table table-bordered">
-      <thead>
-      <tr>
-        <th>Queue</th>
-        <th>Concurrency</th>
-        <th>Retry Count</th>
-        <th>Visibility Timeout</th>
-        <th>Dead Letter queue(s)</th>
-        <th>Created On</th>
-        <th>Updated On</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        {% if config == null %}
-        {{ queueName }}
+<div class="container queue-detail">
+  {# ----- Hero ------------------------------------------------------------- #}
+  <section class="queue-hero queue-detail-hero">
+    <div class="queue-hero-copy">
+      <span class="queue-hero-kicker">Queue</span>
+      <h1 class="queue-hero-title">
+        {% if config != null %}{{config.name}}{% else %}{{queueName}}{% endif %}
+        {% if config != null and config.paused %}
+          <span class="queue-state-badge queue-state-paused queue-detail-state"
+                title="Paused">
+            <i class="bx bx-pause-circle"></i> Paused
+          </span>
         {% else %}
-        <td>{{config.name}}</td>
-        <td>
-          {% if config.concurrency.min == -1 and config.concurrency.max == -1 %}
-          <span aria-label="Unbounded concurrency"
-                class="queue-detail-infinity"
-                data-placement="top"
-                data-toggle="tooltip"
-                title="Unbounded concurrency">
-            <i class="bx bx-infinite"></i>
+          <span class="queue-state-badge queue-state-live queue-detail-state"
+                title="Live">
+            <i class="bx bx-check-circle"></i> Live
           </span>
-          {% else %}
-          {{config.concurrency.min}},{{config.concurrency.max}}
-          {% endif %}
-        </td>
-        <td>
-          {% if config.unlimitedRetry %}
-          <span aria-label="Unlimited retries"
-                class="queue-detail-infinity"
-                data-placement="top"
-                data-toggle="tooltip"
-                title="Unlimited retries">
-            <i class="bx bx-infinite"></i>
-          </span>
-          {% else %}
-          {{config.numRetry}}
-          {% endif %}
-        </td>
-        <td>{{duration(config.visibilityTimeout)}}</td>
-        <td>
-          {{ dlq(config.deadLetterQueues) }}
-        </td>
-        <td>{{ time(config.createdOn) }}</td>
-        <td>{{ time(config.updatedOn) }}</td>
         {% endif %}
-      </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-{# ---------------------------------------------------------------------------
-   Subscribers — one row per @RqueueListener consumer.
-     • Redis: every handler is a row; Pending / In-Flight are shared sizes
-       (marked "(shared)") and folded with last-poll info from the worker
-       registry.
-     • NATS WorkQueue: every durable consumer is a row; Pending is the shared
-       stream msgCount, In-Flight is the consumer's exclusive numAckPending.
-     • NATS Limits: every durable consumer is a row; Pending is the consumer's
-       exact numPending, In-Flight is its numAckPending.
-   --------------------------------------------------------------------------- #}
-<div class="container">
-  <h4>Subscribers</h4>
-  <div class="row table-responsive">
+      </h1>
+      <p class="queue-hero-subtitle">
+        Live consumers, pending work, and terminal storage for this {{ storageKicker | default('Redis') }} queue.
+      </p>
+    </div>
+    <div class="queue-hero-meta queue-detail-hero-meta">
+      <div class="queue-hero-stat">
+        <span class="queue-hero-stat-label">Subscribers</span>
+        <strong class="queue-hero-stat-value">{{ subscribers | length }}</strong>
+      </div>
+      <div class="queue-hero-stat">
+        <span class="queue-hero-stat-label">Pending</span>
+        <strong class="queue-hero-stat-value">
+          {% if subscribers is not empty %}{{ subscribers[0].pending }}{% else %}0{% endif %}
+        </strong>
+      </div>
+      <div class="queue-hero-stat">
+        <span class="queue-hero-stat-label">In-Flight</span>
+        <strong class="queue-hero-stat-value">
+          {% set totalInFlight = 0 %}
+          {% for sub in subscribers %}{% set totalInFlight = totalInFlight + sub.inFlight %}{% endfor %}
+          {{ totalInFlight }}
+        </strong>
+      </div>
+    </div>
+  </section>
+
+  {# ----- Configuration chip strip ---------------------------------------- #}
+  {% if config != null %}
+  <section class="queue-detail-config">
+    <div class="queue-detail-config-row">
+      <div class="queue-detail-metric">
+        <span class="queue-detail-metric-label">
+          <i class="bx bx-sitemap"></i> Concurrency
+        </span>
+        <strong class="queue-detail-metric-value">
+          {% if config.concurrency.min == -1 and config.concurrency.max == -1 %}
+            <i class="bx bx-infinite"></i> Unbounded
+          {% else %}
+            {{config.concurrency.min}} – {{config.concurrency.max}}
+          {% endif %}
+        </strong>
+      </div>
+      <div class="queue-detail-metric">
+        <span class="queue-detail-metric-label">
+          <i class="bx bx-refresh"></i> Retries
+        </span>
+        <strong class="queue-detail-metric-value">
+          {% if config.unlimitedRetry %}
+            <i class="bx bx-infinite"></i> Unlimited
+          {% else %}
+            {{config.numRetry}}
+          {% endif %}
+        </strong>
+      </div>
+      <div class="queue-detail-metric">
+        <span class="queue-detail-metric-label">
+          <i class="bx bx-time-five"></i> Visibility
+        </span>
+        <strong class="queue-detail-metric-value">{{duration(config.visibilityTimeout)}}</strong>
+      </div>
+      <div class="queue-detail-metric">
+        <span class="queue-detail-metric-label">
+          <i class="bx bx-skull"></i> Dead Letter
+        </span>
+        <strong class="queue-detail-metric-value">
+          {% if config.deadLetterQueues is empty %}
+            <span class="text-muted">—</span>
+          {% else %}
+            {{ dlq(config.deadLetterQueues) }}
+          {% endif %}
+        </strong>
+      </div>
+    </div>
+    <div class="queue-detail-config-meta">
+      <span><strong>Created</strong> {{ time(config.createdOn) }}</span>
+      <span><strong>Updated</strong> {{ time(config.updatedOn) }}</span>
+    </div>
+  </section>
+  {% endif %}
+
+  {# ----- Subscribers ------------------------------------------------------
+       One row per @RqueueListener consumer. Folds in worker-registry status
+       so the standalone "Queue Pollers" section is no longer needed.
+  ----------------------------------------------------------------------- #}
+  <section class="queue-detail-section">
+    <div class="queue-section-header">
+      <div>
+        <span class="queue-section-kicker">Live</span>
+        <h2 class="queue-section-title">Subscribers</h2>
+      </div>
+      <p class="queue-section-copy">
+        One entry per registered listener. Click a consumer to browse its messages.
+      </p>
+    </div>
+
     {% if subscribers is empty %}
-    <div class="alert alert-secondary w-100" role="alert">
-      No subscribers are attached to this queue yet.
+    <div class="queue-empty-state queue-detail-empty" role="status">
+      <h3>No subscribers attached.</h3>
+      <p>Listeners will appear here after they register a poll heartbeat.</p>
     </div>
     {% else %}
-    <table class="table table-bordered">
-      <thead>
-      <tr>
-        <th>Consumer</th>
-        <th>Type</th>
-        <th>Storage</th>
-        <th>Pending</th>
-        <th>In-Flight</th>
-        <th>Status</th>
-        <th>Host / PID</th>
-        <th>Last Poll</th>
-      </tr>
-      </thead>
-      <tbody>
+    <div class="subscriber-grid">
       {% for sub in subscribers %}
-      <tr>
-        <td>
-          <a class="data-explorer"
-             data-name="{{sub.storageName}}"
-             data-target="#explore-queue"
-             data-toggle="modal"
-             data-type="{{sub.dataType}}"
-             data-type-label="{{ sub.typeLabel | default(sub.dataType) }}"
-             href="#">
-            {{sub.consumerName}}
-          </a>
-        </td>
-        <td>{{ sub.typeLabel | default(sub.dataType) }}</td>
-        <td>{{sub.storageName}}</td>
-        <td>
-          {{sub.pending}}
-          {% if sub.pendingShared %}<small class="text-muted">(shared)</small>{% endif %}
-        </td>
-        <td>{{sub.inFlight}}</td>
-        <td>{% if sub.status %}{{sub.status}}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-        <td>
-          {% if sub.host %}{{sub.host}}{% if sub.pid %} / {{sub.pid}}{% endif %}{% else %}<span class="text-muted">—</span>{% endif %}
-        </td>
-        <td>
-          {% if sub.lastPollAt > 0 %}
-            {{ time(sub.lastPollAt) }}
-            {% if sub.lastPollAge %}<small class="text-muted">({{sub.lastPollAge}} ago)</small>{% endif %}
+      <article class="subscriber-card">
+        <header class="subscriber-card-head">
+          <div class="subscriber-card-title-row">
+            <span class="subscriber-card-kicker">Consumer</span>
+            <h3 class="subscriber-card-title">
+              <a class="data-explorer"
+                 data-name="{{sub.storageName}}"
+                 data-target="#explore-queue"
+                 data-toggle="modal"
+                 data-type="{{sub.dataType}}"
+                 data-type-label="{{ sub.typeLabel | default(sub.dataType) }}"
+                 href="#">{{sub.consumerName}}</a>
+            </h3>
+            <span class="subscriber-card-type">{{ sub.typeLabel | default(sub.dataType) }}</span>
+          </div>
+          {% if sub.status %}
+          <span class="worker-status-badge
+              {% if sub.status == 'ACTIVE' %}worker-status-active{% endif %}
+              {% if sub.status == 'STALE' %}worker-status-stale{% endif %}
+              {% if sub.status == 'PAUSED' %}worker-status-paused{% endif %}">
+            {{sub.status}}
+          </span>
           {% else %}
-            <span class="text-muted">—</span>
+          <span class="worker-status-badge worker-status-stale">UNKNOWN</span>
           {% endif %}
-        </td>
-      </tr>
+        </header>
+
+        <div class="subscriber-stat-row">
+          <div class="subscriber-stat">
+            <span class="subscriber-stat-label">Pending</span>
+            <strong class="subscriber-stat-value">{{sub.pending}}</strong>
+            {% if sub.pendingShared %}
+            <span class="subscriber-stat-hint">shared</span>
+            {% endif %}
+          </div>
+          <div class="subscriber-stat">
+            <span class="subscriber-stat-label">In-Flight</span>
+            <strong class="subscriber-stat-value">{{sub.inFlight}}</strong>
+          </div>
+        </div>
+
+        <dl class="subscriber-meta">
+          <div class="subscriber-meta-row">
+            <dt>Storage</dt>
+            <dd><code>{{sub.storageName}}</code></dd>
+          </div>
+          <div class="subscriber-meta-row">
+            <dt>Host</dt>
+            <dd>
+              {% if sub.host %}
+                {{sub.host}}{% if sub.pid %} <small class="text-muted">/ pid {{sub.pid}}</small>{% endif %}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </dd>
+          </div>
+          <div class="subscriber-meta-row">
+            <dt>Last Poll</dt>
+            <dd>
+              {% if sub.lastPollAt > 0 %}
+                {{ time(sub.lastPollAt) }}
+                {% if sub.lastPollAge %}
+                  <small class="text-muted">{{sub.lastPollAge}} ago</small>
+                {% endif %}
+              {% else %}
+                <span class="text-muted">no poll yet</span>
+              {% endif %}
+            </dd>
+          </div>
+        </dl>
+      </article>
       {% endfor %}
-      </tbody>
-    </table>
+    </div>
     {% endif %}
-  </div>
-</div>
+  </section>
 
-{# ---------------------------------------------------------------------------
-   Terminal Storage — COMPLETED set + DLQs. These are shared across subscribers
-   so they get their own table rather than being repeated per row.
-   --------------------------------------------------------------------------- #}
-{% if terminalRows is not empty %}
-<div class="container">
-  <h4>Terminal Storage</h4>
-  <div class="row table-responsive">
-    <table class="table table-bordered">
-      <thead>
-      <tr>
-        <th>Bucket</th>
-        <th>Type</th>
-        <th>Storage</th>
-        <th>Size</th>
-      </tr>
-      </thead>
-      <tbody>
+  {# ----- Terminal Storage ------------------------------------------------ #}
+  {% if terminalRows is not empty %}
+  <section class="queue-detail-section">
+    <div class="queue-section-header">
+      <div>
+        <span class="queue-section-kicker">Shared</span>
+        <h2 class="queue-section-title">Terminal Storage</h2>
+      </div>
+      <p class="queue-section-copy">
+        Buckets shared across subscribers — completed messages and dead-letter queues.
+      </p>
+    </div>
+    <div class="terminal-grid">
       {% for row in terminalRows %}
-      <tr>
-        <td>
-          <a class="data-explorer"
-             data-name="{{row.storageName}}"
-             data-target="#explore-queue"
-             data-toggle="modal"
-             data-type="{{row.dataType}}"
-             data-type-label="{{ row.typeLabel | default(row.dataType) }}"
-             href="#">
-            {{row.tab}}
-          </a>
-        </td>
-        <td>{{ row.typeLabel | default(row.dataType) }}</td>
-        <td>{{row.storageName}}</td>
-        <td>
+      <article class="terminal-card terminal-card-{{ row.tab | lower }}">
+        <header class="terminal-card-head">
+          <span class="terminal-card-kicker">{{row.tab}}</span>
+          <h3 class="terminal-card-title">
+            <a class="data-explorer"
+               data-name="{{row.storageName}}"
+               data-target="#explore-queue"
+               data-toggle="modal"
+               data-type="{{row.dataType}}"
+               data-type-label="{{ row.typeLabel | default(row.dataType) }}"
+               href="#">{{row.storageName}}</a>
+          </h3>
+          <span class="terminal-card-type">{{ row.typeLabel | default(row.dataType) }}</span>
+        </header>
+        <div class="terminal-card-size">
           {% if row.size < 0 %}
-          Queue-backed
-          {% elseif row.approximate %}
-          ~ {{row.size}}
+            <span class="terminal-card-size-label">Queue-backed</span>
           {% else %}
-          {{row.size}}
+            {% if row.approximate %}<span class="terminal-card-approx">~</span>{% endif %}
+            <strong class="terminal-card-size-value">{{row.size}}</strong>
+            <span class="terminal-card-size-label">messages</span>
           {% endif %}
-        </td>
-      </tr>
+        </div>
+      </article>
       {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endif %}
-<hr/>
-{% include 'stats_chart' %}
-<hr/>
-{% include 'latency_chart' %}
+    </div>
+  </section>
+  {% endif %}
 
-{% include 'data_explorer_modal' %}
+  {# ----- Charts (collapsed by default to keep the fold useful) --------- #}
+  <details class="queue-detail-charts" id="queue-detail-charts">
+    <summary class="queue-detail-charts-summary">
+      <div>
+        <span class="queue-section-kicker">Telemetry</span>
+        <h2 class="queue-section-title">Stats &amp; Latency</h2>
+      </div>
+      <span class="queue-detail-charts-toggle"></span>
+    </summary>
+    <div class="queue-detail-charts-body">
+      {% include 'stats_chart' %}
+      <hr/>
+      {% include 'latency_chart' %}
+    </div>
+  </details>
+
+  {% include 'data_explorer_modal' %}
+</div>
 {% endblock %}
 
 {% block additional_script %}
@@ -210,22 +284,30 @@
   var chartParams = {"queue": queueName, "type": "STATS", 'aggregationType': 'DAILY'};
   var latencyChartParams = {"queue": queueName, "type": "LATENCY", 'aggregationType': 'DAILY'};
   $(document).ready(function () {
-    drawChart(chartParams, "stats_chart");
-    drawChart(latencyChartParams, "latency_chart");
-    $('#refresh-chart').click(function () {
-      refreshStatsChart(chartParams, "stats_chart");
+    var chartsRendered = false;
+    function renderChartsOnce() {
+      if (chartsRendered) return;
+      chartsRendered = true;
+      drawChart(chartParams, "stats_chart");
+      drawChart(latencyChartParams, "latency_chart");
+      $('#refresh-chart').click(function () {
+        refreshStatsChart(chartParams, "stats_chart");
+      });
+      $('#refresh-latency-chart').click(function () {
+        refreshLatencyChart(latencyChartParams, "latency_chart");
+      });
+      attachChartEventListeners();
+    }
+    // Lazy-render charts only when the disclosure opens, so the first paint
+    // stays tight on the subscriber + terminal cards.
+    $('#queue-detail-charts').on('toggle', function () {
+      if (this.open) renderChartsOnce();
     });
-
-    $('#refresh-latency-chart').click(function () {
-      refreshLatencyChart(latencyChartParams, "latency_chart");
-    });
-    attachChartEventListeners();
     $('#explore-queue').on('shown.bs.modal', function () {
       $('#explorer-title').empty().append("Queue:").append("<b>&nbsp;" + queueName + "</b>").append(
           "&nbsp;[" + (dataTypeLabel || dataType) + "]").append("<b>&nbsp;" + dataName + "</b>");
       refreshPage();
     });
   });
-
 </script>
 {% endblock %}
