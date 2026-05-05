@@ -210,6 +210,20 @@ public interface MessageBroker {
   }
 
   /**
+   * Per-consumer pending breakdown for queues whose backend has multiple independent
+   * subscribers — e.g. JetStream Limits-retention streams where each durable consumer
+   * progresses at its own pace. Returns an ordered map of {@code consumerName -> pending}
+   * so the dashboard can render one row per consumer instead of a single aggregate.
+   *
+   * <p>The default returns {@code null}, signalling that the queue has a single shared pool
+   * (Redis lists, NATS WorkQueue streams) and the caller should fall back to
+   * {@link #size(QueueDetail)}. Empty / null also means "no consumers attached".
+   */
+  default java.util.Map<String, Long> consumerPendingSizes(QueueDetail q) {
+    return null;
+  }
+
+  /**
    * Backend-aware human-readable label for the given Redis-shaped {@code DataType} on the given
    * dashboard tab. Surfaces in the queue-detail page's "Data Type" column so NATS deployments
    * can show "Queue (Stream)" instead of "LIST".

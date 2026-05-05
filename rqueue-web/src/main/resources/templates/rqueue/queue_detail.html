@@ -91,10 +91,18 @@
              data-type-label="{{ queueData.value.typeLabel | default(queueData.value.type) }}"
              href="#">
             {{queueData.key.name}}
+            {% if queueData.value.consumerName %}
+              <small class="text-muted">[{{queueData.value.consumerName}}]</small>
+            {% endif %}
           </a>
         </td>
         <td>{{ queueData.value.typeLabel | default(queueData.value.type) }}</td>
-        <td>{{queueData.value.name}}</td>
+        <td>
+          {{queueData.value.name}}
+          {% if queueData.value.consumerName %}
+            <small class="text-muted">/ {{queueData.value.consumerName}}</small>
+          {% endif %}
+        </td>
         <td>
           {% if queueData.value.size < 0 %}
           Queue-backed

@@ -641,6 +641,56 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
   }
 
+  /**
+   * For Limits-retention streams, returns an exact per-consumer pending count
+   * ({@code lastSeq - delivered.streamSeq}). For WorkQueue streams returns {@code null} so the
+   * dashboard falls back to the single {@link #size(QueueDetail)} row — WorkQueue messages are
+   * shared across consumers, so a per-consumer split is meaningless.
+   *
+   * <p>The map iteration order matches {@link io.nats.client.JetStreamManagement#getConsumerNames}
+   * (insertion order), giving the dashboard a stable rendering.
+   */
+  @Override
+  public java.util.Map<String, Long> consumerPendingSizes(QueueDetail q) {
+    String stream = streamFor(q);
+    try {
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      if (retention != io.nats.client.api.RetentionPolicy.Limits) {
+        // WorkQueue (and any future single-pool retention) doesn't have per-consumer pending.
+        return null;
+      }
+      long lastSeq = info.getStreamState().getLastSequence();
+      List<String> consumers = jsm.getConsumerNames(stream);
+      if (consumers == null || consumers.isEmpty()) {
+        return java.util.Collections.emptyMap();
+      }
+      java.util.Map<String, Long> out = new java.util.LinkedHashMap<>();
+      for (String consumer : consumers) {
+        try {
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
+          if (ci == null) {
+            continue;
+          }
+          // Prefer numPending when available (server-computed); fall back to position math.
+          long pending = ci.getNumPending();
+          if (pending == 0 && ci.getDelivered() != null) {
+            long delivered = ci.getDelivered().getStreamSequence();
+            pending = Math.max(0L, lastSeq - delivered);
+          }
+          out.put(consumer, pending);
+        } catch (IOException | JetStreamApiException ignore) {
+          // best-effort; skip consumers that disappear mid-walk
+        }
+      }
+      return out;
+    } catch (IOException | JetStreamApiException e) {
+      log.log(Level.WARNING, "consumerPendingSizes failed for stream=" + stream, e);
+      return null;
+    }
+  }
+
   @Override
   public AutoCloseable subscribe(String channel, Consumer<String> handler) {
     Dispatcher d =

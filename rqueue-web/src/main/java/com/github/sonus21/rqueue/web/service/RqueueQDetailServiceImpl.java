@@ -181,14 +181,33 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
             ? messageBroker.storageDisplayName(brokerQueueDetail)
             : queueConfig.getQueueName();
-    RedisDataDetail pendingDetail =
-        new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending);
-    pendingDetail.setTypeLabel(brokerLabel(NavTab.PENDING, DataType.LIST));
-    if (brokerQueueDetail != null) {
-      pendingDetail.setApproximate(messageBroker.isSizeApproximate(brokerQueueDetail));
+    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList();
+    // Per-consumer pending breakdown for brokers that expose it (e.g. NATS Limits-retention
+    // streams where each durable consumer has its own offset). When present, render one row
+    // per consumer with an exact pending count instead of a single aggregated "~ N" row.
+    Map<String, Long> perConsumer =
+        brokerQueueDetail != null ? messageBroker.consumerPendingSizes(brokerQueueDetail) : null;
+    if (perConsumer != null && !perConsumer.isEmpty()) {
+      String label = brokerLabel(NavTab.PENDING, DataType.LIST);
+      for (Map.Entry<String, Long> entry : perConsumer.entrySet()) {
+        Long size = entry.getValue();
+        RedisDataDetail consumerDetail =
+            new RedisDataDetail(pendingDisplayName, DataType.LIST, size == null ? 0 : size);
+        consumerDetail.setTypeLabel(label);
+        consumerDetail.setConsumerName(entry.getKey());
+        // Per-consumer counts are exact (numPending or position math for that subscriber);
+        // the approximation flag only applies to the aggregated single-row view.
+        queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.PENDING, consumerDetail));
+      }
+    } else {
+      RedisDataDetail pendingDetail =
+          new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending);
+      pendingDetail.setTypeLabel(brokerLabel(NavTab.PENDING, DataType.LIST));
+      if (brokerQueueDetail != null) {
+        pendingDetail.setApproximate(messageBroker.isSizeApproximate(brokerQueueDetail));
+      }
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.PENDING, pendingDetail));
     }
-    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails =
-        newArrayList(new HashMap.SimpleEntry<>(NavTab.PENDING, pendingDetail));
     // Brokers that manage their own in-flight tracking (e.g. NATS JetStream) have no separate
     // processing ZSET, so omit the RUNNING entry to avoid a 501 when the explorer opens it.
     if (!brokerHidesRunning()) {

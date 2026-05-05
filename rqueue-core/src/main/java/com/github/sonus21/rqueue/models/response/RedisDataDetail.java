@@ -53,7 +53,14 @@ public class RedisDataDetail extends SerializableBase {
    */
   private boolean approximate;
 
+  /**
+   * Optional consumer name when the row represents a single subscriber's view of a shared
+   * stream (e.g. NATS Limits-retention streams). Renders next to the stream name in the
+   * "Name" column so each durable consumer's lag is visible separately.
+   */
+  private String consumerName;
+
   public RedisDataDetail(String name, DataType type, long size) {
-    this(name, type, size, null, false);
+    this(name, type, size, null, false, null);
   }
 }
