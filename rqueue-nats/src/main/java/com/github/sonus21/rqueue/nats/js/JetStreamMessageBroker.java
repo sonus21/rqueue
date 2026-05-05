@@ -507,6 +507,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public List<RqueueMessage> peek(QueueDetail q, long offset, long count) {
+    return peek(q, null, offset, count);
+  }
+
+  @Override
+  public List<RqueueMessage> peek(QueueDetail q, String consumerName, long offset, long count) {
     String stream = streamFor(q);
     if (count <= 0) {
       return Collections.emptyList();
@@ -527,7 +532,27 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       if (lastSeq < firstSeq) {
         return Collections.emptyList();
       }
-      long startSeq = Math.max(firstSeq, firstSeq + Math.max(0L, offset));
+      // Consumer-aware base sequence for Limits-retention streams: when a consumerName is
+      // provided, start from that consumer's next undelivered sequence so the dashboard
+      // shows messages still pending for this subscriber instead of the entire retained
+      // window. WorkQueue streams have a single shared consumer (msgs are removed on ack)
+      // so the stream's firstSeq is already the right base — skip the lookup.
+      long base = firstSeq;
+      if (consumerName != null
+          && !consumerName.isEmpty()
+          && info.getConfiguration() != null
+          && info.getConfiguration().getRetentionPolicy()
+              == io.nats.client.api.RetentionPolicy.Limits) {
+        try {
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumerName);
+          if (ci != null && ci.getDelivered() != null) {
+            base = Math.max(firstSeq, ci.getDelivered().getStreamSequence() + 1);
+          }
+        } catch (JetStreamApiException ignore) {
+          // consumer may have disappeared mid-walk; fall back to stream firstSeq
+        }
+      }
+      long startSeq = base + Math.max(0L, offset);
       long endSeq = Math.min(lastSeq, startSeq + count - 1);
       List<RqueueMessage> out = new ArrayList<>();
       for (long seq = startSeq; seq <= endSeq && out.size() < count; seq++) {

@@ -389,7 +389,12 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public DataViewResponse getExplorePageData(
-      String src, String name, DataType type, int pageNumber, int itemPerPage) {
+      String src,
+      String name,
+      DataType type,
+      String consumerName,
+      int pageNumber,
+      int itemPerPage) {
     QueueConfig queueConfig = rqueueSystemManagerService.getQueueConfig(src);
     DataViewResponse response = new DataViewResponse();
     boolean deadLetterQueue = queueConfig.isDeadLetterQueue(name);
@@ -413,7 +418,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       QueueDetail qd = lookupQueueDetail(queueConfig.getName());
       if (qd != null) {
         long offset = (long) pageNumber * itemPerPage;
-        List<RqueueMessage> peeked = messageBroker.peek(qd, offset, itemPerPage);
+        List<RqueueMessage> peeked = messageBroker.peek(qd, consumerName, offset, itemPerPage);
         List<TypedTuple<RqueueMessage>> tuples = peeked.stream()
             .map(m -> (TypedTuple<RqueueMessage>) new DefaultTypedTuple<>(m, null))
             .collect(Collectors.toList());
@@ -785,8 +790,13 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public Mono<DataViewResponse> getReactiveExplorePageData(
-      String src, String name, DataType type, int pageNumber, int itemPerPage) {
-    return Mono.just(getExplorePageData(src, name, type, pageNumber, itemPerPage));
+      String src,
+      String name,
+      DataType type,
+      String consumerName,
+      int pageNumber,
+      int itemPerPage) {
+    return Mono.just(getExplorePageData(src, name, type, consumerName, pageNumber, itemPerPage));
   }
 
   @Override

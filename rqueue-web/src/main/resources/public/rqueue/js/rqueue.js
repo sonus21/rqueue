@@ -19,6 +19,7 @@ var dataPageUrl = null;
 var dataKey = null;
 var dataName = null;
 var dataTypeLabel = null;
+var dataConsumer = null;
 var deleteActionMessage = null;
 var dataType = null;
 var currentPage = 0;
@@ -190,6 +191,10 @@ function exploreData() {
   // Falls back to the Redis-shaped DataType when the attribute isn't present.
   dataTypeLabel = element.data('type-label') || element.data('type');
   dataKey = element.data('key');
+  // Optional per-subscriber consumer name. When the queue has competing consumers
+  // (Limits-retention streams) this lets the server start pagination from this
+  // consumer's next undelivered sequence instead of the stream's first sequence.
+  dataConsumer = element.data('consumer');
 }
 
 function displayHeader(response, displayPageNumberEl, pageSize) {
@@ -389,7 +394,8 @@ function displayTable(nextOrPrev) {
     'page': pageNumber,
     'type': dataType,
     'name': dataName,
-    'key': dataKey
+    'key': dataKey,
+    'consumerName': dataConsumer
   };
   ajaxRequest(getAbsoluteUrl(dataPageUrl), 'POST', data,
       function (response) {

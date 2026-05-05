@@ -58,7 +58,7 @@ public interface RqueueQDetailService {
   List<NavTab> getNavTabs(QueueConfig queueConfig);
 
   DataViewResponse getExplorePageData(
-      String src, String name, DataType type, int pageNumber, int itemPerPage);
+      String src, String name, DataType type, String consumerName, int pageNumber, int itemPerPage);
 
   DataViewResponse viewData(
       String name, DataType type, String key, int pageNumber, int itemPerPage);
@@ -74,7 +74,7 @@ public interface RqueueQDetailService {
   List<RqueueWorkerPollerView> getQueueWorkers(String queueName);
 
   Mono<DataViewResponse> getReactiveExplorePageData(
-      String src, String name, DataType type, int pageNumber, int itemPerPage);
+      String src, String name, DataType type, String consumerName, int pageNumber, int itemPerPage);
 
   Mono<DataViewResponse> viewReactiveData(
       String name, DataType type, String key, int pageNumber, int itemPerPage);

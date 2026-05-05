@@ -119,6 +119,7 @@ public class ReactiveRqueueRestController extends BaseReactiveController {
           request.getSrc(),
           request.getName(),
           request.getType(),
+          request.getConsumerName(),
           request.getPageNumber(),
           request.getItemPerPage());
     }

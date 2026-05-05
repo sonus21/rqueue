@@ -111,6 +111,18 @@ public interface MessageBroker {
   List<RqueueMessage> peek(QueueDetail q, long offset, long count);
 
   /**
+   * Consumer-aware peek overload. When {@code consumerName} is non-null and the backend has
+   * per-consumer offsets (e.g. NATS Limits-retention streams), the implementation starts
+   * pagination from that consumer's next undelivered sequence so the dashboard shows messages
+   * still pending for that specific subscriber instead of the entire retained window. The
+   * default delegates to {@link #peek(QueueDetail, long, long)} for backends with a single
+   * shared pool.
+   */
+  default List<RqueueMessage> peek(QueueDetail q, String consumerName, long offset, long count) {
+    return peek(q, offset, count);
+  }
+
+  /**
    * Remove {@code old} from the processing store and re-enqueue {@code updated} for retry.
    * {@code delayMs <= 0} means immediate; {@code delayMs > 0} means schedule after that delay.
    * Backends without a processing store (e.g. NATS) default to a plain nack.
