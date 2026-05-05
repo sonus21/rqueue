@@ -106,8 +106,7 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
       String mainSubject = config.getSubjectPrefix() + q.getName();
       total += tryEnsure(failures, mainStream, mainSubject, q);
       if (!producerOnly) {
-        String consumerName = resolveConsumerName(q);
-        tryEnsureConsumer(failures, mainStream, consumerName, q, cd);
+        tryEnsureConsumer(failures, mainStream, q.resolvedConsumerName(), q, cd);
       }
 
       if (q.getPriority() != null) {
@@ -161,16 +160,6 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
         Level.INFO,
         "NatsStreamValidator: ensured {0} JetStream stream(s) across {1} queue(s)",
         new Object[] {total, queues.size()});
-  }
-
-  private String resolveConsumerName(QueueDetail q) {
-    String customName = q.getConsumerName();
-    if (q.getType() == com.github.sonus21.rqueue.enums.QueueType.QUEUE
-        && (customName == null || customName.isEmpty())) {
-      String sanitized = q.getName().replaceAll("[^A-Za-z0-9_-]", "-");
-      return sanitized + "-consumer";
-    }
-    return q.resolvedConsumerName();
   }
 
   private void tryEnsureConsumer(
