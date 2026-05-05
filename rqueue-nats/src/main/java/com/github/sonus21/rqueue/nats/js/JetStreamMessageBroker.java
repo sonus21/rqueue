@@ -675,16 +675,18 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   /**
    * Per-consumer subscriber view used by the queue-detail dashboard. Walks all durable
-   * consumers on the queue's stream and reports each one's outstanding work + in-flight counts.
+   * consumers on the queue's stream and reports each one's pending + in-flight counts as
+   * separate columns — same split as the Redis backend's processing ZSET vs ready LIST.
    *
-   * <p><b>Pending semantics.</b> {@code pending} represents <em>outstanding work</em> — every
-   * message this consumer has not yet completed (acked) — so the column matches what the
-   * explorer renders when the operator clicks on the row. For WorkQueue retention this is the
-   * stream's shared {@code msgCount} (every row shows the same number, marked
-   * {@code pendingShared = true}). For Limits retention it is per-consumer
-   * {@code numPending + numAckPending}: the messages still to be delivered plus those delivered
-   * but not yet acked. {@code inFlight} is always the consumer's exclusive {@code numAckPending}
-   * — a strict subset of {@code pending} for Limits, useful for spotting stuck handlers.
+   * <p><b>Pending semantics.</b> {@code pending} is yet-to-deliver work for this consumer.
+   * For WorkQueue retention this is the stream's shared {@code msgCount} (every row shows the
+   * same number, marked {@code pendingShared = true}); for Limits retention it is the
+   * consumer's exact {@code numPending}. {@code inFlight} is always the consumer's exclusive
+   * {@code numAckPending}: messages delivered but not yet acked. The two are disjoint —
+   * {@code pending} excludes anything currently in flight — so an operator reading the row
+   * sees the work split between "still to dispatch" and "currently being processed". Total
+   * outstanding work for the consumer is the sum of the two, which is what the explorer
+   * surfaces when the operator clicks the consumer link.
    *
    * <p>If consumer enumeration fails or the stream is unprovisioned, falls back to the
    * default single-row implementation so the dashboard still renders something useful.
@@ -711,11 +713,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
           if (ci == null) {
             continue;
           }
+          long pending = pendingIsShared ? sharedPending : ci.getNumPending();
           long inFlight = ci.getNumAckPending();
-          // Outstanding work: yet-to-deliver + delivered-but-unacked. Matches what the
-          // explorer pulls when the operator clicks the consumer link (peek bases on
-          // ackFloor + 1, which spans both buckets).
-          long pending = pendingIsShared ? sharedPending : ci.getNumPending() + inFlight;
           out.add(new com.github.sonus21.rqueue.core.spi.SubscriberView(
               consumer, pending, inFlight, pendingIsShared));
         } catch (IOException | JetStreamApiException ignore) {
