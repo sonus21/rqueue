@@ -569,7 +569,11 @@ function updateDeleteModal() {
 }
 
 function deleteMessage() {
-  let id = $($($($(this).parent()).parent()).children()[0]).text();
+  // The delete button is wrapped in <div.explorer-action-group> inside the <td> action cell,
+  // which is a direct child of the <tr>. Walk up: button → div → td → tr, then read the first
+  // cell (the message id). The earlier two-parent walk landed on the td and read "Delete"
+  // (the wrapping div's text) as the id.
+  let id = $($(this).closest('tr').children()[0]).text().trim();
   let payload = {
     "queue": queueName,
     "message_id": id,
@@ -588,11 +592,11 @@ function deleteMessage() {
 }
 
 function enqueueMessage() {
-  enqueueMessageAtPosition($($(this).parent()).parent(), 'FRONT');
+  enqueueMessageAtPosition($(this).closest('tr'), 'FRONT');
 }
 
 function enqueueRearMessage() {
-  enqueueMessageAtPosition($($(this).parent()).parent(), 'REAR');
+  enqueueMessageAtPosition($(this).closest('tr'), 'REAR');
 }
 
 function enqueueMessageAtPosition(rowEl, position) {

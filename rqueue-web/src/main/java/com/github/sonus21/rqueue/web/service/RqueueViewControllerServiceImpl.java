@@ -18,6 +18,8 @@ package com.github.sonus21.rqueue.web.service;
 
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.spi.Capabilities;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.models.Pair;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
@@ -52,6 +54,13 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
   private final RqueueUtilityService rqueueUtilityService;
   private final RqueueSystemManagerService rqueueSystemManagerService;
 
+  /**
+   * Optional broker SPI. When set (non-Redis backend), {@link #addBasicDetails(Model, String)}
+   * propagates {@link Capabilities} flags to every view template so the navigation, charts, and
+   * other panels can hide unsupported sections globally.
+   */
+  private MessageBroker messageBroker;
+
   @Autowired
   public RqueueViewControllerServiceImpl(
       RqueueConfig rqueueConfig,
@@ -66,11 +75,24 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     this.rqueueSystemManagerService = rqueueSystemManagerService;
   }
 
+  @Autowired(required = false)
+  public void setMessageBroker(MessageBroker messageBroker) {
+    this.messageBroker = messageBroker;
+  }
+
   private void addNavData(Model model, NavTab tab) {
     for (NavTab navTab : NavTab.values()) {
       String name = navTab.name().toLowerCase() + "Active";
       model.addAttribute(name, tab == navTab);
     }
+  }
+
+  /**
+   * Resolved capabilities for the active broker. Defaults to {@link Capabilities#REDIS_DEFAULTS}
+   * (everything supported) so the legacy no-broker path keeps the historical UI.
+   */
+  private Capabilities capabilities() {
+    return messageBroker != null ? messageBroker.capabilities() : Capabilities.REDIS_DEFAULTS;
   }
 
   private void addBasicDetails(Model model, String xForwardedPrefix) {
@@ -81,6 +103,18 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("timeInMilli", System.currentTimeMillis());
     model.addAttribute("version", rqueueConfig.getLibVersion());
     model.addAttribute("urlPrefix", rqueueWebConfig.getUrlPrefix(xForwardedPrefix));
+    // Capability-driven UI hide flags. Templates default to "show" when these are absent /
+    // false, matching the historical Redis behavior.
+    Capabilities caps = capabilities();
+    model.addAttribute("hideScheduledPanel", !caps.supportsScheduledIntrospection());
+    model.addAttribute("hideRunningPanel", !caps.usesPrimaryHandlerDispatch());
+    model.addAttribute("hideCronJobs", !caps.supportsCronJobs());
+    // Charts (stats / latency) require time-series counters. Brokers without scheduled
+    // introspection (e.g. NATS) don't track them; hide the chart panels rather than render
+    // an empty Google Charts canvas.
+    model.addAttribute("hideCharts", !caps.supportsScheduledIntrospection());
+    model.addAttribute("storageKicker", rqueueQDetailService.storageKicker());
+    model.addAttribute("storageDescription", rqueueQDetailService.storageDescription());
   }
 
   @Override

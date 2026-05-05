@@ -172,10 +172,14 @@
   </div>
 </div>
 {% endif %}
+{# Charts depend on time-series counters which brokers like NATS JetStream don't track.
+   Hide them when the active broker reports the unsupported capability. #}
+{% if not hideCharts %}
 <hr/>
 {% include 'stats_chart' %}
 <hr/>
 {% include 'latency_chart' %}
+{% endif %}
 
 {% include 'data_explorer_modal' %}
 {% endblock %}
@@ -184,9 +188,12 @@
 <script type="application/javascript">
   queueName = "{{queueName}}"
   dataPageUrl = "rqueue/api/v1/queue-data";
+  {% if not hideCharts %}
   var chartParams = {"queue": queueName, "type": "STATS", 'aggregationType': 'DAILY'};
   var latencyChartParams = {"queue": queueName, "type": "LATENCY", 'aggregationType': 'DAILY'};
+  {% endif %}
   $(document).ready(function () {
+    {% if not hideCharts %}
     drawChart(chartParams, "stats_chart");
     drawChart(latencyChartParams, "latency_chart");
     $('#refresh-chart').click(function () {
@@ -197,6 +204,7 @@
       refreshLatencyChart(latencyChartParams, "latency_chart");
     });
     attachChartEventListeners();
+    {% endif %}
     $('#explore-queue').on('shown.bs.modal', function () {
       $('#explorer-title').empty().append("Queue:").append("<b>&nbsp;" + queueName + "</b>").append(
           "&nbsp;[" + dataType + "]").append("<b>&nbsp;" + dataName + "</b>");

@@ -53,12 +53,17 @@
             <span>Workers</span>
           </a>
         </li>
+        {# Hidden when the active broker reports !usesPrimaryHandlerDispatch (e.g. JetStream
+           durable consumers manage in-flight tracking internally — there is no separate
+           processing ZSET to inspect). Defaults to visible for the Redis backend. #}
+        {% if not hideRunningPanel %}
         <li class="{% if runningActive %}active{% endif %}">
           <a href="{{urlPrefix}}rqueue/running">
             <i class='bx bx-sync'></i>
             <span>Running</span>
           </a>
         </li>
+        {% endif %}
         {# Hidden when the active broker reports !supportsScheduledIntrospection (e.g. JetStream).
            Defaults to visible (hideScheduledPanel == null/false) for the Redis backend. #}
         {% if not hideScheduledPanel %}

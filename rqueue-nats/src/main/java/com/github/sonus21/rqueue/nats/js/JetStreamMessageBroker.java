@@ -38,6 +38,7 @@ import io.nats.client.impl.Headers;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -511,44 +512,49 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   @Override
   public List<RqueueMessage> peek(QueueDetail q, long offset, long count) {
     String stream = streamFor(q);
-    String subject = subjectFor(q);
-    JetStreamSubscription sub = null;
+    if (count <= 0) {
+      return Collections.emptyList();
+    }
     try {
-      ConsumerConfiguration.Builder cb = ConsumerConfiguration.builder()
-          .ackPolicy(AckPolicy.None)
-          .filterSubject(subject)
-          .name("rqueue-js-peek-" + UUID.randomUUID());
-      if (offset > 0) {
-        cb.deliverPolicy(DeliverPolicy.ByStartSequence).startSequence(Math.max(1L, offset));
-      } else {
-        cb.deliverPolicy(DeliverPolicy.All);
+      // Read messages directly from the stream by sequence number via the JetStream
+      // Management API. This avoids creating any consumer, which sidesteps two NATS 2.12+
+      // restrictions on WorkQueue-retention streams:
+      //   1. Pull consumers require AckPolicy.Explicit (error 10084).
+      //   2. Multiple consumers on a WorkQueue stream must be mutually exclusive via
+      //      filter subjects (error 10100) — incompatible with the always-on durable
+      //      consumer that the listener container uses.
+      // Reading by sequence is purely non-destructive and works regardless of retention
+      // policy or what other consumers exist on the stream.
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      long firstSeq = info.getStreamState().getFirstSequence();
+      long lastSeq = info.getStreamState().getLastSequence();
+      if (lastSeq < firstSeq) {
+        return Collections.emptyList();
       }
-      PullSubscribeOptions opts = PullSubscribeOptions.builder().stream(stream)
-          .configuration(cb.build())
-          .build();
-      sub = js.subscribe(subject, opts);
-      int n = (int) Math.min(Integer.MAX_VALUE, Math.max(0L, count));
-      List<Message> msgs = sub.fetch(n, Duration.ofSeconds(2));
-      List<RqueueMessage> out = new ArrayList<>(msgs.size());
-      for (Message nm : msgs) {
+      long startSeq = Math.max(firstSeq, firstSeq + Math.max(0L, offset));
+      long endSeq = Math.min(lastSeq, startSeq + count - 1);
+      List<RqueueMessage> out = new ArrayList<>();
+      for (long seq = startSeq; seq <= endSeq && out.size() < count; seq++) {
         try {
-          out.add(serdes.deserialize(nm.getData(), RqueueMessage.class));
-        } catch (Exception e) {
-          log.log(Level.WARNING, "peek: skipping undeserializable message", e);
+          io.nats.client.api.MessageInfo mi = jsm.getMessage(stream, seq);
+          if (mi == null || mi.getData() == null) {
+            continue;
+          }
+          out.add(serdes.deserialize(mi.getData(), RqueueMessage.class));
+        } catch (JetStreamApiException notFound) {
+          // Sequence may have been purged or skipped (e.g. WorkQueue acks); keep walking.
+          log.log(
+              Level.FINE,
+              "peek: skipping missing seq=" + seq + " on stream=" + stream,
+              notFound);
+        } catch (Exception deserErr) {
+          log.log(Level.WARNING, "peek: skipping undeserializable seq=" + seq, deserErr);
         }
       }
       return out;
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
           "Failed to peek queue=" + q.getName() + " offset=" + offset + " count=" + count, e);
-    } finally {
-      if (sub != null) {
-        try {
-          sub.unsubscribe();
-        } catch (RuntimeException ignored) {
-          // ephemeral consumer is auto-reaped server-side; ignore
-        }
-      }
     }
   }
 
