@@ -154,9 +154,16 @@ Then re-run:
 ./gradlew :rqueue-spring-boot-starter:test --tests "com.github.sonus21.rqueue.spring.boot.integration.NatsBackendEndToEndIT"
 ```
 
-### Web-layer NATS dashboard gap (new follow-up)
+### Web-layer NATS dashboard gap (new follow-up)  *(PARTIAL — admin write ops landing)*
 
-All 4 controllers and the 5 web service impls (`RqueueDashboardChartService*`, `RqueueQDetailService*`, `RqueueJobService*`, `RqueueSystemManagerService*`, `RqueueUtilityService*`) are still gated `@Conditional(RedisBackendCondition)`. On NATS the dashboard reports broker-derived sizes only; no charts, no message browse, no admin ops. Plan to fix:
+All 4 controllers and the 5 web service impls (`RqueueDashboardChartService*`, `RqueueQDetailService*`, `RqueueJobService*`, `RqueueSystemManagerService*`, `RqueueUtilityService*`) are still gated `@Conditional(RedisBackendCondition)`. On NATS the dashboard reports broker-derived sizes only; no charts, no message browse, no admin ops.
+
+Status:
+- ✅ `NatsRqueueUtilityService` (rqueue-nats `@Conditional(NatsBackendCondition)`) replaces the all-stub impl: `pauseUnpauseQueue`, soft `deleteMessage`, `getDataType`, `aggregateDataCounter` work end-to-end. `moveMessage` / `enqueueMessage` / `makeEmpty` are deliberately `notSupported` (no JetStream equivalent).
+- ✅ `RqueueQDetailServiceImpl` returns header-only tables for `getRunningTasks` / `getScheduledTasks` when the broker capabilities suppress those sections, instead of rendering 0-rows / 501s.
+- ⏳ Charts (`RqueueDashboardChartService`), message browse, and `moveMessage` on NATS — still pending.
+
+Plan to fix the rest:
 
 1. Introduce repository interfaces in `rqueue-core/repository/` for the few storage primitives the web services share (queue browsing, time-series counters, atomic move). Web service impls move into core / `rqueue-web` and depend only on the repos.
 2. Redis impls of the repos stay in `rqueue-redis`; NATS impls go in `rqueue-nats` and throw `BackendCapabilityException("nats", "operation", "reason")` for primitives JetStream can't model (positional message moves, time-bucket charts).

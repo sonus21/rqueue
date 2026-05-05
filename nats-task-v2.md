@@ -8,18 +8,21 @@ All v1 items are done and 360 unit tests pass. Branch `nats-backend` is ready to
 
 ## v2 pending items
 
-### 1. Web dashboard — NATS gaps
+### 1. Web dashboard — NATS gaps  *(IN PROGRESS — pause/delete/explore landed)*
 
 Controllers are no longer Redis-gated but several operations throw `BackendCapabilityException` (HTTP 501) on NATS. The front-end should hide unsupported panels proactively instead of relying on 501s.
 
-- Expose `GET /rqueue/api/capabilities` returning the `Capabilities` record so the UI can conditionally hide panels.
-- Extend `Capabilities` with dashboard-op flags: `supportsCharts`, `supportsMessageBrowse`, `supportsAdminMove`.
-- Wire the flags into Pebble templates (scheduled panel, cron jobs panel, chart panel already have `hideScheduledPanel` / `hideCronJobs` hooks in `DataViewResponse`).
+- ✅ `GET /rqueue/api/capabilities` already returns the `Capabilities` record so the UI can conditionally hide panels.
+- ✅ `RqueueQDetailServiceImpl.getRunningTasks()` / `getScheduledTasks()` now return header-only tables on NATS instead of zero rows / 501s. Pending queue browsing routes through `MessageBroker.peek()`.
+- ✅ `NatsRqueueUtilityService` implements `pauseUnpauseQueue` (persists flag + notifies local `RqueueMessageListenerContainer`), soft `deleteMessage` (KV metadata flag), `getDataType` (returns `"STREAM"`), `aggregateDataCounter`. 20 unit tests cover the path.
+- ⏳ Pause-event multi-instance fan-out: `RqueueInternalPubSubChannel` is Redis-only. NATS bridge follow-up: subscribe to `rqueue.internal.<broker>` via `MessageBroker.subscribe/publish` and rebroadcast pause requests across worker JVMs.
+- ⏳ Extend `Capabilities` with dashboard-op flags: `supportsCharts`, `supportsMessageBrowse`, `supportsAdminMove` (not yet — current flags suffice for the panels we hide today).
+- ⏳ Pebble templates: `hideScheduledPanel` / `hideCronJobs` already wired into `DataViewResponse`. Front-end hides those panels; chart and message-browse hides still TBD.
 
 Affected services that throw on NATS today:
-- `RqueueDashboardChartServiceImpl` — time-series charts (no equivalent in JetStream)
-- `RqueueUtilityServiceImpl` — move/enqueue admin ops
-- `NatsMessageBrowsingRepository.viewData` — positional message browse
+- `RqueueDashboardChartServiceImpl` — time-series charts (no equivalent in JetStream) — still pending
+- `RqueueUtilityServiceImpl` — move/enqueue admin ops — `moveMessage`, `enqueueMessage`, `makeEmpty` deliberately remain `notSupported` (no JetStream primitive); `pauseUnpauseQueue` and `deleteMessage` now implemented
+- `NatsMessageBrowsingRepository.viewData` — positional message browse (Redis-only by design)
 
 ### 2. Reactive listener container
 

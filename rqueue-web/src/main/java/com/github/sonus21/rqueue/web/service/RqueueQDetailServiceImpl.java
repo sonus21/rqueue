@@ -465,6 +465,12 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getRunningTasks() {
+    // Brokers that manage in-flight tracking internally (e.g. NATS JetStream durable consumers)
+    // have no separate processing ZSET to report on. Surface an empty table with just the header
+    // row so the home dashboard shows the section but doesn't render a column of zeros.
+    if (brokerHidesRunning()) {
+      return emptyTable("Processing");
+    }
     return bulkSizeTable(
         rqueueSystemManagerService.getSortedQueueConfigs(),
         QueueConfig::getProcessingQueueName,
@@ -483,11 +489,27 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getScheduledTasks() {
+    // Brokers without scheduled-queue introspection (e.g. NATS JetStream) have no scheduled ZSET.
+    // Return an empty table so the home dashboard doesn't query an absent data structure.
+    if (brokerHidesScheduled()) {
+      return emptyTable("Scheduled");
+    }
     return bulkSizeTable(
         rqueueSystemManagerService.getSortedQueueConfigs(),
         QueueConfig::getScheduledQueueName,
         DataType.ZSET,
         "Scheduled [ZSET]");
+  }
+
+  /**
+   * Header-only table used when a broker capability suppresses an entire section (e.g.
+   * NATS hiding the running / scheduled rows). The frontend renders the column header and
+   * no body rows.
+   */
+  private List<List<Object>> emptyTable(String section) {
+    List<List<Object>> rows = new ArrayList<>();
+    rows.add(Arrays.asList("Queue", section, "Number of Messages"));
+    return rows;
   }
 
   /**
