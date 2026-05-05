@@ -176,9 +176,8 @@ public class RedisMessageBroker implements MessageBroker {
     java.util.List<com.github.sonus21.rqueue.core.spi.SubscriberView> out =
         new java.util.ArrayList<>(registered.size());
     for (QueueDetail qd : registered) {
-      out.add(
-          new com.github.sonus21.rqueue.core.spi.SubscriberView(
-              qd.resolvedConsumerName(), sharedPending, sharedInFlight, true));
+      out.add(new com.github.sonus21.rqueue.core.spi.SubscriberView(
+          qd.resolvedConsumerName(), sharedPending, sharedInFlight, true));
     }
     return out;
   }

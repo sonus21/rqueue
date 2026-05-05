@@ -1947,460 +1947,431 @@ section {
   cursor: pointer;
 }
 
+
 /* ============================================================================
-   Queue Detail (post-redesign)
-   - Hero header with paused/live badge and stat chips
-   - Configuration metric strip
-   - Subscriber cards (one per @RqueueListener consumer)
-   - Terminal Storage cards (COMPLETED + DLQ)
-   - Charts collapsed by default behind a <details> disclosure
+   Queue Detail — compact, table-driven, action-first
    ========================================================================== */
 
-.queue-detail {
-  padding-bottom: 48px;
+.qd {
+  padding-bottom: 32px;
 }
 
-.queue-detail-hero .queue-hero-title {
+/* ----- Header --------------------------------------------------------------
+   Single horizontal bar: name + state pill + pause toggle, summary stats on
+   the right. Replaces the big hero so the data is visible without scrolling.
+*/
+.qd-header {
   align-items: center;
+  border-bottom: 1px solid #e0e3d4;
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
+  justify-content: space-between;
+  margin: 8px 0 16px;
+  padding-bottom: 12px;
 }
 
-.queue-detail-state {
+.qd-header-title {
   align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.qd-name {
+  color: #273126;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  word-break: break-word;
+}
+
+.qd-state {
+  align-items: center;
+  border-radius: 999px;
   display: inline-flex;
-  font-size: 13px;
-  gap: 6px;
-  letter-spacing: 0.08em;
-  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 4px;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
   text-transform: uppercase;
 }
 
-.queue-detail-state .bx {
-  font-size: 16px;
+.qd-state .bx {
+  font-size: 14px;
 }
 
-.queue-detail-hero-meta {
-  align-items: stretch;
+.qd-state-live {
+  background: #e7efdb;
+  color: #4a6b35;
 }
 
-/* ----- Configuration chip strip ----- */
-.queue-detail-config {
-  background: #ffffff;
+.qd-state-paused {
+  background: #fbe5d9;
+  color: #b45433;
+}
+
+/* Pause / play action button next to the state pill. Reuses the existing
+   .pause-queue-btn handler so a click POSTs to /pause-unpause-queue. */
+.qd-pause-btn {
+  align-items: center;
+  background: #f6f7ee;
+  border: 1px solid #d8dbcb;
+  border-radius: 8px;
+  color: #4a5d44;
+  cursor: pointer;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  width: 34px;
+}
+
+.qd-pause-btn:hover {
+  background: #eef0e3;
+  border-color: #b4bba0;
+  color: #2f3d2b;
+}
+
+.qd-pause-btn:focus-visible {
+  outline: 2px solid #6d8a52;
+  outline-offset: 2px;
+}
+
+.qd-pause-btn .pause-queue-btn {
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.qd-header-stats {
+  align-items: baseline;
+  color: #4a5d44;
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.qd-stat strong {
+  color: #273126;
+  font-size: 17px;
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+.qd-stat-sep {
+  color: #c0c5b0;
+  font-weight: 700;
+}
+
+/* ----- Configuration chip strip ------------------------------------------- */
+.qd-config {
+  background: #fbfbf6;
   border: 1px solid #e0e3d4;
-  border-radius: 18px;
-  box-shadow: 0 4px 14px rgba(31, 47, 27, 0.04);
-  margin: 24px 0 32px;
-  padding: 22px 26px;
-}
-
-.queue-detail-config-row {
+  border-radius: 10px;
   display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin-bottom: 20px;
+  padding: 12px 16px;
 }
 
-.queue-detail-metric {
+.qd-config-cell {
+  border-right: 1px dashed #e3e7d8;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
+  padding: 4px 12px 4px 0;
 }
 
-.queue-detail-metric-label {
+.qd-config-cell:last-child {
+  border-right: none;
+}
+
+.qd-config-cell-meta .qd-config-value {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.qd-config-label {
   align-items: center;
   color: #6d7561;
   display: inline-flex;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  gap: 6px;
-  letter-spacing: 0.1em;
+  gap: 4px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.queue-detail-metric-label .bx {
-  font-size: 16px;
+.qd-config-label .bx {
+  font-size: 14px;
 }
 
-.queue-detail-metric-value {
+.qd-config-value {
   color: #273126;
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
 }
 
-.queue-detail-metric-value .bx {
+.qd-config-value .bx {
   vertical-align: middle;
 }
 
-.queue-detail-config-meta {
-  border-top: 1px dashed #e3e7d8;
-  color: #6d7561;
+/* ----- Section -------------------------------------------------------------
+   Tight section header (no kicker pill) and a table directly under it.
+*/
+.qd-section {
+  margin: 18px 0;
+}
+
+.qd-section-head {
+  align-items: baseline;
+  border-bottom: 1px solid #eef0e3;
   display: flex;
   flex-wrap: wrap;
-  font-size: 13px;
-  gap: 24px;
-  margin-top: 18px;
-  padding-top: 14px;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
 }
 
-.queue-detail-config-meta strong {
+.qd-section-title {
+  color: #273126;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.qd-count {
+  background: #f1f3e8;
+  border-radius: 999px;
+  color: #4a5d44;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 6px;
+  padding: 2px 8px;
+}
+
+.qd-section-hint {
+  color: #6d7561;
+  font-size: 12px;
+}
+
+.qd-empty {
+  background: #fbfbf6;
+  border: 1px dashed #d8dbcb;
+  border-radius: 8px;
+  color: #6d7561;
+  font-size: 13px;
+  padding: 16px;
+  text-align: center;
+}
+
+/* ----- Tables -------------------------------------------------------------- */
+.qd-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  width: 100%;
+}
+
+.qd-table thead th {
+  background: #f6f7ee;
+  border-bottom: 1px solid #d8dbcb;
+  border-top: 1px solid #d8dbcb;
+  color: #4a5d44;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 8px 10px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.qd-table thead th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.qd-table thead th:last-child {
+  border-top-right-radius: 8px;
+}
+
+.qd-table thead th.qd-num,
+.qd-table tbody td.qd-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.qd-table tbody td {
+  border-bottom: 1px solid #eef0e3;
+  color: #273126;
+  padding: 10px;
+  vertical-align: top;
+}
+
+.qd-table tbody tr:hover {
+  background: #fafbf3;
+}
+
+.qd-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+.qd-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+.qd-num strong {
+  color: #273126;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.qd-num .qd-muted {
+  display: inline-block;
+  margin-left: 4px;
+}
+
+.qd-link {
+  color: #4a5d44;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.qd-link:hover,
+.qd-link:focus {
+  color: #2f3d2b;
+  text-decoration: underline;
+}
+
+.qd-pill {
+  background: #f1f3e8;
+  border-radius: 999px;
+  color: #4a5d44;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.qd-code {
+  background: #f6f7ee;
+  border-radius: 4px;
+  color: #2f3d2b;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  padding: 1px 6px;
+  word-break: break-all;
+}
+
+.qd-muted {
+  color: #6d7561;
+  font-size: 11px;
+}
+
+/* Status badges (inline-table version of worker-status-*) */
+.qd-status {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.qd-status-active {
+  background: #d6e7c5;
+  color: #3e5a2c;
+}
+
+.qd-status-stale {
+  background: #f4e3c5;
+  color: #7a5a26;
+}
+
+.qd-status-paused {
+  background: #fbe5d9;
+  color: #b45433;
+}
+
+.qd-poll-time {
   color: #273126;
   font-weight: 600;
-  margin-right: 6px;
 }
 
-/* ----- Section spacing ----- */
-.queue-detail-section {
-  margin: 36px 0;
+/* Bucket label (Terminal Storage table) */
+.qd-bucket {
+  border-radius: 4px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  text-transform: uppercase;
 }
 
-.queue-detail-section .queue-section-header {
-  margin-bottom: 16px;
+.qd-bucket-completed {
+  background: #d6e7c5;
+  color: #3e5a2c;
 }
 
-.queue-detail-empty {
-  margin-top: 0;
+.qd-bucket-dead {
+  background: #fbe5d9;
+  color: #b45433;
 }
 
-/* ----- Subscriber cards ----- */
-.subscriber-grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
-.subscriber-card {
-  background: #ffffff;
+/* ----- Charts disclosure --------------------------------------------------- */
+.qd-charts {
+  background: #fbfbf6;
   border: 1px solid #e0e3d4;
-  border-radius: 18px;
-  box-shadow: 0 4px 14px rgba(31, 47, 27, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 22px;
-  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  border-radius: 10px;
+  margin-top: 20px;
 }
 
-.subscriber-card:hover {
-  box-shadow: 0 8px 22px rgba(31, 47, 27, 0.08);
-  transform: translateY(-1px);
-}
-
-.subscriber-card-head {
-  align-items: flex-start;
+.qd-charts-head {
+  align-items: baseline;
+  cursor: pointer;
   display: flex;
   gap: 12px;
   justify-content: space-between;
-}
-
-.subscriber-card-title-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.subscriber-card-kicker {
-  color: #6d7561;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.subscriber-card-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-  word-break: break-word;
-}
-
-.subscriber-card-title a {
-  color: #4a5d44;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-.subscriber-card-title a:hover,
-.subscriber-card-title a:focus {
-  color: #2f3d2b;
-  text-decoration: underline;
-}
-
-.subscriber-card-type {
-  background: #f1f3e8;
-  border-radius: 999px;
-  color: #4a5d44;
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  margin-top: 4px;
-  padding: 3px 10px;
-  text-transform: uppercase;
-  width: fit-content;
-}
-
-.subscriber-stat-row {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: 1fr 1fr;
-}
-
-.subscriber-stat {
-  background: linear-gradient(180deg, #f6f7ee 0%, #f0f2e2 100%);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
-}
-
-.subscriber-stat-label {
-  color: #6d7561;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.subscriber-stat-value {
-  color: #273126;
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.subscriber-stat-hint {
-  color: #6d7561;
-  font-size: 11px;
-  font-style: italic;
-}
-
-.subscriber-meta {
-  border-top: 1px dashed #e3e7d8;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding-top: 12px;
-}
-
-.subscriber-meta-row {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: 90px 1fr;
-}
-
-.subscriber-meta-row dt {
-  color: #6d7561;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.subscriber-meta-row dd {
-  color: #273126;
-  font-size: 13px;
-  margin: 0;
-  word-break: break-word;
-}
-
-.subscriber-meta-row dd code {
-  background: #f6f7ee;
-  border-radius: 6px;
-  color: #2f3d2b;
-  display: inline-block;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 12px;
-  padding: 2px 6px;
-}
-
-.subscriber-meta-row dd small.text-muted {
-  color: #6d7561 !important;
-  display: block;
-  font-size: 11px;
-  margin-top: 2px;
-}
-
-/* ----- Terminal storage cards ----- */
-.terminal-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-
-.terminal-card {
-  background: #ffffff;
-  border: 1px solid #e0e3d4;
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(31, 47, 27, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 20px;
-  position: relative;
-}
-
-.terminal-card-completed {
-  border-left: 4px solid #6d8a52;
-}
-
-.terminal-card-dead {
-  border-left: 4px solid #c97a4f;
-}
-
-.terminal-card-head {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.terminal-card-kicker {
-  color: #6d7561;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.terminal-card-title {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 0;
-  word-break: break-word;
-}
-
-.terminal-card-title a {
-  color: #4a5d44;
-  text-decoration: none;
-}
-
-.terminal-card-title a:hover,
-.terminal-card-title a:focus {
-  color: #2f3d2b;
-  text-decoration: underline;
-}
-
-.terminal-card-type {
-  background: #f1f3e8;
-  border-radius: 999px;
-  color: #4a5d44;
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  margin-top: 4px;
-  padding: 3px 10px;
-  text-transform: uppercase;
-  width: fit-content;
-}
-
-.terminal-card-size {
-  align-items: baseline;
-  display: flex;
-  gap: 6px;
-}
-
-.terminal-card-size-value {
-  color: #273126;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.terminal-card-approx {
-  color: #6d7561;
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.terminal-card-size-label {
-  color: #6d7561;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-/* ----- Charts disclosure ----- */
-.queue-detail-charts {
-  background: #ffffff;
-  border: 1px solid #e0e3d4;
-  border-radius: 18px;
-  box-shadow: 0 4px 14px rgba(31, 47, 27, 0.04);
-  margin-top: 36px;
-  padding: 0;
-}
-
-.queue-detail-charts-summary {
-  align-items: center;
-  cursor: pointer;
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
   list-style: none;
-  padding: 22px 26px;
+  padding: 12px 16px;
 }
 
-.queue-detail-charts-summary::-webkit-details-marker {
+.qd-charts-head::-webkit-details-marker {
   display: none;
 }
 
-.queue-detail-charts-summary > div .queue-section-title {
-  margin-top: 4px;
+.qd-charts[open] .qd-charts-head {
+  border-bottom: 1px solid #eef0e3;
 }
 
-.queue-detail-charts-toggle {
-  height: 16px;
-  position: relative;
-  width: 16px;
-}
-
-.queue-detail-charts-toggle::before,
-.queue-detail-charts-toggle::after {
-  background: #4a5d44;
-  border-radius: 1px;
-  content: "";
-  position: absolute;
-  transition: transform 0.18s ease;
-}
-
-.queue-detail-charts-toggle::before {
-  height: 2px;
-  left: 0;
-  top: 7px;
-  width: 16px;
-}
-
-.queue-detail-charts-toggle::after {
-  height: 16px;
-  left: 7px;
-  top: 0;
-  width: 2px;
-}
-
-.queue-detail-charts[open] .queue-detail-charts-toggle::after {
-  transform: rotate(90deg);
-}
-
-.queue-detail-charts-body {
-  border-top: 1px solid #eef0e3;
-  padding: 22px 26px;
+.qd-charts-body {
+  padding: 16px;
 }
 
 @media (max-width: 720px) {
-  .subscriber-card-head {
-    flex-direction: column;
-  }
-  .queue-detail-charts-summary {
+  .qd-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  .subscriber-meta-row {
-    grid-template-columns: 1fr;
-    gap: 2px;
+  .qd-config-cell {
+    border-right: none;
+    border-bottom: 1px dashed #e3e7d8;
+    padding: 6px 0;
+  }
+  .qd-config-cell:last-child {
+    border-bottom: none;
+  }
+  .qd-table {
+    font-size: 12px;
   }
 }

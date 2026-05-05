@@ -12,8 +12,8 @@ package com.github.sonus21.rqueue.nats.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -64,8 +64,8 @@ class NatsRqueueUtilityServiceTest {
     systemConfigDao = Mockito.mock(RqueueSystemConfigDao.class);
     metadataService = Mockito.mock(RqueueMessageMetadataService.class);
     listenerContainer = Mockito.mock(RqueueMessageListenerContainer.class);
-    service =
-        new NatsRqueueUtilityService(webConfig, systemConfigDao, metadataService, listenerContainer);
+    service = new NatsRqueueUtilityService(
+        webConfig, systemConfigDao, metadataService, listenerContainer);
   }
 
   // --- deleteMessage --------------------------------------------------------
@@ -110,7 +110,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void pauseUnpauseQueue_persistsFlagAndNotifiesListener() {
-    QueueConfig config = QueueConfig.builder().name("q").queueName("q").paused(false).build();
+    QueueConfig config =
+        QueueConfig.builder().name("q").queueName("q").paused(false).build();
     when(systemConfigDao.getConfigByName("q", true)).thenReturn(config);
     PauseUnpauseQueueRequest request = new PauseUnpauseQueueRequest();
     request.setName("q");
@@ -127,7 +128,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void pauseUnpauseQueue_unpause_propagatesFalse() {
-    QueueConfig config = QueueConfig.builder().name("q").queueName("q").paused(true).build();
+    QueueConfig config =
+        QueueConfig.builder().name("q").queueName("q").paused(true).build();
     when(systemConfigDao.getConfigByName("q", true)).thenReturn(config);
     PauseUnpauseQueueRequest request = new PauseUnpauseQueueRequest();
     request.setName("q");
@@ -155,7 +157,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void pauseUnpauseQueue_alreadyInTargetState_isNoOp() {
-    QueueConfig config = QueueConfig.builder().name("q").queueName("q").paused(true).build();
+    QueueConfig config =
+        QueueConfig.builder().name("q").queueName("q").paused(true).build();
     when(systemConfigDao.getConfigByName("q", true)).thenReturn(config);
     PauseUnpauseQueueRequest request = new PauseUnpauseQueueRequest();
     request.setName("q");
@@ -182,7 +185,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void pauseUnpauseQueue_listenerThrows_persistsButReports500() {
-    QueueConfig config = QueueConfig.builder().name("q").queueName("q").paused(false).build();
+    QueueConfig config =
+        QueueConfig.builder().name("q").queueName("q").paused(false).build();
     when(systemConfigDao.getConfigByName("q", true)).thenReturn(config);
     Mockito.doThrow(new RuntimeException("listener offline"))
         .when(listenerContainer)
@@ -261,7 +265,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void reactivePauseUnpauseQueue_delegatesToSync() {
-    QueueConfig config = QueueConfig.builder().name("q").queueName("q").paused(false).build();
+    QueueConfig config =
+        QueueConfig.builder().name("q").queueName("q").paused(false).build();
     when(systemConfigDao.getConfigByName("q", true)).thenReturn(config);
     PauseUnpauseQueueRequest request = new PauseUnpauseQueueRequest();
     request.setName("q");

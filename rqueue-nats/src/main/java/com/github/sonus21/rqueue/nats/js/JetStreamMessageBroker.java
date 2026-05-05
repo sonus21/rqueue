@@ -31,9 +31,6 @@ import io.nats.client.JetStreamManagement;
 import io.nats.client.JetStreamSubscription;
 import io.nats.client.Message;
 import io.nats.client.PullSubscribeOptions;
-import io.nats.client.api.AckPolicy;
-import io.nats.client.api.ConsumerConfiguration;
-import io.nats.client.api.DeliverPolicy;
 import io.nats.client.impl.Headers;
 import java.io.IOException;
 import java.time.Duration;
@@ -41,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -544,9 +540,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         } catch (JetStreamApiException notFound) {
           // Sequence may have been purged or skipped (e.g. WorkQueue acks); keep walking.
           log.log(
-              Level.FINE,
-              "peek: skipping missing seq=" + seq + " on stream=" + stream,
-              notFound);
+              Level.FINE, "peek: skipping missing seq=" + seq + " on stream=" + stream, notFound);
         } catch (Exception deserErr) {
           log.log(Level.WARNING, "peek: skipping undeserializable seq=" + seq, deserErr);
         }
@@ -588,8 +582,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    * Returns {@code msgCount} as a fallback when no consumers exist or the enumeration
    * fails, so the dashboard never misses a non-zero queue.
    */
-  private long approximateLimitsPending(
-      String stream, io.nats.client.api.StreamInfo info) {
+  private long approximateLimitsPending(String stream, io.nats.client.api.StreamInfo info) {
     long lastSeq = info.getStreamState().getLastSequence();
     if (lastSeq <= 0) {
       return 0L;
@@ -676,9 +669,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
           }
           long pending = pendingIsShared ? sharedPending : ci.getNumPending();
           long inFlight = ci.getNumAckPending();
-          out.add(
-              new com.github.sonus21.rqueue.core.spi.SubscriberView(
-                  consumer, pending, inFlight, pendingIsShared));
+          out.add(new com.github.sonus21.rqueue.core.spi.SubscriberView(
+              consumer, pending, inFlight, pendingIsShared));
         } catch (IOException | JetStreamApiException ignore) {
           // best-effort; skip consumers that disappear mid-walk
         }

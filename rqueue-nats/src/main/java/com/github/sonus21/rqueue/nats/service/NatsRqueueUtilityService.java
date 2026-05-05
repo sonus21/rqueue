@@ -229,8 +229,7 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
     } catch (Exception e) {
       // QueueConfig is already persisted; surface the pause-propagation failure to the caller
       // but do not roll back — the next listener restart will pick up the persisted flag.
-      log.warn(
-          "pauseUnpauseQueue listener notification failed for queue={}", request.getName(), e);
+      log.warn("pauseUnpauseQueue listener notification failed for queue={}", request.getName(), e);
       response.set(500, "Persisted but listener notification failed: " + e.getMessage());
     }
     return response;

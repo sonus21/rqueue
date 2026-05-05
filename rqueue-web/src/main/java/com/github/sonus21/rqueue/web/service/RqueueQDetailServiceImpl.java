@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.core.spi.SubscriberView;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -35,7 +36,6 @@ import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.models.enums.TableColumnType;
 import com.github.sonus21.rqueue.models.registry.RqueueWorkerPollerView;
-import com.github.sonus21.rqueue.core.spi.SubscriberView;
 import com.github.sonus21.rqueue.models.response.Action;
 import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
@@ -227,8 +227,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     if (!brokerHidesScheduled()) {
       Long scheduled = messageBrowsingRepository.getDataSize(scheduledQueueName, DataType.ZSET);
       RedisDataDetail scheduledDetail =
-          new RedisDataDetail(
-              scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled);
+          new RedisDataDetail(scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled);
       scheduledDetail.setTypeLabel(brokerLabel(NavTab.SCHEDULED, DataType.ZSET));
       queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.SCHEDULED, scheduledDetail));
     }
@@ -259,9 +258,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
           brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
               ? messageBroker.storageDisplayName(brokerQueueDetail)
               : queueConfig.getCompletedQueueName();
-      RedisDataDetail completedDetail =
-          new RedisDataDetail(
-              completedDisplayName, DataType.ZSET, completed == null ? 0 : completed);
+      RedisDataDetail completedDetail = new RedisDataDetail(
+          completedDisplayName, DataType.ZSET, completed == null ? 0 : completed);
       completedDetail.setTypeLabel(brokerLabel(NavTab.COMPLETED, DataType.ZSET));
       queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.COMPLETED, completedDetail));
     }
@@ -706,13 +704,11 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     }
     // No active QueueDetail registered (producer-only or shutdown). Surface a single row so
     // the operator at least sees the queue's pending count from the repository fallback.
-    Long pending =
-        messageBrowsingRepository.getDataSize(queueConfig.getQueueName(), DataType.LIST);
+    Long pending = messageBrowsingRepository.getDataSize(queueConfig.getQueueName(), DataType.LIST);
     if (pending == null || pending <= 0) {
       return Collections.emptyList();
     }
-    return Collections.singletonList(
-        new SubscriberView(queueConfig.getName(), pending, 0L, true));
+    return Collections.singletonList(new SubscriberView(queueConfig.getName(), pending, 0L, true));
   }
 
   private Map<String, RqueueWorkerPollerView> indexWorkersByConsumer(String queueName) {
