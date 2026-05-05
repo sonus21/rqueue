@@ -79,9 +79,20 @@ public abstract class AbstractJetStreamIT {
   }
 
   protected QueueDetail mockQueue(String name, QueueType type) {
+    return mockQueue(name, type, null);
+  }
+
+  /**
+   * Build a mock QueueDetail whose {@code resolvedConsumerName()} returns the given consumer
+   * name. Used by tests that exercise multi-consumer flows where pop's {@code consumerName}
+   * argument must match what ack/nack derive from the QueueDetail.
+   */
+  protected QueueDetail mockQueue(String name, QueueType type, String consumerName) {
     QueueDetail q = mock(QueueDetail.class);
     when(q.getName()).thenReturn(name);
     when(q.getType()).thenReturn(type);
+    String resolved = consumerName != null ? consumerName : name + "-consumer";
+    when(q.resolvedConsumerName()).thenReturn(resolved);
     return q;
   }
 }

@@ -27,7 +27,8 @@ class JetStreamMessageBrokerCompetingConsumersIT extends AbstractJetStreamIT {
 
   @Test
   void twoWorkersSharingDurable_eachMessageDeliveredOnce() throws Exception {
-    QueueDetail q = mockQueue("ccq-" + System.nanoTime());
+    QueueDetail q = mockQueue(
+        "ccq-" + System.nanoTime(), com.github.sonus21.rqueue.enums.QueueType.QUEUE, "shared");
     int total = 20;
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
