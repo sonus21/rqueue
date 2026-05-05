@@ -78,9 +78,18 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   private final NatsProvisioner provisioner;
 
   /**
-   * keyed by RqueueMessage.id, value is the underlying NATS Message for ack/nak.
+   * keyed by {@code "<consumerName>::<RqueueMessage.id>"}, value is the underlying NATS
+   * Message for ack/nak. The consumer prefix is required for Limits-retention streams where
+   * multiple durable consumers each receive their own copy of every message — keying on
+   * just the message id would let one consumer's {@code put} overwrite another's, and the
+   * subsequent ack would target the wrong NATS Message handle (leaving the original delivery
+   * stuck in {@code numAckPending} until {@code AckWait} expires).
    */
   private final ConcurrentHashMap<String, Message> inFlight = new ConcurrentHashMap<>();
+
+  private static String inFlightKey(String consumerName, String messageId) {
+    return (consumerName == null ? "" : consumerName) + "::" + messageId;
+  }
 
   /**
    * Cached pull subscriptions keyed by stream + consumerName so we don't re-bind on every pop.
@@ -414,7 +423,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
           // defensive: metadata unavailable on non-JetStream messages
         }
         if (rm.getId() != null) {
-          inFlight.put(rm.getId(), nm);
+          inFlight.put(inFlightKey(consumerName, rm.getId()), nm);
         }
         out.add(rm);
       } catch (RuntimeException | IOException e) {
@@ -439,7 +448,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     if (m.getId() == null) {
       return false;
     }
-    Message nm = inFlight.remove(m.getId());
+    Message nm = inFlight.remove(inFlightKey(q.resolvedConsumerName(), m.getId()));
     if (nm == null) {
       return false;
     }
@@ -452,7 +461,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     if (m.getId() == null) {
       return false;
     }
-    Message nm = inFlight.remove(m.getId());
+    Message nm = inFlight.remove(inFlightKey(q.resolvedConsumerName(), m.getId()));
     if (nm == null) {
       return false;
     }
@@ -469,7 +478,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       long delayMs) {
     // Ack the original NATS message so it is removed from the source stream.
     if (old.getId() != null) {
-      Message nm = inFlight.remove(old.getId());
+      Message nm = inFlight.remove(inFlightKey(source.resolvedConsumerName(), old.getId()));
       if (nm != null) {
         nm.ack();
       }
