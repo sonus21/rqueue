@@ -111,6 +111,7 @@
         <th>Storage</th>
         <th class="qd-num">Pending</th>
         <th class="qd-num">In-Flight</th>
+        <th class="qd-num">Workers</th>
         <th>Status</th>
         <th>Host</th>
         <th>Last Poll</th>
@@ -136,6 +137,11 @@
           {% if sub.pendingShared %}<small class="qd-muted">shared</small>{% endif %}
         </td>
         <td class="qd-num"><strong>{{sub.inFlight}}</strong></td>
+        <td class="qd-num">
+          {% if sub.workerCount > 0 %}
+            <strong>{{sub.workerCount}}</strong>
+          {% else %}<span class="qd-muted">—</span>{% endif %}
+        </td>
         <td>
           {% if sub.status %}
           <span class="qd-status qd-status-{{ sub.status | lower }}">{{sub.status}}</span>

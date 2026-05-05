@@ -668,6 +668,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     String label = brokerLabel(NavTab.PENDING, DataType.LIST);
     Map<String, RqueueWorkerPollerView> workersByConsumer =
         indexWorkersByConsumer(queueConfig.getName());
+    Map<String, Integer> workerCountByConsumer = countWorkersByConsumer(queueConfig.getName());
     List<SubscriberRow> rows = new ArrayList<>(views.size());
     long now = System.currentTimeMillis();
     for (SubscriberView v : views) {
@@ -678,7 +679,8 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
           .dataType(DataType.LIST)
           .pending(v.pending())
           .pendingShared(v.pendingShared())
-          .inFlight(v.inFlight());
+          .inFlight(v.inFlight())
+          .workerCount(workerCountByConsumer.getOrDefault(v.consumerName(), 0));
       RqueueWorkerPollerView w = workersByConsumer.get(v.consumerName());
       if (w != null) {
         builder
@@ -693,6 +695,28 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       rows.add(builder.build());
     }
     return rows;
+  }
+
+  /**
+   * Count the live worker threads bucketed by {@code consumerName}. Mirrors the bucketing that
+   * {@link #indexWorkersByConsumer(String)} does but keeps the count instead of collapsing to
+   * the most-recently polling worker — surfaces the {@code @RqueueListener.concurrency} fanout
+   * separately from the row's representative worker (host / pid / lastPollAt).
+   */
+  private Map<String, Integer> countWorkersByConsumer(String queueName) {
+    List<RqueueWorkerPollerView> workers = rqueueWorkerRegistry.getQueueWorkers(queueName);
+    if (CollectionUtils.isEmpty(workers)) {
+      return Collections.emptyMap();
+    }
+    Map<String, Integer> out = new HashMap<>();
+    for (RqueueWorkerPollerView w : workers) {
+      String key = w.getConsumerName();
+      if (key == null || key.isEmpty()) {
+        continue;
+      }
+      out.merge(key, 1, Integer::sum);
+    }
+    return out;
   }
 
   private List<SubscriberView> brokerSubscribers(

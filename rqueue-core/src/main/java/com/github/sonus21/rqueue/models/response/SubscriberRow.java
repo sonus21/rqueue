@@ -73,6 +73,17 @@ public class SubscriberRow extends SerializableBase {
   /** Worker status: ACTIVE / STALE / UNKNOWN. */
   private String status;
 
+  /**
+   * Number of distinct {@code (JVM, consumer)} heartbeats currently active in the worker
+   * registry — i.e. how many polling worker instances are attached to this consumer across
+   * the cluster. The row's {@link #host}/{@link #pid}/{@link #lastPollAt} fields describe
+   * only the most-recently polling instance, so the dashboard surfaces the total count
+   * separately. Thread-level fanout from {@code @RqueueListener(concurrency = "10-20")}
+   * lives inside a single instance and is not reflected here — the registry tracks
+   * heartbeats per JVM, not per thread.
+   */
+  private int workerCount;
+
   /** Host running the active worker, when known. */
   private String host;
 

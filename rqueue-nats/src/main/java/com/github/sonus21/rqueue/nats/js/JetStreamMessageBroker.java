@@ -597,13 +597,14 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       io.nats.client.api.RetentionPolicy retention =
           info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
       // WorkQueue retention removes messages on ack, so streamState.msgCount is the exact
-      // count of messages still pending consumption — the natural "pending size" for queue
-      // mode. For Limits retention msgCount is the total retained messages regardless of
-      // consumer progress, so we compute the worst-case pending from stream position math:
-      //   pending ≈ lastSeq - min(consumer.delivered.streamSeq)
-      // which is the number of messages the slowest durable consumer has yet to receive.
-      // This is mathematically equivalent to max(consumer.numPending) but expressed via
-      // sequence offsets, which is what the user-facing "~ N" approximation reflects.
+      // count of outstanding work — the natural "pending size" for queue mode. For Limits
+      // retention msgCount is the total retained messages regardless of consumer progress,
+      // so we compute the worst-case outstanding work from stream position math:
+      //   outstanding ≈ lastSeq - min(consumer.ackFloor.streamSeq)
+      // which is the messages the slowest durable consumer has not yet acked. This matches
+      // the per-consumer pending semantic in subscribers() (numPending + numAckPending) so
+      // the queue-level "size" and the per-row pending counts agree on what "outstanding"
+      // means.
       if (retention == io.nats.client.api.RetentionPolicy.Limits) {
         return approximateLimitsPending(stream, info);
       }
@@ -614,10 +615,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   /**
-   * Position-based pending estimate for a Limits-retention stream:
-   * {@code lastSeq - min(consumer.delivered.streamSeq)} across all durable consumers.
-   * Returns {@code msgCount} as a fallback when no consumers exist or the enumeration
-   * fails, so the dashboard never misses a non-zero queue.
+   * Position-based outstanding-work estimate for a Limits-retention stream:
+   * {@code lastSeq - min(consumer.ackFloor.streamSeq)} across all durable consumers — i.e. the
+   * size of the unacked window for the slowest consumer (counts both yet-to-deliver and
+   * delivered-but-unacked messages). Returns {@code msgCount} as a fallback when no consumers
+   * exist or the enumeration fails, so the dashboard never misses a non-zero queue.
    */
   private long approximateLimitsPending(String stream, io.nats.client.api.StreamInfo info) {
     long lastSeq = info.getStreamState().getLastSequence();
@@ -627,29 +629,29 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     try {
       List<String> consumers = jsm.getConsumerNames(stream);
       if (consumers == null || consumers.isEmpty()) {
-        // No consumers attached: the entire retained range is "pending" from the perspective
+        // No consumers attached: the entire retained range is outstanding from the perspective
         // of any future consumer. Stream's msgCount is the right approximation.
         return info.getStreamState().getMsgCount();
       }
-      long minDelivered = Long.MAX_VALUE;
+      long minAckFloor = Long.MAX_VALUE;
       for (String consumer : consumers) {
         try {
           io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
-          if (ci == null || ci.getDelivered() == null) {
+          if (ci == null || ci.getAckFloor() == null) {
             continue;
           }
-          long delivered = ci.getDelivered().getStreamSequence();
-          if (delivered < minDelivered) {
-            minDelivered = delivered;
+          long ackFloor = ci.getAckFloor().getStreamSequence();
+          if (ackFloor < minAckFloor) {
+            minAckFloor = ackFloor;
           }
         } catch (IOException | JetStreamApiException ignore) {
           // best-effort; skip consumers that disappear mid-walk
         }
       }
-      if (minDelivered == Long.MAX_VALUE) {
+      if (minAckFloor == Long.MAX_VALUE) {
         return info.getStreamState().getMsgCount();
       }
-      return Math.max(0L, lastSeq - minDelivered);
+      return Math.max(0L, lastSeq - minAckFloor);
     } catch (IOException | JetStreamApiException ignore) {
       return info.getStreamState().getMsgCount();
     }
@@ -673,11 +675,16 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   /**
    * Per-consumer subscriber view used by the queue-detail dashboard. Walks all durable
-   * consumers on the queue's stream and reports each one's pending + in-flight counts.
-   * For WorkQueue retention {@code pending} is the shared {@code msgCount} (every row
-   * shows the same number, marked {@code pendingShared = true}); for Limits retention
-   * {@code pending} is the consumer's exact {@code numPending}. {@code inFlight} is
-   * always the consumer's exclusive {@code numAckPending}.
+   * consumers on the queue's stream and reports each one's outstanding work + in-flight counts.
+   *
+   * <p><b>Pending semantics.</b> {@code pending} represents <em>outstanding work</em> — every
+   * message this consumer has not yet completed (acked) — so the column matches what the
+   * explorer renders when the operator clicks on the row. For WorkQueue retention this is the
+   * stream's shared {@code msgCount} (every row shows the same number, marked
+   * {@code pendingShared = true}). For Limits retention it is per-consumer
+   * {@code numPending + numAckPending}: the messages still to be delivered plus those delivered
+   * but not yet acked. {@code inFlight} is always the consumer's exclusive {@code numAckPending}
+   * — a strict subset of {@code pending} for Limits, useful for spotting stuck handlers.
    *
    * <p>If consumer enumeration fails or the stream is unprovisioned, falls back to the
    * default single-row implementation so the dashboard still renders something useful.
@@ -704,8 +711,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
           if (ci == null) {
             continue;
           }
-          long pending = pendingIsShared ? sharedPending : ci.getNumPending();
           long inFlight = ci.getNumAckPending();
+          // Outstanding work: yet-to-deliver + delivered-but-unacked. Matches what the
+          // explorer pulls when the operator clicks the consumer link (peek bases on
+          // ackFloor + 1, which spans both buckets).
+          long pending = pendingIsShared ? sharedPending : ci.getNumPending() + inFlight;
           out.add(new com.github.sonus21.rqueue.core.spi.SubscriberView(
               consumer, pending, inFlight, pendingIsShared));
         } catch (IOException | JetStreamApiException ignore) {
