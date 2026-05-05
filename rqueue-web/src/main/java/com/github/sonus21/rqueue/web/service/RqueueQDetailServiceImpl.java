@@ -184,6 +184,9 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     RedisDataDetail pendingDetail =
         new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending);
     pendingDetail.setTypeLabel(brokerLabel(NavTab.PENDING, DataType.LIST));
+    if (brokerQueueDetail != null) {
+      pendingDetail.setApproximate(messageBroker.isSizeApproximate(brokerQueueDetail));
+    }
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails =
         newArrayList(new HashMap.SimpleEntry<>(NavTab.PENDING, pendingDetail));
     // Brokers that manage their own in-flight tracking (e.g. NATS JetStream) have no separate

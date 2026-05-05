@@ -98,6 +98,8 @@
         <td>
           {% if queueData.value.size < 0 %}
           Queue-backed
+          {% elseif queueData.value.approximate %}
+          ~ {{queueData.value.size}}
           {% else %}
           {{queueData.value.size}}
           {% endif %}

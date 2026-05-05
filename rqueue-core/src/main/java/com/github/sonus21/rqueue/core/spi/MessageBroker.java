@@ -199,6 +199,17 @@ public interface MessageBroker {
   }
 
   /**
+   * Indicates whether {@link #size(QueueDetail)} returns an exact count or an approximation
+   * for the given queue. Brokers that compute pending from per-consumer position math (e.g.
+   * NATS JetStream Limits-retention streams) return {@code true} so the dashboard renders
+   * the figure with a "~" prefix instead of presenting it as authoritative. Defaults to
+   * {@code false} (the historical Redis behavior — exact list / sorted-set lengths).
+   */
+  default boolean isSizeApproximate(QueueDetail q) {
+    return false;
+  }
+
+  /**
    * Backend-aware human-readable label for the given Redis-shaped {@code DataType} on the given
    * dashboard tab. Surfaces in the queue-detail page's "Data Type" column so NATS deployments
    * can show "Queue (Stream)" instead of "LIST".

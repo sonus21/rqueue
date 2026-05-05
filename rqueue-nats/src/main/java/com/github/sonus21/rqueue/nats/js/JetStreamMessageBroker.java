@@ -565,36 +565,79 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
       io.nats.client.api.RetentionPolicy retention =
           info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
-      // WorkQueue retention removes messages on ack, so streamState.msgCount equals the count
-      // of messages still pending consumption — the natural "pending size" for queue-mode use.
-      // For Limits retention, msgCount is the total messages currently stored regardless of
-      // consumer progress, so falling back to it would over-report. In that case, walk the
-      // stream's durable consumers and surface the maximum unacked-pending count, which best
-      // approximates "messages still to be processed by someone" for the dashboard.
+      // WorkQueue retention removes messages on ack, so streamState.msgCount is the exact
+      // count of messages still pending consumption — the natural "pending size" for queue
+      // mode. For Limits retention msgCount is the total retained messages regardless of
+      // consumer progress, so we compute the worst-case pending from stream position math:
+      //   pending ≈ lastSeq - min(consumer.delivered.streamSeq)
+      // which is the number of messages the slowest durable consumer has yet to receive.
+      // This is mathematically equivalent to max(consumer.numPending) but expressed via
+      // sequence offsets, which is what the user-facing "~ N" approximation reflects.
       if (retention == io.nats.client.api.RetentionPolicy.Limits) {
-        long maxPending = 0L;
-        try {
-          List<String> consumers = jsm.getConsumerNames(stream);
-          for (String consumer : consumers) {
-            try {
-              io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
-              if (ci != null && ci.getNumPending() > maxPending) {
-                maxPending = ci.getNumPending();
-              }
-            } catch (IOException | JetStreamApiException ignore) {
-              // best-effort; skip consumers that disappear mid-walk
-            }
-          }
-          return maxPending;
-        } catch (IOException | JetStreamApiException ignore) {
-          // Fallback to stream count if the consumer enumeration fails — better than throwing
-          // for a dashboard read.
-          return info.getStreamState().getMsgCount();
-        }
+        return approximateLimitsPending(stream, info);
       }
       return info.getStreamState().getMsgCount();
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException("Failed to read stream size for queue=" + q.getName(), e);
+    }
+  }
+
+  /**
+   * Position-based pending estimate for a Limits-retention stream:
+   * {@code lastSeq - min(consumer.delivered.streamSeq)} across all durable consumers.
+   * Returns {@code msgCount} as a fallback when no consumers exist or the enumeration
+   * fails, so the dashboard never misses a non-zero queue.
+   */
+  private long approximateLimitsPending(
+      String stream, io.nats.client.api.StreamInfo info) {
+    long lastSeq = info.getStreamState().getLastSequence();
+    if (lastSeq <= 0) {
+      return 0L;
+    }
+    try {
+      List<String> consumers = jsm.getConsumerNames(stream);
+      if (consumers == null || consumers.isEmpty()) {
+        // No consumers attached: the entire retained range is "pending" from the perspective
+        // of any future consumer. Stream's msgCount is the right approximation.
+        return info.getStreamState().getMsgCount();
+      }
+      long minDelivered = Long.MAX_VALUE;
+      for (String consumer : consumers) {
+        try {
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
+          if (ci == null || ci.getDelivered() == null) {
+            continue;
+          }
+          long delivered = ci.getDelivered().getStreamSequence();
+          if (delivered < minDelivered) {
+            minDelivered = delivered;
+          }
+        } catch (IOException | JetStreamApiException ignore) {
+          // best-effort; skip consumers that disappear mid-walk
+        }
+      }
+      if (minDelivered == Long.MAX_VALUE) {
+        return info.getStreamState().getMsgCount();
+      }
+      return Math.max(0L, lastSeq - minDelivered);
+    } catch (IOException | JetStreamApiException ignore) {
+      return info.getStreamState().getMsgCount();
+    }
+  }
+
+  /**
+   * Reports whether {@link #size(QueueDetail)} is an approximation. True for Limits-retention
+   * streams (per-consumer position math) and false for WorkQueue streams (msgCount is exact).
+   */
+  public boolean isSizeApproximate(QueueDetail q) {
+    String stream = streamFor(q);
+    try {
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      return retention == io.nats.client.api.RetentionPolicy.Limits;
+    } catch (IOException | JetStreamApiException e) {
+      return false;
     }
   }
 

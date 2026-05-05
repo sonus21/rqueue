@@ -45,7 +45,15 @@ public class RedisDataDetail extends SerializableBase {
    */
   private String typeLabel;
 
+  /**
+   * Indicates that {@link #size} is an approximation rather than an exact count. NATS
+   * Limits-retention streams compute pending size from {@code lastSeq - min(delivered.streamSeq)}
+   * across durable consumers, which is approximate when filter subjects or per-consumer
+   * positions diverge. Templates render the size with a {@code ~} prefix when this is set.
+   */
+  private boolean approximate;
+
   public RedisDataDetail(String name, DataType type, long size) {
-    this(name, type, size, null);
+    this(name, type, size, null, false);
   }
 }
