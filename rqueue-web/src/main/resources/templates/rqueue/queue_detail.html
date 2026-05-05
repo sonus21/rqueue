@@ -87,11 +87,13 @@
         <td>
           <a class="data-explorer" data-name="{{queueData.value.name}}" data-target="#explore-queue"
              data-toggle="modal"
-             data-type="{{queueData.value.type}}" href="#">
+             data-type="{{queueData.value.type}}"
+             data-type-label="{{ queueData.value.typeLabel | default(queueData.value.type) }}"
+             href="#">
             {{queueData.key.name}}
           </a>
         </td>
-        <td>{{queueData.value.type}}</td>
+        <td>{{ queueData.value.typeLabel | default(queueData.value.type) }}</td>
         <td>{{queueData.value.name}}</td>
         <td>
           {% if queueData.value.size < 0 %}
@@ -207,7 +209,7 @@
     {% endif %}
     $('#explore-queue').on('shown.bs.modal', function () {
       $('#explorer-title').empty().append("Queue:").append("<b>&nbsp;" + queueName + "</b>").append(
-          "&nbsp;[" + dataType + "]").append("<b>&nbsp;" + dataName + "</b>");
+          "&nbsp;[" + (dataTypeLabel || dataType) + "]").append("<b>&nbsp;" + dataName + "</b>");
       refreshPage();
     });
   });

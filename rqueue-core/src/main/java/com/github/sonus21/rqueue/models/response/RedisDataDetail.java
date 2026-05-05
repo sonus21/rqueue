@@ -37,4 +37,15 @@ public class RedisDataDetail extends SerializableBase {
   private String name;
   private DataType type;
   private long size;
+
+  /**
+   * Backend-aware human-readable label for the {@link #type}. The legacy templates surface
+   * this directly so deployments can display "Queue" / "Stream" on NATS instead of Redis-shaped
+   * "LIST" / "ZSET" tokens. When unset, templates default to {@code type.name()}.
+   */
+  private String typeLabel;
+
+  public RedisDataDetail(String name, DataType type, long size) {
+    this(name, type, size, null);
+  }
 }

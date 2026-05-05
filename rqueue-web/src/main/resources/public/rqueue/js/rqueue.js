@@ -18,6 +18,7 @@ var queueName = null;
 var dataPageUrl = null;
 var dataKey = null;
 var dataName = null;
+var dataTypeLabel = null;
 var deleteActionMessage = null;
 var dataType = null;
 var currentPage = 0;
@@ -185,6 +186,9 @@ function exploreData() {
   let element = $(this);
   dataName = element.data('name');
   dataType = element.data('type');
+  // Backend-aware human label set by the template (e.g. "Queue (Stream)" for NATS).
+  // Falls back to the Redis-shaped DataType when the attribute isn't present.
+  dataTypeLabel = element.data('type-label') || element.data('type');
   dataKey = element.data('key');
 }
 

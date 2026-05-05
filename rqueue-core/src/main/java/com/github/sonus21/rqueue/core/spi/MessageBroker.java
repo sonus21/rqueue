@@ -198,6 +198,25 @@ public interface MessageBroker {
     return null;
   }
 
+  /**
+   * Backend-aware human-readable label for the given Redis-shaped {@code DataType} on the given
+   * dashboard tab. Surfaces in the queue-detail page's "Data Type" column so NATS deployments
+   * can show "Queue (Stream)" instead of "LIST".
+   *
+   * <p>The default returns {@code null}, which the dashboard interprets as "fall back to
+   * {@code DataType.name()}" (the historical Redis behavior).
+   *
+   * @param tab the dashboard nav tab the row corresponds to (PENDING, RUNNING, SCHEDULED, DEAD,
+   *     COMPLETED, etc.). May be {@code null} when called in a context without a tab.
+   * @param type Redis-shaped data type used by the dashboard's table rendering.
+   * @return display label, or {@code null} to fall through to the default rendering.
+   */
+  default String dataTypeLabel(
+      com.github.sonus21.rqueue.models.enums.NavTab tab,
+      com.github.sonus21.rqueue.models.enums.DataType type) {
+    return null;
+  }
+
   AutoCloseable subscribe(String channel, Consumer<String> handler);
 
   void publish(String channel, String payload);

@@ -181,28 +181,31 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
             ? messageBroker.storageDisplayName(brokerQueueDetail)
             : queueConfig.getQueueName();
+    RedisDataDetail pendingDetail =
+        new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending);
+    pendingDetail.setTypeLabel(brokerLabel(NavTab.PENDING, DataType.LIST));
     List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails =
-        newArrayList(new HashMap.SimpleEntry<>(
-            NavTab.PENDING,
-            new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending)));
+        newArrayList(new HashMap.SimpleEntry<>(NavTab.PENDING, pendingDetail));
     // Brokers that manage their own in-flight tracking (e.g. NATS JetStream) have no separate
     // processing ZSET, so omit the RUNNING entry to avoid a 501 when the explorer opens it.
     if (!brokerHidesRunning()) {
       String processingQueueName = queueConfig.getProcessingQueueName();
       Long running = messageBrowsingRepository.getDataSize(processingQueueName, DataType.ZSET);
-      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-          NavTab.RUNNING,
-          new RedisDataDetail(processingQueueName, DataType.ZSET, running == null ? 0 : running)));
+      RedisDataDetail runningDetail =
+          new RedisDataDetail(processingQueueName, DataType.ZSET, running == null ? 0 : running);
+      runningDetail.setTypeLabel(brokerLabel(NavTab.RUNNING, DataType.ZSET));
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.RUNNING, runningDetail));
     }
     String scheduledQueueName = queueConfig.getScheduledQueueName();
     // When the broker doesn't support scheduled introspection (e.g. JetStream), suppress
     // the SCHEDULED nav tab entry entirely so the dashboard doesn't query an absent ZSET.
     if (!brokerHidesScheduled()) {
       Long scheduled = messageBrowsingRepository.getDataSize(scheduledQueueName, DataType.ZSET);
-      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-          NavTab.SCHEDULED,
+      RedisDataDetail scheduledDetail =
           new RedisDataDetail(
-              scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
+              scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled);
+      scheduledDetail.setTypeLabel(brokerLabel(NavTab.SCHEDULED, DataType.ZSET));
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.SCHEDULED, scheduledDetail));
     }
     if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
       for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
@@ -210,16 +213,17 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 && messageBroker.dlqStorageDisplayName(brokerQueueDetail) != null
             ? messageBroker.dlqStorageDisplayName(brokerQueueDetail)
             : dlq.getName();
+        RedisDataDetail dlqDetail;
         if (!dlq.isConsumerEnabled()) {
           Long dlqSize = messageBrowsingRepository.getDataSize(dlq.getName(), DataType.LIST);
-          queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-              NavTab.DEAD,
-              new RedisDataDetail(dlqDisplayName, DataType.LIST, dlqSize == null ? 0 : dlqSize)));
+          dlqDetail =
+              new RedisDataDetail(dlqDisplayName, DataType.LIST, dlqSize == null ? 0 : dlqSize);
         } else {
           // TODO should we redirect to the queue page?
-          queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-              NavTab.DEAD, new RedisDataDetail(dlqDisplayName, DataType.LIST, -1)));
+          dlqDetail = new RedisDataDetail(dlqDisplayName, DataType.LIST, -1);
         }
+        dlqDetail.setTypeLabel(brokerLabel(NavTab.DEAD, DataType.LIST));
+        queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.DEAD, dlqDetail));
       }
     }
     if (rqueueConfig.messageInTerminalStateShouldBeStored()
@@ -230,12 +234,22 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
           brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
               ? messageBroker.storageDisplayName(brokerQueueDetail)
               : queueConfig.getCompletedQueueName();
-      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-          NavTab.COMPLETED,
+      RedisDataDetail completedDetail =
           new RedisDataDetail(
-              completedDisplayName, DataType.ZSET, completed == null ? 0 : completed)));
+              completedDisplayName, DataType.ZSET, completed == null ? 0 : completed);
+      completedDetail.setTypeLabel(brokerLabel(NavTab.COMPLETED, DataType.ZSET));
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.COMPLETED, completedDetail));
     }
     return queueRedisDataDetails;
+  }
+
+  /**
+   * Resolve the broker-specific human-readable label for the given (NavTab, DataType) pair.
+   * Returns {@code null} on the legacy Redis path so the template falls back to
+   * {@code DataType.name()} (LIST/ZSET).
+   */
+  private String brokerLabel(NavTab tab, DataType type) {
+    return messageBroker != null ? messageBroker.dataTypeLabel(tab, type) : null;
   }
 
   @Override

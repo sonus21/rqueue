@@ -562,7 +562,37 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public long size(QueueDetail q) {
     String stream = streamFor(q);
     try {
-      return jsm.getStreamInfo(stream).getStreamState().getMsgCount();
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      // WorkQueue retention removes messages on ack, so streamState.msgCount equals the count
+      // of messages still pending consumption — the natural "pending size" for queue-mode use.
+      // For Limits retention, msgCount is the total messages currently stored regardless of
+      // consumer progress, so falling back to it would over-report. In that case, walk the
+      // stream's durable consumers and surface the maximum unacked-pending count, which best
+      // approximates "messages still to be processed by someone" for the dashboard.
+      if (retention == io.nats.client.api.RetentionPolicy.Limits) {
+        long maxPending = 0L;
+        try {
+          List<String> consumers = jsm.getConsumerNames(stream);
+          for (String consumer : consumers) {
+            try {
+              io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
+              if (ci != null && ci.getNumPending() > maxPending) {
+                maxPending = ci.getNumPending();
+              }
+            } catch (IOException | JetStreamApiException ignore) {
+              // best-effort; skip consumers that disappear mid-walk
+            }
+          }
+          return maxPending;
+        } catch (IOException | JetStreamApiException ignore) {
+          // Fallback to stream count if the consumer enumeration fails — better than throwing
+          // for a dashboard read.
+          return info.getStreamState().getMsgCount();
+        }
+      }
+      return info.getStreamState().getMsgCount();
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException("Failed to read stream size for queue=" + q.getName(), e);
     }
@@ -645,6 +675,32 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   @Override
   public String dlqStorageDisplayName(QueueDetail q) {
     return dlqStreamFor(q);
+  }
+
+  /**
+   * Map the dashboard's Redis-shaped data-type tokens onto NATS terminology. Each per-queue
+   * stream uses the JetStream {@code WorkQueue} retention policy by default, so the pending
+   * row is labelled "Queue (Stream)". Completed messages are tracked in a KV bucket and DLQs
+   * are independent streams.
+   */
+  @Override
+  public String dataTypeLabel(
+      com.github.sonus21.rqueue.models.enums.NavTab tab,
+      com.github.sonus21.rqueue.models.enums.DataType type) {
+    if (tab == null) {
+      return type == null ? null : "Stream";
+    }
+    switch (tab) {
+      case PENDING:
+        return "Queue (Stream)";
+      case DEAD:
+        return "Dead Letter (Stream)";
+      case COMPLETED:
+        return "Completed (KV)";
+      default:
+        // Running / Scheduled / Cron tabs are hidden on NATS via Capabilities; fall through.
+        return type == null ? null : "Stream";
+    }
   }
 
   @Override
