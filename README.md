@@ -1,5 +1,5 @@
 <div>
-   <img  align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue-core/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
+   <img  align="left" src="https://raw.githubusercontent.com/sonus21/rqueue/master/rqueue-web/src/main/resources/public/rqueue/img/android-chrome-192x192.png" alt="Rqueue Logo" width="90">
    <h1 style="float:left">Rqueue: Job Queue and Scheduler for Spring and Spring Boot (Redis &amp; NATS)</h1>
 </div>
 
