@@ -13,13 +13,14 @@ All notable user-facing changes to this project are documented in this file.
 {: .highlight}
 First stable 4.0.0 release. Targets Spring Boot 4.x and Spring Framework 7.x on
 Java 21. See the RC1 / RC2 entries below for the foundational Spring Boot 4 and
-Jackson 3 migration notes — those still apply.
+Jackson 3 migration notes — those still apply. The NATS JetStream backend itself
+was introduced in RC4; this release builds on it with the broker SPI extraction
+and a NATS-aware dashboard.
+
+{: .note}
+RC5 was not released. Versioning jumped from RC4 directly to RC6.
 
 ### Features
-* **NATS JetStream backend** — added a new `rqueue-nats` module that lets Rqueue
-  run on NATS JetStream as the message broker. Supports both Limits-retention
-  and WorkQueue-retention streams, durable consumers, and ack/nack delivery
-  semantics.
 * **Pluggable broker SPI** — the queueing layer was separated from Redis behind
   a `MessageBroker` SPI with a `Capabilities` model. The dashboard, explorer,
   and admin paths now adapt to backend capabilities (nav tabs, charts, data-type
@@ -42,8 +43,8 @@ Jackson 3 migration notes — those still apply.
   middleware can detect and react to inbound deserialization failures (route to
   DLQ, alert, attempt a fallback decode) instead of being unable to distinguish
   a converter error from a legitimately-String payload.
-* **Pluggable publishing of additional modules** — `rqueue-nats`, `rqueue-redis`,
-  and `rqueue-web` are now published to Maven Central alongside `rqueue-core`,
+* **Additional modules published to Maven Central** — `rqueue-nats`,
+  `rqueue-redis`, and `rqueue-web` now ship alongside `rqueue-core`,
   `rqueue-spring`, and `rqueue-spring-boot-starter`.
 
 ### Fixes
@@ -64,6 +65,30 @@ Jackson 3 migration notes — those still apply.
 * The dashboard `/explore` API gained a `consumerName` query parameter
   (nullable). Callers using the REST API directly should pass `null` to
   preserve existing behaviour or a specific consumer name to scope the peek.
+
+## Release [4.0.0.RC4] 14-Apr-2026
+
+{: .highlight}
+Release candidate. The headline change is the introduction of the NATS
+JetStream backend.
+
+### Features
+* **NATS JetStream backend** — added a new `rqueue-nats` module that lets Rqueue
+  run on NATS JetStream as the message broker. Supports Limits-retention and
+  WorkQueue-retention streams, durable consumers, and ack/nack delivery
+  semantics. This is the initial drop; the broker SPI extraction and the
+  capability-aware dashboard land in 4.0.0.
+
+### CI / Build
+* Coveralls integration fixed for GitHub Actions (token wiring, build-number
+  propagation, request-payload diagnostics).
+
+## Release [4.0.0.RC3] 14-Apr-2026
+
+{: .note}
+Housekeeping release. No user-facing code changes versus RC2 — version bump
+plus documentation tweaks (header refresh, dependabot bump for `addressable`
+in `/docs`).
 
 ## Release [4.0.0.RC2] 24-Mar-2026
 
