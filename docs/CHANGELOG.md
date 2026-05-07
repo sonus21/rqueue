@@ -8,6 +8,63 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [4.0.0] TBD
+
+{: .highlight}
+First stable 4.0.0 release. Targets Spring Boot 4.x and Spring Framework 7.x on
+Java 21. See the RC1 / RC2 entries below for the foundational Spring Boot 4 and
+Jackson 3 migration notes — those still apply.
+
+### Features
+* **NATS JetStream backend** — added a new `rqueue-nats` module that lets Rqueue
+  run on NATS JetStream as the message broker. Supports both Limits-retention
+  and WorkQueue-retention streams, durable consumers, and ack/nack delivery
+  semantics.
+* **Pluggable broker SPI** — the queueing layer was separated from Redis behind
+  a `MessageBroker` SPI with a `Capabilities` model. The dashboard, explorer,
+  and admin paths now adapt to backend capabilities (nav tabs, charts, data-type
+  labels, queue-size accounting) instead of assuming Redis primitives.
+* **Consumer-aware peek** — added a consumer-aware `peek` overload on the broker
+  SPI. The dashboard explorer can browse a specific consumer's outstanding
+  messages on Limits-retention streams, skipping already-acked ranges and
+  reflecting per-consumer ack floors. Useful for fan-out topologies where each
+  durable has a different delivery position.
+* **NATS-aware queue detail page** — redesigned queue detail with a hero panel,
+  chip strip, per-consumer Subscribers table (with separate Pending and
+  In-Flight columns and a Workers column), and a Terminal Storage card. Pending
+  shows yet-to-deliver count; In-Flight shows messages currently being
+  processed. Limits-retention queues render approximate sizes with a `~` prefix.
+* **Pause / soft-delete admin ops for NATS queues** — operators can pause and
+  soft-delete NATS queues from the dashboard, with capability-gated controls so
+  unsupported actions do not appear on backends that cannot honour them.
+* **Message-converter exception exposed to middleware** — `Job` now exposes
+  `getConversionException()` (and a `hasConversionException()` default) so
+  middleware can detect and react to inbound deserialization failures (route to
+  DLQ, alert, attempt a fallback decode) instead of being unable to distinguish
+  a converter error from a legitimately-String payload.
+* **Pluggable publishing of additional modules** — `rqueue-nats`, `rqueue-redis`,
+  and `rqueue-web` are now published to Maven Central alongside `rqueue-core`,
+  `rqueue-spring`, and `rqueue-spring-boot-starter`.
+
+### Fixes
+* **NATS ack/nack under fan-out** — fixed an in-flight key collision that could
+  cause ack/nack to target the wrong NATS message when multiple consumers were
+  fanning out from the same stream.
+* **Consumer-name resolution** — `resolvedConsumerName` now uses a single
+  consumer-name suffix, preventing duplicated suffixing under repeated lookups.
+* **Peek base sequence** — NATS peek now bases on `ackFloor` rather than
+  `delivered.streamSeq`, so the explorer shows the correct un-acked tail
+  instead of skipping past acked-but-not-yet-deleted messages.
+
+### Migration Notes
+* Backends are now selected via the `MessageBroker` SPI. Existing Redis
+  applications continue to work without configuration changes — a Redis broker
+  is wired by default. Applications wanting NATS should add `rqueue-nats` and
+  configure a JetStream `MessageBroker` bean.
+* The dashboard `/explore` API gained a `consumerName` query parameter
+  (nullable). Callers using the REST API directly should pass `null` to
+  preserve existing behaviour or a specific consumer name to scope the peek.
+
 ## Release [4.0.0.RC2] 24-Mar-2026
 
 {: .highlight}
