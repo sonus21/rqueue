@@ -57,6 +57,7 @@ public class JobImpl implements Job {
   private final RqueueJob rqueueJob;
   private final PostProcessingHandler postProcessingHandler;
   private final boolean isPeriodicJob;
+  private final Throwable conversionException;
   private Object userMessage;
   private Context context = DefaultContext.EMPTY;
   private Boolean released;
@@ -73,12 +74,39 @@ public class JobImpl implements Job {
       RqueueMessage rqueueMessage,
       Object userMessage,
       PostProcessingHandler postProcessingHandler) {
+    this(
+        rqueueConfig,
+        messageMetadataService,
+        rqueueJobDao,
+        messageBroker,
+        rqueueLockManager,
+        queueDetail,
+        messageMetadata,
+        rqueueMessage,
+        userMessage,
+        null,
+        postProcessingHandler);
+  }
+
+  public JobImpl(
+      RqueueConfig rqueueConfig,
+      RqueueMessageMetadataService messageMetadataService,
+      RqueueJobDao rqueueJobDao,
+      MessageBroker messageBroker,
+      RqueueLockManager rqueueLockManager,
+      QueueDetail queueDetail,
+      MessageMetadata messageMetadata,
+      RqueueMessage rqueueMessage,
+      Object userMessage,
+      Throwable conversionException,
+      PostProcessingHandler postProcessingHandler) {
     this.rqueueJobDao = rqueueJobDao;
     this.messageMetadataService = messageMetadataService;
     this.rqueueConfig = rqueueConfig;
     this.messageBroker = messageBroker;
     this.queueDetail = queueDetail;
     this.userMessage = userMessage;
+    this.conversionException = conversionException;
     this.postProcessingHandler = postProcessingHandler;
     this.rqueueJob = new RqueueJob(rqueueConfig.getJobId(), rqueueMessage, messageMetadata, null);
     this.expiry = Duration.ofMillis(2 * queueDetail.getVisibilityTimeout());
@@ -165,6 +193,11 @@ public class JobImpl implements Job {
   @Override
   public void setMessage(Object message) {
     this.userMessage = message;
+  }
+
+  @Override
+  public Throwable getConversionException() {
+    return conversionException;
   }
 
   @Override

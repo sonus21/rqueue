@@ -57,6 +57,7 @@ class RqueueExecutor extends MessageContainerBase {
   private Throwable error;
   private int failureCount;
   private Object userMessage;
+  private Throwable conversionException;
 
   RqueueExecutor(
       RqueueBeanProvider rqueueBeanProvider,
@@ -85,6 +86,7 @@ class RqueueExecutor extends MessageContainerBase {
       return RqueueMessageUtils.convertMessageToObject(
           tmpMessage, beanProvider.getRqueueMessageHandler().getMessageConverter());
     } catch (Exception e) {
+      this.conversionException = e;
       log(Level.DEBUG, "Unable to convert message {}", e, rqueueMessage.getMessage());
     }
     return rqueueMessage.getMessage();
@@ -104,6 +106,7 @@ class RqueueExecutor extends MessageContainerBase {
         messageMetadata,
         rqueueMessage,
         userMessage,
+        conversionException,
         postProcessingHandler);
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }

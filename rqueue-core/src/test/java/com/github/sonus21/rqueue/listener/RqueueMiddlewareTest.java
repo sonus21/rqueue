@@ -384,6 +384,65 @@ class RqueueMiddlewareTest extends TestBase {
     assertEquals(rqueueMessage.getId(), logMiddleware.jobs.get(0).getMessageId());
   }
 
+  @Test
+  void middlewareRunsWhenMessageConverterThrows() {
+    TestLogMiddleware logMiddleware = new TestLogMiddleware();
+    QueueDetail queueDetail = TestUtils.createQueueDetail(queueName);
+    doReturn(rqueueLockManager).when(rqueueBeanProvider).getRqueueLockManager();
+    doReturn(true).when(rqueueLockManager).acquireLock(anyString(), any(), any());
+    doReturn(defaultMessageMetadata)
+        .when(rqueueMessageMetadataService)
+        .get(defaultMessageMetadata.getId());
+    doReturn(defaultMessageMetadata)
+        .when(rqueueMessageMetadataService)
+        .getOrCreateMessageMetadata(any());
+
+    // Swap the handler's converter to one that throws on read; the message was already
+    // built above with the working converter, so only the inbound conversion fails.
+    MessageConverter throwingConverter = new MessageConverter() {
+      @Override
+      public Object fromMessage(org.springframework.messaging.Message<?> message, Class<?> targetClass) {
+        throw new IllegalStateException("boom: converter failed");
+      }
+
+      @Override
+      public org.springframework.messaging.Message<?> toMessage(Object payload, org.springframework.messaging.MessageHeaders headers) {
+        return null;
+      }
+    };
+    org.mockito.Mockito.reset(messageHandler);
+    doReturn(throwingConverter).when(messageHandler).getMessageConverter();
+
+    new RqueueExecutor(
+            rqueueBeanProvider,
+            queueStateMgr,
+            Collections.singletonList(logMiddleware),
+            postProcessingHandler,
+            rqueueMessage,
+            queueDetail,
+            queueThreadPool)
+        .run();
+
+    // Middleware still runs even though the converter blew up.
+    assertEquals(1, logMiddleware.jobs.size());
+    Job seenJob = logMiddleware.jobs.get(0);
+    assertEquals(rqueueMessage.getId(), seenJob.getMessageId());
+    // Middleware sees the raw String payload (the on-wire message) rather than the
+    // deserialized object, and the converter exception is exposed via getConversionException.
+    assertTrue(
+        seenJob.getMessage() instanceof String,
+        "expected raw String fallback when converter throws, got: "
+            + (seenJob.getMessage() == null ? "null" : seenJob.getMessage().getClass()));
+    assertEquals(rqueueMessage.getMessage(), seenJob.getMessage());
+    assertTrue(seenJob.hasConversionException(), "expected conversion error to be exposed");
+    assertNotNull(seenJob.getConversionException());
+    assertTrue(seenJob.getConversionException() instanceof IllegalStateException);
+    assertEquals("boom: converter failed", seenJob.getConversionException().getMessage());
+    // Handler is still dispatched; ack is still issued.
+    verify(messageHandler, times(1)).handleMessage(any());
+    verify(messageBroker, times(1)).ack(eq(queueDetail), any(RqueueMessage.class));
+  }
+
   static class TestContextMiddleware implements ContextMiddleware {
 
     List<Job> jobs = new ArrayList<>();
