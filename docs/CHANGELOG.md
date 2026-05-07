@@ -12,45 +12,56 @@ All notable user-facing changes to this project are documented in this file.
 
 {: .highlight}
 First stable 4.0.0 release. Targets Spring Boot 4.x and Spring Framework 7.x on
-Java 21. See the RC1 / RC2 entries below for the foundational Spring Boot 4 and
-Jackson 3 migration notes — those still apply. The NATS JetStream backend itself
-was introduced in RC4; this release builds on it with the broker SPI extraction
-and a NATS-aware dashboard.
+Java 21. Promotes the RC6 line to GA — no functional changes versus RC6. See
+RC1 / RC2 below for the foundational Spring Boot 4 and Jackson 3 migration
+notes; RC4–RC6 below for the NATS backend, broker SPI, dashboard work, and
+middleware additions that build on top.
 
-{: .note}
-RC5 was not released. Versioning jumped from RC4 directly to RC6.
+## Release [4.0.0.RC6] TBD
+
+{: .highlight}
+Release candidate.
+
+### Features
+* **Message-converter exception exposed to middleware** — `Job` now exposes
+  `getConversionException()` (and a `hasConversionException()` default) so
+  middleware can detect and react to inbound deserialization failures (route
+  to DLQ, alert, attempt a fallback decode) instead of being unable to
+  distinguish a converter error from a legitimately-String payload.
+
+### Build
+* `rqueue-nats`, `rqueue-redis`, and `rqueue-web` now publish to Maven Central
+  alongside `rqueue-core`, `rqueue-spring`, and `rqueue-spring-boot-starter`.
+
+## Release [4.0.0.RC5] TBD
+
+{: .highlight}
+Release candidate. The two themes are a multi-consumer correctness fix on the
+NATS backend and a NATS-aware dashboard built on a new pluggable broker SPI.
 
 ### Features
 * **Pluggable broker SPI** — the queueing layer was separated from Redis behind
   a `MessageBroker` SPI with a `Capabilities` model. The dashboard, explorer,
-  and admin paths now adapt to backend capabilities (nav tabs, charts, data-type
+  and admin paths adapt to backend capabilities (nav tabs, charts, data-type
   labels, queue-size accounting) instead of assuming Redis primitives.
-* **Consumer-aware peek** — added a consumer-aware `peek` overload on the broker
-  SPI. The dashboard explorer can browse a specific consumer's outstanding
-  messages on Limits-retention streams, skipping already-acked ranges and
-  reflecting per-consumer ack floors. Useful for fan-out topologies where each
-  durable has a different delivery position.
+* **Consumer-aware peek** — added a consumer-aware `peek` overload on the
+  broker SPI. The dashboard explorer can browse a specific consumer's
+  outstanding messages on Limits-retention streams, skipping already-acked
+  ranges and reflecting per-consumer ack floors. Useful for fan-out topologies
+  where each durable has a different delivery position.
 * **NATS-aware queue detail page** — redesigned queue detail with a hero panel,
-  chip strip, per-consumer Subscribers table (with separate Pending and
-  In-Flight columns and a Workers column), and a Terminal Storage card. Pending
-  shows yet-to-deliver count; In-Flight shows messages currently being
-  processed. Limits-retention queues render approximate sizes with a `~` prefix.
+  chip strip, per-consumer Subscribers table (separate Pending and In-Flight
+  columns plus a Workers column), and a Terminal Storage card. Pending shows
+  yet-to-deliver count; In-Flight shows messages currently being processed.
+  Limits-retention queues render approximate sizes with a `~` prefix.
 * **Pause / soft-delete admin ops for NATS queues** — operators can pause and
-  soft-delete NATS queues from the dashboard, with capability-gated controls so
-  unsupported actions do not appear on backends that cannot honour them.
-* **Message-converter exception exposed to middleware** — `Job` now exposes
-  `getConversionException()` (and a `hasConversionException()` default) so
-  middleware can detect and react to inbound deserialization failures (route to
-  DLQ, alert, attempt a fallback decode) instead of being unable to distinguish
-  a converter error from a legitimately-String payload.
-* **Additional modules published to Maven Central** — `rqueue-nats`,
-  `rqueue-redis`, and `rqueue-web` now ship alongside `rqueue-core`,
-  `rqueue-spring`, and `rqueue-spring-boot-starter`.
+  soft-delete NATS queues from the dashboard, with capability-gated controls
+  so unsupported actions do not appear on backends that cannot honour them.
 
 ### Fixes
-* **NATS ack/nack under fan-out** — fixed an in-flight key collision that could
-  cause ack/nack to target the wrong NATS message when multiple consumers were
-  fanning out from the same stream.
+* **NATS ack/nack under multi-consumer fan-out** — fixed an in-flight key
+  collision that could cause ack/nack to target the wrong NATS message when
+  multiple consumers were fanning out from the same stream.
 * **Consumer-name resolution** — `resolvedConsumerName` now uses a single
   consumer-name suffix, preventing duplicated suffixing under repeated lookups.
 * **Peek base sequence** — NATS peek now bases on `ackFloor` rather than
@@ -59,9 +70,9 @@ RC5 was not released. Versioning jumped from RC4 directly to RC6.
 
 ### Migration Notes
 * Backends are now selected via the `MessageBroker` SPI. Existing Redis
-  applications continue to work without configuration changes — a Redis broker
-  is wired by default. Applications wanting NATS should add `rqueue-nats` and
-  configure a JetStream `MessageBroker` bean.
+  applications continue to work without configuration changes — a Redis
+  broker is wired by default. Applications wanting NATS should add
+  `rqueue-nats` and configure a JetStream `MessageBroker` bean.
 * The dashboard `/explore` API gained a `consumerName` query parameter
   (nullable). Callers using the REST API directly should pass `null` to
   preserve existing behaviour or a specific consumer name to scope the peek.
@@ -77,7 +88,7 @@ JetStream backend.
   run on NATS JetStream as the message broker. Supports Limits-retention and
   WorkQueue-retention streams, durable consumers, and ack/nack delivery
   semantics. This is the initial drop; the broker SPI extraction and the
-  capability-aware dashboard land in 4.0.0.
+  capability-aware dashboard land in RC5.
 
 ### CI / Build
 * Coveralls integration fixed for GitHub Actions (token wiring, build-number
