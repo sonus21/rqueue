@@ -401,12 +401,14 @@ class RqueueMiddlewareTest extends TestBase {
     // built above with the working converter, so only the inbound conversion fails.
     MessageConverter throwingConverter = new MessageConverter() {
       @Override
-      public Object fromMessage(org.springframework.messaging.Message<?> message, Class<?> targetClass) {
+      public Object fromMessage(
+          org.springframework.messaging.Message<?> message, Class<?> targetClass) {
         throw new IllegalStateException("boom: converter failed");
       }
 
       @Override
-      public org.springframework.messaging.Message<?> toMessage(Object payload, org.springframework.messaging.MessageHeaders headers) {
+      public org.springframework.messaging.Message<?> toMessage(
+          Object payload, org.springframework.messaging.MessageHeaders headers) {
         return null;
       }
     };

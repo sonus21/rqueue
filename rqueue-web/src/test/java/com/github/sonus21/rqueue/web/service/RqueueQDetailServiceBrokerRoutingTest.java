@@ -193,7 +193,8 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
     DataViewResponse response = service.getExplorePageData(
         queueConfig.getName(), queueConfig.getQueueName(), DataType.LIST, null, 0, 10);
 
-    verify(messageBroker, atLeastOnce()).peek(any(QueueDetail.class), nullable(String.class), anyLong(), anyLong());
+    verify(messageBroker, atLeastOnce())
+        .peek(any(QueueDetail.class), nullable(String.class), anyLong(), anyLong());
     assertTrue(response.getRows() == null || response.getRows().isEmpty());
   }
 
