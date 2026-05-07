@@ -1079,6 +1079,9 @@ public class RqueueHtmlRenderer {
   }
 
   public String renderUtility(Map<String, Object> m) {
+    boolean hideExploreData = bool(m, "hideExploreData");
+    boolean hideMoveMessages = bool(m, "hideMoveMessages");
+
     List<DataType> supportedDataType = get(m, "supportedDataType");
     StringBuilder typeOptions = new StringBuilder();
     if (supportedDataType != null) {
@@ -1088,94 +1091,120 @@ public class RqueueHtmlRenderer {
       }
     }
 
-    String main = """
-        <div class="container">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="col-md-12"><h2>Explore Data</h2></div>
-              <div class="explore-data-form col-md-12">
-                <div class="form-group">
-                  <label for="data-name">Name: <b id="data-name-type"></b></label>
-                  <input class="form-control" id="data-name" name="data-name" placeholder="__rq::queue::{job-queue}" type="text">
-                </div>
-                <div class="form-group display-none" id="data-key-form">
-                  <label for="data-key">Key:</label>
-                  <input class="form-control" id="data-key" name="data-key" placeholder="any key" type="text">
-                </div>
-                <div class="clearfix">
-                  <button class="btn btn-primary" data-target="#explore-queue" data-toggle="modal" id="view-data" type="button">View</button>
-                </div>
+    StringBuilder sections = new StringBuilder();
+    sections.append("<div class=\"container\"><div class=\"row\">");
+
+    if (!hideExploreData) {
+      sections.append("""
+          <div class="col-md-6">
+            <div class="col-md-12"><h2>Explore Data</h2></div>
+            <div class="explore-data-form col-md-12">
+              <div class="form-group">
+                <label for="data-name">Name: <b id="data-name-type"></b></label>
+                <input class="form-control" id="data-name" name="data-name" placeholder="__rq::queue::{job-queue}" type="text">
               </div>
-            </div>
-            <div class="col-md-6">
-              <div class="col-md-12"><h2>Move Messages</h2></div>
-              <div class="message-move-form col-md-12">
-                <div class="form-group">
-                  <label for="src-data">Source Data Set: <b id="src-data-type"></b></label>
-                  <input class="form-control" id="src-data" name="src-data" placeholder="__rq::queue::{job-queue}" type="text">
-                </div>
-                <div class="form-group">
-                  <label for="dst-data">Destination Data Set:<b id="dst-data-type"></b></label>
-                  <input class="form-control" id="dst-data" name="dst-data" placeholder="__rq::queue::{job-morgue}" type="text">
-                </div>
-                <div class="form-group display-none" id="dst-data-type-input-form">
-                  <label for="dst-data-type-input">Destination Data Type</label>
-                  <select class="form-control" id="dst-data-type-input">
-                    <option selected="selected" value="">Select Type</option>
-                    %s
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="number-of-messages">Number of messages: </label>
-                  <input class="form-control" id="number-of-messages" name="dst-data" placeholder="100" type="text">
-                </div>
-                <div class="form-group display-none" id="priority-controller-form">
-                  <hr/>
-                  <div class="form-group">
-                    <label for="priority-type">Priority Type</label>
-                    <select class="form-control" id="priority-type" name="priority-type">
-                      <option value="">Select</option>
-                      <option value="ABS">Absolute</option>
-                      <option value="REL">Relative</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="priority-val">Priority</label>
-                    <input class="form-control" id="priority-val" name="priority-val" type="number">
-                  </div>
-                </div>
-                <div class="clearfix">
-                  <button class="btn btn-danger" id="move-button" type="button">Move</button>
-                </div>
+              <div class="form-group display-none" id="data-key-form">
+                <label for="data-key">Key:</label>
+                <input class="form-control" id="data-key" name="data-key" placeholder="any key" type="text">
+              </div>
+              <div class="clearfix">
+                <button class="btn btn-primary" data-target="#explore-queue" data-toggle="modal" id="view-data" type="button">View</button>
               </div>
             </div>
           </div>
-        </div>
-        %s
-        """.formatted(typeOptions, dataExplorerModalPartial(m));
+          """);
+    }
 
-    String script = """
-        <script type="application/javascript">
-          dataPageUrl = "rqueue/api/v1/view-data";
-          var dataKeyEl = $('#data-key');
-          var dataNameEl = $('#data-name');
-          var srcDataEl = $('#src-data');
-          var dstDataEl = $('#dst-data');
-          var dstDataTypeInputEl = $('#dst-data-type-input');
-          dataNameEl.on("change", function () { updateDataType(this, enableKeyForm); });
-          dataKeyEl.on("change", function () { $('#view-data').data('key', $(this).val()); });
-          dstDataTypeInputEl.on('change', function () {
-            var type = convertVal($(this).val());
-            if (type !== 'ZSET') { $('#priority-controller-form').hide(); } else { $('#priority-controller-form').show(); }
-          });
-          srcDataEl.on('change', function () { disableForms(); updateDataType(this, enableFormsIfRequired); });
-          dstDataEl.on('change', function () { disableForms(); updateDataType(this, enableFormsIfRequired); });
-          $('#explore-queue').on('shown.bs.modal', function () {
-            $('#explorer-title').empty().append("Key:").append("<b>&nbsp;" + dataNameEl.val() + "</b>");
-            refreshPage();
-          });
-        </script>
-        """;
-    return base(m, main, script);
+    if (!hideMoveMessages) {
+      sections.append("""
+          <div class="col-md-6">
+            <div class="col-md-12"><h2>Move Messages</h2></div>
+            <div class="message-move-form col-md-12">
+              <div class="form-group">
+                <label for="src-data">Source Data Set: <b id="src-data-type"></b></label>
+                <input class="form-control" id="src-data" name="src-data" placeholder="__rq::queue::{job-queue}" type="text">
+              </div>
+              <div class="form-group">
+                <label for="dst-data">Destination Data Set:<b id="dst-data-type"></b></label>
+                <input class="form-control" id="dst-data" name="dst-data" placeholder="__rq::queue::{job-morgue}" type="text">
+              </div>
+              <div class="form-group display-none" id="dst-data-type-input-form">
+                <label for="dst-data-type-input">Destination Data Type</label>
+                <select class="form-control" id="dst-data-type-input">
+                  <option selected="selected" value="">Select Type</option>
+                  %s
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="number-of-messages">Number of messages: </label>
+                <input class="form-control" id="number-of-messages" name="dst-data" placeholder="100" type="text">
+              </div>
+              <div class="form-group display-none" id="priority-controller-form">
+                <hr/>
+                <div class="form-group">
+                  <label for="priority-type">Priority Type</label>
+                  <select class="form-control" id="priority-type" name="priority-type">
+                    <option value="">Select</option>
+                    <option value="ABS">Absolute</option>
+                    <option value="REL">Relative</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="priority-val">Priority</label>
+                  <input class="form-control" id="priority-val" name="priority-val" type="number">
+                </div>
+              </div>
+              <div class="clearfix">
+                <button class="btn btn-danger" id="move-button" type="button">Move</button>
+              </div>
+            </div>
+          </div>
+          """.formatted(typeOptions));
+    }
+
+    if (hideExploreData && hideMoveMessages) {
+      sections.append("""
+          <div class="col-md-12">
+            <div class="alert alert-info" role="alert">
+              Explore Data and Move Messages are not supported by the active backend.
+            </div>
+          </div>
+          """);
+    }
+
+    sections.append("</div></div>");
+    sections.append(dataExplorerModalPartial(m));
+    String main = sections.toString();
+
+    StringBuilder script = new StringBuilder("<script type=\"application/javascript\">\n");
+    if (!hideExploreData) {
+      script.append("""
+            dataPageUrl = "rqueue/api/v1/view-data";
+            var dataKeyEl = $('#data-key');
+            var dataNameEl = $('#data-name');
+            dataNameEl.on("change", function () { updateDataType(this, enableKeyForm); });
+            dataKeyEl.on("change", function () { $('#view-data').data('key', $(this).val()); });
+            $('#explore-queue').on('shown.bs.modal', function () {
+              $('#explorer-title').empty().append("Key:").append("<b>&nbsp;" + dataNameEl.val() + "</b>");
+              refreshPage();
+            });
+          """);
+    }
+    if (!hideMoveMessages) {
+      script.append("""
+            var srcDataEl = $('#src-data');
+            var dstDataEl = $('#dst-data');
+            var dstDataTypeInputEl = $('#dst-data-type-input');
+            dstDataTypeInputEl.on('change', function () {
+              var type = convertVal($(this).val());
+              if (type !== 'ZSET') { $('#priority-controller-form').hide(); } else { $('#priority-controller-form').show(); }
+            });
+            srcDataEl.on('change', function () { disableForms(); updateDataType(this, enableFormsIfRequired); });
+            dstDataEl.on('change', function () { disableForms(); updateDataType(this, enableFormsIfRequired); });
+          """);
+    }
+    script.append("</script>");
+
+    return base(m, main, script.toString());
   }
 }

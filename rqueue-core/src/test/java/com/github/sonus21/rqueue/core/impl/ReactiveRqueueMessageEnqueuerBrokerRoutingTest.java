@@ -95,7 +95,7 @@ class ReactiveRqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
         enqueuer, "rqueueMessageMetadataService", rqueueMessageMetadataService, true);
     lenient()
         .when(messageBroker.capabilities())
-        .thenReturn(new Capabilities(true, false, false, true));
+        .thenReturn(new Capabilities(true, false, false, true, true, true));
     lenient()
         .when(rqueueMessageMetadataService.saveReactive(any(), any(), anyBoolean()))
         .thenReturn(Mono.just(Boolean.TRUE));

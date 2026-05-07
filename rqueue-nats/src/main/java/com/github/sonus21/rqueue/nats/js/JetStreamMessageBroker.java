@@ -59,7 +59,7 @@ import reactor.core.publisher.Mono;
 public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   private static final Logger log = Logger.getLogger(JetStreamMessageBroker.class.getName());
-  private static final Capabilities CAPS = new Capabilities(false, false, false, false);
+  private static final Capabilities CAPS = new Capabilities(false, false, false, false, false, false);
 
   /**
    * Lower bound for fetch wait when the caller passes a non-positive duration. JetStream rejects

@@ -108,7 +108,7 @@ class BaseMessageSenderMetadataTest extends TestBase {
 
   @Test
   void natsLikeCapabilitiesSkipMetadata() {
-    Capabilities caps = new Capabilities(true, false, false, false);
+    Capabilities caps = new Capabilities(true, false, false, false, false, false);
     when(messageBroker.capabilities()).thenReturn(caps);
 
     String id = enqueuer.enqueue(queue, "nats-payload");

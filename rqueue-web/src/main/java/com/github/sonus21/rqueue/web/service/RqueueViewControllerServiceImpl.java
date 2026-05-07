@@ -109,6 +109,8 @@ public class RqueueViewControllerServiceImpl implements RqueueViewControllerServ
     model.addAttribute("hideScheduledPanel", !caps.supportsScheduledIntrospection());
     model.addAttribute("hideRunningPanel", !caps.usesPrimaryHandlerDispatch());
     model.addAttribute("hideCronJobs", !caps.supportsCronJobs());
+    model.addAttribute("hideExploreData", !caps.supportsViewData());
+    model.addAttribute("hideMoveMessages", !caps.supportsMoveMessage());
     // Charts always render; NATS deployments will show empty until counters accumulate.
     model.addAttribute("hideCharts", false);
     model.addAttribute("storageKicker", rqueueQDetailService.storageKicker());

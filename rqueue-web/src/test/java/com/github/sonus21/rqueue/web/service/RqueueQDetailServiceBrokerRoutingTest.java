@@ -157,7 +157,7 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
   @Test
   void scheduledAndRunningTabsHiddenForNatsBroker() {
     // NATS: supportsScheduledIntrospection=false, usesPrimaryHandlerDispatch=false
-    Capabilities natsCaps = new Capabilities(true, false, false, false);
+    Capabilities natsCaps = new Capabilities(true, false, false, false, false, false);
     service.setMessageBroker(messageBroker);
     when(messageBroker.capabilities()).thenReturn(natsCaps);
     when(messageBroker.size(any(QueueDetail.class))).thenReturn(0L);
