@@ -16,5 +16,8 @@
 #
 
 ./gradlew rqueue-core:publishToMavenCentral
+./gradlew rqueue-nats:publishToMavenCentral
+./gradlew rqueue-redis:publishToMavenCentral
+./gradlew rqueue-web:publishToMavenCentral
 ./gradlew rqueue-spring:publishToMavenCentral
 ./gradlew rqueue-spring-boot-starter:publishToMavenCentral
