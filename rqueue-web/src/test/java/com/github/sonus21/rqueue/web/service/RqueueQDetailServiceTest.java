@@ -239,7 +239,7 @@ class RqueueQDetailServiceTest extends TestBase {
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test", 0, 9);
     DataViewResponse response =
-        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, 0, 10);
+        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, null, 0, 10);
     assertEquals(expectedResponse, response);
   }
 
@@ -273,7 +273,7 @@ class RqueueQDetailServiceTest extends TestBase {
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromList("test-dlq", 0, 9);
     DataViewResponse response =
-        rqueueQDetailService.getExplorePageData("test", "test-dlq", DataType.LIST, 0, 10);
+        rqueueQDetailService.getExplorePageData("test", "test-dlq", DataType.LIST, null, 0, 10);
     for (TableRow row : response.getRows()) {
       assertNotEquals("", row.getColumns().get(3).getValue());
       row.getColumns().remove(3);
@@ -326,7 +326,7 @@ class RqueueQDetailServiceTest extends TestBase {
     doReturn(messageMetadata).when(rqueueMessageMetadataService).findAll(anyCollection());
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     DataViewResponse response =
-        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, 0, 10);
+        rqueueQDetailService.getExplorePageData("test", "test", DataType.LIST, null, 0, 10);
     assertEquals(expectedResponse, response);
   }
 
@@ -364,7 +364,7 @@ class RqueueQDetailServiceTest extends TestBase {
     doReturn(queueConfig).when(rqueueSystemManagerService).getQueueConfig("test");
     doReturn(rqueueMessages).when(rqueueMessageTemplate).readFromZset("__rq::d-queue::test", 0, 9);
     DataViewResponse response = rqueueQDetailService.getExplorePageData(
-        "test", "__rq::d-queue::test", DataType.ZSET, 0, 10);
+        "test", "__rq::d-queue::test", DataType.ZSET, null, 0, 10);
     // clear time left
     for (TableRow tableRow : response.getRows()) {
       tableRow.getColumns().remove(3);
@@ -409,7 +409,7 @@ class RqueueQDetailServiceTest extends TestBase {
         .readFromZsetWithScore("__rq::p-queue::test", 0, 9);
 
     DataViewResponse response = rqueueQDetailService.getExplorePageData(
-        "test", "__rq::p-queue::test", DataType.ZSET, 0, 10);
+        "test", "__rq::p-queue::test", DataType.ZSET, null, 0, 10);
     // clear time left
     for (TableRow tableRow : response.getRows()) {
       tableRow.getColumns().remove(3);
