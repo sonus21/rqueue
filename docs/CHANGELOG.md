@@ -12,10 +12,11 @@ All notable user-facing changes to this project are documented in this file.
 
 {: .highlight}
 First stable 4.0.0 release. Targets Spring Boot 4.x and Spring Framework 7.x on
-Java 21. Promotes the RC6 line to GA — no functional changes versus RC6. See
-RC1 / RC2 below for the foundational Spring Boot 4 and Jackson 3 migration
-notes; RC4–RC6 below for the NATS backend, broker SPI, dashboard work, and
-middleware additions that build on top.
+Java 17 (lowered from the original Java 21 baseline in RC3). Promotes the RC6
+line to GA — no functional changes versus RC6. See RC1 / RC2 below for the
+foundational Spring Boot 4 and Jackson 3 migration notes; RC3 for the Java 17
+baseline change; RC4–RC6 below for the NATS backend, broker SPI, dashboard
+work, and middleware additions that build on top.
 
 ## Release [4.0.0.RC6] TBD
 
@@ -96,10 +97,16 @@ JetStream backend.
 
 ## Release [4.0.0.RC3] 14-Apr-2026
 
-{: .note}
-Housekeeping release. No user-facing code changes versus RC2 — version bump
-plus documentation tweaks (header refresh, dependabot bump for `addressable`
-in `/docs`).
+{: .highlight}
+Lowers the Java baseline from 21 back to 17.
+
+### Changes
+* **Java 17 baseline (was 21 in RC1/RC2)** — `languageVersion`,
+  `sourceCompatibility`, and `targetCompatibility` reverted from 21 to 17 so
+  the library can be consumed by applications still on Java 17. RC1's
+  "Java 21 baseline" note is superseded — 4.0.0 supports Java 17 and above.
+* Documentation tweaks (header refresh, dependabot bump for `addressable`
+  in `/docs`).
 
 ## Release [4.0.0.RC2] 24-Mar-2026
 
