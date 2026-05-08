@@ -397,6 +397,10 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       int itemPerPage) {
     QueueConfig queueConfig = rqueueSystemManagerService.getQueueConfig(src);
     DataViewResponse response = new DataViewResponse();
+    if (queueConfig == null) {
+      response.set(1, "Queue '" + src + "' does not exist");
+      return response;
+    }
     boolean deadLetterQueue = queueConfig.isDeadLetterQueue(name);
     boolean scheduledQueue = queueConfig.getScheduledQueueName().equals(name);
     boolean completionQueue = name.equals(queueConfig.getCompletedQueueName());
