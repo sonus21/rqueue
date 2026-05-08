@@ -18,7 +18,23 @@ foundational Spring Boot 4 and Jackson 3 migration notes; RC3 for the Java 17
 baseline change; RC4–RC6 below for the NATS backend, broker SPI, dashboard
 work, and middleware additions that build on top.
 
-## Release [4.0.0.RC6] TBD
+## Release [4.0.0.RC7] 2026-05-08
+
+{: .highlight}
+Release candidate.
+
+### Fixes
+* **Null guard in queue explorer** — `getExplorePageData` now returns a
+  structured error response (`"Queue '…' does not exist"`) when the requested
+  queue name is not registered, instead of throwing a `NullPointerException`.
+
+### Build
+* **Removed redundant `lettuce-core` dependency from example app** — the
+  example app previously declared `io.lettuce:lettuce-core` without an explicit
+  version. The dependency is now removed as it is already transitively provided
+  by `spring-boot-starter-data-redis`.
+
+## Release [4.0.0.RC6] 2026-05-07
 
 {: .highlight}
 Release candidate.
