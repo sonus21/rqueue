@@ -50,5 +50,6 @@ public class QueueExploreRequest extends SerializableBase {
    * first sequence, so the explorer shows messages that are still pending for this specific
    * consumer rather than the entire retained window.
    */
+  @JsonProperty("consumerName")
   private String consumerName;
 }

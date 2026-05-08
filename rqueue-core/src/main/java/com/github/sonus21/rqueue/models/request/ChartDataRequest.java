@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.SerializableBase;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
@@ -39,7 +40,10 @@ public class ChartDataRequest extends SerializableBase {
   private ChartType type;
   private String queue;
   private int number;
+  @JsonProperty("aggregationType")
   private AggregationType aggregationType;
+
+  @JsonProperty("dateTypes")
   private List<ChartDataType> dateTypes;
 
   public ChartDataRequest(ChartType chartType, AggregationType aggregationType) {
