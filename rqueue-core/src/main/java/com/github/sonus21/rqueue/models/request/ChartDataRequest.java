@@ -40,6 +40,7 @@ public class ChartDataRequest extends SerializableBase {
   private ChartType type;
   private String queue;
   private int number;
+
   @JsonProperty("aggregationType")
   private AggregationType aggregationType;
 

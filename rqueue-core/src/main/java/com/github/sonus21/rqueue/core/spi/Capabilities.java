@@ -23,5 +23,6 @@ public record Capabilities(
     boolean usesPrimaryHandlerDispatch,
     boolean supportsViewData,
     boolean supportsMoveMessage) {
-  public static final Capabilities REDIS_DEFAULTS = new Capabilities(true, true, true, true, true, true);
+  public static final Capabilities REDIS_DEFAULTS =
+      new Capabilities(true, true, true, true, true, true);
 }

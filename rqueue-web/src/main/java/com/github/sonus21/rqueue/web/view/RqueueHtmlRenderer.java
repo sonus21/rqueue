@@ -183,18 +183,25 @@ public class RqueueHtmlRenderer {
         %s
         </body>
         </html>
-        """.formatted(
-        title,
-        up, up, up, up,     // favicons x4
-        up, up, up,          // css x3
-        up,                  // logo href
-        navBar(m),
-        mainContent,
-        footerHtml(m),
-        up, up, up,          // scripts x3
-        jsStr(get(m, "urlPrefix")),
-        additionalScript
-    );
+        """
+        .formatted(
+            title,
+            up,
+            up,
+            up,
+            up, // favicons x4
+            up,
+            up,
+            up, // css x3
+            up, // logo href
+            navBar(m),
+            mainContent,
+            footerHtml(m),
+            up,
+            up,
+            up, // scripts x3
+            jsStr(get(m, "urlPrefix")),
+            additionalScript);
   }
 
   private String navBar(Map<String, Object> m) {
@@ -237,13 +244,13 @@ public class RqueueHtmlRenderer {
             </div>
           </div>
         </footer>
-        """.formatted(
-        esc(get(m, "version")),
-        esc(get(m, "releaseLink")),
-        esc(get(m, "latestVersion")),
-        esc(get(m, "time")),
-        esc(get(m, "timeInMilli"))
-    );
+        """
+        .formatted(
+            esc(get(m, "version")),
+            esc(get(m, "releaseLink")),
+            esc(get(m, "latestVersion")),
+            esc(get(m, "time")),
+            esc(get(m, "timeInMilli")));
   }
 
   // ---- Shared partials ----
@@ -256,12 +263,14 @@ public class RqueueHtmlRenderer {
     StringBuilder typeCheckboxes = new StringBuilder();
     if (typeSelectors != null) {
       for (ChartDataType t : typeSelectors) {
-        typeCheckboxes.append("""
+        typeCheckboxes.append(
+            """
             <div class="form-check">
               <input checked="checked" class="form-check-input" id="%s" name="data-type" type="checkbox" value="%s">
               <label class="form-check-label" for="%s">%s</label>
             </div>
-            """.formatted(esc(t.name()), esc(t.name()), esc(t.name()), esc(t.getDescription())));
+            """
+                .formatted(esc(t.name()), esc(t.name()), esc(t.name()), esc(t.getDescription())));
       }
     }
 
@@ -269,8 +278,12 @@ public class RqueueHtmlRenderer {
     if (aggTypes != null) {
       boolean first = true;
       for (AggregationType a : aggTypes) {
-        aggTypeOptions.append("<option").append(first ? " selected" : "").append(">")
-            .append(esc(a.toString())).append("</option>");
+        aggTypeOptions
+            .append("<option")
+            .append(first ? " selected" : "")
+            .append(">")
+            .append(esc(a.toString()))
+            .append("</option>");
         first = false;
       }
     }
@@ -279,8 +292,12 @@ public class RqueueHtmlRenderer {
     StringBuilder counterOptions = new StringBuilder();
     if (aggDateCounter != null && aggDateCounter.getData() != null) {
       for (Pair<String, String> p : aggDateCounter.getData()) {
-        counterOptions.append("<option value=\"").append(esc(p.getFirst())).append("\">")
-            .append(esc(p.getSecond())).append("</option>");
+        counterOptions
+            .append("<option value=\"")
+            .append(esc(p.getFirst()))
+            .append("\">")
+            .append(esc(p.getSecond()))
+            .append("</option>");
       }
     }
 
@@ -312,7 +329,8 @@ public class RqueueHtmlRenderer {
             </div>
           </div>
         </div>
-        """.formatted(typeCheckboxes, aggTypeOptions, counterTitle, counterOptions);
+        """
+        .formatted(typeCheckboxes, aggTypeOptions, counterTitle, counterOptions);
   }
 
   private String latencyChartPartial(Map<String, Object> m) {
@@ -323,8 +341,12 @@ public class RqueueHtmlRenderer {
     if (aggTypes != null) {
       boolean first = true;
       for (AggregationType a : aggTypes) {
-        aggTypeOptions.append("<option").append(first ? " selected" : "").append(">")
-            .append(esc(a.toString())).append("</option>");
+        aggTypeOptions
+            .append("<option")
+            .append(first ? " selected" : "")
+            .append(">")
+            .append(esc(a.toString()))
+            .append("</option>");
         first = false;
       }
     }
@@ -333,8 +355,12 @@ public class RqueueHtmlRenderer {
     StringBuilder counterOptions = new StringBuilder();
     if (aggDateCounter != null && aggDateCounter.getData() != null) {
       for (Pair<String, String> p : aggDateCounter.getData()) {
-        counterOptions.append("<option value=\"").append(esc(p.getFirst())).append("\">")
-            .append(esc(p.getSecond())).append("</option>");
+        counterOptions
+            .append("<option value=\"")
+            .append(esc(p.getFirst()))
+            .append("\">")
+            .append(esc(p.getSecond()))
+            .append("</option>");
       }
     }
 
@@ -370,7 +396,8 @@ public class RqueueHtmlRenderer {
             </div>
           </div>
         </div>
-        """.formatted(aggTypeOptions, counterTitle, counterOptions);
+        """
+        .formatted(aggTypeOptions, counterTitle, counterOptions);
   }
 
   private String dataExplorerModalPartial(Map<String, Object> m) {
@@ -423,18 +450,29 @@ public class RqueueHtmlRenderer {
             </div>
           </div>
         </div>
-        """.formatted(queueName);
+        """
+        .formatted(queueName);
   }
 
-  private String paginationControls(boolean hasPrev, boolean hasNext, int prevPage, int nextPage, int currentPage, int totalPages) {
+  private String paginationControls(
+      boolean hasPrev,
+      boolean hasNext,
+      int prevPage,
+      int nextPage,
+      int currentPage,
+      int totalPages) {
     StringBuilder sb = new StringBuilder();
     sb.append("<div class=\"worker-pagination\">");
     if (hasPrev) {
-      sb.append("<a class=\"worker-page-btn\" href=\"?page=").append(prevPage).append("\">Previous</a>");
+      sb.append("<a class=\"worker-page-btn\" href=\"?page=")
+          .append(prevPage)
+          .append("\">Previous</a>");
     }
     sb.append("<span class=\"worker-page-pill\">Page ").append(currentPage).append("</span>");
     if (hasNext) {
-      sb.append("<a class=\"worker-page-btn worker-page-btn-primary\" href=\"?page=").append(nextPage).append("\">Next</a>");
+      sb.append("<a class=\"worker-page-btn worker-page-btn-primary\" href=\"?page=")
+          .append(nextPage)
+          .append("\">Next</a>");
     }
     sb.append("</div>");
     return sb.toString();
@@ -444,7 +482,8 @@ public class RqueueHtmlRenderer {
 
   public String renderIndex(Map<String, Object> m) {
     String main = statsChartPartial(m) + "<hr/>" + latencyChartPartial(m);
-    String script = """
+    String script =
+        """
         <script type="application/javascript">
           var chartParams = {'type': 'STATS', 'aggregationType': 'DAILY'};
           var latencyChartParams = {'type': 'LATENCY', 'aggregationType': 'DAILY'};
@@ -472,11 +511,13 @@ public class RqueueHtmlRenderer {
     int totalQueueCount = ((Number) m.get("totalQueueCount")).intValue();
     String storageKicker = orDefault(get(m, "storageKicker"), "Redis");
     String storageDesc = esc(get(m, "storageDescription"));
-    String pagination = paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages);
+    String pagination =
+        paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages);
 
     StringBuilder cards = new StringBuilder();
     if (queues == null || queues.isEmpty()) {
-      cards.append("""
+      cards.append(
+          """
           <section class="queue-empty-state" role="alert">
             <h2>No queues available.</h2>
             <p>Queue definitions will appear here after Rqueue loads listener metadata.</p>
@@ -492,15 +533,22 @@ public class RqueueHtmlRenderer {
         String stateIcon = paused ? "bx-pause-circle" : "bx-check-circle";
         String pauseIcon = paused ? "bx-play-circle" : "bx-pause-circle";
         String pauseTitle = paused ? "Unpause" : "Pause";
-        boolean unboundedConc = meta.getConcurrency().getMin() == -1 && meta.getConcurrency().getMax() == -1;
+        boolean unboundedConc =
+            meta.getConcurrency().getMin() == -1 && meta.getConcurrency().getMax() == -1;
         String concurrency = unboundedConc
-            ? "<span aria-label=\"Unbounded concurrency\" class=\"queue-metric-infinity\" data-placement=\"top\" data-toggle=\"tooltip\" title=\"Unbounded concurrency\"><i class=\"bx bx-infinite\"></i></span>"
-            : esc(meta.getConcurrency().getMin()) + " to " + esc(meta.getConcurrency().getMax());
+            ? "<span aria-label=\"Unbounded concurrency\" class=\"queue-metric-infinity\""
+                + " data-placement=\"top\" data-toggle=\"tooltip\" title=\"Unbounded"
+                + " concurrency\"><i class=\"bx bx-infinite\"></i></span>"
+            : esc(meta.getConcurrency().getMin()) + " to "
+                + esc(meta.getConcurrency().getMax());
         String retries = meta.isUnlimitedRetry()
-            ? "<span aria-label=\"Unlimited retries\" class=\"queue-metric-infinity\" data-placement=\"top\" data-toggle=\"tooltip\" title=\"Unlimited retries\"><i class=\"bx bx-infinite\"></i></span>"
+            ? "<span aria-label=\"Unlimited retries\" class=\"queue-metric-infinity\""
+                + " data-placement=\"top\" data-toggle=\"tooltip\" title=\"Unlimited"
+                + " retries\"><i class=\"bx bx-infinite\"></i></span>"
             : esc(meta.getNumRetry());
 
-        cards.append("""
+        cards.append(
+            """
             <article class="queue-card">
               <div class="queue-card-top">
                 <div class="queue-card-heading">
@@ -547,16 +595,23 @@ public class RqueueHtmlRenderer {
                 </div>
               </div>
             </article>
-            """.formatted(
-            name, name,
-            stateLabel, stateCss, stateLabel, stateIcon,
-            pauseIcon, name, pauseTitle,
-            concurrency, retries,
-            fmtDuration(meta.getVisibilityTimeout()),
-            fmtDlq(meta.getDeadLetterQueues()),
-            fmtReadable(meta.getCreatedOn()),
-            fmtReadable(meta.getUpdatedOn())
-        ));
+            """
+                .formatted(
+                    name,
+                    name,
+                    stateLabel,
+                    stateCss,
+                    stateLabel,
+                    stateIcon,
+                    pauseIcon,
+                    name,
+                    pauseTitle,
+                    concurrency,
+                    retries,
+                    fmtDuration(meta.getVisibilityTimeout()),
+                    fmtDlq(meta.getDeadLetterQueues()),
+                    fmtReadable(meta.getCreatedOn()),
+                    fmtReadable(meta.getUpdatedOn())));
       }
       cards.append("</section>");
     }
@@ -570,11 +625,18 @@ public class RqueueHtmlRenderer {
           String sizeHtml = meta.getValue().getSize() < 0
               ? "Queue-backed"
               : esc(meta.getValue().getSize());
-          rows.append("<tr><td>").append(esc(meta.getKey())).append("</td>")
-              .append("<td>").append(esc(meta.getValue().getName())).append("</td>")
-              .append("<td>").append(sizeHtml).append("</td></tr>");
+          rows.append("<tr><td>")
+              .append(esc(meta.getKey()))
+              .append("</td>")
+              .append("<td>")
+              .append(esc(meta.getValue().getName()))
+              .append("</td>")
+              .append("<td>")
+              .append(sizeHtml)
+              .append("</td></tr>");
         }
-        storageGrid.append("""
+        storageGrid.append(
+            """
             <article class="queue-storage-card">
               <div class="queue-storage-card-head">
                 <span class="queue-storage-label">Queue</span>
@@ -587,15 +649,16 @@ public class RqueueHtmlRenderer {
                 </table>
               </div>
             </article>
-            """.formatted(esc(config.getKey()), rows));
+            """
+                .formatted(esc(config.getKey()), rows));
       }
     }
 
-    String toolbarNote = totalQueueCount > 0
-        ? "Showing queue records for this page."
-        : "No queues are registered.";
+    String toolbarNote =
+        totalQueueCount > 0 ? "Showing queue records for this page." : "No queues are registered.";
 
-    String main = """
+    String main =
+        """
         <div class="container queue-dashboard">
           <section class="queue-hero">
             <div class="queue-hero-copy">
@@ -634,13 +697,19 @@ public class RqueueHtmlRenderer {
             %s
           </section>
         </div>
-        """.formatted(
-        storageKicker, totalQueueCount, currentPage, totalPages,
-        toolbarNote, pagination,
-        cards,
-        storageKicker, storageDesc, storageGrid,
-        paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages)
-    );
+        """
+            .formatted(
+                storageKicker,
+                totalQueueCount,
+                currentPage,
+                totalPages,
+                toolbarNote,
+                pagination,
+                cards,
+                storageKicker,
+                storageDesc,
+                storageGrid,
+                paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages));
     return base(m, main, "");
   }
 
@@ -653,7 +722,8 @@ public class RqueueHtmlRenderer {
     int prevPage = ((Number) m.get("previousPage")).intValue();
     int nextPage = ((Number) m.get("nextPage")).intValue();
     int totalWorkerCount = ((Number) m.get("totalWorkerCount")).intValue();
-    String pagination = paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages);
+    String pagination =
+        paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages);
 
     String toolbarNote = totalWorkerCount > 0
         ? "Showing worker records for this page."
@@ -661,7 +731,8 @@ public class RqueueHtmlRenderer {
 
     StringBuilder workerList = new StringBuilder();
     if (workers == null || workers.isEmpty()) {
-      workerList.append("""
+      workerList.append(
+          """
           <section class="worker-empty-state" role="alert">
             <h2>No worker heartbeat is available yet.</h2>
             <p>The page will populate after a worker starts polling queues and reports registry metadata.</p>
@@ -673,15 +744,19 @@ public class RqueueHtmlRenderer {
       for (RqueueWorkerView worker : workers) {
         StringBuilder pollers = new StringBuilder();
         for (RqueueWorkerPollerView poller : worker.getPollers()) {
-          String statusCss = "ACTIVE".equals(poller.getStatus()) ? "worker-status-active"
-              : "STALE".equals(poller.getStatus()) ? "worker-status-stale"
-              : "PAUSED".equals(poller.getStatus()) ? "worker-status-paused" : "";
+          String statusCss = "ACTIVE".equals(poller.getStatus())
+              ? "worker-status-active"
+              : "STALE".equals(poller.getStatus())
+                  ? "worker-status-stale"
+                  : "PAUSED".equals(poller.getStatus()) ? "worker-status-paused" : "";
           String lastPollTime = fmtTime(poller.getLastPollAt());
           String lastMsgTime = fmtTime(poller.getLastMessageAt());
           String lastExhTime = fmtTime(poller.getLastCapacityExhaustedAt());
           String consumerNameHtml = poller.getConsumerName() != null
-              ? "<span class=\"worker-consumer-name\">" + esc(poller.getConsumerName()) + "</span>" : "";
-          pollers.append("""
+              ? "<span class=\"worker-consumer-name\">" + esc(poller.getConsumerName()) + "</span>"
+              : "";
+          pollers.append(
+              """
               <article class="worker-queue-card">
                 <div class="worker-queue-card-head">
                   <div>
@@ -713,17 +788,23 @@ public class RqueueHtmlRenderer {
                   <strong class="worker-queue-footer-value">%s</strong>
                 </div>
               </article>
-              """.formatted(
-              esc(poller.getQueue()), esc(poller.getQueue()),
-              consumerNameHtml,
-              statusCss, esc(poller.getStatus()),
-              lastPollTime, esc(poller.getLastPollAge()),
-              lastMsgTime, esc(poller.getLastMessageAge()),
-              lastExhTime, esc(poller.getLastCapacityExhaustedAge()),
-              esc(poller.getCapacityExhaustedCount())
-          ));
+              """
+                  .formatted(
+                      esc(poller.getQueue()),
+                      esc(poller.getQueue()),
+                      consumerNameHtml,
+                      statusCss,
+                      esc(poller.getStatus()),
+                      lastPollTime,
+                      esc(poller.getLastPollAge()),
+                      lastMsgTime,
+                      esc(poller.getLastMessageAge()),
+                      lastExhTime,
+                      esc(poller.getLastCapacityExhaustedAge()),
+                      esc(poller.getCapacityExhaustedCount())));
         }
-        workerList.append("""
+        workerList.append(
+            """
             <details class="worker-panel" %s>
               <summary class="worker-panel-summary">
                 <div class="worker-panel-main">
@@ -749,21 +830,25 @@ public class RqueueHtmlRenderer {
                 <div class="worker-queue-grid">%s</div>
               </div>
             </details>
-            """.formatted(
-            first ? "open" : "",
-            esc(worker.getWorkerId()),
-            esc(worker.getHost()), esc(worker.getPid()),
-            fmtTime(worker.getLastPollAt()), esc(worker.getLastPollAge()),
-            esc(worker.getActiveQueues()), esc(worker.getStaleQueues()),
-            esc(worker.getRecentCapacityExhaustedQueues()),
-            pollers
-        ));
+            """
+                .formatted(
+                    first ? "open" : "",
+                    esc(worker.getWorkerId()),
+                    esc(worker.getHost()),
+                    esc(worker.getPid()),
+                    fmtTime(worker.getLastPollAt()),
+                    esc(worker.getLastPollAge()),
+                    esc(worker.getActiveQueues()),
+                    esc(worker.getStaleQueues()),
+                    esc(worker.getRecentCapacityExhaustedQueues()),
+                    pollers));
         first = false;
       }
       workerList.append("</section>");
     }
 
-    String main = """
+    String main =
+        """
         <div class="container worker-dashboard">
           <section class="worker-hero">
             <div class="worker-hero-copy">
@@ -792,12 +877,15 @@ public class RqueueHtmlRenderer {
             %s
           </section>
         </div>
-        """.formatted(
-        totalWorkerCount, currentPage, totalPages,
-        toolbarNote, pagination,
-        workerList,
-        paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages)
-    );
+        """
+            .formatted(
+                totalWorkerCount,
+                currentPage,
+                totalPages,
+                toolbarNote,
+                pagination,
+                workerList,
+                paginationControls(hasPrev, hasNext, prevPage, nextPage, currentPage, totalPages));
     return base(m, main, "");
   }
 
@@ -819,31 +907,38 @@ public class RqueueHtmlRenderer {
     if (config != null) {
       String pauseIcon = paused ? "bx-play-circle" : "bx-pause-circle";
       String pauseTitle = paused ? "Unpause" : "Pause";
-      pauseBtn = """
+      pauseBtn =
+          """
           <button class="qd-pause-btn" type="button" title="%s queue">
             <i class="bx pause-queue-btn %s" data-queue="%s" data-placement="top" data-toggle="tooltip" title="%s"></i>
           </button>
-          """.formatted(pauseTitle, pauseIcon, configName, pauseTitle);
+          """
+              .formatted(pauseTitle, pauseIcon, configName, pauseTitle);
     }
 
-    long totalInFlight = subscribers.stream().mapToLong(SubscriberRow::getInFlight).sum();
+    long totalInFlight =
+        subscribers.stream().mapToLong(SubscriberRow::getInFlight).sum();
     long firstPending = subscribers.isEmpty() ? 0 : subscribers.get(0).getPending();
 
     // Config chip strip
     String configStrip = "";
     if (config != null) {
-      boolean unboundedConc = config.getConcurrency().getMin() == -1 && config.getConcurrency().getMax() == -1;
+      boolean unboundedConc =
+          config.getConcurrency().getMin() == -1 && config.getConcurrency().getMax() == -1;
       String concHtml = unboundedConc
           ? "<i class=\"bx bx-infinite\"></i> Unbounded"
-          : esc(config.getConcurrency().getMin()) + "–" + esc(config.getConcurrency().getMax());
+          : esc(config.getConcurrency().getMin()) + "–"
+              + esc(config.getConcurrency().getMax());
       String retryHtml = config.isUnlimitedRetry()
           ? "<i class=\"bx bx-infinite\"></i> Unlimited"
           : esc(config.getNumRetry());
-      String dlqHtml = config.getDeadLetterQueues() == null || config.getDeadLetterQueues().isEmpty()
-          ? "<span class=\"qd-muted\">—</span>"
-          : fmtDlq(config.getDeadLetterQueues());
+      String dlqHtml =
+          config.getDeadLetterQueues() == null || config.getDeadLetterQueues().isEmpty()
+              ? "<span class=\"qd-muted\">—</span>"
+              : fmtDlq(config.getDeadLetterQueues());
 
-      configStrip = """
+      configStrip =
+          """
           <div class="qd-config">
             <div class="qd-config-cell"><span class="qd-config-label"><i class="bx bx-sitemap"></i> Concurrency</span><span class="qd-config-value">%s</span></div>
             <div class="qd-config-cell"><span class="qd-config-label"><i class="bx bx-refresh"></i> Retries</span><span class="qd-config-value">%s</span></div>
@@ -852,36 +947,45 @@ public class RqueueHtmlRenderer {
             <div class="qd-config-cell qd-config-cell-meta"><span class="qd-config-label">Created</span><span class="qd-config-value">%s</span></div>
             <div class="qd-config-cell qd-config-cell-meta"><span class="qd-config-label">Updated</span><span class="qd-config-value">%s</span></div>
           </div>
-          """.formatted(
-          concHtml, retryHtml,
-          fmtDuration(config.getVisibilityTimeout()),
-          dlqHtml,
-          fmtTime(config.getCreatedOn()),
-          fmtTime(config.getUpdatedOn())
-      );
+          """
+              .formatted(
+                  concHtml,
+                  retryHtml,
+                  fmtDuration(config.getVisibilityTimeout()),
+                  dlqHtml,
+                  fmtTime(config.getCreatedOn()),
+                  fmtTime(config.getUpdatedOn()));
     }
 
     // Subscribers table
     StringBuilder subRows = new StringBuilder();
     for (SubscriberRow sub : subscribers) {
-      String typeLabel = orDefault(sub.getTypeLabel(), sub.getDataType() != null ? sub.getDataType().toString() : "");
+      String typeLabel = orDefault(
+          sub.getTypeLabel(), sub.getDataType() != null ? sub.getDataType().toString() : "");
       String statusHtml = sub.getStatus() != null
-          ? "<span class=\"qd-status qd-status-" + sub.getStatus().toLowerCase() + "\">" + esc(sub.getStatus()) + "</span>"
+          ? "<span class=\"qd-status qd-status-" + sub.getStatus().toLowerCase() + "\">"
+              + esc(sub.getStatus()) + "</span>"
           : "<span class=\"qd-muted\">—</span>";
       String hostHtml = sub.getHost() != null
-          ? esc(sub.getHost()) + (sub.getPid() != null ? " <small class=\"qd-muted\">/ " + esc(sub.getPid()) + "</small>" : "")
+          ? esc(sub.getHost())
+              + (sub.getPid() != null
+                  ? " <small class=\"qd-muted\">/ " + esc(sub.getPid()) + "</small>"
+                  : "")
           : "<span class=\"qd-muted\">—</span>";
       String pollHtml = sub.getLastPollAt() > 0
           ? "<div class=\"qd-poll-time\">" + fmtTime(sub.getLastPollAt()) + "</div>"
-          + (sub.getLastPollAge() != null ? "<small class=\"qd-muted\">" + esc(sub.getLastPollAge()) + " ago</small>" : "")
+              + (sub.getLastPollAge() != null
+                  ? "<small class=\"qd-muted\">" + esc(sub.getLastPollAge()) + " ago</small>"
+                  : "")
           : "<span class=\"qd-muted\">—</span>";
       String workerCountHtml = sub.getWorkerCount() > 0
           ? "<strong>" + sub.getWorkerCount() + "</strong>"
           : "<span class=\"qd-muted\">—</span>";
-      String pendingSharedHtml = sub.isPendingShared()
-          ? "<small class=\"qd-muted\">shared</small>" : "";
+      String pendingSharedHtml =
+          sub.isPendingShared() ? "<small class=\"qd-muted\">shared</small>" : "";
       String dataTypeName = sub.getDataType() != null ? esc(sub.getDataType().toString()) : "";
-      subRows.append("""
+      subRows.append(
+          """
           <tr>
             <td><a class="qd-link data-explorer" data-name="%s" data-consumer="%s" data-target="#explore-queue" data-toggle="modal" data-type="%s" data-type-label="%s" href="#">%s</a></td>
             <td><span class="qd-pill">%s</span></td>
@@ -893,24 +997,30 @@ public class RqueueHtmlRenderer {
             <td>%s</td>
             <td>%s</td>
           </tr>
-          """.formatted(
-          esc(sub.getStorageName()), esc(sub.getConsumerName()),
-          dataTypeName, typeLabel,
-          esc(sub.getConsumerName()),
-          typeLabel,
-          esc(sub.getStorageName()),
-          sub.getPending(), pendingSharedHtml,
-          sub.getInFlight(),
-          workerCountHtml,
-          statusHtml, hostHtml, pollHtml
-      ));
+          """
+              .formatted(
+                  esc(sub.getStorageName()),
+                  esc(sub.getConsumerName()),
+                  dataTypeName,
+                  typeLabel,
+                  esc(sub.getConsumerName()),
+                  typeLabel,
+                  esc(sub.getStorageName()),
+                  sub.getPending(),
+                  pendingSharedHtml,
+                  sub.getInFlight(),
+                  workerCountHtml,
+                  statusHtml,
+                  hostHtml,
+                  pollHtml));
     }
 
     String subscribersSection;
     if (subscribers.isEmpty()) {
       subscribersSection = "<div class=\"qd-empty\">No subscribers attached yet.</div>";
     } else {
-      subscribersSection = """
+      subscribersSection =
+          """
           <table class="qd-table">
             <thead>
               <tr>
@@ -921,7 +1031,8 @@ public class RqueueHtmlRenderer {
             </thead>
             <tbody>%s</tbody>
           </table>
-          """.formatted(subRows);
+          """
+              .formatted(subRows);
     }
 
     // Terminal storage table
@@ -929,28 +1040,35 @@ public class RqueueHtmlRenderer {
     if (!CollectionUtils.isEmpty(terminalRows)) {
       StringBuilder termRows = new StringBuilder();
       for (TerminalStorageRow row : terminalRows) {
-        String rowTypeLabel = orDefault(row.getTypeLabel(), row.getDataType() != null ? row.getDataType().toString() : "");
+        String rowTypeLabel = orDefault(
+            row.getTypeLabel(), row.getDataType() != null ? row.getDataType().toString() : "");
         String sizeHtml = row.getSize() < 0
             ? "<span class=\"qd-muted\">Queue-backed</span>"
-            : (row.isApproximate() ? "<span class=\"qd-muted\">~</span>" : "") + "<strong>" + row.getSize() + "</strong>";
+            : (row.isApproximate() ? "<span class=\"qd-muted\">~</span>" : "") + "<strong>"
+                + row.getSize() + "</strong>";
         String tabName = row.getTab() != null ? row.getTab().name() : "";
         String dataTypeName = row.getDataType() != null ? esc(row.getDataType().toString()) : "";
-        termRows.append("""
+        termRows.append(
+            """
             <tr>
               <td><span class="qd-bucket qd-bucket-%s">%s</span></td>
               <td><span class="qd-pill">%s</span></td>
               <td><a class="qd-link data-explorer" data-name="%s" data-target="#explore-queue" data-toggle="modal" data-type="%s" data-type-label="%s" href="#"><code class="qd-code">%s</code></a></td>
               <td class="qd-num">%s</td>
             </tr>
-            """.formatted(
-            esc(tabName.toLowerCase()), esc(tabName),
-            rowTypeLabel,
-            esc(row.getStorageName()), dataTypeName, rowTypeLabel,
-            esc(row.getStorageName()),
-            sizeHtml
-        ));
+            """
+                .formatted(
+                    esc(tabName.toLowerCase()),
+                    esc(tabName),
+                    rowTypeLabel,
+                    esc(row.getStorageName()),
+                    dataTypeName,
+                    rowTypeLabel,
+                    esc(row.getStorageName()),
+                    sizeHtml));
       }
-      terminalSection = """
+      terminalSection =
+          """
           <section class="qd-section">
             <div class="qd-section-head">
               <h2 class="qd-section-title">Terminal Storage <span class="qd-count">%d</span></h2>
@@ -961,10 +1079,12 @@ public class RqueueHtmlRenderer {
               <tbody>%s</tbody>
             </table>
           </section>
-          """.formatted(terminalRows.size(), termRows);
+          """
+              .formatted(terminalRows.size(), termRows);
     }
 
-    String main = """
+    String main =
+        """
         <div class="container qd">
           <header class="qd-header">
             <div class="qd-header-title">
@@ -1002,21 +1122,26 @@ public class RqueueHtmlRenderer {
           </details>
           %s
         </div>
-        """.formatted(
-        configName,
-        stateCss, stateIcon, stateLabel,
-        pauseBtn,
-        subscribers.size(), firstPending, totalInFlight,
-        configStrip,
-        subscribers.size(),
-        subscribersSection,
-        terminalSection,
-        statsChartPartial(m),
-        latencyChartPartial(m),
-        dataExplorerModalPartial(m)
-    );
+        """
+            .formatted(
+                configName,
+                stateCss,
+                stateIcon,
+                stateLabel,
+                pauseBtn,
+                subscribers.size(),
+                firstPending,
+                totalInFlight,
+                configStrip,
+                subscribers.size(),
+                subscribersSection,
+                terminalSection,
+                statsChartPartial(m),
+                latencyChartPartial(m),
+                dataExplorerModalPartial(m));
 
-    String script = """
+    String script =
+        """
         <script type="application/javascript">
           queueName = "%s";
           dataPageUrl = "rqueue/api/v1/queue-data";
@@ -1040,7 +1165,8 @@ public class RqueueHtmlRenderer {
             });
           });
         </script>
-        """.formatted(jsStr(get(m, "queueName")));
+        """
+            .formatted(jsStr(get(m, "queueName")));
     return base(m, main, script);
   }
 
@@ -1065,7 +1191,8 @@ public class RqueueHtmlRenderer {
       }
     }
 
-    String main = """
+    String main =
+        """
         <div class="container">
           <div class="row table-responsive">
             <table class="table table-bordered">
@@ -1074,7 +1201,8 @@ public class RqueueHtmlRenderer {
             </table>
           </div>
         </div>
-        """.formatted(headerRow, taskRows);
+        """
+            .formatted(headerRow, taskRows);
     return base(m, main, "");
   }
 
@@ -1086,8 +1214,12 @@ public class RqueueHtmlRenderer {
     StringBuilder typeOptions = new StringBuilder();
     if (supportedDataType != null) {
       for (DataType type : supportedDataType) {
-        typeOptions.append("<option value=\"").append(esc(type.name())).append("\">")
-            .append(esc(type.getDescription())).append("</option>");
+        typeOptions
+            .append("<option value=\"")
+            .append(esc(type.name()))
+            .append("\">")
+            .append(esc(type.getDescription()))
+            .append("</option>");
       }
     }
 
@@ -1095,7 +1227,8 @@ public class RqueueHtmlRenderer {
     sections.append("<div class=\"container\"><div class=\"row\">");
 
     if (!hideExploreData) {
-      sections.append("""
+      sections.append(
+          """
           <div class="col-md-6">
             <div class="col-md-12"><h2>Explore Data</h2></div>
             <div class="explore-data-form col-md-12">
@@ -1116,7 +1249,8 @@ public class RqueueHtmlRenderer {
     }
 
     if (!hideMoveMessages) {
-      sections.append("""
+      sections.append(
+          """
           <div class="col-md-6">
             <div class="col-md-12"><h2>Move Messages</h2></div>
             <div class="message-move-form col-md-12">
@@ -1159,11 +1293,13 @@ public class RqueueHtmlRenderer {
               </div>
             </div>
           </div>
-          """.formatted(typeOptions));
+          """
+              .formatted(typeOptions));
     }
 
     if (hideExploreData && hideMoveMessages) {
-      sections.append("""
+      sections.append(
+          """
           <div class="col-md-12">
             <div class="alert alert-info" role="alert">
               Explore Data and Move Messages are not supported by the active backend.
@@ -1178,7 +1314,8 @@ public class RqueueHtmlRenderer {
 
     StringBuilder script = new StringBuilder("<script type=\"application/javascript\">\n");
     if (!hideExploreData) {
-      script.append("""
+      script.append(
+          """
             dataPageUrl = "rqueue/api/v1/view-data";
             var dataKeyEl = $('#data-key');
             var dataNameEl = $('#data-name');
@@ -1191,7 +1328,8 @@ public class RqueueHtmlRenderer {
           """);
     }
     if (!hideMoveMessages) {
-      script.append("""
+      script.append(
+          """
             var srcDataEl = $('#src-data');
             var dstDataEl = $('#dst-data');
             var dstDataTypeInputEl = $('#dst-data-type-input');

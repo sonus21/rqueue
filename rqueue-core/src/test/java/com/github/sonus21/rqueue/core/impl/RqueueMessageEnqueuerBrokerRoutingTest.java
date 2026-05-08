@@ -67,7 +67,8 @@ class RqueueMessageEnqueuerBrokerRoutingTest extends TestBase {
   private static final QueueDetail queueDetail = TestUtils.createQueueDetail(queue);
   private static final RqueueMessageIdGenerator FIXED_ID = () -> "fixed-id";
   // NATS-shaped: not the primary-handler-dispatch (Redis) capability set.
-  private static final Capabilities NATS_LIKE = new Capabilities(true, false, false, false, false, false);
+  private static final Capabilities NATS_LIKE =
+      new Capabilities(true, false, false, false, false, false);
 
   private final MessageConverter messageConverter = new DefaultRqueueMessageConverter();
   private final MessageHeaders messageHeaders = RqueueMessageHeaders.emptyMessageHeaders();
