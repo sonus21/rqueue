@@ -171,10 +171,8 @@ class JetStreamMessageBrokerSchedulingIT extends AbstractJetStreamIT {
               + ")");
 
       // Step 1 — plain enqueue: creates stream with only the work subject, no sched flag
-      RqueueMessage immediate = RqueueMessage.builder()
-          .id("imm-1")
-          .message("immediate")
-          .build();
+      RqueueMessage immediate =
+          RqueueMessage.builder().id("imm-1").message("immediate").build();
       broker.enqueue(q, immediate);
 
       // Step 2 — delayed enqueue: must upgrade the stream (add sched wildcard + flag)

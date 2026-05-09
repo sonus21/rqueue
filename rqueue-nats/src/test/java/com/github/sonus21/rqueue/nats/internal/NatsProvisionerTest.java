@@ -323,16 +323,12 @@ class NatsProvisionerTest {
 
     // enqueueWithDelay() calls ensureStream with the sched wildcard and allowSchedules=true
     provisioner.ensureStream(
-        "rqueue-js-orders",
-        Arrays.asList(workSubject, schedPattern),
-        QueueType.QUEUE,
-        null,
-        true);
+        "rqueue-js-orders", Arrays.asList(workSubject, schedPattern), QueueType.QUEUE, null, true);
 
     // Must call updateStream (never addStream — stream already exists)
     verify(jsm, never()).addStream(any());
-    verify(jsm, times(1)).updateStream(argThat(cfg ->
-        cfg.getAllowMsgSchedules()
+    verify(jsm, times(1))
+        .updateStream(argThat(cfg -> cfg.getAllowMsgSchedules()
             && cfg.getSubjects().contains(workSubject)
             && cfg.getSubjects().contains(schedPattern)));
   }
