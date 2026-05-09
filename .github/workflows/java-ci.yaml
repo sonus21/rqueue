@@ -152,7 +152,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: redis-server
+          name: producer-redis-server
           path: /tmp/redis.log
           if-no-files-found: ignore
 
@@ -219,7 +219,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: redis-server
+          name: integration-redis-server
           path: /tmp/redis.log
           if-no-files-found: ignore
 
@@ -372,7 +372,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: redis-server-log-reactive
+          name: reactive-redis-server
           path: /tmp/redis.log
           if-no-files-found: ignore
 
@@ -454,7 +454,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nats-server-log
+          name: nats-server
           path: /tmp/nats.log
           if-no-files-found: ignore
 
