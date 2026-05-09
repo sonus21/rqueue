@@ -76,11 +76,12 @@ public class NatsProvisioner {
     this.jsm = jsm;
     this.config = config;
     io.nats.client.api.ServerInfo serverInfo = connection.getServerInfo();
-    this.schedulingSupported = serverInfo.isSameOrNewerThanVersion(SCHEDULING_MIN_VERSION);
+    this.schedulingSupported =
+        serverInfo != null && serverInfo.isSameOrNewerThanVersion(SCHEDULING_MIN_VERSION);
     log.log(
         Level.INFO,
         "NATS server version={0}; message scheduling (ADR-51) supported={1}",
-        new Object[] {serverInfo.getVersion(), schedulingSupported});
+        new Object[] {serverInfo != null ? serverInfo.getVersion() : "unknown", schedulingSupported});
   }
 
   /** Returns {@code true} when the connected NATS server supports message scheduling (>= 2.12). */
