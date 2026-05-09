@@ -12,9 +12,11 @@ package com.github.sonus21.rqueue.nats.service;
 
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.models.Pair;
+import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.AggregationType;
 import com.github.sonus21.rqueue.models.request.MessageMoveRequest;
@@ -24,10 +26,19 @@ import com.github.sonus21.rqueue.models.response.BooleanResponse;
 import com.github.sonus21.rqueue.models.response.DataSelectorResponse;
 import com.github.sonus21.rqueue.models.response.MessageMoveResponse;
 import com.github.sonus21.rqueue.models.response.StringResponse;
+import com.github.sonus21.rqueue.serdes.RqueueSerDes;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.service.RqueueUtilityService;
+import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
+import io.nats.client.JetStream;
+import io.nats.client.JetStreamApiException;
+import io.nats.client.JetStreamManagement;
+import io.nats.client.api.MessageInfo;
+import io.nats.client.api.StreamInfo;
+import io.nats.client.impl.Headers;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,10 +66,14 @@ import reactor.core.publisher.Mono;
  *       stream messages, not Redis-shaped data structures.
  * </ul>
  *
- * <p>Operations that have no JetStream equivalent return a structured "not supported" response:
- * {@link #moveMessage(MessageMoveRequest)}, {@link #enqueueMessage(String, String, String)} (no
- * scheduled-queue ZSET to re-enqueue from), and {@link #makeEmpty(String, String)} (would require
- * stream re-creation, which is destructive and out-of-band).
+ * <p>{@link #moveMessage(MessageMoveRequest)} reads up to {@code maxMessages} from the source
+ * JetStream stream, republishes each to the destination stream, and hard-deletes the source copy
+ * via {@link JetStreamManagement#deleteMessage}. {@link #enqueueMessage(String, String, String)}
+ * looks up the message in the metadata store and republishes it immediately (without a
+ * {@code Nats-Next-Deliver-Time} header) so the worker picks it up on its next poll.
+ *
+ * <p>{@link #makeEmpty(String, String)} still returns "not supported" — purging a stream is a
+ * destructive admin operation best performed via {@code nats stream purge}.
  */
 @Service
 @Conditional(NatsBackendCondition.class)
@@ -68,21 +83,38 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
   private static final String NOT_SUPPORTED_SUFFIX =
       " is not supported with rqueue.backend=nats in v1";
 
+  /** Error code returned by JetStream when a sequence does not exist in the stream. */
+  private static final int JS_NO_MESSAGE_FOUND = 10037;
+
   private final RqueueWebConfig rqueueWebConfig;
   private final RqueueSystemConfigDao systemConfigDao;
   private final RqueueMessageMetadataService messageMetadataService;
   private final RqueueMessageListenerContainer rqueueMessageListenerContainer;
+  private final JetStreamManagement jsm;
+  private final JetStream js;
+  private final RqueueSerDes serdes;
+  private final String streamPrefix;
+  private final String subjectPrefix;
 
   @Autowired
   public NatsRqueueUtilityService(
       RqueueWebConfig rqueueWebConfig,
       RqueueSystemConfigDao systemConfigDao,
       RqueueMessageMetadataService messageMetadataService,
-      RqueueMessageListenerContainer rqueueMessageListenerContainer) {
+      RqueueMessageListenerContainer rqueueMessageListenerContainer,
+      JetStreamManagement jsm,
+      JetStream js,
+      RqueueSerDes serdes,
+      RqueueNatsConfig natsConfig) {
     this.rqueueWebConfig = rqueueWebConfig;
     this.systemConfigDao = systemConfigDao;
     this.messageMetadataService = messageMetadataService;
     this.rqueueMessageListenerContainer = rqueueMessageListenerContainer;
+    this.jsm = jsm;
+    this.js = js;
+    this.serdes = serdes;
+    this.streamPrefix = natsConfig.getStreamPrefix();
+    this.subjectPrefix = natsConfig.getSubjectPrefix();
   }
 
   private static <T extends BaseResponse> T notSupported(T response, String op) {
@@ -122,21 +154,114 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
   }
 
   /**
-   * NATS does not support arbitrary message re-enqueue: stream sequences are immutable and there
-   * is no scheduled-queue ZSET to pull from. Surfaces a structured "not supported" response.
+   * Re-enqueue a message for immediate delivery. Looks up the {@link RqueueMessage} from the
+   * metadata store by {@code queueName + id}, then republishes the raw bytes to the queue's
+   * JetStream stream without a {@code Nats-Next-Deliver-Time} header so the poller picks it up
+   * on its next fetch. A fresh {@code Nats-Msg-Id} ({@code id-requeue-<millis>}) prevents
+   * JetStream from deduplicating against the original scheduled publish. The {@code position}
+   * hint (FRONT / BACK) is ignored — JetStream pull consumers deliver in stream-sequence order.
    */
   @Override
   public BooleanResponse enqueueMessage(String queueName, String id, String position) {
-    return notSupported(new BooleanResponse(), "enqueueMessage");
+    BooleanResponse r = new BooleanResponse();
+    if (StringUtils.isEmpty(queueName) || StringUtils.isEmpty(id)) {
+      r.setCode(1);
+      r.setMessage("queueName and id are required");
+      return r;
+    }
+    MessageMetadata meta = messageMetadataService.getByMessageId(queueName, id);
+    if (meta == null || meta.getRqueueMessage() == null) {
+      r.setCode(1);
+      r.setMessage("Message not found for queue=" + queueName + " id=" + id);
+      return r;
+    }
+    RqueueMessage message = meta.getRqueueMessage();
+    String subject = toSubject(queueName);
+    try {
+      byte[] payload = serdes.serialize(message);
+      Headers headers = new Headers();
+      // fresh dedup key so JetStream doesn't drop this as a duplicate of the original publish
+      headers.add("Nats-Msg-Id", id + "-requeue-" + System.currentTimeMillis());
+      js.publish(subject, headers, payload);
+      r.setValue(true);
+      return r;
+    } catch (Exception e) {
+      log.warn("enqueueMessage failed queue={} id={}", queueName, id, e);
+      r.setCode(1);
+      r.setMessage("enqueueMessage failed: " + e.getMessage());
+      return r;
+    }
   }
 
   /**
-   * NATS does not support cross-queue positional moves: streams are independent, sequences are
-   * immutable. Surfaces a structured "not supported" response.
+   * Move up to {@code maxMessages} messages from the source stream to the destination stream.
+   * For each message: re-publishes the raw bytes (with original headers minus {@code Nats-Msg-Id})
+   * to the destination subject, then hard-deletes the source sequence via
+   * {@link JetStreamManagement#deleteMessage}. Both {@code src} and {@code dst} can be either
+   * bare queue names (e.g. {@code "orders"}) or fully-prefixed stream names
+   * (e.g. {@code "rqueue-js-orders"}) — the prefix is added if absent.
    */
   @Override
-  public MessageMoveResponse moveMessage(MessageMoveRequest messageMoveRequest) {
-    return notSupported(new MessageMoveResponse(), "moveMessage");
+  public MessageMoveResponse moveMessage(MessageMoveRequest request) {
+    String error = request.validationMessage();
+    if (error != null) {
+      MessageMoveResponse r = new MessageMoveResponse();
+      r.setCode(1);
+      r.setMessage(error);
+      return r;
+    }
+    int maxCount = request.getMessageCount(rqueueWebConfig);
+    String srcStream = toStream(request.getSrc());
+    String dstStream = toStream(request.getDst());
+    String dstSubject = toSubject(request.getDst());
+    try {
+      StreamInfo info = jsm.getStreamInfo(srcStream);
+      long seq = info.getStreamState().getFirstSequence();
+      long last = info.getStreamState().getLastSequence();
+      int moved = 0;
+      while (seq <= last && moved < maxCount) {
+        try {
+          MessageInfo mi = jsm.getMessage(srcStream, seq);
+          if (mi != null && mi.getData() != null) {
+            Headers h = new Headers();
+            if (mi.getHeaders() != null) {
+              mi.getHeaders().forEach((k, v) -> {
+                if (!"Nats-Msg-Id".equals(k)) { // avoid dedup collision on destination
+                  h.add(k, v);
+                }
+              });
+            }
+            js.publish(dstSubject, h, mi.getData());
+            jsm.deleteMessage(srcStream, seq, false);
+            moved++;
+          }
+        } catch (JetStreamApiException e) {
+          if (e.getApiErrorCode() == JS_NO_MESSAGE_FOUND) {
+            // already consumed or deleted by another process — skip
+          } else {
+            throw e;
+          }
+        }
+        seq++;
+      }
+      MessageMoveResponse r = new MessageMoveResponse(moved);
+      r.setValue(moved > 0);
+      return r;
+    } catch (IOException | JetStreamApiException e) {
+      log.warn("moveMessage failed src={} dst={}", srcStream, dstStream, e);
+      MessageMoveResponse r = new MessageMoveResponse();
+      r.setCode(1);
+      r.setMessage("moveMessage failed: " + e.getMessage());
+      return r;
+    }
+  }
+
+  private String toStream(String name) {
+    return name.startsWith(streamPrefix) ? name : streamPrefix + name;
+  }
+
+  private String toSubject(String name) {
+    return name.startsWith(subjectPrefix) ? name : subjectPrefix + name;
   }
 
   /**

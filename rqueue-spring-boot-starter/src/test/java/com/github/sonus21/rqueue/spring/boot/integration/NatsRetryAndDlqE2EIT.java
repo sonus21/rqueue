@@ -47,9 +47,13 @@ import org.springframework.stereotype.Component;
     properties = {"rqueue.backend=nats"})
 @Tag("nats")
 @Disabled(
-    "DLQ bridge wiring (JetStreamMessageBroker.installDeadLetterBridge) is not yet invoked by "
-        + "RqueueNatsAutoConfig; enable once the container start path provisions the advisory "
-        + "dispatcher per queue.")
+    "This test exercises the NATS-native advisory bridge path "
+        + "(JetStreamMessageBroker.installDeadLetterBridge / $JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES), "
+        + "which is not yet wired by RqueueNatsAutoConfig. "
+        + "The rqueue-level DLQ path (PostProcessingHandler → broker.moveToDlq) is already "
+        + "tested in NatsSchedulingAdvancedE2EIT#scheduledMessageExhaustsRetriesToDlq and "
+        + "works without this bridge. Enable this test once RqueueNatsAutoConfig provisions the "
+        + "advisory dispatcher per queue during container start.")
 class NatsRetryAndDlqE2EIT extends AbstractNatsBootIT {
 
   @Autowired

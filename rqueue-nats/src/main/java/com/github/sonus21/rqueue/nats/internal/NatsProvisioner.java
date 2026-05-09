@@ -61,12 +61,31 @@ public class NatsProvisioner {
   private final ConcurrentHashMap<String, String> consumerCache = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Object> consumerLocks = new ConcurrentHashMap<>();
 
+  /**
+   * Minimum NATS server version that supports server-side message scheduling via the
+   * {@code Nats-Next-Deliver-Time} JetStream publish header (ADR-51).
+   */
+  public static final String SCHEDULING_MIN_VERSION = "2.12.0";
+
+  private final boolean schedulingSupported;
+
   public NatsProvisioner(Connection connection, JetStreamManagement jsm, RqueueNatsConfig config)
       throws IOException {
     this.connection = connection;
     this.kvm = connection.keyValueManagement();
     this.jsm = jsm;
     this.config = config;
+    io.nats.client.api.ServerInfo serverInfo = connection.getServerInfo();
+    this.schedulingSupported = serverInfo.isSameOrNewerThanVersion(SCHEDULING_MIN_VERSION);
+    log.log(
+        Level.INFO,
+        "NATS server version={0}; message scheduling (ADR-51) supported={1}",
+        new Object[] {serverInfo.getVersion(), schedulingSupported});
+  }
+
+  /** Returns {@code true} when the connected NATS server supports message scheduling (>= 2.12). */
+  public boolean isMessageSchedulingSupported() {
+    return schedulingSupported;
   }
 
   // ---- KV provisioning --------------------------------------------------
@@ -177,7 +196,6 @@ public class NatsProvisioner {
               .replicas(sd.getReplicas())
               .storageType(sd.getStorage())
               .retentionPolicy(desired)
-              .duplicateWindow(sd.getDuplicateWindow())
               .compressionOption(CompressionOption.S2);
           if (description != null && !description.isEmpty()) {
             b.description(description);

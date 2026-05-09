@@ -104,6 +104,12 @@ public class RqueueNatsAutoConfig {
   }
 
   @Bean
+  @ConditionalOnMissingBean(RqueueNatsConfig.class)
+  public RqueueNatsConfig rqueueNatsConfig(RqueueNatsProperties props) {
+    return toBrokerConfig(props);
+  }
+
+  @Bean
   @ConditionalOnMissingBean
   public JetStream jetStream(Connection connection) throws IOException {
     return connection.jetStream();
@@ -230,9 +236,6 @@ public class RqueueNatsAutoConfig {
     sd.setMaxMsgs(p.getStream().getMaxMessages());
     sd.setMaxBytes(p.getStream().getMaxBytes());
     sd.setMaxAge(p.getStream().getMaxAge());
-    if (p.getStream().getDuplicateWindow() != null) {
-      sd.setDuplicateWindow(p.getStream().getDuplicateWindow());
-    }
     cfg.setStreamDefaults(sd);
 
     RqueueNatsConfig.ConsumerDefaults cd = new RqueueNatsConfig.ConsumerDefaults();

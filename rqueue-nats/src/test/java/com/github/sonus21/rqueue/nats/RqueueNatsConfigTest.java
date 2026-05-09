@@ -91,14 +91,12 @@ class RqueueNatsConfigTest {
     assertSame(sd, sd.setReplicas(3));
     assertSame(sd, sd.setStorage(StorageType.Memory));
     assertSame(sd, sd.setRetention(RetentionPolicy.Limits));
-    assertSame(sd, sd.setDuplicateWindow(Duration.ofMinutes(10)));
     assertSame(sd, sd.setMaxMsgs(1234L));
     assertSame(sd, sd.setMaxBytes(99999L));
 
     assertEquals(3, sd.getReplicas());
     assertEquals(StorageType.Memory, sd.getStorage());
     assertEquals(RetentionPolicy.Limits, sd.getRetention());
-    assertEquals(Duration.ofMinutes(10), sd.getDuplicateWindow());
     assertEquals(1234L, sd.getMaxMsgs());
     assertEquals(99999L, sd.getMaxBytes());
   }

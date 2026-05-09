@@ -34,6 +34,9 @@ import io.nats.client.PullSubscribeOptions;
 import io.nats.client.impl.Headers;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,7 +62,26 @@ import reactor.core.publisher.Mono;
 public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   private static final Logger log = Logger.getLogger(JetStreamMessageBroker.class.getName());
-  private static final Capabilities CAPS = new Capabilities(false, false, false, false, false, false);
+
+  /**
+   * JetStream publish header used by NATS >= 2.12 to hold a message until a UTC delivery time
+   * (ADR-51). Value must be RFC 3339 UTC, e.g. {@code 2026-05-09T12:30:00Z}.
+   */
+  static final String HDR_NEXT_DELIVER_TIME = "Nats-Next-Deliver-Time";
+
+  /**
+   * Enrichment header: epoch-ms at which this message was scheduled to be processed.
+   * Written at scheduling publish time; read back in {@code enrichFromDelivery} so that
+   * {@link RqueueMessage#getProcessAt()} can be populated without deserializing the payload.
+   */
+  static final String HDR_PROCESS_AT = "Rqueue-Process-At";
+
+  /**
+   * Enrichment header: period in milliseconds for periodic messages.
+   * Written at scheduling publish time; read back in {@code enrichFromDelivery} to restore
+   * {@link RqueueMessage#getPeriod()} for payloads that have it as zero.
+   */
+  static final String HDR_PERIOD = "Rqueue-Period";
 
   /**
    * Lower bound for fetch wait when the caller passes a non-positive duration. JetStream rejects
@@ -70,12 +92,18 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    */
   private static final Duration MIN_FETCH_WAIT = Duration.ofMillis(50);
 
+  /** RFC 3339 UTC formatter for the {@code Nats-Next-Deliver-Time} header value. */
+  private static final DateTimeFormatter RFC3339_UTC =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC);
+
   private final Connection connection;
   private final JetStream js;
   private final JetStreamManagement jsm;
   private final RqueueNatsConfig config;
   private final RqueueSerDes serdes;
   private final NatsProvisioner provisioner;
+  private final boolean schedulingSupported;
+  private final Capabilities caps;
 
   /**
    * keyed by {@code "<consumerName>::<RqueueMessage.id>"}, value is the underlying NATS
@@ -113,6 +141,14 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     this.config = config;
     this.serdes = serdes;
     this.provisioner = provisioner;
+    this.schedulingSupported = provisioner != null && provisioner.isMessageSchedulingSupported();
+    this.caps = new Capabilities(
+        schedulingSupported,  // supportsDelayedEnqueue  — requires NATS >= 2.12
+        false,                // supportsScheduledIntrospection — no inspectable scheduled-zset
+        false,                // supportsCronJobs         — no server-side cron
+        false,                // usesPrimaryHandlerDispatch — no Redis processing-ZSET
+        true,                 // supportsViewData         — peek() reads from JetStream stream
+        true);                // supportsMoveMessage      — NatsRqueueUtilityService.moveMessage()
   }
 
   public static Builder builder() {
@@ -251,9 +287,40 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs) {
-    throw new UnsupportedOperationException(
-        "delayed enqueue not supported by NATS backend in this version; "
-            + "use the Redis backend for scheduled messages");
+    if (!schedulingSupported) {
+      throw new RqueueNatsException(
+          "NATS message scheduling (ADR-51) is not available: the connected server is older than "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + ". Upgrade NATS to "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + "+ or use the Redis backend for delayed messages.");
+    }
+    String subject = subjectFor(q);
+    String stream = streamFor(q);
+    provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
+    Headers headers = buildSchedulingHeaders(m, delayMs);
+    try {
+      byte[] payload = serdes.serialize(m);
+      js.publish(subject, headers, payload);
+    } catch (IOException | JetStreamApiException e) {
+      throw new RqueueNatsException(
+          "Failed to enqueue scheduled message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " subject="
+              + subject,
+          e);
+    } catch (RuntimeException e) {
+      throw new RqueueNatsException(
+          "Failed to serialize/enqueue scheduled message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " subject="
+              + subject,
+          e);
+    }
   }
 
   @Override
@@ -303,9 +370,52 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public Mono<Void> enqueueWithDelayReactive(QueueDetail q, RqueueMessage m, long delayMs) {
-    return Mono.error(new UnsupportedOperationException(
-        "delayed enqueue not supported by NATS backend in this version; "
-            + "use the Redis backend for scheduled messages"));
+    if (!schedulingSupported) {
+      return Mono.error(new RqueueNatsException(
+          "NATS message scheduling (ADR-51) is not available: the connected server is older than "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + ". Upgrade NATS to "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + "+ or use the Redis backend for delayed messages."));
+    }
+    String subject = subjectFor(q);
+    String stream = streamFor(q);
+    try {
+      provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
+    } catch (Exception e) {
+      return Mono.error(new RqueueNatsException(
+          "Failed to provision stream for reactive scheduled enqueue id="
+              + m.getId()
+              + " queue="
+              + q.getName(),
+          e));
+    }
+    Headers headers = buildSchedulingHeaders(m, delayMs);
+    byte[] payload;
+    try {
+      payload = serdes.serialize(m);
+    } catch (RuntimeException | IOException e) {
+      return Mono.error(new RqueueNatsException(
+          "Failed to serialize scheduled message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " subject="
+              + subject,
+          e));
+    }
+    return Mono.fromFuture(() -> js.publishAsync(subject, headers, payload))
+        .onErrorMap(e -> e instanceof RqueueNatsException
+            ? e
+            : new RqueueNatsException(
+                "Failed to enqueue scheduled message id="
+                    + m.getId()
+                    + " queue="
+                    + q.getName()
+                    + " subject="
+                    + subject,
+                e))
+        .then();
   }
 
   @Override
@@ -415,13 +525,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     for (Message nm : msgs) {
       try {
         RqueueMessage rm = serdes.deserialize(nm.getData(), RqueueMessage.class);
-        // derive failure count from JetStream redelivery metadata
-        try {
-          long deliveredCount = nm.metaData().deliveredCount();
-          rm.setFailureCount((int) Math.max(0, deliveredCount - 1));
-        } catch (Exception ignored) {
-          // defensive: metadata unavailable on non-JetStream messages
-        }
+        enrichFromDelivery(rm, nm);
         if (rm.getId() != null) {
           inFlight.put(inFlightKey(consumerName, rm.getId()), nm);
         }
@@ -454,6 +558,37 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
     nm.ack();
     return true;
+  }
+
+  /**
+   * Extend the visibility timeout for a message that is still being processed. Sends a NATS
+   * WIP (work-in-progress) signal to the server, which resets the consumer's {@code ackWait}
+   * timer back to its configured value. Call this periodically from a long-running handler to
+   * prevent JetStream from redelivering the message to another consumer while work is in flight.
+   *
+   * <p>The {@code deltaMs} hint from the caller is ignored — NATS always resets to the consumer's
+   * fixed {@code ackWait}; there is no per-message extension API in JetStream.
+   *
+   * @return {@code true} if the WIP signal was sent; {@code false} if the message is no longer
+   *         tracked (already acked, nacked, or the process restarted).
+   */
+  @Override
+  public boolean extendVisibilityTimeout(QueueDetail q, RqueueMessage m, long deltaMs) {
+    if (m.getId() == null) {
+      return false;
+    }
+    Message nm = inFlight.get(inFlightKey(q.resolvedConsumerName(), m.getId()));
+    if (nm == null) {
+      return false;
+    }
+    try {
+      nm.inProgress();
+      return true;
+    } catch (RuntimeException e) {
+      log.log(Level.WARNING,
+          "inProgress failed for message id=" + m.getId() + " queue=" + q.getName(), e);
+      return false;
+    }
   }
 
   @Override
@@ -838,7 +973,107 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public Capabilities capabilities() {
-    return CAPS;
+    return caps;
+  }
+
+  /**
+   * Headers for a scheduled (or periodic) JetStream publish.
+   *
+   * <p><b>Dedup key strategy — {@code Nats-Msg-Id}:</b>
+   * <ul>
+   *   <li>Scheduled messages ({@code processAt > 0}) — key is {@code id@processAt}.
+   *       Each period of a recurring message has a unique {@code processAt} (advances by
+   *       {@code period} each time), so consecutive periods never share a key and are never
+   *       suppressed. Retries of the same period reuse the identical {@code processAt}, so
+   *       the duplicate {@code scheduleNext} publish is correctly deduplicated by JetStream —
+   *       preventing double-execution of a period when the handler fails and is redelivered.
+   *   <li>Non-scheduled messages ({@code processAt == 0}) — plain {@code m.getId()}; each
+   *       enqueue generates a fresh UUID so there is no collision risk.
+   * </ul>
+   *
+   * <p><b>Enrichment headers</b> — written at publish time so they can be read back on
+   * {@link #popInternal} without deserializing the payload:
+   * <ul>
+   *   <li>{@code Rqueue-Process-At} — epoch-ms at which the message should be processed;
+   *       used to set {@link RqueueMessage#setProcessAt} if the deserialized payload lacks it.
+   *   <li>{@code Rqueue-Period} — period in ms for periodic messages; used to set
+   *       {@link RqueueMessage#setPeriod} if the deserialized payload lacks it.
+   * </ul>
+   */
+  private Headers buildSchedulingHeaders(RqueueMessage m, long delayMs) {
+    Headers headers = new Headers();
+    if (m.getId() != null) {
+      // Dedup key: id-at-processAt for scheduled messages (processAt > 0).
+      //   - Each period of a recurring message has a unique processAt → unique key → no
+      //     cross-period suppression.
+      //   - If scheduleNext is called again for the same period on redelivery after a handler
+      //     failure, processAt is identical → same key → JetStream deduplicates the second
+      //     publish and the period executes exactly once.
+      // For non-scheduled messages (processAt == 0) the plain id is used; each enqueue
+      // generates a fresh UUID so there is no collision risk.
+      String dedupKey = m.getProcessAt() > 0
+          ? m.getId() + "-at-" + m.getProcessAt()
+          : m.getId();
+      headers.add("Nats-Msg-Id", dedupKey);
+    }
+    long deliverAtMs = m.getProcessAt() > 0
+        ? m.getProcessAt()
+        : System.currentTimeMillis() + delayMs;
+    String deliverAt = RFC3339_UTC.format(Instant.ofEpochMilli(deliverAtMs));
+    headers.add(HDR_NEXT_DELIVER_TIME, deliverAt);
+    // Enrichment headers — readable on pop without deserializing the payload
+    headers.add(HDR_PROCESS_AT, String.valueOf(deliverAtMs));
+    if (m.isPeriodic()) {
+      headers.add(HDR_PERIOD, String.valueOf(m.getPeriod()));
+    }
+    return headers;
+  }
+
+  /**
+   * Enrich a deserialized {@link RqueueMessage} with delivery metadata from the NATS message.
+   *
+   * <p><b>Failure count</b> — derived from {@code metaData().deliveredCount() - 1} (JetStream
+   * tracks redeliveries in the reply-to subject). This is the authoritative source; we never
+   * re-publish on retry, so a static header set at publish time would always show 0.
+   *
+   * <p><b>Scheduling fields</b> — {@code processAt} and {@code period} are read from the
+   * enrichment headers ({@code Rqueue-Process-At}, {@code Rqueue-Period}) when the deserialized
+   * message has them as zero. This handles payloads published by older broker versions that
+   * predate per-field population, or any case where the JSON payload was trimmed.
+   */
+  private static void enrichFromDelivery(RqueueMessage rm, Message nm) {
+    // Failure count from JetStream redelivery metadata (the authoritative retry counter).
+    try {
+      long deliveredCount = nm.metaData().deliveredCount();
+      rm.setFailureCount((int) Math.max(0, deliveredCount - 1));
+    } catch (Exception ignored) {
+      // defensive: metadata absent on non-JetStream or synthetic messages
+    }
+    // Scheduling fields from publish-time enrichment headers.
+    if (rm.getProcessAt() <= 0) {
+      String processAtHdr = nm.getHeaders() == null ? null
+          : nm.getHeaders().getFirst(HDR_PROCESS_AT);
+      if (processAtHdr != null) {
+        try {
+          rm.setProcessAt(Long.parseLong(processAtHdr));
+        } catch (NumberFormatException ignored) {
+          // malformed header; leave processAt as-is
+        }
+      }
+    }
+    if (!rm.isPeriodic() && nm.getHeaders() != null) {
+      String periodHdr = nm.getHeaders().getFirst(HDR_PERIOD);
+      if (periodHdr != null) {
+        try {
+          long period = Long.parseLong(periodHdr);
+          if (period > 0) {
+            rm.setPeriod(period);
+          }
+        } catch (NumberFormatException ignored) {
+          // malformed header; leave period as-is
+        }
+      }
+    }
   }
 
   @Override

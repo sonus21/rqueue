@@ -54,7 +54,7 @@ public abstract class AbstractJetStreamIT {
     if (USE_EXTERNAL_NATS) {
       url = EXTERNAL_NATS_URL;
     } else {
-      NATS = new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
+      NATS = new GenericContainer<>(DockerImageName.parse("nats:2.12-alpine"))
           .withCommand("-js", "-DV")
           .withExposedPorts(4222)
           .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));
