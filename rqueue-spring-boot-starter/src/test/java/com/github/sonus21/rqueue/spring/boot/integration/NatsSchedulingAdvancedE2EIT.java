@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -62,9 +63,22 @@ import org.springframework.stereotype.Component;
  */
 @SpringBootTest(
     classes = NatsSchedulingAdvancedE2EIT.TestApp.class,
-    properties = {"rqueue.backend=nats", "rqueue.reactive.enabled=true"})
+    properties = {
+        "rqueue.backend=nats",
+        "rqueue.reactive.enabled=true",
+        "rqueue.nats.stream-prefix=" + NatsSchedulingAdvancedE2EIT.STREAM_PREFIX,
+        "rqueue.nats.subject-prefix=" + NatsSchedulingAdvancedE2EIT.SUBJECT_PREFIX
+    })
 @Tag("nats")
 class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
+
+  static final String STREAM_PREFIX = "rqueue-js-schedAdv-";
+  static final String SUBJECT_PREFIX = "rqueue.js.schedAdv.";
+
+  @BeforeAll
+  static void wipeOwnedStreams() {
+    deleteStreamsWithPrefix(STREAM_PREFIX);
+  }
 
   static final Duration DELAY = Duration.ofSeconds(3);
   static final Duration PERIOD = Duration.ofSeconds(5);

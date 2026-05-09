@@ -24,6 +24,7 @@ import io.nats.client.api.StreamInfo;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,11 @@ import org.springframework.stereotype.Component;
  */
 @SpringBootTest(
     classes = NatsRetryAndDlqE2EIT.TestApp.class,
-    properties = {"rqueue.backend=nats"})
+    properties = {
+        "rqueue.backend=nats",
+        "rqueue.nats.stream-prefix=" + NatsRetryAndDlqE2EIT.STREAM_PREFIX,
+        "rqueue.nats.subject-prefix=" + NatsRetryAndDlqE2EIT.SUBJECT_PREFIX
+    })
 @Tag("nats")
 @Disabled("This test exercises the NATS-native advisory bridge path"
     + " (JetStreamMessageBroker.installDeadLetterBridge /"
@@ -54,6 +59,14 @@ import org.springframework.stereotype.Component;
     + " works without this bridge. Enable this test once RqueueNatsAutoConfig provisions the"
     + " advisory dispatcher per queue during container start.")
 class NatsRetryAndDlqE2EIT extends AbstractNatsBootIT {
+
+  static final String STREAM_PREFIX = "rqueue-js-retryDlqE2E-";
+  static final String SUBJECT_PREFIX = "rqueue.js.retryDlqE2E.";
+
+  @BeforeAll
+  static void wipeOwnedStreams() {
+    deleteStreamsWithPrefix(STREAM_PREFIX);
+  }
 
   @Autowired
   RqueueMessageEnqueuer enqueuer;

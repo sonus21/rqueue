@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -45,9 +46,26 @@ import reactor.core.publisher.Flux;
  */
 @SpringBootTest(
     classes = NatsScheduledMessageE2EIT.TestApp.class,
-    properties = {"rqueue.backend=nats", "rqueue.reactive.enabled=true"})
+    properties = {
+        "rqueue.backend=nats",
+        "rqueue.reactive.enabled=true",
+        // Per-class prefix isolates this test's NATS streams from every other NATS-backed test
+        // running against the same nats-server (CI shares one instance across all classes, and a
+        // persistent JetStream dir survives reruns). Same queue name → distinct stream so we never
+        // inherit stale config or in-flight messages from an earlier class/run.
+        "rqueue.nats.stream-prefix=" + NatsScheduledMessageE2EIT.STREAM_PREFIX,
+        "rqueue.nats.subject-prefix=" + NatsScheduledMessageE2EIT.SUBJECT_PREFIX
+    })
 @Tag("nats")
 class NatsScheduledMessageE2EIT extends AbstractNatsBootIT {
+
+  static final String STREAM_PREFIX = "rqueue-js-schedE2E-";
+  static final String SUBJECT_PREFIX = "rqueue.js.schedE2E.";
+
+  @BeforeAll
+  static void wipeOwnedStreams() {
+    deleteStreamsWithPrefix(STREAM_PREFIX);
+  }
 
   static final Duration DELAY = Duration.ofSeconds(3);
   static final Duration NOT_YET_GUARD = Duration.ofMillis(800);
