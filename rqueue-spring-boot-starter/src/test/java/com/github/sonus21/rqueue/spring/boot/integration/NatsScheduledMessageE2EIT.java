@@ -10,16 +10,19 @@
 package com.github.sonus21.rqueue.spring.boot.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.core.ReactiveRqueueMessageEnqueuer;
 import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +54,9 @@ class NatsScheduledMessageE2EIT extends AbstractNatsBootIT {
   static final Duration TOTAL_WAIT = Duration.ofSeconds(12);
 
   @Autowired
+  NatsProvisioner natsProvisioner;
+
+  @Autowired
   RqueueMessageEnqueuer enqueuer;
 
   @Autowired
@@ -58,6 +64,14 @@ class NatsScheduledMessageE2EIT extends AbstractNatsBootIT {
 
   @Autowired
   ScheduledListener listener;
+
+  @BeforeEach
+  void requireSchedulingSupport() {
+    assumeTrue(
+        natsProvisioner.isMessageSchedulingSupported(),
+        "Skipping: connected NATS server is older than " + NatsProvisioner.SCHEDULING_MIN_VERSION
+            + " and does not support ADR-51 message scheduling");
+  }
 
   @Test
   void scheduledMessageIsDeliveredAfterDelay() throws Exception {
