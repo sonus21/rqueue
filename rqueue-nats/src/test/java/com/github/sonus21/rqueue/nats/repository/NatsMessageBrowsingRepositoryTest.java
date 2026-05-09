@@ -50,10 +50,11 @@ class NatsMessageBrowsingRepositoryTest {
   }
 
   private static StreamInfo streamInfo(long msgCount) {
-    StreamState state = mock(StreamState.class,
+    StreamState state = mock(
+        StreamState.class,
         inv -> "getMsgCount".equals(inv.getMethod().getName()) ? msgCount : null);
-    return mock(StreamInfo.class,
-        inv -> "getStreamState".equals(inv.getMethod().getName()) ? state : null);
+    return mock(
+        StreamInfo.class, inv -> "getStreamState".equals(inv.getMethod().getName()) ? state : null);
   }
 
   // ---- getDataSize -- null / empty ---------------------------------
@@ -145,7 +146,8 @@ class NatsMessageBrowsingRepositoryTest {
 
   @Test
   void getDataSizes_empty_returnsEmpty() {
-    assertTrue(repo.getDataSizes(Collections.emptyList(), Collections.emptyList()).isEmpty());
+    assertTrue(
+        repo.getDataSizes(Collections.emptyList(), Collections.emptyList()).isEmpty());
   }
 
   @Test
@@ -154,8 +156,7 @@ class NatsMessageBrowsingRepositoryTest {
     when(jsm.getStreamInfo(stream)).thenReturn(streamInfo(3L));
 
     List<Long> result = repo.getDataSizes(
-        Arrays.asList("__rq::queue::q1", ""),
-        Arrays.asList(DataType.LIST, DataType.LIST));
+        Arrays.asList("__rq::queue::q1", ""), Arrays.asList(DataType.LIST, DataType.LIST));
 
     assertEquals(2, result.size());
     assertEquals(3L, result.get(0));

@@ -37,13 +37,26 @@ import org.springframework.ui.Model;
 @CoreUnitTest
 class RqueueViewControllerTest {
 
-  @Mock private RqueueHtmlRenderer renderer;
-  @Mock private RqueueWebConfig webConfig;
-  @Mock private RqueueViewControllerService viewControllerService;
-  @Mock private HttpServletRequest request;
-  @Mock private HttpServletResponse response;
-  @Mock private Model model;
-  @Mock private PrintWriter writer;
+  @Mock
+  private RqueueHtmlRenderer renderer;
+
+  @Mock
+  private RqueueWebConfig webConfig;
+
+  @Mock
+  private RqueueViewControllerService viewControllerService;
+
+  @Mock
+  private HttpServletRequest request;
+
+  @Mock
+  private HttpServletResponse response;
+
+  @Mock
+  private Model model;
+
+  @Mock
+  private PrintWriter writer;
 
   private RqueueViewController controller;
 

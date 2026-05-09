@@ -30,14 +30,16 @@ class RqueueWebExceptionAdviceTest {
 
   @Test
   void handleBackendCapability_returnsHttp501() {
-    BackendCapabilityException ex = new BackendCapabilityException("nats", "viewData", "not supported");
+    BackendCapabilityException ex =
+        new BackendCapabilityException("nats", "viewData", "not supported");
     ResponseEntity<Map<String, Object>> resp = advice.handleBackendCapability(ex);
     assertEquals(HttpStatus.NOT_IMPLEMENTED, resp.getStatusCode());
   }
 
   @Test
   void handleBackendCapability_bodyContainsCode501() {
-    BackendCapabilityException ex = new BackendCapabilityException("nats", "viewData", "not supported");
+    BackendCapabilityException ex =
+        new BackendCapabilityException("nats", "viewData", "not supported");
     ResponseEntity<Map<String, Object>> resp = advice.handleBackendCapability(ex);
     assertNotNull(resp.getBody());
     assertEquals(501, resp.getBody().get("code"));
@@ -45,28 +47,32 @@ class RqueueWebExceptionAdviceTest {
 
   @Test
   void handleBackendCapability_bodyContainsBackend() {
-    BackendCapabilityException ex = new BackendCapabilityException("nats", "viewData", "not supported");
+    BackendCapabilityException ex =
+        new BackendCapabilityException("nats", "viewData", "not supported");
     ResponseEntity<Map<String, Object>> resp = advice.handleBackendCapability(ex);
     assertEquals("nats", resp.getBody().get("backend"));
   }
 
   @Test
   void handleBackendCapability_bodyContainsOperation() {
-    BackendCapabilityException ex = new BackendCapabilityException("nats", "viewData", "not supported");
+    BackendCapabilityException ex =
+        new BackendCapabilityException("nats", "viewData", "not supported");
     ResponseEntity<Map<String, Object>> resp = advice.handleBackendCapability(ex);
     assertEquals("viewData", resp.getBody().get("operation"));
   }
 
   @Test
   void handleBackendCapability_bodyContainsMessage() {
-    BackendCapabilityException ex = new BackendCapabilityException("nats", "viewData", "not supported");
+    BackendCapabilityException ex =
+        new BackendCapabilityException("nats", "viewData", "not supported");
     ResponseEntity<Map<String, Object>> resp = advice.handleBackendCapability(ex);
     assertEquals("not supported", resp.getBody().get("message"));
   }
 
   @Test
   void handleBackendCapability_bodyHasAllFourKeys() {
-    BackendCapabilityException ex = new BackendCapabilityException("redis", "moveData", "atomic move unavailable");
+    BackendCapabilityException ex =
+        new BackendCapabilityException("redis", "moveData", "atomic move unavailable");
     ResponseEntity<Map<String, Object>> resp = advice.handleBackendCapability(ex);
     Map<String, Object> body = resp.getBody();
     assertNotNull(body);

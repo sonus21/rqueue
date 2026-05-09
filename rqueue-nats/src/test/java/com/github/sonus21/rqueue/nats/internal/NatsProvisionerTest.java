@@ -9,7 +9,6 @@
  */
 package com.github.sonus21.rqueue.nats.internal;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -182,7 +181,8 @@ class NatsProvisionerTest {
    * Usage: create the exception first, then use it in thenThrow().
    */
   private static JetStreamApiException makeStreamNotFoundEx() {
-    return mock(JetStreamApiException.class,
+    return mock(
+        JetStreamApiException.class,
         inv -> "getApiErrorCode".equals(inv.getMethod().getName()) ? 10059 : null);
   }
 
@@ -208,31 +208,38 @@ class NatsProvisionerTest {
   }
 
   @Test
-  void ensureStream_autoCreateDisabled_throwsWhenStreamAbsent() throws IOException, JetStreamApiException {
+  void ensureStream_autoCreateDisabled_throwsWhenStreamAbsent()
+      throws IOException, JetStreamApiException {
     RqueueNatsConfig noAutoCreate = RqueueNatsConfig.defaults().setAutoCreateStreams(false);
     NatsProvisioner p = new NatsProvisioner(connection, jsm, noAutoCreate);
 
     JetStreamApiException notFound = makeStreamNotFoundEx();
     when(jsm.getStreamInfo("rqueue-js-orders")).thenThrow(notFound);
 
-    assertThrows(RqueueNatsException.class, () ->
-        p.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders")));
+    assertThrows(
+        RqueueNatsException.class,
+        () -> p.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders")));
   }
 
   @Test
-  void ensureStream_ioException_wrapsInRqueueNatsException() throws IOException, JetStreamApiException {
+  void ensureStream_ioException_wrapsInRqueueNatsException()
+      throws IOException, JetStreamApiException {
     when(jsm.getStreamInfo(anyString())).thenThrow(new IOException("connection refused"));
 
-    assertThrows(RqueueNatsException.class, () ->
-        provisioner.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders")));
+    assertThrows(
+        RqueueNatsException.class,
+        () -> provisioner.ensureStream(
+            "rqueue-js-orders", Collections.singletonList("rqueue.js.orders")));
   }
 
   @Test
-  void ensureStream_queueType_streamRetention_createsLimitsPolicy() throws IOException, JetStreamApiException {
+  void ensureStream_queueType_streamRetention_createsLimitsPolicy()
+      throws IOException, JetStreamApiException {
     JetStreamApiException notFound = makeStreamNotFoundEx();
     when(jsm.getStreamInfo("rqueue-js-events")).thenThrow(notFound);
 
-    provisioner.ensureStream("rqueue-js-events", Arrays.asList("rqueue.js.events"), QueueType.STREAM);
+    provisioner.ensureStream(
+        "rqueue-js-events", Arrays.asList("rqueue.js.events"), QueueType.STREAM);
 
     verify(jsm, times(1)).addStream(any(StreamConfiguration.class));
   }
@@ -240,9 +247,11 @@ class NatsProvisionerTest {
   // ---- ensureDlqStream ----
 
   @Test
-  void ensureDlqStream_autoCreateDlqFalse_doesNotCreateStream() throws IOException, JetStreamApiException {
+  void ensureDlqStream_autoCreateDlqFalse_doesNotCreateStream()
+      throws IOException, JetStreamApiException {
     // Default config has autoCreateDlqStream=false
-    provisioner.ensureDlqStream("rqueue-js-orders-dlq", Collections.singletonList("rqueue.js.orders.dlq"));
+    provisioner.ensureDlqStream(
+        "rqueue-js-orders-dlq", Collections.singletonList("rqueue.js.orders.dlq"));
     verify(jsm, never()).addStream(any());
   }
 

@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -71,8 +70,8 @@ class NatsRqueueJobDaoTest {
   }
 
   private static KeyValueEntry entry(byte[] value) {
-    return mock(KeyValueEntry.class,
-        inv -> "getValue".equals(inv.getMethod().getName()) ? value : null);
+    return mock(
+        KeyValueEntry.class, inv -> "getValue".equals(inv.getMethod().getName()) ? value : null);
   }
 
   // ---- save / createJob ----------------------------------------------
@@ -210,7 +209,8 @@ class NatsRqueueJobDaoTest {
   }
 
   @Test
-  void finByMessageId_matchingJob_returnsIt() throws IOException, JetStreamApiException, InterruptedException {
+  void finByMessageId_matchingJob_returnsIt()
+      throws IOException, JetStreamApiException, InterruptedException {
     byte[] bytes = "{}".getBytes();
     RqueueJob j = job("j1", "target-msg");
     when(kv.keys()).thenReturn(Collections.singletonList("j1"));
@@ -224,7 +224,8 @@ class NatsRqueueJobDaoTest {
   }
 
   @Test
-  void finByMessageId_noMatch_returnsEmpty() throws IOException, JetStreamApiException, InterruptedException {
+  void finByMessageId_noMatch_returnsEmpty()
+      throws IOException, JetStreamApiException, InterruptedException {
     byte[] bytes = "{}".getBytes();
     RqueueJob j = job("j1", "other-msg");
     when(kv.keys()).thenReturn(Collections.singletonList("j1"));
@@ -235,7 +236,8 @@ class NatsRqueueJobDaoTest {
   }
 
   @Test
-  void finByMessageId_ioException_returnsEmpty() throws IOException, JetStreamApiException, InterruptedException {
+  void finByMessageId_ioException_returnsEmpty()
+      throws IOException, JetStreamApiException, InterruptedException {
     when(kv.keys()).thenThrow(new IOException("kv down"));
     assertTrue(dao.finByMessageId("x").isEmpty());
   }
@@ -264,7 +266,8 @@ class NatsRqueueJobDaoTest {
   }
 
   @Test
-  void finByMessageIdIn_scansAndFilters() throws IOException, JetStreamApiException, InterruptedException {
+  void finByMessageIdIn_scansAndFilters()
+      throws IOException, JetStreamApiException, InterruptedException {
     byte[] bytes = "{}".getBytes();
     RqueueJob j1 = job("j1", "m1");
     RqueueJob j2 = job("j2", "m2");

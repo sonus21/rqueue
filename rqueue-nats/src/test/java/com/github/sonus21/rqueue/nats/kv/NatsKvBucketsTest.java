@@ -43,8 +43,7 @@ class NatsKvBucketsTest {
   void allBucketsIsImmutable() {
     assertFalse(NatsKvBuckets.ALL_BUCKETS.isEmpty());
     org.junit.jupiter.api.Assertions.assertThrows(
-        UnsupportedOperationException.class,
-        () -> NatsKvBuckets.ALL_BUCKETS.add("rogue-bucket"));
+        UnsupportedOperationException.class, () -> NatsKvBuckets.ALL_BUCKETS.add("rogue-bucket"));
   }
 
   @Test

@@ -35,6 +35,7 @@ class RqueueJobServiceImplTest {
 
   @Mock
   private RqueueJobDao rqueueJobDao;
+
   @Mock
   private RqueueSerDes rqueueSerDes;
 
@@ -135,7 +136,8 @@ class RqueueJobServiceImplTest {
     DataViewResponse resp = service.getJobs("msg-1");
 
     // Column index 3 is "Error"
-    assertEquals("something went wrong", resp.getRows().get(0).getColumns().get(3).getValue());
+    assertEquals(
+        "something went wrong", resp.getRows().get(0).getColumns().get(3).getValue());
   }
 
   // ---- getJobs — with lastCheckinAt ----

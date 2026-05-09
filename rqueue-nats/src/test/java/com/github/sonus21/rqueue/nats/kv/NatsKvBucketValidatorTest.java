@@ -73,8 +73,7 @@ class NatsKvBucketValidatorTest {
     }
 
     IllegalStateException ex = assertThrows(
-        IllegalStateException.class,
-        () -> NatsKvBucketValidator.validate(connection, false));
+        IllegalStateException.class, () -> NatsKvBucketValidator.validate(connection, false));
     assertTrue(ex.getMessage().contains(NatsKvBuckets.LOCKS));
   }
 
@@ -91,8 +90,7 @@ class NatsKvBucketValidatorTest {
     }
 
     IllegalStateException ex = assertThrows(
-        IllegalStateException.class,
-        () -> NatsKvBucketValidator.validate(connection, false));
+        IllegalStateException.class, () -> NatsKvBucketValidator.validate(connection, false));
     assertTrue(ex.getMessage().contains(NatsKvBuckets.JOBS));
     assertTrue(ex.getMessage().contains(NatsKvBuckets.MESSAGE_METADATA));
   }
@@ -102,8 +100,7 @@ class NatsKvBucketValidatorTest {
     when(connection.keyValueManagement()).thenThrow(new IOException("connection lost"));
 
     IllegalStateException ex = assertThrows(
-        IllegalStateException.class,
-        () -> NatsKvBucketValidator.validate(connection, false));
+        IllegalStateException.class, () -> NatsKvBucketValidator.validate(connection, false));
     assertTrue(ex.getMessage().contains("KeyValueManagement"));
   }
 
