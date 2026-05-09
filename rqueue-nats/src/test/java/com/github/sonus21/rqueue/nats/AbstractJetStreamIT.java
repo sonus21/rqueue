@@ -9,6 +9,7 @@
  */
 package com.github.sonus21.rqueue.nats;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,18 +20,30 @@ import io.nats.client.Nats;
 import io.nats.client.Options;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Base for JetStream integration tests. Mirrors the Redis test pattern: when {@code NATS_RUNNING}
- * is set the test connects to a locally running nats-server (CI path); otherwise a Testcontainers-
- * managed instance is started in {@link BeforeAll} (local Docker path). JUnit 5 / Testcontainers
- * skip the test gracefully if Docker isn't available and {@code NATS_RUNNING} isn't set.
+ * Base for JetStream integration tests. Two execution paths:
+ *
+ * <ol>
+ *   <li><b>External NATS</b> — set {@code NATS_RUNNING=1} (and optionally {@code NATS_URL}) to
+ *       connect to an already-running nats-server. This is the path used in CI and when
+ *       nats-server is installed locally (e.g. via Homebrew).
+ *   <li><b>Testcontainers</b> — when Docker is available and {@code NATS_RUNNING} is not set, a
+ *       {@code nats:2.12-alpine} container is started automatically.
+ * </ol>
+ *
+ * <p>If neither path is viable the whole class is skipped via {@link
+ * org.junit.jupiter.api.Assumptions#assumeTrue} — no hard failure.
+ *
+ * <p><b>Why no {@code @Testcontainers(disabledWithoutDocker = true)}:</b> that annotation
+ * disables the class at the JUnit extension level <em>before</em> {@code @BeforeAll} runs,
+ * so the external-NATS path would never be reached when Docker is absent. We manage the
+ * container lifecycle manually and gate on assumptions instead.
  */
-@Testcontainers(disabledWithoutDocker = true)
 @NatsIntegrationTest
 public abstract class AbstractJetStreamIT {
 
@@ -38,14 +51,7 @@ public abstract class AbstractJetStreamIT {
   static final String EXTERNAL_NATS_URL =
       System.getenv().getOrDefault("NATS_URL", "nats://127.0.0.1:4222");
 
-  /**
-   * Container is only constructed in the local-Docker path. The Testcontainers extension
-   * ignores static {@code GenericContainer} fields that aren't annotated {@code @Container};
-   * we manage the container's lifecycle from {@link #setup()} / {@link #teardown()} so the
-   * external-NATS path can leave it null without tripping the extension.
-   */
   protected static GenericContainer<?> NATS;
-
   protected static Connection connection;
 
   @BeforeAll
@@ -54,6 +60,10 @@ public abstract class AbstractJetStreamIT {
     if (USE_EXTERNAL_NATS) {
       url = EXTERNAL_NATS_URL;
     } else {
+      assumeTrue(
+          DockerClientFactory.instance().isDockerAvailable(),
+          "Skipping NATS ITs: Docker is not available and NATS_RUNNING is not set. "
+              + "Start nats-server locally and set NATS_RUNNING=1, or start Docker.");
       NATS = new GenericContainer<>(DockerImageName.parse("nats:2.12-alpine"))
           .withCommand("-js", "-DV")
           .withExposedPorts(4222)
@@ -82,11 +92,6 @@ public abstract class AbstractJetStreamIT {
     return mockQueue(name, type, null);
   }
 
-  /**
-   * Build a mock QueueDetail whose {@code resolvedConsumerName()} returns the given consumer
-   * name. Used by tests that exercise multi-consumer flows where pop's {@code consumerName}
-   * argument must match what ack/nack derive from the QueueDetail.
-   */
   protected QueueDetail mockQueue(String name, QueueType type, String consumerName) {
     QueueDetail q = mock(QueueDetail.class);
     when(q.getName()).thenReturn(name);

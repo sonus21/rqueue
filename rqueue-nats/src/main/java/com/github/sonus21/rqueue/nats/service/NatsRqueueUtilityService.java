@@ -70,7 +70,7 @@ import reactor.core.publisher.Mono;
  * JetStream stream, republishes each to the destination stream, and hard-deletes the source copy
  * via {@link JetStreamManagement#deleteMessage}. {@link #enqueueMessage(String, String, String)}
  * looks up the message in the metadata store and republishes it immediately (without a
- * {@code Nats-Next-Deliver-Time} header) so the worker picks it up on its next poll.
+ * {@code Nats-Schedule} header) so the worker picks it up on its next poll.
  *
  * <p>{@link #makeEmpty(String, String)} still returns "not supported" — purging a stream is a
  * destructive admin operation best performed via {@code nats stream purge}.
@@ -156,7 +156,7 @@ public class NatsRqueueUtilityService implements RqueueUtilityService {
   /**
    * Re-enqueue a message for immediate delivery. Looks up the {@link RqueueMessage} from the
    * metadata store by {@code queueName + id}, then republishes the raw bytes to the queue's
-   * JetStream stream without a {@code Nats-Next-Deliver-Time} header so the poller picks it up
+   * JetStream stream without a {@code Nats-Schedule} header so the poller picks it up
    * on its next fetch. A fresh {@code Nats-Msg-Id} ({@code id-requeue-<millis>}) prevents
    * JetStream from deduplicating against the original scheduled publish. The {@code position}
    * hint (FRONT / BACK) is ignored — JetStream pull consumers deliver in stream-sequence order.

@@ -365,7 +365,7 @@ jobs:
       # instead of pulling a Testcontainers image.
       - name: Install nats-server
         run: |
-          NATS_VERSION=v2.10.22
+          NATS_VERSION=v2.12.0
           curl -sSL "https://github.com/nats-io/nats-server/releases/download/${NATS_VERSION}/nats-server-${NATS_VERSION}-linux-amd64.tar.gz" \
             | tar -xz -C /tmp
           sudo mv "/tmp/nats-server-${NATS_VERSION}-linux-amd64/nats-server" /usr/local/bin/nats-server

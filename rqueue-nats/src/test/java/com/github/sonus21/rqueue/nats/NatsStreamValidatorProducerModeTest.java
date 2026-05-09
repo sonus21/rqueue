@@ -63,7 +63,7 @@ class NatsStreamValidatorProducerModeTest {
   void setUp() {
     EndpointRegistry.delete();
     provisioner = mock(NatsProvisioner.class);
-    when(provisioner.ensureConsumer(anyString(), anyString(), any(), anyLong(), anyLong()))
+    when(provisioner.ensureConsumer(anyString(), anyString(), anyString(), any(), anyLong(), anyLong()))
         .thenReturn("rqueue-consumer");
     natsConfig = RqueueNatsConfig.defaults();
   }
@@ -81,7 +81,7 @@ class NatsStreamValidatorProducerModeTest {
     verify(provisioner, times(1))
         .ensureStream(eq(natsConfig.getStreamPrefix() + "orders"), any(), any(), any());
     verify(provisioner, never())
-        .ensureConsumer(anyString(), anyString(), any(Duration.class), anyLong(), anyLong());
+        .ensureConsumer(anyString(), anyString(), anyString(), any(Duration.class), anyLong(), anyLong());
   }
 
   @Test
@@ -99,6 +99,7 @@ class NatsStreamValidatorProducerModeTest {
         .ensureConsumer(
             eq(natsConfig.getStreamPrefix() + "orders"),
             anyString(),
+            eq(natsConfig.getSubjectPrefix() + "orders"),
             any(Duration.class),
             anyLong(),
             anyLong());
@@ -112,6 +113,6 @@ class NatsStreamValidatorProducerModeTest {
     validator.afterSingletonsInstantiated();
 
     verify(provisioner, times(1))
-        .ensureConsumer(anyString(), anyString(), any(Duration.class), anyLong(), anyLong());
+        .ensureConsumer(anyString(), anyString(), anyString(), any(Duration.class), anyLong(), anyLong());
   }
 }
