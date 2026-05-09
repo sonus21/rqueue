@@ -18,6 +18,38 @@ foundational Spring Boot 4 and Jackson 3 migration notes; RC3 for the Java 17
 baseline change; RC4–RC6 below for the NATS backend, broker SPI, dashboard
 work, and middleware additions that build on top.
 
+## Release [4.0.0.RC8] 2026-05-09
+
+{: .highlight}
+Release candidate.
+
+### Features
+* **NATS message scheduling (ADR-51)** — delayed and periodic message delivery
+  is now fully supported on NATS servers ≥ 2.12 via the `Nats-Next-Deliver-Time`
+  header (ADR-51). `RqueueMessageEnqueuer.enqueueIn()` and `enqueuePeriodic()`
+  work transparently; the broker advertises `supportsDelayedEnqueue=true` when
+  the connected server supports scheduling. Older servers continue to work with
+  scheduling silently disabled.
+* **Dashboard move-message for NATS** — `NatsRqueueUtilityService.moveMessage()`
+  is now implemented: walks the source JetStream stream, republishes each message
+  to the destination stream, and hard-deletes the source sequence. The dashboard
+  "move messages" panel is now functional for NATS queues.
+* **Dashboard re-enqueue for NATS** — `enqueueMessage()` looks up the message
+  from the metadata store and republishes it immediately (no
+  `Nats-Next-Deliver-Time` header) so the worker picks it up on the next poll.
+* **Long-running job keep-alive** — `Job.updateVisibilityTimeout(Duration)` now
+  issues a NATS `+WIP` (work-in-progress) signal that resets the consumer's
+  `ackWait` timer, preventing redelivery while a long-running handler is still
+  active.
+
+### Changes
+* **`duplicateWindow` removed from stream config** — the per-stream
+  `DuplicateWindow` setting has been removed. Any job running longer than a
+  finite duplicate window could trigger unexpected dedup expiry on retry. JetStream
+  now manages deduplication server-side with its own defaults. The dedup key shape
+  (`id-at-processAt`) still guarantees correctness for periodic messages across
+  periods.
+
 ## Release [4.0.0.RC7] 2026-05-08
 
 {: .highlight}
