@@ -209,11 +209,14 @@ class NatsProvisionerTest {
     JetStreamApiException notFound = makeStreamNotFoundEx();
     when(jsm.getStreamInfo("rqueue-js-orders")).thenThrow(notFound);
 
-    provisioner.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders"),
-        QueueType.QUEUE, null, true);
+    provisioner.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        true);
 
-    verify(jsm, times(1)).addStream(
-        argThat(cfg -> cfg.getAllowMsgSchedules()));
+    verify(jsm, times(1)).addStream(argThat(cfg -> cfg.getAllowMsgSchedules()));
   }
 
   @Test
@@ -233,11 +236,14 @@ class NatsProvisionerTest {
     when(jsm.getStreamInfo("rqueue-js-orders")).thenThrow(notFound);
 
     // allowSchedules=true is requested but server doesn't support it → flag must NOT be set
-    oldProvisioner.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders"),
-        QueueType.QUEUE, null, true);
+    oldProvisioner.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        true);
 
-    verify(jsm, times(1)).addStream(
-        argThat(cfg -> !cfg.getAllowMsgSchedules()));
+    verify(jsm, times(1)).addStream(argThat(cfg -> !cfg.getAllowMsgSchedules()));
   }
 
   /**
@@ -246,30 +252,41 @@ class NatsProvisionerTest {
    * flag rather than silently skipping because the stream is already in cache.
    */
   @Test
-  void ensureStream_upgradeScheduling_updatesExistingStream() throws IOException, JetStreamApiException {
+  void ensureStream_upgradeScheduling_updatesExistingStream()
+      throws IOException, JetStreamApiException {
     // First call: stream doesn't exist, created without scheduling
     JetStreamApiException notFound = makeStreamNotFoundEx();
     when(jsm.getStreamInfo("rqueue-js-orders"))
-        .thenThrow(notFound)             // first call: not found → create
-        .thenReturn(mock(StreamInfo.class, inv -> {  // second call: exists, no scheduling
-          String m = inv.getMethod().getName();
-          if ("getConfiguration".equals(m)) {
-            StreamConfiguration cfg = StreamConfiguration.builder()
-                .name("rqueue-js-orders")
-                .subjects(Collections.singletonList("rqueue.js.orders"))
-                .build();
-            return cfg;
-          }
-          return null;
-        }));
+        .thenThrow(notFound) // first call: not found → create
+        .thenReturn(mock(
+            StreamInfo.class,
+            inv -> { // second call: exists, no scheduling
+              String m = inv.getMethod().getName();
+              if ("getConfiguration".equals(m)) {
+                StreamConfiguration cfg = StreamConfiguration.builder()
+                    .name("rqueue-js-orders")
+                    .subjects(Collections.singletonList("rqueue.js.orders"))
+                    .build();
+                return cfg;
+              }
+              return null;
+            }));
 
     // First call: no scheduling
-    provisioner.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders"),
-        QueueType.QUEUE, null, false);
+    provisioner.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        false);
     // Second call (different provisioner instance to bypass cache): scheduling requested
     NatsProvisioner p2 = new NatsProvisioner(connection, jsm, config);
-    p2.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders"),
-        QueueType.QUEUE, null, true);
+    p2.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        true);
 
     verify(jsm, times(1)).addStream(any(StreamConfiguration.class));
     verify(jsm, times(1)).updateStream(argThat(cfg -> cfg.getAllowMsgSchedules()));

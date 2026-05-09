@@ -64,7 +64,8 @@ class RqueueNatsListenerConfigTest {
 
   @Test
   void natsConnection_urlOnly_connectsCalled() throws IOException, InterruptedException {
-    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL)).thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
     when(env.getProperty("rqueue.nats.username")).thenReturn(null);
     when(env.getProperty("rqueue.nats.password")).thenReturn(null);
     when(env.getProperty("rqueue.nats.token")).thenReturn(null);
@@ -82,7 +83,8 @@ class RqueueNatsListenerConfigTest {
 
   @Test
   void natsConnection_withConnectionName_connectsCalled() throws IOException, InterruptedException {
-    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL)).thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
     when(env.getProperty("rqueue.nats.username")).thenReturn(null);
     when(env.getProperty("rqueue.nats.password")).thenReturn(null);
     when(env.getProperty("rqueue.nats.token")).thenReturn(null);
@@ -100,7 +102,8 @@ class RqueueNatsListenerConfigTest {
 
   @Test
   void natsConnection_withToken_connectsCalled() throws IOException, InterruptedException {
-    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL)).thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
     when(env.getProperty("rqueue.nats.username")).thenReturn(null);
     when(env.getProperty("rqueue.nats.password")).thenReturn(null);
     when(env.getProperty("rqueue.nats.token")).thenReturn("secret-token");
@@ -117,11 +120,13 @@ class RqueueNatsListenerConfigTest {
   // ---- natsConnection – with username/password auth (token is empty) ----
 
   @Test
-  void natsConnection_withUsernamePassword_connectsCalled() throws IOException, InterruptedException {
-    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL)).thenReturn("nats://localhost:4222");
+  void natsConnection_withUsernamePassword_connectsCalled()
+      throws IOException, InterruptedException {
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
     when(env.getProperty("rqueue.nats.username")).thenReturn("user");
     when(env.getProperty("rqueue.nats.password")).thenReturn("pass");
-    when(env.getProperty("rqueue.nats.token")).thenReturn("");   // empty → fall through to user/pass
+    when(env.getProperty("rqueue.nats.token")).thenReturn(""); // empty → fall through to user/pass
     when(env.getProperty("rqueue.nats.connection-name")).thenReturn(null);
 
     Connection mockConn = mock(Connection.class);
@@ -136,14 +141,16 @@ class RqueueNatsListenerConfigTest {
 
   @Test
   void natsConnection_interrupted_throwsIOException() throws InterruptedException {
-    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL)).thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
     when(env.getProperty("rqueue.nats.username")).thenReturn(null);
     when(env.getProperty("rqueue.nats.password")).thenReturn(null);
     when(env.getProperty("rqueue.nats.token")).thenReturn(null);
     when(env.getProperty("rqueue.nats.connection-name")).thenReturn(null);
 
     try (MockedStatic<Nats> natsStatic = mockStatic(Nats.class)) {
-      natsStatic.when(() -> Nats.connect(any(Options.class)))
+      natsStatic
+          .when(() -> Nats.connect(any(Options.class)))
           .thenThrow(new InterruptedException("interrupted"));
 
       assertThrows(IOException.class, () -> config.natsConnection());

@@ -52,7 +52,8 @@ public class NatsProvisioner {
   private final ConcurrentHashMap<String, KeyValue> kvCache = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Object> kvLocks = new ConcurrentHashMap<>();
 
-  // stream name → schedulingEnabled (true if the stream was created/updated with allowMessageSchedules)
+  // stream name → schedulingEnabled (true if the stream was created/updated with
+  // allowMessageSchedules)
   private final ConcurrentHashMap<String, Boolean> streamsDone = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Object> streamLocks = new ConcurrentHashMap<>();
 
@@ -254,8 +255,10 @@ public class NatsProvisioner {
                 .allowMessageSchedules(true)
                 .build();
             jsm.updateStream(updated);
-            log.log(Level.INFO,
-                "Stream ''{0}'' updated to enable message scheduling (ADR-51).", streamName);
+            log.log(
+                Level.INFO,
+                "Stream ''{0}'' updated to enable message scheduling (ADR-51).",
+                streamName);
           }
         }
       } catch (IOException | JetStreamApiException e) {
@@ -316,8 +319,8 @@ public class NatsProvisioner {
       if (cached != null) {
         return cached;
       }
-      String actual =
-          doEnsureConsumer(streamName, consumerName, filterSubject, ackWait, maxDeliver, maxAckPending);
+      String actual = doEnsureConsumer(
+          streamName, consumerName, filterSubject, ackWait, maxDeliver, maxAckPending);
       consumerCache.put(cacheKey, actual);
       return actual;
     }

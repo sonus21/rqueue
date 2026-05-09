@@ -330,9 +330,12 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
     String workSubject = subjectFor(q);
     String stream = streamFor(q);
-    provisioner.ensureStream(stream,
+    provisioner.ensureStream(
+        stream,
         List.of(workSubject, schedSubjectPattern(workSubject)),
-        q.getType(), streamDescription(q), true);
+        q.getType(),
+        streamDescription(q),
+        true);
     String schedSubject = schedSubjectFor(q, m.getId());
     Headers headers = buildSchedulingHeaders(m, delayMs, workSubject);
     try {
@@ -417,9 +420,12 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     String workSubject = subjectFor(q);
     String stream = streamFor(q);
     try {
-      provisioner.ensureStream(stream,
+      provisioner.ensureStream(
+          stream,
           List.of(workSubject, schedSubjectPattern(workSubject)),
-          q.getType(), streamDescription(q), true);
+          q.getType(),
+          streamDescription(q),
+          true);
     } catch (Exception e) {
       return Mono.error(new RqueueNatsException(
           "Failed to provision stream for reactive scheduled enqueue id="
@@ -546,7 +552,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         String actualConsumerName = provisioner.ensureConsumer(
             stream,
             consumerName,
-            subject,   // filter: consumer only receives work-subject messages, not sched entries
+            subject, // filter: consumer only receives work-subject messages, not sched entries
             ackWait,
             maxDeliver,
             config.getConsumerDefaults().getMaxAckPending());

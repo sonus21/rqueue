@@ -329,8 +329,7 @@ class JetStreamMessageBrokerUnitTest {
         "Nats-Schedule-Target must be the work subject");
 
     // Nats-Rollup must be 'sub' for per-subject idempotent scheduling
-    assertEquals("sub", headers.getValue().getFirst("Nats-Rollup"),
-        "Nats-Rollup must be 'sub'");
+    assertEquals("sub", headers.getValue().getFirst("Nats-Rollup"), "Nats-Rollup must be 'sub'");
 
     // Dedup key must encode the period identity
     assertEquals(

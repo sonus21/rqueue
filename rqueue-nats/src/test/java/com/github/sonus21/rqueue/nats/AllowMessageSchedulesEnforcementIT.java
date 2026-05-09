@@ -75,7 +75,8 @@ class AllowMessageSchedulesEnforcementIT extends AbstractJetStreamIT {
 
     // Confirm the flag is not set on the server-side config
     StreamInfo info = jsm.getStreamInfo(streamName);
-    assertFalse(info.getConfiguration().getAllowMsgSchedules(),
+    assertFalse(
+        info.getConfiguration().getAllowMsgSchedules(),
         "Pre-condition: stream must NOT have allow_msg_schedules");
 
     // Build correct ADR-51 headers: Nats-Schedule + Nats-Schedule-Target + Nats-Rollup
@@ -100,11 +101,13 @@ class AllowMessageSchedulesEnforcementIT extends AbstractJetStreamIT {
 
     // Document and assert the actual behaviour.
     // If this assertion ever changes it means a NATS server upgrade changed the enforcement policy.
-    assertTrue(serverEnforcesFlag,
-        "NATS server accepted Nats-Schedule on a stream without allow_msg_schedules. "
-            + "This means the flag is advisory on this server version — the unit tests in "
-            + "NatsProvisionerTest that verify the flag is set are still correct best-practice "
-            + "but the server does not enforce it. Update this test if the behaviour is intentional.");
+    assertTrue(
+        serverEnforcesFlag,
+        "NATS server accepted Nats-Schedule on a stream without allow_msg_schedules. This means"
+            + " the flag is advisory on this server version — the unit tests in"
+            + " NatsProvisionerTest that verify the flag is set are still correct best-practice"
+            + " but the server does not enforce it. Update this test if the behaviour is"
+            + " intentional.");
   }
 
   @Test
@@ -132,7 +135,8 @@ class AllowMessageSchedulesEnforcementIT extends AbstractJetStreamIT {
     jsm.addStream(cfg);
 
     StreamInfo info = jsm.getStreamInfo(streamName);
-    assertTrue(info.getConfiguration().getAllowMsgSchedules(),
+    assertTrue(
+        info.getConfiguration().getAllowMsgSchedules(),
         "Pre-condition: stream MUST have allow_msg_schedules");
 
     String deliverAt = "@at " + RFC3339.format(Instant.now().plusSeconds(10));
