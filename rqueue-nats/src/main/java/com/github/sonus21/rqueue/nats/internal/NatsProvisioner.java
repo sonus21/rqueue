@@ -253,7 +253,8 @@ public class NatsProvisioner {
           // enqueueWithDelay after the stream was originally created by a plain enqueue call).
           java.util.List<String> existingSubjects = existing.getConfiguration().getSubjects();
           java.util.Set<String> existingSet = existingSubjects != null
-              ? new java.util.HashSet<>(existingSubjects) : new java.util.HashSet<>();
+              ? new java.util.HashSet<>(existingSubjects)
+              : new java.util.HashSet<>();
           boolean needsSubjectUpdate = subjects.stream().anyMatch(s -> !existingSet.contains(s));
           boolean needsFlagUpdate =
               enableSchedules && !existing.getConfiguration().getAllowMsgSchedules();
@@ -262,19 +263,22 @@ public class NatsProvisioner {
             // Merge: keep all existing subjects and append new ones (never remove).
             java.util.LinkedHashSet<String> merged = new java.util.LinkedHashSet<>(existingSet);
             merged.addAll(subjects);
-            StreamConfiguration.Builder upd =
-                StreamConfiguration.builder(existing.getConfiguration())
-                    .subjects(new java.util.ArrayList<>(merged));
+            StreamConfiguration.Builder upd = StreamConfiguration.builder(
+                    existing.getConfiguration())
+                .subjects(new java.util.ArrayList<>(merged));
             if (needsFlagUpdate) {
               upd.allowMessageSchedules(true);
             }
             jsm.updateStream(upd.build());
             if (needsFlagUpdate) {
-              log.log(Level.INFO,
-                  "Stream ''{0}'' updated to enable message scheduling (ADR-51).", streamName);
+              log.log(
+                  Level.INFO,
+                  "Stream ''{0}'' updated to enable message scheduling (ADR-51).",
+                  streamName);
             }
             if (needsSubjectUpdate) {
-              log.log(Level.INFO,
+              log.log(
+                  Level.INFO,
                   "Stream ''{0}'' updated with additional subjects: {1}.",
                   new Object[] {streamName, subjects});
             }

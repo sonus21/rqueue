@@ -78,6 +78,7 @@ class NatsScheduledMessageE2EIT extends AbstractNatsBootIT {
    * cannot race with the scheduler firing.
    */
   static final Duration ETD_DELAY = Duration.ofSeconds(10);
+
   static final Duration ETD_TOTAL_WAIT = Duration.ofSeconds(20);
 
   @Autowired
@@ -204,7 +205,7 @@ class NatsScheduledMessageE2EIT extends AbstractNatsBootIT {
     void onMessage(String payload) {
       received.add(payload);
       immediateLatch.countDown(); // first call unblocks; subsequent calls are no-ops
-      allLatch.countDown();       // each call decrements; reaches 0 when both arrive
+      allLatch.countDown(); // each call decrements; reaches 0 when both arrive
     }
   }
 
