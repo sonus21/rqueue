@@ -168,12 +168,16 @@ class NatsProvisionerTest {
     StreamInfo existing = mock(StreamInfo.class);
     StreamConfiguration existingCfg = mock(StreamConfiguration.class);
     when(existingCfg.getRetentionPolicy()).thenReturn(io.nats.client.api.RetentionPolicy.WorkQueue);
+    // Stub getSubjects() so the provisioner sees the subject as already present and skips update
+    when(existingCfg.getSubjects()).thenReturn(Collections.singletonList("rqueue.js.orders"));
+    when(existingCfg.getAllowMsgSchedules()).thenReturn(false);
     when(existing.getConfiguration()).thenReturn(existingCfg);
     when(jsm.getStreamInfo("rqueue-js-orders")).thenReturn(existing);
 
     provisioner.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders"));
 
     verify(jsm, never()).addStream(any());
+    verify(jsm, never()).updateStream(any());
   }
 
   /**
@@ -290,6 +294,47 @@ class NatsProvisionerTest {
 
     verify(jsm, times(1)).addStream(any(StreamConfiguration.class));
     verify(jsm, times(1)).updateStream(argThat(cfg -> cfg.getAllowMsgSchedules()));
+  }
+
+  /**
+   * Concrete scenario: plain enqueue() creates the stream with only the work subject, then
+   * enqueueWithDelay() is called for the first time. The provisioner must update the stream to
+   * add BOTH the sched-wildcard subject AND the allow_msg_schedules flag in a single updateStream()
+   * call. Without the subject update, publishing to the sched subject would be rejected by NATS
+   * with "no stream matches subject".
+   */
+  @Test
+  void ensureStream_firstEnqueueThenDelay_addsSchedSubjectAndFlag()
+      throws IOException, JetStreamApiException {
+    String workSubject = "rqueue.js.orders";
+    String schedPattern = workSubject + ".sched.*";
+
+    // After enqueue() created the stream (work subject only, no scheduling flag)
+    StreamInfo existingInfo = mock(StreamInfo.class, inv -> {
+      if ("getConfiguration".equals(inv.getMethod().getName())) {
+        return StreamConfiguration.builder()
+            .name("rqueue-js-orders")
+            .subjects(Collections.singletonList(workSubject))
+            .build(); // allowMsgSchedules defaults to false
+      }
+      return null;
+    });
+    when(jsm.getStreamInfo("rqueue-js-orders")).thenReturn(existingInfo);
+
+    // enqueueWithDelay() calls ensureStream with the sched wildcard and allowSchedules=true
+    provisioner.ensureStream(
+        "rqueue-js-orders",
+        Arrays.asList(workSubject, schedPattern),
+        QueueType.QUEUE,
+        null,
+        true);
+
+    // Must call updateStream (never addStream — stream already exists)
+    verify(jsm, never()).addStream(any());
+    verify(jsm, times(1)).updateStream(argThat(cfg ->
+        cfg.getAllowMsgSchedules()
+            && cfg.getSubjects().contains(workSubject)
+            && cfg.getSubjects().contains(schedPattern)));
   }
 
   @Test
