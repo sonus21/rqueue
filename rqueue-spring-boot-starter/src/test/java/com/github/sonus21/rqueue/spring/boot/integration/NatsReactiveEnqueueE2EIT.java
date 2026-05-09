@@ -47,8 +47,8 @@ import reactor.core.publisher.Flux;
     properties = {
         "rqueue.backend=nats",
         "rqueue.reactive.enabled=true",
-        "rqueue.nats.stream-prefix=" + NatsReactiveEnqueueE2EIT.STREAM_PREFIX,
-        "rqueue.nats.subject-prefix=" + NatsReactiveEnqueueE2EIT.SUBJECT_PREFIX
+        "rqueue.nats.naming.stream-prefix=" + NatsReactiveEnqueueE2EIT.STREAM_PREFIX,
+        "rqueue.nats.naming.subject-prefix=" + NatsReactiveEnqueueE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsReactiveEnqueueE2EIT extends AbstractNatsBootIT {

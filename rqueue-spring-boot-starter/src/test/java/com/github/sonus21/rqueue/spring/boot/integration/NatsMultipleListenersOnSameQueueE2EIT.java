@@ -48,8 +48,8 @@ import org.springframework.stereotype.Component;
     classes = NatsMultipleListenersOnSameQueueE2EIT.TestApp.class,
     properties = {
         "rqueue.backend=nats",
-        "rqueue.nats.stream-prefix=" + NatsMultipleListenersOnSameQueueE2EIT.STREAM_PREFIX,
-        "rqueue.nats.subject-prefix=" + NatsMultipleListenersOnSameQueueE2EIT.SUBJECT_PREFIX
+        "rqueue.nats.naming.stream-prefix=" + NatsMultipleListenersOnSameQueueE2EIT.STREAM_PREFIX,
+        "rqueue.nats.naming.subject-prefix=" + NatsMultipleListenersOnSameQueueE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 @Disabled("Default JetStream retention=WorkQueue prevents true fan-out across multiple consumers; "

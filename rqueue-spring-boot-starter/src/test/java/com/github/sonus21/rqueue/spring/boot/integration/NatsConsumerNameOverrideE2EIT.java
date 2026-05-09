@@ -45,8 +45,8 @@ import org.springframework.stereotype.Component;
     classes = NatsConsumerNameOverrideE2EIT.TestApp.class,
     properties = {
         "rqueue.backend=nats",
-        "rqueue.nats.stream-prefix=" + NatsConsumerNameOverrideE2EIT.STREAM_PREFIX,
-        "rqueue.nats.subject-prefix=" + NatsConsumerNameOverrideE2EIT.SUBJECT_PREFIX
+        "rqueue.nats.naming.stream-prefix=" + NatsConsumerNameOverrideE2EIT.STREAM_PREFIX,
+        "rqueue.nats.naming.subject-prefix=" + NatsConsumerNameOverrideE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {
@@ -73,7 +73,8 @@ class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {
     enqueuer.enqueue("custom-consumer", "hello");
     assertThat(listener.latch.await(20, TimeUnit.SECONDS)).isTrue();
 
-    ConsumerInfo info = jsm.getConsumerInfo("rqueue-js-custom-consumer", "my-custom-consumer");
+    ConsumerInfo info =
+        jsm.getConsumerInfo(STREAM_PREFIX + "custom-consumer", "my-custom-consumer");
     assertThat(info).isNotNull();
     assertThat(info.getName()).isEqualTo("my-custom-consumer");
   }

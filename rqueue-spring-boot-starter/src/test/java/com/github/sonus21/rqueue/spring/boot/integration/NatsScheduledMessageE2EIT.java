@@ -53,8 +53,8 @@ import reactor.core.publisher.Flux;
         // running against the same nats-server (CI shares one instance across all classes, and a
         // persistent JetStream dir survives reruns). Same queue name → distinct stream so we never
         // inherit stale config or in-flight messages from an earlier class/run.
-        "rqueue.nats.stream-prefix=" + NatsScheduledMessageE2EIT.STREAM_PREFIX,
-        "rqueue.nats.subject-prefix=" + NatsScheduledMessageE2EIT.SUBJECT_PREFIX
+        "rqueue.nats.naming.stream-prefix=" + NatsScheduledMessageE2EIT.STREAM_PREFIX,
+        "rqueue.nats.naming.subject-prefix=" + NatsScheduledMessageE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsScheduledMessageE2EIT extends AbstractNatsBootIT {

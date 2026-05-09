@@ -21,6 +21,7 @@ import com.github.sonus21.rqueue.metrics.RqueueQueueMetricsProvider;
 import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.nats.js.NatsDeadLetterBridgeRegistrar;
 import com.github.sonus21.rqueue.nats.js.NatsStreamValidator;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBucketValidator;
 import com.github.sonus21.rqueue.nats.metrics.NatsRqueueQueueMetricsProvider;
@@ -160,6 +161,19 @@ public class RqueueNatsAutoConfig {
       ObjectProvider<RqueueConfig> rqueueConfigProvider) {
     return new NatsStreamValidator(
         natsProvisioner, toBrokerConfig(props), rqueueConfigProvider.getIfAvailable());
+  }
+
+  /**
+   * Boot-time installer for the NATS-native dead-letter advisory bridge: for every registered
+   * queue, subscribes to {@code $JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES.<stream>.<consumer>}
+   * and republishes any message that exhausts {@code maxDeliver} onto the queue's DLQ stream.
+   * Complementary to the rqueue-level DLQ path ({@code PostProcessingHandler.moveToDlq}).
+   */
+  @Bean
+  @ConditionalOnMissingBean(NatsDeadLetterBridgeRegistrar.class)
+  public NatsDeadLetterBridgeRegistrar natsDeadLetterBridgeRegistrar(
+      MessageBroker broker, ObjectProvider<RqueueConfig> rqueueConfigProvider) {
+    return new NatsDeadLetterBridgeRegistrar(broker, rqueueConfigProvider.getIfAvailable());
   }
 
   /**
