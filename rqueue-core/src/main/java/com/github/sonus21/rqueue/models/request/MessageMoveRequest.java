@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.models.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
 import com.github.sonus21.rqueue.models.enums.DataType;
 import com.github.sonus21.rqueue.utils.StringUtils;
@@ -36,8 +37,13 @@ public class MessageMoveRequest implements Serializable {
 
   private static final long serialVersionUID = -5105668034442269108L;
   private String src;
+
+  @JsonProperty("srcType")
   private DataType srcType;
+
   private String dst;
+
+  @JsonProperty("dstType")
   private DataType dstType;
 
   private Map<String, Serializable> others = new HashMap<>();

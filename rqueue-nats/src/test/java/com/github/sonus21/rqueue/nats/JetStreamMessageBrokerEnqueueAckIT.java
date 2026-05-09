@@ -25,7 +25,8 @@ class JetStreamMessageBrokerEnqueueAckIT extends AbstractJetStreamIT {
 
   @Test
   void enqueuePopAck_drainsStream() throws Exception {
-    QueueDetail q = mockQueue("eaq-" + System.nanoTime());
+    QueueDetail q = mockQueue(
+        "eaq-" + System.nanoTime(), com.github.sonus21.rqueue.enums.QueueType.QUEUE, "worker");
     RqueueNatsConfig cfg = RqueueNatsConfig.defaults();
     cfg.getStreamDefaults().setRetention(io.nats.client.api.RetentionPolicy.WorkQueue);
     try (JetStreamMessageBroker broker =

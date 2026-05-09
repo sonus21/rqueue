@@ -1946,3 +1946,432 @@ section {
   font-size: 35px;
   cursor: pointer;
 }
+
+
+/* ============================================================================
+   Queue Detail — compact, table-driven, action-first
+   ========================================================================== */
+
+.qd {
+  padding-bottom: 32px;
+}
+
+/* ----- Header --------------------------------------------------------------
+   Single horizontal bar: name + state pill + pause toggle, summary stats on
+   the right. Replaces the big hero so the data is visible without scrolling.
+*/
+.qd-header {
+  align-items: center;
+  border-bottom: 1px solid #e0e3d4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  margin: 8px 0 16px;
+  padding-bottom: 12px;
+}
+
+.qd-header-title {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.qd-name {
+  color: #273126;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  word-break: break-word;
+}
+
+.qd-state {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 4px;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  text-transform: uppercase;
+}
+
+.qd-state .bx {
+  font-size: 14px;
+}
+
+.qd-state-live {
+  background: #e7efdb;
+  color: #4a6b35;
+}
+
+.qd-state-paused {
+  background: #fbe5d9;
+  color: #b45433;
+}
+
+/* Pause / play action button next to the state pill. Reuses the existing
+   .pause-queue-btn handler so a click POSTs to /pause-unpause-queue. */
+.qd-pause-btn {
+  align-items: center;
+  background: #f6f7ee;
+  border: 1px solid #d8dbcb;
+  border-radius: 8px;
+  color: #4a5d44;
+  cursor: pointer;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  width: 34px;
+}
+
+.qd-pause-btn:hover {
+  background: #eef0e3;
+  border-color: #b4bba0;
+  color: #2f3d2b;
+}
+
+.qd-pause-btn:focus-visible {
+  outline: 2px solid #6d8a52;
+  outline-offset: 2px;
+}
+
+.qd-pause-btn .pause-queue-btn {
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.qd-header-stats {
+  align-items: baseline;
+  color: #4a5d44;
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.qd-stat strong {
+  color: #273126;
+  font-size: 17px;
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+.qd-stat-sep {
+  color: #c0c5b0;
+  font-weight: 700;
+}
+
+/* ----- Configuration chip strip ------------------------------------------- */
+.qd-config {
+  background: #fbfbf6;
+  border: 1px solid #e0e3d4;
+  border-radius: 10px;
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin-bottom: 20px;
+  padding: 12px 16px;
+}
+
+.qd-config-cell {
+  border-right: 1px dashed #e3e7d8;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 12px 4px 0;
+}
+
+.qd-config-cell:last-child {
+  border-right: none;
+}
+
+.qd-config-cell-meta .qd-config-value {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.qd-config-label {
+  align-items: center;
+  color: #6d7561;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 700;
+  gap: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.qd-config-label .bx {
+  font-size: 14px;
+}
+
+.qd-config-value {
+  color: #273126;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.qd-config-value .bx {
+  vertical-align: middle;
+}
+
+/* ----- Section -------------------------------------------------------------
+   Tight section header (no kicker pill) and a table directly under it.
+*/
+.qd-section {
+  margin: 18px 0;
+}
+
+.qd-section-head {
+  align-items: baseline;
+  border-bottom: 1px solid #eef0e3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+.qd-section-title {
+  color: #273126;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.qd-count {
+  background: #f1f3e8;
+  border-radius: 999px;
+  color: #4a5d44;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 6px;
+  padding: 2px 8px;
+}
+
+.qd-section-hint {
+  color: #6d7561;
+  font-size: 12px;
+}
+
+.qd-empty {
+  background: #fbfbf6;
+  border: 1px dashed #d8dbcb;
+  border-radius: 8px;
+  color: #6d7561;
+  font-size: 13px;
+  padding: 16px;
+  text-align: center;
+}
+
+/* ----- Tables -------------------------------------------------------------- */
+.qd-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  width: 100%;
+}
+
+.qd-table thead th {
+  background: #f6f7ee;
+  border-bottom: 1px solid #d8dbcb;
+  border-top: 1px solid #d8dbcb;
+  color: #4a5d44;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 8px 10px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.qd-table thead th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.qd-table thead th:last-child {
+  border-top-right-radius: 8px;
+}
+
+.qd-table thead th.qd-num,
+.qd-table tbody td.qd-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.qd-table tbody td {
+  border-bottom: 1px solid #eef0e3;
+  color: #273126;
+  padding: 10px;
+  vertical-align: top;
+}
+
+.qd-table tbody tr:hover {
+  background: #fafbf3;
+}
+
+.qd-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+.qd-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+.qd-num strong {
+  color: #273126;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.qd-num .qd-muted {
+  display: inline-block;
+  margin-left: 4px;
+}
+
+.qd-link {
+  color: #4a5d44;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.qd-link:hover,
+.qd-link:focus {
+  color: #2f3d2b;
+  text-decoration: underline;
+}
+
+.qd-pill {
+  background: #f1f3e8;
+  border-radius: 999px;
+  color: #4a5d44;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.qd-code {
+  background: #f6f7ee;
+  border-radius: 4px;
+  color: #2f3d2b;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  padding: 1px 6px;
+  word-break: break-all;
+}
+
+.qd-muted {
+  color: #6d7561;
+  font-size: 11px;
+}
+
+/* Status badges (inline-table version of worker-status-*) */
+.qd-status {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.qd-status-active {
+  background: #d6e7c5;
+  color: #3e5a2c;
+}
+
+.qd-status-stale {
+  background: #f4e3c5;
+  color: #7a5a26;
+}
+
+.qd-status-paused {
+  background: #fbe5d9;
+  color: #b45433;
+}
+
+.qd-poll-time {
+  color: #273126;
+  font-weight: 600;
+}
+
+/* Bucket label (Terminal Storage table) */
+.qd-bucket {
+  border-radius: 4px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.qd-bucket-completed {
+  background: #d6e7c5;
+  color: #3e5a2c;
+}
+
+.qd-bucket-dead {
+  background: #fbe5d9;
+  color: #b45433;
+}
+
+/* ----- Charts disclosure --------------------------------------------------- */
+.qd-charts {
+  background: #fbfbf6;
+  border: 1px solid #e0e3d4;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.qd-charts-head {
+  align-items: baseline;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  list-style: none;
+  padding: 12px 16px;
+}
+
+.qd-charts-head::-webkit-details-marker {
+  display: none;
+}
+
+.qd-charts[open] .qd-charts-head {
+  border-bottom: 1px solid #eef0e3;
+}
+
+.qd-charts-body {
+  padding: 16px;
+}
+
+@media (max-width: 720px) {
+  .qd-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .qd-config-cell {
+    border-right: none;
+    border-bottom: 1px dashed #e3e7d8;
+    padding: 6px 0;
+  }
+  .qd-config-cell:last-child {
+    border-bottom: none;
+  }
+  .qd-table {
+    font-size: 12px;
+  }
+}

@@ -12,12 +12,14 @@ package com.github.sonus21.rqueue.nats;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.listener.QueueDetail;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
 import com.github.sonus21.rqueue.serdes.SerializationUtils;
@@ -44,25 +46,43 @@ class JetStreamMessageBrokerDelayThrowsTest {
   }
 
   @Test
-  void enqueueWithDelay_throwsUOE() {
+  void enqueueWithDelay_throwsWhenSchedulingUnsupported() {
+    // null provisioner → schedulingSupported=false
     JetStreamMessageBroker broker = newBroker();
     QueueDetail q = mock(QueueDetail.class);
     when(q.getName()).thenReturn("orders");
     RqueueMessage m = RqueueMessage.builder().id("id-1").message("hi").build();
-    UnsupportedOperationException ex =
-        assertThrows(UnsupportedOperationException.class, () -> broker.enqueueWithDelay(q, m, 100));
-    // message must mention NATS so users grep'ing for UOE find a useful pointer
-    org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().toLowerCase().contains("nats"));
+    RqueueNatsException ex =
+        assertThrows(RqueueNatsException.class, () -> broker.enqueueWithDelay(q, m, 100));
+    assertTrue(ex.getMessage().contains(NatsProvisioner.SCHEDULING_MIN_VERSION));
   }
 
   @Test
-  void capabilities_delayAndCronFalse_primaryDispatchFalse() {
+  void capabilities_schedulingFalse_whenProvisionerNull() {
+    // null provisioner → schedulingSupported=false
     Capabilities caps = newBroker().capabilities();
     assertEquals(false, caps.supportsDelayedEnqueue());
     assertEquals(false, caps.supportsScheduledIntrospection());
     assertEquals(false, caps.supportsCronJobs());
     // NATS uses its own JetStream subscription dispatch, not the Redis primary handler path.
     assertEquals(false, caps.usesPrimaryHandlerDispatch());
+  }
+
+  @Test
+  void capabilities_schedulingTrue_whenProvisionerSupportsIt() {
+    Connection conn = mock(Connection.class);
+    JetStream js = mock(JetStream.class);
+    JetStreamManagement jsm = mock(JetStreamManagement.class);
+    NatsProvisioner provisioner = mock(NatsProvisioner.class);
+    when(provisioner.isMessageSchedulingSupported()).thenReturn(true);
+    JetStreamMessageBroker broker = new JetStreamMessageBroker(
+        conn,
+        js,
+        jsm,
+        RqueueNatsConfig.defaults(),
+        new RqJacksonSerDes(SerializationUtils.getObjectMapper()),
+        provisioner);
+    assertTrue(broker.capabilities().supportsDelayedEnqueue());
   }
 
   @Test

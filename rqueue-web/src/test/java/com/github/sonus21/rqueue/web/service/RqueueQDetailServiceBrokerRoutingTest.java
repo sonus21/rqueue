@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -156,7 +157,7 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
   @Test
   void scheduledAndRunningTabsHiddenForNatsBroker() {
     // NATS: supportsScheduledIntrospection=false, usesPrimaryHandlerDispatch=false
-    Capabilities natsCaps = new Capabilities(true, false, false, false);
+    Capabilities natsCaps = new Capabilities(true, false, false, false, false, false);
     service.setMessageBroker(messageBroker);
     when(messageBroker.capabilities()).thenReturn(natsCaps);
     when(messageBroker.size(any(QueueDetail.class))).thenReturn(0L);
@@ -175,7 +176,7 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
 
     when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName())).thenReturn(queueConfig);
     DataViewResponse explore = service.getExplorePageData(
-        queueConfig.getName(), queueConfig.getScheduledQueueName(), DataType.ZSET, 0, 10);
+        queueConfig.getName(), queueConfig.getScheduledQueueName(), DataType.ZSET, null, 0, 10);
     assertTrue(explore.isHideScheduledPanel());
     assertTrue(explore.isHideCronJobs());
     assertTrue(explore.getRows() == null || explore.getRows().isEmpty());
@@ -185,14 +186,15 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
   void peekRoutesThroughBrokerForReadyList() {
     service.setMessageBroker(messageBroker);
     when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
-    when(messageBroker.peek(any(QueueDetail.class), anyLong(), anyLong()))
+    when(messageBroker.peek(any(QueueDetail.class), nullable(String.class), anyLong(), anyLong()))
         .thenReturn(Collections.emptyList());
     when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName())).thenReturn(queueConfig);
 
     DataViewResponse response = service.getExplorePageData(
-        queueConfig.getName(), queueConfig.getQueueName(), DataType.LIST, 0, 10);
+        queueConfig.getName(), queueConfig.getQueueName(), DataType.LIST, null, 0, 10);
 
-    verify(messageBroker, atLeastOnce()).peek(any(QueueDetail.class), anyLong(), anyLong());
+    verify(messageBroker, atLeastOnce())
+        .peek(any(QueueDetail.class), nullable(String.class), anyLong(), anyLong());
     assertTrue(response.getRows() == null || response.getRows().isEmpty());
   }
 
@@ -200,12 +202,12 @@ class RqueueQDetailServiceBrokerRoutingTest extends TestBase {
   void hideFlagsDefaultFalseWithRedisBroker() {
     service.setMessageBroker(messageBroker);
     when(messageBroker.capabilities()).thenReturn(Capabilities.REDIS_DEFAULTS);
-    when(messageBroker.peek(any(QueueDetail.class), anyLong(), anyLong()))
+    when(messageBroker.peek(any(QueueDetail.class), nullable(String.class), anyLong(), anyLong()))
         .thenReturn(Collections.emptyList());
     when(rqueueSystemManagerService.getQueueConfig(queueConfig.getName())).thenReturn(queueConfig);
 
     DataViewResponse response = service.getExplorePageData(
-        queueConfig.getName(), queueConfig.getQueueName(), DataType.LIST, 0, 10);
+        queueConfig.getName(), queueConfig.getQueueName(), DataType.LIST, null, 0, 10);
 
     assertFalse(response.isHideScheduledPanel());
     assertFalse(response.isHideCronJobs());

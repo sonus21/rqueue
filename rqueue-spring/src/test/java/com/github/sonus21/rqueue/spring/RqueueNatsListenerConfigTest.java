@@ -16,60 +16,197 @@
 package com.github.sonus21.rqueue.spring;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
+import com.github.sonus21.rqueue.nats.js.NatsStreamValidator;
 import io.nats.client.Connection;
 import io.nats.client.JetStream;
 import io.nats.client.JetStreamManagement;
+import io.nats.client.Nats;
+import io.nats.client.Options;
+import java.io.IOException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.mockito.MockedStatic;
+import org.springframework.core.env.Environment;
 
+/**
+ * Unit tests for {@link RqueueNatsListenerConfig}: verifies every {@code @Bean} method
+ * including all branches inside {@link RqueueNatsListenerConfig#natsConnection()}.
+ *
+ * <p>Uses {@code mockito-inline}'s {@link MockedStatic} to stub the {@link Nats#connect(Options)}
+ * static call so no real NATS server is required.
+ */
 @Tag("unit")
 @Tag("nats")
 class RqueueNatsListenerConfigTest {
 
-  @Configuration
-  static class MockBeans {
-    @Bean
-    Connection natsConnection() {
-      return mock(Connection.class);
-    }
+  private RqueueNatsListenerConfig config;
+  private Environment env;
 
-    @Bean
-    JetStream jetStream() {
-      return mock(JetStream.class);
-    }
+  @BeforeEach
+  void setUp() {
+    env = mock(Environment.class);
+    config = new RqueueNatsListenerConfig();
+    config.environment = env;
+  }
 
-    @Bean
-    JetStreamManagement jetStreamManagement() {
-      return mock(JetStreamManagement.class);
-    }
+  // ---- natsConnection – URL only (no auth, no connection name) ----
 
-    @Bean
-    MessageBroker jetStreamMessageBroker(
-        Connection connection, JetStream jetStream, JetStreamManagement management) {
-      return JetStreamMessageBroker.builder()
-          .connection(connection)
-          .jetStream(jetStream)
-          .management(management)
-          .build();
+  @Test
+  void natsConnection_urlOnly_connectsCalled() throws IOException, InterruptedException {
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.username")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.password")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.token")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.connection-name")).thenReturn(null);
+
+    Connection mockConn = mock(Connection.class);
+    try (MockedStatic<Nats> natsStatic = mockStatic(Nats.class)) {
+      natsStatic.when(() -> Nats.connect(any(Options.class))).thenReturn(mockConn);
+      Connection result = config.natsConnection();
+      assertNotNull(result);
     }
   }
 
+  // ---- natsConnection – with connection name ----
+
   @Test
-  void natsBrokerBeanIsRegistered() {
-    AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
-    ctx.register(MockBeans.class);
-    ctx.refresh();
-    MessageBroker broker = ctx.getBean(MessageBroker.class);
+  void natsConnection_withConnectionName_connectsCalled() throws IOException, InterruptedException {
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.username")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.password")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.token")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.connection-name")).thenReturn("my-conn");
+
+    Connection mockConn = mock(Connection.class);
+    try (MockedStatic<Nats> natsStatic = mockStatic(Nats.class)) {
+      natsStatic.when(() -> Nats.connect(any(Options.class))).thenReturn(mockConn);
+      Connection result = config.natsConnection();
+      assertNotNull(result);
+    }
+  }
+
+  // ---- natsConnection – with token auth ----
+
+  @Test
+  void natsConnection_withToken_connectsCalled() throws IOException, InterruptedException {
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.username")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.password")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.token")).thenReturn("secret-token");
+    when(env.getProperty("rqueue.nats.connection-name")).thenReturn(null);
+
+    Connection mockConn = mock(Connection.class);
+    try (MockedStatic<Nats> natsStatic = mockStatic(Nats.class)) {
+      natsStatic.when(() -> Nats.connect(any(Options.class))).thenReturn(mockConn);
+      Connection result = config.natsConnection();
+      assertNotNull(result);
+    }
+  }
+
+  // ---- natsConnection – with username/password auth (token is empty) ----
+
+  @Test
+  void natsConnection_withUsernamePassword_connectsCalled()
+      throws IOException, InterruptedException {
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.username")).thenReturn("user");
+    when(env.getProperty("rqueue.nats.password")).thenReturn("pass");
+    when(env.getProperty("rqueue.nats.token")).thenReturn(""); // empty → fall through to user/pass
+    when(env.getProperty("rqueue.nats.connection-name")).thenReturn(null);
+
+    Connection mockConn = mock(Connection.class);
+    try (MockedStatic<Nats> natsStatic = mockStatic(Nats.class)) {
+      natsStatic.when(() -> Nats.connect(any(Options.class))).thenReturn(mockConn);
+      Connection result = config.natsConnection();
+      assertNotNull(result);
+    }
+  }
+
+  // ---- natsConnection – InterruptedException is wrapped in IOException ----
+
+  @Test
+  void natsConnection_interrupted_throwsIOException() throws InterruptedException {
+    when(env.getProperty("rqueue.nats.url", Options.DEFAULT_URL))
+        .thenReturn("nats://localhost:4222");
+    when(env.getProperty("rqueue.nats.username")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.password")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.token")).thenReturn(null);
+    when(env.getProperty("rqueue.nats.connection-name")).thenReturn(null);
+
+    try (MockedStatic<Nats> natsStatic = mockStatic(Nats.class)) {
+      natsStatic
+          .when(() -> Nats.connect(any(Options.class)))
+          .thenThrow(new InterruptedException("interrupted"));
+
+      assertThrows(IOException.class, () -> config.natsConnection());
+    }
+    // Also verify the interrupt flag was restored
+    // (Thread.currentThread().interrupt() is called inside the catch block)
+    assertTrue(Thread.currentThread().isInterrupted());
+    Thread.interrupted(); // clear for subsequent tests
+  }
+
+  // ---- jetStream ----
+
+  @Test
+  void jetStream_delegatesToConnection() throws IOException {
+    Connection conn = mock(Connection.class);
+    JetStream js = mock(JetStream.class);
+    when(conn.jetStream()).thenReturn(js);
+
+    JetStream result = config.jetStream(conn);
+    assertNotNull(result);
+  }
+
+  // ---- jetStreamManagement ----
+
+  @Test
+  void jetStreamManagement_delegatesToConnection() throws IOException {
+    Connection conn = mock(Connection.class);
+    JetStreamManagement jsm = mock(JetStreamManagement.class);
+    when(conn.jetStreamManagement()).thenReturn(jsm);
+
+    JetStreamManagement result = config.jetStreamManagement(conn);
+    assertNotNull(result);
+  }
+
+  // ---- jetStreamMessageBroker ----
+
+  @Test
+  void jetStreamMessageBroker_returnsJetStreamMessageBroker() {
+    Connection conn = mock(Connection.class);
+    JetStream js = mock(JetStream.class);
+    JetStreamManagement jsm = mock(JetStreamManagement.class);
+
+    MessageBroker broker = config.jetStreamMessageBroker(conn, js, jsm);
+
     assertNotNull(broker);
     assertTrue(broker instanceof JetStreamMessageBroker);
-    ctx.close();
+  }
+
+  // ---- natsStreamValidator ----
+
+  @Test
+  void natsStreamValidator_returnsNatsStreamValidator() {
+    NatsProvisioner provisioner = mock(NatsProvisioner.class);
+
+    NatsStreamValidator validator = config.natsStreamValidator(provisioner);
+
+    assertNotNull(validator);
   }
 }

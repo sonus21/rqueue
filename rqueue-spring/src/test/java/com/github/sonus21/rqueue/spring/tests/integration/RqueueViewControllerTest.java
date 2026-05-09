@@ -17,17 +17,13 @@
 package com.github.sonus21.rqueue.spring.tests.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-import com.github.sonus21.rqueue.models.enums.AggregationType;
-import com.github.sonus21.rqueue.models.enums.ChartDataType;
 import com.github.sonus21.rqueue.models.enums.NavTab;
 import com.github.sonus21.rqueue.spring.app.SpringApp;
 import com.github.sonus21.rqueue.spring.tests.SpringIntegrationTest;
 import com.github.sonus21.rqueue.test.common.SpringWebTestBase;
-import io.pebbletemplates.spring.servlet.PebbleView;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -35,7 +31,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.ui.ModelMap;
 
 @ContextConfiguration(classes = SpringApp.class)
 @Slf4j
@@ -52,129 +47,94 @@ import org.springframework.ui.ModelMap;
 @DisabledIfEnvironmentVariable(named = "RQUEUE_REACTIVE_ENABLED", matches = "true")
 class RqueueViewControllerTest extends SpringWebTestBase {
 
-  private void verifyBasicData(ModelMap model, NavTab navTab) {
-    assertNotNull(model.get("latestVersion"));
-    assertNotNull(model.get("version"));
-    assertNotNull(model.get("releaseLink"));
-    assertNotNull(model.get("time"));
-    assertNotNull(model.get("timeInMilli"));
-    for (NavTab tab : NavTab.values()) {
-      assertEquals(tab == navTab, model.get(tab.name().toLowerCase() + "Active"));
+  private String body(MvcResult result) throws Exception {
+    return result.getResponse().getContentAsString();
+  }
+
+  private void verifyHtmlResponse(MvcResult result) throws Exception {
+    assertEquals(200, result.getResponse().getStatus());
+    assertTrue(
+        result.getResponse().getContentType().startsWith("text/html"),
+        "Expected text/html content type");
+  }
+
+  private void verifyTitle(MvcResult result, String expectedTitle) throws Exception {
+    assertTrue(
+        body(result).contains("<title>" + expectedTitle + "</title>"),
+        "Expected title: " + expectedTitle);
+  }
+
+  private void verifyNavActive(MvcResult result, NavTab navTab) throws Exception {
+    if (navTab == null) {
+      return;
     }
+    String path = navTab.name().toLowerCase();
+    String body = body(result);
+    assertTrue(
+        body.contains("class=\"active\"") && body.contains("rqueue/" + path),
+        "Expected nav tab " + path + " to be active");
   }
 
   @Test
   void home() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue")).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/index.html", pebbleView.getUrl());
-    verifyBasicData(model, null);
-    assertEquals(
-        Arrays.asList(AggregationType.DAILY, AggregationType.WEEKLY, AggregationType.MONTHLY),
-        model.get("aggregatorTypes"));
-    assertEquals(
-        Arrays.asList(
-            ChartDataType.SUCCESSFUL,
-            ChartDataType.DISCARDED,
-            ChartDataType.MOVED_TO_DLQ,
-            ChartDataType.RETRIED),
-        model.get("typeSelectors"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Rqueue Dashboard");
   }
 
   @Test
   void queues() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/queues")).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/queues.html", pebbleView.getUrl());
-    verifyBasicData(model, NavTab.QUEUES);
-    assertEquals("Queues", model.get("title"));
-    assertNotNull(model.get("queues"));
-    assertNotNull(model.get("queueConfigs"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Queues");
+    verifyNavActive(result, NavTab.QUEUES);
   }
 
   @Test
   void queueDetail() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/queues/" + jobQueue)).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/queue_detail.html", pebbleView.getUrl());
-    verifyBasicData(model, NavTab.QUEUES);
-    assertEquals("Queue: " + jobQueue, model.get("title"));
-    assertEquals(jobQueue, model.get("queueName"));
-    assertEquals(
-        Arrays.asList(AggregationType.DAILY, AggregationType.WEEKLY, AggregationType.MONTHLY),
-        model.get("aggregatorTypes"));
-    assertEquals(
-        Arrays.asList(
-            ChartDataType.SUCCESSFUL,
-            ChartDataType.DISCARDED,
-            ChartDataType.MOVED_TO_DLQ,
-            ChartDataType.RETRIED),
-        model.get("typeSelectors"));
-    assertNotNull(model.get("config"));
-    assertNotNull(model.get("queueRedisDataDetails"));
-    assertEquals(
-        Arrays.asList(NavTab.PENDING, NavTab.SCHEDULED, NavTab.RUNNING), model.get("queueActions"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Queue: " + jobQueue);
+    verifyNavActive(result, NavTab.QUEUES);
   }
 
   @Test
   void running() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/running")).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/running.html", pebbleView.getUrl());
-    verifyBasicData(model, NavTab.RUNNING);
-    assertEquals("Running Tasks", model.get("title"));
-    assertNotNull(model.get("tasks"));
-    assertNotNull(model.get("header"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Running Tasks");
+    verifyNavActive(result, NavTab.RUNNING);
   }
 
   @Test
   void scheduled() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/scheduled")).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/running.html", pebbleView.getUrl());
-    verifyBasicData(model, NavTab.SCHEDULED);
-    assertEquals("Scheduled Tasks", model.get("title"));
-    assertNotNull(model.get("tasks"));
-    assertNotNull(model.get("header"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Scheduled Tasks");
+    verifyNavActive(result, NavTab.SCHEDULED);
   }
 
   @Test
   void dead() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/dead")).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/running.html", pebbleView.getUrl());
-    verifyBasicData(model, NavTab.DEAD);
-    assertEquals("Tasks moved to dead letter queue", model.get("title"));
-    assertNotNull(model.get("tasks"));
-    assertNotNull(model.get("header"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Tasks moved to dead letter queue");
+    verifyNavActive(result, NavTab.DEAD);
   }
 
   @Test
   void pending() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/pending")).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/running.html", pebbleView.getUrl());
-    verifyBasicData(model, NavTab.PENDING);
-    assertEquals("Tasks waiting for execution", model.get("title"));
-    assertNotNull(model.get("tasks"));
-    assertNotNull(model.get("header"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Tasks waiting for execution");
+    verifyNavActive(result, NavTab.PENDING);
   }
 
   @Test
   void utility() throws Exception {
     MvcResult result = this.mockMvc.perform(get("/rqueue/utility")).andReturn();
-    ModelMap model = result.getModelAndView().getModelMap();
-    PebbleView pebbleView = (PebbleView) result.getModelAndView().getView();
-    assertEquals("templates/rqueue/utility.html", pebbleView.getUrl());
-    verifyBasicData(model, NavTab.UTILITY);
-    assertEquals("Utility", model.get("title"));
-    assertNotNull(model.get("supportedDataType"));
+    verifyHtmlResponse(result);
+    verifyTitle(result, "Utility");
+    verifyNavActive(result, NavTab.UTILITY);
   }
 }

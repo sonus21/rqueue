@@ -8,6 +8,160 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
+## Release [4.0.0] TBD
+
+{: .highlight}
+First stable 4.0.0 release. Targets Spring Boot 4.x and Spring Framework 7.x on
+Java 17 (lowered from the original Java 21 baseline in RC3). Promotes the RC6
+line to GA — no functional changes versus RC6. See RC1 / RC2 below for the
+foundational Spring Boot 4 and Jackson 3 migration notes; RC3 for the Java 17
+baseline change; RC4–RC6 below for the NATS backend, broker SPI, dashboard
+work, and middleware additions that build on top.
+
+## Release [4.0.0.RC8] 2026-05-09
+
+{: .highlight}
+Release candidate.
+
+### Features
+* **NATS message scheduling (ADR-51)** — delayed and periodic message delivery
+  is now fully supported on NATS servers ≥ 2.12 via the `Nats-Next-Deliver-Time`
+  header (ADR-51). `RqueueMessageEnqueuer.enqueueIn()` and `enqueuePeriodic()`
+  work transparently; the broker advertises `supportsDelayedEnqueue=true` when
+  the connected server supports scheduling. Older servers continue to work with
+  scheduling silently disabled.
+* **Dashboard move-message for NATS** — `NatsRqueueUtilityService.moveMessage()`
+  is now implemented: walks the source JetStream stream, republishes each message
+  to the destination stream, and hard-deletes the source sequence. The dashboard
+  "move messages" panel is now functional for NATS queues.
+* **Dashboard re-enqueue for NATS** — `enqueueMessage()` looks up the message
+  from the metadata store and republishes it immediately (no
+  `Nats-Next-Deliver-Time` header) so the worker picks it up on the next poll.
+* **Long-running job keep-alive** — `Job.updateVisibilityTimeout(Duration)` now
+  issues a NATS `+WIP` (work-in-progress) signal that resets the consumer's
+  `ackWait` timer, preventing redelivery while a long-running handler is still
+  active.
+
+### Changes
+* **`duplicateWindow` removed from stream config** — the per-stream
+  `DuplicateWindow` setting has been removed. Any job running longer than a
+  finite duplicate window could trigger unexpected dedup expiry on retry. JetStream
+  now manages deduplication server-side with its own defaults. The dedup key shape
+  (`id-at-processAt`) still guarantees correctness for periodic messages across
+  periods.
+
+## Release [4.0.0.RC7] 2026-05-08
+
+{: .highlight}
+Release candidate.
+
+### Fixes
+* **Null guard in queue explorer** — `getExplorePageData` now returns a
+  structured error response (`"Queue '…' does not exist"`) when the requested
+  queue name is not registered, instead of throwing a `NullPointerException`.
+
+### Changes
+* **Removed Pebble template engine** — the `pebble-spring7` dependency has been
+  dropped. All dashboard HTML is now produced directly in Java using text blocks
+  and `StringBuilder` via the new `RqueueHtmlRenderer` component, eliminating
+  the external templating runtime entirely.
+
+### Build
+* **Removed redundant `lettuce-core` dependency from example app** — the
+  example app previously declared `io.lettuce:lettuce-core` without an explicit
+  version. The dependency is now removed as it is already transitively provided
+  by `spring-boot-starter-data-redis`.
+
+## Release [4.0.0.RC6] 2026-05-07
+
+{: .highlight}
+Release candidate.
+
+### Features
+* **Message-converter exception exposed to middleware** — `Job` now exposes
+  `getConversionException()` (and a `hasConversionException()` default) so
+  middleware can detect and react to inbound deserialization failures (route
+  to DLQ, alert, attempt a fallback decode) instead of being unable to
+  distinguish a converter error from a legitimately-String payload.
+
+### Build
+* `rqueue-nats`, `rqueue-redis`, and `rqueue-web` now publish to Maven Central
+  alongside `rqueue-core`, `rqueue-spring`, and `rqueue-spring-boot-starter`.
+
+## Release [4.0.0.RC5] TBD
+
+{: .highlight}
+Release candidate. The two themes are a multi-consumer correctness fix on the
+NATS backend and a NATS-aware dashboard built on a new pluggable broker SPI.
+
+### Features
+* **Pluggable broker SPI** — the queueing layer was separated from Redis behind
+  a `MessageBroker` SPI with a `Capabilities` model. The dashboard, explorer,
+  and admin paths adapt to backend capabilities (nav tabs, charts, data-type
+  labels, queue-size accounting) instead of assuming Redis primitives.
+* **Consumer-aware peek** — added a consumer-aware `peek` overload on the
+  broker SPI. The dashboard explorer can browse a specific consumer's
+  outstanding messages on Limits-retention streams, skipping already-acked
+  ranges and reflecting per-consumer ack floors. Useful for fan-out topologies
+  where each durable has a different delivery position.
+* **NATS-aware queue detail page** — redesigned queue detail with a hero panel,
+  chip strip, per-consumer Subscribers table (separate Pending and In-Flight
+  columns plus a Workers column), and a Terminal Storage card. Pending shows
+  yet-to-deliver count; In-Flight shows messages currently being processed.
+  Limits-retention queues render approximate sizes with a `~` prefix.
+* **Pause / soft-delete admin ops for NATS queues** — operators can pause and
+  soft-delete NATS queues from the dashboard, with capability-gated controls
+  so unsupported actions do not appear on backends that cannot honour them.
+
+### Fixes
+* **NATS ack/nack under multi-consumer fan-out** — fixed an in-flight key
+  collision that could cause ack/nack to target the wrong NATS message when
+  multiple consumers were fanning out from the same stream.
+* **Consumer-name resolution** — `resolvedConsumerName` now uses a single
+  consumer-name suffix, preventing duplicated suffixing under repeated lookups.
+* **Peek base sequence** — NATS peek now bases on `ackFloor` rather than
+  `delivered.streamSeq`, so the explorer shows the correct un-acked tail
+  instead of skipping past acked-but-not-yet-deleted messages.
+
+### Migration Notes
+* Backends are now selected via the `MessageBroker` SPI. Existing Redis
+  applications continue to work without configuration changes — a Redis
+  broker is wired by default. Applications wanting NATS should add
+  `rqueue-nats` and configure a JetStream `MessageBroker` bean.
+* The dashboard `/explore` API gained a `consumerName` query parameter
+  (nullable). Callers using the REST API directly should pass `null` to
+  preserve existing behaviour or a specific consumer name to scope the peek.
+
+## Release [4.0.0.RC4] 14-Apr-2026
+
+{: .highlight}
+Release candidate. The headline change is the introduction of the NATS
+JetStream backend.
+
+### Features
+* **NATS JetStream backend** — added a new `rqueue-nats` module that lets Rqueue
+  run on NATS JetStream as the message broker. Supports Limits-retention and
+  WorkQueue-retention streams, durable consumers, and ack/nack delivery
+  semantics. This is the initial drop; the broker SPI extraction and the
+  capability-aware dashboard land in RC5.
+
+### CI / Build
+* Coveralls integration fixed for GitHub Actions (token wiring, build-number
+  propagation, request-payload diagnostics).
+
+## Release [4.0.0.RC3] 14-Apr-2026
+
+{: .highlight}
+Lowers the Java baseline from 21 back to 17.
+
+### Changes
+* **Java 17 baseline (was 21 in RC1/RC2)** — `languageVersion`,
+  `sourceCompatibility`, and `targetCompatibility` reverted from 21 to 17 so
+  the library can be consumed by applications still on Java 17. RC1's
+  "Java 21 baseline" note is superseded — 4.0.0 supports Java 17 and above.
+* Documentation tweaks (header refresh, dependabot bump for `addressable`
+  in `/docs`).
+
 ## Release [4.0.0.RC2] 24-Mar-2026
 
 {: .highlight}

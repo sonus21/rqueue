@@ -2,6 +2,7 @@ plugins {
     id "org.springframework.boot" version "${springBootVersion}"
     id "war"
 }
+
 dependencies {
     implementation project(":rqueue-spring-boot-starter")
     implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
@@ -10,7 +11,7 @@ dependencies {
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
-    implementation "io.lettuce:lettuce-core"
+    implementation "io.lettuce:lettuce-core:${lettuceVersion}"
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
     providedRuntime "org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}"
 }

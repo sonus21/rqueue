@@ -61,7 +61,6 @@ ext {
 
     // server
     jakartaServletVersion = "6.1.0"
-    pebbleVersion = "4.1.0"
 
     // database
     lettuceVersion = "7.2.1.RELEASE"
@@ -85,7 +84,7 @@ ext {
 
 subprojects {
     group = "com.github.sonus21"
-    version = "4.0.0-RC4"
+    version = "4.0.0-RC8"
 
     dependencies {
         // https://mvnrepository.com/artifact/org.springframework/spring-messaging

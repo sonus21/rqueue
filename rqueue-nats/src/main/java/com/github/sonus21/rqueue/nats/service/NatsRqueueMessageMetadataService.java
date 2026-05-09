@@ -122,10 +122,16 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
     String metaId = RqueueMessageUtils.getMessageMetaId(queueName, messageId);
     MessageMetadata m = get(metaId);
     if (m == null) {
-      return false;
+      // NATS doesn't store metadata at enqueue time (storeMessageMetadata short-circuits in
+      // BaseMessageSender for brokers that don't use primary-handler dispatch). So a delete
+      // request from the dashboard for a stream-resident message will see no metadata. Create
+      // a tombstone entry keyed by metaId so subsequent peeks render the row as "deleted".
+      m = new MessageMetadata(metaId, MessageStatus.DELETED);
     }
     m.setDeleted(true);
+    m.setStatus(MessageStatus.DELETED);
     m.setDeletedOn(System.currentTimeMillis());
+    m.setUpdatedOn(System.currentTimeMillis());
     save(m, ttl, false);
     return true;
   }

@@ -174,19 +174,23 @@ public class QueueDetail extends SerializableBase {
   }
 
   /**
-   * Returns the effective JetStream consumer name for this queue. When {@link #consumerName} is
-   * explicitly set it is returned as-is. Otherwise a default is derived from the queue name:
-   * primary (non-system-generated) queues get {@code {name}-consumer-primary}; system-generated
-   * priority sub-queues get {@code {name}-consumer}. The name is sanitized so that characters
+   * Returns the effective broker-level consumer name for this queue. When {@link #consumerName} is
+   * explicitly set on the {@code @RqueueListener} it is returned as-is. Otherwise the default is
+   * derived from the queue name as {@code {name}-consumer}. The name is sanitized so characters
    * outside {@code [A-Za-z0-9_-]} (e.g. the {@code ::} priority suffix separator) are replaced
    * with {@code -}, producing a valid NATS consumer name in all cases.
+   *
+   * <p>A single suffix is used regardless of {@code systemGenerated} so the bootstrap validator
+   * and the runtime poller agree on the consumer name. NATS workqueue streams reject multiple
+   * non-filtered consumers (error 10099); using two different suffixes would cause the poller to
+   * try creating a second consumer with a different name and fail.
    */
   public String resolvedConsumerName() {
     if (consumerName != null && !consumerName.isEmpty()) {
       return consumerName;
     }
     String sanitized = name.replaceAll("[^A-Za-z0-9_-]", "-");
-    return systemGenerated ? sanitized + "-consumer" : sanitized + "-consumer-primary";
+    return sanitized + "-consumer";
   }
 
   public boolean isDoNotRetryError(Throwable throwable) {

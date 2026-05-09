@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.example;
 
 import com.github.sonus21.rqueue.annotation.RqueueListener;
+import com.github.sonus21.rqueue.enums.QueueType;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
 import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
@@ -63,11 +64,16 @@ public class MessageListener {
     execute("simple: {}", message, false);
   }
 
+  // Two listeners on the same queue with distinct consumerNames — exercises multi-listener
+  // fan-out. mode = QueueType.STREAM makes the underlying JetStream stream Limits-retention so
+  // both consumers can coexist (NATS rejects multiple non-filtered consumers on a WorkQueue
+  // stream with error 10099).
   @RqueueListener(
       value = "job-queue",
       deadLetterQueue = "job-queue-linkedin-dlq",
       numRetries = "2",
       concurrency = "10-20",
+      mode = QueueType.STREAM,
       consumerName = "linkedin-search")
   public void onJobMessage(Job job) {
     execute("job-queue-linkedin: {}", job, true);
@@ -78,6 +84,7 @@ public class MessageListener {
       numRetries = "2",
       deadLetterQueue = "job-queue-google-dlq",
       concurrency = "10-20",
+      mode = QueueType.STREAM,
       consumerName = "google-search")
   public void onJobMessageGooglSearch(Job job) {
     execute("job-queue-google: {}", job, true);

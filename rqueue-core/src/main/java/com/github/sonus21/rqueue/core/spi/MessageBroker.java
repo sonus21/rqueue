@@ -111,6 +111,18 @@ public interface MessageBroker {
   List<RqueueMessage> peek(QueueDetail q, long offset, long count);
 
   /**
+   * Consumer-aware peek overload. When {@code consumerName} is non-null and the backend has
+   * per-consumer offsets (e.g. NATS Limits-retention streams), the implementation starts
+   * pagination from that consumer's next undelivered sequence so the dashboard shows messages
+   * still pending for that specific subscriber instead of the entire retained window. The
+   * default delegates to {@link #peek(QueueDetail, long, long)} for backends with a single
+   * shared pool.
+   */
+  default List<RqueueMessage> peek(QueueDetail q, String consumerName, long offset, long count) {
+    return peek(q, offset, count);
+  }
+
+  /**
    * Remove {@code old} from the processing store and re-enqueue {@code updated} for retry.
    * {@code delayMs <= 0} means immediate; {@code delayMs > 0} means schedule after that delay.
    * Backends without a processing store (e.g. NATS) default to a plain nack.
@@ -195,6 +207,85 @@ public interface MessageBroker {
    * fall back to the DLQ key name stored in {@code DeadLetterQueue}.
    */
   default String dlqStorageDisplayName(QueueDetail q) {
+    return null;
+  }
+
+  /**
+   * Indicates whether {@link #size(QueueDetail)} returns an exact count or an approximation
+   * for the given queue. Brokers that compute pending from per-consumer position math (e.g.
+   * NATS JetStream Limits-retention streams) return {@code true} so the dashboard renders
+   * the figure with a "~" prefix instead of presenting it as authoritative. Defaults to
+   * {@code false} (the historical Redis behavior — exact list / sorted-set lengths).
+   */
+  default boolean isSizeApproximate(QueueDetail q) {
+    return false;
+  }
+
+  /**
+   * Per-consumer pending breakdown for queues whose backend has multiple independent
+   * subscribers — e.g. JetStream Limits-retention streams where each durable consumer
+   * progresses at its own pace. Returns an ordered map of {@code consumerName -> pending}
+   * so the dashboard can render one row per consumer instead of a single aggregate.
+   *
+   * <p>The default returns {@code null}, signalling that the queue has a single shared pool
+   * (Redis lists, NATS WorkQueue streams) and the caller should fall back to
+   * {@link #size(QueueDetail)}. Empty / null also means "no consumers attached".
+   *
+   * @deprecated superseded by {@link #subscribers(QueueDetail)} which returns a richer view
+   *     (consumer + pending + in-flight + shared flag). Retained for one release so
+   *     downstream callers keep compiling.
+   */
+  @Deprecated
+  default java.util.Map<String, Long> consumerPendingSizes(QueueDetail q) {
+    return null;
+  }
+
+  /**
+   * Per-subscriber breakdown for the queue-detail dashboard. Each entry represents one
+   * logical handler attached to the queue:
+   *
+   * <ul>
+   *   <li><b>Redis</b> — one entry per {@code @RqueueListener} method that registered for
+   *       the queue. {@code pending} is the shared list size on every row
+   *       ({@code pendingShared = true}); {@code inFlight} is the shared processing-ZSET
+   *       size.
+   *   <li><b>NATS JetStream</b> — one entry per durable consumer. For WorkQueue retention
+   *       {@code pending} is the shared stream {@code msgCount} ({@code pendingShared = true});
+   *       for Limits retention it is the exact per-consumer {@code numPending}
+   *       ({@code pendingShared = false}). {@code inFlight} is the consumer's
+   *       {@code numAckPending} in both cases.
+   * </ul>
+   *
+   * <p>The default returns a single anonymous row backed by {@link #size(QueueDetail)}, so
+   * brokers that don't track named subscribers still render a working table.
+   */
+  default java.util.List<SubscriberView> subscribers(QueueDetail q) {
+    long pending;
+    try {
+      pending = size(q);
+    } catch (RuntimeException e) {
+      pending = 0L;
+    }
+    return java.util.Collections.singletonList(
+        new SubscriberView(q.resolvedConsumerName(), pending, 0L, true));
+  }
+
+  /**
+   * Backend-aware human-readable label for the given Redis-shaped {@code DataType} on the given
+   * dashboard tab. Surfaces in the queue-detail page's "Data Type" column so NATS deployments
+   * can show "Queue (Stream)" instead of "LIST".
+   *
+   * <p>The default returns {@code null}, which the dashboard interprets as "fall back to
+   * {@code DataType.name()}" (the historical Redis behavior).
+   *
+   * @param tab the dashboard nav tab the row corresponds to (PENDING, RUNNING, SCHEDULED, DEAD,
+   *     COMPLETED, etc.). May be {@code null} when called in a context without a tab.
+   * @param type Redis-shaped data type used by the dashboard's table rendering.
+   * @return display label, or {@code null} to fall through to the default rendering.
+   */
+  default String dataTypeLabel(
+      com.github.sonus21.rqueue.models.enums.NavTab tab,
+      com.github.sonus21.rqueue.models.enums.DataType type) {
     return null;
   }
 

@@ -26,18 +26,24 @@ class JetStreamMessageBrokerIndependentConsumersIT extends AbstractJetStreamIT {
 
   @Test
   void twoDurables_eachReceiveAllMessages() throws Exception {
-    QueueDetail q = mockQueue("icq-" + System.nanoTime(), QueueType.STREAM);
+    String name = "icq-" + System.nanoTime();
+    // Same stream, two QueueDetail facets (one per @RqueueListener) — mirrors how production
+    // builds a separate QueueDetail per listener with its own resolvedConsumerName.
+    QueueDetail enqueueFacet = mockQueue(name, QueueType.STREAM);
+    QueueDetail qa = mockQueue(name, QueueType.STREAM, "consumer-a");
+    QueueDetail qb = mockQueue(name, QueueType.STREAM, "consumer-b");
     int total = 5;
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
       for (int i = 0; i < total; i++) {
-        broker.enqueue(q, RqueueMessage.builder().id("m-" + i).message("p" + i).build());
+        broker.enqueue(
+            enqueueFacet, RqueueMessage.builder().id("m-" + i).message("p" + i).build());
       }
 
       Set<String> aSeen = new HashSet<>();
       Set<String> bSeen = new HashSet<>();
-      drainInto(broker, q, "consumer-a", aSeen);
-      drainInto(broker, q, "consumer-b", bSeen);
+      drainInto(broker, qa, "consumer-a", aSeen);
+      drainInto(broker, qb, "consumer-b", bSeen);
 
       assertEquals(total, aSeen.size());
       assertEquals(total, bSeen.size());

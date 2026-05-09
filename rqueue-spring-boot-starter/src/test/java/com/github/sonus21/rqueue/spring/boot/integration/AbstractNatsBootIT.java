@@ -52,7 +52,7 @@ abstract class AbstractNatsBootIT {
     if (USE_EXTERNAL_NATS || NATS != null) {
       return;
     }
-    NATS = new GenericContainer<>(DockerImageName.parse("nats:2.10-alpine"))
+    NATS = new GenericContainer<>(DockerImageName.parse("nats:2.12-alpine"))
         .withCommand("-js")
         .withExposedPorts(4222)
         .waitingFor(Wait.forLogMessage(".*Server is ready.*\\n", 1));

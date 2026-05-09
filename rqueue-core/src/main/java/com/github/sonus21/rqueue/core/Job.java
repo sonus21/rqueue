@@ -121,6 +121,20 @@ public interface Job {
   void setMessage(Object message);
 
   /**
+   * Exception thrown by the message converter while deserializing the raw payload, if any. When
+   * conversion fails the raw {@link String} payload is exposed via {@link #getMessage()} so that
+   * middleware can still run; this method gives middleware access to the underlying error so it can
+   * decide what to do (skip the handler, route to DLQ, alert, attempt a fallback decode, etc.).
+   *
+   * @return the conversion error, or {@code null} if conversion succeeded
+   */
+  Throwable getConversionException();
+
+  default boolean hasConversionException() {
+    return getConversionException() != null;
+  }
+
+  /**
    * MessageMetadata corresponding the enqueued message
    *
    * @return message metadata object

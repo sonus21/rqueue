@@ -31,16 +31,16 @@ import io.nats.client.JetStreamManagement;
 import io.nats.client.JetStreamSubscription;
 import io.nats.client.Message;
 import io.nats.client.PullSubscribeOptions;
-import io.nats.client.api.AckPolicy;
-import io.nats.client.api.ConsumerConfiguration;
-import io.nats.client.api.DeliverPolicy;
 import io.nats.client.impl.Headers;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -62,7 +62,26 @@ import reactor.core.publisher.Mono;
 public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   private static final Logger log = Logger.getLogger(JetStreamMessageBroker.class.getName());
-  private static final Capabilities CAPS = new Capabilities(false, false, false, false);
+
+  /**
+   * JetStream publish header used by NATS >= 2.12 to hold a message until a UTC delivery time
+   * (ADR-51). Value must be RFC 3339 UTC, e.g. {@code 2026-05-09T12:30:00Z}.
+   */
+  static final String HDR_NEXT_DELIVER_TIME = "Nats-Next-Deliver-Time";
+
+  /**
+   * Enrichment header: epoch-ms at which this message was scheduled to be processed.
+   * Written at scheduling publish time; read back in {@code enrichFromDelivery} so that
+   * {@link RqueueMessage#getProcessAt()} can be populated without deserializing the payload.
+   */
+  static final String HDR_PROCESS_AT = "Rqueue-Process-At";
+
+  /**
+   * Enrichment header: period in milliseconds for periodic messages.
+   * Written at scheduling publish time; read back in {@code enrichFromDelivery} to restore
+   * {@link RqueueMessage#getPeriod()} for payloads that have it as zero.
+   */
+  static final String HDR_PERIOD = "Rqueue-Period";
 
   /**
    * Lower bound for fetch wait when the caller passes a non-positive duration. JetStream rejects
@@ -73,17 +92,32 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    */
   private static final Duration MIN_FETCH_WAIT = Duration.ofMillis(50);
 
+  /** RFC 3339 UTC formatter for the {@code Nats-Next-Deliver-Time} header value. */
+  private static final DateTimeFormatter RFC3339_UTC =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC);
+
   private final Connection connection;
   private final JetStream js;
   private final JetStreamManagement jsm;
   private final RqueueNatsConfig config;
   private final RqueueSerDes serdes;
   private final NatsProvisioner provisioner;
+  private final boolean schedulingSupported;
+  private final Capabilities caps;
 
   /**
-   * keyed by RqueueMessage.id, value is the underlying NATS Message for ack/nak.
+   * keyed by {@code "<consumerName>::<RqueueMessage.id>"}, value is the underlying NATS
+   * Message for ack/nak. The consumer prefix is required for Limits-retention streams where
+   * multiple durable consumers each receive their own copy of every message — keying on
+   * just the message id would let one consumer's {@code put} overwrite another's, and the
+   * subsequent ack would target the wrong NATS Message handle (leaving the original delivery
+   * stuck in {@code numAckPending} until {@code AckWait} expires).
    */
   private final ConcurrentHashMap<String, Message> inFlight = new ConcurrentHashMap<>();
+
+  private static String inFlightKey(String consumerName, String messageId) {
+    return (consumerName == null ? "" : consumerName) + "::" + messageId;
+  }
 
   /**
    * Cached pull subscriptions keyed by stream + consumerName so we don't re-bind on every pop.
@@ -107,6 +141,14 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     this.config = config;
     this.serdes = serdes;
     this.provisioner = provisioner;
+    this.schedulingSupported = provisioner != null && provisioner.isMessageSchedulingSupported();
+    this.caps = new Capabilities(
+        schedulingSupported, // supportsDelayedEnqueue  — requires NATS >= 2.12
+        false, // supportsScheduledIntrospection — no inspectable scheduled-zset
+        false, // supportsCronJobs         — no server-side cron
+        false, // usesPrimaryHandlerDispatch — no Redis processing-ZSET
+        true, // supportsViewData         — peek() reads from JetStream stream
+        true); // supportsMoveMessage      — NatsRqueueUtilityService.moveMessage()
   }
 
   public static Builder builder() {
@@ -245,9 +287,40 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs) {
-    throw new UnsupportedOperationException(
-        "delayed enqueue not supported by NATS backend in this version; "
-            + "use the Redis backend for scheduled messages");
+    if (!schedulingSupported) {
+      throw new RqueueNatsException(
+          "NATS message scheduling (ADR-51) is not available: the connected server is older than "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + ". Upgrade NATS to "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + "+ or use the Redis backend for delayed messages.");
+    }
+    String subject = subjectFor(q);
+    String stream = streamFor(q);
+    provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
+    Headers headers = buildSchedulingHeaders(m, delayMs);
+    try {
+      byte[] payload = serdes.serialize(m);
+      js.publish(subject, headers, payload);
+    } catch (IOException | JetStreamApiException e) {
+      throw new RqueueNatsException(
+          "Failed to enqueue scheduled message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " subject="
+              + subject,
+          e);
+    } catch (RuntimeException e) {
+      throw new RqueueNatsException(
+          "Failed to serialize/enqueue scheduled message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " subject="
+              + subject,
+          e);
+    }
   }
 
   @Override
@@ -297,9 +370,52 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public Mono<Void> enqueueWithDelayReactive(QueueDetail q, RqueueMessage m, long delayMs) {
-    return Mono.error(new UnsupportedOperationException(
-        "delayed enqueue not supported by NATS backend in this version; "
-            + "use the Redis backend for scheduled messages"));
+    if (!schedulingSupported) {
+      return Mono.error(new RqueueNatsException(
+          "NATS message scheduling (ADR-51) is not available: the connected server is older than "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + ". Upgrade NATS to "
+              + NatsProvisioner.SCHEDULING_MIN_VERSION
+              + "+ or use the Redis backend for delayed messages."));
+    }
+    String subject = subjectFor(q);
+    String stream = streamFor(q);
+    try {
+      provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
+    } catch (Exception e) {
+      return Mono.error(new RqueueNatsException(
+          "Failed to provision stream for reactive scheduled enqueue id="
+              + m.getId()
+              + " queue="
+              + q.getName(),
+          e));
+    }
+    Headers headers = buildSchedulingHeaders(m, delayMs);
+    byte[] payload;
+    try {
+      payload = serdes.serialize(m);
+    } catch (RuntimeException | IOException e) {
+      return Mono.error(new RqueueNatsException(
+          "Failed to serialize scheduled message id="
+              + m.getId()
+              + " queue="
+              + q.getName()
+              + " subject="
+              + subject,
+          e));
+    }
+    return Mono.fromFuture(() -> js.publishAsync(subject, headers, payload))
+        .onErrorMap(e -> e instanceof RqueueNatsException
+            ? e
+            : new RqueueNatsException(
+                "Failed to enqueue scheduled message id="
+                    + m.getId()
+                    + " queue="
+                    + q.getName()
+                    + " subject="
+                    + subject,
+                e))
+        .then();
   }
 
   @Override
@@ -409,15 +525,9 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     for (Message nm : msgs) {
       try {
         RqueueMessage rm = serdes.deserialize(nm.getData(), RqueueMessage.class);
-        // derive failure count from JetStream redelivery metadata
-        try {
-          long deliveredCount = nm.metaData().deliveredCount();
-          rm.setFailureCount((int) Math.max(0, deliveredCount - 1));
-        } catch (Exception ignored) {
-          // defensive: metadata unavailable on non-JetStream messages
-        }
+        enrichFromDelivery(rm, nm);
         if (rm.getId() != null) {
-          inFlight.put(rm.getId(), nm);
+          inFlight.put(inFlightKey(consumerName, rm.getId()), nm);
         }
         out.add(rm);
       } catch (RuntimeException | IOException e) {
@@ -442,7 +552,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     if (m.getId() == null) {
       return false;
     }
-    Message nm = inFlight.remove(m.getId());
+    Message nm = inFlight.remove(inFlightKey(q.resolvedConsumerName(), m.getId()));
     if (nm == null) {
       return false;
     }
@@ -450,12 +560,45 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     return true;
   }
 
+  /**
+   * Extend the visibility timeout for a message that is still being processed. Sends a NATS
+   * WIP (work-in-progress) signal to the server, which resets the consumer's {@code ackWait}
+   * timer back to its configured value. Call this periodically from a long-running handler to
+   * prevent JetStream from redelivering the message to another consumer while work is in flight.
+   *
+   * <p>The {@code deltaMs} hint from the caller is ignored — NATS always resets to the consumer's
+   * fixed {@code ackWait}; there is no per-message extension API in JetStream.
+   *
+   * @return {@code true} if the WIP signal was sent; {@code false} if the message is no longer
+   *         tracked (already acked, nacked, or the process restarted).
+   */
+  @Override
+  public boolean extendVisibilityTimeout(QueueDetail q, RqueueMessage m, long deltaMs) {
+    if (m.getId() == null) {
+      return false;
+    }
+    Message nm = inFlight.get(inFlightKey(q.resolvedConsumerName(), m.getId()));
+    if (nm == null) {
+      return false;
+    }
+    try {
+      nm.inProgress();
+      return true;
+    } catch (RuntimeException e) {
+      log.log(
+          Level.WARNING,
+          "inProgress failed for message id=" + m.getId() + " queue=" + q.getName(),
+          e);
+      return false;
+    }
+  }
+
   @Override
   public boolean nack(QueueDetail q, RqueueMessage m, long retryDelayMs) {
     if (m.getId() == null) {
       return false;
     }
-    Message nm = inFlight.remove(m.getId());
+    Message nm = inFlight.remove(inFlightKey(q.resolvedConsumerName(), m.getId()));
     if (nm == null) {
       return false;
     }
@@ -472,7 +615,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       long delayMs) {
     // Ack the original NATS message so it is removed from the source stream.
     if (old.getId() != null) {
-      Message nm = inFlight.remove(old.getId());
+      Message nm = inFlight.remove(inFlightKey(source.resolvedConsumerName(), old.getId()));
       if (nm != null) {
         nm.ack();
       }
@@ -510,45 +653,76 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public List<RqueueMessage> peek(QueueDetail q, long offset, long count) {
+    return peek(q, null, offset, count);
+  }
+
+  @Override
+  public List<RqueueMessage> peek(QueueDetail q, String consumerName, long offset, long count) {
     String stream = streamFor(q);
-    String subject = subjectFor(q);
-    JetStreamSubscription sub = null;
+    if (count <= 0) {
+      return Collections.emptyList();
+    }
     try {
-      ConsumerConfiguration.Builder cb = ConsumerConfiguration.builder()
-          .ackPolicy(AckPolicy.None)
-          .filterSubject(subject)
-          .name("rqueue-js-peek-" + UUID.randomUUID());
-      if (offset > 0) {
-        cb.deliverPolicy(DeliverPolicy.ByStartSequence).startSequence(Math.max(1L, offset));
-      } else {
-        cb.deliverPolicy(DeliverPolicy.All);
+      // Read messages directly from the stream by sequence number via the JetStream
+      // Management API. This avoids creating any consumer, which sidesteps two NATS 2.12+
+      // restrictions on WorkQueue-retention streams:
+      //   1. Pull consumers require AckPolicy.Explicit (error 10084).
+      //   2. Multiple consumers on a WorkQueue stream must be mutually exclusive via
+      //      filter subjects (error 10100) — incompatible with the always-on durable
+      //      consumer that the listener container uses.
+      // Reading by sequence is purely non-destructive and works regardless of retention
+      // policy or what other consumers exist on the stream.
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      long firstSeq = info.getStreamState().getFirstSequence();
+      long lastSeq = info.getStreamState().getLastSequence();
+      if (lastSeq < firstSeq) {
+        return Collections.emptyList();
       }
-      PullSubscribeOptions opts = PullSubscribeOptions.builder().stream(stream)
-          .configuration(cb.build())
-          .build();
-      sub = js.subscribe(subject, opts);
-      int n = (int) Math.min(Integer.MAX_VALUE, Math.max(0L, count));
-      List<Message> msgs = sub.fetch(n, Duration.ofSeconds(2));
-      List<RqueueMessage> out = new ArrayList<>(msgs.size());
-      for (Message nm : msgs) {
+      // Consumer-aware base sequence for Limits-retention streams: when a consumerName is
+      // provided, start from that consumer's lowest unacked sequence (ackFloor + 1) so the
+      // dashboard shows everything this subscriber still has work to do on — both messages
+      // already delivered but not yet acked (in-flight) and messages still to be delivered
+      // (pending). Using delivered.streamSeq + 1 would hide the in-flight window, which
+      // surprises operators who see "in-flight = 15" but get an empty explorer.
+      // WorkQueue streams have a single shared consumer (msgs are removed on ack) so the
+      // stream's firstSeq is already the right base — skip the lookup.
+      long base = firstSeq;
+      if (consumerName != null
+          && !consumerName.isEmpty()
+          && info.getConfiguration() != null
+          && info.getConfiguration().getRetentionPolicy()
+              == io.nats.client.api.RetentionPolicy.Limits) {
         try {
-          out.add(serdes.deserialize(nm.getData(), RqueueMessage.class));
-        } catch (Exception e) {
-          log.log(Level.WARNING, "peek: skipping undeserializable message", e);
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumerName);
+          if (ci != null && ci.getAckFloor() != null) {
+            base = Math.max(firstSeq, ci.getAckFloor().getStreamSequence() + 1);
+          }
+        } catch (JetStreamApiException ignore) {
+          // consumer may have disappeared mid-walk; fall back to stream firstSeq
+        }
+      }
+      long startSeq = base + Math.max(0L, offset);
+      long endSeq = Math.min(lastSeq, startSeq + count - 1);
+      List<RqueueMessage> out = new ArrayList<>();
+      for (long seq = startSeq; seq <= endSeq && out.size() < count; seq++) {
+        try {
+          io.nats.client.api.MessageInfo mi = jsm.getMessage(stream, seq);
+          if (mi == null || mi.getData() == null) {
+            continue;
+          }
+          out.add(serdes.deserialize(mi.getData(), RqueueMessage.class));
+        } catch (JetStreamApiException notFound) {
+          // Sequence may have been purged or skipped (e.g. WorkQueue acks); keep walking.
+          log.log(
+              Level.FINE, "peek: skipping missing seq=" + seq + " on stream=" + stream, notFound);
+        } catch (Exception deserErr) {
+          log.log(Level.WARNING, "peek: skipping undeserializable seq=" + seq, deserErr);
         }
       }
       return out;
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
           "Failed to peek queue=" + q.getName() + " offset=" + offset + " count=" + count, e);
-    } finally {
-      if (sub != null) {
-        try {
-          sub.unsubscribe();
-        } catch (RuntimeException ignored) {
-          // ephemeral consumer is auto-reaped server-side; ignore
-        }
-      }
     }
   }
 
@@ -556,9 +730,192 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   public long size(QueueDetail q) {
     String stream = streamFor(q);
     try {
-      return jsm.getStreamInfo(stream).getStreamState().getMsgCount();
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      // WorkQueue retention removes messages on ack, so streamState.msgCount is the exact
+      // count of outstanding work — the natural "pending size" for queue mode. For Limits
+      // retention msgCount is the total retained messages regardless of consumer progress,
+      // so we compute the worst-case outstanding work from stream position math:
+      //   outstanding ≈ lastSeq - min(consumer.ackFloor.streamSeq)
+      // which is the messages the slowest durable consumer has not yet acked. This matches
+      // the per-consumer pending semantic in subscribers() (numPending + numAckPending) so
+      // the queue-level "size" and the per-row pending counts agree on what "outstanding"
+      // means.
+      if (retention == io.nats.client.api.RetentionPolicy.Limits) {
+        return approximateLimitsPending(stream, info);
+      }
+      return info.getStreamState().getMsgCount();
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException("Failed to read stream size for queue=" + q.getName(), e);
+    }
+  }
+
+  /**
+   * Position-based outstanding-work estimate for a Limits-retention stream:
+   * {@code lastSeq - min(consumer.ackFloor.streamSeq)} across all durable consumers — i.e. the
+   * size of the unacked window for the slowest consumer (counts both yet-to-deliver and
+   * delivered-but-unacked messages). Returns {@code msgCount} as a fallback when no consumers
+   * exist or the enumeration fails, so the dashboard never misses a non-zero queue.
+   */
+  private long approximateLimitsPending(String stream, io.nats.client.api.StreamInfo info) {
+    long lastSeq = info.getStreamState().getLastSequence();
+    if (lastSeq <= 0) {
+      return 0L;
+    }
+    try {
+      List<String> consumers = jsm.getConsumerNames(stream);
+      if (consumers == null || consumers.isEmpty()) {
+        // No consumers attached: the entire retained range is outstanding from the perspective
+        // of any future consumer. Stream's msgCount is the right approximation.
+        return info.getStreamState().getMsgCount();
+      }
+      long minAckFloor = Long.MAX_VALUE;
+      for (String consumer : consumers) {
+        try {
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
+          if (ci == null || ci.getAckFloor() == null) {
+            continue;
+          }
+          long ackFloor = ci.getAckFloor().getStreamSequence();
+          if (ackFloor < minAckFloor) {
+            minAckFloor = ackFloor;
+          }
+        } catch (IOException | JetStreamApiException ignore) {
+          // best-effort; skip consumers that disappear mid-walk
+        }
+      }
+      if (minAckFloor == Long.MAX_VALUE) {
+        return info.getStreamState().getMsgCount();
+      }
+      return Math.max(0L, lastSeq - minAckFloor);
+    } catch (IOException | JetStreamApiException ignore) {
+      return info.getStreamState().getMsgCount();
+    }
+  }
+
+  /**
+   * Reports whether {@link #size(QueueDetail)} is an approximation. True for Limits-retention
+   * streams (per-consumer position math) and false for WorkQueue streams (msgCount is exact).
+   */
+  public boolean isSizeApproximate(QueueDetail q) {
+    String stream = streamFor(q);
+    try {
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      return retention == io.nats.client.api.RetentionPolicy.Limits;
+    } catch (IOException | JetStreamApiException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Per-consumer subscriber view used by the queue-detail dashboard. Walks all durable
+   * consumers on the queue's stream and reports each one's pending + in-flight counts as
+   * separate columns — same split as the Redis backend's processing ZSET vs ready LIST.
+   *
+   * <p><b>Pending semantics.</b> {@code pending} is yet-to-deliver work for this consumer.
+   * For WorkQueue retention this is the stream's shared {@code msgCount} (every row shows the
+   * same number, marked {@code pendingShared = true}); for Limits retention it is the
+   * consumer's exact {@code numPending}. {@code inFlight} is always the consumer's exclusive
+   * {@code numAckPending}: messages delivered but not yet acked. The two are disjoint —
+   * {@code pending} excludes anything currently in flight — so an operator reading the row
+   * sees the work split between "still to dispatch" and "currently being processed". Total
+   * outstanding work for the consumer is the sum of the two, which is what the explorer
+   * surfaces when the operator clicks the consumer link.
+   *
+   * <p>If consumer enumeration fails or the stream is unprovisioned, falls back to the
+   * default single-row implementation so the dashboard still renders something useful.
+   */
+  @Override
+  public java.util.List<com.github.sonus21.rqueue.core.spi.SubscriberView> subscribers(
+      QueueDetail q) {
+    String stream = streamFor(q);
+    try {
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      boolean pendingIsShared = retention != io.nats.client.api.RetentionPolicy.Limits;
+      long sharedPending = info.getStreamState().getMsgCount();
+      List<String> consumers = jsm.getConsumerNames(stream);
+      if (consumers == null || consumers.isEmpty()) {
+        return com.github.sonus21.rqueue.core.spi.MessageBroker.super.subscribers(q);
+      }
+      java.util.List<com.github.sonus21.rqueue.core.spi.SubscriberView> out =
+          new java.util.ArrayList<>(consumers.size());
+      for (String consumer : consumers) {
+        try {
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
+          if (ci == null) {
+            continue;
+          }
+          long pending = pendingIsShared ? sharedPending : ci.getNumPending();
+          long inFlight = ci.getNumAckPending();
+          out.add(new com.github.sonus21.rqueue.core.spi.SubscriberView(
+              consumer, pending, inFlight, pendingIsShared));
+        } catch (IOException | JetStreamApiException ignore) {
+          // best-effort; skip consumers that disappear mid-walk
+        }
+      }
+      if (out.isEmpty()) {
+        return com.github.sonus21.rqueue.core.spi.MessageBroker.super.subscribers(q);
+      }
+      return out;
+    } catch (IOException | JetStreamApiException e) {
+      log.log(Level.WARNING, "subscribers() failed for stream=" + stream, e);
+      return com.github.sonus21.rqueue.core.spi.MessageBroker.super.subscribers(q);
+    }
+  }
+
+  /**
+   * For Limits-retention streams, returns an exact per-consumer pending count
+   * ({@code lastSeq - delivered.streamSeq}). For WorkQueue streams returns {@code null} so the
+   * dashboard falls back to the single {@link #size(QueueDetail)} row — WorkQueue messages are
+   * shared across consumers, so a per-consumer split is meaningless.
+   *
+   * <p>The map iteration order matches {@link io.nats.client.JetStreamManagement#getConsumerNames}
+   * (insertion order), giving the dashboard a stable rendering.
+   */
+  @Override
+  @Deprecated
+  public java.util.Map<String, Long> consumerPendingSizes(QueueDetail q) {
+    String stream = streamFor(q);
+    try {
+      io.nats.client.api.StreamInfo info = jsm.getStreamInfo(stream);
+      io.nats.client.api.RetentionPolicy retention =
+          info.getConfiguration() != null ? info.getConfiguration().getRetentionPolicy() : null;
+      if (retention != io.nats.client.api.RetentionPolicy.Limits) {
+        // WorkQueue (and any future single-pool retention) doesn't have per-consumer pending.
+        return null;
+      }
+      long lastSeq = info.getStreamState().getLastSequence();
+      List<String> consumers = jsm.getConsumerNames(stream);
+      if (consumers == null || consumers.isEmpty()) {
+        return java.util.Collections.emptyMap();
+      }
+      java.util.Map<String, Long> out = new java.util.LinkedHashMap<>();
+      for (String consumer : consumers) {
+        try {
+          io.nats.client.api.ConsumerInfo ci = jsm.getConsumerInfo(stream, consumer);
+          if (ci == null) {
+            continue;
+          }
+          // Prefer numPending when available (server-computed); fall back to position math.
+          long pending = ci.getNumPending();
+          if (pending == 0 && ci.getDelivered() != null) {
+            long delivered = ci.getDelivered().getStreamSequence();
+            pending = Math.max(0L, lastSeq - delivered);
+          }
+          out.put(consumer, pending);
+        } catch (IOException | JetStreamApiException ignore) {
+          // best-effort; skip consumers that disappear mid-walk
+        }
+      }
+      return out;
+    } catch (IOException | JetStreamApiException e) {
+      log.log(Level.WARNING, "consumerPendingSizes failed for stream=" + stream, e);
+      return null;
     }
   }
 
@@ -618,7 +975,104 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   @Override
   public Capabilities capabilities() {
-    return CAPS;
+    return caps;
+  }
+
+  /**
+   * Headers for a scheduled (or periodic) JetStream publish.
+   *
+   * <p><b>Dedup key strategy — {@code Nats-Msg-Id}:</b>
+   * <ul>
+   *   <li>Scheduled messages ({@code processAt > 0}) — key is {@code id@processAt}.
+   *       Each period of a recurring message has a unique {@code processAt} (advances by
+   *       {@code period} each time), so consecutive periods never share a key and are never
+   *       suppressed. Retries of the same period reuse the identical {@code processAt}, so
+   *       the duplicate {@code scheduleNext} publish is correctly deduplicated by JetStream —
+   *       preventing double-execution of a period when the handler fails and is redelivered.
+   *   <li>Non-scheduled messages ({@code processAt == 0}) — plain {@code m.getId()}; each
+   *       enqueue generates a fresh UUID so there is no collision risk.
+   * </ul>
+   *
+   * <p><b>Enrichment headers</b> — written at publish time so they can be read back on
+   * {@link #popInternal} without deserializing the payload:
+   * <ul>
+   *   <li>{@code Rqueue-Process-At} — epoch-ms at which the message should be processed;
+   *       used to set {@link RqueueMessage#setProcessAt} if the deserialized payload lacks it.
+   *   <li>{@code Rqueue-Period} — period in ms for periodic messages; used to set
+   *       {@link RqueueMessage#setPeriod} if the deserialized payload lacks it.
+   * </ul>
+   */
+  private Headers buildSchedulingHeaders(RqueueMessage m, long delayMs) {
+    Headers headers = new Headers();
+    if (m.getId() != null) {
+      // Dedup key: id-at-processAt for scheduled messages (processAt > 0).
+      //   - Each period of a recurring message has a unique processAt → unique key → no
+      //     cross-period suppression.
+      //   - If scheduleNext is called again for the same period on redelivery after a handler
+      //     failure, processAt is identical → same key → JetStream deduplicates the second
+      //     publish and the period executes exactly once.
+      // For non-scheduled messages (processAt == 0) the plain id is used; each enqueue
+      // generates a fresh UUID so there is no collision risk.
+      String dedupKey = m.getProcessAt() > 0 ? m.getId() + "-at-" + m.getProcessAt() : m.getId();
+      headers.add("Nats-Msg-Id", dedupKey);
+    }
+    long deliverAtMs =
+        m.getProcessAt() > 0 ? m.getProcessAt() : System.currentTimeMillis() + delayMs;
+    String deliverAt = RFC3339_UTC.format(Instant.ofEpochMilli(deliverAtMs));
+    headers.add(HDR_NEXT_DELIVER_TIME, deliverAt);
+    // Enrichment headers — readable on pop without deserializing the payload
+    headers.add(HDR_PROCESS_AT, String.valueOf(deliverAtMs));
+    if (m.isPeriodic()) {
+      headers.add(HDR_PERIOD, String.valueOf(m.getPeriod()));
+    }
+    return headers;
+  }
+
+  /**
+   * Enrich a deserialized {@link RqueueMessage} with delivery metadata from the NATS message.
+   *
+   * <p><b>Failure count</b> — derived from {@code metaData().deliveredCount() - 1} (JetStream
+   * tracks redeliveries in the reply-to subject). This is the authoritative source; we never
+   * re-publish on retry, so a static header set at publish time would always show 0.
+   *
+   * <p><b>Scheduling fields</b> — {@code processAt} and {@code period} are read from the
+   * enrichment headers ({@code Rqueue-Process-At}, {@code Rqueue-Period}) when the deserialized
+   * message has them as zero. This handles payloads published by older broker versions that
+   * predate per-field population, or any case where the JSON payload was trimmed.
+   */
+  private static void enrichFromDelivery(RqueueMessage rm, Message nm) {
+    // Failure count from JetStream redelivery metadata (the authoritative retry counter).
+    try {
+      long deliveredCount = nm.metaData().deliveredCount();
+      rm.setFailureCount((int) Math.max(0, deliveredCount - 1));
+    } catch (Exception ignored) {
+      // defensive: metadata absent on non-JetStream or synthetic messages
+    }
+    // Scheduling fields from publish-time enrichment headers.
+    if (rm.getProcessAt() <= 0) {
+      String processAtHdr =
+          nm.getHeaders() == null ? null : nm.getHeaders().getFirst(HDR_PROCESS_AT);
+      if (processAtHdr != null) {
+        try {
+          rm.setProcessAt(Long.parseLong(processAtHdr));
+        } catch (NumberFormatException ignored) {
+          // malformed header; leave processAt as-is
+        }
+      }
+    }
+    if (!rm.isPeriodic() && nm.getHeaders() != null) {
+      String periodHdr = nm.getHeaders().getFirst(HDR_PERIOD);
+      if (periodHdr != null) {
+        try {
+          long period = Long.parseLong(periodHdr);
+          if (period > 0) {
+            rm.setPeriod(period);
+          }
+        } catch (NumberFormatException ignored) {
+          // malformed header; leave period as-is
+        }
+      }
+    }
   }
 
   @Override
@@ -639,6 +1093,32 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   @Override
   public String dlqStorageDisplayName(QueueDetail q) {
     return dlqStreamFor(q);
+  }
+
+  /**
+   * Map the dashboard's Redis-shaped data-type tokens onto NATS terminology. Each per-queue
+   * stream uses the JetStream {@code WorkQueue} retention policy by default, so the pending
+   * row is labelled "Queue (Stream)". Completed messages are tracked in a KV bucket and DLQs
+   * are independent streams.
+   */
+  @Override
+  public String dataTypeLabel(
+      com.github.sonus21.rqueue.models.enums.NavTab tab,
+      com.github.sonus21.rqueue.models.enums.DataType type) {
+    if (tab == null) {
+      return type == null ? null : "Stream";
+    }
+    switch (tab) {
+      case PENDING:
+        return "Queue (Stream)";
+      case DEAD:
+        return "Dead Letter (Stream)";
+      case COMPLETED:
+        return "Completed (KV)";
+      default:
+        // Running / Scheduled / Cron tabs are hidden on NATS via Capabilities; fall through.
+        return type == null ? null : "Stream";
+    }
   }
 
   @Override

@@ -37,4 +37,30 @@ public class RedisDataDetail extends SerializableBase {
   private String name;
   private DataType type;
   private long size;
+
+  /**
+   * Backend-aware human-readable label for the {@link #type}. The legacy templates surface
+   * this directly so deployments can display "Queue" / "Stream" on NATS instead of Redis-shaped
+   * "LIST" / "ZSET" tokens. When unset, templates default to {@code type.name()}.
+   */
+  private String typeLabel;
+
+  /**
+   * Indicates that {@link #size} is an approximation rather than an exact count. NATS
+   * Limits-retention streams compute pending size from {@code lastSeq - min(delivered.streamSeq)}
+   * across durable consumers, which is approximate when filter subjects or per-consumer
+   * positions diverge. Templates render the size with a {@code ~} prefix when this is set.
+   */
+  private boolean approximate;
+
+  /**
+   * Optional consumer name when the row represents a single subscriber's view of a shared
+   * stream (e.g. NATS Limits-retention streams). Renders next to the stream name in the
+   * "Name" column so each durable consumer's lag is visible separately.
+   */
+  private String consumerName;
+
+  public RedisDataDetail(String name, DataType type, long size) {
+    this(name, type, size, null, false, null);
+  }
 }

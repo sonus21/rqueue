@@ -10,7 +10,6 @@
 package com.github.sonus21.rqueue.nats.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -99,8 +98,16 @@ class NatsRqueueMessageMetadataServiceIT extends AbstractJetStreamIT {
   }
 
   @Test
-  void deleteMessageOnMissingReturnsFalse() {
-    assertFalse(svc.deleteMessage("orders", "never-saved", Duration.ofMinutes(1)));
+  void deleteMessageOnMissingCreatesTombstone() {
+    // NATS doesn't store metadata at enqueue time for stream-resident messages, so a
+    // dashboard delete request can land before any metadata exists. The contract (shared
+    // with the Redis impl) is to write a tombstone keyed by metaId so subsequent peeks
+    // render the row as deleted, and return true.
+    assertTrue(svc.deleteMessage("orders", "never-saved", Duration.ofMinutes(1)));
+    MessageMetadata tombstone = svc.getByMessageId("orders", "never-saved");
+    assertNotNull(tombstone);
+    assertTrue(tombstone.isDeleted());
+    assertEquals(MessageStatus.DELETED, tombstone.getStatus());
   }
 
   @Test

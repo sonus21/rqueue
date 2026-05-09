@@ -70,7 +70,7 @@ and minimal setup.
 * Java 21+
 * Spring Reactive
 * **Redis backend (default):** Lettuce client; read-master preference for Redis Cluster
-* **NATS backend:** NATS Server 2.2+ with JetStream enabled (`nats-server -js`); `rqueue-nats` on the classpath
+* **NATS backend:** NATS Server 2.2+ with JetStream enabled (`nats-server -js`); `rqueue-nats` on the classpath. Delayed/periodic scheduling requires NATS ≥ 2.12.
 
 ## Getting Started
 
@@ -177,10 +177,14 @@ rqueue.backend=nats
 rqueue.nats.connection.url=nats://localhost:4222
 ```
 
+Delayed and periodic scheduling (`enqueueIn`, `enqueueAt`, `enqueuePeriodic`) is supported on
+**NATS ≥ 2.12**. Rqueue detects the server version at startup and enables scheduling
+automatically when available. On older servers those calls throw `UnsupportedOperationException`.
+
 {: .note }
 See [NATS Configuration](configuration/nats-configuration) for the full reference — connection
-options, stream defaults, consumer tuning, naming, auto-provisioning, locked-down account setup,
-and feature limitations.
+options, stream defaults, consumer tuning, naming, auto-provisioning, pitfalls, and feature
+comparison.
 
 ---
 

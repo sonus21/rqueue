@@ -24,7 +24,7 @@ class JetStreamMessageBrokerRetryDlqIT extends AbstractJetStreamIT {
   @Test
   void exhaustedMessage_landsOnDlqStream() throws Exception {
     String name = "rdq-" + System.nanoTime();
-    QueueDetail q = mockQueue(name);
+    QueueDetail q = mockQueue(name, com.github.sonus21.rqueue.enums.QueueType.QUEUE, "worker");
     RqueueNatsConfig cfg = RqueueNatsConfig.defaults();
     cfg.getConsumerDefaults().setMaxDeliver(2);
     cfg.getConsumerDefaults().setAckWait(Duration.ofMillis(500));

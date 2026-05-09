@@ -10,8 +10,11 @@
 package com.github.sonus21.rqueue.nats;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -21,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.github.sonus21.rqueue.core.RqueueMessage;
+import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.listener.QueueDetail;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
@@ -37,6 +41,7 @@ import io.nats.client.impl.Headers;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import reactor.test.StepVerifier;
 
 /**
@@ -55,12 +60,18 @@ class JetStreamMessageBrokerUnitTest {
 
   /** Build a broker with all NATS primitives mocked and stream provisioning short-circuited. */
   private static Fixture newFixture(RqueueNatsConfig config) {
+    return newFixture(config, false);
+  }
+
+  /** Build a broker with {@code schedulingSupported} controlled by the caller. */
+  private static Fixture newFixture(RqueueNatsConfig config, boolean schedulingSupported) {
     Connection conn = mock(Connection.class);
     JetStream js = mock(JetStream.class);
     JetStreamManagement jsm = mock(JetStreamManagement.class);
     // Mock the provisioner so ensureStream() is a no-op — these tests verify subject
     // naming and exception wrapping, not stream creation.
     NatsProvisioner provisioner = mock(NatsProvisioner.class);
+    when(provisioner.isMessageSchedulingSupported()).thenReturn(schedulingSupported);
     JetStreamMessageBroker broker = new JetStreamMessageBroker(
         conn,
         js,
@@ -191,12 +202,118 @@ class JetStreamMessageBrokerUnitTest {
   }
 
   @Test
-  void enqueueWithDelayReactive_returnsErrorMonoOfUOE() {
+  void enqueueWithDelayReactive_returnsErrorMonoWhenSchedulingUnsupported() {
+    // provisioner mock returns false for isMessageSchedulingSupported() by default
     Fixture f = newFixture(RqueueNatsConfig.defaults());
     StepVerifier.create(f.broker.enqueueWithDelayReactive(
             queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build(), 100))
-        .expectError(UnsupportedOperationException.class)
+        .expectError(RqueueNatsException.class)
         .verify();
+  }
+
+  @Test
+  void enqueueWithDelay_periodicMessage_dedupKeyIsIdAtProcessAt() throws Exception {
+    // Nats-Msg-Id = id@processAt for periodic messages:
+    //   - consecutive periods have unique processAt → different keys → no cross-period suppression
+    //   - retries share the same processAt → same key → JetStream deduplicates double scheduleNext
+    Fixture f = newFixture(RqueueNatsConfig.defaults(), true);
+    when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
+        .thenReturn(mock(io.nats.client.api.PublishAck.class));
+
+    long processAt = 1_746_789_000_000L;
+    RqueueMessage m = RqueueMessage.builder()
+        .id("pid-1")
+        .message("hi")
+        .processAt(processAt)
+        .period(5_000L)
+        .build();
+    f.broker.enqueueWithDelay(queueNamed("orders"), m, 5_000L);
+
+    ArgumentCaptor<Headers> headersCaptor = ArgumentCaptor.forClass(Headers.class);
+    verify(f.js, times(1)).publish(any(String.class), headersCaptor.capture(), any(byte[].class));
+    assertEquals("pid-1-at-" + processAt, headersCaptor.getValue().getFirst("Nats-Msg-Id"));
+    assertEquals(String.valueOf(processAt), headersCaptor.getValue().getFirst("Rqueue-Process-At"));
+    assertEquals("5000", headersCaptor.getValue().getFirst("Rqueue-Period"));
+  }
+
+  @Test
+  void enqueueWithDelay_nonPeriodicMessage_dedupKeyIsIdAtProcessAt() throws Exception {
+    // Nats-Msg-Id = id@processAt for non-periodic scheduled messages too.
+    // Double-publish of the same logical message within DuplicateWindow (= ackWait) is
+    // deduplicated; after the window expires the same ID may be reused freely.
+    Fixture f = newFixture(RqueueNatsConfig.defaults(), true);
+    when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
+        .thenReturn(mock(io.nats.client.api.PublishAck.class));
+
+    long processAt = 1_746_789_000_000L;
+    RqueueMessage m =
+        RqueueMessage.builder().id("oid-1").message("hi").processAt(processAt).build();
+    f.broker.enqueueWithDelay(queueNamed("orders"), m, 3_000L);
+
+    ArgumentCaptor<Headers> headersCaptor = ArgumentCaptor.forClass(Headers.class);
+    verify(f.js, times(1)).publish(any(String.class), headersCaptor.capture(), any(byte[].class));
+    assertEquals("oid-1-at-" + processAt, headersCaptor.getValue().getFirst("Nats-Msg-Id"));
+    assertEquals(String.valueOf(processAt), headersCaptor.getValue().getFirst("Rqueue-Process-At"));
+    assertEquals(null, headersCaptor.getValue().getFirst("Rqueue-Period"));
+  }
+
+  // ---- capabilities -----------------------------------------------------
+
+  @Test
+  void capabilities_schedulingUnsupported_supportsDelayedEnqueueIsFalse() {
+    Fixture f = newFixture(RqueueNatsConfig.defaults(), false);
+    Capabilities caps = f.broker.capabilities();
+    assertFalse(caps.supportsDelayedEnqueue(), "no scheduling on old NATS");
+    assertFalse(caps.supportsScheduledIntrospection(), "no scheduled zset in NATS");
+    assertFalse(caps.supportsCronJobs(), "no server-side cron in NATS");
+    assertFalse(caps.usesPrimaryHandlerDispatch(), "no Redis processing-ZSET in NATS");
+    assertTrue(caps.supportsViewData(), "peek() is implemented — explore panel must be visible");
+    assertTrue(caps.supportsMoveMessage(), "NatsRqueueUtilityService.moveMessage() is implemented");
+  }
+
+  @Test
+  void capabilities_schedulingSupported_supportsDelayedEnqueueIsTrue() {
+    Fixture f = newFixture(RqueueNatsConfig.defaults(), true);
+    Capabilities caps = f.broker.capabilities();
+    assertTrue(caps.supportsDelayedEnqueue());
+    assertTrue(caps.supportsViewData());
+    assertTrue(caps.supportsMoveMessage());
+    assertFalse(caps.usesPrimaryHandlerDispatch());
+  }
+
+  // ---- scheduleNext (SPI default) ----------------------------------------
+
+  /**
+   * JetStreamMessageBroker does not override {@code scheduleNext}; the SPI default calls
+   * {@code enqueueWithDelay(q, message, delay)}. Verify that path reaches JetStream publish
+   * with the correct subject and that {@code Nats-Next-Deliver-Time} is set (ADR-51 header).
+   */
+  @Test
+  void scheduleNext_delegatesToEnqueueWithDelay_setsDeliverTimeHeader() throws Exception {
+    Fixture f = newFixture(RqueueNatsConfig.defaults(), true);
+    when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
+        .thenReturn(mock(PublishAck.class));
+
+    long processAt = System.currentTimeMillis() + 5_000L;
+    RqueueMessage m = RqueueMessage.builder()
+        .id("pid-1")
+        .message("payload")
+        .processAt(processAt)
+        .period(5_000L)
+        .build();
+
+    // scheduleNext default: delayMs = max(0, processAt - now) → enqueueWithDelay
+    f.broker.scheduleNext(queueNamed("orders"), "ignored-key", m, 60L);
+
+    ArgumentCaptor<Headers> headers = ArgumentCaptor.forClass(Headers.class);
+    verify(f.js, times(1)).publish(eq("rqueue.js.orders"), headers.capture(), any(byte[].class));
+    assertNotNull(
+        headers.getValue().getFirst("Nats-Next-Deliver-Time"),
+        "ADR-51 deliver-time header must be present");
+    assertEquals(
+        "pid-1-at-" + processAt,
+        headers.getValue().getFirst("Nats-Msg-Id"),
+        "dedup key must be id-at-processAt");
   }
 
   // ---- helper -----------------------------------------------------------

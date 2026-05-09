@@ -24,6 +24,7 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
+import com.github.sonus21.rqueue.core.spi.SubscriberView;
 import com.github.sonus21.rqueue.core.support.RqueueMessageUtils;
 import com.github.sonus21.rqueue.exception.UnknownSwitchCase;
 import com.github.sonus21.rqueue.listener.QueueDetail;
@@ -40,8 +41,10 @@ import com.github.sonus21.rqueue.models.response.DataViewResponse;
 import com.github.sonus21.rqueue.models.response.RedisDataDetail;
 import com.github.sonus21.rqueue.models.response.RowColumnMeta;
 import com.github.sonus21.rqueue.models.response.RowColumnMetaType;
+import com.github.sonus21.rqueue.models.response.SubscriberRow;
 import com.github.sonus21.rqueue.models.response.TableColumn;
 import com.github.sonus21.rqueue.models.response.TableRow;
+import com.github.sonus21.rqueue.models.response.TerminalStorageRow;
 import com.github.sonus21.rqueue.repository.MessageBrowsingRepository;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import com.github.sonus21.rqueue.utils.Constants;
@@ -181,28 +184,52 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
         brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
             ? messageBroker.storageDisplayName(brokerQueueDetail)
             : queueConfig.getQueueName();
-    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails =
-        newArrayList(new HashMap.SimpleEntry<>(
-            NavTab.PENDING,
-            new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending)));
+    List<Entry<NavTab, RedisDataDetail>> queueRedisDataDetails = newArrayList();
+    // Per-consumer pending breakdown for brokers that expose it (e.g. NATS Limits-retention
+    // streams where each durable consumer has its own offset). When present, render one row
+    // per consumer with an exact pending count instead of a single aggregated "~ N" row.
+    Map<String, Long> perConsumer =
+        brokerQueueDetail != null ? messageBroker.consumerPendingSizes(brokerQueueDetail) : null;
+    if (perConsumer != null && !perConsumer.isEmpty()) {
+      String label = brokerLabel(NavTab.PENDING, DataType.LIST);
+      for (Map.Entry<String, Long> entry : perConsumer.entrySet()) {
+        Long size = entry.getValue();
+        RedisDataDetail consumerDetail =
+            new RedisDataDetail(pendingDisplayName, DataType.LIST, size == null ? 0 : size);
+        consumerDetail.setTypeLabel(label);
+        consumerDetail.setConsumerName(entry.getKey());
+        // Per-consumer counts are exact (numPending or position math for that subscriber);
+        // the approximation flag only applies to the aggregated single-row view.
+        queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.PENDING, consumerDetail));
+      }
+    } else {
+      RedisDataDetail pendingDetail =
+          new RedisDataDetail(pendingDisplayName, DataType.LIST, pending == null ? 0 : pending);
+      pendingDetail.setTypeLabel(brokerLabel(NavTab.PENDING, DataType.LIST));
+      if (brokerQueueDetail != null) {
+        pendingDetail.setApproximate(messageBroker.isSizeApproximate(brokerQueueDetail));
+      }
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.PENDING, pendingDetail));
+    }
     // Brokers that manage their own in-flight tracking (e.g. NATS JetStream) have no separate
     // processing ZSET, so omit the RUNNING entry to avoid a 501 when the explorer opens it.
     if (!brokerHidesRunning()) {
       String processingQueueName = queueConfig.getProcessingQueueName();
       Long running = messageBrowsingRepository.getDataSize(processingQueueName, DataType.ZSET);
-      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-          NavTab.RUNNING,
-          new RedisDataDetail(processingQueueName, DataType.ZSET, running == null ? 0 : running)));
+      RedisDataDetail runningDetail =
+          new RedisDataDetail(processingQueueName, DataType.ZSET, running == null ? 0 : running);
+      runningDetail.setTypeLabel(brokerLabel(NavTab.RUNNING, DataType.ZSET));
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.RUNNING, runningDetail));
     }
     String scheduledQueueName = queueConfig.getScheduledQueueName();
     // When the broker doesn't support scheduled introspection (e.g. JetStream), suppress
     // the SCHEDULED nav tab entry entirely so the dashboard doesn't query an absent ZSET.
     if (!brokerHidesScheduled()) {
       Long scheduled = messageBrowsingRepository.getDataSize(scheduledQueueName, DataType.ZSET);
-      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-          NavTab.SCHEDULED,
-          new RedisDataDetail(
-              scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled)));
+      RedisDataDetail scheduledDetail =
+          new RedisDataDetail(scheduledQueueName, DataType.ZSET, scheduled == null ? 0 : scheduled);
+      scheduledDetail.setTypeLabel(brokerLabel(NavTab.SCHEDULED, DataType.ZSET));
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.SCHEDULED, scheduledDetail));
     }
     if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
       for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
@@ -210,16 +237,17 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
                 && messageBroker.dlqStorageDisplayName(brokerQueueDetail) != null
             ? messageBroker.dlqStorageDisplayName(brokerQueueDetail)
             : dlq.getName();
+        RedisDataDetail dlqDetail;
         if (!dlq.isConsumerEnabled()) {
           Long dlqSize = messageBrowsingRepository.getDataSize(dlq.getName(), DataType.LIST);
-          queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-              NavTab.DEAD,
-              new RedisDataDetail(dlqDisplayName, DataType.LIST, dlqSize == null ? 0 : dlqSize)));
+          dlqDetail =
+              new RedisDataDetail(dlqDisplayName, DataType.LIST, dlqSize == null ? 0 : dlqSize);
         } else {
           // TODO should we redirect to the queue page?
-          queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-              NavTab.DEAD, new RedisDataDetail(dlqDisplayName, DataType.LIST, -1)));
+          dlqDetail = new RedisDataDetail(dlqDisplayName, DataType.LIST, -1);
         }
+        dlqDetail.setTypeLabel(brokerLabel(NavTab.DEAD, DataType.LIST));
+        queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.DEAD, dlqDetail));
       }
     }
     if (rqueueConfig.messageInTerminalStateShouldBeStored()
@@ -230,12 +258,21 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
           brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
               ? messageBroker.storageDisplayName(brokerQueueDetail)
               : queueConfig.getCompletedQueueName();
-      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(
-          NavTab.COMPLETED,
-          new RedisDataDetail(
-              completedDisplayName, DataType.ZSET, completed == null ? 0 : completed)));
+      RedisDataDetail completedDetail = new RedisDataDetail(
+          completedDisplayName, DataType.ZSET, completed == null ? 0 : completed);
+      completedDetail.setTypeLabel(brokerLabel(NavTab.COMPLETED, DataType.ZSET));
+      queueRedisDataDetails.add(new HashMap.SimpleEntry<>(NavTab.COMPLETED, completedDetail));
     }
     return queueRedisDataDetails;
+  }
+
+  /**
+   * Resolve the broker-specific human-readable label for the given (NavTab, DataType) pair.
+   * Returns {@code null} on the legacy Redis path so the template falls back to
+   * {@code DataType.name()} (LIST/ZSET).
+   */
+  private String brokerLabel(NavTab tab, DataType type) {
+    return messageBroker != null ? messageBroker.dataTypeLabel(tab, type) : null;
   }
 
   @Override
@@ -352,9 +389,18 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public DataViewResponse getExplorePageData(
-      String src, String name, DataType type, int pageNumber, int itemPerPage) {
+      String src,
+      String name,
+      DataType type,
+      String consumerName,
+      int pageNumber,
+      int itemPerPage) {
     QueueConfig queueConfig = rqueueSystemManagerService.getQueueConfig(src);
     DataViewResponse response = new DataViewResponse();
+    if (queueConfig == null) {
+      response.set(1, "Queue '" + src + "' does not exist");
+      return response;
+    }
     boolean deadLetterQueue = queueConfig.isDeadLetterQueue(name);
     boolean scheduledQueue = queueConfig.getScheduledQueueName().equals(name);
     boolean completionQueue = name.equals(queueConfig.getCompletedQueueName());
@@ -376,7 +422,7 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
       QueueDetail qd = lookupQueueDetail(queueConfig.getName());
       if (qd != null) {
         long offset = (long) pageNumber * itemPerPage;
-        List<RqueueMessage> peeked = messageBroker.peek(qd, offset, itemPerPage);
+        List<RqueueMessage> peeked = messageBroker.peek(qd, consumerName, offset, itemPerPage);
         List<TypedTuple<RqueueMessage>> tuples = peeked.stream()
             .map(m -> (TypedTuple<RqueueMessage>) new DefaultTypedTuple<>(m, null))
             .collect(Collectors.toList());
@@ -465,6 +511,12 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getRunningTasks() {
+    // Brokers that manage in-flight tracking internally (e.g. NATS JetStream durable consumers)
+    // have no separate processing ZSET to report on. Surface an empty table with just the header
+    // row so the home dashboard shows the section but doesn't render a column of zeros.
+    if (brokerHidesRunning()) {
+      return emptyTable("Processing");
+    }
     return bulkSizeTable(
         rqueueSystemManagerService.getSortedQueueConfigs(),
         QueueConfig::getProcessingQueueName,
@@ -483,11 +535,27 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
 
   @Override
   public List<List<Object>> getScheduledTasks() {
+    // Brokers without scheduled-queue introspection (e.g. NATS JetStream) have no scheduled ZSET.
+    // Return an empty table so the home dashboard doesn't query an absent data structure.
+    if (brokerHidesScheduled()) {
+      return emptyTable("Scheduled");
+    }
     return bulkSizeTable(
         rqueueSystemManagerService.getSortedQueueConfigs(),
         QueueConfig::getScheduledQueueName,
         DataType.ZSET,
         "Scheduled [ZSET]");
+  }
+
+  /**
+   * Header-only table used when a broker capability suppresses an entire section (e.g.
+   * NATS hiding the running / scheduled rows). The frontend renders the column header and
+   * no body rows.
+   */
+  private List<List<Object>> emptyTable(String section) {
+    List<List<Object>> rows = new ArrayList<>();
+    rows.add(Arrays.asList("Queue", section, "Number of Messages"));
+    return rows;
   }
 
   /**
@@ -576,10 +644,187 @@ public class RqueueQDetailServiceImpl implements RqueueQDetailService {
     return rqueueWorkerRegistry.getQueueWorkers(queueName);
   }
 
+  // -------------------------------------------------------------------------
+  // Subscriber + Terminal Storage rows (new queue-detail UI)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Build the per-subscriber rows that drive the new "Subscribers" section. Joins broker SPI
+   * data ({@link MessageBroker#subscribers}) with last-active info from the worker registry,
+   * keyed on {@code consumerName}. Falls back to a single anonymous row when the queue has
+   * no registered handlers (e.g. a producer-only deployment).
+   */
+  @Override
+  public List<SubscriberRow> getSubscriberRows(QueueConfig queueConfig) {
+    if (queueConfig == null) {
+      return Collections.emptyList();
+    }
+    QueueDetail brokerQueueDetail =
+        messageBroker != null ? lookupQueueDetail(queueConfig.getName()) : null;
+    List<SubscriberView> views = brokerSubscribers(queueConfig, brokerQueueDetail);
+    if (views.isEmpty()) {
+      return Collections.emptyList();
+    }
+    String storageName =
+        brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+            ? messageBroker.storageDisplayName(brokerQueueDetail)
+            : queueConfig.getQueueName();
+    String label = brokerLabel(NavTab.PENDING, DataType.LIST);
+    Map<String, RqueueWorkerPollerView> workersByConsumer =
+        indexWorkersByConsumer(queueConfig.getName());
+    Map<String, Integer> workerCountByConsumer = countWorkersByConsumer(queueConfig.getName());
+    List<SubscriberRow> rows = new ArrayList<>(views.size());
+    long now = System.currentTimeMillis();
+    for (SubscriberView v : views) {
+      SubscriberRow.SubscriberRowBuilder builder = SubscriberRow.builder()
+          .consumerName(v.consumerName())
+          .typeLabel(label)
+          .storageName(storageName)
+          .dataType(DataType.LIST)
+          .pending(v.pending())
+          .pendingShared(v.pendingShared())
+          .inFlight(v.inFlight())
+          .workerCount(workerCountByConsumer.getOrDefault(v.consumerName(), 0));
+      RqueueWorkerPollerView w = workersByConsumer.get(v.consumerName());
+      if (w != null) {
+        builder
+            .status(w.getStatus())
+            .host(w.getHost())
+            .pid(w.getPid())
+            .lastPollAt(w.getLastPollAt());
+        if (w.getLastPollAt() > 0) {
+          builder.lastPollAge(DateTimeUtils.milliToHumanRepresentation(now - w.getLastPollAt()));
+        }
+      }
+      rows.add(builder.build());
+    }
+    return rows;
+  }
+
+  /**
+   * Count the live worker threads bucketed by {@code consumerName}. Mirrors the bucketing that
+   * {@link #indexWorkersByConsumer(String)} does but keeps the count instead of collapsing to
+   * the most-recently polling worker — surfaces the {@code @RqueueListener.concurrency} fanout
+   * separately from the row's representative worker (host / pid / lastPollAt).
+   */
+  private Map<String, Integer> countWorkersByConsumer(String queueName) {
+    List<RqueueWorkerPollerView> workers = rqueueWorkerRegistry.getQueueWorkers(queueName);
+    if (CollectionUtils.isEmpty(workers)) {
+      return Collections.emptyMap();
+    }
+    Map<String, Integer> out = new HashMap<>();
+    for (RqueueWorkerPollerView w : workers) {
+      String key = w.getConsumerName();
+      if (key == null || key.isEmpty()) {
+        continue;
+      }
+      out.merge(key, 1, Integer::sum);
+    }
+    return out;
+  }
+
+  private List<SubscriberView> brokerSubscribers(
+      QueueConfig queueConfig, QueueDetail brokerQueueDetail) {
+    if (brokerQueueDetail != null && messageBroker != null) {
+      try {
+        List<SubscriberView> views = messageBroker.subscribers(brokerQueueDetail);
+        if (views != null && !views.isEmpty()) {
+          return views;
+        }
+      } catch (RuntimeException ignored) {
+        // fall through to producer-only path
+      }
+    }
+    // No active QueueDetail registered (producer-only or shutdown). Surface a single row so
+    // the operator at least sees the queue's pending count from the repository fallback.
+    Long pending = messageBrowsingRepository.getDataSize(queueConfig.getQueueName(), DataType.LIST);
+    if (pending == null || pending <= 0) {
+      return Collections.emptyList();
+    }
+    return Collections.singletonList(new SubscriberView(queueConfig.getName(), pending, 0L, true));
+  }
+
+  private Map<String, RqueueWorkerPollerView> indexWorkersByConsumer(String queueName) {
+    List<RqueueWorkerPollerView> workers = rqueueWorkerRegistry.getQueueWorkers(queueName);
+    if (CollectionUtils.isEmpty(workers)) {
+      return Collections.emptyMap();
+    }
+    Map<String, RqueueWorkerPollerView> out = new HashMap<>(workers.size());
+    for (RqueueWorkerPollerView w : workers) {
+      String key = w.getConsumerName();
+      if (key == null || key.isEmpty()) {
+        continue;
+      }
+      RqueueWorkerPollerView existing = out.get(key);
+      if (existing == null || w.getLastPollAt() > existing.getLastPollAt()) {
+        out.put(key, w);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Terminal-storage rows: COMPLETED set + each DLQ. These are shared across subscribers, so
+   * they live in their own table rather than being repeated on every subscriber row.
+   */
+  @Override
+  public List<TerminalStorageRow> getTerminalRows(QueueConfig queueConfig) {
+    if (queueConfig == null) {
+      return Collections.emptyList();
+    }
+    List<TerminalStorageRow> out = new ArrayList<>();
+    QueueDetail brokerQueueDetail =
+        messageBroker != null ? lookupQueueDetail(queueConfig.getName()) : null;
+    if (rqueueConfig.messageInTerminalStateShouldBeStored()
+        && !StringUtils.isEmpty(queueConfig.getCompletedQueueName())) {
+      Long completed =
+          messageBrowsingRepository.getDataSize(queueConfig.getCompletedQueueName(), DataType.ZSET);
+      String completedDisplayName =
+          brokerQueueDetail != null && messageBroker.storageDisplayName(brokerQueueDetail) != null
+              ? messageBroker.storageDisplayName(brokerQueueDetail)
+              : queueConfig.getCompletedQueueName();
+      out.add(TerminalStorageRow.builder()
+          .tab(NavTab.COMPLETED)
+          .typeLabel(brokerLabel(NavTab.COMPLETED, DataType.ZSET))
+          .storageName(completedDisplayName)
+          .dataType(DataType.ZSET)
+          .size(completed == null ? 0L : completed)
+          .build());
+    }
+    if (!CollectionUtils.isEmpty(queueConfig.getDeadLetterQueues())) {
+      for (DeadLetterQueue dlq : queueConfig.getDeadLetterQueues()) {
+        String dlqDisplayName = brokerQueueDetail != null
+                && messageBroker.dlqStorageDisplayName(brokerQueueDetail) != null
+            ? messageBroker.dlqStorageDisplayName(brokerQueueDetail)
+            : dlq.getName();
+        long size;
+        if (dlq.isConsumerEnabled()) {
+          size = -1L;
+        } else {
+          Long dlqSize = messageBrowsingRepository.getDataSize(dlq.getName(), DataType.LIST);
+          size = dlqSize == null ? 0L : dlqSize;
+        }
+        out.add(TerminalStorageRow.builder()
+            .tab(NavTab.DEAD)
+            .typeLabel(brokerLabel(NavTab.DEAD, DataType.LIST))
+            .storageName(dlqDisplayName)
+            .dataType(DataType.LIST)
+            .size(size)
+            .build());
+      }
+    }
+    return out;
+  }
+
   @Override
   public Mono<DataViewResponse> getReactiveExplorePageData(
-      String src, String name, DataType type, int pageNumber, int itemPerPage) {
-    return Mono.just(getExplorePageData(src, name, type, pageNumber, itemPerPage));
+      String src,
+      String name,
+      DataType type,
+      String consumerName,
+      int pageNumber,
+      int itemPerPage) {
+    return Mono.just(getExplorePageData(src, name, type, consumerName, pageNumber, itemPerPage));
   }
 
   @Override

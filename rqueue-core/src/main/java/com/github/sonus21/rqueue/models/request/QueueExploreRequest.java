@@ -43,4 +43,13 @@ public class QueueExploreRequest extends SerializableBase {
 
   @JsonProperty("count")
   private int itemPerPage = 20;
+
+  /**
+   * Optional consumer / subscriber name. When set on Limits-retention streams the broker
+   * starts the peek from that consumer's next undelivered sequence instead of the stream's
+   * first sequence, so the explorer shows messages that are still pending for this specific
+   * consumer rather than the entire retained window.
+   */
+  @JsonProperty("consumerName")
+  private String consumerName;
 }

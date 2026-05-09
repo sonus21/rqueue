@@ -69,7 +69,6 @@ public class RqueueNatsProperties {
     private long maxBytes = -1;
     private long maxMessages = -1;
     private String discardPolicy = "OLD";
-    private Duration duplicateWindow = Duration.ofMinutes(2);
   }
 
   @Getter

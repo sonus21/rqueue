@@ -95,8 +95,8 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
    */
   @Test
   void queueMode_consumerReuse_preservesDeliveryPosition() throws Exception {
-    QueueDetail q = mockQueue("qm-reuse-" + System.nanoTime(), QueueType.QUEUE);
     String consumerName = "c1-reuse";
+    QueueDetail q = mockQueue("qm-reuse-" + System.nanoTime(), QueueType.QUEUE, consumerName);
     int total = 5;
     int firstBatch = 3;
 
@@ -156,7 +156,8 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
 
   @Test
   void queueMode_queue_competingConsumers_eachMessageDeliveredOnce() throws Exception {
-    QueueDetail q = mockQueue("qm-cc-" + System.nanoTime(), QueueType.QUEUE);
+    String sharedConsumer = "shared-cc";
+    QueueDetail q = mockQueue("qm-cc-" + System.nanoTime(), QueueType.QUEUE, sharedConsumer);
     int total = 20;
 
     try (JetStreamMessageBroker broker =
@@ -167,7 +168,6 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
 
       Set<String> seen = ConcurrentHashMap.newKeySet();
       CountDownLatch done = new CountDownLatch(total);
-      String sharedConsumer = "shared-cc";
       var pool = Executors.newFixedThreadPool(2);
       for (int t = 0; t < 2; t++) {
         pool.submit(() -> {
@@ -194,19 +194,25 @@ class JetStreamQueueModeIT extends AbstractJetStreamIT {
 
   @Test
   void queueMode_stream_fanOut_everyConsumerReceivesAllMessages() throws Exception {
-    QueueDetail q = mockQueue("qm-fo-" + System.nanoTime(), QueueType.STREAM);
+    String name = "qm-fo-" + System.nanoTime();
+    // Same stream, two QueueDetail facets — one per @RqueueListener with its own
+    // resolvedConsumerName so ack/nack key on the right (consumer, id) pair.
+    QueueDetail enqueueFacet = mockQueue(name, QueueType.STREAM);
+    QueueDetail q1 = mockQueue(name, QueueType.STREAM, "listener-svc-1");
+    QueueDetail q2 = mockQueue(name, QueueType.STREAM, "listener-svc-2");
     int total = 8;
 
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
       for (int i = 0; i < total; i++) {
-        broker.enqueue(q, RqueueMessage.builder().id("fo-" + i).message("p" + i).build());
+        broker.enqueue(
+            enqueueFacet, RqueueMessage.builder().id("fo-" + i).message("p" + i).build());
       }
 
       // Each listener group uses a distinct consumer name — they are independent on a
       // Limits-retention stream and each track their own delivery position.
-      Set<String> listenerOneSeen = drain(broker, q, "listener-svc-1", total);
-      Set<String> listenerTwoSeen = drain(broker, q, "listener-svc-2", total);
+      Set<String> listenerOneSeen = drain(broker, q1, "listener-svc-1", total);
+      Set<String> listenerTwoSeen = drain(broker, q2, "listener-svc-2", total);
 
       assertEquals(
           total, listenerOneSeen.size(), "STREAM mode: listener-svc-1 must receive all messages");

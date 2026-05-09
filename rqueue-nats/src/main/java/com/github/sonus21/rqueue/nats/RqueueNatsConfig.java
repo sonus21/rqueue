@@ -54,7 +54,6 @@ public class RqueueNatsConfig {
     private int replicas = 1;
     private StorageType storage = StorageType.File;
     private RetentionPolicy retention = RetentionPolicy.Limits;
-    private Duration duplicateWindow = Duration.ofMinutes(2);
     private long maxMsgs = -1;
     private long maxBytes = -1;
     private Duration maxAge = null;
