@@ -37,9 +37,12 @@ public class MessageMoveRequest implements Serializable {
 
   private static final long serialVersionUID = -5105668034442269108L;
   private String src;
+
   @JsonProperty("srcType")
   private DataType srcType;
+
   private String dst;
+
   @JsonProperty("dstType")
   private DataType dstType;
 

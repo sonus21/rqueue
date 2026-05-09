@@ -180,7 +180,8 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
   void brokerWithPrimaryHandlerDispatchUsesNormalStartQueuePath() throws Exception {
     EndpointRegistry.delete();
     // Capabilities with usesPrimaryHandlerDispatch=true (e.g. NATS after the refactor).
-    CountingBroker broker = new CountingBroker(new Capabilities(true, false, false, true, true, true));
+    CountingBroker broker =
+        new CountingBroker(new Capabilities(true, false, false, true, true, true));
     TrackingContainer container = new TrackingContainer(messageHandler);
     container.setMessageBroker(broker);
     container.afterPropertiesSet();
@@ -223,7 +224,8 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
   @Test
   void pollerForwardsPollingIntervalAsBrokerFetchWait() throws Exception {
     EndpointRegistry.delete();
-    CountingBroker broker = new CountingBroker(new Capabilities(true, false, false, true, true, true));
+    CountingBroker broker =
+        new CountingBroker(new Capabilities(true, false, false, true, true, true));
     RqueueMessageListenerContainer container =
         new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
     container.rqueueBeanProvider = beanProvider;
