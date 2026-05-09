@@ -60,6 +60,12 @@ Release candidate.
   structured error response (`"Queue '…' does not exist"`) when the requested
   queue name is not registered, instead of throwing a `NullPointerException`.
 
+### Changes
+* **Removed Pebble template engine** — the `pebble-spring7` dependency has been
+  dropped. All dashboard HTML is now produced directly in Java using text blocks
+  and `StringBuilder` via the new `RqueueHtmlRenderer` component, eliminating
+  the external templating runtime entirely.
+
 ### Build
 * **Removed redundant `lettuce-core` dependency from example app** — the
   example app previously declared `io.lettuce:lettuce-core` without an explicit
