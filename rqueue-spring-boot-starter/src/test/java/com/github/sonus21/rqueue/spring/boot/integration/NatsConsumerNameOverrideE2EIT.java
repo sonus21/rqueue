@@ -44,9 +44,9 @@ import org.springframework.stereotype.Component;
 @SpringBootTest(
     classes = NatsConsumerNameOverrideE2EIT.TestApp.class,
     properties = {
-        "rqueue.backend=nats",
-        "rqueue.nats.naming.stream-prefix=" + NatsConsumerNameOverrideE2EIT.STREAM_PREFIX,
-        "rqueue.nats.naming.subject-prefix=" + NatsConsumerNameOverrideE2EIT.SUBJECT_PREFIX
+      "rqueue.backend=nats",
+      "rqueue.nats.naming.stream-prefix=" + NatsConsumerNameOverrideE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsConsumerNameOverrideE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {

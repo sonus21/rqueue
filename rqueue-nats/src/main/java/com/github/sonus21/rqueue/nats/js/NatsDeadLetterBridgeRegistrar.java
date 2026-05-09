@@ -56,11 +56,9 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
  * to wire unconditionally from the NATS auto-config (which is itself gated on
  * {@code rqueue.backend=nats}).
  */
-public class NatsDeadLetterBridgeRegistrar
-    implements SmartInitializingSingleton, DisposableBean {
+public class NatsDeadLetterBridgeRegistrar implements SmartInitializingSingleton, DisposableBean {
 
-  private static final Logger log =
-      Logger.getLogger(NatsDeadLetterBridgeRegistrar.class.getName());
+  private static final Logger log = Logger.getLogger(NatsDeadLetterBridgeRegistrar.class.getName());
 
   private final MessageBroker broker;
   private final RqueueConfig rqueueConfig;
@@ -74,7 +72,8 @@ public class NatsDeadLetterBridgeRegistrar
   @Override
   public void afterSingletonsInstantiated() {
     if (rqueueConfig != null && rqueueConfig.isProducer()) {
-      log.log(Level.FINE,
+      log.log(
+          Level.FINE,
           "NatsDeadLetterBridgeRegistrar: producer-only mode — skipping bridge installation");
       return;
     }
@@ -97,12 +96,15 @@ public class NatsDeadLetterBridgeRegistrar
       } catch (RuntimeException e) {
         // Best-effort: a single failure must not abort listener startup. The rqueue-level DLQ
         // path (PostProcessingHandler.moveToDlq) still works regardless.
-        log.log(Level.WARNING,
-            "Failed to install dead-letter advisory bridge for queue " + q.getName()
-                + " consumer " + consumerName + ": " + e.getMessage(), e);
+        log.log(
+            Level.WARNING,
+            "Failed to install dead-letter advisory bridge for queue " + q.getName() + " consumer "
+                + consumerName + ": " + e.getMessage(),
+            e);
       }
     }
-    log.log(Level.INFO,
+    log.log(
+        Level.INFO,
         "NatsDeadLetterBridgeRegistrar: installed {0} advisory bridge(s) across {1} queue(s)",
         new Object[] {installed, queues.size()});
   }

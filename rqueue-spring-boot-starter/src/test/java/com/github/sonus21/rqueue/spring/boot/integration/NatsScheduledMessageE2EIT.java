@@ -47,14 +47,14 @@ import reactor.core.publisher.Flux;
 @SpringBootTest(
     classes = NatsScheduledMessageE2EIT.TestApp.class,
     properties = {
-        "rqueue.backend=nats",
-        "rqueue.reactive.enabled=true",
-        // Per-class prefix isolates this test's NATS streams from every other NATS-backed test
-        // running against the same nats-server (CI shares one instance across all classes, and a
-        // persistent JetStream dir survives reruns). Same queue name → distinct stream so we never
-        // inherit stale config or in-flight messages from an earlier class/run.
-        "rqueue.nats.naming.stream-prefix=" + NatsScheduledMessageE2EIT.STREAM_PREFIX,
-        "rqueue.nats.naming.subject-prefix=" + NatsScheduledMessageE2EIT.SUBJECT_PREFIX
+      "rqueue.backend=nats",
+      "rqueue.reactive.enabled=true",
+      // Per-class prefix isolates this test's NATS streams from every other NATS-backed test
+      // running against the same nats-server (CI shares one instance across all classes, and a
+      // persistent JetStream dir survives reruns). Same queue name → distinct stream so we never
+      // inherit stale config or in-flight messages from an earlier class/run.
+      "rqueue.nats.naming.stream-prefix=" + NatsScheduledMessageE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsScheduledMessageE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsScheduledMessageE2EIT extends AbstractNatsBootIT {
