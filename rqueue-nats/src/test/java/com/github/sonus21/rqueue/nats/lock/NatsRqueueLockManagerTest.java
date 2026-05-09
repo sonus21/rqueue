@@ -96,8 +96,7 @@ class NatsRqueueLockManagerTest {
   // ---- releaseLock --------------------------------------------------------
 
   @Test
-  void releaseLock_matchingValue_deletesAndReturnsTrue()
-      throws IOException, JetStreamApiException {
+  void releaseLock_matchingValue_deletesAndReturnsTrue() throws IOException, JetStreamApiException {
     KeyValueEntry entry = mock(KeyValueEntry.class);
     when(entry.getValue()).thenReturn("owner-1".getBytes(StandardCharsets.UTF_8));
     when(entry.getRevision()).thenReturn(3L);

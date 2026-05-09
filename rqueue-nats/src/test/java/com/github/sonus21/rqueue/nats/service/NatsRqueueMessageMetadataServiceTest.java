@@ -10,7 +10,6 @@
 package com.github.sonus21.rqueue.nats.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,7 +17,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -67,8 +65,8 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   private static KeyValueEntry entry(byte[] value) {
-    return mock(KeyValueEntry.class,
-        inv -> "getValue".equals(inv.getMethod().getName()) ? value : null);
+    return mock(
+        KeyValueEntry.class, inv -> "getValue".equals(inv.getMethod().getName()) ? value : null);
   }
 
   private MessageMetadata meta(String id) {
@@ -78,7 +76,8 @@ class NatsRqueueMessageMetadataServiceTest {
   // ---- get ---------------------------------------------------------
 
   @Test
-  void get_returnsDeserialisedMetadata() throws IOException, JetStreamApiException, InterruptedException {
+  void get_returnsDeserialisedMetadata()
+      throws IOException, JetStreamApiException, InterruptedException {
     byte[] bytes = "{}".getBytes();
     MessageMetadata m = meta("meta-1");
     when(kv.get("meta-1")).thenReturn(entry(bytes));
@@ -91,13 +90,15 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   @Test
-  void get_entryNotFound_returnsNull() throws IOException, JetStreamApiException, InterruptedException {
+  void get_entryNotFound_returnsNull()
+      throws IOException, JetStreamApiException, InterruptedException {
     when(kv.get(anyString())).thenReturn(null);
     assertNull(service.get("ghost"));
   }
 
   @Test
-  void get_entryNullValue_returnsNull() throws IOException, JetStreamApiException, InterruptedException {
+  void get_entryNullValue_returnsNull()
+      throws IOException, JetStreamApiException, InterruptedException {
     KeyValueEntry e = mock(KeyValueEntry.class);
     when(e.getValue()).thenReturn(null);
     when(kv.get(anyString())).thenReturn(e);
@@ -105,7 +106,8 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   @Test
-  void get_ioException_returnsNull() throws IOException, JetStreamApiException, InterruptedException {
+  void get_ioException_returnsNull()
+      throws IOException, JetStreamApiException, InterruptedException {
     when(kv.get(anyString())).thenThrow(new IOException("network error"));
     assertNull(service.get("meta-1"));
   }
@@ -119,7 +121,8 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   @Test
-  void delete_ioException_isSwallowed() throws IOException, JetStreamApiException, InterruptedException {
+  void delete_ioException_isSwallowed()
+      throws IOException, JetStreamApiException, InterruptedException {
     doThrow(new IOException("kv down")).when(kv).delete(anyString());
     service.delete("meta-1"); // must not throw
   }
@@ -134,14 +137,16 @@ class NatsRqueueMessageMetadataServiceTest {
   // ---- deleteAll ---------------------------------------------------
 
   @Test
-  void deleteAll_callsDeleteForEachId() throws IOException, JetStreamApiException, InterruptedException {
+  void deleteAll_callsDeleteForEachId()
+      throws IOException, JetStreamApiException, InterruptedException {
     service.deleteAll(Arrays.asList("meta-1", "meta-2"));
     verify(kv).delete("meta-1");
     verify(kv).delete("meta-2");
   }
 
   @Test
-  void deleteAll_emptyCollection_isNoOp() throws IOException, JetStreamApiException, InterruptedException {
+  void deleteAll_emptyCollection_isNoOp()
+      throws IOException, JetStreamApiException, InterruptedException {
     service.deleteAll(Collections.emptyList());
     verify(kv, never()).delete(anyString());
   }
@@ -175,7 +180,8 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   @Test
-  void save_ioException_isSwallowed() throws IOException, JetStreamApiException, InterruptedException {
+  void save_ioException_isSwallowed()
+      throws IOException, JetStreamApiException, InterruptedException {
     MessageMetadata m = meta("meta-1");
     when(serdes.serialize(m)).thenReturn("{}".getBytes());
     doThrow(new IOException("kv down")).when(kv).put(anyString(), any(byte[].class));
@@ -186,7 +192,8 @@ class NatsRqueueMessageMetadataServiceTest {
   // ---- getByMessageId ----------------------------------------------
 
   @Test
-  void getByMessageId_delegatesToGetWithComposedKey() throws IOException, JetStreamApiException, InterruptedException {
+  void getByMessageId_delegatesToGetWithComposedKey()
+      throws IOException, JetStreamApiException, InterruptedException {
     when(kv.get(anyString())).thenReturn(null);
 
     service.getByMessageId("orders", "msg-1");
@@ -228,7 +235,8 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   @Test
-  void deleteMessage_alwaysReturnsTrue() throws IOException, JetStreamApiException, InterruptedException {
+  void deleteMessage_alwaysReturnsTrue()
+      throws IOException, JetStreamApiException, InterruptedException {
     when(kv.get(anyString())).thenReturn(null);
     when(serdes.serialize(any(MessageMetadata.class))).thenReturn("{}".getBytes());
 
@@ -238,14 +246,19 @@ class NatsRqueueMessageMetadataServiceTest {
   // ---- getOrCreateMessageMetadata ---------------------------------
 
   @Test
-  void getOrCreateMessageMetadata_existing_returnsIt() throws IOException, JetStreamApiException, InterruptedException {
+  void getOrCreateMessageMetadata_existing_returnsIt()
+      throws IOException, JetStreamApiException, InterruptedException {
     MessageMetadata existing = meta("existing");
     byte[] bytes = "{}".getBytes();
     when(kv.get(anyString())).thenReturn(entry(bytes));
     when(serdes.deserialize(bytes, MessageMetadata.class)).thenReturn(existing);
 
-    RqueueMessage msg = RqueueMessage.builder().id("msg-1").queueName("orders").message("payload")
-        .queuedTime(System.currentTimeMillis()).build();
+    RqueueMessage msg = RqueueMessage.builder()
+        .id("msg-1")
+        .queueName("orders")
+        .message("payload")
+        .queuedTime(System.currentTimeMillis())
+        .build();
     MessageMetadata result = service.getOrCreateMessageMetadata(msg);
 
     assertNotNull(result);
@@ -257,8 +270,12 @@ class NatsRqueueMessageMetadataServiceTest {
       throws IOException, JetStreamApiException, InterruptedException {
     when(kv.get(anyString())).thenReturn(null);
 
-    RqueueMessage msg = RqueueMessage.builder().id("msg-1").queueName("orders").message("payload")
-        .queuedTime(System.currentTimeMillis()).build();
+    RqueueMessage msg = RqueueMessage.builder()
+        .id("msg-1")
+        .queueName("orders")
+        .message("payload")
+        .queuedTime(System.currentTimeMillis())
+        .build();
     MessageMetadata result = service.getOrCreateMessageMetadata(msg);
 
     assertNotNull(result);
@@ -268,7 +285,8 @@ class NatsRqueueMessageMetadataServiceTest {
   // ---- saveReactive -----------------------------------------------
 
   @Test
-  void saveReactive_wrapsAndReturnsTrue() throws IOException, JetStreamApiException, InterruptedException {
+  void saveReactive_wrapsAndReturnsTrue()
+      throws IOException, JetStreamApiException, InterruptedException {
     MessageMetadata m = meta("meta-1");
     when(serdes.serialize(m)).thenReturn("{}".getBytes());
 
@@ -282,7 +300,8 @@ class NatsRqueueMessageMetadataServiceTest {
   // ---- readMessageMetadataForQueue --------------------------------
 
   @Test
-  void readMessageMetadataForQueue_returnsMatchingKeys() throws IOException, JetStreamApiException, InterruptedException {
+  void readMessageMetadataForQueue_returnsMatchingKeys()
+      throws IOException, JetStreamApiException, InterruptedException {
     byte[] bytes = "{}".getBytes();
     MessageMetadata m = meta("orders_msg1");
     m.setUpdatedOn(1000L);
@@ -353,7 +372,8 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   @Test
-  void deleteQueueMessages_ioException_isSwallowed() throws IOException, JetStreamApiException, InterruptedException {
+  void deleteQueueMessages_ioException_isSwallowed()
+      throws IOException, JetStreamApiException, InterruptedException {
     when(kv.keys()).thenThrow(new IOException("kv down"));
     service.deleteQueueMessages("orders", 1000L); // must not throw
   }
@@ -361,7 +381,8 @@ class NatsRqueueMessageMetadataServiceTest {
   // ---- saveMessageMetadataForQueue --------------------------------
 
   @Test
-  void saveMessageMetadataForQueue_delegatesToSave() throws IOException, JetStreamApiException, InterruptedException {
+  void saveMessageMetadataForQueue_delegatesToSave()
+      throws IOException, JetStreamApiException, InterruptedException {
     MessageMetadata m = meta("meta-1");
     when(serdes.serialize(m)).thenReturn("{}".getBytes());
 
@@ -371,7 +392,8 @@ class NatsRqueueMessageMetadataServiceTest {
   }
 
   @Test
-  void saveMessageMetadataForQueue_nullTtl_doesNotThrow() throws IOException, JetStreamApiException, InterruptedException {
+  void saveMessageMetadataForQueue_nullTtl_doesNotThrow()
+      throws IOException, JetStreamApiException, InterruptedException {
     MessageMetadata m = meta("meta-1");
     when(serdes.serialize(m)).thenReturn("{}".getBytes());
 

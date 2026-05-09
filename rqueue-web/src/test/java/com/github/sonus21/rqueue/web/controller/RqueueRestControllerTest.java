@@ -58,22 +58,42 @@ import org.springframework.beans.factory.ObjectProvider;
 @CoreUnitTest
 class RqueueRestControllerTest {
 
-  @Mock private RqueueDashboardChartService chartService;
-  @Mock private RqueueQDetailService qDetailService;
-  @Mock private RqueueUtilityService utilityService;
-  @Mock private RqueueSystemManagerService systemManagerService;
-  @Mock private RqueueWebConfig webConfig;
-  @Mock private RqueueJobService jobService;
-  @Mock private ObjectProvider<MessageBroker> brokerProvider;
-  @Mock private HttpServletResponse response;
+  @Mock
+  private RqueueDashboardChartService chartService;
+
+  @Mock
+  private RqueueQDetailService qDetailService;
+
+  @Mock
+  private RqueueUtilityService utilityService;
+
+  @Mock
+  private RqueueSystemManagerService systemManagerService;
+
+  @Mock
+  private RqueueWebConfig webConfig;
+
+  @Mock
+  private RqueueJobService jobService;
+
+  @Mock
+  private ObjectProvider<MessageBroker> brokerProvider;
+
+  @Mock
+  private HttpServletResponse response;
 
   private RqueueRestController controller;
 
   @BeforeEach
   void setUp() {
     controller = new RqueueRestController(
-        chartService, qDetailService, utilityService, systemManagerService,
-        webConfig, jobService, brokerProvider);
+        chartService,
+        qDetailService,
+        utilityService,
+        systemManagerService,
+        webConfig,
+        jobService,
+        brokerProvider);
   }
 
   private void enableWeb() {
@@ -189,7 +209,8 @@ class RqueueRestControllerTest {
     MessageEnqueueRequest req = new MessageEnqueueRequest();
     req.setQueueName("orders");
     req.setMessageId("msg-1");
-    when(utilityService.enqueueMessage(anyString(), anyString(), any())).thenReturn(new BooleanResponse());
+    when(utilityService.enqueueMessage(anyString(), anyString(), any()))
+        .thenReturn(new BooleanResponse());
     assertNotNull(controller.enqueueMessage(req, response));
   }
 
@@ -288,7 +309,8 @@ class RqueueRestControllerTest {
   @Test
   void aggregateDataCounter_enabled_delegatesToUtilityService() {
     enableWeb();
-    when(utilityService.aggregateDataCounter(AggregationType.DAILY)).thenReturn(new DataSelectorResponse());
+    when(utilityService.aggregateDataCounter(AggregationType.DAILY))
+        .thenReturn(new DataSelectorResponse());
     assertNotNull(controller.aggregateDataCounter(AggregationType.DAILY, response));
   }
 

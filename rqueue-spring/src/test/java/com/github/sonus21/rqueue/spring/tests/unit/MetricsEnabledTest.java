@@ -29,6 +29,7 @@ class MetricsEnabledTest {
 
   @Mock
   private ConditionContext context;
+
   @Mock
   private AnnotatedTypeMetadata metadata;
 
@@ -43,8 +44,8 @@ class MetricsEnabledTest {
   void matches_meterRegistryOnClasspath_returnsTrue() {
     // micrometer-core is on the test classpath so MeterRegistry should be present
     boolean result = condition.matches(context, metadata);
-    assertTrue(result,
-        "Expected MeterRegistry to be on the test classpath (micrometer-core dependency)");
+    assertTrue(
+        result, "Expected MeterRegistry to be on the test classpath (micrometer-core dependency)");
   }
 
   @Test

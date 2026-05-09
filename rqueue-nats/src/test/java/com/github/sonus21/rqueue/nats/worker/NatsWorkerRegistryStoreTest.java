@@ -157,8 +157,7 @@ class NatsWorkerRegistryStoreTest {
 
     when(workerKv.get(anyString())).thenReturn(null);
 
-    Map<String, RqueueWorkerInfo> result =
-        store.getWorkerInfos(Arrays.asList("w1", "w2"));
+    Map<String, RqueueWorkerInfo> result = store.getWorkerInfos(Arrays.asList("w1", "w2"));
     assertTrue(result.isEmpty());
   }
 
@@ -179,8 +178,7 @@ class NatsWorkerRegistryStoreTest {
 
   @Test
   void putQueueHeartbeat_ioException_swallowed() throws IOException, JetStreamApiException {
-    doThrow(new IOException("bucket gone")).when(heartbeatKv)
-        .put(anyString(), any(byte[].class));
+    doThrow(new IOException("bucket gone")).when(heartbeatKv).put(anyString(), any(byte[].class));
     store.putQueueHeartbeat("q", "w", "{}"); // must not throw
   }
 

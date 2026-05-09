@@ -18,7 +18,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.atMostOnce;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -67,8 +66,8 @@ class NatsRqueueSystemConfigDaoTest {
   }
 
   private static KeyValueEntry entry(byte[] value) {
-    return mock(KeyValueEntry.class,
-        inv -> "getValue".equals(inv.getMethod().getName()) ? value : null);
+    return mock(
+        KeyValueEntry.class, inv -> "getValue".equals(inv.getMethod().getName()) ? value : null);
   }
 
   // ---- getConfigByName (cached) ------------------------------------
@@ -127,7 +126,8 @@ class NatsRqueueSystemConfigDaoTest {
   // ---- getQConfig --------------------------------------------------
 
   @Test
-  void getQConfig_cacheHit_returnsFromCache() throws IOException, JetStreamApiException, InterruptedException {
+  void getQConfig_cacheHit_returnsFromCache()
+      throws IOException, JetStreamApiException, InterruptedException {
     QueueConfig cfg = config("id-1", "orders");
     byte[] bytes = "{}".getBytes();
     when(kv.get("orders")).thenReturn(entry(bytes));
@@ -143,7 +143,8 @@ class NatsRqueueSystemConfigDaoTest {
   }
 
   @Test
-  void getQConfig_cacheMiss_scansKv() throws IOException, JetStreamApiException, InterruptedException {
+  void getQConfig_cacheMiss_scansKv()
+      throws IOException, JetStreamApiException, InterruptedException {
     QueueConfig cfg = config("id-1", "orders");
     byte[] bytes = "{}".getBytes();
     when(kv.keys()).thenReturn(Collections.singletonList("orders"));
@@ -173,7 +174,8 @@ class NatsRqueueSystemConfigDaoTest {
   }
 
   @Test
-  void getQConfig_ioException_returnsNull() throws IOException, JetStreamApiException, InterruptedException {
+  void getQConfig_ioException_returnsNull()
+      throws IOException, JetStreamApiException, InterruptedException {
     when(kv.keys()).thenThrow(new IOException("kv down"));
     assertNull(dao.getQConfig("id-x", false));
   }
@@ -200,7 +202,8 @@ class NatsRqueueSystemConfigDaoTest {
   }
 
   @Test
-  void findAllQConfig_returnsMatchingById() throws IOException, JetStreamApiException, InterruptedException {
+  void findAllQConfig_returnsMatchingById()
+      throws IOException, JetStreamApiException, InterruptedException {
     QueueConfig cfg = config("id-1", "orders");
     byte[] bytes = "{}".getBytes();
     when(kv.keys()).thenReturn(Collections.singletonList("orders"));

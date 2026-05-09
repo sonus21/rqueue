@@ -29,6 +29,7 @@ class BaseControllerTest {
 
   @Mock
   private RqueueWebConfig rqueueWebConfig;
+
   @Mock
   private HttpServletResponse response;
 
@@ -51,7 +52,8 @@ class BaseControllerTest {
     when(rqueueWebConfig.isEnable()).thenReturn(true);
     controller.isEnable(response);
     // When enabled, the 503 status is NOT set
-    verify(response, org.mockito.Mockito.never()).setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+    verify(response, org.mockito.Mockito.never())
+        .setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
   }
 
   @Test

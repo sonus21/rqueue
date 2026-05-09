@@ -30,8 +30,10 @@ class NatsBackendConditionTest {
 
   @Mock
   private ConditionContext context;
+
   @Mock
   private Environment environment;
+
   @Mock
   private AnnotatedTypeMetadata metadata;
 
