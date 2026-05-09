@@ -81,7 +81,8 @@ public class NatsProvisioner {
     log.log(
         Level.INFO,
         "NATS server version={0}; message scheduling (ADR-51) supported={1}",
-        new Object[] {serverInfo != null ? serverInfo.getVersion() : "unknown", schedulingSupported});
+        new Object[] {serverInfo != null ? serverInfo.getVersion() : "unknown", schedulingSupported
+        });
   }
 
   /** Returns {@code true} when the connected NATS server supports message scheduling (>= 2.12). */
