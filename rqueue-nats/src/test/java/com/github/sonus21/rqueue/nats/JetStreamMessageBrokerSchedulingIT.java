@@ -40,9 +40,11 @@ class JetStreamMessageBrokerSchedulingIT extends AbstractJetStreamIT {
     QueueDetail q = mockQueue("sched-" + System.nanoTime(), QueueType.QUEUE, "sched-worker");
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
-      assumeTrue(broker.capabilities().supportsDelayedEnqueue(),
+      assumeTrue(
+          broker.capabilities().supportsDelayedEnqueue(),
           "Skipping: connected NATS server does not support message scheduling (< "
-              + com.github.sonus21.rqueue.nats.internal.NatsProvisioner.SCHEDULING_MIN_VERSION + ")");
+              + com.github.sonus21.rqueue.nats.internal.NatsProvisioner.SCHEDULING_MIN_VERSION
+              + ")");
 
       RqueueMessage m = RqueueMessage.builder()
           .id("sched-1")
@@ -53,8 +55,8 @@ class JetStreamMessageBrokerSchedulingIT extends AbstractJetStreamIT {
 
       // Message must not arrive before the scheduled time
       List<RqueueMessage> before = broker.pop(q, "sched-worker", 5, Duration.ofMillis(500));
-      assertTrue(before.isEmpty(),
-          "Message must be held by JetStream until the Nats-Next-Deliver-Time");
+      assertTrue(
+          before.isEmpty(), "Message must be held by JetStream until the Nats-Next-Deliver-Time");
 
       Thread.sleep(DELAY_MS + BUFFER_MS);
 
@@ -70,9 +72,11 @@ class JetStreamMessageBrokerSchedulingIT extends AbstractJetStreamIT {
     QueueDetail q = mockQueue("rsched-" + System.nanoTime(), QueueType.QUEUE, "rsched-worker");
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
-      assumeTrue(broker.capabilities().supportsDelayedEnqueue(),
+      assumeTrue(
+          broker.capabilities().supportsDelayedEnqueue(),
           "Skipping: connected NATS server does not support message scheduling (< "
-              + com.github.sonus21.rqueue.nats.internal.NatsProvisioner.SCHEDULING_MIN_VERSION + ")");
+              + com.github.sonus21.rqueue.nats.internal.NatsProvisioner.SCHEDULING_MIN_VERSION
+              + ")");
 
       RqueueMessage m = RqueueMessage.builder()
           .id("rsched-1")
@@ -84,8 +88,8 @@ class JetStreamMessageBrokerSchedulingIT extends AbstractJetStreamIT {
       StepVerifier.create(publish).verifyComplete();
 
       List<RqueueMessage> before = broker.pop(q, "rsched-worker", 5, Duration.ofMillis(500));
-      assertTrue(before.isEmpty(),
-          "Message must be held by JetStream until the Nats-Next-Deliver-Time");
+      assertTrue(
+          before.isEmpty(), "Message must be held by JetStream until the Nats-Next-Deliver-Time");
 
       Thread.sleep(DELAY_MS + BUFFER_MS);
 
@@ -101,9 +105,11 @@ class JetStreamMessageBrokerSchedulingIT extends AbstractJetStreamIT {
     QueueDetail q = mockQueue("msched-" + System.nanoTime(), QueueType.QUEUE, "msched-worker");
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
-      assumeTrue(broker.capabilities().supportsDelayedEnqueue(),
+      assumeTrue(
+          broker.capabilities().supportsDelayedEnqueue(),
           "Skipping: connected NATS server does not support message scheduling (< "
-              + com.github.sonus21.rqueue.nats.internal.NatsProvisioner.SCHEDULING_MIN_VERSION + ")");
+              + com.github.sonus21.rqueue.nats.internal.NatsProvisioner.SCHEDULING_MIN_VERSION
+              + ")");
 
       // Three messages with the same delay — all arrive in the same window
       long now = System.currentTimeMillis();

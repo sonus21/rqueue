@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -87,8 +86,14 @@ class NatsRqueueUtilityServiceTest {
     js = Mockito.mock(JetStream.class);
     serdes = Mockito.mock(RqueueSerDes.class);
     service = new NatsRqueueUtilityService(
-        webConfig, systemConfigDao, metadataService, listenerContainer,
-        jsm, js, serdes, RqueueNatsConfig.defaults());
+        webConfig,
+        systemConfigDao,
+        metadataService,
+        listenerContainer,
+        jsm,
+        js,
+        serdes,
+        RqueueNatsConfig.defaults());
   }
 
   // --- deleteMessage --------------------------------------------------------
@@ -227,7 +232,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void enqueueMessage_happyPath_publishesToSubjectAndReturnsTrue() throws Exception {
-    RqueueMessage msg = RqueueMessage.builder().id("m1").message("hello").queueName("q").build();
+    RqueueMessage msg =
+        RqueueMessage.builder().id("m1").message("hello").queueName("q").build();
     MessageMetadata meta = new MessageMetadata(msg, MessageStatus.ENQUEUED);
     when(metadataService.getByMessageId("q", "m1")).thenReturn(meta);
     when(serdes.serialize(msg)).thenReturn("hello".getBytes());
@@ -243,7 +249,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void enqueueMessage_dedupKeyContainsOriginalId() throws Exception {
-    RqueueMessage msg = RqueueMessage.builder().id("m1").message("hi").queueName("q").build();
+    RqueueMessage msg =
+        RqueueMessage.builder().id("m1").message("hi").queueName("q").build();
     MessageMetadata meta = new MessageMetadata(msg, MessageStatus.ENQUEUED);
     when(metadataService.getByMessageId("q", "m1")).thenReturn(meta);
     when(serdes.serialize(msg)).thenReturn("hi".getBytes());
@@ -281,7 +288,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void enqueueMessage_publishThrows_returnsError() throws Exception {
-    RqueueMessage msg = RqueueMessage.builder().id("m1").message("hi").queueName("q").build();
+    RqueueMessage msg =
+        RqueueMessage.builder().id("m1").message("hi").queueName("q").build();
     MessageMetadata meta = new MessageMetadata(msg, MessageStatus.ENQUEUED);
     when(metadataService.getByMessageId("q", "m1")).thenReturn(meta);
     when(serdes.serialize(msg)).thenReturn("hi".getBytes());
@@ -298,8 +306,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void moveMessage_happyPath_movesMessagesAndDeletesSources() throws Exception {
-    MessageMoveRequest request = new MessageMoveRequest(
-        "orders", DataType.LIST, "orders-dlq", DataType.LIST);
+    MessageMoveRequest request =
+        new MessageMoveRequest("orders", DataType.LIST, "orders-dlq", DataType.LIST);
     StreamState state = Mockito.mock(StreamState.class);
     when(state.getFirstSequence()).thenReturn(1L);
     when(state.getLastSequence()).thenReturn(2L);
@@ -328,8 +336,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void moveMessage_skipsAlreadyConsumedSequences() throws Exception {
-    MessageMoveRequest request = new MessageMoveRequest(
-        "orders", DataType.LIST, "orders-dlq", DataType.LIST);
+    MessageMoveRequest request =
+        new MessageMoveRequest("orders", DataType.LIST, "orders-dlq", DataType.LIST);
     StreamState state = Mockito.mock(StreamState.class);
     when(state.getFirstSequence()).thenReturn(1L);
     when(state.getLastSequence()).thenReturn(2L);
@@ -355,8 +363,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void moveMessage_stripsNatsMsgIdHeaderFromCopiedMessages() throws Exception {
-    MessageMoveRequest request = new MessageMoveRequest(
-        "orders", DataType.LIST, "orders-dlq", DataType.LIST);
+    MessageMoveRequest request =
+        new MessageMoveRequest("orders", DataType.LIST, "orders-dlq", DataType.LIST);
     StreamState state = Mockito.mock(StreamState.class);
     when(state.getFirstSequence()).thenReturn(1L);
     when(state.getLastSequence()).thenReturn(1L);
@@ -378,7 +386,8 @@ class NatsRqueueUtilityServiceTest {
     verify(js).publish(anyString(), headersCaptor.capture(), any(byte[].class));
     Headers dst = headersCaptor.getValue();
     // Nats-Msg-Id must be stripped; other headers forwarded
-    assertEquals(null, dst.getFirst("Nats-Msg-Id"), "Nats-Msg-Id must not be copied to destination");
+    assertEquals(
+        null, dst.getFirst("Nats-Msg-Id"), "Nats-Msg-Id must not be copied to destination");
     assertEquals("12345", dst.getFirst("Rqueue-Process-At"), "Other headers must be forwarded");
   }
 
@@ -397,8 +406,8 @@ class NatsRqueueUtilityServiceTest {
 
   @Test
   void moveMessage_streamNotFound_returnsError() throws Exception {
-    MessageMoveRequest request = new MessageMoveRequest(
-        "orders", DataType.LIST, "orders-dlq", DataType.LIST);
+    MessageMoveRequest request =
+        new MessageMoveRequest("orders", DataType.LIST, "orders-dlq", DataType.LIST);
     when(jsm.getStreamInfo("rqueue-js-orders")).thenThrow(new IOException("stream not found"));
 
     MessageMoveResponse response = service.moveMessage(request);

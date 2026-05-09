@@ -35,13 +35,13 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 /**
@@ -72,17 +72,35 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
   /** Quiesce window after a successful completion to rule out a racing duplicate. */
   static final Duration POST_SUCCESS_QUIESCE = Duration.ofSeconds(3);
 
-  @Autowired RqueueMessageEnqueuer enqueuer;
-  @Autowired ReactiveRqueueMessageEnqueuer reactiveEnqueuer;
-  @Autowired MessageBroker broker;
+  @Autowired
+  RqueueMessageEnqueuer enqueuer;
 
-  @Autowired RecurringListener recurringListener;
-  @Autowired RetryOnScheduledListener retryListener;
-  @Autowired ConcurrentRetryDelayedListener concurrentRetryListener;
-  @Autowired ConcurrentRetryRecurringListener concurrentRecurringListener;
-  @Autowired SchedDlqSourceListener schedDlqSourceListener;
-  @Autowired SchedDlqSinkListener schedDlqSinkListener;
-  @Autowired LongRunningJobListener longRunningJobListener;
+  @Autowired
+  ReactiveRqueueMessageEnqueuer reactiveEnqueuer;
+
+  @Autowired
+  MessageBroker broker;
+
+  @Autowired
+  RecurringListener recurringListener;
+
+  @Autowired
+  RetryOnScheduledListener retryListener;
+
+  @Autowired
+  ConcurrentRetryDelayedListener concurrentRetryListener;
+
+  @Autowired
+  ConcurrentRetryRecurringListener concurrentRecurringListener;
+
+  @Autowired
+  SchedDlqSourceListener schedDlqSourceListener;
+
+  @Autowired
+  SchedDlqSinkListener schedDlqSinkListener;
+
+  @Autowired
+  LongRunningJobListener longRunningJobListener;
 
   private void assumeScheduling() {
     Assumptions.assumeTrue(
@@ -171,7 +189,8 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
         .as("Expected at least 3 keep-alive signals within 3 minutes")
         .isTrue();
     assertThat(longRunningJobListener.invocations.get())
-        .as("Handler should have been invoked exactly once — no redelivery while WIP signals are sent")
+        .as("Handler should have been invoked exactly once — no redelivery while WIP signals are"
+            + " sent")
         .isEqualTo(1);
   }
 
@@ -198,13 +217,13 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
   @SpringBootApplication(
       exclude = {DataRedisAutoConfiguration.class, DataRedisReactiveAutoConfiguration.class})
   @Import({
-      RecurringListener.class,
-      RetryOnScheduledListener.class,
-      ConcurrentRetryDelayedListener.class,
-      ConcurrentRetryRecurringListener.class,
-      SchedDlqSourceListener.class,
-      SchedDlqSinkListener.class,
-      LongRunningJobListener.class
+    RecurringListener.class,
+    RetryOnScheduledListener.class,
+    ConcurrentRetryDelayedListener.class,
+    ConcurrentRetryRecurringListener.class,
+    SchedDlqSourceListener.class,
+    SchedDlqSinkListener.class,
+    LongRunningJobListener.class
   })
   static class TestApp {}
 
@@ -286,7 +305,10 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
   static class SchedDlqSourceListener {
     final AtomicInteger attempts = new AtomicInteger();
 
-    @RqueueListener(value = "adv-sched-dlq-src", deadLetterQueue = "adv-sched-dlq", numRetries = "1")
+    @RqueueListener(
+        value = "adv-sched-dlq-src",
+        deadLetterQueue = "adv-sched-dlq",
+        numRetries = "1")
     void onMessage(String payload) {
       attempts.incrementAndGet();
       throw new RuntimeException("always-fail for DLQ test");
