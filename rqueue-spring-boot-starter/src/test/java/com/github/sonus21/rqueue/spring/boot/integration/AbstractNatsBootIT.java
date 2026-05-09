@@ -16,11 +16,12 @@
 package com.github.sonus21.rqueue.spring.boot.integration;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assumptions;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -30,14 +31,17 @@ import org.testcontainers.utility.DockerImageName;
  * when the {@code NATS_RUNNING} environment variable is set the tests assume an externally
  * managed nats-server is reachable at {@code NATS_URL} (default {@code nats://127.0.0.1:4222})
  * and skip Testcontainers entirely. CI sets {@code NATS_RUNNING=true} after starting nats-server
- * via apt; local dev leaves it unset and falls back to Testcontainers, which itself skips
- * gracefully when Docker isn't available.
+ * via apt; local dev leaves it unset and falls back to Testcontainers.
+ *
+ * <p>When neither {@code NATS_RUNNING} is set nor Docker is available the entire test class is
+ * skipped via {@link org.junit.jupiter.api.Assumptions#assumeTrue} inside {@link #startNats()}.
+ * This avoids the {@code @Testcontainers(disabledWithoutDocker=true)} pitfall where the annotation
+ * silently disables tests even when {@code NATS_RUNNING=true} and Docker happens to be absent.
  *
  * <p>Subclasses declare their own {@code @SpringBootApplication} test config (typically excluding
  * Redis auto-config, see {@link NatsBackendEndToEndIT} for the reference pattern) and any
  * {@code @RqueueListener} beans they need.
  */
-@Testcontainers(disabledWithoutDocker = true)
 abstract class AbstractNatsBootIT {
 
   static final boolean USE_EXTERNAL_NATS = System.getenv("NATS_RUNNING") != null;
@@ -52,6 +56,10 @@ abstract class AbstractNatsBootIT {
     if (USE_EXTERNAL_NATS || NATS != null) {
       return;
     }
+    Assumptions.assumeTrue(
+        DockerClientFactory.instance().isDockerAvailable(),
+        "Skipping: Docker is not available and NATS_RUNNING is not set — "
+            + "start nats-server locally or set NATS_RUNNING=true");
     NATS = new GenericContainer<>(DockerImageName.parse("nats:2.12-alpine"))
         .withCommand("-js")
         .withExposedPorts(4222)

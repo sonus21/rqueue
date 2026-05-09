@@ -137,9 +137,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y redis-server
           redis-cli --version
+          sudo systemctl stop redis-server
+          redis-server --logfile /tmp/redis.log --daemonize yes
+
+      - name: Log Redis info
+        run: |
+          redis-server --version
+          redis-cli INFO server
 
       - name: Run producer-only tests
         run: ./gradlew test -DincludeTags=producerOnly
+
+      - name: Upload redis-server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redis-server
+          path: /tmp/redis.log
+          if-no-files-found: ignore
 
       - name: Upload JaCoCo exec data
         if: always()
@@ -189,9 +204,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y redis-server
           redis-cli --version
+          sudo systemctl stop redis-server
+          redis-server --logfile /tmp/redis.log --daemonize yes
+
+      - name: Log Redis info
+        run: |
+          redis-server --version
+          redis-cli INFO server
 
       - name: Run integration tests
         run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
+
+      - name: Upload redis-server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redis-server
+          path: /tmp/redis.log
+          if-no-files-found: ignore
 
       - name: Upload JaCoCo exec data
         if: always()
@@ -245,12 +275,12 @@ jobs:
       - name: Setup Redis Cluster
         run: |
           mkdir 9000 9001 9002 9003 9004 9005
-          printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9000/redis.conf
-          printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9001/redis.conf
-          printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9002/redis.conf
-          printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9003/redis.conf
-          printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9004/redis.conf
-          printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes" >> 9005/redis.conf
+          printf "port 9000 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes\nlogfile /tmp/redis-9000.log" >> 9000/redis.conf
+          printf "port 9001 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes\nlogfile /tmp/redis-9001.log" >> 9001/redis.conf
+          printf "port 9002 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes\nlogfile /tmp/redis-9002.log" >> 9002/redis.conf
+          printf "port 9003 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes\nlogfile /tmp/redis-9003.log" >> 9003/redis.conf
+          printf "port 9004 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes\nlogfile /tmp/redis-9004.log" >> 9004/redis.conf
+          printf "port 9005 \ncluster-enabled yes \ncluster-config-file nodes.conf \ncluster-node-timeout 5000 \nappendonly yes\nlogfile /tmp/redis-9005.log" >> 9005/redis.conf
           (cd 9000 && redis-server ./redis.conf) &
           (cd 9001 && redis-server ./redis.conf) &
           (cd 9002 && redis-server ./redis.conf) &
@@ -260,8 +290,22 @@ jobs:
           sleep 30
           yes yes | redis-cli --cluster create 127.0.0.1:9000 127.0.0.1:9001 127.0.0.1:9002 127.0.0.1:9003 127.0.0.1:9004 127.0.0.1:9005 --cluster-replicas 1
 
+      - name: Log Redis cluster info
+        run: |
+          redis-server --version
+          redis-cli -p 9000 INFO server | grep -E 'redis_version|os|tcp_port|uptime_in_seconds'
+          redis-cli -p 9000 CLUSTER INFO
+
       - name: Run Redis cluster tests
         run: ./gradlew test -DincludeTags=redisCluster
+
+      - name: Upload redis-server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redis-server-cluster
+          path: /tmp/redis-*.log
+          if-no-files-found: ignore
 
       - name: Upload JaCoCo exec data
         if: always()
@@ -313,9 +357,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y redis-server
           redis-cli --version
+          sudo systemctl stop redis-server
+          redis-server --logfile /tmp/redis.log --daemonize yes
+
+      - name: Log Redis info
+        run: |
+          redis-server --version
+          redis-cli INFO server
 
       - name: Run reactive integration tests
         run: ./gradlew test -DincludeTags=integration -DexcludeTags=redisCluster,producerOnly,local
+
+      - name: Upload redis-server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redis-server-log-reactive
+          path: /tmp/redis.log
+          if-no-files-found: ignore
 
       - name: Upload JaCoCo exec data
         if: always()
@@ -374,13 +433,16 @@ jobs:
       - name: Start nats-server
         run: |
           mkdir -p /tmp/jetstream
-          nohup nats-server -js -sd /tmp/jetstream -p 4222 > /tmp/nats.log 2>&1 &
+          nats-server -js -sd /tmp/jetstream -p 4222 > /tmp/nats.log 2>&1 &
           for i in $(seq 1 20); do
             if (echo > /dev/tcp/127.0.0.1/4222) 2>/dev/null; then
               echo "nats-server ready after ${i}s"; break
             fi
             sleep 1
           done
+
+      - name: Log NATS server info
+        run: nats-server --version
 
       - name: Run NATS tests
         env:
