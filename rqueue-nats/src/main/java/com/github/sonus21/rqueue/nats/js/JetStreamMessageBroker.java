@@ -143,12 +143,12 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     this.provisioner = provisioner;
     this.schedulingSupported = provisioner != null && provisioner.isMessageSchedulingSupported();
     this.caps = new Capabilities(
-        schedulingSupported,  // supportsDelayedEnqueue  — requires NATS >= 2.12
-        false,                // supportsScheduledIntrospection — no inspectable scheduled-zset
-        false,                // supportsCronJobs         — no server-side cron
-        false,                // usesPrimaryHandlerDispatch — no Redis processing-ZSET
-        true,                 // supportsViewData         — peek() reads from JetStream stream
-        true);                // supportsMoveMessage      — NatsRqueueUtilityService.moveMessage()
+        schedulingSupported, // supportsDelayedEnqueue  — requires NATS >= 2.12
+        false, // supportsScheduledIntrospection — no inspectable scheduled-zset
+        false, // supportsCronJobs         — no server-side cron
+        false, // usesPrimaryHandlerDispatch — no Redis processing-ZSET
+        true, // supportsViewData         — peek() reads from JetStream stream
+        true); // supportsMoveMessage      — NatsRqueueUtilityService.moveMessage()
   }
 
   public static Builder builder() {
@@ -585,8 +585,10 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       nm.inProgress();
       return true;
     } catch (RuntimeException e) {
-      log.log(Level.WARNING,
-          "inProgress failed for message id=" + m.getId() + " queue=" + q.getName(), e);
+      log.log(
+          Level.WARNING,
+          "inProgress failed for message id=" + m.getId() + " queue=" + q.getName(),
+          e);
       return false;
     }
   }
@@ -1011,14 +1013,11 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       //     publish and the period executes exactly once.
       // For non-scheduled messages (processAt == 0) the plain id is used; each enqueue
       // generates a fresh UUID so there is no collision risk.
-      String dedupKey = m.getProcessAt() > 0
-          ? m.getId() + "-at-" + m.getProcessAt()
-          : m.getId();
+      String dedupKey = m.getProcessAt() > 0 ? m.getId() + "-at-" + m.getProcessAt() : m.getId();
       headers.add("Nats-Msg-Id", dedupKey);
     }
-    long deliverAtMs = m.getProcessAt() > 0
-        ? m.getProcessAt()
-        : System.currentTimeMillis() + delayMs;
+    long deliverAtMs =
+        m.getProcessAt() > 0 ? m.getProcessAt() : System.currentTimeMillis() + delayMs;
     String deliverAt = RFC3339_UTC.format(Instant.ofEpochMilli(deliverAtMs));
     headers.add(HDR_NEXT_DELIVER_TIME, deliverAt);
     // Enrichment headers — readable on pop without deserializing the payload
@@ -1051,8 +1050,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
     // Scheduling fields from publish-time enrichment headers.
     if (rm.getProcessAt() <= 0) {
-      String processAtHdr = nm.getHeaders() == null ? null
-          : nm.getHeaders().getFirst(HDR_PROCESS_AT);
+      String processAtHdr =
+          nm.getHeaders() == null ? null : nm.getHeaders().getFirst(HDR_PROCESS_AT);
       if (processAtHdr != null) {
         try {
           rm.setProcessAt(Long.parseLong(processAtHdr));

@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
@@ -223,7 +222,11 @@ class JetStreamMessageBrokerUnitTest {
 
     long processAt = 1_746_789_000_000L;
     RqueueMessage m = RqueueMessage.builder()
-        .id("pid-1").message("hi").processAt(processAt).period(5_000L).build();
+        .id("pid-1")
+        .message("hi")
+        .processAt(processAt)
+        .period(5_000L)
+        .build();
     f.broker.enqueueWithDelay(queueNamed("orders"), m, 5_000L);
 
     ArgumentCaptor<Headers> headersCaptor = ArgumentCaptor.forClass(Headers.class);
@@ -243,7 +246,8 @@ class JetStreamMessageBrokerUnitTest {
         .thenReturn(mock(io.nats.client.api.PublishAck.class));
 
     long processAt = 1_746_789_000_000L;
-    RqueueMessage m = RqueueMessage.builder().id("oid-1").message("hi").processAt(processAt).build();
+    RqueueMessage m =
+        RqueueMessage.builder().id("oid-1").message("hi").processAt(processAt).build();
     f.broker.enqueueWithDelay(queueNamed("orders"), m, 3_000L);
 
     ArgumentCaptor<Headers> headersCaptor = ArgumentCaptor.forClass(Headers.class);
@@ -292,16 +296,23 @@ class JetStreamMessageBrokerUnitTest {
 
     long processAt = System.currentTimeMillis() + 5_000L;
     RqueueMessage m = RqueueMessage.builder()
-        .id("pid-1").message("payload").processAt(processAt).period(5_000L).build();
+        .id("pid-1")
+        .message("payload")
+        .processAt(processAt)
+        .period(5_000L)
+        .build();
 
     // scheduleNext default: delayMs = max(0, processAt - now) → enqueueWithDelay
     f.broker.scheduleNext(queueNamed("orders"), "ignored-key", m, 60L);
 
     ArgumentCaptor<Headers> headers = ArgumentCaptor.forClass(Headers.class);
     verify(f.js, times(1)).publish(eq("rqueue.js.orders"), headers.capture(), any(byte[].class));
-    assertNotNull(headers.getValue().getFirst("Nats-Next-Deliver-Time"),
+    assertNotNull(
+        headers.getValue().getFirst("Nats-Next-Deliver-Time"),
         "ADR-51 deliver-time header must be present");
-    assertEquals("pid-1-at-" + processAt, headers.getValue().getFirst("Nats-Msg-Id"),
+    assertEquals(
+        "pid-1-at-" + processAt,
+        headers.getValue().getFirst("Nats-Msg-Id"),
         "dedup key must be id-at-processAt");
   }
 

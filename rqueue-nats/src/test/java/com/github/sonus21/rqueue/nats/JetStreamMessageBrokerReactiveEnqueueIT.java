@@ -43,7 +43,8 @@ class JetStreamMessageBrokerReactiveEnqueueIT extends AbstractJetStreamIT {
 
   @Test
   void enqueueWithDelayReactive_publishesAndMessageIsDeliveredAfterDelay() throws Exception {
-    QueueDetail q = mockQueue("rd-" + System.nanoTime(), com.github.sonus21.rqueue.enums.QueueType.QUEUE, "rd-worker");
+    QueueDetail q = mockQueue(
+        "rd-" + System.nanoTime(), com.github.sonus21.rqueue.enums.QueueType.QUEUE, "rd-worker");
     long delayMs = 3_000L;
     try (JetStreamMessageBroker broker =
         JetStreamMessageBroker.builder().connection(connection).build()) {
@@ -51,8 +52,11 @@ class JetStreamMessageBrokerReactiveEnqueueIT extends AbstractJetStreamIT {
           broker.capabilities().supportsDelayedEnqueue(),
           "Skipping: connected NATS server does not support message scheduling (< 2.12)");
 
-      RqueueMessage m = RqueueMessage.builder().id("rm-delay").message("delayed-p")
-          .processAt(System.currentTimeMillis() + delayMs).build();
+      RqueueMessage m = RqueueMessage.builder()
+          .id("rm-delay")
+          .message("delayed-p")
+          .processAt(System.currentTimeMillis() + delayMs)
+          .build();
       Mono<Void> mono = broker.enqueueWithDelayReactive(q, m, delayMs);
       StepVerifier.create(mono).verifyComplete();
 

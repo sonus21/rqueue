@@ -94,11 +94,13 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
   public void afterSingletonsInstantiated() {
     boolean schedulingSupported = provisioner.isMessageSchedulingSupported();
     if (schedulingSupported) {
-      log.log(Level.INFO,
+      log.log(
+          Level.INFO,
           "NatsStreamValidator: NATS message scheduling (ADR-51) is AVAILABLE — "
               + "enqueueWithDelay will use the Nats-Next-Deliver-Time header.");
     } else {
-      log.log(Level.WARNING,
+      log.log(
+          Level.WARNING,
           "NatsStreamValidator: NATS message scheduling (ADR-51) is NOT AVAILABLE — "
               + "the connected server is older than {0}. "
               + "Calls to enqueueWithDelay will throw RqueueNatsException at runtime. "

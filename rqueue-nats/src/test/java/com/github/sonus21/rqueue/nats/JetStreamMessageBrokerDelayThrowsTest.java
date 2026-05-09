@@ -19,8 +19,6 @@ import static org.mockito.Mockito.when;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.listener.QueueDetail;
-import com.github.sonus21.rqueue.nats.RqueueNatsConfig;
-import com.github.sonus21.rqueue.nats.RqueueNatsException;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.js.JetStreamMessageBroker;
 import com.github.sonus21.rqueue.serdes.RqJacksonSerDes;
@@ -78,8 +76,12 @@ class JetStreamMessageBrokerDelayThrowsTest {
     NatsProvisioner provisioner = mock(NatsProvisioner.class);
     when(provisioner.isMessageSchedulingSupported()).thenReturn(true);
     JetStreamMessageBroker broker = new JetStreamMessageBroker(
-        conn, js, jsm, RqueueNatsConfig.defaults(),
-        new RqJacksonSerDes(SerializationUtils.getObjectMapper()), provisioner);
+        conn,
+        js,
+        jsm,
+        RqueueNatsConfig.defaults(),
+        new RqJacksonSerDes(SerializationUtils.getObjectMapper()),
+        provisioner);
     assertTrue(broker.capabilities().supportsDelayedEnqueue());
   }
 
