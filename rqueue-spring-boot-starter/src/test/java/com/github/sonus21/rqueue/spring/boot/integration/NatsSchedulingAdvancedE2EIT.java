@@ -66,10 +66,10 @@ import org.springframework.stereotype.Component;
 @SpringBootTest(
     classes = NatsSchedulingAdvancedE2EIT.TestApp.class,
     properties = {
-        "rqueue.backend=nats",
-        "rqueue.reactive.enabled=true",
-        "rqueue.nats.naming.stream-prefix=" + NatsSchedulingAdvancedE2EIT.STREAM_PREFIX,
-        "rqueue.nats.naming.subject-prefix=" + NatsSchedulingAdvancedE2EIT.SUBJECT_PREFIX
+      "rqueue.backend=nats",
+      "rqueue.reactive.enabled=true",
+      "rqueue.nats.naming.stream-prefix=" + NatsSchedulingAdvancedE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsSchedulingAdvancedE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {

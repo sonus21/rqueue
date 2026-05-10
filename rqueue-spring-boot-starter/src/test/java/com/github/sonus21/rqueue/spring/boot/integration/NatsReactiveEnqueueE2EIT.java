@@ -45,10 +45,10 @@ import reactor.core.publisher.Flux;
 @SpringBootTest(
     classes = NatsReactiveEnqueueE2EIT.TestApp.class,
     properties = {
-        "rqueue.backend=nats",
-        "rqueue.reactive.enabled=true",
-        "rqueue.nats.naming.stream-prefix=" + NatsReactiveEnqueueE2EIT.STREAM_PREFIX,
-        "rqueue.nats.naming.subject-prefix=" + NatsReactiveEnqueueE2EIT.SUBJECT_PREFIX
+      "rqueue.backend=nats",
+      "rqueue.reactive.enabled=true",
+      "rqueue.nats.naming.stream-prefix=" + NatsReactiveEnqueueE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsReactiveEnqueueE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsReactiveEnqueueE2EIT extends AbstractNatsBootIT {

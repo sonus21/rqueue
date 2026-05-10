@@ -61,9 +61,9 @@ import org.springframework.stereotype.Component;
 @SpringBootTest(
     classes = NatsRetryAndDlqE2EIT.TestApp.class,
     properties = {
-        "rqueue.backend=nats",
-        "rqueue.nats.naming.stream-prefix=" + NatsRetryAndDlqE2EIT.STREAM_PREFIX,
-        "rqueue.nats.naming.subject-prefix=" + NatsRetryAndDlqE2EIT.SUBJECT_PREFIX
+      "rqueue.backend=nats",
+      "rqueue.nats.naming.stream-prefix=" + NatsRetryAndDlqE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsRetryAndDlqE2EIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsRetryAndDlqE2EIT extends AbstractNatsBootIT {
@@ -107,7 +107,8 @@ class NatsRetryAndDlqE2EIT extends AbstractNatsBootIT {
         .as("Listener must receive the marker payload before we synthesize the advisory")
         .isTrue();
 
-    // Bridge installer provisioned the DLQ stream from boot (installDeadLetterBridge → provisionDlq).
+    // Bridge installer provisioned the DLQ stream from boot (installDeadLetterBridge →
+    // provisionDlq).
     Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
       assertThat(jsm.getStreamInfo(dlqStream)).isNotNull();
     });

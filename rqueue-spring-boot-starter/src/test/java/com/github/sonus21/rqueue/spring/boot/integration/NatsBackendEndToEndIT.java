@@ -57,9 +57,9 @@ import org.springframework.stereotype.Component;
 @SpringBootTest(
     classes = NatsBackendEndToEndIT.TestApp.class,
     properties = {
-        "rqueue.backend=nats",
-        "rqueue.nats.naming.stream-prefix=" + NatsBackendEndToEndIT.STREAM_PREFIX,
-        "rqueue.nats.naming.subject-prefix=" + NatsBackendEndToEndIT.SUBJECT_PREFIX
+      "rqueue.backend=nats",
+      "rqueue.nats.naming.stream-prefix=" + NatsBackendEndToEndIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsBackendEndToEndIT.SUBJECT_PREFIX
     })
 @Tag("nats")
 class NatsBackendEndToEndIT extends AbstractNatsBootIT {

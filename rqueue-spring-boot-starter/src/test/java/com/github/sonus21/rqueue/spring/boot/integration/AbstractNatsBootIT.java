@@ -134,15 +134,19 @@ abstract class AbstractNatsBootIT {
           jsm.deleteStream(name);
           deleted++;
         } catch (IOException | JetStreamApiException e) {
-          log.log(Level.WARNING, "Failed to delete leftover stream " + name + ": " + e.getMessage());
+          log.log(
+              Level.WARNING, "Failed to delete leftover stream " + name + ": " + e.getMessage());
         }
       }
       if (deleted > 0) {
-        log.log(Level.INFO, "Pre-test cleanup: deleted {0} stream(s) with prefix ''{1}''",
+        log.log(
+            Level.INFO,
+            "Pre-test cleanup: deleted {0} stream(s) with prefix ''{1}''",
             new Object[] {deleted, prefix});
       }
     } catch (IOException | InterruptedException | JetStreamApiException e) {
-      log.log(Level.WARNING, "Stream cleanup with prefix '" + prefix + "' failed: " + e.getMessage());
+      log.log(
+          Level.WARNING, "Stream cleanup with prefix '" + prefix + "' failed: " + e.getMessage());
     }
   }
 }
