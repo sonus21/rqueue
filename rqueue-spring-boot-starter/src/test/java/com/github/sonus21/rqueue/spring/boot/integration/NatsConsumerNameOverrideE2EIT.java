@@ -23,6 +23,7 @@ import io.nats.client.JetStreamManagement;
 import io.nats.client.api.ConsumerInfo;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,9 +43,21 @@ import org.springframework.stereotype.Component;
  */
 @SpringBootTest(
     classes = NatsConsumerNameOverrideE2EIT.TestApp.class,
-    properties = {"rqueue.backend=nats"})
+    properties = {
+      "rqueue.backend=nats",
+      "rqueue.nats.naming.stream-prefix=" + NatsConsumerNameOverrideE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsConsumerNameOverrideE2EIT.SUBJECT_PREFIX
+    })
 @Tag("nats")
 class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {
+
+  static final String STREAM_PREFIX = "rqueue-js-consumerOvrE2E-";
+  static final String SUBJECT_PREFIX = "rqueue.js.consumerOvrE2E.";
+
+  @BeforeAll
+  static void wipeOwnedStreams() {
+    deleteStreamsWithPrefix(STREAM_PREFIX);
+  }
 
   @Autowired
   RqueueMessageEnqueuer enqueuer;
@@ -60,7 +73,8 @@ class NatsConsumerNameOverrideE2EIT extends AbstractNatsBootIT {
     enqueuer.enqueue("custom-consumer", "hello");
     assertThat(listener.latch.await(20, TimeUnit.SECONDS)).isTrue();
 
-    ConsumerInfo info = jsm.getConsumerInfo("rqueue-js-custom-consumer", "my-custom-consumer");
+    ConsumerInfo info =
+        jsm.getConsumerInfo(STREAM_PREFIX + "custom-consumer", "my-custom-consumer");
     assertThat(info).isNotNull();
     assertThat(info.getName()).isEqualTo("my-custom-consumer");
   }

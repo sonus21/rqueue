@@ -38,4 +38,14 @@ public class RqueueCounter implements RqueueMetricsCounter {
   public void updateExecutionCount(String queueName) {
     queueCounter.updateExecutionCount(queueName);
   }
+
+  @Override
+  public void updateFailureCount(String queueName, String consumerName) {
+    queueCounter.updateFailureCount(queueName, consumerName);
+  }
+
+  @Override
+  public void updateExecutionCount(String queueName, String consumerName) {
+    queueCounter.updateExecutionCount(queueName, consumerName);
+  }
 }

@@ -22,6 +22,7 @@ import com.github.sonus21.rqueue.core.RqueueMessageEnqueuer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +42,21 @@ import org.springframework.stereotype.Component;
  */
 @SpringBootTest(
     classes = NatsConcurrencyE2EIT.TestApp.class,
-    properties = {"rqueue.backend=nats"})
+    properties = {
+      "rqueue.backend=nats",
+      "rqueue.nats.naming.stream-prefix=" + NatsConcurrencyE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsConcurrencyE2EIT.SUBJECT_PREFIX
+    })
 @Tag("nats")
 class NatsConcurrencyE2EIT extends AbstractNatsBootIT {
+
+  static final String STREAM_PREFIX = "rqueue-js-concurrencyE2E-";
+  static final String SUBJECT_PREFIX = "rqueue.js.concurrencyE2E.";
+
+  @BeforeAll
+  static void wipeOwnedStreams() {
+    deleteStreamsWithPrefix(STREAM_PREFIX);
+  }
 
   @Autowired
   RqueueMessageEnqueuer enqueuer;

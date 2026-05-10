@@ -97,7 +97,7 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
       log.log(
           Level.INFO,
           "NatsStreamValidator: NATS message scheduling (ADR-51) is AVAILABLE — "
-              + "enqueueWithDelay will use the Nats-Next-Deliver-Time header.");
+              + "enqueueWithDelay will use the Nats-Schedule header.");
     } else {
       log.log(
           Level.WARNING,
@@ -122,7 +122,7 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
       String mainSubject = config.getSubjectPrefix() + q.getName();
       total += tryEnsure(failures, mainStream, mainSubject, q);
       if (!producerOnly) {
-        tryEnsureConsumer(failures, mainStream, q.resolvedConsumerName(), q, cd);
+        tryEnsureConsumer(failures, mainStream, q.resolvedConsumerName(), mainSubject, q, cd);
       }
 
       if (q.getPriority() != null) {
@@ -182,13 +182,14 @@ public class NatsStreamValidator implements SmartInitializingSingleton {
       List<String> failures,
       String streamName,
       String consumerName,
+      String filterSubject,
       QueueDetail q,
       RqueueNatsConfig.ConsumerDefaults cd) {
     Duration ackWait = JetStreamMessageBroker.resolveAckWait(q, config);
     long maxDeliver = JetStreamMessageBroker.resolveMaxDeliver(q, config);
     try {
       provisioner.ensureConsumer(
-          streamName, consumerName, ackWait, maxDeliver, cd.getMaxAckPending());
+          streamName, consumerName, filterSubject, ackWait, maxDeliver, cd.getMaxAckPending());
     } catch (RqueueNatsException e) {
       failures.add("consumer " + consumerName + " on " + streamName + ": " + rootCause(e));
     }

@@ -30,7 +30,6 @@ import io.nats.client.api.StreamInfo;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,8 +52,9 @@ public class NatsProvisioner {
   private final ConcurrentHashMap<String, KeyValue> kvCache = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Object> kvLocks = new ConcurrentHashMap<>();
 
-  // stream name → provisioned (set membership acts as the boolean flag)
-  private final Set<String> streamsDone = ConcurrentHashMap.newKeySet();
+  // stream name → schedulingEnabled (true if the stream was created/updated with
+  // allowMessageSchedules)
+  private final ConcurrentHashMap<String, Boolean> streamsDone = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Object> streamLocks = new ConcurrentHashMap<>();
 
   // "streamName/requestedConsumerName" → actual consumer name (may differ for stale-rebind)
@@ -63,7 +63,7 @@ public class NatsProvisioner {
 
   /**
    * Minimum NATS server version that supports server-side message scheduling via the
-   * {@code Nats-Next-Deliver-Time} JetStream publish header (ADR-51).
+   * {@code Nats-Schedule} JetStream publish header (ADR-51).
    */
   public static final String SCHEDULING_MIN_VERSION = "2.12.0";
 
@@ -146,12 +146,18 @@ public class NatsProvisioner {
    * use {@link #ensureStream(String, List, QueueType)} instead.
    */
   public void ensureStream(String streamName, List<String> subjects) {
-    ensureStream(streamName, subjects, QueueType.QUEUE, null);
+    ensureStream(streamName, subjects, QueueType.QUEUE, null, false);
   }
 
-  /** See {@link #ensureStream(String, List, QueueType, String)}. */
+  /** See {@link #ensureStream(String, List, QueueType, String, boolean)}. */
   public void ensureStream(String streamName, List<String> subjects, QueueType queueType) {
-    ensureStream(streamName, subjects, queueType, null);
+    ensureStream(streamName, subjects, queueType, null, false);
+  }
+
+  /** See {@link #ensureStream(String, List, QueueType, String, boolean)}. */
+  public void ensureStream(
+      String streamName, List<String> subjects, QueueType queueType, String description) {
+    ensureStream(streamName, subjects, queueType, description, false);
   }
 
   /**
@@ -168,20 +174,35 @@ public class NatsProvisioner {
    * {@code nats stream info}). Callers should pass the rqueue queue name so operators can map a
    * stream back to the queue that created it; pass {@code null} to skip.
    *
+   * <p>{@code allowSchedules} must be {@code true} when the stream will receive messages published
+   * with the {@code Nats-Schedule} header (ADR-51). Only callers that perform delayed
+   * enqueue should pass {@code true}; regular enqueue callers should pass {@code false} (or use the
+   * shorter overloads). Equivalent to the CLI flag {@code --allow-schedules}.
+   *
    * <p>Hits the NATS backend at most once per stream name per process lifetime; subsequent calls
-   * return immediately from the in-process cache. If the stream already exists with a different
+   * return immediately from the in-process cache. If {@code allowSchedules=true} is later requested
+   * for a stream that was previously created without that flag, the stream is updated in place via
+   * {@link JetStreamManagement#updateStream}. If the stream already exists with a different
    * retention policy, a WARNING is logged and the existing config is left untouched.
    */
   public void ensureStream(
-      String streamName, List<String> subjects, QueueType queueType, String description) {
-    if (streamsDone.contains(streamName)) {
+      String streamName,
+      List<String> subjects,
+      QueueType queueType,
+      String description,
+      boolean allowSchedules) {
+    // Fast-path: already provisioned with at least as many capabilities as requested.
+    Boolean cached = streamsDone.get(streamName);
+    if (cached != null && (cached || !allowSchedules)) {
       return;
     }
     Object lock = streamLocks.computeIfAbsent(streamName, k -> new Object());
     synchronized (lock) {
-      if (streamsDone.contains(streamName)) {
+      cached = streamsDone.get(streamName);
+      if (cached != null && (cached || !allowSchedules)) {
         return;
       }
+      boolean enableSchedules = allowSchedules && schedulingSupported;
       try {
         StreamInfo existing = safeGetStreamInfo(streamName);
         RetentionPolicy desired =
@@ -199,6 +220,11 @@ public class NatsProvisioner {
               .storageType(sd.getStorage())
               .retentionPolicy(desired)
               .compressionOption(CompressionOption.S2);
+          if (enableSchedules) {
+            // Enable server-side message scheduling (ADR-51 / Nats-Schedule header).
+            // Equivalent to: nats stream add MY_STREAM --allow-schedules
+            b.allowMessageSchedules(true);
+          }
           if (description != null && !description.isEmpty()) {
             b.description(description);
           }
@@ -223,12 +249,46 @@ public class NatsProvisioner {
                     + " — leaving existing config in place.",
                 new Object[] {streamName, actual, desired});
           }
+          // Check whether new subjects need to be merged in (e.g. the sched wildcard added by
+          // enqueueWithDelay after the stream was originally created by a plain enqueue call).
+          java.util.List<String> existingSubjects = existing.getConfiguration().getSubjects();
+          java.util.Set<String> existingSet = existingSubjects != null
+              ? new java.util.HashSet<>(existingSubjects)
+              : new java.util.HashSet<>();
+          boolean needsSubjectUpdate = subjects.stream().anyMatch(s -> !existingSet.contains(s));
+          boolean needsFlagUpdate =
+              enableSchedules && !existing.getConfiguration().getAllowMsgSchedules();
+
+          if (needsFlagUpdate || needsSubjectUpdate) {
+            // Merge: keep all existing subjects and append new ones (never remove).
+            java.util.LinkedHashSet<String> merged = new java.util.LinkedHashSet<>(existingSet);
+            merged.addAll(subjects);
+            StreamConfiguration.Builder upd = StreamConfiguration.builder(
+                    existing.getConfiguration())
+                .subjects(new java.util.ArrayList<>(merged));
+            if (needsFlagUpdate) {
+              upd.allowMessageSchedules(true);
+            }
+            jsm.updateStream(upd.build());
+            if (needsFlagUpdate) {
+              log.log(
+                  Level.INFO,
+                  "Stream ''{0}'' updated to enable message scheduling (ADR-51).",
+                  streamName);
+            }
+            if (needsSubjectUpdate) {
+              log.log(
+                  Level.INFO,
+                  "Stream ''{0}'' updated with additional subjects: {1}.",
+                  new Object[] {streamName, subjects});
+            }
+          }
         }
       } catch (IOException | JetStreamApiException e) {
         throw new RqueueNatsException(
             "Failed to ensure stream '" + streamName + "' for subjects " + subjects, e);
       }
-      streamsDone.add(streamName);
+      streamsDone.put(streamName, enableSchedules);
     }
   }
 
@@ -236,14 +296,38 @@ public class NatsProvisioner {
    * Ensure a durable pull consumer exists, returning the consumer name.
    * Hits the NATS backend at most once per (stream, consumer) pair per process lifetime.
    *
-   * <p>No filter subject is set on the consumer: each queue already has its own dedicated stream
-   * with a single subject, so a filter would be redundant. More importantly, omitting the filter
-   * allows multiple independent consumer groups (fan-out) to coexist on the same stream — NATS
-   * rejects two consumers with the same filter subject (error 10100) regardless of retention type.
+   * <p>Overload without a filter subject: used when the stream has only the work subject so the
+   * filter would be redundant, or when multiple independent consumer groups (fan-out) must coexist
+   * on a Limits-retention stream (NATS rejects two consumers with the same filter subject, error
+   * 10100). For WorkQueue streams that also carry scheduler subjects ({@code .sched.*}) a filter
+   * subject MUST be supplied via
+   * {@link #ensureConsumer(String, String, String, Duration, long, long)} so the consumer only
+   * receives work-subject messages and does not accidentally pick up scheduler entries.
    */
   public String ensureConsumer(
       String streamName,
       String consumerName,
+      Duration ackWait,
+      long maxDeliver,
+      long maxAckPending) {
+    return ensureConsumer(streamName, consumerName, null, ackWait, maxDeliver, maxAckPending);
+  }
+
+  /**
+   * Ensure a durable pull consumer exists with an optional subject filter, returning the consumer
+   * name. Hits the NATS backend at most once per (stream, consumer) pair per process lifetime.
+   *
+   * <p>{@code filterSubject} — when non-null, sets the consumer's filter subject so it only
+   * receives messages published to that subject. Required when the stream carries both work subjects
+   * and scheduler subjects ({@code .sched.*}): without a filter the consumer reads scheduler
+   * entries before the scheduled time, delivering the message early. Pass {@code null} for streams
+   * that do not use NATS scheduling, or where fan-out across multiple consumers is needed (Limits
+   * retention).
+   */
+  public String ensureConsumer(
+      String streamName,
+      String consumerName,
+      String filterSubject,
       Duration ackWait,
       long maxDeliver,
       long maxAckPending) {
@@ -258,8 +342,8 @@ public class NatsProvisioner {
       if (cached != null) {
         return cached;
       }
-      String actual =
-          doEnsureConsumer(streamName, consumerName, ackWait, maxDeliver, maxAckPending);
+      String actual = doEnsureConsumer(
+          streamName, consumerName, filterSubject, ackWait, maxDeliver, maxAckPending);
       consumerCache.put(cacheKey, actual);
       return actual;
     }
@@ -268,6 +352,7 @@ public class NatsProvisioner {
   private String doEnsureConsumer(
       String streamName,
       String consumerName,
+      String filterSubject,
       Duration ackWait,
       long maxDeliver,
       long maxAckPending) {
@@ -295,16 +380,20 @@ public class NatsProvisioner {
         throw new RqueueNatsException("Consumer '" + consumerName + "' on stream '" + streamName
             + "' does not exist and autoCreateConsumers=false");
       }
-      jsm.addOrUpdateConsumer(
-          streamName,
-          ConsumerConfiguration.builder()
-              .durable(consumerName)
-              .ackPolicy(AckPolicy.Explicit)
-              .deliverPolicy(DeliverPolicy.All)
-              .ackWait(ackWait)
-              .maxDeliver(maxDeliver)
-              .maxAckPending(maxAckPending)
-              .build());
+      ConsumerConfiguration.Builder ccBuilder = ConsumerConfiguration.builder()
+          .durable(consumerName)
+          .ackPolicy(AckPolicy.Explicit)
+          .deliverPolicy(DeliverPolicy.All)
+          .ackWait(ackWait)
+          .maxDeliver(maxDeliver)
+          .maxAckPending(maxAckPending);
+      if (filterSubject != null && !filterSubject.isEmpty()) {
+        // Filter to the work subject only so that scheduler entries (published to
+        // <workSubject>.sched.*) are not delivered to this consumer before the scheduled time.
+        // The NATS scheduler fires the triggered message to workSubject when the time arrives.
+        ccBuilder.filterSubject(filterSubject);
+      }
+      jsm.addOrUpdateConsumer(streamName, ccBuilder.build());
       return consumerName;
     } catch (JetStreamApiException e) {
       throw new RqueueNatsException(

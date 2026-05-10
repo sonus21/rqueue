@@ -27,11 +27,14 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -62,9 +65,22 @@ import org.springframework.stereotype.Component;
  */
 @SpringBootTest(
     classes = NatsSchedulingAdvancedE2EIT.TestApp.class,
-    properties = {"rqueue.backend=nats", "rqueue.reactive.enabled=true"})
+    properties = {
+      "rqueue.backend=nats",
+      "rqueue.reactive.enabled=true",
+      "rqueue.nats.naming.stream-prefix=" + NatsSchedulingAdvancedE2EIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsSchedulingAdvancedE2EIT.SUBJECT_PREFIX
+    })
 @Tag("nats")
 class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
+
+  static final String STREAM_PREFIX = "rqueue-js-schedAdv-";
+  static final String SUBJECT_PREFIX = "rqueue.js.schedAdv.";
+
+  @BeforeAll
+  static void wipeOwnedStreams() {
+    deleteStreamsWithPrefix(STREAM_PREFIX);
+  }
 
   static final Duration DELAY = Duration.ofSeconds(3);
   static final Duration PERIOD = Duration.ofSeconds(5);
@@ -157,17 +173,45 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
 
   // ---- 4. Concurrent retry on recurring message ------------------------------
 
+  /**
+   * With {@code concurrency=2} two pollers race for each periodic delivery; the JetStream
+   * dedup-key (per-message {@code Nats-Msg-Id} = {@code id@processAt}, set by
+   * {@code JetStreamMessageBroker.buildSchedulingHeaders}) guarantees each period is delivered
+   * exactly once. This test pins that invariant by tracking the distinct {@code processAt} values
+   * the listener actually saw and asserting:
+   *
+   * <ul>
+   *   <li>at least {@code 3} distinct periods fired within {@code TOTAL_WAIT};</li>
+   *   <li>the total invocation count equals the number of distinct periods — i.e. no period was
+   *       processed more than once. A regression in dedup keying would surface as
+   *       {@code count > distinct.size()}.</li>
+   * </ul>
+   */
   @Test
   void concurrentRetryOnRecurringMessageNoDuplicates() throws Exception {
     assumeScheduling();
     enqueuer.enqueuePeriodic("adv-conc-recur-e2e", "conc-recur", PERIOD);
 
-    assertThat(concurrentRecurringListener.latch.await(TOTAL_WAIT.toSeconds(), TimeUnit.SECONDS))
-        .as("Recurring message with concurrency=2 should complete at least 2 periods")
+    assertThat(concurrentRecurringListener.distinctPeriodsLatch.await(
+            TOTAL_WAIT.toSeconds(), TimeUnit.SECONDS))
+        .as(
+            "Recurring message with concurrency=2 should fire >= 3 distinct periods within %s",
+            TOTAL_WAIT)
         .isTrue();
-    assertThat(concurrentRecurringListener.count.get())
-        .as("Each period must run at least twice (2 periods delivered)")
-        .isGreaterThanOrEqualTo(2);
+    // Brief quiesce so a racing duplicate (if any) has time to land before we assert.
+    Thread.sleep(POST_SUCCESS_QUIESCE.toMillis());
+
+    int count = concurrentRecurringListener.count.get();
+    int distinct = concurrentRecurringListener.distinctProcessAts.size();
+    assertThat(distinct)
+        .as("Should have observed at least 3 distinct periodic processAt values")
+        .isGreaterThanOrEqualTo(3);
+    assertThat(count)
+        .as(
+            "Each distinct period must be processed exactly once: count=%d, distinct=%d "
+                + "— a discrepancy means JetStream dedup (Nats-Msg-Id=id@processAt) regressed",
+            count, distinct)
+        .isEqualTo(distinct);
   }
 
   // ---- 6. Long-running job: keep-alive via Job.updateVisibilityTimeout ------
@@ -282,18 +326,30 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
   }
 
   /**
-   * Listener for test 4: concurrency=2, periodic message; latch opens when 2 periods complete.
-   * The dedup-key fix (id@processAt) ensures period 2+ is not silently dropped by JetStream.
+   * Listener for test 4: concurrency=2, periodic message. Tracks every delivery's
+   * {@code processAt} (read from the {@link Job#getRqueueMessage()} attached to the message
+   * headers) so the test can assert each period is processed exactly once.
+   *
+   * <p>{@code count} = total handler invocations. {@code distinctProcessAts} = unique
+   * {@code processAt} values seen. With correct JetStream dedup keying the two are equal; if a
+   * duplicate slips through (e.g. a regression in the {@code id@processAt} {@code Nats-Msg-Id})
+   * we observe {@code count > distinctProcessAts.size()}.
    */
   @Component
   static class ConcurrentRetryRecurringListener {
     final AtomicInteger count = new AtomicInteger();
-    final CountDownLatch latch = new CountDownLatch(2);
+    /** Concurrent set: ConcurrentHashMap-backed so concurrent inserts don't drop entries. */
+    final Set<Long> distinctProcessAts = ConcurrentHashMap.newKeySet();
+
+    final CountDownLatch distinctPeriodsLatch = new CountDownLatch(3);
 
     @RqueueListener(value = "adv-conc-recur-e2e", concurrency = "2")
-    void onMessage(String payload) {
+    void onMessage(String payload, @Header(RqueueMessageHeaders.JOB) Job job) {
       count.incrementAndGet();
-      latch.countDown();
+      long processAt = job.getRqueueMessage().getProcessAt();
+      if (distinctProcessAts.add(processAt)) {
+        distinctPeriodsLatch.countDown();
+      }
     }
   }
 

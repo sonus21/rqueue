@@ -286,10 +286,12 @@ class JetStreamMessageBrokerUnitTest {
   /**
    * JetStreamMessageBroker does not override {@code scheduleNext}; the SPI default calls
    * {@code enqueueWithDelay(q, message, delay)}. Verify that path reaches JetStream publish
-   * with the correct subject and that {@code Nats-Next-Deliver-Time} is set (ADR-51 header).
+   * to the scheduler subject ({@code <workSubject>.sched.<msgId>}) with the correct ADR-51 headers:
+   * {@code Nats-Schedule: @at <RFC3339>}, {@code Nats-Schedule-Target: <workSubject>}, and
+   * {@code Nats-Rollup: sub}.
    */
   @Test
-  void scheduleNext_delegatesToEnqueueWithDelay_setsDeliverTimeHeader() throws Exception {
+  void scheduleNext_delegatesToEnqueueWithDelay_setsScheduleHeaders() throws Exception {
     Fixture f = newFixture(RqueueNatsConfig.defaults(), true);
     when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))
         .thenReturn(mock(PublishAck.class));
@@ -305,11 +307,31 @@ class JetStreamMessageBrokerUnitTest {
     // scheduleNext default: delayMs = max(0, processAt - now) → enqueueWithDelay
     f.broker.scheduleNext(queueNamed("orders"), "ignored-key", m, 60L);
 
+    ArgumentCaptor<String> subject = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Headers> headers = ArgumentCaptor.forClass(Headers.class);
-    verify(f.js, times(1)).publish(eq("rqueue.js.orders"), headers.capture(), any(byte[].class));
-    assertNotNull(
-        headers.getValue().getFirst("Nats-Next-Deliver-Time"),
-        "ADR-51 deliver-time header must be present");
+    verify(f.js, times(1)).publish(subject.capture(), headers.capture(), any(byte[].class));
+
+    // Must publish to the scheduler subject, NOT the work subject
+    assertEquals(
+        "rqueue.js.orders.sched.pid-1",
+        subject.getValue(),
+        "Must publish to scheduler subject <workSubject>.sched.<msgId>");
+
+    // Nats-Schedule header must carry the @at prefix and an RFC3339 UTC time
+    String schedule = headers.getValue().getFirst(JetStreamMessageBroker.HDR_SCHEDULE);
+    assertNotNull(schedule, "Nats-Schedule header must be present");
+    assertTrue(schedule.startsWith("@at "), "Nats-Schedule value must start with '@at '");
+
+    // Nats-Schedule-Target must point to the work subject
+    assertEquals(
+        "rqueue.js.orders",
+        headers.getValue().getFirst(JetStreamMessageBroker.HDR_SCHEDULE_TARGET),
+        "Nats-Schedule-Target must be the work subject");
+
+    // Nats-Rollup must be 'sub' for per-subject idempotent scheduling
+    assertEquals("sub", headers.getValue().getFirst("Nats-Rollup"), "Nats-Rollup must be 'sub'");
+
+    // Dedup key must encode the period identity
     assertEquals(
         "pid-1-at-" + processAt,
         headers.getValue().getFirst("Nats-Msg-Id"),

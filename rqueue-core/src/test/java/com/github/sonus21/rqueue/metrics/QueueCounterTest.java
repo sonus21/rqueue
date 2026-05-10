@@ -89,4 +89,75 @@ class QueueCounterTest extends TestBase {
   void updateExecutionCount() {
     validateCountStatistics(TestUtils.createQueueDetail("scheduled-queue", 900000L), "success");
   }
+
+  /**
+   * Regression: two QueueDetails on the same queue with different consumerName overrides each
+   * register their own counter, and a consumer-aware {@code updateXxxCount} routes to the
+   * correct one. Before the fix, both registrations collided on {@code map.put(queueName, ...)}
+   * and only the last consumer's counter was reachable; calls without a consumer name silently
+   * lost increments for any consumer that wasn't last to register.
+   */
+  @Test
+  void multiConsumerOnSameQueueRoutesToCorrectCounter() {
+    metricsProperties.getCount().setExecution(true);
+    metricsProperties.getCount().setFailure(true);
+    MeterRegistry registry = new SimpleMeterRegistry();
+    QueueCounter counter = new QueueCounter();
+
+    QueueDetail qA = QueueDetail.builder()
+        .name("multi")
+        .queueName("__rq::queue::multi")
+        .processingQueueName("__rq::p-queue::multi")
+        .scheduledQueueName("__rq::d-queue::multi")
+        .completedQueueName("__rq::c-queue::multi")
+        .consumerName("consumer-a")
+        .numRetry(3)
+        .visibilityTimeout(900000L)
+        .priorityGroup("")
+        .concurrency(new com.github.sonus21.rqueue.models.Concurrency(-1, -1))
+        .active(true)
+        .build();
+    QueueDetail qB = QueueDetail.builder()
+        .name("multi")
+        .queueName("__rq::queue::multi")
+        .processingQueueName("__rq::p-queue::multi")
+        .scheduledQueueName("__rq::d-queue::multi")
+        .completedQueueName("__rq::c-queue::multi")
+        .consumerName("consumer-b")
+        .numRetry(3)
+        .visibilityTimeout(900000L)
+        .priorityGroup("")
+        .concurrency(new com.github.sonus21.rqueue.models.Concurrency(-1, -1))
+        .active(true)
+        .build();
+
+    counter.registerQueue(
+        metricsProperties, Tags.of("queue", "multi", "consumer", "consumer-a"), registry, qA);
+    counter.registerQueue(
+        metricsProperties, Tags.of("queue", "multi", "consumer", "consumer-b"), registry, qB);
+
+    counter.updateExecutionCount("multi", "consumer-a");
+    counter.updateExecutionCount("multi", "consumer-a");
+    counter.updateExecutionCount("multi", "consumer-b");
+    counter.updateFailureCount("multi", "consumer-b");
+
+    Tags tagsA = Tags.of("queue", "multi", "consumer", "consumer-a", QUEUE_KEY, qA.getQueueName());
+    Tags tagsB = Tags.of("queue", "multi", "consumer", "consumer-b", QUEUE_KEY, qB.getQueueName());
+
+    assertEquals(
+        2.0,
+        registry.get(EXECUTION_COUNT).tags(tagsA).counter().count(),
+        0.0,
+        "consumer-a execution count");
+    assertEquals(
+        1.0,
+        registry.get(EXECUTION_COUNT).tags(tagsB).counter().count(),
+        0.0,
+        "consumer-b execution count");
+    assertEquals(
+        1.0,
+        registry.get(FAILURE_COUNT).tags(tagsB).counter().count(),
+        0.0,
+        "consumer-b failure count");
+  }
 }

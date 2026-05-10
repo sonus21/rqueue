@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,9 +56,21 @@ import org.springframework.stereotype.Component;
  */
 @SpringBootTest(
     classes = NatsBackendEndToEndIT.TestApp.class,
-    properties = {"rqueue.backend=nats"})
+    properties = {
+      "rqueue.backend=nats",
+      "rqueue.nats.naming.stream-prefix=" + NatsBackendEndToEndIT.STREAM_PREFIX,
+      "rqueue.nats.naming.subject-prefix=" + NatsBackendEndToEndIT.SUBJECT_PREFIX
+    })
 @Tag("nats")
 class NatsBackendEndToEndIT extends AbstractNatsBootIT {
+
+  static final String STREAM_PREFIX = "rqueue-js-backendE2E-";
+  static final String SUBJECT_PREFIX = "rqueue.js.backendE2E.";
+
+  @BeforeAll
+  static void wipeOwnedStreams() {
+    deleteStreamsWithPrefix(STREAM_PREFIX);
+  }
 
   @Autowired
   RqueueMessageEnqueuer enqueuer;

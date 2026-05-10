@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -167,12 +168,16 @@ class NatsProvisionerTest {
     StreamInfo existing = mock(StreamInfo.class);
     StreamConfiguration existingCfg = mock(StreamConfiguration.class);
     when(existingCfg.getRetentionPolicy()).thenReturn(io.nats.client.api.RetentionPolicy.WorkQueue);
+    // Stub getSubjects() so the provisioner sees the subject as already present and skips update
+    when(existingCfg.getSubjects()).thenReturn(Collections.singletonList("rqueue.js.orders"));
+    when(existingCfg.getAllowMsgSchedules()).thenReturn(false);
     when(existing.getConfiguration()).thenReturn(existingCfg);
     when(jsm.getStreamInfo("rqueue-js-orders")).thenReturn(existing);
 
     provisioner.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders"));
 
     verify(jsm, never()).addStream(any());
+    verify(jsm, never()).updateStream(any());
   }
 
   /**
@@ -194,6 +199,138 @@ class NatsProvisionerTest {
     provisioner.ensureStream("rqueue-js-orders", Collections.singletonList("rqueue.js.orders"));
 
     verify(jsm, times(1)).addStream(any(StreamConfiguration.class));
+  }
+
+  /**
+   * When the NATS server supports scheduling (≥ 2.12), streams must be created with
+   * {@code allowMessageSchedules=true} so the server accepts {@code Nats-Schedule}
+   * publish headers (ADR-51).  Equivalent to: {@code nats stream add --allow-schedules}.
+   */
+  @Test
+  void ensureStream_schedulingSupported_setsAllowMessageSchedules()
+      throws IOException, JetStreamApiException {
+    // setUp() already wires serverInfo.isSameOrNewerThanVersion() → true (scheduling supported)
+    JetStreamApiException notFound = makeStreamNotFoundEx();
+    when(jsm.getStreamInfo("rqueue-js-orders")).thenThrow(notFound);
+
+    provisioner.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        true);
+
+    verify(jsm, times(1)).addStream(argThat(cfg -> cfg.getAllowMsgSchedules()));
+  }
+
+  @Test
+  void ensureStream_schedulingNotSupported_doesNotSetAllowMessageSchedules()
+      throws IOException, JetStreamApiException {
+    // Build a provisioner backed by a server that does NOT support scheduling
+    Connection oldConn = mock(Connection.class);
+    KeyValueManagement oldKvm = mock(KeyValueManagement.class);
+    when(oldConn.keyValueManagement()).thenReturn(oldKvm);
+    io.nats.client.api.ServerInfo oldInfo = mock(io.nats.client.api.ServerInfo.class);
+    when(oldInfo.isSameOrNewerThanVersion(anyString())).thenReturn(false);
+    when(oldInfo.getVersion()).thenReturn("2.10.0");
+    when(oldConn.getServerInfo()).thenReturn(oldInfo);
+    NatsProvisioner oldProvisioner = new NatsProvisioner(oldConn, jsm, config);
+
+    JetStreamApiException notFound = makeStreamNotFoundEx();
+    when(jsm.getStreamInfo("rqueue-js-orders")).thenThrow(notFound);
+
+    // allowSchedules=true is requested but server doesn't support it → flag must NOT be set
+    oldProvisioner.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        true);
+
+    verify(jsm, times(1)).addStream(argThat(cfg -> !cfg.getAllowMsgSchedules()));
+  }
+
+  /**
+   * If a stream was initially created without scheduling (allowSchedules=false) and a later call
+   * requests scheduling (allowSchedules=true), the provisioner must call updateStream() to add the
+   * flag rather than silently skipping because the stream is already in cache.
+   */
+  @Test
+  void ensureStream_upgradeScheduling_updatesExistingStream()
+      throws IOException, JetStreamApiException {
+    // First call: stream doesn't exist, created without scheduling
+    JetStreamApiException notFound = makeStreamNotFoundEx();
+    when(jsm.getStreamInfo("rqueue-js-orders"))
+        .thenThrow(notFound) // first call: not found → create
+        .thenReturn(mock(
+            StreamInfo.class,
+            inv -> { // second call: exists, no scheduling
+              String m = inv.getMethod().getName();
+              if ("getConfiguration".equals(m)) {
+                StreamConfiguration cfg = StreamConfiguration.builder()
+                    .name("rqueue-js-orders")
+                    .subjects(Collections.singletonList("rqueue.js.orders"))
+                    .build();
+                return cfg;
+              }
+              return null;
+            }));
+
+    // First call: no scheduling
+    provisioner.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        false);
+    // Second call (different provisioner instance to bypass cache): scheduling requested
+    NatsProvisioner p2 = new NatsProvisioner(connection, jsm, config);
+    p2.ensureStream(
+        "rqueue-js-orders",
+        Collections.singletonList("rqueue.js.orders"),
+        QueueType.QUEUE,
+        null,
+        true);
+
+    verify(jsm, times(1)).addStream(any(StreamConfiguration.class));
+    verify(jsm, times(1)).updateStream(argThat(cfg -> cfg.getAllowMsgSchedules()));
+  }
+
+  /**
+   * Concrete scenario: plain enqueue() creates the stream with only the work subject, then
+   * enqueueWithDelay() is called for the first time. The provisioner must update the stream to
+   * add BOTH the sched-wildcard subject AND the allow_msg_schedules flag in a single updateStream()
+   * call. Without the subject update, publishing to the sched subject would be rejected by NATS
+   * with "no stream matches subject".
+   */
+  @Test
+  void ensureStream_firstEnqueueThenDelay_addsSchedSubjectAndFlag()
+      throws IOException, JetStreamApiException {
+    String workSubject = "rqueue.js.orders";
+    String schedPattern = workSubject + ".sched.*";
+
+    // After enqueue() created the stream (work subject only, no scheduling flag)
+    StreamInfo existingInfo = mock(StreamInfo.class, inv -> {
+      if ("getConfiguration".equals(inv.getMethod().getName())) {
+        return StreamConfiguration.builder()
+            .name("rqueue-js-orders")
+            .subjects(Collections.singletonList(workSubject))
+            .build(); // allowMsgSchedules defaults to false
+      }
+      return null;
+    });
+    when(jsm.getStreamInfo("rqueue-js-orders")).thenReturn(existingInfo);
+
+    // enqueueWithDelay() calls ensureStream with the sched wildcard and allowSchedules=true
+    provisioner.ensureStream(
+        "rqueue-js-orders", Arrays.asList(workSubject, schedPattern), QueueType.QUEUE, null, true);
+
+    // Must call updateStream (never addStream — stream already exists)
+    verify(jsm, never()).addStream(any());
+    verify(jsm, times(1))
+        .updateStream(argThat(cfg -> cfg.getAllowMsgSchedules()
+            && cfg.getSubjects().contains(workSubject)
+            && cfg.getSubjects().contains(schedPattern)));
   }
 
   @Test

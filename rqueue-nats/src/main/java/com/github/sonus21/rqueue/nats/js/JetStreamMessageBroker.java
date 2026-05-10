@@ -64,10 +64,25 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   private static final Logger log = Logger.getLogger(JetStreamMessageBroker.class.getName());
 
   /**
-   * JetStream publish header used by NATS >= 2.12 to hold a message until a UTC delivery time
-   * (ADR-51). Value must be RFC 3339 UTC, e.g. {@code 2026-05-09T12:30:00Z}.
+   * NATS message-scheduling header (ADR-51, NATS >= 2.12).
+   * Value format: {@code @at <RFC3339-UTC>}, e.g. {@code @at 2026-05-09T12:30:00Z}.
+   * The message must be published to a dedicated scheduler subject (not the work subject);
+   * the work subject is declared via {@link #HDR_SCHEDULE_TARGET}.
    */
-  static final String HDR_NEXT_DELIVER_TIME = "Nats-Next-Deliver-Time";
+  public static final String HDR_SCHEDULE = "Nats-Schedule";
+
+  /**
+   * Target subject to which NATS fires the work message when the schedule triggers.
+   * Must differ from the publish (scheduler) subject.
+   */
+  public static final String HDR_SCHEDULE_TARGET = "Nats-Schedule-Target";
+
+  /**
+   * Suffix appended to the work subject to form the per-message scheduler subject,
+   * e.g. {@code rqueue.js.orders.sched.<msgId>}.
+   * The stream must include {@code <workSubject>.sched.*} in its subjects list.
+   */
+  public static final String SCHED_SUBJECT_SUFFIX = ".sched.";
 
   /**
    * Enrichment header: epoch-ms at which this message was scheduled to be processed.
@@ -92,7 +107,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    */
   private static final Duration MIN_FETCH_WAIT = Duration.ofMillis(50);
 
-  /** RFC 3339 UTC formatter for the {@code Nats-Next-Deliver-Time} header value. */
+  /** RFC 3339 UTC formatter for the {@code Nats-Schedule} header value (@at prefix). */
   private static final DateTimeFormatter RFC3339_UTC =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC);
 
@@ -197,6 +212,24 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     return subjectFor(q) + config.getDlqSubjectSuffix();
   }
 
+  /**
+   * Scheduler subject for a single delayed message: {@code <workSubject>.sched.<msgId>}.
+   * The NATS scheduler fires a publish to the work subject when the schedule triggers.
+   * Each message gets its own unique subject so the rollup-sub only replaces itself,
+   * never another message's schedule entry.
+   */
+  private String schedSubjectFor(QueueDetail q, String msgId) {
+    return subjectFor(q) + SCHED_SUBJECT_SUFFIX + msgId;
+  }
+
+  /**
+   * Wildcard pattern covering all scheduler subjects for a queue, used when registering
+   * the stream's subject list. E.g. {@code rqueue.js.orders.sched.*}.
+   */
+  static String schedSubjectPattern(String workSubject) {
+    return workSubject + SCHED_SUBJECT_SUFFIX + "*";
+  }
+
   /** Stream description shown in {@code nats stream info} so operators can map back to rqueue. */
   private static String streamDescription(QueueDetail q) {
     return "rqueue queue: " + q.getName();
@@ -295,13 +328,19 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
               + NatsProvisioner.SCHEDULING_MIN_VERSION
               + "+ or use the Redis backend for delayed messages.");
     }
-    String subject = subjectFor(q);
+    String workSubject = subjectFor(q);
     String stream = streamFor(q);
-    provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
-    Headers headers = buildSchedulingHeaders(m, delayMs);
+    provisioner.ensureStream(
+        stream,
+        List.of(workSubject, schedSubjectPattern(workSubject)),
+        q.getType(),
+        streamDescription(q),
+        true);
+    String schedSubject = schedSubjectFor(q, m.getId());
+    Headers headers = buildSchedulingHeaders(m, delayMs, workSubject);
     try {
       byte[] payload = serdes.serialize(m);
-      js.publish(subject, headers, payload);
+      js.publish(schedSubject, headers, payload);
     } catch (IOException | JetStreamApiException e) {
       throw new RqueueNatsException(
           "Failed to enqueue scheduled message id="
@@ -309,7 +348,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
               + " queue="
               + q.getName()
               + " subject="
-              + subject,
+              + schedSubject,
           e);
     } catch (RuntimeException e) {
       throw new RqueueNatsException(
@@ -318,7 +357,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
               + " queue="
               + q.getName()
               + " subject="
-              + subject,
+              + schedSubject,
           e);
     }
   }
@@ -378,10 +417,15 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
               + NatsProvisioner.SCHEDULING_MIN_VERSION
               + "+ or use the Redis backend for delayed messages."));
     }
-    String subject = subjectFor(q);
+    String workSubject = subjectFor(q);
     String stream = streamFor(q);
     try {
-      provisioner.ensureStream(stream, List.of(subject), q.getType(), streamDescription(q));
+      provisioner.ensureStream(
+          stream,
+          List.of(workSubject, schedSubjectPattern(workSubject)),
+          q.getType(),
+          streamDescription(q),
+          true);
     } catch (Exception e) {
       return Mono.error(new RqueueNatsException(
           "Failed to provision stream for reactive scheduled enqueue id="
@@ -390,7 +434,8 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
               + q.getName(),
           e));
     }
-    Headers headers = buildSchedulingHeaders(m, delayMs);
+    String schedSubject = schedSubjectFor(q, m.getId());
+    Headers headers = buildSchedulingHeaders(m, delayMs, workSubject);
     byte[] payload;
     try {
       payload = serdes.serialize(m);
@@ -401,10 +446,10 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
               + " queue="
               + q.getName()
               + " subject="
-              + subject,
+              + schedSubject,
           e));
     }
-    return Mono.fromFuture(() -> js.publishAsync(subject, headers, payload))
+    return Mono.fromFuture(() -> js.publishAsync(schedSubject, headers, payload))
         .onErrorMap(e -> e instanceof RqueueNatsException
             ? e
             : new RqueueNatsException(
@@ -413,7 +458,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
                     + " queue="
                     + q.getName()
                     + " subject="
-                    + subject,
+                    + schedSubject,
                 e))
         .then();
   }
@@ -507,12 +552,14 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
         String actualConsumerName = provisioner.ensureConsumer(
             stream,
             consumerName,
+            subject, // filter: consumer only receives work-subject messages, not sched entries
             ackWait,
             maxDeliver,
             config.getConsumerDefaults().getMaxAckPending());
         PullSubscribeOptions opts = PullSubscribeOptions.bind(stream, actualConsumerName);
-        // Consumer has no filter subject; pass null so the NATS client doesn't validate
-        // the subject against a (nonexistent) filter — SUB-90011 otherwise.
+        // The filter is set on the consumer itself; pass null here so the NATS client does not
+        // re-validate the subject against the consumer filter at subscribe time — SUB-90011
+        // is thrown if the passed subject doesn't match the consumer's filter subject exactly.
         return js.subscribe(null, opts);
       } catch (IOException | JetStreamApiException e) {
         throw new RqueueNatsException(
@@ -1002,7 +1049,21 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
    *       {@link RqueueMessage#setPeriod} if the deserialized payload lacks it.
    * </ul>
    */
-  private Headers buildSchedulingHeaders(RqueueMessage m, long delayMs) {
+  /**
+   * Build NATS message-scheduling headers for a delayed publish (ADR-51, NATS >= 2.12).
+   *
+   * <p>The message is published to a dedicated scheduler subject
+   * ({@code <workSubject>.sched.<msgId>}). When the schedule triggers, NATS fires a
+   * JetStream publish to {@code workSubject} so consumers see it only after the delay.
+   *
+   * <p>Required headers (confirmed against nats-server 2.12.8):
+   * <ul>
+   *   <li>{@code Nats-Schedule: @at <RFC3339-UTC>} — trigger time, {@code @at } prefix required
+   *   <li>{@code Nats-Schedule-Target: <workSubject>} — where to publish when schedule fires
+   *   <li>{@code Nats-Rollup: sub} — replaces any existing schedule for this subject (idempotent)
+   * </ul>
+   */
+  private Headers buildSchedulingHeaders(RqueueMessage m, long delayMs, String workSubject) {
     Headers headers = new Headers();
     if (m.getId() != null) {
       // Dedup key: id-at-processAt for scheduled messages (processAt > 0).
@@ -1018,8 +1079,13 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
     }
     long deliverAtMs =
         m.getProcessAt() > 0 ? m.getProcessAt() : System.currentTimeMillis() + delayMs;
-    String deliverAt = RFC3339_UTC.format(Instant.ofEpochMilli(deliverAtMs));
-    headers.add(HDR_NEXT_DELIVER_TIME, deliverAt);
+    // "@at " prefix is required — bare RFC3339 is not recognised by the server scheduler.
+    String deliverAt = "@at " + RFC3339_UTC.format(Instant.ofEpochMilli(deliverAtMs));
+    headers.add(HDR_SCHEDULE, deliverAt);
+    headers.add(HDR_SCHEDULE_TARGET, workSubject);
+    // Rollup-sub: replaces any existing schedule entry for this scheduler subject so that
+    // re-enqueue of the same message ID at the same processAt is idempotent.
+    headers.add("Nats-Rollup", "sub");
     // Enrichment headers — readable on pop without deserializing the payload
     headers.add(HDR_PROCESS_AT, String.valueOf(deliverAtMs));
     if (m.isPeriodic()) {

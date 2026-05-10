@@ -35,6 +35,14 @@ import org.springframework.scheduling.annotation.Async;
 public class RqueueMetrics implements RqueueMetricsRegistry {
 
   static final String QUEUE_KEY = "key";
+  /**
+   * Tag added when a {@link QueueDetail} declares a {@code consumerName} override. Without this
+   * tag, two {@code @RqueueListener} methods on the same queue with different consumer names
+   * register gauges with identical (name, tag-set) pairs and Micrometer silently keeps only the
+   * first — losing the second consumer's metrics entirely.
+   */
+  static final String CONSUMER_KEY = "consumer";
+
   private static final String QUEUE_SIZE = "queue.size";
   private static final String SCHEDULED_QUEUE_SIZE = "scheduled.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
@@ -58,17 +66,31 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
     for (QueueDetail queueDetail : EndpointRegistry.getActiveQueueDetails()) {
       Tags queueTags =
           Tags.concat(metricsProperties.getMetricTags(), "queue", queueDetail.getName());
+      // When a queue carries multiple consumers (multiple @RqueueListener with distinct
+      // consumerName overrides), each gets its own QueueDetail. Without a `consumer` tag the
+      // gauges would share the same (name, tags) and Micrometer would drop all but the first.
+      String consumerName = queueDetail.getConsumerName();
+      boolean hasConsumerOverride = consumerName != null && !consumerName.isEmpty();
+      if (hasConsumerOverride) {
+        queueTags = queueTags.and(CONSUMER_KEY, consumerName);
+      }
       Gauge.builder(
               metricsProperties.getMetricName(QUEUE_SIZE),
               queueDetail,
-              c -> queueMetricsProvider.getPendingMessageCount(queueDetail.getName()))
+              c -> hasConsumerOverride
+                  ? queueMetricsProvider.getPendingMessageCountByConsumer(
+                      queueDetail.getName(), consumerName)
+                  : queueMetricsProvider.getPendingMessageCount(queueDetail.getName()))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getQueueName()))
           .description("The number of entries in this queue")
           .register(meterRegistry);
       Gauge.builder(
               metricsProperties.getMetricName(PROCESSING_QUEUE_SIZE),
               queueDetail,
-              c -> queueMetricsProvider.getProcessingMessageCount(queueDetail.getName()))
+              c -> hasConsumerOverride
+                  ? queueMetricsProvider.getProcessingMessageCountByConsumer(
+                      queueDetail.getName(), consumerName)
+                  : queueMetricsProvider.getProcessingMessageCount(queueDetail.getName()))
           .tags(queueTags.and(QUEUE_KEY, queueDetail.getProcessingQueueName()))
           .description("The number of entries in the processing queue")
           .register(meterRegistry);
