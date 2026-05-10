@@ -21,4 +21,21 @@ public interface RqueueMetricsCounter {
   void updateFailureCount(String queueName);
 
   void updateExecutionCount(String queueName);
+
+  /**
+   * Consumer-aware failure increment. When a queue carries multiple {@code @RqueueListener}
+   * methods with distinct {@code consumerName} overrides, each consumer has its own counter
+   * registered under {@code (queueName, consumerName)}; calling the bare-queue overload would
+   * route every increment to the same (last-registered) counter and silently lose per-consumer
+   * counts. Defaults to the queue-level path so callers that don't have a consumer name keep
+   * working unchanged.
+   */
+  default void updateFailureCount(String queueName, String consumerName) {
+    updateFailureCount(queueName);
+  }
+
+  /** Consumer-aware execution increment. See {@link #updateFailureCount(String, String)}. */
+  default void updateExecutionCount(String queueName, String consumerName) {
+    updateExecutionCount(queueName);
+  }
 }

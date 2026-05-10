@@ -122,10 +122,15 @@ class RqueueExecutor extends MessageContainerBase {
     if (Objects.isNull(counter)) {
       return;
     }
+    // Pass the consumer name so the counter can route increments to the per-consumer entry
+    // when multiple @RqueueListener methods share a queue with distinct consumerName overrides;
+    // null/empty (no override) routes to the bare-queue counter unchanged.
+    String queueName = job.getQueueDetail().getName();
+    String consumerName = job.getQueueDetail().getConsumerName();
     if (fail) {
-      counter.updateFailureCount(job.getQueueDetail().getName());
+      counter.updateFailureCount(queueName, consumerName);
     } else {
-      counter.updateExecutionCount(job.getQueueDetail().getName());
+      counter.updateExecutionCount(queueName, consumerName);
     }
   }
 

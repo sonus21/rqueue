@@ -72,4 +72,25 @@ public interface RqueueQueueMetricsProvider {
   default long getProcessingMessageCount(String queueName, String priority) {
     return getProcessingMessageCount(queueName);
   }
+
+  /**
+   * Per-consumer variant of {@link #getPendingMessageCount(String)}. When two
+   * {@code @RqueueListener} methods on the same queue declare different {@code consumerName}
+   * overrides, each gets its own QueueDetail and its own metric registration; backends that can
+   * report per-consumer pending depth (e.g. NATS JetStream Limits/Interest streams or any
+   * fan-out broker) should override this. The default delegates to the queue-level call so
+   * single-consumer queues, and backends without per-consumer state, behave unchanged.
+   *
+   * @param queueName    user-facing queue name
+   * @param consumerName consumer-name override from {@code @RqueueListener(consumerName=...)};
+   *                     {@code null} or empty when no override is set
+   */
+  default long getPendingMessageCountByConsumer(String queueName, String consumerName) {
+    return getPendingMessageCount(queueName);
+  }
+
+  /** Per-consumer variant of {@link #getProcessingMessageCount(String)}. See related javadoc. */
+  default long getProcessingMessageCountByConsumer(String queueName, String consumerName) {
+    return getProcessingMessageCount(queueName);
+  }
 }
