@@ -194,7 +194,8 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
 
     assertThat(concurrentRecurringListener.distinctPeriodsLatch.await(
             TOTAL_WAIT.toSeconds(), TimeUnit.SECONDS))
-        .as("Recurring message with concurrency=2 should fire >= 3 distinct periods within %s",
+        .as(
+            "Recurring message with concurrency=2 should fire >= 3 distinct periods within %s",
             TOTAL_WAIT)
         .isTrue();
     // Brief quiesce so a racing duplicate (if any) has time to land before we assert.
@@ -206,8 +207,9 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
         .as("Should have observed at least 3 distinct periodic processAt values")
         .isGreaterThanOrEqualTo(3);
     assertThat(count)
-        .as("Each distinct period must be processed exactly once: count=%d, distinct=%d "
-            + "— a discrepancy means JetStream dedup (Nats-Msg-Id=id@processAt) regressed",
+        .as(
+            "Each distinct period must be processed exactly once: count=%d, distinct=%d "
+                + "— a discrepancy means JetStream dedup (Nats-Msg-Id=id@processAt) regressed",
             count, distinct)
         .isEqualTo(distinct);
   }
@@ -338,6 +340,7 @@ class NatsSchedulingAdvancedE2EIT extends AbstractNatsBootIT {
     final AtomicInteger count = new AtomicInteger();
     /** Concurrent set: ConcurrentHashMap-backed so concurrent inserts don't drop entries. */
     final Set<Long> distinctProcessAts = ConcurrentHashMap.newKeySet();
+
     final CountDownLatch distinctPeriodsLatch = new CountDownLatch(3);
 
     @RqueueListener(value = "adv-conc-recur-e2e", concurrency = "2")

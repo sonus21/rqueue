@@ -141,16 +141,23 @@ class QueueCounterTest extends TestBase {
     counter.updateExecutionCount("multi", "consumer-b");
     counter.updateFailureCount("multi", "consumer-b");
 
-    Tags tagsA = Tags.of("queue", "multi", "consumer", "consumer-a", QUEUE_KEY,
-        qA.getQueueName());
-    Tags tagsB = Tags.of("queue", "multi", "consumer", "consumer-b", QUEUE_KEY,
-        qB.getQueueName());
+    Tags tagsA = Tags.of("queue", "multi", "consumer", "consumer-a", QUEUE_KEY, qA.getQueueName());
+    Tags tagsB = Tags.of("queue", "multi", "consumer", "consumer-b", QUEUE_KEY, qB.getQueueName());
 
-    assertEquals(2.0, registry.get(EXECUTION_COUNT).tags(tagsA).counter().count(), 0.0,
+    assertEquals(
+        2.0,
+        registry.get(EXECUTION_COUNT).tags(tagsA).counter().count(),
+        0.0,
         "consumer-a execution count");
-    assertEquals(1.0, registry.get(EXECUTION_COUNT).tags(tagsB).counter().count(), 0.0,
+    assertEquals(
+        1.0,
+        registry.get(EXECUTION_COUNT).tags(tagsB).counter().count(),
+        0.0,
         "consumer-b execution count");
-    assertEquals(1.0, registry.get(FAILURE_COUNT).tags(tagsB).counter().count(), 0.0,
+    assertEquals(
+        1.0,
+        registry.get(FAILURE_COUNT).tags(tagsB).counter().count(),
+        0.0,
         "consumer-b failure count");
   }
 }

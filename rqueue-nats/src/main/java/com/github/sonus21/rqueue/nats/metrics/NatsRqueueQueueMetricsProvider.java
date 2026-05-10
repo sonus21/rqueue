@@ -130,14 +130,16 @@ public class NatsRqueueQueueMetricsProvider implements RqueueQueueMetricsProvide
     } catch (JetStreamApiException e) {
       // consumer or stream not yet provisioned — fall back to stream-level count rather than 0,
       // so the gauge reads the same as the bare-queue overload during the bootstrap window.
-      log.log(Level.FINE,
+      log.log(
+          Level.FINE,
           "Consumer-aware pending lookup fell back to stream count: queue=" + queueName
               + " consumer=" + consumerName + " (" + e.getMessage() + ")");
       return getPendingMessageCount(queueName);
     } catch (IOException e) {
       throw new RqueueNatsException(
-          "Failed to read consumer info for queue=" + queueName
-              + " consumer=" + consumerName + " stream=" + stream, e);
+          "Failed to read consumer info for queue=" + queueName + " consumer=" + consumerName
+              + " stream=" + stream,
+          e);
     }
   }
 
@@ -163,14 +165,16 @@ public class NatsRqueueQueueMetricsProvider implements RqueueQueueMetricsProvide
       ConsumerInfo ci = jsm.getConsumerInfo(stream, consumerName);
       return ci == null ? 0L : ci.getNumAckPending();
     } catch (JetStreamApiException e) {
-      log.log(Level.FINE,
-          "Consumer-aware processing lookup fell back to 0: queue=" + queueName
-              + " consumer=" + consumerName + " (" + e.getMessage() + ")");
+      log.log(
+          Level.FINE,
+          "Consumer-aware processing lookup fell back to 0: queue=" + queueName + " consumer="
+              + consumerName + " (" + e.getMessage() + ")");
       return 0L;
     } catch (IOException e) {
       throw new RqueueNatsException(
-          "Failed to read consumer info for queue=" + queueName
-              + " consumer=" + consumerName + " stream=" + stream, e);
+          "Failed to read consumer info for queue=" + queueName + " consumer=" + consumerName
+              + " stream=" + stream,
+          e);
     }
   }
 }

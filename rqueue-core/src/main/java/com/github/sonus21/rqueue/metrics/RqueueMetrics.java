@@ -42,6 +42,7 @@ public class RqueueMetrics implements RqueueMetricsRegistry {
    * first — losing the second consumer's metrics entirely.
    */
   static final String CONSUMER_KEY = "consumer";
+
   private static final String QUEUE_SIZE = "queue.size";
   private static final String SCHEDULED_QUEUE_SIZE = "scheduled.queue.size";
   private static final String PROCESSING_QUEUE_SIZE = "processing.queue.size";
