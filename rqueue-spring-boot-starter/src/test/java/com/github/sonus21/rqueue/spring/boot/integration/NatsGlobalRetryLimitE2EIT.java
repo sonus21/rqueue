@@ -71,11 +71,12 @@ class NatsGlobalRetryLimitE2EIT extends AbstractNatsBootIT {
     enqueuer.enqueue(QUEUE, "payload");
 
     assertThat(listener.twoAttempts.await(20, TimeUnit.SECONDS)).isTrue();
-    Awaitility.await().during(Duration.ofSeconds(2)).atMost(Duration.ofSeconds(3)).untilAsserted(
-        () -> assertThat(listener.attempts).hasValue(2));
+    Awaitility.await()
+        .during(Duration.ofSeconds(2))
+        .atMost(Duration.ofSeconds(3))
+        .untilAsserted(() -> assertThat(listener.attempts).hasValue(2));
 
-    assertThat(jsm
-            .getConsumerInfo(STREAM_PREFIX + QUEUE, QUEUE + "-consumer")
+    assertThat(jsm.getConsumerInfo(STREAM_PREFIX + QUEUE, QUEUE + "-consumer")
             .getConsumerConfiguration()
             .getMaxDeliver())
         .isEqualTo(3L);

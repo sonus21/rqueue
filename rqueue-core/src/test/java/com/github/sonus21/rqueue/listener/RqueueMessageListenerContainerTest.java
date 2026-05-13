@@ -37,8 +37,8 @@ import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
-import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
@@ -178,7 +178,8 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Test
   void globalMaxRetryCapsDefaultRetryForever() throws Exception {
     beanProvider.getRqueueConfig().setMaxRetry(5);
-    doReturn(handlerMap(mapping(slowQueue, -1, null))).when(rqueueMessageHandler)
+    doReturn(handlerMap(mapping(slowQueue, -1, null)))
+        .when(rqueueMessageHandler)
         .getHandlerMethodMap();
 
     container.afterPropertiesSet();
@@ -189,7 +190,8 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Test
   void globalMaxRetryDoesNotOverrideExplicitRetryCount() throws Exception {
     beanProvider.getRqueueConfig().setMaxRetry(2);
-    doReturn(handlerMap(mapping(slowQueue, 10, null))).when(rqueueMessageHandler)
+    doReturn(handlerMap(mapping(slowQueue, 10, null)))
+        .when(rqueueMessageHandler)
         .getHandlerMethodMap();
 
     container.afterPropertiesSet();
@@ -200,7 +202,8 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Test
   void globalMaxRetryDoesNotRaiseLowerExplicitRetryCount() throws Exception {
     beanProvider.getRqueueConfig().setMaxRetry(5);
-    doReturn(handlerMap(mapping(slowQueue, 2, null))).when(rqueueMessageHandler)
+    doReturn(handlerMap(mapping(slowQueue, 2, null)))
+        .when(rqueueMessageHandler)
         .getHandlerMethodMap();
 
     container.afterPropertiesSet();
@@ -211,7 +214,8 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Test
   void globalMaxRetryCanDisableRetries() throws Exception {
     beanProvider.getRqueueConfig().setMaxRetry(0);
-    doReturn(handlerMap(mapping(slowQueue, -1, null))).when(rqueueMessageHandler)
+    doReturn(handlerMap(mapping(slowQueue, -1, null)))
+        .when(rqueueMessageHandler)
         .getHandlerMethodMap();
 
     container.afterPropertiesSet();
@@ -222,12 +226,14 @@ class RqueueMessageListenerContainerTest extends TestBase {
   @Test
   void globalMaxRetryDoesNotOverrideDeadLetterDefaultRetryCount() throws Exception {
     beanProvider.getRqueueConfig().setMaxRetry(0);
-    doReturn(handlerMap(mapping(slowQueue, -1, slowQueue + "-dlq"))).when(rqueueMessageHandler)
+    doReturn(handlerMap(mapping(slowQueue, -1, slowQueue + "-dlq")))
+        .when(rqueueMessageHandler)
         .getHandlerMethodMap();
 
     container.afterPropertiesSet();
 
-    assertEquals(Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE,
+    assertEquals(
+        Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE,
         EndpointRegistry.get(slowQueue).getNumRetry());
   }
 
