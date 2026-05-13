@@ -471,20 +471,20 @@ public class RqueueMessageListenerContainer
 
   private List<QueueDetail> getQueueDetail(String queue, MappingInformation mappingInformation) {
     int numRetry = mappingInformation.getNumRetry();
+    RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
     if (!StringUtils.isEmpty(mappingInformation.getDeadLetterQueueName()) && numRetry == -1) {
       log.warn(
           "Dead letter queue {} is set but retry is not set",
           mappingInformation.getDeadLetterQueueName());
       numRetry = Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE;
     } else if (numRetry == -1) {
-      numRetry = Integer.MAX_VALUE;
+      numRetry = rqueueConfig.getMaxRetry() >= 0 ? rqueueConfig.getMaxRetry() : Integer.MAX_VALUE;
     }
     String priorityGroup = mappingInformation.getPriorityGroup();
     Map<String, Integer> priority = mappingInformation.getPriority();
     if (StringUtils.isEmpty(priorityGroup) && priority.size() == 1) {
       priorityGroup = Constants.DEFAULT_PRIORITY_GROUP;
     }
-    RqueueConfig rqueueConfig = rqueueBeanProvider.getRqueueConfig();
     QueueDetail queueDetail = QueueDetail.builder()
         .name(queue)
         .queueName(rqueueConfig.getQueueName(queue))

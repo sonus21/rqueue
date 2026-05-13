@@ -154,4 +154,9 @@ class RqueueConfigTest extends TestBase {
     assertEquals(
         Duration.ofSeconds(15), rqueueConfigVersion2.getWorkerRegistryQueueHeartbeatInterval());
   }
+
+  @Test
+  void defaultMaxRetryIsDisabled() {
+    assertEquals(-1, rqueueConfigVersion2.getMaxRetry());
+  }
 }
