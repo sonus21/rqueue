@@ -510,15 +510,16 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   /**
    * Resolve the JetStream {@code maxDeliver} from per-queue {@link QueueDetail#getNumRetry()}
    * (counted as initial delivery + N retries = numRetry + 1). The {@link Integer#MAX_VALUE}
-   * "retry forever" sentinel maps to JetStream's unlimited value ({@code -1}); non-positive
-   * numRetry falls back to {@code RqueueNatsConfig.ConsumerDefaults.getMaxDeliver()}.
+   * "retry forever" sentinel maps to JetStream's unlimited value ({@code -1}); zero means
+   * one total delivery and no retries. Negative numRetry falls back to
+   * {@code RqueueNatsConfig.ConsumerDefaults.getMaxDeliver()}.
    */
   public static long resolveMaxDeliver(QueueDetail q, RqueueNatsConfig config) {
     int numRetry = q.getNumRetry();
     if (numRetry == Integer.MAX_VALUE) {
       return -1L;
     }
-    if (numRetry > 0) {
+    if (numRetry >= 0) {
       return numRetry + 1L;
     }
     return config.getConsumerDefaults().getMaxDeliver();

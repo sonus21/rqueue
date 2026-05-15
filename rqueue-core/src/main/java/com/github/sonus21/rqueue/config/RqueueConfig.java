@@ -134,6 +134,9 @@ public class RqueueConfig {
   @Value("${rqueue.retry.per.poll:1}")
   private int retryPerPoll;
 
+  @Value("${rqueue.retry.max:-1}")
+  private int maxRetry = -1;
+
   @Value("${rqueue.net.proxy.host:}")
   private String proxyHost;
 

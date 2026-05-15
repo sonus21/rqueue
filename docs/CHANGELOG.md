@@ -18,6 +18,18 @@ foundational Spring Boot 4 and Jackson 3 migration notes; RC3 for the Java 17
 baseline change; RC4–RC6 below for the NATS backend, broker SPI, dashboard
 work, and middleware additions that build on top.
 
+## Release [4.0.0.RC9] 2026-05-13
+
+{: .highlight}
+Release candidate.
+
+### Features
+* **Global retry limit** — added `rqueue.retry.max` to cap the implicit
+  retry-forever default for listeners that do not configure `numRetries`.
+  Explicit per-listener retry counts and the existing DLQ retry default continue
+  to take precedence. On NATS, the effective retry count maps to JetStream
+  `maxDeliver` as `retries + 1`.
+
 ## Release [4.0.0.RC8] 2026-05-09
 
 {: .highlight}

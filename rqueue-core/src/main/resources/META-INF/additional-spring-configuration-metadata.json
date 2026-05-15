@@ -2,6 +2,13 @@
   "groups": [],
   "properties": [
     {
+      "name": "rqueue.retry.max",
+      "type": "java.lang.Integer",
+      "description": "Global retry limit used when a listener does not configure numRetries and would otherwise retry forever. -1 preserves the retry-forever default. Explicit listener retry counts and DLQ defaults take precedence.",
+      "defaultValue": -1,
+      "sourceType": "com.github.sonus21.rqueue.config.RqueueConfig"
+    },
+    {
       "name": "rqueue.nats.auto-create-streams",
       "type": "java.lang.Boolean",
       "description": "When true (default), Rqueue creates JetStream streams for each registered queue at startup via NatsStreamValidator. Set to false for locked-down JetStream accounts where the application credentials lack add_stream permission; NatsStreamValidator will then verify that every required stream already exists and abort boot with a clear error listing any missing ones.",

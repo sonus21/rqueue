@@ -71,10 +71,9 @@ class JetStreamMessageBrokerResolveTest {
   }
 
   @Test
-  void resolveMaxDeliver_fallsBackToConfigDefaultWhenZero() {
+  void resolveMaxDeliver_zeroRetryMeansOneDelivery() {
     QueueDetail q = queue(30_000L, 0);
-    // RqueueNatsConfig.defaults().consumerDefaults.maxDeliver = 3
-    assertEquals(3L, JetStreamMessageBroker.resolveMaxDeliver(q, RqueueNatsConfig.defaults()));
+    assertEquals(1L, JetStreamMessageBroker.resolveMaxDeliver(q, RqueueNatsConfig.defaults()));
   }
 
   @Test

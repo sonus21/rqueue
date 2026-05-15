@@ -44,6 +44,17 @@ Note: Messages handled this way are neither retried nor moved to the Dead Letter
 When a message handler fails, the message can be retried immediately, delayed for a 
 future retry, moved to a dead letter queue, or dropped.
 
+### Global Retry Limit
+
+Set `rqueue.retry.max=N` to limit listeners that do not configure `numRetries` and
+would otherwise retry forever. The default is `-1`, which leaves the retry-forever
+default unchanged. Explicit `@RqueueListener(numRetries = "...")` values and the
+dead-letter queue default retry count continue to take precedence.
+
+For the NATS backend, this retry count is translated to JetStream `maxDeliver` as
+`N + 1`, because JetStream counts the initial delivery plus retries. For example,
+`rqueue.retry.max=3` creates consumers with at most four total deliveries.
+
 ### Immediate Retries
 To retry a message immediately within the same polling cycle, set 
 `rqueue.retry.per.poll` to a positive integer (e.g., `2`). This will cause the 
@@ -75,5 +86,3 @@ public class RqueueConfiguration {
 }
 ```
  
-
-

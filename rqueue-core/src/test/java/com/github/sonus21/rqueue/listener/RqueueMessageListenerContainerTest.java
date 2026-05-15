@@ -33,10 +33,12 @@ import com.github.sonus21.rqueue.annotation.RqueueListener;
 import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.RqueueConfig;
 import com.github.sonus21.rqueue.config.RqueueWebConfig;
+import com.github.sonus21.rqueue.core.EndpointRegistry;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
 import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
+import com.github.sonus21.rqueue.models.Concurrency;
 import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
@@ -67,6 +69,7 @@ import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 @CoreUnitTest
 class RqueueMessageListenerContainerTest extends TestBase {
@@ -170,6 +173,68 @@ class RqueueMessageListenerContainerTest extends TestBase {
     assertEquals(
         "testExecutor",
         ((ThreadPoolTaskExecutor) container.getTaskExecutor()).getThreadNamePrefix());
+  }
+
+  @Test
+  void globalMaxRetryCapsDefaultRetryForever() throws Exception {
+    beanProvider.getRqueueConfig().setMaxRetry(5);
+    doReturn(handlerMap(mapping(slowQueue, -1, null)))
+        .when(rqueueMessageHandler)
+        .getHandlerMethodMap();
+
+    container.afterPropertiesSet();
+
+    assertEquals(5, EndpointRegistry.get(slowQueue).getNumRetry());
+  }
+
+  @Test
+  void globalMaxRetryDoesNotOverrideExplicitRetryCount() throws Exception {
+    beanProvider.getRqueueConfig().setMaxRetry(2);
+    doReturn(handlerMap(mapping(slowQueue, 10, null)))
+        .when(rqueueMessageHandler)
+        .getHandlerMethodMap();
+
+    container.afterPropertiesSet();
+
+    assertEquals(10, EndpointRegistry.get(slowQueue).getNumRetry());
+  }
+
+  @Test
+  void globalMaxRetryDoesNotRaiseLowerExplicitRetryCount() throws Exception {
+    beanProvider.getRqueueConfig().setMaxRetry(5);
+    doReturn(handlerMap(mapping(slowQueue, 2, null)))
+        .when(rqueueMessageHandler)
+        .getHandlerMethodMap();
+
+    container.afterPropertiesSet();
+
+    assertEquals(2, EndpointRegistry.get(slowQueue).getNumRetry());
+  }
+
+  @Test
+  void globalMaxRetryCanDisableRetries() throws Exception {
+    beanProvider.getRqueueConfig().setMaxRetry(0);
+    doReturn(handlerMap(mapping(slowQueue, -1, null)))
+        .when(rqueueMessageHandler)
+        .getHandlerMethodMap();
+
+    container.afterPropertiesSet();
+
+    assertEquals(0, EndpointRegistry.get(slowQueue).getNumRetry());
+  }
+
+  @Test
+  void globalMaxRetryDoesNotOverrideDeadLetterDefaultRetryCount() throws Exception {
+    beanProvider.getRqueueConfig().setMaxRetry(0);
+    doReturn(handlerMap(mapping(slowQueue, -1, slowQueue + "-dlq")))
+        .when(rqueueMessageHandler)
+        .getHandlerMethodMap();
+
+    container.afterPropertiesSet();
+
+    assertEquals(
+        Constants.DEFAULT_RETRY_DEAD_LETTER_QUEUE,
+        EndpointRegistry.get(slowQueue).getNumRetry());
   }
 
   @Test
@@ -532,6 +597,28 @@ class RqueueMessageListenerContainerTest extends TestBase {
       super(rqueueMessageHandler, rqueueMessageTemplate);
       this.rqueueBeanProvider = beanProvider;
     }
+  }
+
+  private MultiValueMap<MappingInformation, RqueueMessageHandler.HandlerMethodWithPrimary>
+      handlerMap(MappingInformation mappingInformation) {
+    LinkedMultiValueMap<MappingInformation, RqueueMessageHandler.HandlerMethodWithPrimary> map =
+        new LinkedMultiValueMap<>();
+    map.add(mappingInformation, new RqueueMessageHandler.HandlerMethodWithPrimary(null, false));
+    return map;
+  }
+
+  private MappingInformation mapping(String queue, int numRetry, String deadLetterQueueName) {
+    return MappingInformation.builder()
+        .queueNames(Collections.singleton(queue))
+        .numRetry(numRetry)
+        .deadLetterQueueName(deadLetterQueueName)
+        .deadLetterConsumerEnabled(false)
+        .visibilityTimeout(VISIBILITY_TIMEOUT)
+        .active(false)
+        .concurrency(new Concurrency(0, 0))
+        .priority(Collections.singletonMap(Constants.DEFAULT_PRIORITY_KEY, 1))
+        .batchSize(1)
+        .build();
   }
 
   @Getter
