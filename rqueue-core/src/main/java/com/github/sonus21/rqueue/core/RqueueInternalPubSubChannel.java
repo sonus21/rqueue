@@ -57,7 +57,8 @@ public class RqueueInternalPubSubChannel implements InitializingBean {
     this.rqueueConfig = rqueueConfig;
     this.stringRqueueRedisTemplate = stringRqueueRedisTemplate;
     this.rqueueBeanProvider = rqueueBeanProvider;
-    this.rqueueRedisSerializer = new RqueueRedisSerializer();
+    this.rqueueRedisSerializer =
+        new RqueueRedisSerializer(rqueueConfig.getSerializationPropertyOrder());
   }
 
   @Override

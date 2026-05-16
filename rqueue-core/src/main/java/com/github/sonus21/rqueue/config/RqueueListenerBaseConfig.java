@@ -18,6 +18,7 @@ package com.github.sonus21.rqueue.config;
 
 import com.github.sonus21.rqueue.common.RqueueRedisTemplate;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
+import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.RqueueMessageTemplate;
@@ -37,6 +38,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * This is a base configuration class for Rqueue, that is used in Spring and Spring boot Rqueue libs
@@ -59,6 +63,9 @@ public abstract class RqueueListenerBaseConfig {
 
   @Value("${rqueue.reactive.enabled:false}")
   protected boolean reactiveEnabled;
+
+  @Value("${rqueue.serialization.property.order:ALPHABETICAL}")
+  private RqueueRedisSerializer.PropertyOrder serializationPropertyOrder;
 
   @Value(
       "${rqueue.message.converter.provider.class:com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider}")
@@ -109,6 +116,31 @@ public abstract class RqueueListenerBaseConfig {
       @Value("${rqueue.backend:REDIS}") Backend backend,
       @Value("${rqueue.version.key:__rq::version}") String versionKey,
       @Value("${rqueue.db.version:}") Integer dbVersion) {
+    if (serializationPropertyOrder == RqueueRedisSerializer.PropertyOrder.DECLARATION) {
+      RqueueRedisSerializer serializer =
+          new RqueueRedisSerializer(RqueueRedisSerializer.PropertyOrder.DECLARATION);
+      StringRedisSerializer keySerializer = new StringRedisSerializer();
+      RedisUtils.redisTemplateProvider = new RedisUtils.RedisTemplateProvider() {
+        @Override
+        public <V> RedisTemplate<String, V> getRedisTemplate(
+            RedisConnectionFactory redisConnectionFactory) {
+          RedisTemplate<String, V> template = new RedisTemplate<>();
+          template.setConnectionFactory(redisConnectionFactory);
+          template.setKeySerializer(keySerializer);
+          template.setValueSerializer(serializer);
+          template.setHashKeySerializer(keySerializer);
+          template.setHashValueSerializer(serializer);
+          return template;
+        }
+      };
+      RedisUtils.redisSerializationContextProvider =
+          () -> RedisSerializationContext.<String, Object>newSerializationContext()
+              .key(keySerializer)
+              .value(serializer)
+              .hashKey(keySerializer)
+              .hashValue(serializer)
+              .build();
+    }
     boolean sharedConnection = false;
     RedisConnectionFactory connectionFactory =
         simpleRqueueListenerContainerFactory.getRedisConnectionFactory();

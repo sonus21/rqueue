@@ -73,3 +73,28 @@ ZCARD rqueue-processing::<queueName>
 
 If all commands return **0**, your queues are empty and you can proceed with the 
 migration without additional configuration.
+
+---
+
+## Upgrading from 3.x to 4.x
+
+RQueue 4.x switched from Jackson 2.x (`com.fasterxml.jackson`) to Jackson 3.x
+(`tools.jackson`). Jackson 3.x defaults to **alphabetical** JSON property ordering,
+while Jackson 2.x used **declaration order**. Messages enqueued by 3.x and messages
+enqueued by 4.x therefore have different byte representations in Redis.
+
+The processing queue uses byte-exact lookups (ZSCORE/ZREM) to move or acknowledge
+messages. If stored bytes do not match the re-serialised bytes, the lookup silently
+fails and the message is repeatedly re-delivered via the visibility-timeout rescue path.
+
+**If you are upgrading with messages still present in Redis**, set the following
+property to keep using declaration order (matching what 3.x stored):
+
+```properties
+rqueue.serialization.property.order=DECLARATION
+```
+
+{: .warning}
+Changing `rqueue.serialization.property.order` while messages are present in the
+processing queue will cause those messages to be unexpectedly retried. Drain the processing
+queue before switching values.

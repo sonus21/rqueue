@@ -16,6 +16,7 @@
 
 package com.github.sonus21.rqueue.config;
 
+import com.github.sonus21.rqueue.converter.RqueueRedisSerializer;
 import com.github.sonus21.rqueue.models.enums.RqueueMode;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.StringUtils;
@@ -165,6 +166,9 @@ public class RqueueConfig {
 
   @Value("${rqueue.worker.registry.enabled:true}")
   private boolean workerRegistryEnabled;
+
+  @Value("${rqueue.serialization.property.order:ALPHABETICAL}")
+  private RqueueRedisSerializer.PropertyOrder serializationPropertyOrder;
 
   @Value("${rqueue.worker.registry.worker.ttl:300}")
   private long workerRegistryWorkerTtlInSeconds;

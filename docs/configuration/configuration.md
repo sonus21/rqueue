@@ -274,6 +274,19 @@ whenever Rqueue generates the message ID internally.
 
 ## Additional Configuration
 
+- **`rqueue.serialization.property.order`**: Controls the JSON property ordering used
+  when serialising `RqueueMessage` to Redis. Accepted values:
+  - `ALPHABETICAL` *(default)* — alphabetical order, the Jackson 3.x native default.
+    This is the standard setting for RQueue 4.x deployments.
+  - `DECLARATION` — declaration order, matching the Jackson 2.x behaviour used by RQueue 3.x.
+    Use this when upgrading from 3.x with messages still present in Redis queues.
+
+  {: .warning}
+  Switching between values while messages are present in the processing queue will cause
+  those in-flight messages to be unexpectedly retried — the visibility-timeout rescue
+  path preserves raw bytes verbatim, so the serialisation mismatch persists across
+  re-deliveries. Drain the processing queue before changing this setting.
+
 - **`rqueue.retry.per.poll`**: Determines how many times a polled message is retried 
   immediately if processing fails, before it is moved back to the queue for a 
   subsequent poll. The default value is `1`. If increased to `N`, the message will 
