@@ -52,6 +52,7 @@ dependencies {
     api "org.apache.commons:commons-collections4:${apacheCommonCollectionVerion}"
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
     api "io.micrometer:micrometer-core:${microMeterVersion}"
+    testImplementation "com.fasterxml.jackson.core:jackson-databind:2.21.2"
     testImplementation "io.lettuce:lettuce-core:${lettuceVersion}"
     testImplementation "io.projectreactor:reactor-test:${projectReactorReactorTestVersion}"
     testImplementation project(":rqueue-test-util")

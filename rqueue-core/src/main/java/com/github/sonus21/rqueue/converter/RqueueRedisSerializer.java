@@ -25,6 +25,7 @@ import org.springframework.data.redis.serializer.SerializationException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
@@ -76,6 +77,7 @@ public class RqueueRedisSerializer implements RedisSerializer<Object> {
                   .build(),
               DefaultTyping.NON_FINAL,
               As.PROPERTY)
+          .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
           .build();
     }
 
