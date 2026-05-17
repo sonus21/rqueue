@@ -15,6 +15,7 @@ import com.github.sonus21.rqueue.dao.RqueueJobDao;
 import com.github.sonus21.rqueue.models.db.RqueueJob;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
+import com.github.sonus21.rqueue.nats.kv.NatsKvKeys;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
@@ -69,7 +70,7 @@ public class NatsRqueueJobDao implements RqueueJobDao {
   @Override
   public void save(RqueueJob rqueueJob, Duration expiry) {
     try {
-      kv(expiry).put(sanitize(rqueueJob.getId()), serialize(rqueueJob));
+      kv(expiry).put(NatsKvKeys.sanitize(rqueueJob.getId()), serialize(rqueueJob));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "save job " + rqueueJob.getId() + " failed", e);
     }
@@ -77,7 +78,7 @@ public class NatsRqueueJobDao implements RqueueJobDao {
 
   @Override
   public RqueueJob findById(String jobId) {
-    return loadByKey(sanitize(jobId));
+    return loadByKey(NatsKvKeys.sanitize(jobId));
   }
 
   @Override
@@ -111,7 +112,7 @@ public class NatsRqueueJobDao implements RqueueJobDao {
   @Override
   public void delete(String jobId) {
     try {
-      kv(null).delete(sanitize(jobId));
+      kv(null).delete(NatsKvKeys.sanitize(jobId));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "delete job " + jobId + " failed", e);
     }
@@ -165,8 +166,4 @@ public class NatsRqueueJobDao implements RqueueJobDao {
     }
   }
 
-  /** KV keys allow {@code [A-Za-z0-9_=.-]} only. */
-  private static String sanitize(String key) {
-    return key == null ? "_" : key.replaceAll("[^A-Za-z0-9_=.-]", "_");
-  }
 }

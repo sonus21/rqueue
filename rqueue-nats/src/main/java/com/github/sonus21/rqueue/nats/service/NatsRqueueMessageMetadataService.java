@@ -17,6 +17,7 @@ import com.github.sonus21.rqueue.models.db.MessageMetadata;
 import com.github.sonus21.rqueue.models.enums.MessageStatus;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
+import com.github.sonus21.rqueue.nats.kv.NatsKvKeys;
 import com.github.sonus21.rqueue.service.RqueueMessageMetadataService;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
@@ -72,13 +73,13 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
 
   @Override
   public MessageMetadata get(String id) {
-    return loadByKey(sanitize(id));
+    return loadByKey(NatsKvKeys.sanitize(id));
   }
 
   @Override
   public void delete(String id) {
     try {
-      kv().delete(sanitize(id));
+      kv().delete(NatsKvKeys.sanitize(id));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "delete metadata " + id + " failed", e);
     }
@@ -106,7 +107,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
   @Override
   public void save(MessageMetadata messageMetadata, Duration ttl, boolean checkUnique) {
     try {
-      kv().put(sanitize(messageMetadata.getId()), serialize(messageMetadata));
+      kv().put(NatsKvKeys.sanitize(messageMetadata.getId()), serialize(messageMetadata));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "save metadata " + messageMetadata.getId() + " failed", e);
     }
@@ -160,7 +161,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
     try {
       List<String> keys = new ArrayList<>(kv().keys());
       List<TypedTuple<MessageMetadata>> out = new ArrayList<>();
-      String prefix = sanitize(queueName);
+      String prefix = NatsKvKeys.sanitize(queueName);
       for (String k : keys) {
         if (!k.startsWith(prefix)) {
           continue;
@@ -193,7 +194,7 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
   public void deleteQueueMessages(String queueName, long before) {
     try {
       List<String> keys = new ArrayList<>(kv().keys());
-      String prefix = sanitize(queueName);
+      String prefix = NatsKvKeys.sanitize(queueName);
       for (String k : keys) {
         if (!k.startsWith(prefix)) {
           continue;
@@ -239,8 +240,4 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
     }
   }
 
-  /** KV keys allow {@code [A-Za-z0-9_=.-]} only. */
-  private static String sanitize(String key) {
-    return key == null ? "_" : key.replaceAll("[^A-Za-z0-9_=.-]", "_");
-  }
 }

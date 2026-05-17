@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.dao.RqueueQStatsDao;
 import com.github.sonus21.rqueue.models.db.QueueStatistics;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
+import com.github.sonus21.rqueue.nats.kv.NatsKvKeys;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
@@ -72,7 +73,7 @@ public class NatsRqueueQStatsDao implements RqueueQStatsDao {
       return null;
     }
     try {
-      KeyValueEntry entry = kv().get(sanitize(id));
+      KeyValueEntry entry = kv().get(NatsKvKeys.sanitize(id));
       if (entry == null || entry.getValue() == null) {
         return null;
       }
@@ -104,7 +105,7 @@ public class NatsRqueueQStatsDao implements RqueueQStatsDao {
       throw new IllegalArgumentException("id cannot be null: " + queueStatistics);
     }
     try {
-      kv().put(sanitize(queueStatistics.getId()), serialize(queueStatistics));
+      kv().put(NatsKvKeys.sanitize(queueStatistics.getId()), serialize(queueStatistics));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "save id=" + queueStatistics.getId() + " failed", e);
     }
@@ -125,8 +126,4 @@ public class NatsRqueueQStatsDao implements RqueueQStatsDao {
     }
   }
 
-  /** KV keys allow {@code [A-Za-z0-9_=.-]} only. */
-  private static String sanitize(String key) {
-    return key == null ? "_" : key.replaceAll("[^A-Za-z0-9_=.-]", "_");
-  }
 }

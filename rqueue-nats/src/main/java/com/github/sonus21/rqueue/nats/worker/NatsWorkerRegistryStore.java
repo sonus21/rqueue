@@ -20,6 +20,7 @@ import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.models.registry.RqueueWorkerInfo;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
+import com.github.sonus21.rqueue.nats.kv.NatsKvKeys;
 import com.github.sonus21.rqueue.worker.WorkerRegistryStore;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
@@ -86,7 +87,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
     }
     try {
       KeyValue kv = provisioner.ensureKv(WORKER_BUCKET, workerBucketTtl);
-      kv.put(sanitize(workerKey), serialize(info));
+      kv.put(NatsKvKeys.sanitize(workerKey), serialize(info));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "putWorkerInfo " + workerKey + " failed", e);
     }
@@ -96,7 +97,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   public void deleteWorkerInfo(String workerKey) {
     try {
       KeyValue kv = provisioner.ensureKv(WORKER_BUCKET, workerBucketTtl);
-      kv.delete(sanitize(workerKey));
+      kv.delete(NatsKvKeys.sanitize(workerKey));
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "deleteWorkerInfo " + workerKey + " failed", e);
     }
@@ -111,7 +112,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
     try {
       KeyValue kv = provisioner.ensureKv(WORKER_BUCKET, workerBucketTtl);
       for (String key : workerKeys) {
-        KeyValueEntry entry = kv.get(sanitize(key));
+        KeyValueEntry entry = kv.get(NatsKvKeys.sanitize(key));
         if (entry == null || entry.getValue() == null) {
           continue;
         }
@@ -146,7 +147,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
     Map<String, String> out = new LinkedHashMap<>();
     try {
       KeyValue kv = provisioner.ensureKv(HEARTBEAT_BUCKET, heartbeatBucketTtl);
-      String prefix = sanitize(queueKey) + SEP;
+      String prefix = NatsKvKeys.sanitize(queueKey) + SEP;
       List<String> keys = new ArrayList<>(kv.keys());
       for (String k : keys) {
         if (!k.startsWith(prefix)) {
@@ -197,12 +198,7 @@ public class NatsWorkerRegistryStore implements WorkerRegistryStore {
   // ---- helpers ----------------------------------------------------------
 
   private static String compositeKey(String queueKey, String workerId) {
-    return sanitize(queueKey) + SEP + sanitize(workerId);
-  }
-
-  /** KV keys allow {@code [A-Za-z0-9_=.-]} only. */
-  private static String sanitize(String key) {
-    return key == null ? "_" : key.replaceAll("[^A-Za-z0-9_=.-]", "_");
+    return NatsKvKeys.sanitize(queueKey) + SEP + NatsKvKeys.sanitize(workerId);
   }
 
   private byte[] serialize(RqueueWorkerInfo info) throws IOException {

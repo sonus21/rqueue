@@ -15,6 +15,7 @@ import com.github.sonus21.rqueue.dao.RqueueSystemConfigDao;
 import com.github.sonus21.rqueue.models.db.QueueConfig;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
+import com.github.sonus21.rqueue.nats.kv.NatsKvKeys;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
@@ -74,7 +75,7 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
         return hit;
       }
     }
-    QueueConfig loaded = loadByKey(sanitize(name));
+    QueueConfig loaded = loadByKey(NatsKvKeys.sanitize(name));
     if (loaded != null) {
       cache.put(name, loaded);
     }
@@ -120,7 +121,7 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
   @Override
   public void saveQConfig(QueueConfig queueConfig) {
     try {
-      kv().put(sanitize(queueConfig.getName()), serialize(queueConfig));
+      kv().put(NatsKvKeys.sanitize(queueConfig.getName()), serialize(queueConfig));
       cache.put(queueConfig.getName(), queueConfig);
     } catch (IOException | JetStreamApiException e) {
       log.log(Level.WARNING, "saveQConfig " + queueConfig.getName() + " failed", e);
@@ -189,8 +190,4 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
     }
   }
 
-  /** KV keys allow {@code [A-Za-z0-9_=.-]} only. */
-  private static String sanitize(String key) {
-    return key == null ? "_" : key.replaceAll("[^A-Za-z0-9_=.-]", "_");
-  }
 }

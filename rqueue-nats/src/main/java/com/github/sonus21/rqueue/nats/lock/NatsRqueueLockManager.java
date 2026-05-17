@@ -14,6 +14,7 @@ import com.github.sonus21.rqueue.common.RqueueLockManager;
 import com.github.sonus21.rqueue.config.NatsBackendCondition;
 import com.github.sonus21.rqueue.nats.internal.NatsProvisioner;
 import com.github.sonus21.rqueue.nats.kv.NatsKvBuckets;
+import com.github.sonus21.rqueue.nats.kv.NatsKvKeys;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.KeyValue;
 import io.nats.client.api.KeyValueEntry;
@@ -57,7 +58,7 @@ public class NatsRqueueLockManager implements RqueueLockManager {
   public boolean acquireLock(String lockKey, String lockValue, Duration duration) {
     try {
       KeyValue kv = provisioner.ensureKv(BUCKET_NAME, duration);
-      kv.create(sanitize(lockKey), lockValue.getBytes(StandardCharsets.UTF_8));
+      kv.create(NatsKvKeys.sanitize(lockKey), lockValue.getBytes(StandardCharsets.UTF_8));
       return true;
     } catch (JetStreamApiException existing) {
       // Most common path: key already exists; another holder owns the lock.
@@ -75,7 +76,7 @@ public class NatsRqueueLockManager implements RqueueLockManager {
   public boolean releaseLock(String lockKey, String lockValue) {
     try {
       KeyValue kv = provisioner.ensureKv(BUCKET_NAME, Duration.ofSeconds(60));
-      String key = sanitize(lockKey);
+      String key = NatsKvKeys.sanitize(lockKey);
       KeyValueEntry entry = kv.get(key);
       if (entry == null) {
         return false;
@@ -92,12 +93,4 @@ public class NatsRqueueLockManager implements RqueueLockManager {
     }
   }
 
-  /**
-   * KV keys allow {@code [A-Za-z0-9_=.-]} only; coerce other characters to {@code _} so the
-   * caller can pass arbitrary lock keys. {@code $} and {@code #} surface in queue/listener
-   * names from inner classes and the legacy separator respectively.
-   */
-  private static String sanitize(String key) {
-    return key == null ? "_" : key.replaceAll("[^A-Za-z0-9_=.-]", "_");
-  }
 }

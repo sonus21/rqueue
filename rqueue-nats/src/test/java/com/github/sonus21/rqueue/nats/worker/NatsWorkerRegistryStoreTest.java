@@ -177,6 +177,15 @@ class NatsWorkerRegistryStoreTest {
   }
 
   @Test
+  void putQueueHeartbeat_stripsRedisHashTagsFromQueueKey()
+      throws IOException, JetStreamApiException {
+    String queueKey = "__rq::q-pollers::{email-notification-dispatch-queue}";
+    store.putQueueHeartbeat(queueKey, "w1", "{}");
+    verify(heartbeatKv)
+        .put(eq("__rq__q-pollers__email-notification-dispatch-queue__w1"), any(byte[].class));
+  }
+
+  @Test
   void putQueueHeartbeat_ioException_swallowed() throws IOException, JetStreamApiException {
     doThrow(new IOException("bucket gone")).when(heartbeatKv).put(anyString(), any(byte[].class));
     store.putQueueHeartbeat("q", "w", "{}"); // must not throw
