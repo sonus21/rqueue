@@ -125,5 +125,4 @@ public class NatsRqueueQStatsDao implements RqueueQStatsDao {
       return null;
     }
   }
-
 }

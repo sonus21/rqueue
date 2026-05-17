@@ -22,8 +22,7 @@ public final class NatsKvKeys {
     if (key == null) {
       return "_";
     }
-    String sanitized =
-        key.replaceAll("\\{([^{}]*)}", "$1").replaceAll("[^A-Za-z0-9_=.-]", "_");
+    String sanitized = key.replaceAll("\\{([^{}]*)}", "$1").replaceAll("[^A-Za-z0-9_=.-]", "_");
     return sanitized.isEmpty() ? "_" : sanitized;
   }
 }

@@ -165,5 +165,4 @@ public class NatsRqueueJobDao implements RqueueJobDao {
       return null;
     }
   }
-
 }

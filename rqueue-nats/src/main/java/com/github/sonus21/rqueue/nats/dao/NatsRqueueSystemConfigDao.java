@@ -189,5 +189,4 @@ public class NatsRqueueSystemConfigDao implements RqueueSystemConfigDao {
       return null;
     }
   }
-
 }

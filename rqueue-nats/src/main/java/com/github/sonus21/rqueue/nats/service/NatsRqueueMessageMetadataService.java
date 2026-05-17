@@ -239,5 +239,4 @@ public class NatsRqueueMessageMetadataService implements RqueueMessageMetadataSe
       return null;
     }
   }
-
 }

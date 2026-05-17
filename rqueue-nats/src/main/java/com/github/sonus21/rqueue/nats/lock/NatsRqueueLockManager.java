@@ -92,5 +92,4 @@ public class NatsRqueueLockManager implements RqueueLockManager {
       return false;
     }
   }
-
 }
