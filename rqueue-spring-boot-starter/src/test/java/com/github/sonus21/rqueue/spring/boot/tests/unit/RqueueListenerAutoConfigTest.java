@@ -17,6 +17,7 @@
 package com.github.sonus21.rqueue.spring.boot.tests.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,6 +36,8 @@ import com.github.sonus21.rqueue.core.impl.UuidV4RqueueMessageIdGenerator;
 import com.github.sonus21.rqueue.core.spi.Capabilities;
 import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
+import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
+import com.github.sonus21.rqueue.spring.boot.RqueueAutoStartupLifecycle;
 import com.github.sonus21.rqueue.spring.boot.RqueueListenerAutoConfig;
 import com.github.sonus21.rqueue.spring.boot.tests.SpringBootUnitTest;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -126,6 +129,33 @@ class RqueueListenerAutoConfigTest extends TestBase {
   }
 
   @Test
+  void autoStartupLifecycleDelaysOnlyAutoStartupContainers() {
+    RqueueAutoStartupLifecycle lifecycle = new RqueueAutoStartupLifecycle();
+    TestRqueueMessageListenerContainer autoStartupContainer =
+        new TestRqueueMessageListenerContainer();
+    TestRqueueMessageListenerContainer disabledContainer =
+        new TestRqueueMessageListenerContainer();
+    TestRqueueMessageListenerContainer alreadyRunningContainer =
+        new TestRqueueMessageListenerContainer();
+    disabledContainer.setAutoStartup(false);
+
+    lifecycle.postProcessBeforeInitialization(autoStartupContainer, "autoStartupContainer");
+    lifecycle.postProcessBeforeInitialization(disabledContainer, "disabledContainer");
+    lifecycle.postProcessBeforeInitialization(alreadyRunningContainer, "alreadyRunningContainer");
+    alreadyRunningContainer.running = true;
+
+    assertFalse(autoStartupContainer.isAutoStartup());
+    assertFalse(disabledContainer.isAutoStartup());
+    assertFalse(alreadyRunningContainer.isAutoStartup());
+
+    lifecycle.onApplicationEvent(null);
+
+    assertEquals(1, autoStartupContainer.startCount);
+    assertEquals(0, disabledContainer.startCount);
+    assertEquals(0, alreadyRunningContainer.startCount);
+  }
+
+  @Test
   void rqueueMessageEnqueuerWiresBroker() throws IllegalAccessException {
     SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
     factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
@@ -157,5 +187,26 @@ class RqueueListenerAutoConfigTest extends TestBase {
         rqueueMessageHandler, messageTemplate, messageBroker, new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
+  }
+
+  private class TestRqueueMessageListenerContainer extends RqueueMessageListenerContainer {
+
+    private int startCount;
+    private boolean running;
+
+    private TestRqueueMessageListenerContainer() {
+      super(rqueueMessageHandler, messageTemplate);
+    }
+
+    @Override
+    public void start() {
+      startCount++;
+      running = true;
+    }
+
+    @Override
+    public boolean isRunning() {
+      return running;
+    }
   }
 }

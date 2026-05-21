@@ -33,8 +33,10 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.condition.RqueueEnabled;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -42,6 +44,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Role;
 
 @Configuration
 @AutoConfigureAfter(DataRedisAutoConfiguration.class)
@@ -53,6 +56,13 @@ import org.springframework.context.annotation.Import;
 @Conditional({RqueueEnabled.class})
 @Import(RqueueRedisConfigImportSelector.class)
 public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
+
+  @Bean
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+  @ConditionalOnWebApplication
+  public static RqueueAutoStartupLifecycle rqueueAutoStartupLifecycle() {
+    return new RqueueAutoStartupLifecycle();
+  }
 
   @Bean
   @ConditionalOnMissingBean
