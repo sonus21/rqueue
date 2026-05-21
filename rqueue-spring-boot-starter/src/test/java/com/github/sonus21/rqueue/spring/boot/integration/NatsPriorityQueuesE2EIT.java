@@ -91,7 +91,7 @@ class NatsPriorityQueuesE2EIT extends AbstractNatsBootIT {
     final CountDownLatch latch = new CountDownLatch(10);
     final List<String> received = Collections.synchronizedList(new ArrayList<>());
 
-    @RqueueListener(value = "pq", priority = "high=10,low=1")
+    @RqueueListener(value = "pq", priority = "high=10,low=1", batchSize = "5", concurrency = "5")
     void onMessage(String payload) {
       received.add(payload);
       latch.countDown();
