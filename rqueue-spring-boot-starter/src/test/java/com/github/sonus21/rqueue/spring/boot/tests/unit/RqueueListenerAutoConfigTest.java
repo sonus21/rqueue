@@ -133,8 +133,7 @@ class RqueueListenerAutoConfigTest extends TestBase {
     RqueueAutoStartupLifecycle lifecycle = new RqueueAutoStartupLifecycle();
     TestRqueueMessageListenerContainer autoStartupContainer =
         new TestRqueueMessageListenerContainer();
-    TestRqueueMessageListenerContainer disabledContainer =
-        new TestRqueueMessageListenerContainer();
+    TestRqueueMessageListenerContainer disabledContainer = new TestRqueueMessageListenerContainer();
     TestRqueueMessageListenerContainer alreadyRunningContainer =
         new TestRqueueMessageListenerContainer();
     disabledContainer.setAutoStartup(false);
