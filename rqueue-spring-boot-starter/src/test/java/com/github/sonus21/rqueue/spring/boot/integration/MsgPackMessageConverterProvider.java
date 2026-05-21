@@ -15,12 +15,12 @@
  */
 package com.github.sonus21.rqueue.spring.boot.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
 import java.io.IOException;
 import java.util.Base64;
-import org.msgpack.core.MessageBufferPacker;
-import org.msgpack.core.MessagePack;
-import org.msgpack.core.MessageUnpacker;
+import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConversionException;
@@ -77,36 +77,21 @@ public class MsgPackMessageConverterProvider implements MessageConverterProvider
 
   private static final class MsgPackCodec {
 
+    private static final ObjectMapper MAPPER = new ObjectMapper(new MessagePackFactory());
+
     private MsgPackCodec() {}
 
     static byte[] encode(MessagePackageListenerTest.ListenerPayload payload) {
-      try (MessageBufferPacker packer = MessagePack.newDefaultBufferPacker()) {
-        packer.packMapHeader(2);
-        packer.packString("backend");
-        packer.packString(payload.getBackend());
-        packer.packString("body");
-        packer.packString(payload.getBody());
-        return packer.toByteArray();
-      } catch (IOException e) {
+      try {
+        return MAPPER.writeValueAsBytes(payload);
+      } catch (JsonProcessingException e) {
         throw new MessageConversionException("MsgPack encoding failed", e);
       }
     }
 
     static MessagePackageListenerTest.ListenerPayload decode(byte[] bytes) {
-      try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(bytes)) {
-        int entries = unpacker.unpackMapHeader();
-        String backend = null;
-        String body = null;
-        for (int i = 0; i < entries; i++) {
-          String key = unpacker.unpackString();
-          String value = unpacker.unpackString();
-          if ("backend".equals(key)) {
-            backend = value;
-          } else if ("body".equals(key)) {
-            body = value;
-          }
-        }
-        return new MessagePackageListenerTest.ListenerPayload(backend, body);
+      try {
+        return MAPPER.readValue(bytes, MessagePackageListenerTest.ListenerPayload.class);
       } catch (IOException e) {
         throw new MessageConversionException("MsgPack decoding failed", e);
       }
