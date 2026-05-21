@@ -122,10 +122,15 @@ class RqueueListenerAutoConfigTest extends TestBase {
         "com.github.sonus21.rqueue.converter.DefaultMessageConverterProvider",
         true);
     FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
-    messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler, messageBroker);
+    FieldUtils.writeField(
+        messageAutoConfig, "rqueueAutoStartupLifecycle", new RqueueAutoStartupLifecycle(), true);
+    RqueueMessageListenerContainer container =
+        messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler, messageBroker);
     assertEquals(factory.getRqueueMessageHandler(null).hashCode(), rqueueMessageHandler.hashCode());
     // The broker must be propagated onto the factory so the container picks it up.
     assertSame(messageBroker, factory.getMessageBroker());
+    assertFalse(container.isAutoStartup());
+    assertTrue(factory.getAutoStartup());
   }
 
   @Test

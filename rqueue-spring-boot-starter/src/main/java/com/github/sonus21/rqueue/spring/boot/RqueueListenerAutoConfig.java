@@ -33,6 +33,7 @@ import com.github.sonus21.rqueue.listener.RqueueMessageHandler;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer;
 import com.github.sonus21.rqueue.utils.condition.ReactiveEnabled;
 import com.github.sonus21.rqueue.utils.condition.RqueueEnabled;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -56,6 +57,9 @@ import org.springframework.context.annotation.Role;
 @Conditional({RqueueEnabled.class})
 @Import(RqueueRedisConfigImportSelector.class)
 public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
+
+  @Autowired(required = false)
+  private RqueueAutoStartupLifecycle rqueueAutoStartupLifecycle;
 
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -83,7 +87,23 @@ public class RqueueListenerAutoConfig extends RqueueListenerBaseConfig {
     if (simpleRqueueListenerContainerFactory.getMessageBroker() == null) {
       simpleRqueueListenerContainerFactory.setMessageBroker(messageBroker);
     }
-    return simpleRqueueListenerContainerFactory.createMessageListenerContainer();
+    boolean delayAutoStartup =
+        rqueueAutoStartupLifecycle != null && simpleRqueueListenerContainerFactory.getAutoStartup();
+    if (delayAutoStartup) {
+      simpleRqueueListenerContainerFactory.setAutoStartup(false);
+    }
+    RqueueMessageListenerContainer container;
+    try {
+      container = simpleRqueueListenerContainerFactory.createMessageListenerContainer();
+    } finally {
+      if (delayAutoStartup) {
+        simpleRqueueListenerContainerFactory.setAutoStartup(true);
+      }
+    }
+    if (delayAutoStartup) {
+      rqueueAutoStartupLifecycle.delayAutoStartup(container);
+    }
+    return container;
   }
 
   @Bean

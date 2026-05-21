@@ -34,14 +34,18 @@ public class RqueueAutoStartupLifecycle
   private final Set<RqueueMessageListenerContainer> delayedContainers =
       ConcurrentHashMap.newKeySet();
 
+  public void delayAutoStartup(RqueueMessageListenerContainer container) {
+    container.setAutoStartup(false);
+    delayedContainers.add(container);
+  }
+
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName)
       throws BeansException {
     if (bean instanceof RqueueMessageListenerContainer) {
       RqueueMessageListenerContainer container = (RqueueMessageListenerContainer) bean;
       if (container.isAutoStartup()) {
-        container.setAutoStartup(false);
-        delayedContainers.add(container);
+        delayAutoStartup(container);
       }
     }
     return bean;
