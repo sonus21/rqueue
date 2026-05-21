@@ -16,9 +16,11 @@
 package com.github.sonus21.rqueue.spring.boot.integration;
 
 import com.github.sonus21.rqueue.converter.MessageConverterProvider;
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.Base64;
+import org.msgpack.core.MessageBufferPacker;
+import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessageUnpacker;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConversionException;
@@ -78,89 +80,36 @@ public class MsgPackMessageConverterProvider implements MessageConverterProvider
     private MsgPackCodec() {}
 
     static byte[] encode(MessagePackageListenerTest.ListenerPayload payload) {
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      out.write(0x82);
-      writeString(out, "backend");
-      writeString(out, payload.getBackend());
-      writeString(out, "body");
-      writeString(out, payload.getBody());
-      return out.toByteArray();
+      try (MessageBufferPacker packer = MessagePack.newDefaultBufferPacker()) {
+        packer.packMapHeader(2);
+        packer.packString("backend");
+        packer.packString(payload.getBackend());
+        packer.packString("body");
+        packer.packString(payload.getBody());
+        return packer.toByteArray();
+      } catch (IOException e) {
+        throw new MessageConversionException("MsgPack encoding failed", e);
+      }
     }
 
     static MessagePackageListenerTest.ListenerPayload decode(byte[] bytes) {
-      Cursor cursor = new Cursor(bytes);
-      int mapHeader = cursor.readUnsignedByte();
-      int entries;
-      if ((mapHeader & 0xf0) == 0x80) {
-        entries = mapHeader & 0x0f;
-      } else {
-        throw new MessageConversionException("Expected MsgPack fixmap");
-      }
-      String backend = null;
-      String body = null;
-      for (int i = 0; i < entries; i++) {
-        String key = readString(cursor);
-        String value = readString(cursor);
-        if ("backend".equals(key)) {
-          backend = value;
-        } else if ("body".equals(key)) {
-          body = value;
+      try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(bytes)) {
+        int entries = unpacker.unpackMapHeader();
+        String backend = null;
+        String body = null;
+        for (int i = 0; i < entries; i++) {
+          String key = unpacker.unpackString();
+          String value = unpacker.unpackString();
+          if ("backend".equals(key)) {
+            backend = value;
+          } else if ("body".equals(key)) {
+            body = value;
+          }
         }
+        return new MessagePackageListenerTest.ListenerPayload(backend, body);
+      } catch (IOException e) {
+        throw new MessageConversionException("MsgPack decoding failed", e);
       }
-      return new MessagePackageListenerTest.ListenerPayload(backend, body);
-    }
-
-    private static void writeString(ByteArrayOutputStream out, String value) {
-      byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
-      if (bytes.length <= 31) {
-        out.write(0xa0 | bytes.length);
-      } else if (bytes.length <= 255) {
-        out.write(0xd9);
-        out.write(bytes.length);
-      } else {
-        throw new MessageConversionException("Test MsgPack codec supports strings up to 255 bytes");
-      }
-      out.writeBytes(bytes);
-    }
-
-    private static String readString(Cursor cursor) {
-      int header = cursor.readUnsignedByte();
-      int length;
-      if ((header & 0xe0) == 0xa0) {
-        length = header & 0x1f;
-      } else if (header == 0xd9) {
-        length = cursor.readUnsignedByte();
-      } else {
-        throw new MessageConversionException("Expected MsgPack string");
-      }
-      return new String(cursor.readBytes(length), StandardCharsets.UTF_8);
-    }
-  }
-
-  private static final class Cursor {
-
-    private final byte[] bytes;
-    private int index;
-
-    Cursor(byte[] bytes) {
-      this.bytes = bytes;
-    }
-
-    int readUnsignedByte() {
-      if (index >= bytes.length) {
-        throw new MessageConversionException("Unexpected end of MsgPack payload");
-      }
-      return bytes[index++] & 0xff;
-    }
-
-    byte[] readBytes(int length) {
-      if (index + length > bytes.length) {
-        throw new MessageConversionException("Unexpected end of MsgPack payload");
-      }
-      byte[] value = new byte[length];
-      System.arraycopy(bytes, index, value, 0, length);
-      index += length;
-      return value;
     }
   }
 }
