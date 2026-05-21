@@ -39,6 +39,7 @@ import io.nats.client.MessageHandler;
 import io.nats.client.api.PublishAck;
 import io.nats.client.impl.Headers;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -90,6 +91,14 @@ class JetStreamMessageBrokerUnitTest {
     f.broker.enqueue(
         queueNamed("orders"), RqueueMessage.builder().id("m1").message("hi").build());
     verify(f.js, times(1)).publish(eq("rqueue.js.orders"), any(Headers.class), any(byte[].class));
+  }
+
+  @Test
+  void getPollWait_usesConfiguredFetchWait() {
+    RqueueNatsConfig cfg = RqueueNatsConfig.defaults().setDefaultFetchWait(Duration.ofSeconds(9));
+    Fixture f = newFixture(cfg);
+
+    assertEquals(Duration.ofSeconds(9), f.broker.getPollWait(Duration.ofMillis(137)));
   }
 
   @Test

@@ -19,6 +19,7 @@ package com.github.sonus21.rqueue.listener;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.core.RqueueMessage;
 import com.github.sonus21.rqueue.core.middleware.Middleware;
+import com.github.sonus21.rqueue.core.spi.MessageBroker;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
@@ -59,13 +60,9 @@ abstract class RqueueMessagePoller extends MessageContainerBase {
   }
 
   private List<RqueueMessage> getMessages(QueueDetail queueDetail, int count) {
-    return rqueueBeanProvider
-        .getMessageBroker()
-        .pop(
-            queueDetail,
-            queueDetail.resolvedConsumerName(),
-            count,
-            Duration.ofMillis(pollingInterval));
+    MessageBroker broker = rqueueBeanProvider.getMessageBroker();
+    Duration wait = broker.getPollWait(Duration.ofMillis(pollingInterval));
+    return broker.pop(queueDetail, queueDetail.resolvedConsumerName(), count, wait);
   }
 
   private void execute(

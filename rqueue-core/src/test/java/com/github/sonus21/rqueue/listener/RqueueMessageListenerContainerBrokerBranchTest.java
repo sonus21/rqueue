@@ -15,6 +15,7 @@
  */
 package com.github.sonus21.rqueue.listener;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -108,6 +109,7 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     final AtomicInteger popCalls = new AtomicInteger();
     final AtomicBoolean closed = new AtomicBoolean();
     volatile Duration lastWait;
+    volatile Duration pollWait;
     private final Capabilities caps;
 
     CountingBroker(Capabilities caps) {
@@ -119,6 +121,11 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
 
     @Override
     public void enqueueWithDelay(QueueDetail q, RqueueMessage m, long delayMs) {}
+
+    @Override
+    public Duration getPollWait(Duration pollingInterval) {
+      return pollWait != null ? pollWait : MessageBroker.super.getPollWait(pollingInterval);
+    }
 
     @Override
     public List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait) {
@@ -248,9 +255,33 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     Duration wait = broker.lastWait;
     assertNotNull(wait, "broker should have received a wait duration");
     assertFalse(wait.isZero(), "wait must not be Duration.ZERO; should match pollingInterval");
-    assertTrue(
-        wait.toMillis() == pollingInterval,
-        "wait should equal the configured pollingInterval (got " + wait + ")");
+    assertEquals(Duration.ofMillis(pollingInterval), wait);
+  }
+
+  @Test
+  void pollerUsesBrokerResolvedFetchWait() throws Exception {
+    EndpointRegistry.delete();
+    CountingBroker broker =
+        new CountingBroker(new Capabilities(true, false, false, true, true, true));
+    broker.pollWait = Duration.ofSeconds(2);
+    RqueueMessageListenerContainer container =
+        new RqueueMessageListenerContainer(messageHandler, rqueueMessageTemplate);
+    container.rqueueBeanProvider = beanProvider;
+    container.setMessageBroker(broker);
+    container.setPollingInterval(137L);
+    container.afterPropertiesSet();
+    container.start();
+    try {
+      long deadline = System.currentTimeMillis() + 2000;
+      while (broker.popCalls.get() == 0 && System.currentTimeMillis() < deadline) {
+        Thread.sleep(20);
+      }
+    } finally {
+      container.stop();
+      container.destroy();
+    }
+    assertTrue(broker.popCalls.get() > 0, "poller should have issued at least one pop call");
+    assertEquals(broker.pollWait, broker.lastWait);
   }
 
   private class TrackingContainer extends RqueueMessageListenerContainer {
