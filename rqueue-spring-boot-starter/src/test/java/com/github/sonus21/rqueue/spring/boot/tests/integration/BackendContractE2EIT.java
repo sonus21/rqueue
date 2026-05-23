@@ -62,10 +62,9 @@ import reactor.core.publisher.Flux;
 class BackendContractE2EIT {
 
   private static final Logger log = Logger.getLogger(BackendContractE2EIT.class.getName());
-  private static final String BACKEND =
-      System.getProperty(
-              "rqueue.test.backend", System.getenv().getOrDefault("RQUEUE_TEST_BACKEND", "redis"))
-          .toLowerCase(Locale.ROOT);
+  private static final String BACKEND = System.getProperty(
+          "rqueue.test.backend", System.getenv().getOrDefault("RQUEUE_TEST_BACKEND", "redis"))
+      .toLowerCase(Locale.ROOT);
   private static final String STREAM_PREFIX = "rqueue-js-backendContract-";
   private static final String SUBJECT_PREFIX = "rqueue.js.backendContract.";
   private static final String EXTERNAL_NATS_URL =
@@ -154,9 +153,12 @@ class BackendContractE2EIT {
     }
 
     assertThat(listener.priorityLatch.await(30, TimeUnit.SECONDS)).isTrue();
-    assertThat(listener.priorityReceived.stream().filter(s -> s.startsWith("high-")).count())
+    assertThat(listener.priorityReceived.stream()
+            .filter(s -> s.startsWith("high-"))
+            .count())
         .isEqualTo(5);
-    assertThat(listener.priorityReceived.stream().filter(s -> s.startsWith("low-")).count())
+    assertThat(
+            listener.priorityReceived.stream().filter(s -> s.startsWith("low-")).count())
         .isEqualTo(5);
   }
 
