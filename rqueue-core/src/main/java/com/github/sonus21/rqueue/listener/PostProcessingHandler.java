@@ -225,18 +225,11 @@ class PostProcessingHandler extends PrefixLogger {
     }
   }
 
-  private int getMaxRetryCount(RqueueMessage rqueueMessage, QueueDetail queueDetail) {
-    return rqueueMessage.getRetryCount() == null
-        ? queueDetail.getNumRetry()
-        : rqueueMessage.getRetryCount();
-  }
-
   private void handleFailure(JobImpl job, int failureCount, Throwable throwable) {
     if (job.getQueueDetail().isDoNotRetryError(throwable)) {
       handleRetryExceededMessage(job, failureCount, throwable);
     } else {
-      int maxRetryCount = getMaxRetryCount(job.getRqueueMessage(), job.getQueueDetail());
-      if (failureCount < maxRetryCount) {
+      if (!RetryPolicy.isExhausted(job.getRqueueMessage(), job.getQueueDetail(), failureCount)) {
         long delay = taskExecutionBackoff.nextBackOff(
             job.getMessage(), job.getRqueueMessage(), failureCount, throwable);
         if (delay == TaskExecutionBackOff.STOP) {

@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -134,6 +135,41 @@ class RqueueListenerAutoConfigTest extends TestBase {
   }
 
   @Test
+  void rqueueMessageListenerContainerKeepsAutoStartupWhenLifecycleMissing()
+      throws IllegalAccessException {
+    SimpleRqueueListenerContainerFactory factory = new SimpleRqueueListenerContainerFactory();
+    factory.setMessageConverterProvider(new DefaultMessageConverterProvider());
+    factory.setMessageBroker(messageBroker);
+    RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
+    FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
+
+    RqueueMessageListenerContainer container =
+        messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler, messageBroker);
+
+    assertTrue(container.isAutoStartup());
+    assertTrue(factory.getAutoStartup());
+    assertSame(messageBroker, factory.getMessageBroker());
+  }
+
+  @Test
+  void rqueueMessageListenerContainerRestoresFactoryAutoStartupWhenCreationFails()
+      throws IllegalAccessException {
+    FailingListenerContainerFactory factory = new FailingListenerContainerFactory();
+    RqueueListenerAutoConfig messageAutoConfig = new RqueueListenerAutoConfig();
+    FieldUtils.writeField(messageAutoConfig, "simpleRqueueListenerContainerFactory", factory, true);
+    FieldUtils.writeField(
+        messageAutoConfig, "rqueueAutoStartupLifecycle", new RqueueAutoStartupLifecycle(), true);
+
+    IllegalStateException exception = assertThrows(
+        IllegalStateException.class,
+        () ->
+            messageAutoConfig.rqueueMessageListenerContainer(rqueueMessageHandler, messageBroker));
+
+    assertEquals("boom", exception.getMessage());
+    assertTrue(factory.getAutoStartup());
+  }
+
+  @Test
   void autoStartupLifecycleDelaysOnlyAutoStartupContainers() {
     RqueueAutoStartupLifecycle lifecycle = new RqueueAutoStartupLifecycle();
     TestRqueueMessageListenerContainer autoStartupContainer =
@@ -191,6 +227,15 @@ class RqueueListenerAutoConfigTest extends TestBase {
         rqueueMessageHandler, messageTemplate, messageBroker, new UuidV4RqueueMessageIdGenerator());
     MessageConverter converter = messageSender.getMessageConverter();
     assertTrue(converter.hashCode() == messageConverter.hashCode());
+  }
+
+  private static class FailingListenerContainerFactory
+      extends SimpleRqueueListenerContainerFactory {
+
+    @Override
+    public RqueueMessageListenerContainer createMessageListenerContainer() {
+      throw new IllegalStateException("boom");
+    }
   }
 
   private class TestRqueueMessageListenerContainer extends RqueueMessageListenerContainer {

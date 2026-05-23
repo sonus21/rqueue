@@ -102,6 +102,15 @@ class JetStreamMessageBrokerUnitTest {
   }
 
   @Test
+  void getPollWait_fallsBackToPollingIntervalWhenFetchWaitIsUnset() {
+    RqueueNatsConfig cfg = RqueueNatsConfig.defaults().setDefaultFetchWait(null);
+    Fixture f = newFixture(cfg);
+    Duration pollingInterval = Duration.ofMillis(137);
+
+    assertEquals(pollingInterval, f.broker.getPollWait(pollingInterval));
+  }
+
+  @Test
   void enqueueWithPriority_appendsPrioritySuffixToSubject() throws Exception {
     Fixture f = newFixture(RqueueNatsConfig.defaults());
     when(f.js.publish(any(String.class), any(Headers.class), any(byte[].class)))

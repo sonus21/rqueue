@@ -229,6 +229,24 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
   }
 
   @Test
+  void startDoesNotStartQueuesAgainWhenContainerIsAlreadyRunning() throws Exception {
+    EndpointRegistry.delete();
+    CountingBroker broker = new CountingBroker(Capabilities.REDIS_DEFAULTS);
+    TrackingContainer container = new TrackingContainer(messageHandler);
+    container.setMessageBroker(broker);
+    container.afterPropertiesSet();
+    try {
+      container.start();
+      container.start();
+
+      assertEquals(1, container.startQueueCalls.get() + container.startGroupCalls.get());
+    } finally {
+      container.stop();
+      container.destroy();
+    }
+  }
+
+  @Test
   void pollerForwardsPollingIntervalAsBrokerFetchWait() throws Exception {
     EndpointRegistry.delete();
     CountingBroker broker =
@@ -288,6 +306,8 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     final AtomicBoolean startBrokerPollersCalled = new AtomicBoolean();
     final AtomicBoolean startQueueCalled = new AtomicBoolean();
     final AtomicBoolean startGroupCalled = new AtomicBoolean();
+    final AtomicInteger startQueueCalls = new AtomicInteger();
+    final AtomicInteger startGroupCalls = new AtomicInteger();
 
     TrackingContainer(RqueueMessageHandler handler) {
       super(handler, rqueueMessageTemplate);
@@ -297,12 +317,14 @@ class RqueueMessageListenerContainerBrokerBranchTest extends TestBase {
     @Override
     protected void startQueue(String pollerKey, QueueDetail queueDetail) {
       startQueueCalled.set(true);
+      startQueueCalls.incrementAndGet();
       // Do not actually start the poller; it would need a real broker.
     }
 
     @Override
     protected void startGroup(String groupName, List<QueueDetail> queueDetails) {
       startGroupCalled.set(true);
+      startGroupCalls.incrementAndGet();
     }
   }
 }

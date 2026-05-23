@@ -446,6 +446,7 @@ jobs:
 
       - name: Run NATS tests
         env:
+          RQUEUE_TEST_BACKEND: nats
           NATS_RUNNING: "true"
           NATS_URL: nats://127.0.0.1:4222
         run: ./gradlew :rqueue-nats:test :rqueue-spring-boot-starter:test :rqueue-spring:test -DincludeTags=nats

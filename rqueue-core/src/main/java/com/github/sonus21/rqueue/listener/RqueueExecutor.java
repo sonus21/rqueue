@@ -111,12 +111,6 @@ class RqueueExecutor extends MessageContainerBase {
     this.failureCount = job.getRqueueMessage().getFailureCount();
   }
 
-  private int getMaxRetryCount() {
-    return Objects.isNull(job.getRqueueMessage().getRetryCount())
-        ? job.getQueueDetail().getNumRetry()
-        : job.getRqueueMessage().getRetryCount();
-  }
-
   private void updateCounter(boolean fail) {
     RqueueMetricsCounter counter = beanProvider.getRqueueMetricsCounter();
     if (Objects.isNull(counter)) {
@@ -179,11 +173,8 @@ class RqueueExecutor extends MessageContainerBase {
   }
 
   private int getRetryCount() {
-    int maxRetry = getMaxRetryCount();
-    if (beanProvider.getRqueueConfig().getRetryPerPoll() == -1) {
-      return maxRetry;
-    }
-    return Math.min(beanProvider.getRqueueConfig().getRetryPerPoll(), maxRetry);
+    return RetryPolicy.retryCountForPoll(
+        beanProvider.getRqueueConfig(), job.getRqueueMessage(), job.getQueueDetail(), failureCount);
   }
 
   private boolean queueInactive() {
@@ -283,6 +274,7 @@ class RqueueExecutor extends MessageContainerBase {
   private boolean shouldRetry(long maxProcessingTime, int retryCount, int failureCount) {
     if (retryCount > 0
         && ExecutionStatus.FAILED.equals(status)
+        && !RetryPolicy.isExhausted(rqueueMessage, queueDetail, failureCount)
         && System.currentTimeMillis() < maxProcessingTime) {
       boolean doNoRetry = queueDetail.isDoNotRetryError(error);
       // it should not be retried based on the exception list
