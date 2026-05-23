@@ -48,8 +48,7 @@ class RetryPolicyTest {
     doReturn(-1).when(rqueueConfig).getRetryPerPoll();
     RqueueMessage rqueueMessage = RqueueMessage.builder().retryCount(1000).build();
 
-    assertEquals(
-        999, RetryPolicy.retryCountForPoll(rqueueConfig, rqueueMessage, queueDetail, 1));
+    assertEquals(999, RetryPolicy.retryCountForPoll(rqueueConfig, rqueueMessage, queueDetail, 1));
   }
 
   @Test
@@ -66,8 +65,9 @@ class RetryPolicyTest {
         TestUtils.createQueueDetail("queue", Integer.MAX_VALUE, 900000L, null);
     RqueueMessage rqueueMessage = new RqueueMessage();
 
-    assertEquals(RetryPolicy.UNLIMITED_RETRY_LIMIT, RetryPolicy.maxRetryCount(
-        rqueueMessage, retryForeverQueue));
+    assertEquals(
+        RetryPolicy.UNLIMITED_RETRY_LIMIT,
+        RetryPolicy.maxRetryCount(rqueueMessage, retryForeverQueue));
     assertEquals(
         1,
         RetryPolicy.remainingRetryCount(

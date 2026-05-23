@@ -63,10 +63,9 @@ import org.testcontainers.utility.DockerImageName;
 class GlobalRetryLimitE2EIT {
 
   private static final Logger log = Logger.getLogger(GlobalRetryLimitE2EIT.class.getName());
-  private static final String BACKEND =
-      System.getProperty(
-              "rqueue.test.backend", System.getenv().getOrDefault("RQUEUE_TEST_BACKEND", "redis"))
-          .toLowerCase(Locale.ROOT);
+  private static final String BACKEND = System.getProperty(
+          "rqueue.test.backend", System.getenv().getOrDefault("RQUEUE_TEST_BACKEND", "redis"))
+      .toLowerCase(Locale.ROOT);
   private static final String QUEUE = "global-retry-" + BACKEND;
   private static final String STREAM_PREFIX = "rqueue-js-globalRetryE2E-";
   private static final String SUBJECT_PREFIX = "rqueue.js.globalRetryE2E.";
