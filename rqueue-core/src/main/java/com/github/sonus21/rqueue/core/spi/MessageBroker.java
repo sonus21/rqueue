@@ -83,6 +83,19 @@ public interface MessageBroker {
     return Mono.fromRunnable(() -> enqueueWithDelay(q, m, delayMs));
   }
 
+  /**
+   * Resolve the wait duration that listener pollers should pass to {@link #pop}. The default uses
+   * the listener container's polling interval, preserving existing Redis behavior where that value
+   * also controls idle sleeps. Backends with native long-poll controls can override this so their
+   * fetch wait can be tuned independently.
+   *
+   * @param pollingInterval listener container polling interval
+   * @return wait duration for listener-driven pop calls
+   */
+  default Duration getPollWait(Duration pollingInterval) {
+    return pollingInterval;
+  }
+
   List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait);
 
   /**

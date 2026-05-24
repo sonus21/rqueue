@@ -18,6 +18,52 @@ foundational Spring Boot 4 and Jackson 3 migration notes; RC3 for the Java 17
 baseline change; RC4–RC6 below for the NATS backend, broker SPI, dashboard
 work, and middleware additions that build on top.
 
+## Release [4.0.0.RC11] 2026-05-24
+
+{: .highlight}
+Release candidate.
+
+### Fixes
+* **Delayed listener startup for Spring Boot web apps** — Rqueue listener
+  containers in servlet and reactive Spring Boot web applications now wait until
+  `ApplicationReadyEvent` before consuming work. Non-web worker applications keep
+  the existing `SmartLifecycle` startup behavior.
+* **Idempotent listener container startup** — repeated `start()` calls no longer
+  re-run queue startup, and the container marks itself running only after
+  startup succeeds.
+* **Global retry cap enforcement** — `rqueue.retry.max` now caps the remaining
+  retry budget even when `rqueue.retry.per.poll` is low or high. The retry logic
+  is centralized in `RetryPolicy`, preserving explicit message/listener retry
+  counts while preventing implicit retry-forever jobs from bypassing the global
+  max.
+* **NATS listener polling wait** — NATS pollers now use the backend-configured
+  fetch wait via the broker SPI, reducing short-poll churn while keeping Redis
+  behavior unchanged.
+
+### Build
+* **Shared backend contract E2E tests** — Redis and NATS now run the same backend
+  contract E2E coverage through environment-selected bootstrapping, replacing
+  duplicated NATS-only E2E classes.
+* **Broker coverage** — added focused unit coverage for broker defaults and NATS
+  JetStream pop, in-flight, size, subscriber, and dashboard-label paths.
+
+## Release [4.0.0.RC10] 2026-05-21
+
+{: .highlight}
+Release candidate.
+
+### Fixes
+* **Spring Boot 3.x to 4.x message compatibility** — restored Jackson 2.x
+  property ordering compatibility in `RqueueRedisSerializer` so messages written
+  by Rqueue 3.x can be acknowledged or parked for retry after upgrading to
+  Rqueue 4.x. This prevents stale processing-queue entries caused by byte-exact
+  Redis `ZSCORE` / `ZREM` lookups using a different serialized property order.
+
+### Docs
+* **Migration guidance** — clarified the 3.x to 4.x upgrade notes around
+  `rqueue.serialization.property.order` so applications can choose the
+  compatibility mode intentionally during rolling upgrades.
+
 ## Release [4.0.0.RC9] 2026-05-13
 
 {: .highlight}

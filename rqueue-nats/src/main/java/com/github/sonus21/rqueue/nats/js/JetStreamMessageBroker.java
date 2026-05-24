@@ -100,10 +100,7 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
 
   /**
    * Lower bound for fetch wait when the caller passes a non-positive duration. JetStream rejects
-   * zero on a pull fetch, so any zero/negative wait is rounded up to this minimum. Callers that
-   * want long-poll semantics should pass the desired wait explicitly (e.g. the listener
-   * container's {@code pollingInterval}); this constant only guards against accidental zero waits
-   * from non-listener callers.
+   * zero on a pull fetch, so any zero/negative wait is rounded up to this minimum.
    */
   private static final Duration MIN_FETCH_WAIT = Duration.ofMillis(50);
 
@@ -464,6 +461,12 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
   }
 
   @Override
+  public Duration getPollWait(Duration pollingInterval) {
+    Duration fetchWait = config == null ? null : config.getDefaultFetchWait();
+    return fetchWait != null ? fetchWait : MessageBroker.super.getPollWait(pollingInterval);
+  }
+
+  @Override
   public List<RqueueMessage> pop(QueueDetail q, String consumerName, int batch, Duration wait) {
     return popInternal(
         streamFor(q),
@@ -533,10 +536,10 @@ public class JetStreamMessageBroker implements MessageBroker, AutoCloseable {
       Duration wait,
       Duration ackWait,
       long maxDeliver) {
-    // Honour the caller-supplied wait — this is the listener container's pollingInterval for
-    // RqueueMessagePoller, and lets JetStream long-poll instead of the broker firing a steady
-    // stream of $JS.API.CONSUMER.MSG.NEXT requests. Only fall back when the caller didn't
-    // express a preference; zero/negative waits are rounded up to the JetStream minimum.
+    // Honour the caller-supplied wait. Listener pollers obtain this from getPollWait(), so NATS
+    // can use rqueue.nats.consumer.fetch-wait for long polling while keeping the listener
+    // pollingInterval as its idle sleep. Only fall back when the caller didn't express a
+    // preference; zero/negative waits are rounded up to the JetStream minimum.
     Duration fetchWait;
     if (wait == null) {
       fetchWait = config.getDefaultFetchWait();

@@ -517,10 +517,14 @@ public class RqueueMessageListenerContainer
 
   @Override
   public void start() {
-    log.info("Starting Rqueue Message container {}", RqueueConfig.getBrokerId());
     synchronized (lifecycleMgr) {
-      running = true;
+      if (running) {
+        log.debug("Rqueue Message container {} is already running", RqueueConfig.getBrokerId());
+        return;
+      }
+      log.info("Starting Rqueue Message container {}", RqueueConfig.getBrokerId());
       doStart();
+      running = true;
       rqueueBeanProvider
           .getApplicationEventPublisher()
           .publishEvent(new RqueueBootstrapEvent(EVENT_SOURCE, true));
