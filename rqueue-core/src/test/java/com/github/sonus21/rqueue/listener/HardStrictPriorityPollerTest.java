@@ -1,5 +1,6 @@
 package com.github.sonus21.rqueue.listener;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -7,13 +8,16 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.github.sonus21.TestBase;
 import com.github.sonus21.rqueue.CoreUnitTest;
 import com.github.sonus21.rqueue.core.RqueueBeanProvider;
 import com.github.sonus21.rqueue.listener.RqueueMessageListenerContainer.QueueStateMgr;
+import com.github.sonus21.rqueue.listener.RqueueMessagePoller.DeactivateType;
 import com.github.sonus21.rqueue.utils.Constants;
 import com.github.sonus21.rqueue.utils.QueueThreadPool;
 import com.github.sonus21.rqueue.utils.TimeoutUtils;
@@ -67,7 +71,7 @@ class HardStrictPriorityPollerTest extends TestBase {
         rqueueBeanProvider,
         queueStateMgr,
         Collections.emptyList(),
-        50L,
+        60_000L, // Keep deactivation from expiring during assertions.
         50L,
         postProcessingHandler,
         new MessageHeaders(Collections.emptyMap()),
@@ -107,6 +111,35 @@ class HardStrictPriorityPollerTest extends TestBase {
     boolean result =
         poller.existMessagesInCurrentQueueOrHigherPriorityQueue(lowPriorityQueue, queues);
     assertTrue(result, "Should return true because high priority queue has messages");
+  }
+
+  @Test
+  void testBusyPoolDoesNotHideHighPriorityMessages() throws Exception {
+    QueueThreadPool busyPool = mock(QueueThreadPool.class);
+    when(busyPool.acquire(1, poller.getSemaphoreWaitTime())).thenReturn(false);
+    lenient().doReturn(true).when(poller).existAvailableMessagesForPoll(highDetail);
+    lenient().doReturn(false).when(poller).existAvailableMessagesForPoll(lowDetail);
+
+    poller.poll(-1, highPriorityQueue, highDetail, busyPool);
+
+    verify(busyPool).acquire(1, poller.getSemaphoreWaitTime());
+    assertTrue(
+        poller.existMessagesInCurrentQueueOrHigherPriorityQueue(lowPriorityQueue, poller.queues),
+        "A busy pool must not hide pending high-priority messages");
+    verify(poller, never()).existAvailableMessagesForPoll(lowDetail);
+  }
+
+  @Test
+  void testEmptyQueueIsTemporarilySkipped() {
+    lenient().doReturn(false).when(poller).existAvailableMessagesForPoll(lowDetail);
+
+    poller.deactivate(-1, highPriorityQueue, DeactivateType.NO_MESSAGE);
+
+    assertFalse(
+        poller.existMessagesInCurrentQueueOrHigherPriorityQueue(lowPriorityQueue, poller.queues),
+        "An empty high-priority queue should remain inactive during the polling interval");
+    verify(poller, never()).existAvailableMessagesForPoll(highDetail);
+    verify(poller).existAvailableMessagesForPoll(lowDetail);
   }
 
   @Test

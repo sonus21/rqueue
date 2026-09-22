@@ -208,7 +208,7 @@ class HardStrictPriorityPoller extends RqueueMessagePoller {
     if (deactivateType == DeactivateType.POLL_FAILED) {
       // Pause in case of connection errors or polling failures
       TimeoutUtils.sleepLog(backoffTime, false);
-    } else {
+    } else if (deactivateType == DeactivateType.NO_MESSAGE) {
       // Mark deactivation time if the queue is empty
       queueDeactivationTime.put(queue, System.currentTimeMillis());
     }
