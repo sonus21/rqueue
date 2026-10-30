@@ -8,7 +8,7 @@ layout: default
 
 All notable user-facing changes to this project are documented in this file.
 
-## Release [4.0.0] TBD
+## Release [4.0.0] 2026-10-30
 
 {: .highlight}
 First stable 4.0.0 release. Targets Spring Boot 4.x and Spring Framework 7.x on
